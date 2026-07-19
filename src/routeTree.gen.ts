@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TrackerRouteImport } from './routes/tracker'
+import { Route as PromosRouteImport } from './routes/promos'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as GalleryRouteImport } from './routes/gallery'
 import { Route as FeedRouteImport } from './routes/feed'
@@ -20,6 +21,11 @@ import { Route as EventsEventIdRouteImport } from './routes/events.$eventId'
 const TrackerRoute = TrackerRouteImport.update({
   id: '/tracker',
   path: '/tracker',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PromosRoute = PromosRouteImport.update({
+  id: '/promos',
+  path: '/promos',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProfileRoute = ProfileRouteImport.update({
@@ -58,6 +64,7 @@ export interface FileRoutesByFullPath {
   '/feed': typeof FeedRoute
   '/gallery': typeof GalleryRoute
   '/profile': typeof ProfileRoute
+  '/promos': typeof PromosRoute
   '/tracker': typeof TrackerRoute
   '/events/$eventId': typeof EventsEventIdRoute
   '/events/': typeof EventsIndexRoute
@@ -67,6 +74,7 @@ export interface FileRoutesByTo {
   '/feed': typeof FeedRoute
   '/gallery': typeof GalleryRoute
   '/profile': typeof ProfileRoute
+  '/promos': typeof PromosRoute
   '/tracker': typeof TrackerRoute
   '/events/$eventId': typeof EventsEventIdRoute
   '/events': typeof EventsIndexRoute
@@ -77,6 +85,7 @@ export interface FileRoutesById {
   '/feed': typeof FeedRoute
   '/gallery': typeof GalleryRoute
   '/profile': typeof ProfileRoute
+  '/promos': typeof PromosRoute
   '/tracker': typeof TrackerRoute
   '/events/$eventId': typeof EventsEventIdRoute
   '/events/': typeof EventsIndexRoute
@@ -88,6 +97,7 @@ export interface FileRouteTypes {
     | '/feed'
     | '/gallery'
     | '/profile'
+    | '/promos'
     | '/tracker'
     | '/events/$eventId'
     | '/events/'
@@ -97,6 +107,7 @@ export interface FileRouteTypes {
     | '/feed'
     | '/gallery'
     | '/profile'
+    | '/promos'
     | '/tracker'
     | '/events/$eventId'
     | '/events'
@@ -106,6 +117,7 @@ export interface FileRouteTypes {
     | '/feed'
     | '/gallery'
     | '/profile'
+    | '/promos'
     | '/tracker'
     | '/events/$eventId'
     | '/events/'
@@ -116,6 +128,7 @@ export interface RootRouteChildren {
   FeedRoute: typeof FeedRoute
   GalleryRoute: typeof GalleryRoute
   ProfileRoute: typeof ProfileRoute
+  PromosRoute: typeof PromosRoute
   TrackerRoute: typeof TrackerRoute
   EventsEventIdRoute: typeof EventsEventIdRoute
   EventsIndexRoute: typeof EventsIndexRoute
@@ -128,6 +141,13 @@ declare module '@tanstack/react-router' {
       path: '/tracker'
       fullPath: '/tracker'
       preLoaderRoute: typeof TrackerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/promos': {
+      id: '/promos'
+      path: '/promos'
+      fullPath: '/promos'
+      preLoaderRoute: typeof PromosRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/profile': {
@@ -180,6 +200,7 @@ const rootRouteChildren: RootRouteChildren = {
   FeedRoute: FeedRoute,
   GalleryRoute: GalleryRoute,
   ProfileRoute: ProfileRoute,
+  PromosRoute: PromosRoute,
   TrackerRoute: TrackerRoute,
   EventsEventIdRoute: EventsEventIdRoute,
   EventsIndexRoute: EventsIndexRoute,
