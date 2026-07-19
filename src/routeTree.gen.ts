@@ -14,6 +14,7 @@ import { Route as PromosRouteImport } from './routes/promos'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as GalleryRouteImport } from './routes/gallery'
 import { Route as FeedRouteImport } from './routes/feed'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as EventsIndexRouteImport } from './routes/events.index'
 import { Route as EventsEventIdRouteImport } from './routes/events.$eventId'
@@ -45,6 +46,11 @@ const FeedRoute = FeedRouteImport.update({
   path: '/feed',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -73,6 +79,7 @@ const EventsEventIdEnterRoute = EventsEventIdEnterRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
   '/feed': typeof FeedRoute
   '/gallery': typeof GalleryRoute
   '/profile': typeof ProfileRoute
@@ -85,6 +92,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
   '/feed': typeof FeedRoute
   '/gallery': typeof GalleryRoute
   '/profile': typeof ProfileRoute
@@ -97,6 +105,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
   '/feed': typeof FeedRoute
   '/gallery': typeof GalleryRoute
   '/profile': typeof ProfileRoute
@@ -111,6 +120,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/admin'
     | '/feed'
     | '/gallery'
     | '/profile'
@@ -123,6 +133,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/admin'
     | '/feed'
     | '/gallery'
     | '/profile'
@@ -134,6 +145,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/admin'
     | '/feed'
     | '/gallery'
     | '/profile'
@@ -147,6 +159,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AdminRoute: typeof AdminRoute
   FeedRoute: typeof FeedRoute
   GalleryRoute: typeof GalleryRoute
   ProfileRoute: typeof ProfileRoute
@@ -191,6 +204,13 @@ declare module '@tanstack/react-router' {
       path: '/feed'
       fullPath: '/feed'
       preLoaderRoute: typeof FeedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -247,6 +267,7 @@ const EventsEventIdRouteWithChildren = EventsEventIdRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AdminRoute: AdminRoute,
   FeedRoute: FeedRoute,
   GalleryRoute: GalleryRoute,
   ProfileRoute: ProfileRoute,

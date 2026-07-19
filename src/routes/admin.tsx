@@ -14,13 +14,14 @@ export const Route = createFileRoute("/admin")({
   component: AdminLayout,
 });
 
-const nav = [
+const nav: { to: string; label: string; icon: typeof LayoutDashboard; exact?: boolean }[] = [
   { to: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
   { to: "/admin/events", label: "Events", icon: CalendarDays },
   { to: "/admin/feed", label: "News feed", icon: Newspaper },
   { to: "/admin/promos", label: "Promos", icon: Tag },
   { to: "/admin/sponsors", label: "Sponsors", icon: Handshake },
-] as const;
+];
+
 
 function AdminLayout() {
   useHydratedStore();
