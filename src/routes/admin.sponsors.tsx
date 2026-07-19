@@ -228,7 +228,7 @@ function SponsorEditor({
               placeholder="https://…"
             />
           </L>
-          <L label="Accent color" className="md:col-span-2">
+          <L label="Accent color (fallback when no logo image)" className="md:col-span-2">
             <input
               className={i}
               value={form.accent}
@@ -236,6 +236,65 @@ function SponsorEditor({
               placeholder="oklch(0.55 0.2 25) or #d81a1a"
             />
           </L>
+
+          <div className="col-span-full">
+            <span className="mb-1 block text-[11px] font-bold uppercase tracking-wider text-ink-soft">
+              Logo image
+            </span>
+            <div className="flex items-center gap-3 rounded-lg border border-dashed border-border bg-background p-3">
+              <div className="grid h-16 w-16 shrink-0 place-items-center rounded-md bg-white ring-1 ring-border">
+                {form.logoUrl ? (
+                  <img
+                    src={form.logoUrl}
+                    alt="Logo preview"
+                    className="max-h-14 max-w-14 object-contain"
+                  />
+                ) : (
+                  <ImageIcon className="h-6 w-6 text-ink-soft" />
+                )}
+              </div>
+              <div className="flex-1">
+                <input
+                  ref={fileRef}
+                  type="file"
+                  accept="image/png,image/jpeg,image/svg+xml,image/webp"
+                  className="hidden"
+                  onChange={(e) => onPick(e.target.files?.[0])}
+                />
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => fileRef.current?.click()}
+                    disabled={uploading}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-semibold disabled:opacity-50"
+                  >
+                    {uploading ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <Upload className="h-3.5 w-3.5" />
+                    )}
+                    {uploading ? "Uploading…" : form.logoUrl ? "Replace" : "Upload logo"}
+                  </button>
+                  {form.logoUrl ? (
+                    <button
+                      type="button"
+                      onClick={() => update("logoUrl", undefined)}
+                      className="rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-semibold text-cherry"
+                    >
+                      Remove
+                    </button>
+                  ) : null}
+                </div>
+                <p className="mt-1.5 text-[11px] text-ink-soft">
+                  PNG, JPG, SVG or WEBP. Wide/transparent logos look best.
+                </p>
+                {uploadErr ? (
+                  <p className="mt-1 text-[11px] font-semibold text-cherry">{uploadErr}</p>
+                ) : null}
+              </div>
+            </div>
+          </div>
+
           <label className="col-span-full flex items-center gap-2 text-sm font-semibold">
             <input
               type="checkbox"
@@ -249,9 +308,24 @@ function SponsorEditor({
             <p className="mb-1 text-[10px] font-bold uppercase tracking-widest text-ink-soft">
               Preview
             </p>
-            <p className="font-display text-xl font-black" style={{ color: form.accent }}>
-              {form.logoText || form.name || "LOGO"}
-            </p>
+            {form.logoUrl ? (
+              <div className="grid h-14 w-fit min-w-[140px] place-items-center rounded-xl bg-white px-5 ring-1 ring-black/10">
+                <img
+                  src={form.logoUrl}
+                  alt={form.name || "Logo"}
+                  className="max-h-10 max-w-[120px] object-contain"
+                />
+              </div>
+            ) : (
+              <div
+                className="grid h-14 w-fit min-w-[140px] place-items-center rounded-xl px-5 text-white ring-1 ring-black/10"
+                style={{ background: form.accent }}
+              >
+                <span className="font-display text-sm font-black tracking-[0.18em]">
+                  {form.logoText || form.name || "LOGO"}
+                </span>
+              </div>
+            )}
           </div>
         </div>
         <footer className="flex justify-end gap-2 border-t border-border px-5 py-3">
