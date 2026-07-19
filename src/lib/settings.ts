@@ -102,7 +102,7 @@ export async function fetchSettings(): Promise<Partial<SiteSettings> | null> {
 export async function saveBranding(b: Branding) {
   const { error } = await supabase
     .from("site_settings")
-    .upsert({ key: "branding", value: b as unknown as Record<string, unknown> });
+    .upsert({ key: "branding", value: b as never });
   if (error) console.warn("[settings:saveBranding]", error);
   return !error;
 }
@@ -110,7 +110,7 @@ export async function saveBranding(b: Branding) {
 export async function saveQuickLinks(items: QuickLink[]) {
   const { error } = await supabase
     .from("site_settings")
-    .upsert({ key: "quick_links", value: { items } });
+    .upsert({ key: "quick_links", value: { items } as never });
   if (error) console.warn("[settings:saveQuickLinks]", error);
   return !error;
 }
@@ -118,7 +118,7 @@ export async function saveQuickLinks(items: QuickLink[]) {
 export async function saveWaivers(w: Waivers) {
   const { error } = await supabase
     .from("site_settings")
-    .upsert({ key: "waivers", value: w as unknown as Record<string, unknown> });
+    .upsert({ key: "waivers", value: w as never });
   if (error) console.warn("[settings:saveWaivers]", error);
   return !error;
 }
