@@ -545,9 +545,21 @@ function EnterEvent() {
           </p>
           <div className="mt-2 space-y-1 text-sm">
             <div className="flex justify-between">
-              <span className="text-ink-soft">Entry — {category.label}</span>
+              <span className="text-ink-soft">Entry — {category.label} ({firstName || "You"})</span>
               <span className="font-mono font-semibold text-ink">{ZAR(category.priceZAR)}</span>
             </div>
+            {friends.map((f, i) => {
+              const fc = config.categories.find((c: EntryCategory) => c.id === f.categoryId);
+              if (!fc) return null;
+              return (
+                <div key={f.id} className="flex justify-between">
+                  <span className="text-ink-soft">
+                    Entry — {fc.label} ({f.firstName || `Friend ${i + 1}`})
+                  </span>
+                  <span className="font-mono font-semibold text-ink">{ZAR(fc.priceZAR)}</span>
+                </div>
+              );
+            })}
             {config.merch.map((m: MerchItem) => {
               const q = merchQty[m.id] ?? 0;
               if (!q) return null;
