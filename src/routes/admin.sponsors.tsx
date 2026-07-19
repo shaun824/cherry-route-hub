@@ -165,8 +165,24 @@ function SponsorEditor({
   onCancel: () => void;
 }) {
   const [form, setForm] = useState<Sponsor>(value);
+  const [uploading, setUploading] = useState(false);
+  const [uploadErr, setUploadErr] = useState<string | null>(null);
+  const fileRef = useRef<HTMLInputElement | null>(null);
   function update<K extends keyof Sponsor>(k: K, v: Sponsor[K]) {
     setForm((f) => ({ ...f, [k]: v }));
+  }
+  async function onPick(file: File | undefined) {
+    if (!file) return;
+    setUploadErr(null);
+    setUploading(true);
+    try {
+      const url = await uploadSponsorLogo(file);
+      setForm((f) => ({ ...f, logoUrl: url }));
+    } catch (err) {
+      setUploadErr(err instanceof Error ? err.message : "Upload failed");
+    } finally {
+      setUploading(false);
+    }
   }
   return (
     <div className="fixed inset-0 z-50 grid place-items-center bg-black/50 p-4">
