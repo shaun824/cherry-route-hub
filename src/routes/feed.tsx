@@ -1,6 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { PageHeader, TypeBadge } from "@/components/ui-bits";
-import { feed, relativeTime } from "@/lib/mock-data";
+import { relativeTime } from "@/lib/mock-data";
+import { useAdminStore } from "@/lib/store";
+import { useHydratedStore } from "@/lib/use-hydrated-store";
 import { Pin } from "lucide-react";
 
 export const Route = createFileRoute("/feed")({
@@ -14,11 +16,14 @@ export const Route = createFileRoute("/feed")({
 });
 
 function Feed() {
+  useHydratedStore();
+  const feed = useAdminStore((s) => s.feed);
   const sorted = [...feed].sort((a, b) => {
     if (a.pinned && !b.pinned) return -1;
     if (b.pinned && !a.pinned) return 1;
     return new Date(b.postedAt).getTime() - new Date(a.postedAt).getTime();
   });
+
 
   return (
     <div>
