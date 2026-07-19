@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useAdminStore } from "./store";
 import { fetchFeed, fetchPromos, fetchSponsors } from "./cloud";
+import { fetchSettings } from "./settings";
 import { supabase } from "@/integrations/supabase/client";
 
 let started = false;
