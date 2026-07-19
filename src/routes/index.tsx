@@ -117,28 +117,29 @@ function Home() {
       </div>
 
       {/* Quick links */}
-      <div className="-mt-5 grid grid-cols-4 gap-2 px-4">
-        {[
-          { to: "/feed", label: "News", icon: Newspaper },
-          { to: "/events", label: "Events", icon: MapPin },
-          { to: "/gallery", label: "Gallery", icon: ImageIcon },
-          { to: "/promos", label: "Promos", icon: Tag },
-        ].map((q) => {
-          const Icon = q.icon;
-          return (
-            <Link
-              key={q.to}
-              to={q.to}
-              className="flex flex-col items-center gap-1.5 rounded-2xl bg-card p-3 shadow-sm ring-1 ring-border"
-            >
-              <span className="grid h-9 w-9 place-items-center rounded-xl bg-accent text-cherry-deep">
-                <Icon className="h-4.5 w-4.5" strokeWidth={2.2} />
-              </span>
-              <span className="text-[11px] font-semibold text-ink">{q.label}</span>
-            </Link>
-          );
-        })}
-      </div>
+      {quickLinks.length > 0 ? (
+        <div
+          className="-mt-5 grid gap-2 px-4"
+          style={{ gridTemplateColumns: `repeat(${qlCols}, minmax(0, 1fr))` }}
+        >
+          {quickLinks.map((q) => {
+            const Icon = QUICK_ICONS[q.icon] ?? Sparkles;
+            return (
+              <Link
+                key={q.id}
+                to={q.to}
+                className="flex flex-col items-center gap-1.5 rounded-2xl bg-card p-3 shadow-sm ring-1 ring-border"
+              >
+                <span className="grid h-9 w-9 place-items-center rounded-xl bg-accent text-cherry-deep">
+                  <Icon className="h-4.5 w-4.5" strokeWidth={2.2} />
+                </span>
+                <span className="text-[11px] font-semibold text-ink">{q.label}</span>
+              </Link>
+            );
+          })}
+        </div>
+      ) : null}
+
 
       {/* Pinned notice */}
       {pinned ? (
