@@ -611,6 +611,8 @@ function EnterEvent() {
               ? "Choose your included kit sizes to continue"
               : missingMerchSize
               ? "Pick a size for each merch item you've added"
+              : friendsInvalid
+              ? "Complete every friend's details and sizes"
               : "Fill your details and accept the waivers"}
           </p>
         )}
