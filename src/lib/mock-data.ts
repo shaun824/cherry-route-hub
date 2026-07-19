@@ -1,6 +1,14 @@
 // Mock data — shaped to be replaced later by Entry Ninja / backend integrations.
 // Every entity carries an `externalId` field for future sync.
 
+export type Batch = {
+  id: string;
+  name: string;         // e.g. "A Bunch", "Wave 1", "Elite"
+  startTime: string;    // "HH:MM" — race-day start time
+  capacity?: number;    // optional cap
+  description?: string; // optional note (e.g. "Seeded, licensed riders only")
+};
+
 export type Event = {
   id: string;
   externalId: string | null; // Entry Ninja event ID
@@ -16,6 +24,8 @@ export type Event = {
   schedule: { time: string; label: string }[];
   mapQuery: string; // used for embed
   entered: boolean;
+  classes?: EntryCategory[]; // admin-managed race classes / categories
+  batches?: Batch[];         // admin-managed start batches / waves
 };
 
 export type FeedPost = {

@@ -16,7 +16,7 @@ import {
   Sparkles,
   X,
 } from "lucide-react";
-import { currentRider, events, formatDate, formatTime, getEntryConfig, type EntryCategory, type MerchItem } from "@/lib/mock-data";
+import { currentRider, events, formatDate, formatTime, getEntryConfig, type Batch, type EntryCategory, type MerchItem } from "@/lib/mock-data";
 import { useAdminStore } from "@/lib/store";
 import { useHydratedStore } from "@/lib/use-hydrated-store";
 
@@ -57,11 +57,19 @@ const ZAR = (n: number) =>
 
 function EnterEvent() {
   useHydratedStore();
-  const { event, config } = Route.useLoaderData();
+  const loader = Route.useLoaderData();
   const waivers = useAdminStore((s) => s.settings.waivers);
+  const storeEvent = useAdminStore((s) => s.events.find((e) => e.id === loader.event.id));
+  const event = storeEvent ?? loader.event;
+  const config = loader.config;
+
+  // Admin-managed classes override the default config; same for batches.
+  const classes: EntryCategory[] = (event.classes && event.classes.length > 0 ? event.classes : config.categories);
+  const batches: Batch[] = event.batches ?? [];
 
 
-  const [categoryId, setCategoryId] = useState(config.categories[0].id);
+  const [categoryId, setCategoryId] = useState(classes[0]?.id ?? "");
+  const [batchId, setBatchId] = useState<string>(batches[0]?.id ?? "");
   const [firstName, setFirstName] = useState(currentRider.name.split(" ")[0] ?? "");
   const [lastName, setLastName] = useState(currentRider.name.split(" ").slice(1).join(" ") ?? "");
   const [email, setEmail] = useState("alex@example.com");
@@ -87,6 +95,7 @@ function EnterEvent() {
     phone: string;
     dob: string;
     categoryId: string;
+    batchId: string;
     tshirtSize: string;
     jacketSize: string;
   };
@@ -97,7 +106,8 @@ function EnterEvent() {
     email: "",
     phone: "",
     dob: "",
-    categoryId: config.categories[0].id,
+    categoryId: classes[0]?.id ?? "",
+    batchId: batches[0]?.id ?? "",
     tshirtSize: "",
     jacketSize: "",
   });
@@ -112,7 +122,8 @@ function EnterEvent() {
   const [stage, setStage] = useState<Stage>("form");
   const [paymentId, setPaymentId] = useState<string>("");
 
-  const category = config.categories.find((c: EntryCategory) => c.id === categoryId)!;
+  const category = classes.find((c) => c.id === categoryId) ?? classes[0];
+  const batch = batches.find((b) => b.id === batchId);
 
   const merchTotal = useMemo(
     () =>
@@ -122,12 +133,12 @@ function EnterEvent() {
   const friendsTotal = useMemo(
     () =>
       friends.reduce((sum, f) => {
-        const c = config.categories.find((cc: EntryCategory) => cc.id === f.categoryId);
+        const c = classes.find((cc) => cc.id === f.categoryId);
         return sum + (c?.priceZAR ?? 0);
       }, 0),
-    [friends, config.categories],
+    [friends, classes],
   );
-  const total = category.priceZAR + friendsTotal + merchTotal;
+  const total = (category?.priceZAR ?? 0) + friendsTotal + merchTotal;
 
   const setQty = (id: string, delta: number) =>
     setMerchQty((q) => {
@@ -141,6 +152,8 @@ function EnterEvent() {
   const missingMerchSize = config.merch.some((m: MerchItem) => (merchQty[m.id] ?? 0) > 0 && m.sizes && !merchSize[m.id],
   );
 
+  const batchRequired = batches.length > 0 && !batchId;
+
   const friendsInvalid = friends.some(
     (f) =>
       !f.firstName ||
@@ -148,12 +161,13 @@ function EnterEvent() {
       !f.email ||
       !f.phone ||
       !f.dob ||
+      (batches.length > 0 && !f.batchId) ||
       (config.jacketIncluded && !f.jacketSize) ||
       (config.tshirtIncluded && !f.tshirtSize),
   );
 
   const canSubmit =
-    firstName && lastName && email && phone && emergencyName && emergencyPhone && waiver && terms && !kitRequired && !missingMerchSize && !friendsInvalid;
+    !!category && firstName && lastName && email && phone && emergencyName && emergencyPhone && waiver && terms && !kitRequired && !missingMerchSize && !batchRequired && !friendsInvalid;
 
   if (stage === "success") {
     return (
@@ -241,10 +255,10 @@ function EnterEvent() {
           if (canSubmit) setStage("pay");
         }}
       >
-        {/* Category */}
-        <Section title="1 · Choose your category" hint="Distance and pricing">
+        {/* Category / class */}
+        <Section title="1 · Choose your class" hint="Distance and pricing">
           <div className="space-y-2">
-            {config.categories.map((c: EntryCategory) => {
+            {classes.map((c) => {
               const active = c.id === categoryId;
               return (
                 <label
@@ -284,6 +298,44 @@ function EnterEvent() {
             })}
           </div>
         </Section>
+
+        {/* Batch / start wave */}
+        {batches.length > 0 && (
+          <Section title="2 · Pick your start batch" hint="Choose the wave you'll roll out with">
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              {batches.map((b) => {
+                const active = b.id === batchId;
+                return (
+                  <button
+                    key={b.id}
+                    type="button"
+                    onClick={() => setBatchId(b.id)}
+                    className={`flex items-start justify-between gap-2 rounded-2xl border p-3 text-left transition ${
+                      active
+                        ? "border-cherry bg-cherry/5 ring-2 ring-cherry/30"
+                        : "border-border bg-card hover:border-cherry/40"
+                    }`}
+                  >
+                    <div className="min-w-0 flex-1">
+                      <p className="font-semibold text-ink">{b.name}</p>
+                      {b.description ? (
+                        <p className="mt-0.5 text-xs text-ink-soft">{b.description}</p>
+                      ) : null}
+                      {b.capacity ? (
+                        <p className="mt-0.5 text-[10px] uppercase tracking-widest text-muted-foreground">
+                          Capacity {b.capacity}
+                        </p>
+                      ) : null}
+                    </div>
+                    <span className="font-mono text-xs font-bold text-cherry">{b.startTime}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </Section>
+        )}
+
+
 
         {/* Rider details */}
         <Section title="2 · Rider details" hint="Matches your Entry Ninja profile">
@@ -351,20 +403,41 @@ function EnterEvent() {
 
                   <label className="mt-2 block">
                     <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                      Category <span className="text-cherry">*</span>
+                      Class <span className="text-cherry">*</span>
                     </span>
                     <select
                       value={f.categoryId}
                       onChange={(e) => updateFriend(f.id, { categoryId: e.target.value })}
                       className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm font-semibold text-ink focus:border-cherry focus:outline-none"
                     >
-                      {config.categories.map((c: EntryCategory) => (
+                      {classes.map((c) => (
                         <option key={c.id} value={c.id}>
                           {c.label} · {c.distanceKm} km · {ZAR(c.priceZAR)}
                         </option>
                       ))}
                     </select>
                   </label>
+
+                  {batches.length > 0 && (
+                    <label className="mt-2 block">
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                        Start batch <span className="text-cherry">*</span>
+                      </span>
+                      <select
+                        value={f.batchId}
+                        onChange={(e) => updateFriend(f.id, { batchId: e.target.value })}
+                        className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm font-semibold text-ink focus:border-cherry focus:outline-none"
+                      >
+                        <option value="">Select batch…</option>
+                        {batches.map((b) => (
+                          <option key={b.id} value={b.id}>
+                            {b.name} · {b.startTime}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  )}
+
 
                   {(config.jacketIncluded || config.tshirtIncluded) && (
                     <div className="mt-3 space-y-3">
