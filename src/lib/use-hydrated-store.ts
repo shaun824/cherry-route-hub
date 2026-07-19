@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useAdminStore } from "./store";
 import { fetchFeed, fetchPromos, fetchSponsors } from "./cloud";
+import { fetchSettings } from "./settings";
 import { supabase } from "@/integrations/supabase/client";
 
 let started = false;
@@ -16,13 +17,20 @@ export function useHydratedStore() {
     const setState = useAdminStore.setState;
 
     const load = async () => {
-      const [feed, promos, sponsors] = await Promise.all([
-        fetchFeed(), fetchPromos(), fetchSponsors(),
+      const [feed, promos, sponsors, settings] = await Promise.all([
+        fetchFeed(), fetchPromos(), fetchSponsors(), fetchSettings(),
       ]);
       setState((s) => ({
         feed: feed ?? s.feed,
         promos: promos ?? s.promos,
         sponsors: sponsors ?? s.sponsors,
+        settings: settings
+          ? {
+              branding: settings.branding ?? s.settings.branding,
+              quickLinks: settings.quickLinks ?? s.settings.quickLinks,
+              waivers: settings.waivers ?? s.settings.waivers,
+            }
+          : s.settings,
       }));
       setHydrated(true);
     };
@@ -38,6 +46,18 @@ export function useHydratedStore() {
       })
       .on("postgres_changes", { event: "*", schema: "public", table: "sponsors" }, () => {
         fetchSponsors().then((sponsors) => sponsors && setState({ sponsors }));
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "site_settings" }, () => {
+        fetchSettings().then((settings) => {
+          if (!settings) return;
+          setState((s) => ({
+            settings: {
+              branding: settings.branding ?? s.settings.branding,
+              quickLinks: settings.quickLinks ?? s.settings.quickLinks,
+              waivers: settings.waivers ?? s.settings.waivers,
+            },
+          }));
+        });
       })
       .subscribe();
     return () => { supabase.removeChannel(ch); };

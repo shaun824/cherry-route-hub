@@ -16,6 +16,7 @@ import {
   upsertPromoCloud, deletePromoCloud,
   upsertSponsorCloud, deleteSponsorCloud,
 } from "./cloud";
+import { DEFAULT_SETTINGS, type SiteSettings } from "./settings";
 
 export type Sponsor = {
   id: string;
@@ -40,6 +41,7 @@ type AdminState = {
   feed: FeedPost[];
   promos: Promo[];
   sponsors: Sponsor[];
+  settings: SiteSettings;
 
   upsertEvent: (e: Event) => void;
   deleteEvent: (id: string) => void;
@@ -53,6 +55,8 @@ type AdminState = {
   upsertSponsor: (s: Sponsor) => void;
   deleteSponsor: (id: string) => void;
 
+  setSettings: (s: Partial<SiteSettings>) => void;
+
   resetLocal: () => void;
 };
 
@@ -61,6 +65,10 @@ export const useAdminStore = create<AdminState>()((set) => ({
   feed: seedFeed,
   promos: seedPromos,
   sponsors: seedSponsors,
+  settings: DEFAULT_SETTINGS,
+
+  setSettings: (patch) =>
+    set((s) => ({ settings: { ...s.settings, ...patch } })),
 
   upsertEvent: (e) =>
     set((s) => {
@@ -115,7 +123,7 @@ export const useAdminStore = create<AdminState>()((set) => ({
   },
 
   resetLocal: () =>
-    set({ events: seedEvents, feed: seedFeed, promos: seedPromos, sponsors: seedSponsors }),
+    set({ events: seedEvents, feed: seedFeed, promos: seedPromos, sponsors: seedSponsors, settings: DEFAULT_SETTINGS }),
 }));
 
 export function newId(prefix: string) {

@@ -1,5 +1,5 @@
 import { createFileRoute, Outlet, Link, useRouterState, Navigate } from "@tanstack/react-router";
-import { LayoutDashboard, CalendarDays, Newspaper, Tag, Handshake, ArrowLeft, LogOut, Users } from "lucide-react";
+import { LayoutDashboard, CalendarDays, Newspaper, Tag, Handshake, ArrowLeft, LogOut, Users, Settings } from "lucide-react";
 import { useHydratedStore } from "@/lib/use-hydrated-store";
 import { useIsAdmin, signOut } from "@/lib/auth";
 
@@ -21,6 +21,7 @@ const nav: { to: string; label: string; icon: typeof LayoutDashboard; exact?: bo
   { to: "/admin/promos", label: "Promos", icon: Tag },
   { to: "/admin/sponsors", label: "Sponsors", icon: Handshake },
   { to: "/admin/riders", label: "Riders", icon: Users },
+  { to: "/admin/settings", label: "Settings", icon: Settings },
 ];
 
 

@@ -1,10 +1,37 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Bell, ChevronRight, Newspaper, Image as ImageIcon, Tag, MapPin, Clock } from "lucide-react";
+import {
+  Bell,
+  Calendar,
+  ChevronRight,
+  Clock,
+  Handshake,
+  Image as ImageIcon,
+  MapPin,
+  Newspaper,
+  ShieldCheck,
+  Sparkles,
+  Tag,
+  Trophy,
+} from "lucide-react";
 import { BrandMark, SectionTitle, TypeBadge } from "@/components/ui-bits";
 import { SponsorScroller } from "@/components/sponsor-scroller";
 import { currentRider, formatDate, formatTime, relativeTime } from "@/lib/mock-data";
 import { useAdminStore } from "@/lib/store";
 import { useHydratedStore } from "@/lib/use-hydrated-store";
+import type { QuickLinkIcon } from "@/lib/settings";
+
+const QUICK_ICONS: Record<QuickLinkIcon, typeof Newspaper> = {
+  Newspaper,
+  MapPin,
+  Image: ImageIcon,
+  Tag,
+  Bell,
+  Sparkles,
+  ShieldCheck,
+  Handshake,
+  Trophy,
+  Calendar,
+};
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -23,11 +50,14 @@ function Home() {
   const events = useAdminStore((s) => s.events);
   const feed = useAdminStore((s) => s.feed);
   const promos = useAdminStore((s) => s.promos);
+  const branding = useAdminStore((s) => s.settings.branding);
+  const quickLinks = useAdminStore((s) => s.settings.quickLinks).filter((q) => q.enabled);
   const upcoming = events
     .filter((e) => (e.lifecycle ?? "published") === "published" && e.status !== "closed")
     .slice(0, 3);
   const pinned = feed.filter((p) => p.pinned)[0];
   const recentNews = feed.filter((p) => !p.pinned).slice(0, 3);
+  const qlCols = Math.min(Math.max(quickLinks.length, 1), 4);
 
 
   return (
@@ -40,8 +70,8 @@ function Home() {
           <div className="flex items-center gap-3">
             <BrandMark size={44} />
             <div>
-              <p className="text-[11px] font-medium uppercase tracking-[0.18em] opacity-80">Red Cherry</p>
-              <h1 className="font-display text-2xl font-bold leading-tight">Rider Hub</h1>
+              <p className="text-[11px] font-medium uppercase tracking-[0.18em] opacity-80">{branding.eyebrow}</p>
+              <h1 className="font-display text-2xl font-bold leading-tight">{branding.tagline}</h1>
             </div>
           </div>
           <button
@@ -54,7 +84,7 @@ function Home() {
         </div>
 
         <div className="relative mt-7">
-          <p className="text-sm opacity-85">Welcome back,</p>
+          <p className="text-sm opacity-85">{branding.welcomeMessage}</p>
           <p className="font-display text-xl font-bold">{currentRider.name}</p>
         </div>
 
@@ -87,28 +117,29 @@ function Home() {
       </div>
 
       {/* Quick links */}
-      <div className="-mt-5 grid grid-cols-4 gap-2 px-4">
-        {[
-          { to: "/feed", label: "News", icon: Newspaper },
-          { to: "/events", label: "Events", icon: MapPin },
-          { to: "/gallery", label: "Gallery", icon: ImageIcon },
-          { to: "/promos", label: "Promos", icon: Tag },
-        ].map((q) => {
-          const Icon = q.icon;
-          return (
-            <Link
-              key={q.to}
-              to={q.to}
-              className="flex flex-col items-center gap-1.5 rounded-2xl bg-card p-3 shadow-sm ring-1 ring-border"
-            >
-              <span className="grid h-9 w-9 place-items-center rounded-xl bg-accent text-cherry-deep">
-                <Icon className="h-4.5 w-4.5" strokeWidth={2.2} />
-              </span>
-              <span className="text-[11px] font-semibold text-ink">{q.label}</span>
-            </Link>
-          );
-        })}
-      </div>
+      {quickLinks.length > 0 ? (
+        <div
+          className="-mt-5 grid gap-2 px-4"
+          style={{ gridTemplateColumns: `repeat(${qlCols}, minmax(0, 1fr))` }}
+        >
+          {quickLinks.map((q) => {
+            const Icon = QUICK_ICONS[q.icon] ?? Sparkles;
+            return (
+              <Link
+                key={q.id}
+                to={q.to}
+                className="flex flex-col items-center gap-1.5 rounded-2xl bg-card p-3 shadow-sm ring-1 ring-border"
+              >
+                <span className="grid h-9 w-9 place-items-center rounded-xl bg-accent text-cherry-deep">
+                  <Icon className="h-4.5 w-4.5" strokeWidth={2.2} />
+                </span>
+                <span className="text-[11px] font-semibold text-ink">{q.label}</span>
+              </Link>
+            );
+          })}
+        </div>
+      ) : null}
+
 
       {/* Pinned notice */}
       {pinned ? (
