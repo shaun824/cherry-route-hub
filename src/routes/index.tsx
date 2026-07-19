@@ -70,8 +70,8 @@ function Home() {
           <div className="flex items-center gap-3">
             <BrandMark size={44} />
             <div>
-              <p className="text-[11px] font-medium uppercase tracking-[0.18em] opacity-80">Red Cherry</p>
-              <h1 className="font-display text-2xl font-bold leading-tight">Rider Hub</h1>
+              <p className="text-[11px] font-medium uppercase tracking-[0.18em] opacity-80">{branding.eyebrow}</p>
+              <h1 className="font-display text-2xl font-bold leading-tight">{branding.tagline}</h1>
             </div>
           </div>
           <button
