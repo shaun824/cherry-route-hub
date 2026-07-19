@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
+import rceLogo from "@/assets/rce-logo.png.asset.json";
 
 export function PageHeader({
   title,
@@ -31,20 +32,15 @@ export function PageHeader({
 export function BrandMark({ size = 36 }: { size?: number }) {
   return (
     <div
-      className="grid place-items-center rounded-2xl cherry-gradient text-white shadow-md shadow-cherry/30"
+      className="grid place-items-center rounded-2xl bg-white p-1.5 shadow-md ring-1 ring-white/60"
       style={{ width: size, height: size }}
       aria-label="Red Cherry Events"
     >
-      <svg viewBox="0 0 24 24" fill="none" className="h-1/2 w-1/2">
-        <path
-          d="M12 3c-.6 2.4-2 3.6-3.4 4.1M12 3c.6 2.4 2 3.6 3.4 4.1"
-          stroke="currentColor"
-          strokeWidth="1.6"
-          strokeLinecap="round"
-        />
-        <circle cx="9" cy="14" r="4.2" fill="currentColor" />
-        <circle cx="15.2" cy="14.6" r="4" fill="currentColor" opacity="0.75" />
-      </svg>
+      <img
+        src={rceLogo.url}
+        alt="Red Cherry Events"
+        className="h-full w-full object-contain"
+      />
     </div>
   );
 }
