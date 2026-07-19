@@ -103,7 +103,21 @@
 }
 
 @utility cherry-gradient {
-  background-image: linear-gradient(135deg, var(--cherry) 0%, var(--cherry-deep) 100%);
+  background-image: linear-gradient(
+    135deg,
+    var(--brand-green) 0%,
+    var(--brand-blue) 50%,
+    var(--brand-orange) 100%
+  );
+}
+
+@utility brand-gradient {
+  background-image: linear-gradient(
+    135deg,
+    var(--brand-green) 0%,
+    var(--brand-blue) 50%,
+    var(--brand-orange) 100%
+  );
 }
 
 @utility card-elevated {
