@@ -255,10 +255,10 @@ function EnterEvent() {
           if (canSubmit) setStage("pay");
         }}
       >
-        {/* Category */}
-        <Section title="1 · Choose your category" hint="Distance and pricing">
+        {/* Category / class */}
+        <Section title="1 · Choose your class" hint="Distance and pricing">
           <div className="space-y-2">
-            {config.categories.map((c: EntryCategory) => {
+            {classes.map((c) => {
               const active = c.id === categoryId;
               return (
                 <label
@@ -298,6 +298,44 @@ function EnterEvent() {
             })}
           </div>
         </Section>
+
+        {/* Batch / start wave */}
+        {batches.length > 0 && (
+          <Section title="2 · Pick your start batch" hint="Choose the wave you'll roll out with">
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              {batches.map((b) => {
+                const active = b.id === batchId;
+                return (
+                  <button
+                    key={b.id}
+                    type="button"
+                    onClick={() => setBatchId(b.id)}
+                    className={`flex items-start justify-between gap-2 rounded-2xl border p-3 text-left transition ${
+                      active
+                        ? "border-cherry bg-cherry/5 ring-2 ring-cherry/30"
+                        : "border-border bg-card hover:border-cherry/40"
+                    }`}
+                  >
+                    <div className="min-w-0 flex-1">
+                      <p className="font-semibold text-ink">{b.name}</p>
+                      {b.description ? (
+                        <p className="mt-0.5 text-xs text-ink-soft">{b.description}</p>
+                      ) : null}
+                      {b.capacity ? (
+                        <p className="mt-0.5 text-[10px] uppercase tracking-widest text-muted-foreground">
+                          Capacity {b.capacity}
+                        </p>
+                      ) : null}
+                    </div>
+                    <span className="font-mono text-xs font-bold text-cherry">{b.startTime}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </Section>
+        )}
+
+
 
         {/* Rider details */}
         <Section title="2 · Rider details" hint="Matches your Entry Ninja profile">
