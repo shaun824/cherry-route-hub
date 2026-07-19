@@ -274,6 +274,121 @@ export const promos: Promo[] = [
   },
 ];
 
+// ─── Event entry / merchandise ──────────────────────────────────────────────
+export type MerchItem = {
+  id: string;
+  name: string;
+  description: string;
+  priceZAR: number;
+  sizes?: string[]; // if sized garment
+  colors?: string[];
+  image: string; // emoji / short label placeholder
+  limited?: boolean;
+};
+
+export type EntryCategory = {
+  id: string;
+  label: string;
+  distanceKm: number;
+  priceZAR: number;
+  description: string;
+};
+
+export type EventEntryConfig = {
+  categories: EntryCategory[];
+  jacketSizes: string[];
+  tshirtSizes: string[];
+  jacketIncluded: boolean;
+  tshirtIncluded: boolean;
+  merch: MerchItem[];
+  cutOff: string; // ISO
+  entryNinjaUrl: string;
+};
+
+const APPAREL_SIZES = ["XS", "S", "M", "L", "XL", "XXL", "3XL"];
+
+export const eventEntryConfig: Record<string, EventEntryConfig> = {
+  evt_cherry_classic: {
+    categories: [
+      { id: "cat_100", label: "Cherry Classic 100", distanceKm: 100, priceZAR: 950, description: "Full route, 3 timed KOMs, seeded start pens." },
+      { id: "cat_60", label: "Cherry 60 Social", distanceKm: 60, priceZAR: 650, description: "Shorter loop, single feed zone, mass start." },
+      { id: "cat_junior", label: "Junior (U18)", distanceKm: 60, priceZAR: 350, description: "Junior category, licensed riders only." },
+    ],
+    jacketSizes: APPAREL_SIZES,
+    tshirtSizes: APPAREL_SIZES,
+    jacketIncluded: true,
+    tshirtIncluded: true,
+    cutOff: "2026-07-28T23:59:00Z",
+    entryNinjaUrl: "https://entryninja.com/e/cherry-classic-100",
+    merch: [
+      { id: "m_jersey", name: "Race Jersey 2026", description: "Aero fit, Italian fabric, cherry red / carbon", priceZAR: 1450, sizes: APPAREL_SIZES, image: "🚴", limited: true },
+      { id: "m_bibs", name: "Pro Bib Shorts", description: "Elastic interface pad, 6-hour rated", priceZAR: 1650, sizes: APPAREL_SIZES, image: "🩳" },
+      { id: "m_socks", name: "Cherry Tall Socks", description: "15cm cuff, merino blend", priceZAR: 220, sizes: ["S/M", "L/XL"], image: "🧦" },
+      { id: "m_cap", name: "Classic Cotton Cap", description: "One size, embroidered cherry", priceZAR: 250, image: "🧢" },
+      { id: "m_bottle", name: "Insulated Bottle 600ml", description: "Purist Chrome, keeps cold 4h", priceZAR: 320, image: "🍶" },
+      { id: "m_musette", name: "Finisher Musette", description: "Cotton canvas, race-day print", priceZAR: 180, image: "👜" },
+    ],
+  },
+  evt_karoo_gravel: {
+    categories: [
+      { id: "cat_165", label: "Karoo 165", distanceKm: 165, priceZAR: 1250, description: "Full self-supported gravel epic." },
+      { id: "cat_95", label: "Karoo 95", distanceKm: 95, priceZAR: 850, description: "Shorter route, still remote — bring spares." },
+    ],
+    jacketSizes: APPAREL_SIZES,
+    tshirtSizes: APPAREL_SIZES,
+    jacketIncluded: false,
+    tshirtIncluded: true,
+    cutOff: "2026-09-07T23:59:00Z",
+    entryNinjaUrl: "https://entryninja.com/e/karoo-gravel",
+    merch: [
+      { id: "m_gravel_jersey", name: "Karoo Gravel Jersey", description: "Relaxed fit, dust-print colourway", priceZAR: 1350, sizes: APPAREL_SIZES, image: "🚵", limited: true },
+      { id: "m_buff", name: "Dust Buff", description: "UPF50, breathable microfiber", priceZAR: 240, image: "🧣" },
+      { id: "m_toolroll", name: "Frame Tool Roll", description: "Waxed canvas, 3-pocket", priceZAR: 480, image: "🧰" },
+      { id: "m_bottle_gravel", name: "Karoo 750ml Bottle", description: "High-flow valve", priceZAR: 220, image: "🍶" },
+    ],
+  },
+  evt_night_crit: {
+    categories: [
+      { id: "cat_a", label: "Men's A / Elite", distanceKm: 30, priceZAR: 400, description: "45min + 5 laps, UCI-style crit." },
+      { id: "cat_b", label: "Men's B / C", distanceKm: 25, priceZAR: 350, description: "40min + 3 laps." },
+      { id: "cat_women", label: "Women's A + Open", distanceKm: 25, priceZAR: 350, description: "40min + 3 laps, all levels welcome." },
+    ],
+    jacketSizes: APPAREL_SIZES,
+    tshirtSizes: APPAREL_SIZES,
+    jacketIncluded: false,
+    tshirtIncluded: true,
+    cutOff: "2026-07-24T18:00:00Z",
+    entryNinjaUrl: "https://entryninja.com/e/cherry-night-crit",
+    merch: [
+      { id: "m_crit_tee", name: "Night Crit Tee", description: "Glow-print, 100% organic cotton", priceZAR: 380, sizes: APPAREL_SIZES, image: "👕" },
+      { id: "m_hoodie", name: "Cherry Zip Hoodie", description: "Heavyweight, embroidered logo", priceZAR: 890, sizes: APPAREL_SIZES, image: "🧥" },
+      { id: "m_cap_crit", name: "Reflective Cap", description: "3M piping, one size", priceZAR: 280, image: "🧢" },
+    ],
+  },
+  evt_mtb_shootout: {
+    categories: [
+      { id: "cat_elite", label: "Elite / Sub-vet", distanceKm: 65, priceZAR: 780, description: "Seeded start, full timing splits." },
+      { id: "cat_masters", label: "Masters 40+", distanceKm: 65, priceZAR: 780, description: "Own start pen, own podium." },
+      { id: "cat_short", label: "Short Course", distanceKm: 35, priceZAR: 550, description: "Skips the technical black sectors." },
+    ],
+    jacketSizes: APPAREL_SIZES,
+    tshirtSizes: APPAREL_SIZES,
+    jacketIncluded: true,
+    tshirtIncluded: false,
+    cutOff: "2026-09-28T23:59:00Z",
+    entryNinjaUrl: "https://entryninja.com/e/tm-mtb-shootout",
+    merch: [
+      { id: "m_mtb_jersey", name: "Trail Jersey", description: "Loose fit, back pocket, MTB cut", priceZAR: 1250, sizes: APPAREL_SIZES, image: "🚵" },
+      { id: "m_gloves", name: "Trail Gloves", description: "Full finger, silicone grip", priceZAR: 420, sizes: ["S", "M", "L", "XL"], image: "🧤" },
+      { id: "m_pack", name: "Hydration Pack 3L", description: "Fits 2 bottles + tools", priceZAR: 1450, image: "🎒", limited: true },
+    ],
+  },
+};
+
+export function getEntryConfig(eventId: string): EventEntryConfig | null {
+  return eventEntryConfig[eventId] ?? null;
+}
+
 export function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString(undefined, {
     weekday: "short",
