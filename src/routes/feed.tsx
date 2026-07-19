@@ -18,11 +18,17 @@ export const Route = createFileRoute("/feed")({
 function Feed() {
   useHydratedStore();
   const feed = useAdminStore((s) => s.feed);
-  const sorted = [...feed].sort((a, b) => {
-    if (a.pinned && !b.pinned) return -1;
-    if (b.pinned && !a.pinned) return 1;
-    return new Date(b.postedAt).getTime() - new Date(a.postedAt).getTime();
-  });
+  const now = Date.now();
+  const sorted = feed
+    .filter((p) => new Date(p.postedAt).getTime() <= now)
+    .sort((a, b) => {
+      if (a.pinned && !b.pinned) return -1;
+      if (b.pinned && !a.pinned) return 1;
+      const ao = a.order ?? Number.POSITIVE_INFINITY;
+      const bo = b.order ?? Number.POSITIVE_INFINITY;
+      if (ao !== bo) return ao - bo;
+      return new Date(b.postedAt).getTime() - new Date(a.postedAt).getTime();
+    });
 
 
   return (
