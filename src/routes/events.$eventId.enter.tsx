@@ -189,7 +189,7 @@ function EnterEvent() {
             )}
           </p>
           <div className="mt-4 rounded-2xl bg-accent/40 p-4 text-left text-xs text-ink">
-            <p className="flex justify-between"><span>Your entry ({category.distanceKm} km)</span><strong>{ZAR(category.priceZAR)}</strong></p>
+            <p className="flex justify-between"><span>Your entry ({category.distanceKm} km{activePrice ? ` · ${activePrice.label}` : ""})</span><strong>{ZAR(primaryEntryPrice)}</strong></p>
             {friendsTotal > 0 && (
               <p className="mt-1 flex justify-between"><span>{friends.length} friend entr{friends.length === 1 ? "y" : "ies"}</span><strong>{ZAR(friendsTotal)}</strong></p>
             )}
