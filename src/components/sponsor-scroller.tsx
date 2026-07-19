@@ -9,7 +9,7 @@ export function SponsorScroller({
   title?: string;
   compact?: boolean;
 }) {
-  const sponsors = useAdminStore((s) => s.sponsors.filter((sp) => sp.active));
+  const sponsors = useAdminStore((s) => s.sponsors).filter((sp) => sp.active);
   if (sponsors.length === 0) return null;
 
   const row = [...sponsors, ...sponsors]; // duplicate for seamless loop
