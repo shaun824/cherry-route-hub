@@ -122,7 +122,8 @@ function EnterEvent() {
   const [stage, setStage] = useState<Stage>("form");
   const [paymentId, setPaymentId] = useState<string>("");
 
-  const category = config.categories.find((c: EntryCategory) => c.id === categoryId)!;
+  const category = classes.find((c) => c.id === categoryId) ?? classes[0];
+  const batch = batches.find((b) => b.id === batchId);
 
   const merchTotal = useMemo(
     () =>
@@ -132,12 +133,12 @@ function EnterEvent() {
   const friendsTotal = useMemo(
     () =>
       friends.reduce((sum, f) => {
-        const c = config.categories.find((cc: EntryCategory) => cc.id === f.categoryId);
+        const c = classes.find((cc) => cc.id === f.categoryId);
         return sum + (c?.priceZAR ?? 0);
       }, 0),
-    [friends, config.categories],
+    [friends, classes],
   );
-  const total = category.priceZAR + friendsTotal + merchTotal;
+  const total = (category?.priceZAR ?? 0) + friendsTotal + merchTotal;
 
   const setQty = (id: string, delta: number) =>
     setMerchQty((q) => {
@@ -151,6 +152,8 @@ function EnterEvent() {
   const missingMerchSize = config.merch.some((m: MerchItem) => (merchQty[m.id] ?? 0) > 0 && m.sizes && !merchSize[m.id],
   );
 
+  const batchRequired = batches.length > 0 && !batchId;
+
   const friendsInvalid = friends.some(
     (f) =>
       !f.firstName ||
@@ -158,12 +161,13 @@ function EnterEvent() {
       !f.email ||
       !f.phone ||
       !f.dob ||
+      (batches.length > 0 && !f.batchId) ||
       (config.jacketIncluded && !f.jacketSize) ||
       (config.tshirtIncluded && !f.tshirtSize),
   );
 
   const canSubmit =
-    firstName && lastName && email && phone && emergencyName && emergencyPhone && waiver && terms && !kitRequired && !missingMerchSize && !friendsInvalid;
+    !!category && firstName && lastName && email && phone && emergencyName && emergencyPhone && waiver && terms && !kitRequired && !missingMerchSize && !batchRequired && !friendsInvalid;
 
   if (stage === "success") {
     return (
