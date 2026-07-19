@@ -1,7 +1,7 @@
-import { createFileRoute, Outlet, Link, useRouterState } from "@tanstack/react-router";
-import { LayoutDashboard, CalendarDays, Newspaper, Tag, Handshake, ArrowLeft, RotateCcw } from "lucide-react";
-import { useAdminStore } from "@/lib/store";
+import { createFileRoute, Outlet, Link, useRouterState, Navigate } from "@tanstack/react-router";
+import { LayoutDashboard, CalendarDays, Newspaper, Tag, Handshake, ArrowLeft, LogOut, Users } from "lucide-react";
 import { useHydratedStore } from "@/lib/use-hydrated-store";
+import { useIsAdmin, signOut } from "@/lib/auth";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({
@@ -20,13 +20,36 @@ const nav: { to: string; label: string; icon: typeof LayoutDashboard; exact?: bo
   { to: "/admin/feed", label: "News feed", icon: Newspaper },
   { to: "/admin/promos", label: "Promos", icon: Tag },
   { to: "/admin/sponsors", label: "Sponsors", icon: Handshake },
+  { to: "/admin/riders", label: "Riders", icon: Users },
 ];
 
 
 function AdminLayout() {
   useHydratedStore();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const resetAll = useAdminStore((s) => s.resetAll);
+  const { isAdmin, loading, user } = useIsAdmin();
+
+  if (loading) {
+    return <div className="grid min-h-screen place-items-center text-sm text-ink-soft">Loading admin…</div>;
+  }
+  if (!user) return <Navigate to="/auth" search={{ next: "/admin" }} />;
+  if (!isAdmin) {
+    return (
+      <div className="grid min-h-screen place-items-center bg-secondary/40 px-6 text-center">
+        <div className="max-w-sm space-y-3">
+          <h1 className="font-display text-xl font-bold">No admin access</h1>
+          <p className="text-sm text-ink-soft">
+            You're signed in as <b>{user.email}</b>, but your account isn't a super admin.
+            Contact <b>shaun@redcherryevents.co.za</b> to request access.
+          </p>
+          <div className="flex flex-wrap justify-center gap-2 pt-2">
+            <Link to="/" className="rounded-lg bg-ink px-3 py-1.5 text-xs font-semibold text-white">Go to rider app</Link>
+            <button onClick={() => void signOut()} className="rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-semibold">Sign out</button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-secondary/40 text-ink">
@@ -45,13 +68,12 @@ function AdminLayout() {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <span className="hidden text-xs text-ink-soft md:inline">{user.email}</span>
             <button
-              onClick={() => {
-                if (confirm("Reset all admin content to seed data?")) resetAll();
-              }}
+              onClick={() => void signOut()}
               className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-semibold text-ink-soft hover:bg-secondary"
             >
-              <RotateCcw className="h-3.5 w-3.5" /> Reset seed
+              <LogOut className="h-3.5 w-3.5" /> Sign out
             </button>
             <Link
               to="/"
