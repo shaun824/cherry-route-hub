@@ -26,12 +26,20 @@ export function SponsorScroller({
           className="flex w-max items-center gap-3 animate-marquee will-change-transform"
           style={{ animationDuration: `${Math.max(18, sponsors.length * 4)}s` }}
         >
-          {row.map((sp, i) => (
-            <li
-              key={`${sp.id}-${i}`}
-              aria-hidden={i >= sponsors.length ? "true" : undefined}
-              className="shrink-0"
-            >
+          {row.map((sp, i) => {
+            const inner = sp.logoUrl ? (
+              <div
+                className="grid h-14 min-w-[140px] place-items-center rounded-xl bg-white px-5 shadow-sm ring-1 ring-black/10"
+                title={sp.name}
+              >
+                <img
+                  src={sp.logoUrl}
+                  alt={sp.name}
+                  className="max-h-10 max-w-[120px] object-contain"
+                  loading="lazy"
+                />
+              </div>
+            ) : (
               <div
                 className="grid h-14 min-w-[140px] place-items-center rounded-xl px-5 text-white shadow-sm ring-1 ring-black/10"
                 style={{ background: sp.accent }}
@@ -41,8 +49,29 @@ export function SponsorScroller({
                   {sp.logoText}
                 </span>
               </div>
-            </li>
-          ))}
+            );
+            return (
+              <li
+                key={`${sp.id}-${i}`}
+                aria-hidden={i >= sponsors.length ? "true" : undefined}
+                className="shrink-0"
+              >
+                {sp.url ? (
+                  <a
+                    href={sp.url}
+                    target="_blank"
+                    rel="noopener noreferrer sponsored"
+                    aria-label={`Visit ${sp.name}`}
+                    className="block transition-transform hover:scale-[1.03]"
+                  >
+                    {inner}
+                  </a>
+                ) : (
+                  inner
+                )}
+              </li>
+            );
+          })}
         </ul>
       </div>
     </section>

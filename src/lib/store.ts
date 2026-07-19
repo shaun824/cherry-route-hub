@@ -22,6 +22,7 @@ export type Sponsor = {
   name: string;
   tier: "Platinum" | "Gold" | "Silver" | "Bronze";
   logoText: string;
+  logoUrl?: string;
   accent: string;
   url?: string;
   active: boolean;

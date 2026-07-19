@@ -1,8 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
-import { Plus, Pencil, Trash2, X, Eye, EyeOff } from "lucide-react";
+import { useRef, useState } from "react";
+import { Plus, Pencil, Trash2, X, Eye, EyeOff, Upload, Image as ImageIcon, Loader2 } from "lucide-react";
 import { useAdminStore, newId, type Sponsor } from "@/lib/store";
 import { SponsorScroller } from "@/components/sponsor-scroller";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/admin/sponsors")({
   component: AdminSponsors,
@@ -18,6 +19,22 @@ function blank(): Sponsor {
     url: "",
     active: true,
   };
+}
+
+// Uploads a logo to the private `sponsor-logos` bucket and returns a long-lived
+// signed URL. (Public buckets are blocked in this workspace.)
+async function uploadSponsorLogo(file: File): Promise<string> {
+  const ext = file.name.split(".").pop()?.toLowerCase() ?? "png";
+  const path = `${crypto.randomUUID()}.${ext}`;
+  const { error } = await supabase.storage
+    .from("sponsor-logos")
+    .upload(path, file, { contentType: file.type, upsert: false });
+  if (error) throw error;
+  const { data, error: signErr } = await supabase.storage
+    .from("sponsor-logos")
+    .createSignedUrl(path, 60 * 60 * 24 * 365 * 10); // ~10 years
+  if (signErr || !data?.signedUrl) throw signErr ?? new Error("Sign URL failed");
+  return data.signedUrl;
 }
 
 const tierOrder: Sponsor["tier"][] = ["Platinum", "Gold", "Silver", "Bronze"];
@@ -65,15 +82,31 @@ function AdminSponsors() {
             key={sp.id}
             className={`rounded-xl bg-card p-4 ring-1 ${sp.active ? "ring-border" : "ring-dashed ring-border opacity-60"}`}
           >
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-[10px] font-bold uppercase tracking-widest text-ink-soft">
-                  {sp.tier}
-                </p>
-                <p className="font-display text-base font-bold" style={{ color: sp.accent }}>
-                  {sp.logoText || sp.name}
-                </p>
-                <p className="text-xs text-ink-soft">{sp.name}</p>
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex min-w-0 items-center gap-3">
+                {sp.logoUrl ? (
+                  <img
+                    src={sp.logoUrl}
+                    alt={sp.name}
+                    className="h-12 w-12 shrink-0 rounded-md bg-white object-contain p-1 ring-1 ring-border"
+                  />
+                ) : (
+                  <div
+                    className="grid h-12 w-12 shrink-0 place-items-center rounded-md text-[10px] font-black text-white"
+                    style={{ background: sp.accent }}
+                  >
+                    {(sp.logoText || sp.name || "?").slice(0, 4)}
+                  </div>
+                )}
+                <div className="min-w-0">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-ink-soft">
+                    {sp.tier}
+                  </p>
+                  <p className="truncate font-display text-base font-bold">{sp.name}</p>
+                  {sp.url ? (
+                    <p className="truncate text-xs text-ink-soft">{sp.url}</p>
+                  ) : null}
+                </div>
               </div>
               <div className="flex gap-1">
                 <button
@@ -132,8 +165,24 @@ function SponsorEditor({
   onCancel: () => void;
 }) {
   const [form, setForm] = useState<Sponsor>(value);
+  const [uploading, setUploading] = useState(false);
+  const [uploadErr, setUploadErr] = useState<string | null>(null);
+  const fileRef = useRef<HTMLInputElement | null>(null);
   function update<K extends keyof Sponsor>(k: K, v: Sponsor[K]) {
     setForm((f) => ({ ...f, [k]: v }));
+  }
+  async function onPick(file: File | undefined) {
+    if (!file) return;
+    setUploadErr(null);
+    setUploading(true);
+    try {
+      const url = await uploadSponsorLogo(file);
+      setForm((f) => ({ ...f, logoUrl: url }));
+    } catch (err) {
+      setUploadErr(err instanceof Error ? err.message : "Upload failed");
+    } finally {
+      setUploading(false);
+    }
   }
   return (
     <div className="fixed inset-0 z-50 grid place-items-center bg-black/50 p-4">
@@ -179,7 +228,7 @@ function SponsorEditor({
               placeholder="https://…"
             />
           </L>
-          <L label="Accent color" className="md:col-span-2">
+          <L label="Accent color (fallback when no logo image)" className="md:col-span-2">
             <input
               className={i}
               value={form.accent}
@@ -187,6 +236,65 @@ function SponsorEditor({
               placeholder="oklch(0.55 0.2 25) or #d81a1a"
             />
           </L>
+
+          <div className="col-span-full">
+            <span className="mb-1 block text-[11px] font-bold uppercase tracking-wider text-ink-soft">
+              Logo image
+            </span>
+            <div className="flex items-center gap-3 rounded-lg border border-dashed border-border bg-background p-3">
+              <div className="grid h-16 w-16 shrink-0 place-items-center rounded-md bg-white ring-1 ring-border">
+                {form.logoUrl ? (
+                  <img
+                    src={form.logoUrl}
+                    alt="Logo preview"
+                    className="max-h-14 max-w-14 object-contain"
+                  />
+                ) : (
+                  <ImageIcon className="h-6 w-6 text-ink-soft" />
+                )}
+              </div>
+              <div className="flex-1">
+                <input
+                  ref={fileRef}
+                  type="file"
+                  accept="image/png,image/jpeg,image/svg+xml,image/webp"
+                  className="hidden"
+                  onChange={(e) => onPick(e.target.files?.[0])}
+                />
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => fileRef.current?.click()}
+                    disabled={uploading}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-semibold disabled:opacity-50"
+                  >
+                    {uploading ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <Upload className="h-3.5 w-3.5" />
+                    )}
+                    {uploading ? "Uploading…" : form.logoUrl ? "Replace" : "Upload logo"}
+                  </button>
+                  {form.logoUrl ? (
+                    <button
+                      type="button"
+                      onClick={() => update("logoUrl", undefined)}
+                      className="rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-semibold text-cherry"
+                    >
+                      Remove
+                    </button>
+                  ) : null}
+                </div>
+                <p className="mt-1.5 text-[11px] text-ink-soft">
+                  PNG, JPG, SVG or WEBP. Wide/transparent logos look best.
+                </p>
+                {uploadErr ? (
+                  <p className="mt-1 text-[11px] font-semibold text-cherry">{uploadErr}</p>
+                ) : null}
+              </div>
+            </div>
+          </div>
+
           <label className="col-span-full flex items-center gap-2 text-sm font-semibold">
             <input
               type="checkbox"
@@ -200,9 +308,24 @@ function SponsorEditor({
             <p className="mb-1 text-[10px] font-bold uppercase tracking-widest text-ink-soft">
               Preview
             </p>
-            <p className="font-display text-xl font-black" style={{ color: form.accent }}>
-              {form.logoText || form.name || "LOGO"}
-            </p>
+            {form.logoUrl ? (
+              <div className="grid h-14 w-fit min-w-[140px] place-items-center rounded-xl bg-white px-5 ring-1 ring-black/10">
+                <img
+                  src={form.logoUrl}
+                  alt={form.name || "Logo"}
+                  className="max-h-10 max-w-[120px] object-contain"
+                />
+              </div>
+            ) : (
+              <div
+                className="grid h-14 w-fit min-w-[140px] place-items-center rounded-xl px-5 text-white ring-1 ring-black/10"
+                style={{ background: form.accent }}
+              >
+                <span className="font-display text-sm font-black tracking-[0.18em]">
+                  {form.logoText || form.name || "LOGO"}
+                </span>
+              </div>
+            )}
           </div>
         </div>
         <footer className="flex justify-end gap-2 border-t border-border px-5 py-3">
