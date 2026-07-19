@@ -21,6 +21,7 @@ const nav: { to: string; label: string; icon: typeof LayoutDashboard; exact?: bo
   { to: "/admin/promos", label: "Promos", icon: Tag },
   { to: "/admin/sponsors", label: "Sponsors", icon: Handshake },
   { to: "/admin/riders", label: "Riders", icon: Users },
+  { to: "/admin/settings", label: "Settings", icon: Settings },
 ];
 
 
