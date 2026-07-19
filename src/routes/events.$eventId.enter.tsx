@@ -180,7 +180,7 @@ function EnterEvent() {
         className="space-y-6 px-5 pt-6"
         onSubmit={(e) => {
           e.preventDefault();
-          if (canSubmit) setSubmitted(true);
+          if (canSubmit) setStage("pay");
         }}
       >
         {/* Category */}
@@ -408,7 +408,7 @@ function EnterEvent() {
         <button
           type="button"
           disabled={!canSubmit}
-          onClick={() => canSubmit && setSubmitted(true)}
+          onClick={() => canSubmit && setStage("pay")}
           className="flex w-full items-center justify-center gap-2 rounded-xl cherry-gradient py-3.5 text-sm font-bold text-white shadow-lg shadow-cherry/25 disabled:cursor-not-allowed disabled:opacity-40 active:scale-[0.99] transition-transform"
         >
           Confirm entry · {ZAR(total)}
