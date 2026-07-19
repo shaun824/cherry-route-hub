@@ -1,6 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { PageHeader, TypeBadge } from "@/components/ui-bits";
-import { events, formatDate, formatTime } from "@/lib/mock-data";
+import { formatDate, formatTime } from "@/lib/mock-data";
+import { useAdminStore } from "@/lib/store";
+import { useHydratedStore } from "@/lib/use-hydrated-store";
 import { MapPin, ChevronRight } from "lucide-react";
 
 export const Route = createFileRoute("/events/")({
@@ -14,6 +16,9 @@ export const Route = createFileRoute("/events/")({
 });
 
 function Events() {
+  useHydratedStore();
+  const events = useAdminStore((s) => s.events);
+
   return (
     <div>
       <PageHeader title="Events" subtitle="Upcoming races & rides" />

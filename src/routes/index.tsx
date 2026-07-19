@@ -1,7 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Bell, ChevronRight, Newspaper, Image as ImageIcon, Tag, MapPin, Clock } from "lucide-react";
 import { BrandMark, SectionTitle, TypeBadge } from "@/components/ui-bits";
-import { events, feed, promos, currentRider, formatDate, formatTime, relativeTime } from "@/lib/mock-data";
+import { SponsorScroller } from "@/components/sponsor-scroller";
+import { currentRider, formatDate, formatTime, relativeTime } from "@/lib/mock-data";
+import { useAdminStore } from "@/lib/store";
+import { useHydratedStore } from "@/lib/use-hydrated-store";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -16,9 +19,14 @@ export const Route = createFileRoute("/")({
 });
 
 function Home() {
+  useHydratedStore();
+  const events = useAdminStore((s) => s.events);
+  const feed = useAdminStore((s) => s.feed);
+  const promos = useAdminStore((s) => s.promos);
   const upcoming = events.filter((e) => e.status !== "closed").slice(0, 3);
   const pinned = feed.filter((p) => p.pinned)[0];
   const recentNews = feed.filter((p) => !p.pinned).slice(0, 3);
+
 
   return (
     <div>
@@ -159,21 +167,31 @@ function Home() {
       </ul>
 
       {/* Promo teaser */}
-      <SectionTitle title="Supplier promos" action="View all" actionTo="/promos" />
-      <div className="px-5 pb-6">
-        <div className="rounded-2xl bg-ink p-4 text-white">
-          <p className="text-[11px] font-semibold uppercase tracking-widest opacity-70">
-            {promos[0].brand}
-          </p>
-          <p className="mt-1 font-display text-lg font-bold">{promos[0].title}</p>
-          <div className="mt-3 flex items-center justify-between rounded-xl bg-white/10 px-3 py-2">
-            <span className="font-mono text-sm tracking-wider">{promos[0].code}</span>
-            <span className="rounded-md bg-cherry px-2 py-1 text-[11px] font-bold">
-              {promos[0].discount} OFF
-            </span>
+      {promos[0] ? (
+        <>
+          <SectionTitle title="Supplier promos" action="View all" actionTo="/promos" />
+          <div className="px-5 pb-2">
+            <div className="rounded-2xl bg-ink p-4 text-white">
+              <p className="text-[11px] font-semibold uppercase tracking-widest opacity-70">
+                {promos[0].brand}
+              </p>
+              <p className="mt-1 font-display text-lg font-bold">{promos[0].title}</p>
+              <div className="mt-3 flex items-center justify-between rounded-xl bg-white/10 px-3 py-2">
+                <span className="font-mono text-sm tracking-wider">{promos[0].code}</span>
+                <span className="rounded-md bg-cherry px-2 py-1 text-[11px] font-bold">
+                  {promos[0].discount} OFF
+                </span>
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
+        </>
+      ) : null}
+
+      {/* Sponsor logo scroller */}
+      <SponsorScroller />
+
+      <div className="pb-6" />
+
     </div>
   );
 }

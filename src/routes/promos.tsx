@@ -1,7 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { PageHeader } from "@/components/ui-bits";
-import { promos } from "@/lib/mock-data";
+import { SponsorScroller } from "@/components/sponsor-scroller";
+import { useAdminStore } from "@/lib/store";
+import { useHydratedStore } from "@/lib/use-hydrated-store";
 import { Copy, Check } from "lucide-react";
 
 export const Route = createFileRoute("/promos")({
@@ -15,7 +17,10 @@ export const Route = createFileRoute("/promos")({
 });
 
 function Promos() {
+  useHydratedStore();
+  const promos = useAdminStore((s) => s.promos);
   const [copied, setCopied] = useState<string | null>(null);
+
 
   function copy(code: string) {
     navigator.clipboard?.writeText(code);
@@ -72,6 +77,9 @@ function Promos() {
           </li>
         ))}
       </ul>
+      <SponsorScroller title="Our sponsors" />
+      <div className="pb-6" />
     </div>
   );
 }
+
