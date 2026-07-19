@@ -28,6 +28,7 @@ export type FeedPost = {
   postedAt: string; // ISO
   eventId?: string;
   pinned?: boolean;
+  order?: number; // admin-controlled manual sort (lower = higher in feed within its pinned group)
 };
 
 export type MediaPost = {
