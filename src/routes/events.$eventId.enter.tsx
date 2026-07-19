@@ -618,3 +618,236 @@ function Check_({
     </label>
   );
 }
+
+/* ── Mock Stripe-style checkout sheet ─────────────────────────────── */
+
+function PaymentSheet({
+  amount,
+  email,
+  name,
+  onCancel,
+  onSuccess,
+}: {
+  amount: number;
+  email: string;
+  name: string;
+  onCancel: () => void;
+  onSuccess: (paymentId: string) => void;
+}) {
+  const [card, setCard] = useState("4242 4242 4242 4242");
+  const [exp, setExp] = useState("12 / 28");
+  const [cvc, setCvc] = useState("123");
+  const [holder, setHolder] = useState(name || "");
+  const [postal, setPostal] = useState("");
+  const [status, setStatus] = useState<"idle" | "processing" | "declined">("idle");
+  const [errorMsg, setErrorMsg] = useState("");
+
+  const digits = card.replace(/\D/g, "");
+  const brand =
+    digits.startsWith("4") ? "Visa" :
+    digits.startsWith("5") ? "Mastercard" :
+    digits.startsWith("3") ? "Amex" : "Card";
+
+  const cardValid = digits.length >= 15 && digits.length <= 19;
+  const expValid = /^\d{2}\s*\/\s*\d{2}$/.test(exp);
+  const cvcValid = /^\d{3,4}$/.test(cvc);
+  const ready = cardValid && expValid && cvcValid && holder.trim().length > 1 && postal.trim().length > 0;
+
+  const formatCard = (v: string) => {
+    const d = v.replace(/\D/g, "").slice(0, 19);
+    return d.replace(/(.{4})/g, "$1 ").trim();
+  };
+  const formatExp = (v: string) => {
+    const d = v.replace(/\D/g, "").slice(0, 4);
+    if (d.length <= 2) return d;
+    return `${d.slice(0, 2)} / ${d.slice(2)}`;
+  };
+
+  const submit = async () => {
+    if (!ready || status === "processing") return;
+    setStatus("processing");
+    setErrorMsg("");
+
+    // Simulate a Stripe /confirm round-trip
+    await new Promise((r) => setTimeout(r, 1600));
+
+    // Stripe's classic test decline card
+    if (digits === "4000000000000002") {
+      setStatus("declined");
+      setErrorMsg("Your card was declined. (test card 4000 0000 0000 0002)");
+      return;
+    }
+    if (digits === "4000000000009995") {
+      setStatus("declined");
+      setErrorMsg("Insufficient funds. Try a different card.");
+      return;
+    }
+
+    const paymentId = `pi_mock_${Math.random().toString(36).slice(2, 10)}${Date.now().toString(36).slice(-4)}`;
+    onSuccess(paymentId);
+  };
+
+  const processing = status === "processing";
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 backdrop-blur-sm sm:items-center"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Payment"
+    >
+      <div
+        className="relative w-full max-w-md rounded-t-3xl bg-card p-5 shadow-2xl ring-1 ring-border sm:rounded-3xl"
+        style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 1.25rem)" }}
+      >
+        <button
+          type="button"
+          onClick={processing ? undefined : onCancel}
+          disabled={processing}
+          aria-label="Close payment"
+          className="absolute right-4 top-4 grid h-8 w-8 place-items-center rounded-full bg-accent/60 text-ink hover:bg-accent disabled:opacity-40"
+        >
+          <X className="h-4 w-4" />
+        </button>
+
+        <div className="flex items-center gap-2">
+          <div className="grid h-9 w-9 place-items-center rounded-xl bg-[#635BFF] text-white">
+            <CreditCard className="h-4 w-4" />
+          </div>
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+              Secure checkout
+            </p>
+            <p className="text-sm font-semibold text-ink">Red Cherry Events</p>
+          </div>
+        </div>
+
+        <div className="mt-4 rounded-2xl bg-accent/40 p-3">
+          <div className="flex items-baseline justify-between">
+            <span className="text-xs text-ink-soft">Amount due</span>
+            <span className="font-mono text-xl font-bold text-cherry">
+              {new Intl.NumberFormat("en-ZA", { style: "currency", currency: "ZAR", maximumFractionDigits: 0 }).format(amount)}
+            </span>
+          </div>
+          <p className="mt-0.5 text-[11px] text-muted-foreground truncate">{email}</p>
+        </div>
+
+        <div className="mt-4 space-y-3">
+          <label className="block">
+            <span className="mb-1 block text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+              Card number
+            </span>
+            <div className="relative">
+              <input
+                inputMode="numeric"
+                autoComplete="cc-number"
+                value={card}
+                disabled={processing}
+                onChange={(e) => setCard(formatCard(e.target.value))}
+                placeholder="1234 1234 1234 1234"
+                className="w-full rounded-lg border border-border bg-card px-3 py-2.5 pr-16 font-mono text-sm text-ink focus:border-cherry focus:outline-none disabled:opacity-60"
+              />
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 rounded bg-accent px-1.5 py-0.5 text-[10px] font-bold uppercase text-ink-soft">
+                {brand}
+              </span>
+            </div>
+          </label>
+
+          <div className="grid grid-cols-2 gap-3">
+            <label>
+              <span className="mb-1 block text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                Expiry
+              </span>
+              <input
+                inputMode="numeric"
+                autoComplete="cc-exp"
+                value={exp}
+                disabled={processing}
+                onChange={(e) => setExp(formatExp(e.target.value))}
+                placeholder="MM / YY"
+                className="w-full rounded-lg border border-border bg-card px-3 py-2.5 font-mono text-sm text-ink focus:border-cherry focus:outline-none disabled:opacity-60"
+              />
+            </label>
+            <label>
+              <span className="mb-1 block text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                CVC
+              </span>
+              <input
+                inputMode="numeric"
+                autoComplete="cc-csc"
+                value={cvc}
+                disabled={processing}
+                onChange={(e) => setCvc(e.target.value.replace(/\D/g, "").slice(0, 4))}
+                placeholder="123"
+                className="w-full rounded-lg border border-border bg-card px-3 py-2.5 font-mono text-sm text-ink focus:border-cherry focus:outline-none disabled:opacity-60"
+              />
+            </label>
+          </div>
+
+          <label className="block">
+            <span className="mb-1 block text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+              Cardholder name
+            </span>
+            <input
+              autoComplete="cc-name"
+              value={holder}
+              disabled={processing}
+              onChange={(e) => setHolder(e.target.value)}
+              className="w-full rounded-lg border border-border bg-card px-3 py-2.5 text-sm text-ink focus:border-cherry focus:outline-none disabled:opacity-60"
+            />
+          </label>
+
+          <label className="block">
+            <span className="mb-1 block text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+              Postal code
+            </span>
+            <input
+              autoComplete="postal-code"
+              value={postal}
+              disabled={processing}
+              onChange={(e) => setPostal(e.target.value)}
+              placeholder="8000"
+              className="w-full rounded-lg border border-border bg-card px-3 py-2.5 text-sm text-ink focus:border-cherry focus:outline-none disabled:opacity-60"
+            />
+          </label>
+        </div>
+
+        {status === "declined" && (
+          <div
+            role="alert"
+            className="mt-3 flex items-start gap-2 rounded-lg border border-cherry/40 bg-cherry/5 p-3 text-xs text-cherry-deep"
+          >
+            <X className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+            <span>{errorMsg}</span>
+          </div>
+        )}
+
+        <button
+          type="button"
+          onClick={submit}
+          disabled={!ready || processing}
+          className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl cherry-gradient py-3.5 text-sm font-bold text-white shadow-lg shadow-cherry/25 disabled:cursor-not-allowed disabled:opacity-40 active:scale-[0.99] transition-transform"
+        >
+          {processing ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Processing payment…
+            </>
+          ) : (
+            <>
+              <Lock className="h-4 w-4" />
+              Pay {new Intl.NumberFormat("en-ZA", { style: "currency", currency: "ZAR", maximumFractionDigits: 0 }).format(amount)}
+            </>
+          )}
+        </button>
+
+        <p className="mt-3 flex items-center justify-center gap-1.5 text-[10px] uppercase tracking-widest text-muted-foreground">
+          <ShieldCheck className="h-3 w-3" /> Test mode · powered by Stripe (mock)
+        </p>
+        <p className="mt-1 text-center text-[10px] text-muted-foreground">
+          Use <span className="font-mono">4242 4242 4242 4242</span> to succeed, <span className="font-mono">4000 0000 0000 0002</span> to fail.
+        </p>
+      </div>
+    </div>
+  );
+}
