@@ -47,6 +47,18 @@ export function useHydratedStore() {
       .on("postgres_changes", { event: "*", schema: "public", table: "sponsors" }, () => {
         fetchSponsors().then((sponsors) => sponsors && setState({ sponsors }));
       })
+      .on("postgres_changes", { event: "*", schema: "public", table: "site_settings" }, () => {
+        fetchSettings().then((settings) => {
+          if (!settings) return;
+          setState((s) => ({
+            settings: {
+              branding: settings.branding ?? s.settings.branding,
+              quickLinks: settings.quickLinks ?? s.settings.quickLinks,
+              waivers: settings.waivers ?? s.settings.waivers,
+            },
+          }));
+        });
+      })
       .subscribe();
     return () => { supabase.removeChannel(ch); };
   }, []);
