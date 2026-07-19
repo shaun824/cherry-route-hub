@@ -84,7 +84,7 @@ function Home() {
         </div>
 
         <div className="relative mt-7">
-          <p className="text-sm opacity-85">Welcome back,</p>
+          <p className="text-sm opacity-85">{branding.welcomeMessage}</p>
           <p className="font-display text-xl font-bold">{currentRider.name}</p>
         </div>
 
