@@ -1,7 +1,7 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { TypeBadge } from "@/components/ui-bits";
 import { events, feed, formatDate, formatTime, relativeTime } from "@/lib/mock-data";
-import { ArrowLeft, MapPin, Clock, Route as RouteIcon, ExternalLink, MessageSquare } from "lucide-react";
+import { ArrowLeft, MapPin, Clock, Route as RouteIcon, MessageSquare, ChevronRight } from "lucide-react";
 
 export const Route = createFileRoute("/events/$eventId")({
   loader: ({ params }) => {
