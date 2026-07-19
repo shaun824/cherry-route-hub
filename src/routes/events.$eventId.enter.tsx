@@ -5,12 +5,16 @@ import {
   Check,
   ChevronRight,
   Clock,
+  CreditCard,
+  Loader2,
+  Lock,
   MapPin,
   Minus,
   Plus,
   Route as RouteIcon,
   ShieldCheck,
   Sparkles,
+  X,
 } from "lucide-react";
 import { currentRider, events, formatDate, formatTime, getEntryConfig, type EntryCategory, type MerchItem } from "@/lib/mock-data";
 
