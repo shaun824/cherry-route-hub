@@ -1,7 +1,7 @@
-import { createFileRoute, Outlet, Link, useRouterState } from "@tanstack/react-router";
-import { LayoutDashboard, CalendarDays, Newspaper, Tag, Handshake, ArrowLeft, RotateCcw } from "lucide-react";
-import { useAdminStore } from "@/lib/store";
+import { createFileRoute, Outlet, Link, useRouterState, Navigate } from "@tanstack/react-router";
+import { LayoutDashboard, CalendarDays, Newspaper, Tag, Handshake, ArrowLeft, LogOut, Users } from "lucide-react";
 import { useHydratedStore } from "@/lib/use-hydrated-store";
+import { useIsAdmin, signOut } from "@/lib/auth";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({
@@ -20,6 +20,7 @@ const nav: { to: string; label: string; icon: typeof LayoutDashboard; exact?: bo
   { to: "/admin/feed", label: "News feed", icon: Newspaper },
   { to: "/admin/promos", label: "Promos", icon: Tag },
   { to: "/admin/sponsors", label: "Sponsors", icon: Handshake },
+  { to: "/admin/riders", label: "Riders", icon: Users },
 ];
 
 
