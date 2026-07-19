@@ -47,6 +47,8 @@ function blank(): Event {
     schedule: [],
     mapQuery: "",
     entered: false,
+    classes: [],
+    batches: [],
   };
 }
 
