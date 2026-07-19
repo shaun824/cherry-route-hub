@@ -124,6 +124,8 @@ function EnterEvent() {
 
   const category = classes.find((c) => c.id === categoryId) ?? classes[0];
   const batch = batches.find((b) => b.id === batchId);
+  const activePrice = activeBatchPrice(batch);
+  const primaryEntryPrice = activePrice ? activePrice.priceZAR : (category?.priceZAR ?? 0);
 
   const merchTotal = useMemo(
     () =>
@@ -134,11 +136,13 @@ function EnterEvent() {
     () =>
       friends.reduce((sum, f) => {
         const c = classes.find((cc) => cc.id === f.categoryId);
-        return sum + (c?.priceZAR ?? 0);
+        const fb = batches.find((bb) => bb.id === f.batchId);
+        const fp = activeBatchPrice(fb);
+        return sum + (fp ? fp.priceZAR : c?.priceZAR ?? 0);
       }, 0),
-    [friends, classes],
+    [friends, classes, batches],
   );
-  const total = (category?.priceZAR ?? 0) + friendsTotal + merchTotal;
+  const total = primaryEntryPrice + friendsTotal + merchTotal;
 
   const setQty = (id: string, delta: number) =>
     setMerchQty((q) => {
