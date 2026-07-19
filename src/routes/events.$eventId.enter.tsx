@@ -104,14 +104,14 @@ function EnterEvent() {
   const canSubmit =
     firstName && lastName && email && phone && emergencyName && emergencyPhone && waiver && terms && !kitRequired && !missingMerchSize;
 
-  if (submitted) {
+  if (stage === "success") {
     return (
       <div className="min-h-[80vh] px-5 pt-14">
         <div className="mx-auto max-w-md rounded-3xl bg-card p-6 text-center ring-1 ring-border">
           <div className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-emerald-100">
             <Check className="h-7 w-7 text-emerald-700" />
           </div>
-          <h1 className="mt-4 font-display text-xl font-bold text-ink">Entry confirmed</h1>
+          <h1 className="mt-4 font-display text-xl font-bold text-ink">Payment successful</h1>
           <p className="mt-1 text-sm text-ink-soft">
             You're in for <strong>{event.name}</strong> — {category.label}.
           </p>
@@ -122,9 +122,12 @@ function EnterEvent() {
             )}
             <div className="my-2 border-t border-border" />
             <p className="flex justify-between text-sm"><span className="font-bold">Total paid</span><strong className="text-cherry">{ZAR(total)}</strong></p>
+            <p className="mt-2 flex justify-between text-[10px] uppercase tracking-widest text-muted-foreground">
+              <span>Payment ref</span><span className="font-mono">{paymentId}</span>
+            </p>
           </div>
           <p className="mt-4 text-[11px] uppercase tracking-widest text-muted-foreground">
-            Confirmation sent to {email}
+            Receipt sent to {email}
           </p>
           <div className="mt-5 flex flex-col gap-2">
             <Link
