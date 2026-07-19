@@ -641,18 +641,25 @@ function EnterEvent() {
           </p>
           <div className="mt-2 space-y-1 text-sm">
             <div className="flex justify-between">
-              <span className="text-ink-soft">Entry — {category.label} ({firstName || "You"})</span>
-              <span className="font-mono font-semibold text-ink">{ZAR(category.priceZAR)}</span>
+              <span className="text-ink-soft">
+                Entry — {category.label} ({firstName || "You"})
+                {activePrice ? <span className="ml-1 text-[10px] uppercase tracking-widest text-cherry">· {activePrice.label}</span> : null}
+              </span>
+              <span className="font-mono font-semibold text-ink">{ZAR(primaryEntryPrice)}</span>
             </div>
             {friends.map((f, i) => {
-              const fc = config.categories.find((c: EntryCategory) => c.id === f.categoryId);
+              const fc = classes.find((c) => c.id === f.categoryId);
               if (!fc) return null;
+              const fb = batches.find((bb) => bb.id === f.batchId);
+              const fp = activeBatchPrice(fb);
+              const fPrice = fp ? fp.priceZAR : fc.priceZAR;
               return (
                 <div key={f.id} className="flex justify-between">
                   <span className="text-ink-soft">
                     Entry — {fc.label} ({f.firstName || `Friend ${i + 1}`})
+                    {fp ? <span className="ml-1 text-[10px] uppercase tracking-widest text-cherry">· {fp.label}</span> : null}
                   </span>
-                  <span className="font-mono font-semibold text-ink">{ZAR(fc.priceZAR)}</span>
+                  <span className="font-mono font-semibold text-ink">{ZAR(fPrice)}</span>
                 </div>
               );
             })}
