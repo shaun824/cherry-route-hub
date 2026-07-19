@@ -64,8 +64,8 @@ function EnterEvent() {
   const config = loader.config;
 
   // Admin-managed classes override the default config; same for batches.
-  const classes = (event.classes && event.classes.length > 0 ? event.classes : config.categories) as EntryCategory[];
-  const batches = event.batches ?? [];
+  const classes: EntryCategory[] = (event.classes && event.classes.length > 0 ? event.classes : config.categories);
+  const batches: Batch[] = event.batches ?? [];
 
 
   const [categoryId, setCategoryId] = useState(classes[0]?.id ?? "");
