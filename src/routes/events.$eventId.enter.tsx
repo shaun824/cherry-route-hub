@@ -403,20 +403,41 @@ function EnterEvent() {
 
                   <label className="mt-2 block">
                     <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                      Category <span className="text-cherry">*</span>
+                      Class <span className="text-cherry">*</span>
                     </span>
                     <select
                       value={f.categoryId}
                       onChange={(e) => updateFriend(f.id, { categoryId: e.target.value })}
                       className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm font-semibold text-ink focus:border-cherry focus:outline-none"
                     >
-                      {config.categories.map((c: EntryCategory) => (
+                      {classes.map((c) => (
                         <option key={c.id} value={c.id}>
                           {c.label} · {c.distanceKm} km · {ZAR(c.priceZAR)}
                         </option>
                       ))}
                     </select>
                   </label>
+
+                  {batches.length > 0 && (
+                    <label className="mt-2 block">
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                        Start batch <span className="text-cherry">*</span>
+                      </span>
+                      <select
+                        value={f.batchId}
+                        onChange={(e) => updateFriend(f.id, { batchId: e.target.value })}
+                        className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm font-semibold text-ink focus:border-cherry focus:outline-none"
+                      >
+                        <option value="">Select batch…</option>
+                        {batches.map((b) => (
+                          <option key={b.id} value={b.id}>
+                            {b.name} · {b.startTime}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  )}
+
 
                   {(config.jacketIncluded || config.tshirtIncluded) && (
                     <div className="mt-3 space-y-3">
