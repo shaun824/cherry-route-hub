@@ -56,7 +56,10 @@ const ZAR = (n: number) =>
   new Intl.NumberFormat("en-ZA", { style: "currency", currency: "ZAR", maximumFractionDigits: 0 }).format(n);
 
 function EnterEvent() {
+  useHydratedStore();
   const { event, config } = Route.useLoaderData();
+  const waivers = useAdminStore((s) => s.settings.waivers);
+
 
   const [categoryId, setCategoryId] = useState(config.categories[0].id);
   const [firstName, setFirstName] = useState(currentRider.name.split(" ")[0] ?? "");
