@@ -74,11 +74,11 @@ function EnterEvent() {
   const [terms, setTerms] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
-  const category = config.categories.find((c) => c.id === categoryId)!;
+  const category = config.categories.find((c: EntryCategory) => c.id === categoryId)!;
 
   const merchTotal = useMemo(
     () =>
-      config.merch.reduce((sum, m) => sum + (merchQty[m.id] ?? 0) * m.priceZAR, 0),
+      config.merch.reduce((sum: number, m: MerchItem) => sum + (merchQty[m.id] ?? 0) * m.priceZAR, 0),
     [merchQty, config.merch],
   );
   const total = category.priceZAR + merchTotal;
@@ -92,8 +92,7 @@ function EnterEvent() {
   const kitRequired =
     (config.jacketIncluded && !jacketSize) || (config.tshirtIncluded && !tshirtSize);
 
-  const missingMerchSize = config.merch.some(
-    (m) => (merchQty[m.id] ?? 0) > 0 && m.sizes && !merchSize[m.id],
+  const missingMerchSize = config.merch.some((m: MerchItem) => (merchQty[m.id] ?? 0) > 0 && m.sizes && !merchSize[m.id],
   );
 
   const canSubmit =
@@ -178,7 +177,7 @@ function EnterEvent() {
         {/* Category */}
         <Section title="1 · Choose your category" hint="Distance and pricing">
           <div className="space-y-2">
-            {config.categories.map((c) => {
+            {config.categories.map((c: EntryCategory) => {
               const active = c.id === categoryId;
               return (
                 <label
@@ -291,7 +290,7 @@ function EnterEvent() {
           }
         >
           <div className="space-y-2">
-            {config.merch.map((m) => {
+            {config.merch.map((m: MerchItem) => {
               const qty = merchQty[m.id] ?? 0;
               const active = qty > 0;
               return (
@@ -329,7 +328,7 @@ function EnterEvent() {
                         }`}
                       >
                         <option value="">Select size…</option>
-                        {m.sizes.map((s) => (
+                        {m.sizes.map((s: string) => (
                           <option key={s} value={s}>{s}</option>
                         ))}
                       </select>
@@ -368,7 +367,7 @@ function EnterEvent() {
               <span className="text-ink-soft">Entry — {category.label}</span>
               <span className="font-mono font-semibold text-ink">{ZAR(category.priceZAR)}</span>
             </div>
-            {config.merch.map((m) => {
+            {config.merch.map((m: MerchItem) => {
               const q = merchQty[m.id] ?? 0;
               if (!q) return null;
               return (
