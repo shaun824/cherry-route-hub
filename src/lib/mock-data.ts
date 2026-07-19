@@ -390,17 +390,20 @@ export function getEntryConfig(eventId: string): EventEntryConfig | null {
 }
 
 export function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString(undefined, {
+  return new Date(iso).toLocaleDateString("en-ZA", {
     weekday: "short",
     day: "numeric",
     month: "short",
+    timeZone: "UTC",
   });
 }
 
 export function formatTime(iso: string) {
-  return new Date(iso).toLocaleTimeString(undefined, {
+  return new Date(iso).toLocaleTimeString("en-ZA", {
     hour: "2-digit",
     minute: "2-digit",
+    hour12: true,
+    timeZone: "UTC",
   });
 }
 
