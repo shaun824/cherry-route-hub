@@ -32,6 +32,9 @@
   --color-cherry: var(--cherry);
   --color-cherry-foreground: var(--cherry-foreground);
   --color-cherry-deep: var(--cherry-deep);
+  --color-brand-green: var(--brand-green);
+  --color-brand-blue: var(--brand-blue);
+  --color-brand-orange: var(--brand-orange);
   --color-ink: var(--ink);
   --color-ink-soft: var(--ink-soft);
   --font-display: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
@@ -49,13 +52,18 @@
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.18 0.012 260);
 
-  /* Cherry red brand */
-  --cherry: oklch(0.585 0.235 25);
-  --cherry-foreground: oklch(0.99 0.005 25);
-  --cherry-deep: oklch(0.44 0.19 22);
+  /* Red Cherry Events brand colors — from logo */
+  --brand-green: oklch(0.74 0.18 132);   /* #7CB342 */
+  --brand-blue: oklch(0.58 0.16 240);    /* #1E88CC */
+  --brand-orange: oklch(0.72 0.185 55);  /* #F58220 */
 
-  --primary: oklch(0.585 0.235 25);
-  --primary-foreground: oklch(0.99 0.005 25);
+  /* Primary accent = warm orange (kept as "cherry" token for API stability) */
+  --cherry: oklch(0.72 0.185 55);
+  --cherry-foreground: oklch(0.99 0.005 60);
+  --cherry-deep: oklch(0.5 0.16 45);
+
+  --primary: oklch(0.72 0.185 55);
+  --primary-foreground: oklch(0.99 0.005 60);
 
   --secondary: oklch(0.965 0.005 260);
   --secondary-foreground: oklch(0.22 0.02 260);
@@ -63,8 +71,8 @@
   --muted: oklch(0.965 0.005 260);
   --muted-foreground: oklch(0.5 0.015 260);
 
-  --accent: oklch(0.955 0.02 25);
-  --accent-foreground: oklch(0.44 0.19 22);
+  --accent: oklch(0.955 0.03 60);
+  --accent-foreground: oklch(0.5 0.16 45);
 
   --destructive: oklch(0.585 0.235 25);
   --destructive-foreground: oklch(0.99 0.005 25);
@@ -74,7 +82,7 @@
 
   --border: oklch(0.92 0.008 260);
   --input: oklch(0.92 0.008 260);
-  --ring: oklch(0.585 0.235 25);
+  --ring: oklch(0.72 0.185 55);
 }
 
 @layer base {
