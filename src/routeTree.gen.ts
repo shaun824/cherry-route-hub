@@ -17,6 +17,7 @@ import { Route as FeedRouteImport } from './routes/feed'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as EventsIndexRouteImport } from './routes/events.index'
+import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as EventsEventIdRouteImport } from './routes/events.$eventId'
 import { Route as EventsEventIdIndexRouteImport } from './routes/events.$eventId.index'
 import { Route as EventsEventIdEnterRouteImport } from './routes/events.$eventId.enter'
@@ -61,6 +62,11 @@ const EventsIndexRoute = EventsIndexRouteImport.update({
   path: '/events/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminRoute,
+} as any)
 const EventsEventIdRoute = EventsEventIdRouteImport.update({
   id: '/events/$eventId',
   path: '/events/$eventId',
@@ -79,25 +85,26 @@ const EventsEventIdEnterRoute = EventsEventIdEnterRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/admin': typeof AdminRoute
+  '/admin': typeof AdminRouteWithChildren
   '/feed': typeof FeedRoute
   '/gallery': typeof GalleryRoute
   '/profile': typeof ProfileRoute
   '/promos': typeof PromosRoute
   '/tracker': typeof TrackerRoute
   '/events/$eventId': typeof EventsEventIdRouteWithChildren
+  '/admin/': typeof AdminIndexRoute
   '/events/': typeof EventsIndexRoute
   '/events/$eventId/enter': typeof EventsEventIdEnterRoute
   '/events/$eventId/': typeof EventsEventIdIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/admin': typeof AdminRoute
   '/feed': typeof FeedRoute
   '/gallery': typeof GalleryRoute
   '/profile': typeof ProfileRoute
   '/promos': typeof PromosRoute
   '/tracker': typeof TrackerRoute
+  '/admin': typeof AdminIndexRoute
   '/events': typeof EventsIndexRoute
   '/events/$eventId/enter': typeof EventsEventIdEnterRoute
   '/events/$eventId': typeof EventsEventIdIndexRoute
@@ -105,13 +112,14 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/admin': typeof AdminRoute
+  '/admin': typeof AdminRouteWithChildren
   '/feed': typeof FeedRoute
   '/gallery': typeof GalleryRoute
   '/profile': typeof ProfileRoute
   '/promos': typeof PromosRoute
   '/tracker': typeof TrackerRoute
   '/events/$eventId': typeof EventsEventIdRouteWithChildren
+  '/admin/': typeof AdminIndexRoute
   '/events/': typeof EventsIndexRoute
   '/events/$eventId/enter': typeof EventsEventIdEnterRoute
   '/events/$eventId/': typeof EventsEventIdIndexRoute
@@ -127,18 +135,19 @@ export interface FileRouteTypes {
     | '/promos'
     | '/tracker'
     | '/events/$eventId'
+    | '/admin/'
     | '/events/'
     | '/events/$eventId/enter'
     | '/events/$eventId/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/admin'
     | '/feed'
     | '/gallery'
     | '/profile'
     | '/promos'
     | '/tracker'
+    | '/admin'
     | '/events'
     | '/events/$eventId/enter'
     | '/events/$eventId'
@@ -152,6 +161,7 @@ export interface FileRouteTypes {
     | '/promos'
     | '/tracker'
     | '/events/$eventId'
+    | '/admin/'
     | '/events/'
     | '/events/$eventId/enter'
     | '/events/$eventId/'
@@ -159,7 +169,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AdminRoute: typeof AdminRoute
+  AdminRoute: typeof AdminRouteWithChildren
   FeedRoute: typeof FeedRoute
   GalleryRoute: typeof GalleryRoute
   ProfileRoute: typeof ProfileRoute
@@ -227,6 +237,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EventsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/': {
+      id: '/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/events/$eventId': {
       id: '/events/$eventId'
       path: '/events/$eventId'
@@ -251,6 +268,16 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AdminRouteChildren {
+  AdminIndexRoute: typeof AdminIndexRoute
+}
+
+const AdminRouteChildren: AdminRouteChildren = {
+  AdminIndexRoute: AdminIndexRoute,
+}
+
+const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
+
 interface EventsEventIdRouteChildren {
   EventsEventIdEnterRoute: typeof EventsEventIdEnterRoute
   EventsEventIdIndexRoute: typeof EventsEventIdIndexRoute
@@ -267,7 +294,7 @@ const EventsEventIdRouteWithChildren = EventsEventIdRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AdminRoute: AdminRoute,
+  AdminRoute: AdminRouteWithChildren,
   FeedRoute: FeedRoute,
   GalleryRoute: GalleryRoute,
   ProfileRoute: ProfileRoute,
