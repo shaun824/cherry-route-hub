@@ -141,7 +141,4 @@ function RootComponent() {
   );
 }
 
-// Silence unused-import warning when QueryClient hooks are added later.
-void useQueryClient;
-
 
