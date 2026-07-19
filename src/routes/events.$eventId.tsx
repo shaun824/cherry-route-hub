@@ -110,7 +110,7 @@ function EventDetail() {
           Schedule
         </h2>
         <ol className="mt-3 space-y-2">
-          {event.schedule.map((s, i) => (
+          {event.schedule.map((s: { time: string; label: string }, i: number) => (
             <li
               key={i}
               className="flex items-start gap-3 rounded-xl bg-card p-3 ring-1 ring-border"
