@@ -19,6 +19,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as EventsIndexRouteImport } from './routes/events.index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as EventsEventIdRouteImport } from './routes/events.$eventId'
+import { Route as AdminFeedRouteImport } from './routes/admin.feed'
 import { Route as AdminEventsRouteImport } from './routes/admin.events'
 import { Route as EventsEventIdIndexRouteImport } from './routes/events.$eventId.index'
 import { Route as EventsEventIdEnterRouteImport } from './routes/events.$eventId.enter'
@@ -73,6 +74,11 @@ const EventsEventIdRoute = EventsEventIdRouteImport.update({
   path: '/events/$eventId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminFeedRoute = AdminFeedRouteImport.update({
+  id: '/feed',
+  path: '/feed',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminEventsRoute = AdminEventsRouteImport.update({
   id: '/events',
   path: '/events',
@@ -98,6 +104,7 @@ export interface FileRoutesByFullPath {
   '/promos': typeof PromosRoute
   '/tracker': typeof TrackerRoute
   '/admin/events': typeof AdminEventsRoute
+  '/admin/feed': typeof AdminFeedRoute
   '/events/$eventId': typeof EventsEventIdRouteWithChildren
   '/admin/': typeof AdminIndexRoute
   '/events/': typeof EventsIndexRoute
@@ -112,6 +119,7 @@ export interface FileRoutesByTo {
   '/promos': typeof PromosRoute
   '/tracker': typeof TrackerRoute
   '/admin/events': typeof AdminEventsRoute
+  '/admin/feed': typeof AdminFeedRoute
   '/admin': typeof AdminIndexRoute
   '/events': typeof EventsIndexRoute
   '/events/$eventId/enter': typeof EventsEventIdEnterRoute
@@ -127,6 +135,7 @@ export interface FileRoutesById {
   '/promos': typeof PromosRoute
   '/tracker': typeof TrackerRoute
   '/admin/events': typeof AdminEventsRoute
+  '/admin/feed': typeof AdminFeedRoute
   '/events/$eventId': typeof EventsEventIdRouteWithChildren
   '/admin/': typeof AdminIndexRoute
   '/events/': typeof EventsIndexRoute
@@ -144,6 +153,7 @@ export interface FileRouteTypes {
     | '/promos'
     | '/tracker'
     | '/admin/events'
+    | '/admin/feed'
     | '/events/$eventId'
     | '/admin/'
     | '/events/'
@@ -158,6 +168,7 @@ export interface FileRouteTypes {
     | '/promos'
     | '/tracker'
     | '/admin/events'
+    | '/admin/feed'
     | '/admin'
     | '/events'
     | '/events/$eventId/enter'
@@ -172,6 +183,7 @@ export interface FileRouteTypes {
     | '/promos'
     | '/tracker'
     | '/admin/events'
+    | '/admin/feed'
     | '/events/$eventId'
     | '/admin/'
     | '/events/'
@@ -263,6 +275,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EventsEventIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/feed': {
+      id: '/admin/feed'
+      path: '/feed'
+      fullPath: '/admin/feed'
+      preLoaderRoute: typeof AdminFeedRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/events': {
       id: '/admin/events'
       path: '/events'
@@ -289,11 +308,13 @@ declare module '@tanstack/react-router' {
 
 interface AdminRouteChildren {
   AdminEventsRoute: typeof AdminEventsRoute
+  AdminFeedRoute: typeof AdminFeedRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
   AdminEventsRoute: AdminEventsRoute,
+  AdminFeedRoute: AdminFeedRoute,
   AdminIndexRoute: AdminIndexRoute,
 }
 
