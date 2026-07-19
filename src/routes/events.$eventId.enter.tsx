@@ -12,7 +12,7 @@ import {
   ShieldCheck,
   Sparkles,
 } from "lucide-react";
-import { currentRider, events, formatDate, formatTime, getEntryConfig } from "@/lib/mock-data";
+import { currentRider, events, formatDate, formatTime, getEntryConfig, type EntryCategory, type MerchItem } from "@/lib/mock-data";
 
 export const Route = createFileRoute("/events/$eventId/enter")({
   loader: ({ params }) => {

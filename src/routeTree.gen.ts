@@ -17,6 +17,7 @@ import { Route as FeedRouteImport } from './routes/feed'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as EventsIndexRouteImport } from './routes/events.index'
 import { Route as EventsEventIdRouteImport } from './routes/events.$eventId'
+import { Route as EventsEventIdEnterRouteImport } from './routes/events.$eventId.enter'
 
 const TrackerRoute = TrackerRouteImport.update({
   id: '/tracker',
@@ -58,6 +59,11 @@ const EventsEventIdRoute = EventsEventIdRouteImport.update({
   path: '/events/$eventId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const EventsEventIdEnterRoute = EventsEventIdEnterRouteImport.update({
+  id: '/enter',
+  path: '/enter',
+  getParentRoute: () => EventsEventIdRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -66,8 +72,9 @@ export interface FileRoutesByFullPath {
   '/profile': typeof ProfileRoute
   '/promos': typeof PromosRoute
   '/tracker': typeof TrackerRoute
-  '/events/$eventId': typeof EventsEventIdRoute
+  '/events/$eventId': typeof EventsEventIdRouteWithChildren
   '/events/': typeof EventsIndexRoute
+  '/events/$eventId/enter': typeof EventsEventIdEnterRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -76,8 +83,9 @@ export interface FileRoutesByTo {
   '/profile': typeof ProfileRoute
   '/promos': typeof PromosRoute
   '/tracker': typeof TrackerRoute
-  '/events/$eventId': typeof EventsEventIdRoute
+  '/events/$eventId': typeof EventsEventIdRouteWithChildren
   '/events': typeof EventsIndexRoute
+  '/events/$eventId/enter': typeof EventsEventIdEnterRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -87,8 +95,9 @@ export interface FileRoutesById {
   '/profile': typeof ProfileRoute
   '/promos': typeof PromosRoute
   '/tracker': typeof TrackerRoute
-  '/events/$eventId': typeof EventsEventIdRoute
+  '/events/$eventId': typeof EventsEventIdRouteWithChildren
   '/events/': typeof EventsIndexRoute
+  '/events/$eventId/enter': typeof EventsEventIdEnterRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -101,6 +110,7 @@ export interface FileRouteTypes {
     | '/tracker'
     | '/events/$eventId'
     | '/events/'
+    | '/events/$eventId/enter'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -111,6 +121,7 @@ export interface FileRouteTypes {
     | '/tracker'
     | '/events/$eventId'
     | '/events'
+    | '/events/$eventId/enter'
   id:
     | '__root__'
     | '/'
@@ -121,6 +132,7 @@ export interface FileRouteTypes {
     | '/tracker'
     | '/events/$eventId'
     | '/events/'
+    | '/events/$eventId/enter'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -130,7 +142,7 @@ export interface RootRouteChildren {
   ProfileRoute: typeof ProfileRoute
   PromosRoute: typeof PromosRoute
   TrackerRoute: typeof TrackerRoute
-  EventsEventIdRoute: typeof EventsEventIdRoute
+  EventsEventIdRoute: typeof EventsEventIdRouteWithChildren
   EventsIndexRoute: typeof EventsIndexRoute
 }
 
@@ -192,8 +204,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EventsEventIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/events/$eventId/enter': {
+      id: '/events/$eventId/enter'
+      path: '/enter'
+      fullPath: '/events/$eventId/enter'
+      preLoaderRoute: typeof EventsEventIdEnterRouteImport
+      parentRoute: typeof EventsEventIdRoute
+    }
   }
 }
+
+interface EventsEventIdRouteChildren {
+  EventsEventIdEnterRoute: typeof EventsEventIdEnterRoute
+}
+
+const EventsEventIdRouteChildren: EventsEventIdRouteChildren = {
+  EventsEventIdEnterRoute: EventsEventIdEnterRoute,
+}
+
+const EventsEventIdRouteWithChildren = EventsEventIdRoute._addFileChildren(
+  EventsEventIdRouteChildren,
+)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
@@ -202,7 +233,7 @@ const rootRouteChildren: RootRouteChildren = {
   ProfileRoute: ProfileRoute,
   PromosRoute: PromosRoute,
   TrackerRoute: TrackerRoute,
-  EventsEventIdRoute: EventsEventIdRoute,
+  EventsEventIdRoute: EventsEventIdRouteWithChildren,
   EventsIndexRoute: EventsIndexRoute,
 }
 export const routeTree = rootRouteImport
