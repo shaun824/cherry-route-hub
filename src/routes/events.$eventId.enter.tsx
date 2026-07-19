@@ -141,8 +141,19 @@ function EnterEvent() {
   const missingMerchSize = config.merch.some((m: MerchItem) => (merchQty[m.id] ?? 0) > 0 && m.sizes && !merchSize[m.id],
   );
 
+  const friendsInvalid = friends.some(
+    (f) =>
+      !f.firstName ||
+      !f.lastName ||
+      !f.email ||
+      !f.phone ||
+      !f.dob ||
+      (config.jacketIncluded && !f.jacketSize) ||
+      (config.tshirtIncluded && !f.tshirtSize),
+  );
+
   const canSubmit =
-    firstName && lastName && email && phone && emergencyName && emergencyPhone && waiver && terms && !kitRequired && !missingMerchSize;
+    firstName && lastName && email && phone && emergencyName && emergencyPhone && waiver && terms && !kitRequired && !missingMerchSize && !friendsInvalid;
 
   if (stage === "success") {
     return (
