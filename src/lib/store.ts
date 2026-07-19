@@ -65,6 +65,10 @@ export const useAdminStore = create<AdminState>()((set) => ({
   feed: seedFeed,
   promos: seedPromos,
   sponsors: seedSponsors,
+  settings: DEFAULT_SETTINGS,
+
+  setSettings: (patch) =>
+    set((s) => ({ settings: { ...s.settings, ...patch } })),
 
   upsertEvent: (e) =>
     set((s) => {
