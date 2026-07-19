@@ -164,10 +164,17 @@ function EnterEvent() {
           </div>
           <h1 className="mt-4 font-display text-xl font-bold text-ink">Payment successful</h1>
           <p className="mt-1 text-sm text-ink-soft">
-            You're in for <strong>{event.name}</strong> — {category.label}.
+            {friends.length > 0 ? (
+              <>You and <strong>{friends.length}</strong> friend{friends.length === 1 ? "" : "s"} are in for <strong>{event.name}</strong>.</>
+            ) : (
+              <>You're in for <strong>{event.name}</strong> — {category.label}.</>
+            )}
           </p>
           <div className="mt-4 rounded-2xl bg-accent/40 p-4 text-left text-xs text-ink">
-            <p className="flex justify-between"><span>Entry ({category.distanceKm} km)</span><strong>{ZAR(category.priceZAR)}</strong></p>
+            <p className="flex justify-between"><span>Your entry ({category.distanceKm} km)</span><strong>{ZAR(category.priceZAR)}</strong></p>
+            {friendsTotal > 0 && (
+              <p className="mt-1 flex justify-between"><span>{friends.length} friend entr{friends.length === 1 ? "y" : "ies"}</span><strong>{ZAR(friendsTotal)}</strong></p>
+            )}
             {merchTotal > 0 && (
               <p className="mt-1 flex justify-between"><span>Merchandise</span><strong>{ZAR(merchTotal)}</strong></p>
             )}
