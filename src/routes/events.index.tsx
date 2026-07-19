@@ -17,7 +17,9 @@ export const Route = createFileRoute("/events/")({
 
 function Events() {
   useHydratedStore();
-  const events = useAdminStore((s) => s.events);
+  const events = useAdminStore((s) => s.events).filter(
+    (e) => (e.lifecycle ?? "published") === "published",
+  );
 
   return (
     <div>

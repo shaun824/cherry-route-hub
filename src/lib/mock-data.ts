@@ -10,6 +10,7 @@ export type Event = {
   location: string;
   distanceKm: number;
   status: "open" | "closed" | "live" | "upcoming";
+  lifecycle?: "draft" | "published" | "archived";
   heroColor: string;
   description: string;
   schedule: { time: string; label: string }[];

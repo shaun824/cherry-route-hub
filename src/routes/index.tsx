@@ -23,7 +23,9 @@ function Home() {
   const events = useAdminStore((s) => s.events);
   const feed = useAdminStore((s) => s.feed);
   const promos = useAdminStore((s) => s.promos);
-  const upcoming = events.filter((e) => e.status !== "closed").slice(0, 3);
+  const upcoming = events
+    .filter((e) => (e.lifecycle ?? "published") === "published" && e.status !== "closed")
+    .slice(0, 3);
   const pinned = feed.filter((p) => p.pinned)[0];
   const recentNews = feed.filter((p) => !p.pinned).slice(0, 3);
 
