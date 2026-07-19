@@ -16,6 +16,7 @@ import {
   upsertPromoCloud, deletePromoCloud,
   upsertSponsorCloud, deleteSponsorCloud,
 } from "./cloud";
+import { DEFAULT_SETTINGS, type SiteSettings } from "./settings";
 
 export type Sponsor = {
   id: string;
