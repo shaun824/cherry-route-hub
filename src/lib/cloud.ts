@@ -21,6 +21,7 @@ export async function fetchFeed(): Promise<FeedPost[] | null> {
   if (error) { log(error, "fetchFeed"); return null; }
   return (data ?? []).map((r: Row) => ({
     id: String(r.id),
+    externalId: null,
     type: (r.post_type as FeedPost["type"]) ?? "update",
     title: String(r.title ?? ""),
     body: String(r.body ?? ""),
