@@ -82,15 +82,31 @@ function AdminSponsors() {
             key={sp.id}
             className={`rounded-xl bg-card p-4 ring-1 ${sp.active ? "ring-border" : "ring-dashed ring-border opacity-60"}`}
           >
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-[10px] font-bold uppercase tracking-widest text-ink-soft">
-                  {sp.tier}
-                </p>
-                <p className="font-display text-base font-bold" style={{ color: sp.accent }}>
-                  {sp.logoText || sp.name}
-                </p>
-                <p className="text-xs text-ink-soft">{sp.name}</p>
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex min-w-0 items-center gap-3">
+                {sp.logoUrl ? (
+                  <img
+                    src={sp.logoUrl}
+                    alt={sp.name}
+                    className="h-12 w-12 shrink-0 rounded-md bg-white object-contain p-1 ring-1 ring-border"
+                  />
+                ) : (
+                  <div
+                    className="grid h-12 w-12 shrink-0 place-items-center rounded-md text-[10px] font-black text-white"
+                    style={{ background: sp.accent }}
+                  >
+                    {(sp.logoText || sp.name || "?").slice(0, 4)}
+                  </div>
+                )}
+                <div className="min-w-0">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-ink-soft">
+                    {sp.tier}
+                  </p>
+                  <p className="truncate font-display text-base font-bold">{sp.name}</p>
+                  {sp.url ? (
+                    <p className="truncate text-xs text-ink-soft">{sp.url}</p>
+                  ) : null}
+                </div>
               </div>
               <div className="flex gap-1">
                 <button
