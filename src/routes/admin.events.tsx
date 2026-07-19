@@ -467,13 +467,28 @@ function EventEditor({
             />
           </Field>
 
-          <Field label="Event logo URL">
+          <Field label="Event logo">
             <input
               className={inputCls}
               value={form.logoUrl ?? ""}
-              placeholder="https://…/logo.png"
+              placeholder="Upload or paste a URL"
               onChange={(e) => update("logoUrl", e.target.value || undefined)}
             />
+            <div className="mt-2 flex items-center gap-2">
+              <ImageUploadButton
+                label={form.logoUrl ? "Replace logo" : "Upload logo"}
+                onUploaded={(url) => update("logoUrl", url)}
+              />
+              {form.logoUrl ? (
+                <button
+                  type="button"
+                  onClick={() => update("logoUrl", undefined)}
+                  className="text-[11px] font-semibold text-ink-soft hover:text-cherry"
+                >
+                  Remove
+                </button>
+              ) : null}
+            </div>
             {form.logoUrl ? (
               <div className="mt-2 inline-flex items-center gap-2 rounded-lg border border-border bg-background p-2">
                 <img src={form.logoUrl} alt="Logo preview" className="h-10 w-10 rounded object-contain" />
@@ -481,19 +496,35 @@ function EventEditor({
               </div>
             ) : null}
           </Field>
-          <Field label="Cover image URL">
+          <Field label="Cover image">
             <input
               className={inputCls}
               value={form.coverUrl ?? ""}
-              placeholder="https://…/cover.jpg"
+              placeholder="Upload or paste a URL"
               onChange={(e) => update("coverUrl", e.target.value || undefined)}
             />
+            <div className="mt-2 flex items-center gap-2">
+              <ImageUploadButton
+                label={form.coverUrl ? "Replace cover" : "Upload cover"}
+                onUploaded={(url) => update("coverUrl", url)}
+              />
+              {form.coverUrl ? (
+                <button
+                  type="button"
+                  onClick={() => update("coverUrl", undefined)}
+                  className="text-[11px] font-semibold text-ink-soft hover:text-cherry"
+                >
+                  Remove
+                </button>
+              ) : null}
+            </div>
             {form.coverUrl ? (
               <div className="mt-2 overflow-hidden rounded-lg border border-border">
                 <img src={form.coverUrl} alt="Cover preview" className="h-24 w-full object-cover" />
               </div>
             ) : null}
           </Field>
+
 
           <div className="md:col-span-2">
             <div className="mb-2 flex items-center justify-between">
