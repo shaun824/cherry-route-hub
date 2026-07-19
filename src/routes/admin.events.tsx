@@ -554,3 +554,267 @@ function Field({
     </label>
   );
 }
+
+function ClassesEditor({
+  classes,
+  onChange,
+}: {
+  classes: EntryCategory[];
+  onChange: (next: EntryCategory[]) => void;
+}) {
+  const add = () =>
+    onChange([
+      ...classes,
+      {
+        id: newId("cls"),
+        label: "New class",
+        distanceKm: 0,
+        priceZAR: 0,
+        description: "",
+      },
+    ]);
+  const update = (i: number, patch: Partial<EntryCategory>) =>
+    onChange(classes.map((c, idx) => (idx === i ? { ...c, ...patch } : c)));
+  const remove = (i: number) => onChange(classes.filter((_, idx) => idx !== i));
+  const move = (i: number, dir: -1 | 1) => {
+    const j = i + dir;
+    if (j < 0 || j >= classes.length) return;
+    const next = [...classes];
+    [next[i], next[j]] = [next[j], next[i]];
+    onChange(next);
+  };
+
+  return (
+    <div className="md:col-span-2">
+      <div className="mb-2 flex items-center justify-between">
+        <div>
+          <span className="text-[11px] font-bold uppercase tracking-wider text-ink-soft">
+            Classes / categories
+          </span>
+          <p className="text-[11px] text-ink-soft">
+            Distances and pricing riders can pick from. Leave empty to fall back to defaults.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={add}
+          className="inline-flex items-center gap-1 rounded-md bg-secondary px-2.5 py-1 text-xs font-semibold text-ink"
+        >
+          <Plus className="h-3.5 w-3.5" /> Add class
+        </button>
+      </div>
+      <ul className="space-y-2">
+        {classes.map((c, i) => (
+          <li key={c.id} className="rounded-lg border border-border bg-background p-3">
+            <div className="mb-2 flex items-center justify-between">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-ink-soft">
+                Class {i + 1}
+              </span>
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => move(i, -1)}
+                  disabled={i === 0}
+                  className="rounded-md p-1 text-ink-soft hover:bg-secondary disabled:opacity-30"
+                  aria-label="Move up"
+                >
+                  <GripVertical className="h-3 w-3 rotate-90" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => move(i, 1)}
+                  disabled={i === classes.length - 1}
+                  className="rounded-md p-1 text-ink-soft hover:bg-secondary disabled:opacity-30"
+                  aria-label="Move down"
+                >
+                  <GripVertical className="h-3 w-3 -rotate-90" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => remove(i)}
+                  className="rounded-md p-1 text-cherry hover:bg-accent"
+                  aria-label="Remove class"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
+              <input
+                className={inputCls}
+                placeholder="Label (e.g. Elite 100km)"
+                value={c.label}
+                onChange={(e) => update(i, { label: e.target.value })}
+              />
+              <input
+                type="number"
+                className={inputCls}
+                placeholder="Distance km"
+                value={c.distanceKm}
+                onChange={(e) => update(i, { distanceKm: Number(e.target.value) })}
+              />
+              <input
+                type="number"
+                className={inputCls}
+                placeholder="Price ZAR"
+                value={c.priceZAR}
+                onChange={(e) => update(i, { priceZAR: Number(e.target.value) })}
+              />
+              <input
+                className={inputCls}
+                placeholder="ID (auto)"
+                value={c.id}
+                onChange={(e) => update(i, { id: e.target.value })}
+              />
+              <input
+                className={`${inputCls} md:col-span-4`}
+                placeholder="Description shown to riders"
+                value={c.description}
+                onChange={(e) => update(i, { description: e.target.value })}
+              />
+            </div>
+          </li>
+        ))}
+        {classes.length === 0 ? (
+          <li className="rounded-lg border border-dashed border-border p-4 text-center text-xs text-ink-soft">
+            No custom classes. The event will use the default classes for its template.
+          </li>
+        ) : null}
+      </ul>
+    </div>
+  );
+}
+
+function BatchesEditor({
+  batches,
+  onChange,
+}: {
+  batches: Batch[];
+  onChange: (next: Batch[]) => void;
+}) {
+  const add = () =>
+    onChange([
+      ...batches,
+      {
+        id: newId("btc"),
+        name: `Batch ${batches.length + 1}`,
+        startTime: "07:00",
+        capacity: undefined,
+        description: "",
+      },
+    ]);
+  const update = (i: number, patch: Partial<Batch>) =>
+    onChange(batches.map((b, idx) => (idx === i ? { ...b, ...patch } : b)));
+  const remove = (i: number) => onChange(batches.filter((_, idx) => idx !== i));
+  const move = (i: number, dir: -1 | 1) => {
+    const j = i + dir;
+    if (j < 0 || j >= batches.length) return;
+    const next = [...batches];
+    [next[i], next[j]] = [next[j], next[i]];
+    onChange(next);
+  };
+
+  return (
+    <div className="md:col-span-2">
+      <div className="mb-2 flex items-center justify-between">
+        <div>
+          <span className="text-[11px] font-bold uppercase tracking-wider text-ink-soft">
+            Start batches / waves
+          </span>
+          <p className="text-[11px] text-ink-soft">
+            Riders pick a batch at entry. Leave empty to skip the batch step.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={add}
+          className="inline-flex items-center gap-1 rounded-md bg-secondary px-2.5 py-1 text-xs font-semibold text-ink"
+        >
+          <Plus className="h-3.5 w-3.5" /> Add batch
+        </button>
+      </div>
+      <ul className="space-y-2">
+        {batches.map((b, i) => (
+          <li key={b.id} className="rounded-lg border border-border bg-background p-3">
+            <div className="mb-2 flex items-center justify-between">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-ink-soft">
+                Batch {i + 1}
+              </span>
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => move(i, -1)}
+                  disabled={i === 0}
+                  className="rounded-md p-1 text-ink-soft hover:bg-secondary disabled:opacity-30"
+                  aria-label="Move up"
+                >
+                  <GripVertical className="h-3 w-3 rotate-90" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => move(i, 1)}
+                  disabled={i === batches.length - 1}
+                  className="rounded-md p-1 text-ink-soft hover:bg-secondary disabled:opacity-30"
+                  aria-label="Move down"
+                >
+                  <GripVertical className="h-3 w-3 -rotate-90" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => remove(i)}
+                  className="rounded-md p-1 text-cherry hover:bg-accent"
+                  aria-label="Remove batch"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
+              <input
+                className={inputCls}
+                placeholder="Batch name (e.g. A Bunch)"
+                value={b.name}
+                onChange={(e) => update(i, { name: e.target.value })}
+              />
+              <input
+                type="time"
+                className={inputCls}
+                value={b.startTime}
+                onChange={(e) => update(i, { startTime: e.target.value })}
+              />
+              <input
+                type="number"
+                min={0}
+                className={inputCls}
+                placeholder="Capacity (opt)"
+                value={b.capacity ?? ""}
+                onChange={(e) =>
+                  update(i, {
+                    capacity: e.target.value === "" ? undefined : Number(e.target.value),
+                  })
+                }
+              />
+              <input
+                className={inputCls}
+                placeholder="ID (auto)"
+                value={b.id}
+                onChange={(e) => update(i, { id: e.target.value })}
+              />
+              <input
+                className={`${inputCls} md:col-span-4`}
+                placeholder="Description (e.g. Seeded, licensed riders)"
+                value={b.description ?? ""}
+                onChange={(e) => update(i, { description: e.target.value })}
+              />
+            </div>
+          </li>
+        ))}
+        {batches.length === 0 ? (
+          <li className="rounded-lg border border-dashed border-border p-4 text-center text-xs text-ink-soft">
+            No batches. Riders won't pick a start wave at entry.
+          </li>
+        ) : null}
+      </ul>
+    </div>
+  );
+}
