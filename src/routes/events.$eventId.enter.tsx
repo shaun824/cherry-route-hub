@@ -305,6 +305,112 @@ function EnterEvent() {
           </div>
         </Section>
 
+        {/* Friends / group entry */}
+        <Section
+          title="Enter friends with you"
+          hint="Add friends to this order — one entry per person, one payment"
+          right={
+            <span className="rounded-full bg-cherry/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest text-cherry">
+              Optional
+            </span>
+          }
+        >
+          <div className="space-y-3">
+            {friends.map((f, i) => {
+              const fCat = config.categories.find((c: EntryCategory) => c.id === f.categoryId);
+              return (
+                <div key={f.id} className="rounded-2xl border border-border bg-card p-3">
+                  <div className="mb-2 flex items-center justify-between">
+                    <p className="text-xs font-bold uppercase tracking-widest text-cherry">
+                      Friend {i + 1}
+                      {f.firstName ? ` · ${f.firstName}` : ""}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => removeFriend(f.id)}
+                      className="flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-semibold text-muted-foreground hover:text-cherry"
+                    >
+                      <X className="h-3.5 w-3.5" /> Remove
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <Field label="First name" compact value={f.firstName} onChange={(v) => updateFriend(f.id, { firstName: v })} required />
+                    <Field label="Last name" compact value={f.lastName} onChange={(v) => updateFriend(f.id, { lastName: v })} required />
+                    <Field label="Email" type="email" compact value={f.email} onChange={(v) => updateFriend(f.id, { email: v })} required className="col-span-2" />
+                    <Field label="Mobile" type="tel" compact value={f.phone} onChange={(v) => updateFriend(f.id, { phone: v })} required />
+                    <Field label="Date of birth" type="date" compact value={f.dob} onChange={(v) => updateFriend(f.id, { dob: v })} required />
+                  </div>
+
+                  <label className="mt-2 block">
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                      Category <span className="text-cherry">*</span>
+                    </span>
+                    <select
+                      value={f.categoryId}
+                      onChange={(e) => updateFriend(f.id, { categoryId: e.target.value })}
+                      className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm font-semibold text-ink focus:border-cherry focus:outline-none"
+                    >
+                      {config.categories.map((c: EntryCategory) => (
+                        <option key={c.id} value={c.id}>
+                          {c.label} · {c.distanceKm} km · {ZAR(c.priceZAR)}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+
+                  {(config.jacketIncluded || config.tshirtIncluded) && (
+                    <div className="mt-3 space-y-3">
+                      {config.jacketIncluded && (
+                        <SizePicker
+                          label="Race jacket"
+                          emoji="🧥"
+                          sizes={config.jacketSizes}
+                          value={f.jacketSize}
+                          onChange={(v) => updateFriend(f.id, { jacketSize: v })}
+                          required
+                        />
+                      )}
+                      {config.tshirtIncluded && (
+                        <SizePicker
+                          label="Event T-shirt"
+                          emoji="👕"
+                          sizes={config.tshirtSizes}
+                          value={f.tshirtSize}
+                          onChange={(v) => updateFriend(f.id, { tshirtSize: v })}
+                          required
+                        />
+                      )}
+                    </div>
+                  )}
+
+                  {fCat && (
+                    <p className="mt-2 flex justify-between text-xs">
+                      <span className="text-ink-soft">Entry fee</span>
+                      <span className="font-mono font-bold text-cherry">{ZAR(fCat.priceZAR)}</span>
+                    </p>
+                  )}
+                </div>
+              );
+            })}
+
+            <button
+              type="button"
+              onClick={() => setFriends((fs) => [...fs, makeFriend()])}
+              className="flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-cherry/40 bg-cherry/5 py-3 text-sm font-bold text-cherry hover:bg-cherry/10"
+            >
+              <Plus className="h-4 w-4" /> Add a friend
+            </button>
+            {friends.length > 0 && (
+              <p className="text-[11px] text-ink-soft">
+                Each friend gets their own entry, kit and race number. You'll pay for everyone in one checkout.
+              </p>
+            )}
+          </div>
+        </Section>
+
+
+
         {/* Kit sizes */}
         {(config.jacketIncluded || config.tshirtIncluded) && (
           <Section
