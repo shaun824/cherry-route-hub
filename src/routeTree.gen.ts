@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TrackerRouteImport } from './routes/tracker'
+import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as FeedRouteImport } from './routes/feed'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as EventsIndexRouteImport } from './routes/events.index'
@@ -18,6 +19,11 @@ import { Route as EventsEventIdRouteImport } from './routes/events.$eventId'
 const TrackerRoute = TrackerRouteImport.update({
   id: '/tracker',
   path: '/tracker',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProfileRoute = ProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FeedRoute = FeedRouteImport.update({
@@ -44,6 +50,7 @@ const EventsEventIdRoute = EventsEventIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/feed': typeof FeedRoute
+  '/profile': typeof ProfileRoute
   '/tracker': typeof TrackerRoute
   '/events/$eventId': typeof EventsEventIdRoute
   '/events/': typeof EventsIndexRoute
@@ -51,6 +58,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/feed': typeof FeedRoute
+  '/profile': typeof ProfileRoute
   '/tracker': typeof TrackerRoute
   '/events/$eventId': typeof EventsEventIdRoute
   '/events': typeof EventsIndexRoute
@@ -59,21 +67,36 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/feed': typeof FeedRoute
+  '/profile': typeof ProfileRoute
   '/tracker': typeof TrackerRoute
   '/events/$eventId': typeof EventsEventIdRoute
   '/events/': typeof EventsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/feed' | '/tracker' | '/events/$eventId' | '/events/'
+  fullPaths:
+    | '/'
+    | '/feed'
+    | '/profile'
+    | '/tracker'
+    | '/events/$eventId'
+    | '/events/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/feed' | '/tracker' | '/events/$eventId' | '/events'
-  id: '__root__' | '/' | '/feed' | '/tracker' | '/events/$eventId' | '/events/'
+  to: '/' | '/feed' | '/profile' | '/tracker' | '/events/$eventId' | '/events'
+  id:
+    | '__root__'
+    | '/'
+    | '/feed'
+    | '/profile'
+    | '/tracker'
+    | '/events/$eventId'
+    | '/events/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   FeedRoute: typeof FeedRoute
+  ProfileRoute: typeof ProfileRoute
   TrackerRoute: typeof TrackerRoute
   EventsEventIdRoute: typeof EventsEventIdRoute
   EventsIndexRoute: typeof EventsIndexRoute
@@ -86,6 +109,13 @@ declare module '@tanstack/react-router' {
       path: '/tracker'
       fullPath: '/tracker'
       preLoaderRoute: typeof TrackerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/profile': {
+      id: '/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/feed': {
@@ -122,6 +152,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   FeedRoute: FeedRoute,
+  ProfileRoute: ProfileRoute,
   TrackerRoute: TrackerRoute,
   EventsEventIdRoute: EventsEventIdRoute,
   EventsIndexRoute: EventsIndexRoute,
