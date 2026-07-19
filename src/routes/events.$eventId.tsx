@@ -76,17 +76,25 @@ function EventDetail() {
       <div className="sticky top-0 z-10 -mt-3 px-5">
         <div className="rounded-2xl bg-card p-3 shadow-lg ring-1 ring-border">
           {event.entered ? (
-            <button
-              disabled
-              className="w-full rounded-xl bg-emerald-100 py-3 text-sm font-bold text-emerald-900"
-            >
-              ✓ You're entered
-            </button>
+            <div className="flex items-center gap-2 rounded-xl bg-emerald-100 px-4 py-3">
+              <span className="flex-1 text-sm font-bold text-emerald-900">✓ You're entered</span>
+              <Link
+                to="/events/$eventId/enter"
+                params={{ eventId: event.id }}
+                className="text-xs font-semibold text-emerald-900 underline"
+              >
+                Manage
+              </Link>
+            </div>
           ) : (
-            <button className="w-full rounded-xl cherry-gradient py-3 text-sm font-bold text-white shadow-md shadow-cherry/25 active:scale-[0.99] transition-transform">
-              Enter on Entry Ninja
-              <ExternalLink className="ml-2 inline h-4 w-4" />
-            </button>
+            <Link
+              to="/events/$eventId/enter"
+              params={{ eventId: event.id }}
+              className="flex w-full items-center justify-center gap-1 rounded-xl cherry-gradient py-3 text-sm font-bold text-white shadow-md shadow-cherry/25 active:scale-[0.99] transition-transform"
+            >
+              Enter this event
+              <ChevronRight className="h-4 w-4" />
+            </Link>
           )}
           {event.externalId ? (
             <p className="mt-2 text-center text-[10px] uppercase tracking-widest text-muted-foreground">
