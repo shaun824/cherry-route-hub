@@ -411,7 +411,7 @@ function EnterEvent() {
           onClick={() => canSubmit && setStage("pay")}
           className="flex w-full items-center justify-center gap-2 rounded-xl cherry-gradient py-3.5 text-sm font-bold text-white shadow-lg shadow-cherry/25 disabled:cursor-not-allowed disabled:opacity-40 active:scale-[0.99] transition-transform"
         >
-          Confirm entry · {ZAR(total)}
+          Continue to payment · {ZAR(total)}
           <ChevronRight className="h-4 w-4" />
         </button>
         {!canSubmit && (
@@ -424,6 +424,19 @@ function EnterEvent() {
           </p>
         )}
       </div>
+
+      {stage === "pay" && (
+        <PaymentSheet
+          amount={total}
+          email={email}
+          name={`${firstName} ${lastName}`.trim()}
+          onCancel={() => setStage("form")}
+          onSuccess={(id) => {
+            setPaymentId(id);
+            setStage("success");
+          }}
+        />
+      )}
     </div>
   );
 }
