@@ -14,16 +14,322 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      entries: {
+        Row: {
+          category: string
+          created_at: string
+          entry_ninja_ref: string | null
+          event_id: string
+          id: string
+          jacket_size: string | null
+          merch: Json
+          payment_ref: string | null
+          payment_status: string
+          total_cents: number
+          tshirt_size: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          entry_ninja_ref?: string | null
+          event_id: string
+          id?: string
+          jacket_size?: string | null
+          merch?: Json
+          payment_ref?: string | null
+          payment_status?: string
+          total_cents?: number
+          tshirt_size?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          entry_ninja_ref?: string | null
+          event_id?: string
+          id?: string
+          jacket_size?: string | null
+          merch?: Json
+          payment_ref?: string | null
+          payment_status?: string
+          total_cents?: number
+          tshirt_size?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "entries_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      events: {
+        Row: {
+          created_at: string
+          description: string | null
+          discipline: string
+          distance_km: number
+          entry_ninja_id: string | null
+          entry_ninja_url: string | null
+          event_date: string
+          hero_color: string | null
+          id: string
+          location: string
+          map_query: string | null
+          name: string
+          schedule: Json
+          slug: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          discipline: string
+          distance_km?: number
+          entry_ninja_id?: string | null
+          entry_ninja_url?: string | null
+          event_date: string
+          hero_color?: string | null
+          id?: string
+          location: string
+          map_query?: string | null
+          name: string
+          schedule?: Json
+          slug: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          discipline?: string
+          distance_km?: number
+          entry_ninja_id?: string | null
+          entry_ninja_url?: string | null
+          event_date?: string
+          hero_color?: string | null
+          id?: string
+          location?: string
+          map_query?: string | null
+          name?: string
+          schedule?: Json
+          slug?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      feed_posts: {
+        Row: {
+          author: string
+          body: string
+          created_at: string
+          event_id: string | null
+          id: string
+          pinned: boolean
+          post_type: string
+          posted_at: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          author?: string
+          body: string
+          created_at?: string
+          event_id?: string | null
+          id?: string
+          pinned?: boolean
+          post_type?: string
+          posted_at?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          author?: string
+          body?: string
+          created_at?: string
+          event_id?: string | null
+          id?: string
+          pinned?: boolean
+          post_type?: string
+          posted_at?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feed_posts_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          email: string | null
+          emergency_contact_name: string | null
+          emergency_contact_phone: string | null
+          entry_ninja_id: string | null
+          full_name: string | null
+          id: string
+          jacket_size: string | null
+          phone: string | null
+          tshirt_size: string | null
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string | null
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          entry_ninja_id?: string | null
+          full_name?: string | null
+          id: string
+          jacket_size?: string | null
+          phone?: string | null
+          tshirt_size?: string | null
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string | null
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          entry_ninja_id?: string | null
+          full_name?: string | null
+          id?: string
+          jacket_size?: string | null
+          phone?: string | null
+          tshirt_size?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      promos: {
+        Row: {
+          accent: string
+          brand: string
+          code: string
+          created_at: string
+          discount: string
+          expires: string | null
+          id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          accent?: string
+          brand: string
+          code: string
+          created_at?: string
+          discount: string
+          expires?: string | null
+          id?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          accent?: string
+          brand?: string
+          code?: string
+          created_at?: string
+          discount?: string
+          expires?: string | null
+          id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      sponsors: {
+        Row: {
+          accent: string
+          active: boolean
+          created_at: string
+          id: string
+          logo_text: string
+          name: string
+          sort_order: number
+          tier: string
+          updated_at: string
+          url: string | null
+        }
+        Insert: {
+          accent?: string
+          active?: boolean
+          created_at?: string
+          id?: string
+          logo_text: string
+          name: string
+          sort_order?: number
+          tier?: string
+          updated_at?: string
+          url?: string | null
+        }
+        Update: {
+          accent?: string
+          active?: boolean
+          created_at?: string
+          id?: string
+          logo_text?: string
+          name?: string
+          sort_order?: number
+          tier?: string
+          updated_at?: string
+          url?: string | null
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "rider"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +456,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "rider"],
+    },
   },
 } as const
