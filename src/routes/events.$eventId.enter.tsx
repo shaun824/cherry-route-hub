@@ -17,6 +17,8 @@ import {
   X,
 } from "lucide-react";
 import { currentRider, events, formatDate, formatTime, getEntryConfig, type EntryCategory, type MerchItem } from "@/lib/mock-data";
+import { useAdminStore } from "@/lib/store";
+import { useHydratedStore } from "@/lib/use-hydrated-store";
 
 export const Route = createFileRoute("/events/$eventId/enter")({
   loader: ({ params }) => {
