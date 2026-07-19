@@ -1,8 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
-import { Plus, Pencil, Trash2, X, Eye, EyeOff } from "lucide-react";
+import { useRef, useState } from "react";
+import { Plus, Pencil, Trash2, X, Eye, EyeOff, Upload, Image as ImageIcon, Loader2 } from "lucide-react";
 import { useAdminStore, newId, type Sponsor } from "@/lib/store";
 import { SponsorScroller } from "@/components/sponsor-scroller";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/admin/sponsors")({
   component: AdminSponsors,
@@ -18,6 +19,22 @@ function blank(): Sponsor {
     url: "",
     active: true,
   };
+}
+
+// Uploads a logo to the private `sponsor-logos` bucket and returns a long-lived
+// signed URL. (Public buckets are blocked in this workspace.)
+async function uploadSponsorLogo(file: File): Promise<string> {
+  const ext = file.name.split(".").pop()?.toLowerCase() ?? "png";
+  const path = `${crypto.randomUUID()}.${ext}`;
+  const { error } = await supabase.storage
+    .from("sponsor-logos")
+    .upload(path, file, { contentType: file.type, upsert: false });
+  if (error) throw error;
+  const { data, error: signErr } = await supabase.storage
+    .from("sponsor-logos")
+    .createSignedUrl(path, 60 * 60 * 24 * 365 * 10); // ~10 years
+  if (signErr || !data?.signedUrl) throw signErr ?? new Error("Sign URL failed");
+  return data.signedUrl;
 }
 
 const tierOrder: Sponsor["tier"][] = ["Platinum", "Gold", "Silver", "Bronze"];
