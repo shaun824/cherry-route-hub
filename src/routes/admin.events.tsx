@@ -471,6 +471,18 @@ function EventEditor({
             </ul>
           </div>
 
+          <ClassesEditor
+            classes={form.classes ?? []}
+            onChange={(next) => update("classes", next)}
+          />
+
+          <BatchesEditor
+            batches={form.batches ?? []}
+            onChange={(next) => update("batches", next)}
+          />
+
+
+
           <Field label="Hero gradient" className="md:col-span-2">
             <div className="flex flex-wrap gap-2">
               {gradients.map((g) => (
