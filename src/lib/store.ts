@@ -123,7 +123,7 @@ export const useAdminStore = create<AdminState>()((set) => ({
   },
 
   resetLocal: () =>
-    set({ events: seedEvents, feed: seedFeed, promos: seedPromos, sponsors: seedSponsors }),
+    set({ events: seedEvents, feed: seedFeed, promos: seedPromos, sponsors: seedSponsors, settings: DEFAULT_SETTINGS }),
 }));
 
 export function newId(prefix: string) {
