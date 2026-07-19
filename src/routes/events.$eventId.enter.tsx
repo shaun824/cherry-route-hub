@@ -57,11 +57,19 @@ const ZAR = (n: number) =>
 
 function EnterEvent() {
   useHydratedStore();
-  const { event, config } = Route.useLoaderData();
+  const loader = Route.useLoaderData();
   const waivers = useAdminStore((s) => s.settings.waivers);
+  const storeEvent = useAdminStore((s) => s.events.find((e) => e.id === loader.event.id));
+  const event = storeEvent ?? loader.event;
+  const config = loader.config;
+
+  // Admin-managed classes override the default config; same for batches.
+  const classes = (event.classes && event.classes.length > 0 ? event.classes : config.categories) as EntryCategory[];
+  const batches = event.batches ?? [];
 
 
-  const [categoryId, setCategoryId] = useState(config.categories[0].id);
+  const [categoryId, setCategoryId] = useState(classes[0]?.id ?? "");
+  const [batchId, setBatchId] = useState<string>(batches[0]?.id ?? "");
   const [firstName, setFirstName] = useState(currentRider.name.split(" ")[0] ?? "");
   const [lastName, setLastName] = useState(currentRider.name.split(" ").slice(1).join(" ") ?? "");
   const [email, setEmail] = useState("alex@example.com");
@@ -87,6 +95,7 @@ function EnterEvent() {
     phone: string;
     dob: string;
     categoryId: string;
+    batchId: string;
     tshirtSize: string;
     jacketSize: string;
   };
@@ -97,7 +106,8 @@ function EnterEvent() {
     email: "",
     phone: "",
     dob: "",
-    categoryId: config.categories[0].id,
+    categoryId: classes[0]?.id ?? "",
+    batchId: batches[0]?.id ?? "",
     tshirtSize: "",
     jacketSize: "",
   });
