@@ -12,7 +12,7 @@ import {
   GripVertical,
 } from "lucide-react";
 import { useAdminStore, newId } from "@/lib/store";
-import type { Batch, EntryCategory, Event } from "@/lib/mock-data";
+import type { Batch, BatchPrice, EntryCategory, Event } from "@/lib/mock-data";
 
 export const Route = createFileRoute("/admin/events")({
   component: AdminEvents,
@@ -400,6 +400,34 @@ function EventEditor({
               value={form.description}
               onChange={(e) => update("description", e.target.value)}
             />
+          </Field>
+
+          <Field label="Event logo URL">
+            <input
+              className={inputCls}
+              value={form.logoUrl ?? ""}
+              placeholder="https://…/logo.png"
+              onChange={(e) => update("logoUrl", e.target.value || undefined)}
+            />
+            {form.logoUrl ? (
+              <div className="mt-2 inline-flex items-center gap-2 rounded-lg border border-border bg-background p-2">
+                <img src={form.logoUrl} alt="Logo preview" className="h-10 w-10 rounded object-contain" />
+                <span className="text-[11px] text-ink-soft">Logo preview</span>
+              </div>
+            ) : null}
+          </Field>
+          <Field label="Cover image URL">
+            <input
+              className={inputCls}
+              value={form.coverUrl ?? ""}
+              placeholder="https://…/cover.jpg"
+              onChange={(e) => update("coverUrl", e.target.value || undefined)}
+            />
+            {form.coverUrl ? (
+              <div className="mt-2 overflow-hidden rounded-lg border border-border">
+                <img src={form.coverUrl} alt="Cover preview" className="h-24 w-full object-cover" />
+              </div>
+            ) : null}
           </Field>
 
           <div className="md:col-span-2">
@@ -807,11 +835,144 @@ function BatchesEditor({
                 onChange={(e) => update(i, { description: e.target.value })}
               />
             </div>
+            <BatchPricesEditor
+              prices={b.prices ?? []}
+              onChange={(next) => update(i, { prices: next })}
+            />
           </li>
         ))}
         {batches.length === 0 ? (
           <li className="rounded-lg border border-dashed border-border p-4 text-center text-xs text-ink-soft">
             No batches. Riders won't pick a start wave at entry.
+          </li>
+        ) : null}
+      </ul>
+    </div>
+  );
+}
+
+function BatchPricesEditor({
+  prices,
+  onChange,
+}: {
+  prices: BatchPrice[];
+  onChange: (next: BatchPrice[]) => void;
+}) {
+  const add = () =>
+    onChange([
+      ...prices,
+      {
+        id: newId("prc"),
+        label: prices.length === 0 ? "Early Bird" : prices.length === 1 ? "Regular" : "Late Entry",
+        priceZAR: 0,
+        expiresAt: "",
+      },
+    ]);
+  const upd = (i: number, patch: Partial<BatchPrice>) =>
+    onChange(prices.map((p, idx) => (idx === i ? { ...p, ...patch } : p)));
+  const rm = (i: number) => onChange(prices.filter((_, idx) => idx !== i));
+  const move = (i: number, dir: -1 | 1) => {
+    const j = i + dir;
+    if (j < 0 || j >= prices.length) return;
+    const next = [...prices];
+    [next[i], next[j]] = [next[j], next[i]];
+    onChange(next);
+  };
+
+  const toLocal = (iso?: string) => {
+    if (!iso) return "";
+    try { return new Date(iso).toISOString().slice(0, 16); } catch { return ""; }
+  };
+
+  return (
+    <div className="mt-3 rounded-lg border border-dashed border-border bg-secondary/40 p-3">
+      <div className="mb-2 flex items-center justify-between">
+        <div>
+          <span className="text-[11px] font-bold uppercase tracking-wider text-ink-soft">
+            Pricing tiers (early bird → regular)
+          </span>
+          <p className="text-[11px] text-ink-soft">
+            Tiers apply in order. The first tier not yet expired is charged; leave the last tier's expiry blank so it always applies. If empty, the class price is used.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={add}
+          className="inline-flex items-center gap-1 rounded-md bg-card px-2.5 py-1 text-xs font-semibold text-ink ring-1 ring-border"
+        >
+          <Plus className="h-3.5 w-3.5" /> Add tier
+        </button>
+      </div>
+      <ul className="space-y-2">
+        {prices.map((p, i) => (
+          <li key={p.id} className="rounded-lg border border-border bg-background p-2">
+            <div className="mb-1 flex items-center justify-between">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-ink-soft">
+                Tier {i + 1}
+              </span>
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => move(i, -1)}
+                  disabled={i === 0}
+                  className="rounded p-0.5 text-ink-soft hover:bg-secondary disabled:opacity-30"
+                  aria-label="Move up"
+                >
+                  <GripVertical className="h-3 w-3 rotate-90" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => move(i, 1)}
+                  disabled={i === prices.length - 1}
+                  className="rounded p-0.5 text-ink-soft hover:bg-secondary disabled:opacity-30"
+                  aria-label="Move down"
+                >
+                  <GripVertical className="h-3 w-3 -rotate-90" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => rm(i)}
+                  className="rounded p-0.5 text-cherry hover:bg-accent"
+                  aria-label="Remove tier"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-2 md:grid-cols-3">
+              <input
+                className={inputCls}
+                placeholder="Label (e.g. Early Bird)"
+                value={p.label}
+                onChange={(e) => upd(i, { label: e.target.value })}
+              />
+              <input
+                type="number"
+                min={0}
+                className={inputCls}
+                placeholder="Price ZAR"
+                value={p.priceZAR}
+                onChange={(e) => upd(i, { priceZAR: Number(e.target.value) })}
+              />
+              <input
+                type="datetime-local"
+                className={inputCls}
+                value={toLocal(p.expiresAt)}
+                onChange={(e) =>
+                  upd(i, {
+                    expiresAt: e.target.value ? new Date(e.target.value).toISOString() : "",
+                  })
+                }
+              />
+            </div>
+            {!p.expiresAt ? (
+              <p className="mt-1 text-[10px] text-ink-soft">No expiry — this tier always applies unless an earlier tier is active.</p>
+            ) : null}
+          </li>
+        ))}
+        {prices.length === 0 ? (
+          <li className="rounded-lg border border-dashed border-border bg-background p-3 text-center text-[11px] text-ink-soft">
+            No tiered pricing. Riders pay the class price.
           </li>
         ) : null}
       </ul>

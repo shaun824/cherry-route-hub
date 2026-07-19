@@ -32,14 +32,29 @@ function Events() {
               params={{ eventId: e.id }}
               className="block overflow-hidden rounded-2xl bg-card ring-1 ring-border active:scale-[0.99] transition-transform"
             >
-              <div className={`bg-gradient-to-br ${e.heroColor} px-4 py-4 text-white`}>
-                <div className="flex items-center justify-between">
+              <div className={`relative overflow-hidden bg-gradient-to-br ${e.heroColor} px-4 py-4 text-white`}>
+                {e.coverUrl ? (
+                  <>
+                    <img src={e.coverUrl} alt="" className="absolute inset-0 h-full w-full object-cover opacity-40" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                  </>
+                ) : null}
+                <div className="relative flex items-center justify-between">
                   <TypeBadge type={e.status} />
                   <span className="text-[11px] font-semibold uppercase tracking-widest opacity-85">
                     {e.discipline}
                   </span>
                 </div>
-                <p className="mt-3 font-display text-lg font-bold leading-tight">{e.name}</p>
+                <div className="relative mt-3 flex items-center gap-3">
+                  {e.logoUrl ? (
+                    <img
+                      src={e.logoUrl}
+                      alt=""
+                      className="h-10 w-10 shrink-0 rounded-lg bg-white/10 object-contain p-1 ring-1 ring-white/25"
+                    />
+                  ) : null}
+                  <p className="font-display text-lg font-bold leading-tight">{e.name}</p>
+                </div>
               </div>
               <div className="flex items-center justify-between px-4 py-3">
                 <div className="min-w-0">

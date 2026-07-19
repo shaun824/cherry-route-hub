@@ -16,7 +16,7 @@ import {
   Sparkles,
   X,
 } from "lucide-react";
-import { currentRider, events, formatDate, formatTime, getEntryConfig, type Batch, type EntryCategory, type MerchItem } from "@/lib/mock-data";
+import { currentRider, events, formatDate, formatTime, getEntryConfig, activeBatchPrice, type Batch, type EntryCategory, type MerchItem } from "@/lib/mock-data";
 import { useAdminStore } from "@/lib/store";
 import { useHydratedStore } from "@/lib/use-hydrated-store";
 
@@ -124,6 +124,8 @@ function EnterEvent() {
 
   const category = classes.find((c) => c.id === categoryId) ?? classes[0];
   const batch = batches.find((b) => b.id === batchId);
+  const activePrice = activeBatchPrice(batch);
+  const primaryEntryPrice = activePrice ? activePrice.priceZAR : (category?.priceZAR ?? 0);
 
   const merchTotal = useMemo(
     () =>
@@ -134,11 +136,13 @@ function EnterEvent() {
     () =>
       friends.reduce((sum, f) => {
         const c = classes.find((cc) => cc.id === f.categoryId);
-        return sum + (c?.priceZAR ?? 0);
+        const fb = batches.find((bb) => bb.id === f.batchId);
+        const fp = activeBatchPrice(fb);
+        return sum + (fp ? fp.priceZAR : c?.priceZAR ?? 0);
       }, 0),
-    [friends, classes],
+    [friends, classes, batches],
   );
-  const total = (category?.priceZAR ?? 0) + friendsTotal + merchTotal;
+  const total = primaryEntryPrice + friendsTotal + merchTotal;
 
   const setQty = (id: string, delta: number) =>
     setMerchQty((q) => {
@@ -185,7 +189,7 @@ function EnterEvent() {
             )}
           </p>
           <div className="mt-4 rounded-2xl bg-accent/40 p-4 text-left text-xs text-ink">
-            <p className="flex justify-between"><span>Your entry ({category.distanceKm} km)</span><strong>{ZAR(category.priceZAR)}</strong></p>
+            <p className="flex justify-between"><span>Your entry ({category.distanceKm} km{activePrice ? ` · ${activePrice.label}` : ""})</span><strong>{ZAR(primaryEntryPrice)}</strong></p>
             {friendsTotal > 0 && (
               <p className="mt-1 flex justify-between"><span>{friends.length} friend entr{friends.length === 1 ? "y" : "ies"}</span><strong>{ZAR(friendsTotal)}</strong></p>
             )}
@@ -305,6 +309,8 @@ function EnterEvent() {
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               {batches.map((b) => {
                 const active = b.id === batchId;
+                const ap = activeBatchPrice(b);
+                const nextExpiry = ap?.expiresAt;
                 return (
                   <button
                     key={b.id}
@@ -324,6 +330,16 @@ function EnterEvent() {
                       {b.capacity ? (
                         <p className="mt-0.5 text-[10px] uppercase tracking-widest text-muted-foreground">
                           Capacity {b.capacity}
+                        </p>
+                      ) : null}
+                      {ap ? (
+                        <p className="mt-1 text-[11px] font-semibold text-cherry">
+                          {ap.label} · {ZAR(ap.priceZAR)}
+                          {nextExpiry ? (
+                            <span className="ml-1 font-normal text-ink-soft">
+                              (ends {formatDate(nextExpiry)})
+                            </span>
+                          ) : null}
                         </p>
                       ) : null}
                     </div>
@@ -625,18 +641,25 @@ function EnterEvent() {
           </p>
           <div className="mt-2 space-y-1 text-sm">
             <div className="flex justify-between">
-              <span className="text-ink-soft">Entry — {category.label} ({firstName || "You"})</span>
-              <span className="font-mono font-semibold text-ink">{ZAR(category.priceZAR)}</span>
+              <span className="text-ink-soft">
+                Entry — {category.label} ({firstName || "You"})
+                {activePrice ? <span className="ml-1 text-[10px] uppercase tracking-widest text-cherry">· {activePrice.label}</span> : null}
+              </span>
+              <span className="font-mono font-semibold text-ink">{ZAR(primaryEntryPrice)}</span>
             </div>
             {friends.map((f, i) => {
-              const fc = config.categories.find((c: EntryCategory) => c.id === f.categoryId);
+              const fc = classes.find((c) => c.id === f.categoryId);
               if (!fc) return null;
+              const fb = batches.find((bb) => bb.id === f.batchId);
+              const fp = activeBatchPrice(fb);
+              const fPrice = fp ? fp.priceZAR : fc.priceZAR;
               return (
                 <div key={f.id} className="flex justify-between">
                   <span className="text-ink-soft">
                     Entry — {fc.label} ({f.firstName || `Friend ${i + 1}`})
+                    {fp ? <span className="ml-1 text-[10px] uppercase tracking-widest text-cherry">· {fp.label}</span> : null}
                   </span>
-                  <span className="font-mono font-semibold text-ink">{ZAR(fc.priceZAR)}</span>
+                  <span className="font-mono font-semibold text-ink">{ZAR(fPrice)}</span>
                 </div>
               );
             })}

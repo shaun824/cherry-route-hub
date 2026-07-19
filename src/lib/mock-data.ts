@@ -1,12 +1,20 @@
 // Mock data — shaped to be replaced later by Entry Ninja / backend integrations.
 // Every entity carries an `externalId` field for future sync.
 
+export type BatchPrice = {
+  id: string;
+  label: string;       // e.g. "Early Bird", "Regular", "Late Entry"
+  priceZAR: number;
+  expiresAt?: string;  // ISO — after this, next tier applies. Empty on the final/regular tier.
+};
+
 export type Batch = {
   id: string;
   name: string;         // e.g. "A Bunch", "Wave 1", "Elite"
   startTime: string;    // "HH:MM" — race-day start time
   capacity?: number;    // optional cap
   description?: string; // optional note (e.g. "Seeded, licensed riders only")
+  prices?: BatchPrice[]; // optional tiered pricing; overrides the class price when set
 };
 
 export type Event = {
@@ -20,6 +28,8 @@ export type Event = {
   status: "open" | "closed" | "live" | "upcoming";
   lifecycle?: "draft" | "published" | "archived";
   heroColor: string;
+  logoUrl?: string;    // event logo (square/transparent works best)
+  coverUrl?: string;   // wide cover image shown behind the hero
   description: string;
   schedule: { time: string; label: string }[];
   mapQuery: string; // used for embed
@@ -27,6 +37,16 @@ export type Event = {
   classes?: EntryCategory[]; // admin-managed race classes / categories
   batches?: Batch[];         // admin-managed start batches / waves
 };
+
+// Returns the currently active price tier for a batch, or null if none defined.
+export function activeBatchPrice(batch: Batch | undefined | null, now: Date = new Date()): BatchPrice | null {
+  if (!batch?.prices || batch.prices.length === 0) return null;
+  for (const p of batch.prices) {
+    if (!p.expiresAt) return p; // untimed tier = active
+    if (new Date(p.expiresAt).getTime() > now.getTime()) return p;
+  }
+  return batch.prices[batch.prices.length - 1];
+}
 
 export type FeedPost = {
   id: string;
