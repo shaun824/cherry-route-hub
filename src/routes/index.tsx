@@ -50,11 +50,14 @@ function Home() {
   const events = useAdminStore((s) => s.events);
   const feed = useAdminStore((s) => s.feed);
   const promos = useAdminStore((s) => s.promos);
+  const branding = useAdminStore((s) => s.settings.branding);
+  const quickLinks = useAdminStore((s) => s.settings.quickLinks).filter((q) => q.enabled);
   const upcoming = events
     .filter((e) => (e.lifecycle ?? "published") === "published" && e.status !== "closed")
     .slice(0, 3);
   const pinned = feed.filter((p) => p.pinned)[0];
   const recentNews = feed.filter((p) => !p.pinned).slice(0, 3);
+  const qlCols = Math.min(Math.max(quickLinks.length, 1), 4);
 
 
   return (
