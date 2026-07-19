@@ -41,6 +41,7 @@ type AdminState = {
   feed: FeedPost[];
   promos: Promo[];
   sponsors: Sponsor[];
+  settings: SiteSettings;
 
   upsertEvent: (e: Event) => void;
   deleteEvent: (id: string) => void;
@@ -53,6 +54,8 @@ type AdminState = {
 
   upsertSponsor: (s: Sponsor) => void;
   deleteSponsor: (id: string) => void;
+
+  setSettings: (s: Partial<SiteSettings>) => void;
 
   resetLocal: () => void;
 };
