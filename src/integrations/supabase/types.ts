@@ -262,6 +262,7 @@ export type Database = {
           created_at: string
           id: string
           logo_text: string
+          logo_url: string | null
           name: string
           sort_order: number
           tier: string
@@ -274,6 +275,7 @@ export type Database = {
           created_at?: string
           id?: string
           logo_text: string
+          logo_url?: string | null
           name: string
           sort_order?: number
           tier?: string
@@ -286,6 +288,7 @@ export type Database = {
           created_at?: string
           id?: string
           logo_text?: string
+          logo_url?: string | null
           name?: string
           sort_order?: number
           tier?: string
