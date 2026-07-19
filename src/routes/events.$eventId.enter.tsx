@@ -76,7 +76,9 @@ function EnterEvent() {
 
   const [waiver, setWaiver] = useState(false);
   const [terms, setTerms] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
+  type Stage = "form" | "pay" | "success";
+  const [stage, setStage] = useState<Stage>("form");
+  const [paymentId, setPaymentId] = useState<string>("");
 
   const category = config.categories.find((c: EntryCategory) => c.id === categoryId)!;
 
