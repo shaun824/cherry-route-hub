@@ -79,6 +79,33 @@ function EnterEvent() {
   const [merchQty, setMerchQty] = useState<Record<string, number>>({});
   const [merchSize, setMerchSize] = useState<Record<string, string>>({});
 
+  type Friend = {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone: string;
+    dob: string;
+    categoryId: string;
+    tshirtSize: string;
+    jacketSize: string;
+  };
+  const makeFriend = (): Friend => ({
+    id: `f_${Math.random().toString(36).slice(2, 9)}`,
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    dob: "",
+    categoryId: config.categories[0].id,
+    tshirtSize: "",
+    jacketSize: "",
+  });
+  const [friends, setFriends] = useState<Friend[]>([]);
+  const updateFriend = (id: string, patch: Partial<Friend>) =>
+    setFriends((fs) => fs.map((f) => (f.id === id ? { ...f, ...patch } : f)));
+  const removeFriend = (id: string) => setFriends((fs) => fs.filter((f) => f.id !== id));
+
   const [waiver, setWaiver] = useState(false);
   const [terms, setTerms] = useState(false);
   type Stage = "form" | "pay" | "success";
@@ -92,7 +119,15 @@ function EnterEvent() {
       config.merch.reduce((sum: number, m: MerchItem) => sum + (merchQty[m.id] ?? 0) * m.priceZAR, 0),
     [merchQty, config.merch],
   );
-  const total = category.priceZAR + merchTotal;
+  const friendsTotal = useMemo(
+    () =>
+      friends.reduce((sum, f) => {
+        const c = config.categories.find((cc: EntryCategory) => cc.id === f.categoryId);
+        return sum + (c?.priceZAR ?? 0);
+      }, 0),
+    [friends, config.categories],
+  );
+  const total = category.priceZAR + friendsTotal + merchTotal;
 
   const setQty = (id: string, delta: number) =>
     setMerchQty((q) => {
