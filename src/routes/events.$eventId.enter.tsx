@@ -309,6 +309,8 @@ function EnterEvent() {
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               {batches.map((b) => {
                 const active = b.id === batchId;
+                const ap = activeBatchPrice(b);
+                const nextExpiry = ap?.expiresAt;
                 return (
                   <button
                     key={b.id}
@@ -328,6 +330,16 @@ function EnterEvent() {
                       {b.capacity ? (
                         <p className="mt-0.5 text-[10px] uppercase tracking-widest text-muted-foreground">
                           Capacity {b.capacity}
+                        </p>
+                      ) : null}
+                      {ap ? (
+                        <p className="mt-1 text-[11px] font-semibold text-cherry">
+                          {ap.label} · {ZAR(ap.priceZAR)}
+                          {nextExpiry ? (
+                            <span className="ml-1 font-normal text-ink-soft">
+                              (ends {formatDate(nextExpiry)})
+                            </span>
+                          ) : null}
                         </p>
                       ) : null}
                     </div>
