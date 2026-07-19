@@ -119,7 +119,7 @@ function Home() {
       {/* Quick links */}
       {quickLinks.length > 0 ? (
         <div
-          className="-mt-5 grid gap-2 px-4"
+          className="mt-4 grid gap-2 px-4"
           style={{ gridTemplateColumns: `repeat(${qlCols}, minmax(0, 1fr))` }}
         >
           {quickLinks.map((q) => {
@@ -128,12 +128,12 @@ function Home() {
               <Link
                 key={q.id}
                 to={q.to}
-                className="flex flex-col items-center gap-1.5 rounded-2xl bg-card p-3 shadow-sm ring-1 ring-border"
+                className="flex flex-col items-center gap-2 rounded-2xl bg-card px-2 py-4 shadow-sm ring-1 ring-border"
               >
-                <span className="grid h-9 w-9 place-items-center rounded-xl bg-accent text-cherry-deep">
-                  <Icon className="h-4.5 w-4.5" strokeWidth={2.2} />
+                <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-accent text-cherry-deep">
+                  <Icon className="h-5 w-5" strokeWidth={2.2} />
                 </span>
-                <span className="text-[11px] font-semibold text-ink">{q.label}</span>
+                <span className="truncate max-w-full text-[11px] font-semibold text-ink">{q.label}</span>
               </Link>
             );
           })}
