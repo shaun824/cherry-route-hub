@@ -1,5 +1,6 @@
 import { createFileRoute, Outlet, Link, useRouterState, Navigate } from "@tanstack/react-router";
 import { LayoutDashboard, CalendarDays, Newspaper, Tag, Handshake, ArrowLeft, LogOut, Users, Settings } from "lucide-react";
+import rceLogo from "@/assets/rce-logo.png.asset.json";
 import { useHydratedStore } from "@/lib/use-hydrated-store";
 import { useIsAdmin, signOut } from "@/lib/auth";
 
@@ -58,8 +59,8 @@ function AdminLayout() {
       <header className="sticky top-0 z-30 border-b border-border bg-card/95 backdrop-blur">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 md:px-8">
           <div className="flex items-center gap-3">
-            <span className="grid h-9 w-9 place-items-center rounded-lg cherry-gradient text-white font-black">
-              RC
+            <span className="grid h-10 w-10 place-items-center rounded-lg bg-white p-1 ring-1 ring-border">
+              <img src={rceLogo.url} alt="Red Cherry Events" className="h-full w-full object-contain" />
             </span>
             <div>
               <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-ink-soft">
