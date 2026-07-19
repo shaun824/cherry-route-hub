@@ -3,7 +3,7 @@ import { PageHeader, TypeBadge } from "@/components/ui-bits";
 import { events, formatDate, formatTime } from "@/lib/mock-data";
 import { MapPin, ChevronRight } from "lucide-react";
 
-export const Route = createFileRoute("/events")({
+export const Route = createFileRoute("/events/")({
   head: () => ({
     meta: [
       { title: "Events — Red Cherry Events" },
