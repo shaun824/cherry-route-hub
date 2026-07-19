@@ -157,32 +157,59 @@ function Home() {
 
       {/* Upcoming events */}
       <SectionTitle title="Upcoming events" action="See all" actionTo="/events" />
-      <div className="flex snap-x snap-mandatory gap-3 overflow-x-auto px-5 pb-2">
+      <div className="flex snap-x snap-mandatory gap-3 overflow-x-auto px-5 pb-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {upcoming.map((e) => (
-          <Link
+          <article
             key={e.id}
-            to="/events/$eventId"
-            params={{ eventId: e.id }}
-            className={`snap-start shrink-0 w-64 overflow-hidden rounded-2xl bg-gradient-to-br ${e.heroColor} p-4 text-white shadow-md`}
+            className="snap-start shrink-0 w-[17rem] overflow-hidden rounded-2xl bg-card ring-1 ring-border shadow-sm flex flex-col"
           >
-            <div className="flex items-center justify-between">
-              <TypeBadge type={e.status} />
-              <span className="text-[11px] font-semibold uppercase tracking-widest opacity-80">
-                {e.discipline}
+            <Link
+              to="/events/$eventId"
+              params={{ eventId: e.id }}
+              className={`block relative bg-gradient-to-br ${e.heroColor} p-4 text-white`}
+            >
+              {e.coverUrl ? (
+                <img src={e.coverUrl} alt="" className="absolute inset-0 h-full w-full object-cover opacity-40" />
+              ) : null}
+              <div className="relative flex items-center justify-between">
+                <TypeBadge type={e.status} />
+                <span className="text-[11px] font-semibold uppercase tracking-widest opacity-90">
+                  {e.discipline}
+                </span>
+              </div>
+              <p className="relative mt-8 font-display text-lg font-bold leading-tight line-clamp-2">{e.name}</p>
+            </Link>
+            <div className="flex flex-col gap-1.5 p-3">
+              <span className="inline-flex items-center gap-1.5 text-[12px] text-ink-soft">
+                <Clock className="h-3.5 w-3.5 shrink-0" />
+                <span className="truncate">{formatDate(e.date)} · {formatTime(e.date)}</span>
               </span>
-            </div>
-            <p className="mt-6 font-display text-lg font-bold leading-tight">{e.name}</p>
-            <div className="mt-3 flex items-center gap-3 text-[11px] opacity-90">
-              <span className="inline-flex items-center gap-1">
-                <Clock className="h-3.5 w-3.5" /> {formatDate(e.date)} · {formatTime(e.date)}
+              <span className="inline-flex items-center gap-1.5 text-[12px] text-ink-soft">
+                <MapPin className="h-3.5 w-3.5 shrink-0" />
+                <span className="truncate">{e.location} · {e.distanceKm}km</span>
               </span>
+              <div className="mt-2 grid grid-cols-2 gap-2">
+                <Link
+                  to="/events/$eventId"
+                  params={{ eventId: e.id }}
+                  className="grid place-items-center rounded-xl bg-secondary py-2 text-[12px] font-semibold text-ink ring-1 ring-border active:scale-[0.98] transition"
+                >
+                  Details
+                </Link>
+                <Link
+                  to="/events/$eventId/enter"
+                  params={{ eventId: e.id }}
+                  className="grid place-items-center rounded-xl cherry-gradient py-2 text-[12px] font-bold text-white shadow-sm active:scale-[0.98] transition"
+                >
+                  RSVP
+                </Link>
+              </div>
             </div>
-            <div className="mt-1 flex items-center gap-1 text-[11px] opacity-85">
-              <MapPin className="h-3.5 w-3.5" /> {e.location} · {e.distanceKm}km
-            </div>
-          </Link>
+          </article>
         ))}
       </div>
+
+
 
       {/* Latest news preview */}
       <SectionTitle title="Latest from the pits" action="Open feed" actionTo="/feed" />
