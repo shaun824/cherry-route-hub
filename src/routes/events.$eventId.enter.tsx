@@ -361,15 +361,30 @@ function EnterEvent() {
 
         {/* Waivers */}
         <Section title="Waivers & terms">
-          <div className="space-y-2">
-            <Check_ box={waiver} onChange={setWaiver}>
-              I accept the indemnity & liability waiver for this event and confirm I'm medically fit to ride.
-            </Check_>
-            <Check_ box={terms} onChange={setTerms}>
-              I agree to the Red Cherry Events terms and Entry Ninja processing of my data.
-            </Check_>
+          <div className="space-y-3">
+            <div>
+              <Check_ box={waiver} onChange={setWaiver}>
+                {waivers.waiverText}
+              </Check_>
+              {waivers.waiverFullText ? (
+                <p className="mt-1.5 ml-8 text-[11px] leading-relaxed text-ink-soft">
+                  {waivers.waiverFullText}
+                </p>
+              ) : null}
+            </div>
+            <div>
+              <Check_ box={terms} onChange={setTerms}>
+                {waivers.termsText}
+              </Check_>
+              {waivers.termsFullText ? (
+                <p className="mt-1.5 ml-8 text-[11px] leading-relaxed text-ink-soft">
+                  {waivers.termsFullText}
+                </p>
+              ) : null}
+            </div>
           </div>
         </Section>
+
 
         {/* Order summary */}
         <div className="rounded-2xl bg-card p-4 ring-1 ring-border">
