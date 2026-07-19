@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import {
   Plus,
   Pencil,
@@ -10,9 +10,74 @@ import {
   ArchiveRestore,
   Copy,
   GripVertical,
+  Upload,
+  Loader2,
 } from "lucide-react";
 import { useAdminStore, newId } from "@/lib/store";
 import type { Batch, BatchPrice, EntryCategory, Event } from "@/lib/mock-data";
+import { supabase } from "@/integrations/supabase/client";
+
+async function uploadEventImage(file: File): Promise<string> {
+  const ext = file.name.split(".").pop()?.toLowerCase() ?? "png";
+  const path = `${crypto.randomUUID()}.${ext}`;
+  const { error } = await supabase.storage
+    .from("event-images")
+    .upload(path, file, { contentType: file.type, upsert: false });
+  if (error) throw error;
+  const { data, error: signErr } = await supabase.storage
+    .from("event-images")
+    .createSignedUrl(path, 60 * 60 * 24 * 365 * 10);
+  if (signErr || !data?.signedUrl) throw signErr ?? new Error("Sign URL failed");
+  return data.signedUrl;
+}
+
+function ImageUploadButton({
+  onUploaded,
+  label,
+}: {
+  onUploaded: (url: string) => void;
+  label: string;
+}) {
+  const ref = useRef<HTMLInputElement>(null);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  return (
+    <>
+      <input
+        ref={ref}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={async (e) => {
+          const file = e.target.files?.[0];
+          if (!file) return;
+          setBusy(true);
+          setErr(null);
+          try {
+            const url = await uploadEventImage(file);
+            onUploaded(url);
+          } catch (e2) {
+            setErr(e2 instanceof Error ? e2.message : "Upload failed");
+          } finally {
+            setBusy(false);
+            if (ref.current) ref.current.value = "";
+          }
+        }}
+      />
+      <button
+        type="button"
+        disabled={busy}
+        onClick={() => ref.current?.click()}
+        className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-semibold hover:bg-surface disabled:opacity-60"
+      >
+        {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
+        {busy ? "Uploading…" : label}
+      </button>
+      {err ? <p className="mt-1 text-[11px] font-semibold text-cherry">{err}</p> : null}
+    </>
+  );
+}
+
 
 export const Route = createFileRoute("/admin/events")({
   component: AdminEvents,
