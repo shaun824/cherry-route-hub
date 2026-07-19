@@ -4,7 +4,9 @@ import {
   Bell,
   Calendar,
   Check,
-  GripVertical,
+  ChevronRight,
+  Eye,
+  EyeOff,
   Handshake,
   Image as ImageIcon,
   MapPin,
@@ -12,11 +14,13 @@ import {
   Plus,
   Save,
   ShieldCheck,
+  Smartphone,
   Sparkles,
   Tag,
   Trash2,
   Trophy,
   Type as TypeIcon,
+  X,
 } from "lucide-react";
 import { useAdminStore } from "@/lib/store";
 import { useHydratedStore } from "@/lib/use-hydrated-store";
@@ -59,20 +63,292 @@ function AdminSettings() {
   const settings = useAdminStore((s) => s.settings);
   const setSettings = useAdminStore((s) => s.setSettings);
 
-  return (
-    <div className="space-y-6">
-      <header>
-        <p className="text-[11px] font-bold uppercase tracking-widest text-cherry">Site settings</p>
-        <h1 className="font-display text-2xl font-bold">Branding &amp; static content</h1>
-        <p className="mt-1 text-sm text-ink-soft">
-          Manage the app name, tagline, home dashboard quick links, and legal copy (waivers &amp; terms).
-          Changes go live instantly across the rider app.
-        </p>
-      </header>
+  // Lifted draft state so the preview panel can render pending changes
+  // before the admin hits "Save".
+  const [branding, setBranding] = useState<Branding>(settings.branding);
+  const [quickLinks, setQuickLinks] = useState<QuickLink[]>(settings.quickLinks);
+  const [waivers, setWaivers] = useState<Waivers>(settings.waivers);
+  useEffect(() => setBranding(settings.branding), [settings.branding]);
+  useEffect(() => setQuickLinks(settings.quickLinks), [settings.quickLinks]);
+  useEffect(() => setWaivers(settings.waivers), [settings.waivers]);
 
-      <BrandingCard initial={settings.branding} onSaved={(b) => setSettings({ branding: b })} />
-      <QuickLinksCard initial={settings.quickLinks} onSaved={(q) => setSettings({ quickLinks: q })} />
-      <WaiversCard initial={settings.waivers} onSaved={(w) => setSettings({ waivers: w })} />
+  const [previewOpen, setPreviewOpen] = useState(true);
+  const [previewTab, setPreviewTab] = useState<"home" | "waivers">("home");
+
+  const anyDirty =
+    JSON.stringify(branding) !== JSON.stringify(settings.branding) ||
+    JSON.stringify(quickLinks) !== JSON.stringify(settings.quickLinks) ||
+    JSON.stringify(waivers) !== JSON.stringify(settings.waivers);
+
+  return (
+    <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
+      <div className="space-y-6">
+        <header className="flex items-start justify-between gap-3">
+          <div>
+            <p className="text-[11px] font-bold uppercase tracking-widest text-cherry">Site settings</p>
+            <h1 className="font-display text-2xl font-bold">Branding &amp; static content</h1>
+            <p className="mt-1 text-sm text-ink-soft">
+              Preview pending changes on the right before saving. Once saved, they go live instantly across the rider app.
+            </p>
+          </div>
+          <button
+            onClick={() => setPreviewOpen((v) => !v)}
+            className="lg:hidden inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-ink px-3 py-2 text-xs font-bold text-white"
+          >
+            {previewOpen ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+            {previewOpen ? "Hide preview" : "Preview"}
+          </button>
+        </header>
+
+        <BrandingCard
+          value={branding}
+          onChange={setBranding}
+          initial={settings.branding}
+          onSaved={(b) => setSettings({ branding: b })}
+        />
+        <QuickLinksCard
+          value={quickLinks}
+          onChange={setQuickLinks}
+          initial={settings.quickLinks}
+          onSaved={(q) => setSettings({ quickLinks: q })}
+        />
+        <WaiversCard
+          value={waivers}
+          onChange={setWaivers}
+          initial={settings.waivers}
+          onSaved={(w) => setSettings({ waivers: w })}
+        />
+      </div>
+
+      {/* Desktop sticky preview */}
+      <aside className="hidden lg:block">
+        <div className="sticky top-6">
+          <PreviewPanel
+            branding={branding}
+            quickLinks={quickLinks}
+            waivers={waivers}
+            dirty={anyDirty}
+            tab={previewTab}
+            onTab={setPreviewTab}
+          />
+        </div>
+      </aside>
+
+      {/* Mobile slide-over preview */}
+      {previewOpen ? (
+        <div className="fixed inset-0 z-40 lg:hidden">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setPreviewOpen(false)} />
+          <div className="absolute inset-y-0 right-0 w-[min(92vw,380px)] overflow-y-auto bg-background p-4 shadow-xl">
+            <div className="mb-3 flex items-center justify-between">
+              <p className="text-[11px] font-bold uppercase tracking-widest text-ink-soft">Live preview</p>
+              <button
+                onClick={() => setPreviewOpen(false)}
+                className="grid h-8 w-8 place-items-center rounded-md border border-border text-ink-soft"
+                aria-label="Close preview"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <PreviewPanel
+              branding={branding}
+              quickLinks={quickLinks}
+              waivers={waivers}
+              dirty={anyDirty}
+              tab={previewTab}
+              onTab={setPreviewTab}
+            />
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+/* ---------- Preview Panel ---------- */
+
+function PreviewPanel({
+  branding,
+  quickLinks,
+  waivers,
+  dirty,
+  tab,
+  onTab,
+}: {
+  branding: Branding;
+  quickLinks: QuickLink[];
+  waivers: Waivers;
+  dirty: boolean;
+  tab: "home" | "waivers";
+  onTab: (t: "home" | "waivers") => void;
+}) {
+  return (
+    <div className="rounded-2xl bg-card p-4 ring-1 ring-border">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <span className="grid h-8 w-8 place-items-center rounded-lg bg-cherry/10 text-cherry">
+            <Smartphone className="h-4 w-4" />
+          </span>
+          <div>
+            <p className="text-[11px] font-bold uppercase tracking-widest text-ink-soft">Rider preview</p>
+            <p className="text-xs text-ink-soft">
+              {dirty ? (
+                <span className="font-semibold text-cherry">Unsaved changes shown</span>
+              ) : (
+                "Matches what's live"
+              )}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-3 grid grid-cols-2 gap-1 rounded-lg bg-secondary p-1 text-xs font-semibold">
+        {(["home", "waivers"] as const).map((t) => (
+          <button
+            key={t}
+            onClick={() => onTab(t)}
+            className={`rounded-md px-2 py-1.5 capitalize ${
+              tab === t ? "bg-card text-ink shadow-sm" : "text-ink-soft"
+            }`}
+          >
+            {t === "home" ? "Home" : "Entry waivers"}
+          </button>
+        ))}
+      </div>
+
+      {/* Phone frame */}
+      <div className="mt-3 overflow-hidden rounded-[2rem] bg-ink p-2 ring-1 ring-border">
+        <div className="relative h-[520px] overflow-hidden rounded-[1.6rem] bg-background">
+          <div className="pointer-events-none absolute left-1/2 top-1 z-10 h-4 w-16 -translate-x-1/2 rounded-b-2xl bg-ink" />
+          <div className="h-full overflow-y-auto">
+            {tab === "home" ? (
+              <HomePreview branding={branding} quickLinks={quickLinks} />
+            ) : (
+              <WaiverPreview waivers={waivers} />
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function HomePreview({ branding, quickLinks }: { branding: Branding; quickLinks: QuickLink[] }) {
+  const enabled = quickLinks.filter((q) => q.enabled);
+  const cols = Math.min(Math.max(enabled.length, 1), 4);
+  return (
+    <div className="pb-4">
+      <div className="cherry-gradient relative overflow-hidden px-4 pb-7 pt-8 text-white">
+        <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-white/10 blur-2xl" />
+        <div className="relative flex items-start justify-between">
+          <div className="flex items-center gap-2">
+            <span className="grid h-9 w-9 place-items-center rounded-lg bg-white/15 font-black">RC</span>
+            <div>
+              <p className="text-[9px] font-medium uppercase tracking-[0.18em] opacity-80">
+                {branding.eyebrow}
+              </p>
+              <h1 className="font-display text-lg font-bold leading-tight">{branding.tagline}</h1>
+            </div>
+          </div>
+          <span className="grid h-8 w-8 place-items-center rounded-full bg-white/15">
+            <Bell className="h-4 w-4" />
+          </span>
+        </div>
+        <div className="relative mt-5">
+          <p className="text-xs opacity-85">{branding.welcomeMessage}</p>
+          <p className="font-display text-base font-bold">Alex Rider</p>
+        </div>
+        <div className="relative mt-4 flex items-center justify-between rounded-xl bg-white/12 p-2.5 ring-1 ring-white/15">
+          <div>
+            <p className="text-[9px] font-semibold uppercase tracking-widest opacity-80">Gold tier</p>
+            <p className="text-sm font-bold">2,450 pts</p>
+          </div>
+          <ChevronRight className="h-4 w-4 opacity-70" />
+        </div>
+      </div>
+
+      {enabled.length > 0 ? (
+        <div
+          className="-mt-4 grid gap-1.5 px-3"
+          style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}
+        >
+          {enabled.map((q) => {
+            const Icon = ICONS[q.icon] ?? Sparkles;
+            return (
+              <div
+                key={q.id}
+                className="flex flex-col items-center gap-1 rounded-xl bg-card p-2 shadow-sm ring-1 ring-border"
+              >
+                <span className="grid h-7 w-7 place-items-center rounded-lg bg-accent text-cherry-deep">
+                  <Icon className="h-3.5 w-3.5" strokeWidth={2.2} />
+                </span>
+                <span className="text-[9px] font-semibold text-ink">{q.label}</span>
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        <div className="mx-3 mt-3 rounded-xl border border-dashed border-border p-4 text-center text-[11px] text-ink-soft">
+          No quick links enabled — riders will see the hero only.
+        </div>
+      )}
+
+      <div className="mt-5 px-4">
+        <p className="text-[10px] font-bold uppercase tracking-widest text-ink-soft">
+          Upcoming events
+        </p>
+        <div className="mt-2 rounded-xl bg-gradient-to-br from-cherry to-cherry-deep p-3 text-white">
+          <p className="text-[9px] font-semibold uppercase tracking-widest opacity-80">Gravel</p>
+          <p className="mt-3 font-display text-sm font-bold">Karoo Gravel Grinder</p>
+          <p className="mt-1 text-[10px] opacity-85">Sat 12 Sep · Prince Albert</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function WaiverPreview({ waivers }: { waivers: Waivers }) {
+  return (
+    <div className="p-4">
+      <p className="text-[10px] font-bold uppercase tracking-widest text-ink-soft">
+        Step 4 · Entry form
+      </p>
+      <h2 className="mt-1 font-display text-lg font-bold text-ink">Waivers &amp; terms</h2>
+      <div className="mt-4 space-y-4 rounded-2xl bg-card p-3 ring-1 ring-border">
+        <div>
+          <label className="flex items-start gap-2">
+            <span className="mt-0.5 grid h-4 w-4 shrink-0 place-items-center rounded border border-border bg-background">
+              <Check className="h-3 w-3 text-cherry" />
+            </span>
+            <span className="text-[12px] leading-relaxed text-ink">
+              {waivers.waiverText || (
+                <span className="italic text-ink-soft">Waiver line is empty</span>
+              )}
+            </span>
+          </label>
+          {waivers.waiverFullText ? (
+            <p className="mt-1.5 ml-6 text-[10px] leading-relaxed text-ink-soft">
+              {waivers.waiverFullText}
+            </p>
+          ) : null}
+        </div>
+        <div>
+          <label className="flex items-start gap-2">
+            <span className="mt-0.5 grid h-4 w-4 shrink-0 place-items-center rounded border border-border bg-background">
+              <Check className="h-3 w-3 text-cherry" />
+            </span>
+            <span className="text-[12px] leading-relaxed text-ink">
+              {waivers.termsText || (
+                <span className="italic text-ink-soft">Terms line is empty</span>
+              )}
+            </span>
+          </label>
+          {waivers.termsFullText ? (
+            <p className="mt-1.5 ml-6 text-[10px] leading-relaxed text-ink-soft">
+              {waivers.termsFullText}
+            </p>
+          ) : null}
+        </div>
+      </div>
     </div>
   );
 }
@@ -80,17 +356,20 @@ function AdminSettings() {
 /* ---------- Branding ---------- */
 
 function BrandingCard({
+  value,
+  onChange,
   initial,
   onSaved,
 }: {
+  value: Branding;
+  onChange: (b: Branding) => void;
   initial: Branding;
   onSaved: (b: Branding) => void;
 }) {
-  const [form, setForm] = useState(initial);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
-  useEffect(() => setForm(initial), [initial]);
-
+  const form = value;
+  const setForm = onChange;
   const dirty = useMemo(() => JSON.stringify(form) !== JSON.stringify(initial), [form, initial]);
 
   const submit = async () => {
@@ -147,21 +426,6 @@ function BrandingCard({
         </Field>
       </div>
 
-      <div className="mt-4 flex items-center justify-between rounded-xl cherry-gradient p-3 text-white">
-        <div>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] opacity-80">
-            {form.eyebrow}
-          </p>
-          <p className="font-display text-lg font-bold leading-tight">{form.tagline}</p>
-          <p className="mt-1 text-[11px] opacity-80">
-            {form.welcomeMessage} <b>{form.appName}</b>
-          </p>
-        </div>
-        <span className="grid h-10 w-10 place-items-center rounded-lg bg-white/15 font-black">
-          RC
-        </span>
-      </div>
-
       <SaveBar dirty={dirty} saving={saving} saved={saved} onSave={submit} />
     </section>
   );
@@ -170,34 +434,36 @@ function BrandingCard({
 /* ---------- Quick links ---------- */
 
 function QuickLinksCard({
+  value,
+  onChange,
   initial,
   onSaved,
 }: {
+  value: QuickLink[];
+  onChange: (q: QuickLink[]) => void;
   initial: QuickLink[];
   onSaved: (q: QuickLink[]) => void;
 }) {
-  const [items, setItems] = useState(initial);
+  const items = value;
+  const setItems = onChange;
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
-  useEffect(() => setItems(initial), [initial]);
-
   const dirty = useMemo(() => JSON.stringify(items) !== JSON.stringify(initial), [items, initial]);
 
   const update = (id: string, patch: Partial<QuickLink>) =>
-    setItems((prev) => prev.map((it) => (it.id === id ? { ...it, ...patch } : it)));
-  const remove = (id: string) => setItems((prev) => prev.filter((it) => it.id !== id));
-  const move = (id: string, dir: -1 | 1) =>
-    setItems((prev) => {
-      const i = prev.findIndex((x) => x.id === id);
-      const j = i + dir;
-      if (i < 0 || j < 0 || j >= prev.length) return prev;
-      const next = [...prev];
-      [next[i], next[j]] = [next[j], next[i]];
-      return next;
-    });
+    setItems(items.map((it) => (it.id === id ? { ...it, ...patch } : it)));
+  const remove = (id: string) => setItems(items.filter((it) => it.id !== id));
+  const move = (id: string, dir: -1 | 1) => {
+    const i = items.findIndex((x) => x.id === id);
+    const j = i + dir;
+    if (i < 0 || j < 0 || j >= items.length) return;
+    const next = [...items];
+    [next[i], next[j]] = [next[j], next[i]];
+    setItems(next);
+  };
   const add = () =>
-    setItems((prev) => [
-      ...prev,
+    setItems([
+      ...items,
       {
         id: `ql_${Math.random().toString(36).slice(2, 8)}`,
         label: "New link",
@@ -244,7 +510,7 @@ function QuickLinksCard({
           return (
             <li
               key={it.id}
-              className={`grid grid-cols-[auto_auto_1fr_auto] items-center gap-2 rounded-xl border border-border bg-background p-2 md:grid-cols-[auto_auto_1.2fr_1.2fr_auto_auto]`}
+              className="grid grid-cols-[auto_auto_1fr_auto] items-center gap-2 rounded-xl border border-border bg-background p-2 md:grid-cols-[auto_auto_1.2fr_1.2fr_auto_auto]"
             >
               <div className="flex flex-col">
                 <button
@@ -282,9 +548,7 @@ function QuickLinksCard({
               <select
                 className={input() + " col-span-2 md:col-span-1"}
                 value={it.icon}
-                onChange={(e) =>
-                  update(it.id, { icon: e.target.value as QuickLinkIcon })
-                }
+                onChange={(e) => update(it.id, { icon: e.target.value as QuickLinkIcon })}
               >
                 {QUICK_LINK_ICONS.map((k) => (
                   <option key={k} value={k}>
@@ -319,29 +583,6 @@ function QuickLinksCard({
         ) : null}
       </ul>
 
-      <div className="mt-4 rounded-xl bg-secondary/60 p-3">
-        <p className="text-[10px] font-bold uppercase tracking-widest text-ink-soft">Preview</p>
-        <div className="mt-2 grid grid-cols-4 gap-2">
-          {items
-            .filter((it) => it.enabled)
-            .slice(0, 8)
-            .map((q) => {
-              const Icon = ICONS[q.icon] ?? Sparkles;
-              return (
-                <div
-                  key={q.id}
-                  className="flex flex-col items-center gap-1.5 rounded-2xl bg-card p-3 ring-1 ring-border"
-                >
-                  <span className="grid h-9 w-9 place-items-center rounded-xl bg-accent text-cherry-deep">
-                    <Icon className="h-4 w-4" />
-                  </span>
-                  <span className="text-[11px] font-semibold text-ink">{q.label}</span>
-                </div>
-              );
-            })}
-        </div>
-      </div>
-
       <SaveBar dirty={dirty} saving={saving} saved={saved} onSave={submit} />
     </section>
   );
@@ -350,17 +591,20 @@ function QuickLinksCard({
 /* ---------- Waivers ---------- */
 
 function WaiversCard({
+  value,
+  onChange,
   initial,
   onSaved,
 }: {
+  value: Waivers;
+  onChange: (w: Waivers) => void;
   initial: Waivers;
   onSaved: (w: Waivers) => void;
 }) {
-  const [form, setForm] = useState(initial);
+  const form = value;
+  const setForm = onChange;
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
-  useEffect(() => setForm(initial), [initial]);
-
   const dirty = useMemo(() => JSON.stringify(form) !== JSON.stringify(initial), [form, initial]);
 
   const submit = async () => {
@@ -455,6 +699,11 @@ function SaveBar({
 }) {
   return (
     <div className="mt-4 flex items-center justify-end gap-2">
+      {dirty ? (
+        <span className="mr-auto inline-flex items-center gap-1 rounded-full bg-cherry/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest text-cherry">
+          Unsaved
+        </span>
+      ) : null}
       {saved ? (
         <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-600">
           <Check className="h-3.5 w-3.5" /> Saved
@@ -471,6 +720,3 @@ function SaveBar({
     </div>
   );
 }
-
-// keep GripVertical used to avoid unused import warnings if refactored
-void GripVertical;
