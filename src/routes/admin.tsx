@@ -1,5 +1,5 @@
 import { createFileRoute, Outlet, Link, useRouterState, Navigate } from "@tanstack/react-router";
-import { LayoutDashboard, CalendarDays, Newspaper, Tag, Handshake, ArrowLeft, LogOut, Users } from "lucide-react";
+import { LayoutDashboard, CalendarDays, Newspaper, Tag, Handshake, ArrowLeft, LogOut, Users, Settings } from "lucide-react";
 import { useHydratedStore } from "@/lib/use-hydrated-store";
 import { useIsAdmin, signOut } from "@/lib/auth";
 
