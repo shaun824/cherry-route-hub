@@ -12,7 +12,7 @@ import {
   GripVertical,
 } from "lucide-react";
 import { useAdminStore, newId } from "@/lib/store";
-import type { Event } from "@/lib/mock-data";
+import type { Batch, EntryCategory, Event } from "@/lib/mock-data";
 
 export const Route = createFileRoute("/admin/events")({
   component: AdminEvents,
