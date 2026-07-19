@@ -1,7 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Bell, ChevronRight, Newspaper, Image as ImageIcon, Tag, MapPin, Clock } from "lucide-react";
 import { BrandMark, SectionTitle, TypeBadge } from "@/components/ui-bits";
-import { events, feed, promos, currentRider, formatDate, formatTime, relativeTime } from "@/lib/mock-data";
+import { SponsorScroller } from "@/components/sponsor-scroller";
+import { currentRider, formatDate, formatTime, relativeTime } from "@/lib/mock-data";
+import { useAdminStore } from "@/lib/store";
+import { useHydratedStore } from "@/lib/use-hydrated-store";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -16,9 +19,14 @@ export const Route = createFileRoute("/")({
 });
 
 function Home() {
+  useHydratedStore();
+  const events = useAdminStore((s) => s.events);
+  const feed = useAdminStore((s) => s.feed);
+  const promos = useAdminStore((s) => s.promos);
   const upcoming = events.filter((e) => e.status !== "closed").slice(0, 3);
   const pinned = feed.filter((p) => p.pinned)[0];
   const recentNews = feed.filter((p) => !p.pinned).slice(0, 3);
+
 
   return (
     <div>
