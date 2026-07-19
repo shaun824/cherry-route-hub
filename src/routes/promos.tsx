@@ -77,6 +77,9 @@ function Promos() {
           </li>
         ))}
       </ul>
+      <SponsorScroller title="Our sponsors" />
+      <div className="pb-6" />
     </div>
   );
 }
+
