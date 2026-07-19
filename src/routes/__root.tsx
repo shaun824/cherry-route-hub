@@ -76,15 +76,15 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   head: () => ({
     meta: [
       { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
-      { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
+      { name: "theme-color", content: "#c8102e" },
+      { title: "Red Cherry Events — Rider Hub" },
+      { name: "description", content: "The rider hub for Red Cherry Events: race news, event info, live tracking, SOS and loyalty rewards." },
+      { name: "author", content: "Red Cherry Events" },
+      { property: "og:title", content: "Red Cherry Events — Rider Hub" },
+      { property: "og:description", content: "News, events, live tracking and loyalty for Red Cherry riders." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:site", content: "@Lovable" },
     ],
     links: [
       {
