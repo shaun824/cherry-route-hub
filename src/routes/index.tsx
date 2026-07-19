@@ -1,10 +1,37 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Bell, ChevronRight, Newspaper, Image as ImageIcon, Tag, MapPin, Clock } from "lucide-react";
+import {
+  Bell,
+  Calendar,
+  ChevronRight,
+  Clock,
+  Handshake,
+  Image as ImageIcon,
+  MapPin,
+  Newspaper,
+  ShieldCheck,
+  Sparkles,
+  Tag,
+  Trophy,
+} from "lucide-react";
 import { BrandMark, SectionTitle, TypeBadge } from "@/components/ui-bits";
 import { SponsorScroller } from "@/components/sponsor-scroller";
 import { currentRider, formatDate, formatTime, relativeTime } from "@/lib/mock-data";
 import { useAdminStore } from "@/lib/store";
 import { useHydratedStore } from "@/lib/use-hydrated-store";
+import type { QuickLinkIcon } from "@/lib/settings";
+
+const QUICK_ICONS: Record<QuickLinkIcon, typeof Newspaper> = {
+  Newspaper,
+  MapPin,
+  Image: ImageIcon,
+  Tag,
+  Bell,
+  Sparkles,
+  ShieldCheck,
+  Handshake,
+  Trophy,
+  Calendar,
+};
 
 export const Route = createFileRoute("/")({
   head: () => ({
