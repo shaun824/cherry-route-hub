@@ -1,14 +1,15 @@
 // Interactive route map. Client-only — lazy-loaded so Leaflet never runs during
 // SSR. Given an event, fetches every KML referenced by its routes, parses them,
-// renders coloured polylines + placemark pins, and shows total distance + total
-// elevation gain (from KML altitude when available, otherwise Google Elevation
-// API through the Lovable connector).
+// renders coloured polylines, and shows total distance + total elevation gain
+// (from KML altitude when available, otherwise Google Elevation API through the
+// Lovable connector). Waypoints are NOT parsed from KML — only admin-added
+// custom markers are rendered on top of the routes.
 import { useEffect, useMemo, useRef, useState } from "react";
 import { MapContainer, TileLayer, Polyline, Marker, Popup, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { useServerFn } from "@tanstack/react-start";
-import type { Event, EventRoute } from "@/lib/mock-data";
+import type { CustomMarker, Event, EventRoute } from "@/lib/mock-data";
 import {
   boundsFromCoords,
   parseKml,
@@ -28,6 +29,30 @@ L.Icon.Default.mergeOptions({
   iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
   shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
 });
+
+// Coloured circular marker with an emoji glyph.
+const MARKER_GLYPH: Record<NonNullable<CustomMarker["icon"]>, string> = {
+  pin: "📍",
+  start: "🚩",
+  finish: "🏁",
+  aid: "🩹",
+  warning: "⚠️",
+  photo: "📷",
+  food: "🍎",
+  water: "💧",
+};
+
+function customIcon(color: string, icon: CustomMarker["icon"]) {
+  const glyph = MARKER_GLYPH[icon ?? "pin"];
+  return L.divIcon({
+    className: "rce-custom-marker",
+    html: `<div style="background:${color};" class="flex h-8 w-8 items-center justify-center rounded-full text-base ring-2 ring-white shadow-lg">${glyph}</div>`,
+    iconSize: [32, 32],
+    iconAnchor: [16, 16],
+    popupAnchor: [0, -16],
+  });
+}
+
 
 const TIER_COLORS: Record<string, string> = {
   Gold: "#d4a017",
