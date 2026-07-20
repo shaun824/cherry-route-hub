@@ -31,6 +31,22 @@ async function uploadEventImage(file: File): Promise<string> {
   return data.signedUrl;
 }
 
+async function uploadEventKml(file: File): Promise<{ url: string; path: string }> {
+  const safe = file.name.replace(/[^a-z0-9._-]+/gi, "-");
+  const path = `${crypto.randomUUID()}-${safe}`;
+  const { error } = await supabase.storage
+    .from("event-kmls")
+    .upload(path, file, { contentType: file.type || "application/vnd.google-earth.kml+xml", upsert: false });
+  if (error) throw error;
+  const { data } = supabase.storage.from("event-kmls").getPublicUrl(path);
+  return { url: data.publicUrl, path };
+}
+
+async function deleteEventKml(url: string): Promise<void> {
+  const match = url.match(/\/event-kmls\/(.+)$/);
+  if (!match) return;
+  await supabase.storage.from("event-kmls").remove([decodeURIComponent(match[1])]);
+
 function ImageUploadButton({
   onUploaded,
   label,
