@@ -151,7 +151,7 @@ function LinkEntrantForm({ onLinked }: { onLinked: () => void }) {
       if (res.ok) {
         onLinked();
       } else if (res.reason === "no_match") {
-        setStatus("We couldn't find an entry with your email. Ask Red Cherry admin to add you.");
+        setStatus("We couldn't find an entry matching your email or ID number. Ask Red Cherry admin to add you.");
       } else if (res.reason === "id_mismatch") {
         setStatus("That ID number doesn't match what we have on file.");
       } else {

@@ -3,9 +3,9 @@ import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Papa from "papaparse";
 import { useServerFn } from "@tanstack/react-start";
-import { Download, FileUp, UserPlus, Users } from "lucide-react";
+import { Download, FileUp, Plus, Trash2, UserPlus, Users, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { importRoster } from "@/lib/roster.functions";
+import { importRoster, quickAddEntrant, unassignEntrant } from "@/lib/roster.functions";
 
 export const Route = createFileRoute("/admin/roster")({
   component: RosterPage,
@@ -298,6 +298,8 @@ function RosterPage() {
         </div>
       </section>
 
+      <QuickAddSection events={eventsQ.data ?? []} onAdded={() => qc.invalidateQueries({ queryKey: ["admin-entrants"] })} />
+
       <section className="rounded-2xl bg-card p-5 ring-1 ring-border">
         <div className="flex items-center gap-2 pb-3">
           <Users className="h-5 w-5 text-cherry" />
@@ -306,34 +308,272 @@ function RosterPage() {
         {entrantsQ.isLoading ? (
           <p className="text-sm text-ink-soft">Loading…</p>
         ) : (entrantsQ.data ?? []).length === 0 ? (
-          <p className="text-sm text-ink-soft">No entrants yet — import a CSV to get started.</p>
+          <p className="text-sm text-ink-soft">No entrants yet — add one above or import a CSV.</p>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead className="text-ink-soft">
-                <tr>
-                  <th className="py-2">Name</th>
-                  <th>Email</th>
-                  <th>ID ****</th>
-                  <th>Events</th>
-                  <th>Linked</th>
-                </tr>
-              </thead>
-              <tbody>
-                {(entrantsQ.data ?? []).map((e: any) => (
-                  <tr key={e.id} className="border-t border-border">
-                    <td className="py-2 font-semibold text-ink">{e.full_name}</td>
-                    <td>{e.email}</td>
-                    <td>{e.id_number_last4 ?? "—"}</td>
-                    <td>{e.event_entrants?.length ?? 0}</td>
-                    <td>{e.user_id ? "✓" : "—"}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <EntrantsTable
+            rows={entrantsQ.data ?? []}
+            eventNameById={eventNameById}
+            onChanged={() => qc.invalidateQueries({ queryKey: ["admin-entrants"] })}
+          />
         )}
       </section>
     </div>
+  );
+}
+
+function EntrantsTable({
+  rows,
+  eventNameById,
+  onChanged,
+}: {
+  rows: any[];
+  eventNameById: Map<string, string>;
+  onChanged: () => void;
+}) {
+  const unassignFn = useServerFn(unassignEntrant);
+  const [q, setQ] = useState("");
+  const filtered = useMemo(() => {
+    const needle = q.trim().toLowerCase();
+    if (!needle) return rows;
+    return rows.filter(
+      (r) =>
+        (r.full_name ?? "").toLowerCase().includes(needle) ||
+        (r.email ?? "").toLowerCase().includes(needle),
+    );
+  }, [q, rows]);
+
+  async function remove(entrant_id: string, event_id: string) {
+    if (!confirm("Remove this rider from that event?")) return;
+    try {
+      await unassignFn({ data: { entrant_id, event_id } });
+      onChanged();
+    } catch (e) {
+      alert((e as Error).message);
+    }
+  }
+
+  return (
+    <div className="space-y-3">
+      <input
+        value={q}
+        onChange={(e) => setQ(e.target.value)}
+        placeholder="Search name or email"
+        className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+      />
+      <div className="overflow-x-auto">
+        <table className="w-full text-left text-xs">
+          <thead className="text-ink-soft">
+            <tr>
+              <th className="py-2">Name</th>
+              <th>Email</th>
+              <th>ID ****</th>
+              <th>Events</th>
+              <th>Linked</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filtered.map((e: any) => (
+              <tr key={e.id} className="border-t border-border align-top">
+                <td className="py-2 font-semibold text-ink">{e.full_name}</td>
+                <td>{e.email}</td>
+                <td>{e.id_number_last4 ?? "—"}</td>
+                <td>
+                  {(e.event_entrants ?? []).length === 0 ? (
+                    <span className="text-ink-soft">—</span>
+                  ) : (
+                    <ul className="space-y-1">
+                      {(e.event_entrants ?? []).map((ee: any) => (
+                        <li key={ee.event_id} className="flex items-center gap-1">
+                          <span className="rounded bg-secondary px-1.5 py-0.5">
+                            {eventNameById.get(ee.event_id) ?? ee.event_id.slice(0, 8)}
+                          </span>
+                          {ee.category ? (
+                            <span className="rounded bg-accent px-1 py-0.5 text-[10px] text-cherry-deep">
+                              {ee.category}
+                            </span>
+                          ) : null}
+                          {ee.batch ? (
+                            <span className="rounded bg-ink px-1 py-0.5 text-[10px] text-white">
+                              {ee.batch}
+                            </span>
+                          ) : null}
+                          <button
+                            onClick={() => void remove(e.id, ee.event_id)}
+                            className="text-cherry hover:text-cherry-deep"
+                            title="Remove from event"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </td>
+                <td>{e.user_id ? "✓" : "—"}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+type Assignment = { event_id: string; category: string; batch: string; bib_number: string };
+
+function QuickAddSection({
+  events,
+  onAdded,
+}: {
+  events: { id: string; name: string; event_date: string }[];
+  onAdded: () => void;
+}) {
+  const addFn = useServerFn(quickAddEntrant);
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [idNumber, setIdNumber] = useState("");
+  const [phone, setPhone] = useState("");
+  const [assignments, setAssignments] = useState<Assignment[]>([
+    { event_id: "", category: "", batch: "", bib_number: "" },
+  ]);
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState<{ kind: "ok" | "err"; text: string } | null>(null);
+
+  function update(i: number, patch: Partial<Assignment>) {
+    setAssignments((a) => a.map((x, idx) => (idx === i ? { ...x, ...patch } : x)));
+  }
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    setBusy(true);
+    setMsg(null);
+    try {
+      const valid = assignments.filter((a) => a.event_id);
+      if (valid.length === 0) throw new Error("Pick at least one event to tag this rider to.");
+      const res = await addFn({
+        data: {
+          full_name: fullName,
+          email,
+          id_number: idNumber,
+          phone,
+          assignments: valid,
+        },
+      });
+      setMsg({ kind: "ok", text: `Saved. Linked to ${res.linked} event${res.linked === 1 ? "" : "s"}.` });
+      setFullName("");
+      setEmail("");
+      setIdNumber("");
+      setPhone("");
+      setAssignments([{ event_id: "", category: "", batch: "", bib_number: "" }]);
+      onAdded();
+    } catch (err) {
+      setMsg({ kind: "err", text: (err as Error).message });
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <section className="rounded-2xl bg-card p-5 ring-1 ring-border">
+      <div className="flex items-center gap-2 pb-3">
+        <UserPlus className="h-5 w-5 text-cherry" />
+        <h2 className="font-display text-base font-bold text-ink">Add rider & tag to events</h2>
+      </div>
+      <form onSubmit={submit} className="space-y-3">
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+          <Labeled label="Full name">
+            <input required value={fullName} onChange={(e) => setFullName(e.target.value)}
+              className="input-lg" placeholder="Jane Doe" />
+          </Labeled>
+          <Labeled label="Email">
+            <input required type="email" value={email} onChange={(e) => setEmail(e.target.value)}
+              className="input-lg" placeholder="jane@example.com" />
+          </Labeled>
+          <Labeled label="ID number">
+            <input required value={idNumber} onChange={(e) => setIdNumber(e.target.value)}
+              className="input-lg" placeholder="9204115000080" />
+          </Labeled>
+          <Labeled label="Phone (optional)">
+            <input value={phone} onChange={(e) => setPhone(e.target.value)}
+              className="input-lg" placeholder="+27 82 000 0000" />
+          </Labeled>
+        </div>
+
+        <div className="space-y-2">
+          <p className="text-[11px] font-bold uppercase tracking-wider text-ink-soft">Events</p>
+          {assignments.map((a, i) => (
+            <div key={i} className="grid grid-cols-12 gap-2 rounded-lg border border-border bg-background p-2">
+              <select
+                value={a.event_id}
+                onChange={(e) => update(i, { event_id: e.target.value })}
+                className="col-span-12 rounded-md border border-border bg-card px-2 py-1.5 text-sm md:col-span-5"
+              >
+                <option value="">— select event —</option>
+                {events.map((ev) => (
+                  <option key={ev.id} value={ev.id}>
+                    {ev.name} ({new Date(ev.event_date).toLocaleDateString("en-ZA")})
+                  </option>
+                ))}
+              </select>
+              <input
+                value={a.category}
+                onChange={(e) => update(i, { category: e.target.value })}
+                placeholder="Category"
+                className="col-span-4 rounded-md border border-border bg-card px-2 py-1.5 text-sm md:col-span-3"
+              />
+              <input
+                value={a.batch}
+                onChange={(e) => update(i, { batch: e.target.value })}
+                placeholder="Batch"
+                className="col-span-4 rounded-md border border-border bg-card px-2 py-1.5 text-sm md:col-span-2"
+              />
+              <input
+                value={a.bib_number}
+                onChange={(e) => update(i, { bib_number: e.target.value })}
+                placeholder="Bib #"
+                className="col-span-3 rounded-md border border-border bg-card px-2 py-1.5 text-sm md:col-span-1"
+              />
+              <button
+                type="button"
+                onClick={() => setAssignments((arr) => arr.filter((_, idx) => idx !== i))}
+                className="col-span-1 grid place-items-center rounded-md text-ink-soft hover:text-cherry"
+                aria-label="Remove"
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            </div>
+          ))}
+          <button
+            type="button"
+            onClick={() => setAssignments((a) => [...a, { event_id: "", category: "", batch: "", bib_number: "" }])}
+            className="inline-flex items-center gap-1 rounded-lg border border-dashed border-border px-3 py-1.5 text-xs font-semibold text-ink-soft hover:bg-secondary"
+          >
+            <Plus className="h-3.5 w-3.5" /> Add another event
+          </button>
+        </div>
+
+        {msg ? (
+          <p className={`text-xs ${msg.kind === "ok" ? "text-emerald-700" : "text-cherry"}`}>{msg.text}</p>
+        ) : null}
+
+        <button
+          type="submit"
+          disabled={busy}
+          className="rounded-lg cherry-gradient px-4 py-2 text-xs font-bold text-white disabled:opacity-60"
+        >
+          {busy ? "Saving…" : "Save rider"}
+        </button>
+      </form>
+      <style>{`.input-lg{width:100%;border-radius:.5rem;border:1px solid hsl(var(--border));background:hsl(var(--background));padding:.5rem .7rem;font-size:.875rem}`}</style>
+    </section>
+  );
+}
+
+function Labeled({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <label className="block">
+      <span className="mb-1 block text-[11px] font-bold uppercase tracking-wider text-ink-soft">{label}</span>
+      {children}
+    </label>
   );
 }

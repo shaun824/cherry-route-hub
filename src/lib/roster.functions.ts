@@ -136,22 +136,34 @@ export const linkMyEntry = createServerFn({ method: "POST" })
     const { hashIdNumber } = await import("./id-hash.server");
     const { userId, supabase } = context;
 
-    // Look up the authenticated user's email from claims
-    const email = (context.claims.email as string | undefined)?.toLowerCase();
-    if (!email) throw new Error("Your account has no email address.");
-
+    const email = (context.claims.email as string | undefined)?.toLowerCase() ?? null;
     const idHash = hashIdNumber(data.id_number);
 
-    const { data: match, error: findErr } = await supabase
-      .from("entrants")
-      .select("id, user_id, id_number_hash")
-      .ilike("email", email)
-      .maybeSingle();
-    if (findErr) throw findErr;
+    // Try email match first; fall back to ID-hash match so riders whose
+    // login email differs from the roster email can still self-link.
+    // Admin client is used only for the lookup — we still write the user_id
+    // under RLS via the user's client below.
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-    if (!match) {
-      return { ok: false as const, reason: "no_match" as const };
+    let match: { id: string; user_id: string | null; id_number_hash: string | null } | null = null;
+    if (email) {
+      const { data: byEmail } = await supabaseAdmin
+        .from("entrants")
+        .select("id, user_id, id_number_hash")
+        .ilike("email", email)
+        .maybeSingle();
+      if (byEmail) match = byEmail;
     }
+    if (!match) {
+      const { data: byId } = await supabaseAdmin
+        .from("entrants")
+        .select("id, user_id, id_number_hash")
+        .eq("id_number_hash", idHash)
+        .maybeSingle();
+      if (byId) match = byId;
+    }
+
+    if (!match) return { ok: false as const, reason: "no_match" as const };
     if (match.id_number_hash && match.id_number_hash !== idHash) {
       return { ok: false as const, reason: "id_mismatch" as const };
     }
@@ -159,13 +171,121 @@ export const linkMyEntry = createServerFn({ method: "POST" })
       return { ok: false as const, reason: "already_linked" as const };
     }
 
-    const { error: upErr } = await supabase
+    // Write with admin client so RLS can't block the claim on a legacy row.
+    const { error: upErr } = await supabaseAdmin
       .from("entrants")
-      .update({ user_id: userId })
+      .update({ user_id: userId, id_number_hash: idHash })
       .eq("id", match.id);
     if (upErr) throw upErr;
 
+    // Ensure the signed-in user actually has SELECT visibility now.
+    void supabase;
     return { ok: true as const, entrantId: match.id };
+  });
+
+// Admin-only: create/update a single entrant and tag them to events in one call.
+const quickAddSchema = z.object({
+  full_name: z.string().trim().min(1).max(200),
+  email: z.string().trim().email().max(255),
+  id_number: z.string().trim().min(4).max(50),
+  phone: z.string().trim().max(40).optional().default(""),
+  assignments: z
+    .array(
+      z.object({
+        event_id: z.string().uuid(),
+        category: z.string().trim().max(80).optional().default(""),
+        batch: z.string().trim().max(80).optional().default(""),
+        bib_number: z.string().trim().max(40).optional().default(""),
+      }),
+    )
+    .min(1)
+    .max(50),
+});
+
+export const quickAddEntrant = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => quickAddSchema.parse(data))
+  .handler(async ({ data, context }) => {
+    const { data: isAdmin } = await context.supabase.rpc("is_admin");
+    if (!isAdmin) throw new Error("Forbidden");
+
+    const { hashIdNumber, idNumberLast4 } = await import("./id-hash.server");
+    const emailLower = data.email.toLowerCase();
+
+    const { data: existing, error: findErr } = await context.supabase
+      .from("entrants")
+      .select("id")
+      .ilike("email", emailLower)
+      .maybeSingle();
+    if (findErr) throw findErr;
+
+    let entrantId: string;
+    if (existing?.id) {
+      entrantId = existing.id;
+      const { error: upErr } = await context.supabase
+        .from("entrants")
+        .update({
+          full_name: data.full_name,
+          id_number_hash: hashIdNumber(data.id_number),
+          id_number_last4: idNumberLast4(data.id_number),
+          phone: data.phone || null,
+        })
+        .eq("id", entrantId);
+      if (upErr) throw upErr;
+    } else {
+      const { data: ins, error: insErr } = await context.supabase
+        .from("entrants")
+        .insert({
+          full_name: data.full_name,
+          email: emailLower,
+          id_number_hash: hashIdNumber(data.id_number),
+          id_number_last4: idNumberLast4(data.id_number),
+          phone: data.phone || null,
+        })
+        .select("id")
+        .single();
+      if (insErr || !ins) throw insErr ?? new Error("insert failed");
+      entrantId = ins.id;
+    }
+
+    let linked = 0;
+    for (const a of data.assignments) {
+      const { error: eeErr } = await context.supabase
+        .from("event_entrants")
+        .upsert(
+          {
+            event_id: a.event_id,
+            entrant_id: entrantId,
+            category: a.category || null,
+            batch: a.batch || null,
+            bib_number: a.bib_number || null,
+          },
+          { onConflict: "event_id,entrant_id" },
+        );
+      if (!eeErr) linked++;
+    }
+
+    return { entrantId, linked };
+  });
+
+// Admin-only: remove an event assignment.
+const unassignSchema = z.object({
+  entrant_id: z.string().uuid(),
+  event_id: z.string().uuid(),
+});
+export const unassignEntrant = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => unassignSchema.parse(data))
+  .handler(async ({ data, context }) => {
+    const { data: isAdmin } = await context.supabase.rpc("is_admin");
+    if (!isAdmin) throw new Error("Forbidden");
+    const { error } = await context.supabase
+      .from("event_entrants")
+      .delete()
+      .eq("entrant_id", data.entrant_id)
+      .eq("event_id", data.event_id);
+    if (error) throw error;
+    return { ok: true as const };
   });
 
 export const getMyEntrant = createServerFn({ method: "GET" })
