@@ -19,6 +19,16 @@ export type Batch = {
 
 export type RouteTier = "Gold" | "Silver" | "Bronze" | "Custom";
 
+export type CustomMarker = {
+  id: string;
+  name: string;
+  description?: string;
+  lat: number;
+  lng: number;
+  color?: string;      // hex; falls back to the route colour
+  icon?: "pin" | "start" | "finish" | "aid" | "warning" | "photo" | "food" | "water";
+};
+
 export type EventRoute = {
   id: string;
   tier: RouteTier;
@@ -30,6 +40,7 @@ export type EventRoute = {
   mapEmbedUrl?: string;
   kmlUrls?: string[];      // one or more KML files layered on the interactive map
   color?: string;          // optional override for the polyline colour on the map
+  customMarkers?: CustomMarker[]; // admin-added markers shown on the interactive map
 };
 
 export type EventDay = {
