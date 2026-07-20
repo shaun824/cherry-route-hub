@@ -261,7 +261,11 @@ function InfoPanel({
 
 function PackingPanel({ eventId, userId }: { eventId: string; userId: string | null }) {
   const q = useQuery({ queryKey: ["event-info", eventId], queryFn: () => fetchEventInfo(eventId) });
-  const items = q.data?.packing_list ?? [];
+  const configured = q.data?.packing_list ?? [];
+  // Fall back to a sensible multi-day cycling default when admin hasn't set one.
+  const items: PackingItem[] = configured.length > 0 ? configured : DEFAULT_PACKING_LIST;
+  const usingDefault = configured.length === 0;
+
   const stateQ = useQuery({
     queryKey: ["packing-state", eventId, userId],
     queryFn: async () => {
@@ -294,40 +298,175 @@ function PackingPanel({ eventId, userId }: { eventId: string; userId: string | n
     });
   }
 
-  if (items.length === 0) {
-    return <EmptyBlock>No packing list has been published yet.</EmptyBlock>;
-  }
+  // Group by category, preserving first-seen order.
+  const groups = useMemo(() => {
+    const map = new Map<string, PackingItem[]>();
+    for (const it of items) {
+      const cat = it.category ?? "Checklist";
+      const arr = map.get(cat) ?? [];
+      arr.push(it);
+      map.set(cat, arr);
+    }
+    return Array.from(map.entries());
+  }, [items]);
+
+  const total = items.length;
+  const done = items.filter((i) => stateQ.data?.[i.key]).length;
 
   return (
-    <ul className="space-y-2">
-      {items.map((item) => {
-        const checked = Boolean(stateQ.data?.[item.key]);
-        return (
-          <li key={item.key}>
-            <button
-              onClick={() => toggle(item.key)}
-              className="flex w-full items-center gap-3 rounded-xl bg-card p-3 text-left ring-1 ring-border"
-            >
-              {checked ? (
-                <CheckSquare className="h-5 w-5 text-cherry" />
-              ) : (
-                <Square className="h-5 w-5 text-ink-soft" />
-              )}
-              <span
-                className={`flex-1 text-sm ${checked ? "text-ink-soft line-through" : "font-semibold text-ink"}`}
-              >
-                {item.label}
-              </span>
-              {item.essential ? (
-                <span className="rounded bg-cherry/10 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-cherry-deep">
-                  Essential
+    <div className="space-y-4">
+      <div className="rounded-xl bg-card p-3 ring-1 ring-border">
+        <div className="flex items-center justify-between text-xs text-ink-soft">
+          <span className="font-semibold text-ink">Packed {done} / {total}</span>
+          {usingDefault ? (
+            <span className="rounded bg-cherry/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-cherry-deep">
+              Suggested
+            </span>
+          ) : null}
+        </div>
+        <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-secondary">
+          <div
+            className="h-full cherry-gradient transition-all"
+            style={{ width: total > 0 ? `${(done / total) * 100}%` : "0%" }}
+          />
+        </div>
+        {usingDefault ? (
+          <p className="mt-2 text-[11px] text-ink-soft">
+            Starter packing list for multi-day rides. Tick things off as you pack.
+          </p>
+        ) : null}
+      </div>
+
+      {groups.map(([cat, list]) => (
+        <section key={cat}>
+          <SectionTitle>{cat}</SectionTitle>
+          <ul className="mt-2 space-y-2">
+            {list.map((item) => {
+              const checked = Boolean(stateQ.data?.[item.key]);
+              return (
+                <li key={item.key}>
+                  <button
+                    onClick={() => toggle(item.key)}
+                    disabled={!userId}
+                    className="flex w-full items-center gap-3 rounded-xl bg-card p-3 text-left ring-1 ring-border disabled:opacity-70"
+                  >
+                    {checked ? (
+                      <CheckSquare className="h-5 w-5 text-cherry" />
+                    ) : (
+                      <Square className="h-5 w-5 text-ink-soft" />
+                    )}
+                    <span
+                      className={`flex-1 text-sm ${checked ? "text-ink-soft line-through" : "font-semibold text-ink"}`}
+                    >
+                      {item.label}
+                    </span>
+                    {item.essential ? (
+                      <span className="rounded bg-cherry/10 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-cherry-deep">
+                        Essential
+                      </span>
+                    ) : null}
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      ))}
+
+      {!userId ? (
+        <EmptyBlock>Sign in to save your progress across devices.</EmptyBlock>
+      ) : null}
+    </div>
+  );
+}
+
+function ScheduleView({ schedule, days }: { schedule: ScheduleItem[]; days: EventDay[] }) {
+  const grouped = useMemo(() => {
+    // Group items by dayId, preserving order of days when known.
+    const byDay = new Map<string, ScheduleItem[]>();
+    for (const item of schedule) {
+      const key = item.dayId ?? "__unscheduled__";
+      const arr = byDay.get(key) ?? [];
+      arr.push(item);
+      byDay.set(key, arr);
+    }
+    const sortByTime = (a: ScheduleItem, b: ScheduleItem) => (a.time ?? "").localeCompare(b.time ?? "");
+    const orderedDays = days.map((d) => ({
+      day: d,
+      items: (byDay.get(d.id) ?? []).slice().sort(sortByTime),
+    }));
+    const orphaned = (byDay.get("__unscheduled__") ?? []).slice().sort(sortByTime);
+    // Also include day groups referenced but not in `days` (safety).
+    const known = new Set(days.map((d) => d.id));
+    const extras: { day: EventDay; items: ScheduleItem[] }[] = [];
+    for (const [k, v] of byDay.entries()) {
+      if (k === "__unscheduled__") continue;
+      if (!known.has(k)) extras.push({ day: { id: k, date: "", routes: [] }, items: v.slice().sort(sortByTime) });
+    }
+    return { orderedDays: [...orderedDays, ...extras], orphaned };
+  }, [schedule, days]);
+
+  const dayLabel = (d: EventDay, index: number) => {
+    if (d.label) return d.label;
+    if (d.date) {
+      const dt = new Date(d.date);
+      if (!Number.isNaN(dt.getTime())) {
+        return `Day ${index + 1} · ${dt.toLocaleDateString("en-ZA", { weekday: "short", day: "numeric", month: "short" })}`;
+      }
+    }
+    return `Day ${index + 1}`;
+  };
+
+  return (
+    <div className="mt-2 space-y-3">
+      {grouped.orderedDays.map(({ day, items }, i) =>
+        items.length === 0 ? null : (
+          <div key={day.id} className="rounded-xl bg-card p-3 ring-1 ring-border">
+            <p className="flex items-center gap-2 text-sm font-semibold text-ink">
+              <CalendarDays className="h-4 w-4 text-cherry" />
+              {dayLabel(day, i)}
+            </p>
+            <ul className="mt-2 space-y-2">
+              {items.map((it, idx) => (
+                <li key={`${it.time}-${idx}`} className="flex gap-3">
+                  <span className="flex w-16 shrink-0 items-start gap-1 text-xs font-bold text-cherry-deep">
+                    <Clock className="mt-0.5 h-3 w-3" />
+                    {it.time || "—"}
+                  </span>
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold text-ink">{it.label}</p>
+                    {it.details ? (
+                      <p className="mt-0.5 whitespace-pre-line text-xs text-ink-soft">{it.details}</p>
+                    ) : null}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ),
+      )}
+      {grouped.orphaned.length > 0 ? (
+        <div className="rounded-xl bg-card p-3 ring-1 ring-border">
+          <p className="text-sm font-semibold text-ink">General</p>
+          <ul className="mt-2 space-y-2">
+            {grouped.orphaned.map((it, idx) => (
+              <li key={`${it.time}-${idx}`} className="flex gap-3">
+                <span className="flex w-16 shrink-0 items-start gap-1 text-xs font-bold text-cherry-deep">
+                  <Clock className="mt-0.5 h-3 w-3" />
+                  {it.time || "—"}
                 </span>
-              ) : null}
-            </button>
-          </li>
-        );
-      })}
-    </ul>
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-ink">{it.label}</p>
+                  {it.details ? (
+                    <p className="mt-0.5 whitespace-pre-line text-xs text-ink-soft">{it.details}</p>
+                  ) : null}
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+    </div>
   );
 }
 
