@@ -184,28 +184,53 @@ function InfoPanel({
 
       <section>
         <SectionTitle>Venue</SectionTitle>
-        {info?.venue_address ? (
-          <div className="mt-2 rounded-xl bg-card p-3 ring-1 ring-border">
-            <p className="flex items-start gap-2 text-sm font-semibold text-ink">
-              <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-cherry" />
-              {info.venue_address}
-            </p>
-            {info.parking_notes ? (
-              <p className="mt-2 text-xs text-ink-soft">{info.parking_notes}</p>
-            ) : null}
-            <a
-              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(info.venue_address)}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-3 inline-block rounded-lg bg-ink px-3 py-1.5 text-xs font-semibold text-white"
-            >
-              Open in Google Maps
-            </a>
-          </div>
-        ) : (
-          <EmptyBlock>Venue details will appear here.</EmptyBlock>
-        )}
+        {(() => {
+          const venue =
+            info?.venue_address ||
+            (event as any).map_query ||
+            event.location ||
+            "";
+          if (!venue) return <EmptyBlock>Venue details will appear here.</EmptyBlock>;
+          const q = encodeURIComponent(venue);
+          return (
+            <div className="mt-2 overflow-hidden rounded-xl bg-card ring-1 ring-border">
+              <a
+                href={`https://www.google.com/maps/search/?api=1&query=${q}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block"
+                aria-label="Open venue in Google Maps"
+              >
+                <iframe
+                  title="Venue map"
+                  src={`https://www.google.com/maps?q=${q}&output=embed`}
+                  className="pointer-events-none h-44 w-full"
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                />
+              </a>
+              <div className="p-3">
+                <p className="flex items-start gap-2 text-sm font-semibold text-ink">
+                  <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-cherry" />
+                  {venue}
+                </p>
+                {info?.parking_notes ? (
+                  <p className="mt-2 text-xs text-ink-soft">{info.parking_notes}</p>
+                ) : null}
+                <a
+                  href={`https://www.google.com/maps/search/?api=1&query=${q}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-3 inline-block rounded-lg bg-ink px-3 py-1.5 text-xs font-semibold text-white"
+                >
+                  Navigate in Google Maps ↗
+                </a>
+              </div>
+            </div>
+          );
+        })()}
       </section>
+
 
       <section>
         <SectionTitle>Route</SectionTitle>
