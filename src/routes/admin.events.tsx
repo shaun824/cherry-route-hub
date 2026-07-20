@@ -46,6 +46,9 @@ async function deleteEventKml(url: string): Promise<void> {
   const match = url.match(/\/event-kmls\/(.+)$/);
   if (!match) return;
   await supabase.storage.from("event-kmls").remove([decodeURIComponent(match[1])]);
+}
+
+
 
 function ImageUploadButton({
   onUploaded,
