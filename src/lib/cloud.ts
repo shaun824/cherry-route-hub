@@ -21,7 +21,7 @@ function log(err: unknown, ctx: string) {
   const permissionDenied =
     e?.code === "42501" || /row-level security|permission denied/i.test(msg);
   const hint = permissionDenied
-    ? "\n\nYou need to be signed in as a super admin. Go to /auth and sign in with your admin Google account, then try again."
+    ? `\n\nThis usually means your admin session isn't active on this URL (Supabase sessions are per-origin). Current origin: ${window.location.origin}\n\nGo to ${window.location.origin}/auth and sign in with your admin Google account, then try again.`
     : "";
   window.alert(`Save failed (${ctx}):\n${msg}${hint}`);
 }
