@@ -196,7 +196,10 @@ export default function RouteMapInner({
   }, [loaded, fetchElev]);
 
   const visible = loaded.filter((l) => enabled[l.route.id]);
-  const allCoords = visible.flatMap((l) => l.lines.flat());
+  const allCoords: LatLngAlt[] = [
+    ...visible.flatMap((l) => l.lines.flat()),
+    ...visible.flatMap((l) => l.markers.map((m) => [m.lng, m.lat, undefined] as LatLngAlt)),
+  ];
   const bounds = boundsFromCoords(allCoords);
 
   const totalDistance = visible.reduce((acc, l) => acc + l.distanceKm, 0);
