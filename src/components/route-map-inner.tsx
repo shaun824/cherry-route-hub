@@ -274,31 +274,40 @@ export default function RouteMapInner({
             )),
           )}
           {visible.flatMap((l) =>
-            l.points.map((pt, i) => (
-              <Marker
-                key={`${l.route.id}-pt-${i}`}
-                position={[pt.coord[1], pt.coord[0]] as [number, number]}
-              >
-                <Popup>
-                  <div className="max-w-[220px] space-y-1">
-                    {pt.name && <p className="font-semibold text-ink">{pt.name}</p>}
-                    {pt.description && (
-                      <p
-                        className="text-xs text-ink-soft"
-                        // Descriptions in KML can be plain text or HTML.
-                        dangerouslySetInnerHTML={{ __html: pt.description }}
-                      />
-                    )}
-                    <p className="text-[10px] uppercase tracking-wider text-ink-soft/70">
-                      {l.route.name || l.route.tier}
-                    </p>
-                  </div>
-                </Popup>
-              </Marker>
-            )),
+            l.markers.map((m) => {
+              const color = m.color || l.color;
+              return (
+                <Marker
+                  key={`${l.route.id}-mk-${m.id}`}
+                  position={[m.lat, m.lng] as [number, number]}
+                  icon={customIcon(color, m.icon)}
+                >
+                  <Popup>
+                    <div className="max-w-[240px] space-y-1">
+                      <p className="font-semibold text-ink">{m.name}</p>
+                      {m.description ? (
+                        <p className="whitespace-pre-line text-xs text-ink-soft">{m.description}</p>
+                      ) : null}
+                      <p className="text-[10px] uppercase tracking-wider text-ink-soft/70">
+                        {l.route.name || l.route.tier} · {l.dayLabel}
+                      </p>
+                      <a
+                        href={`https://www.google.com/maps/dir/?api=1&destination=${m.lat},${m.lng}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-1 inline-block rounded-md bg-ink px-2 py-1 text-[11px] font-semibold text-white"
+                      >
+                        Navigate
+                      </a>
+                    </div>
+                  </Popup>
+                </Marker>
+              );
+            }),
           )}
         </MapContainer>
       </div>
+
 
       {showStats && visible.length > 0 && (
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
