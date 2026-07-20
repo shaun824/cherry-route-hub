@@ -3,7 +3,8 @@ import { TypeBadge } from "@/components/ui-bits";
 import { feed, formatDate, formatTime, relativeTime } from "@/lib/mock-data";
 import type { EventDay, EventRoute, ScheduleItem } from "@/lib/mock-data";
 import { useAdminStore } from "@/lib/store";
-import { MessageSquare, ChevronRight, ExternalLink } from "lucide-react";
+import { RouteMap } from "@/components/route-map";
+import { MessageSquare, ChevronRight, ExternalLink, Map as MapIcon, Maximize2 } from "lucide-react";
 
 export const Route = createFileRoute("/events/$eventId/")({
   component: EventDetailIndex,
@@ -76,6 +77,27 @@ function EventDetailIndex() {
         </h2>
         <p className="mt-2 text-sm leading-relaxed text-ink-soft">{event.description}</p>
       </section>
+
+      {/* Interactive route map */}
+      {(event.days ?? []).some((d: EventDay) => (d.routes ?? []).some((r: EventRoute) => (r.kmlUrls ?? []).length > 0)) ? (
+        <section className="px-5 pt-6">
+          <div className="flex items-center justify-between">
+            <h2 className="flex items-center gap-2 font-display text-[13px] font-bold uppercase tracking-wider text-ink-soft">
+              <MapIcon className="h-3.5 w-3.5" /> Route map
+            </h2>
+            <Link
+              to="/events/$eventId/map"
+              params={{ eventId: event.id }}
+              className="inline-flex items-center gap-1 text-[11px] font-semibold text-cherry"
+            >
+              Fullscreen <Maximize2 className="h-3 w-3" />
+            </Link>
+          </div>
+          <div className="mt-3">
+            <RouteMap event={event} height="320px" />
+          </div>
+        </section>
+      ) : null}
 
       {/* Days & routes */}
       {event.days && event.days.length > 0 ? (

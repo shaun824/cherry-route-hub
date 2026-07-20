@@ -28,6 +28,8 @@ export type EventRoute = {
   description?: string;
   gpxUrl?: string;
   mapEmbedUrl?: string;
+  kmlUrls?: string[];      // one or more KML files layered on the interactive map
+  color?: string;          // optional override for the polyline colour on the map
 };
 
 export type EventDay = {

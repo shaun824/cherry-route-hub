@@ -16,12 +16,14 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/lib/auth";
 import { fetchEventInfo, type EventInfoBlock } from "@/lib/event-info";
+import { RouteMap } from "@/components/route-map";
+import type { EventDay, EventRoute } from "@/lib/mock-data";
 
 export const Route = createFileRoute("/my-events/$eventId")({
   loader: async ({ params }) => {
     const { data, error } = await supabase
       .from("events")
-      .select("id, name, discipline, event_date, location, distance_km, description, hero_color")
+      .select("id, name, discipline, event_date, location, distance_km, description, hero_color, days")
       .eq("id", params.eventId)
       .maybeSingle();
     if (error || !data) throw notFound();
@@ -100,7 +102,7 @@ function MyEventDetail() {
       </nav>
 
       <div className="px-5 py-4">
-        {tab === "info" && <InfoPanel eventId={event.id} description={event.description} distanceKm={event.distance_km} />}
+        {tab === "info" && <InfoPanel eventId={event.id} description={event.description} distanceKm={event.distance_km} event={event} />}
         {tab === "packing" && <PackingPanel eventId={event.id} userId={user?.id ?? null} />}
         {tab === "chat" && <ChatPanel eventId={event.id} userId={user?.id ?? null} />}
         {tab === "ask" && <AskAdminPanel eventId={event.id} userId={user?.id ?? null} />}
@@ -113,13 +115,16 @@ function InfoPanel({
   eventId,
   description,
   distanceKm,
+  event,
 }: {
   eventId: string;
   description: string | null;
   distanceKm: number;
+  event: { days?: EventDay[] | null };
 }) {
   const q = useQuery({ queryKey: ["event-info", eventId], queryFn: () => fetchEventInfo(eventId) });
   const info = q.data;
+  const hasKml = (event.days ?? []).some((d) => (d.routes ?? []).some((r: EventRoute) => (r.kmlUrls ?? []).length > 0));
 
   return (
     <div className="space-y-4">
@@ -129,6 +134,23 @@ function InfoPanel({
           <p className="mt-1.5 text-sm leading-relaxed text-ink-soft">{description}</p>
         </section>
       ) : null}
+
+      {hasKml ? (
+        <section>
+          <SectionTitle>Route map</SectionTitle>
+          <div className="mt-2">
+            <RouteMap event={event as never} height="300px" />
+            <Link
+              to="/events/$eventId/map"
+              params={{ eventId }}
+              className="mt-2 inline-block text-[11px] font-semibold text-cherry"
+            >
+              Open fullscreen map →
+            </Link>
+          </div>
+        </section>
+      ) : null}
+
 
       <section>
         <SectionTitle>Venue</SectionTitle>

@@ -1,34 +1,58 @@
-Problem: the roster CSV importer requires `event_id` to be a raw UUID (`z.string().uuid()`). Users naturally upload spreadsheets where the event column contains human-readable event names, causing the "Invalid uuid" validation
-validation error.
+## What you'll get
 
-Goal: let admins upload a CSV with either an event UUID or an event name, and map names to the correct event automatically. If a name can't be matched, show a clear row-level error before import.
+- Admin can upload one or more **KML files per route** (Gold/Silver/Bronze) on every event day.
+- Riders see an **interactive map** on the public event page and on their My Events page — pan/zoom, click placemarks to see labels/descriptions, toggle routes on/off.
+- Below the map: **total distance**, **total elevation gain**, and a small **elevation profile chart**.
+- A **"View fullscreen"** button opens an immersive route page (`/events/:id/map`) that fills the screen on mobile.
 
-Changes:
+## Setup you need to do once
 
-1. **Loosen the server schema**
-   - In `src/lib/roster.functions.ts`, change `event_id` from `z.string().uuid()` to `z.string().trim().min(1)`.
-   - Before inserting into `event_entrants`, look up events by UUID first; if that fails, try a case-insensitive match on `events.name`.
-   - If neither matches, record a row error like "Row 3: 'Spring Classic' did not match any event".
+Google Maps Platform must be connected so I can fetch elevation for KML tracks that don't include altitude. I'll walk you through connecting the managed Lovable key — one click, no Google Cloud account needed. If you'd rather skip elevation for now, tell me and I'll ship the map with distance only.
 
-2. **Pre-load event name map in the handler**
-   - Fetch `id, name` from `public.events` once at the start of `importRoster`.
-   - Build a case-insensitive lookup map so name matching is fast and deterministic.
+## Build steps
 
-3. **Improve the admin UI validation**
-   - In `src/routes/admin.roster.tsx`, after parsing the CSV, run a client-side check that tries to resolve each `event_id` against the list of events already loaded in `eventsQ`.
-   - Show a row-level warning when a value looks like a name rather than a UUID, and confirm which event it will be mapped to.
-   - Keep the "Default event" dropdown working as a fallback for blank `event_id` cells.
+1. **Storage & schema**
+   - Create a private `event-kmls` storage bucket with admin-write / signed-read RLS policies (mirrors your existing `event-images` bucket).
+   - Extend the `EventRoute` type (already stored inside `events.days` JSONB — no migration needed) with `kmlUrls: string[]` and cached `distanceKm` / `elevationM` derived on save.
 
-4. **Update the sample CSV and help text**
-   - Change the sample value from `<event-uuid>` to a real-looking event name, e.g. `My Event Name`.
-   - Update the helper copy to say: "event_id can be the event's UUID or the exact event name as shown in Admin → Events."
+2. **Admin editor** (`src/routes/admin.events.tsx`)
+   - In the Days → Routes section, add a "KML files" area per route with drag-and-drop upload, thumbnail list, and delete button.
+   - On upload, parse the KML client-side to fill in distance/elevation preview so admins see it before saving.
 
-5. **Preserve existing behaviour**
-   - Existing valid UUIDs continue to work unchanged.
-   - The default-event dropdown still fills blank cells.
-   - Admin-only access and ID hashing remain unchanged.
+3. **Map component** (`src/components/route-map.tsx`)
+   - Uses **Leaflet + react-leaflet** with OpenStreetMap tiles (no key, free).
+   - Loaded through `<ClientOnly>` + `React.lazy` so SSR doesn't break.
+   - Parses KMLs with `@tmcw/togeojson`; renders LineStrings as coloured polylines (Gold=amber, Silver=slate, Bronze=copper), and Placemarks as clickable pins with popup name/description.
+   - Auto-fits bounds to visible routes. Route toggle chips top-left, legend + stats top-right.
 
-Acceptance:
-- Uploading a CSV with `event_id` = an event name imports successfully and links the rider to the correct event.
-- Uploading a CSV with a misspelled event name shows a clear "did not match any event" error for that row.
-- The existing sample download still imports correctly after the sample is updated.
+4. **Distance & elevation**
+   - Distance computed from LineString coordinates using the haversine formula (no API call).
+   - Elevation: if KML has altitude → use it. If missing → call a new server function `getRouteElevation` that hits Google Maps Elevation API through the connector gateway (server-side, secret key), samples ~200 points along the path, returns the profile. Result cached on the route row so we don't re-query.
+   - Elevation profile rendered as a small SVG sparkline under the map; total gain displayed as a stat.
+
+5. **Public & rider pages**
+   - `src/routes/events.$eventId.index.tsx`: embed `<RouteMap event={event} height="360px" />` in the itinerary section, with "View fullscreen" link.
+   - `src/routes/my-events.$eventId.tsx`: same component, above the packing list.
+   - `src/routes/events.$eventId.map.tsx` (new): fullscreen map route — map fills viewport minus a slim top bar with event name, route toggle, distance/elevation stats, and a back button.
+
+## Dependencies
+
+`leaflet`, `react-leaflet`, `@tmcw/togeojson`, `@types/leaflet`.
+
+## Not included in this pass
+
+- Real-time rider position on the map (that's the separate SOS/tracker feature).
+- Downloadable GPX (kept for a follow-up if you want it).
+- Turn-by-turn directions.
+
+## Order of operations
+
+1. Ask you to connect Google Maps Platform (one click) — or confirm distance-only.
+2. Create the storage bucket + RLS.
+3. Install deps.
+4. Build the map component + elevation server function.
+5. Wire admin upload UI.
+6. Wire the map into the two event pages + the new fullscreen route.
+7. I'll walk you through uploading a test KML to verify.
+
+Say **"go"** to start, or tell me to change anything.

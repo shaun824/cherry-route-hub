@@ -31,6 +31,25 @@ async function uploadEventImage(file: File): Promise<string> {
   return data.signedUrl;
 }
 
+async function uploadEventKml(file: File): Promise<{ url: string; path: string }> {
+  const safe = file.name.replace(/[^a-z0-9._-]+/gi, "-");
+  const path = `${crypto.randomUUID()}-${safe}`;
+  const { error } = await supabase.storage
+    .from("event-kmls")
+    .upload(path, file, { contentType: file.type || "application/vnd.google-earth.kml+xml", upsert: false });
+  if (error) throw error;
+  const { data } = supabase.storage.from("event-kmls").getPublicUrl(path);
+  return { url: data.publicUrl, path };
+}
+
+async function deleteEventKml(url: string): Promise<void> {
+  const match = url.match(/\/event-kmls\/(.+)$/);
+  if (!match) return;
+  await supabase.storage.from("event-kmls").remove([decodeURIComponent(match[1])]);
+}
+
+
+
 function ImageUploadButton({
   onUploaded,
   label,
@@ -77,6 +96,101 @@ function ImageUploadButton({
     </>
   );
 }
+
+function KmlManager({
+  urls,
+  onChange,
+}: {
+  urls: string[];
+  onChange: (urls: string[]) => void;
+}) {
+  const ref = useRef<HTMLInputElement>(null);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const fileName = (u: string) => {
+    try {
+      return decodeURIComponent(u.split("/").pop() ?? u).replace(/^[0-9a-f-]{36}-/i, "");
+    } catch {
+      return u;
+    }
+  };
+  return (
+    <div>
+      <div className="mb-1 flex items-center justify-between">
+        <span className="text-[10px] font-bold uppercase tracking-wider text-ink-soft">
+          Route maps (KML)
+        </span>
+        <input
+          ref={ref}
+          type="file"
+          accept=".kml,application/vnd.google-earth.kml+xml,application/xml,text/xml"
+          multiple
+          className="hidden"
+          onChange={async (e) => {
+            const files = Array.from(e.target.files ?? []);
+            if (files.length === 0) return;
+            setBusy(true);
+            setErr(null);
+            try {
+              const uploaded: string[] = [];
+              for (const f of files) {
+                const { url } = await uploadEventKml(f);
+                uploaded.push(url);
+              }
+              onChange([...urls, ...uploaded]);
+            } catch (e2) {
+              setErr(e2 instanceof Error ? e2.message : "Upload failed");
+            } finally {
+              setBusy(false);
+              if (ref.current) ref.current.value = "";
+            }
+          }}
+        />
+        <button
+          type="button"
+          disabled={busy}
+          onClick={() => ref.current?.click()}
+          className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-2 py-1 text-[11px] font-semibold hover:bg-surface disabled:opacity-60"
+        >
+          {busy ? <Loader2 className="h-3 w-3 animate-spin" /> : <Upload className="h-3 w-3" />}
+          {busy ? "Uploading…" : "Add KML"}
+        </button>
+      </div>
+      {urls.length === 0 ? (
+        <p className="rounded-md border border-dashed border-border px-2 py-1.5 text-[11px] text-ink-soft">
+          No KML files yet. Upload one or more — riders can pan, zoom and see every waypoint on the map.
+        </p>
+      ) : (
+        <ul className="space-y-1">
+          {urls.map((u) => (
+            <li
+              key={u}
+              className="flex items-center justify-between gap-2 rounded-md bg-secondary px-2 py-1 text-[11px]"
+            >
+              <span className="truncate font-mono text-ink" title={u}>
+                {fileName(u)}
+              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  onChange(urls.filter((x) => x !== u));
+                  void deleteEventKml(u);
+                }}
+                className="text-ink-soft hover:text-cherry"
+                aria-label="Remove KML"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+      {err ? <p className="mt-1 text-[11px] font-semibold text-cherry">{err}</p> : null}
+    </div>
+  );
+}
+
+
 
 
 export const Route = createFileRoute("/admin/events")({
@@ -1356,6 +1470,12 @@ function DaysEditor({
                           updateRoute(i, rIdx, { description: e.target.value || undefined })
                         }
                       />
+                      <div className="sm:col-span-2">
+                        <KmlManager
+                          urls={r.kmlUrls ?? []}
+                          onChange={(urls) => updateRoute(i, rIdx, { kmlUrls: urls })}
+                        />
+                      </div>
                     </div>
                   </li>
                 ))}
