@@ -122,11 +122,13 @@ function InfoPanel({
   eventId: string;
   description: string | null;
   distanceKm: number;
-  event: { days?: EventDay[] | null };
+  event: { days?: EventDay[] | null; schedule?: ScheduleItem[] | null };
 }) {
   const q = useQuery({ queryKey: ["event-info", eventId], queryFn: () => fetchEventInfo(eventId) });
   const info = q.data;
-  const hasKml = (event.days ?? []).some((d) => (d.routes ?? []).some((r: EventRoute) => (r.kmlUrls ?? []).length > 0));
+  const days: EventDay[] = event.days ?? [];
+  const hasKml = days.some((d) => (d.routes ?? []).some((r: EventRoute) => (r.kmlUrls ?? []).length > 0));
+  const schedule: ScheduleItem[] = Array.isArray(event.schedule) ? event.schedule : [];
 
   return (
     <div className="space-y-4">
@@ -134,6 +136,13 @@ function InfoPanel({
         <section>
           <SectionTitle>About</SectionTitle>
           <p className="mt-1.5 text-sm leading-relaxed text-ink-soft">{description}</p>
+        </section>
+      ) : null}
+
+      {schedule.length > 0 ? (
+        <section>
+          <SectionTitle>Schedule</SectionTitle>
+          <ScheduleView schedule={schedule} days={days} />
         </section>
       ) : null}
 
