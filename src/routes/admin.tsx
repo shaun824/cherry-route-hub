@@ -8,7 +8,7 @@ export const Route = createFileRoute("/admin")({
   head: () => ({
     meta: [
       { title: "Admin · Red Cherry Events" },
-      { name: "description", content: "Super admin dashboard for managing events, feed, promos and sponsors." },
+      { name: "description", content: "Admin dashboard for managing events, feed, promos and sponsors." },
       { name: "robots", content: "noindex,nofollow" },
     ],
   }),
@@ -44,7 +44,7 @@ function AdminLayout() {
         <div className="max-w-sm space-y-3">
           <h1 className="font-display text-xl font-bold">No admin access</h1>
           <p className="text-sm text-ink-soft">
-            You're signed in as <b>{user.email}</b>, but your account isn't a super admin.
+            You're signed in as <b>{user.email}</b>, but your account isn't an admin.
             Contact <b>shaun@redcherryevents.co.za</b> to request access.
           </p>
           <div className="flex flex-wrap justify-center gap-2 pt-2">
@@ -69,7 +69,7 @@ function AdminLayout() {
               <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-ink-soft">
                 Red Cherry · Admin
               </p>
-              <p className="font-display text-sm font-bold leading-tight">Super admin console</p>
+              <p className="font-display text-sm font-bold leading-tight">Admin console</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
