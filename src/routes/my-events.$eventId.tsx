@@ -3,7 +3,9 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowLeft,
+  CalendarDays,
   CheckSquare,
+  Clock,
   Info,
   MapPin,
   MessageCircle,
@@ -15,9 +17,9 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/lib/auth";
-import { fetchEventInfo, type EventInfoBlock } from "@/lib/event-info";
+import { DEFAULT_PACKING_LIST, fetchEventInfo, type EventInfoBlock, type PackingItem } from "@/lib/event-info";
 import { RouteMap } from "@/components/route-map";
-import type { EventDay, EventRoute } from "@/lib/mock-data";
+import type { EventDay, EventRoute, ScheduleItem } from "@/lib/mock-data";
 
 export const Route = createFileRoute("/my-events/$eventId")({
   loader: async ({ params }) => {
