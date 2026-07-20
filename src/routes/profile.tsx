@@ -1,163 +1,275 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { PageHeader } from "@/components/ui-bits";
-import { currentRider, events, promos } from "@/lib/mock-data";
-import { Award, Trophy, Zap, ChevronRight, Settings, Tag } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useSession, signOut } from "@/lib/auth";
+import { LogOut, Save, User as UserIcon, ShieldAlert } from "lucide-react";
 
 export const Route = createFileRoute("/profile")({
   head: () => ({
     meta: [
-      { title: "Profile & Loyalty — Red Cherry Events" },
-      { name: "description", content: "Your Red Cherry rider profile, loyalty points and rewards." },
+      { title: "Profile — Red Cherry Events" },
+      { name: "description", content: "Manage your Red Cherry rider profile." },
+      { name: "robots", content: "noindex,nofollow" },
     ],
   }),
   component: Profile,
 });
 
-function Profile() {
-  const tierPct =
-    (currentRider.points / (currentRider.points + currentRider.pointsToNext)) * 100;
+type ProfileForm = {
+  full_name: string;
+  phone: string;
+  emergency_contact_name: string;
+  emergency_contact_phone: string;
+  jacket_size: string;
+  tshirt_size: string;
+  entry_ninja_id: string;
+};
 
-  const entered = events.filter((e) => e.entered);
+const empty: ProfileForm = {
+  full_name: "",
+  phone: "",
+  emergency_contact_name: "",
+  emergency_contact_phone: "",
+  jacket_size: "",
+  tshirt_size: "",
+  entry_ninja_id: "",
+};
+
+const SIZES = ["XS", "S", "M", "L", "XL", "XXL", "3XL"];
+
+function Profile() {
+  const { user, loading } = useSession();
+  const navigate = useNavigate();
+  const [form, setForm] = useState<ProfileForm>(empty);
+  const [initialLoad, setInitialLoad] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [msg, setMsg] = useState<{ kind: "ok" | "err"; text: string } | null>(null);
+
+  useEffect(() => {
+    if (loading) return;
+    if (!user) {
+      setInitialLoad(false);
+      return;
+    }
+    (async () => {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("full_name,phone,emergency_contact_name,emergency_contact_phone,jacket_size,tshirt_size,entry_ninja_id")
+        .eq("id", user.id)
+        .maybeSingle();
+      if (!error && data) {
+        setForm({
+          full_name: data.full_name ?? "",
+          phone: data.phone ?? "",
+          emergency_contact_name: data.emergency_contact_name ?? "",
+          emergency_contact_phone: data.emergency_contact_phone ?? "",
+          jacket_size: data.jacket_size ?? "",
+          tshirt_size: data.tshirt_size ?? "",
+          entry_ninja_id: data.entry_ninja_id ?? "",
+        });
+      }
+      setInitialLoad(false);
+    })();
+  }, [loading, user]);
+
+  async function handleSave(e: React.FormEvent) {
+    e.preventDefault();
+    if (!user) return;
+    setSaving(true);
+    setMsg(null);
+    const { error } = await supabase
+      .from("profiles")
+      .update({
+        full_name: form.full_name || null,
+        phone: form.phone || null,
+        emergency_contact_name: form.emergency_contact_name || null,
+        emergency_contact_phone: form.emergency_contact_phone || null,
+        jacket_size: form.jacket_size || null,
+        tshirt_size: form.tshirt_size || null,
+        entry_ninja_id: form.entry_ninja_id || null,
+      })
+      .eq("id", user.id);
+    setSaving(false);
+    if (error) setMsg({ kind: "err", text: error.message });
+    else setMsg({ kind: "ok", text: "Profile saved." });
+  }
+
+  async function handleSignOut() {
+    await signOut();
+    navigate({ to: "/auth", replace: true });
+  }
+
+  if (loading || initialLoad) {
+    return <div className="grid min-h-[50vh] place-items-center text-sm text-ink-soft">Loading profile…</div>;
+  }
+
+  if (!user) {
+    return (
+      <div>
+        <PageHeader title="Profile" subtitle="Sign in to view and edit your profile" />
+        <div className="mx-5 mt-6 rounded-2xl bg-card p-6 text-center ring-1 ring-border">
+          <span className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-secondary text-ink-soft">
+            <ShieldAlert className="h-6 w-6" />
+          </span>
+          <p className="mt-3 font-display font-bold">You're not signed in</p>
+          <p className="mt-1 text-sm text-ink-soft">Sign in to manage your rider details.</p>
+          <Link
+            to="/auth"
+            search={{ next: "/profile" }}
+            className="mt-4 inline-flex rounded-lg bg-cherry px-4 py-2 text-sm font-bold text-white"
+          >
+            Sign in
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div>
+    <div className="pb-24">
       <PageHeader
         title="Profile"
-        subtitle={`${currentRider.tier} member since ${currentRider.memberSince}`}
+        subtitle={user.email ?? "Rider profile"}
         right={
-          <button className="grid h-9 w-9 place-items-center rounded-full bg-secondary text-ink-soft">
-            <Settings className="h-4.5 w-4.5" />
+          <button
+            onClick={handleSignOut}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-semibold text-ink-soft"
+          >
+            <LogOut className="h-3.5 w-3.5" /> Sign out
           </button>
         }
       />
 
-      {/* Loyalty card */}
-      <div className="mx-5 mt-4 overflow-hidden rounded-2xl cherry-gradient p-5 text-white shadow-lg shadow-cherry/25">
-        <div className="flex items-start justify-between">
-          <div>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] opacity-80">
-              Red Cherry Loyalty
-            </p>
-            <p className="mt-1 font-display text-2xl font-bold">{currentRider.tier}</p>
-          </div>
-          <Trophy className="h-8 w-8 opacity-90" />
-        </div>
-        <div className="mt-6">
-          <p className="font-mono text-3xl font-bold tracking-tight">
-            {currentRider.points.toLocaleString()}
-          </p>
-          <p className="text-xs opacity-85">Loyalty points</p>
-        </div>
-        <div className="mt-4">
-          <div className="h-2 w-full overflow-hidden rounded-full bg-white/20">
-            <div className="h-full bg-white" style={{ width: `${tierPct}%` }} />
-          </div>
-          <p className="mt-2 text-[11px] opacity-85">
-            {currentRider.pointsToNext} pts to <b>{currentRider.nextTier}</b>
-          </p>
+      <div className="mx-5 mt-4 flex items-center gap-3 rounded-2xl bg-card p-4 ring-1 ring-border">
+        <span className="grid h-12 w-12 place-items-center rounded-full bg-accent text-cherry-deep">
+          <UserIcon className="h-6 w-6" />
+        </span>
+        <div className="min-w-0">
+          <p className="truncate font-display font-bold">{form.full_name || user.email}</p>
+          <p className="truncate text-xs text-ink-soft">{user.email}</p>
         </div>
       </div>
 
-      {/* Identity + Entry Ninja stub */}
-      <div className="mx-5 mt-4 rounded-2xl bg-card p-4 ring-1 ring-border">
-        <div className="flex items-center gap-3">
-          <div className="grid h-12 w-12 place-items-center rounded-full bg-accent font-display text-lg font-bold text-cherry-deep">
-            {currentRider.name
-              .split(" ")
-              .map((n) => n[0])
-              .join("")}
-          </div>
-          <div className="min-w-0">
-            <p className="truncate font-display font-bold text-ink">{currentRider.name}</p>
-            <p className="truncate text-xs text-muted-foreground">{currentRider.handle}</p>
-          </div>
+      <form onSubmit={handleSave} className="mx-5 mt-4 space-y-4 rounded-2xl bg-card p-4 ring-1 ring-border">
+        <Field label="Full name">
+          <input
+            className="input"
+            value={form.full_name}
+            onChange={(e) => setForm((f) => ({ ...f, full_name: e.target.value }))}
+            placeholder="Your name"
+          />
+        </Field>
+
+        <Field label="Phone">
+          <input
+            className="input"
+            type="tel"
+            value={form.phone}
+            onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
+            placeholder="+27 …"
+          />
+        </Field>
+
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="Emergency contact">
+            <input
+              className="input"
+              value={form.emergency_contact_name}
+              onChange={(e) => setForm((f) => ({ ...f, emergency_contact_name: e.target.value }))}
+              placeholder="Name"
+            />
+          </Field>
+          <Field label="Emergency phone">
+            <input
+              className="input"
+              type="tel"
+              value={form.emergency_contact_phone}
+              onChange={(e) => setForm((f) => ({ ...f, emergency_contact_phone: e.target.value }))}
+              placeholder="+27 …"
+            />
+          </Field>
         </div>
-        <dl className="mt-4 grid grid-cols-3 gap-2 text-center">
-          <div className="rounded-xl bg-secondary p-2.5">
-            <dt className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Events
-            </dt>
-            <dd className="mt-0.5 font-display text-lg font-bold text-ink">
-              {currentRider.eventsCompleted}
-            </dd>
-          </div>
-          <div className="rounded-xl bg-secondary p-2.5">
-            <dt className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Entered
-            </dt>
-            <dd className="mt-0.5 font-display text-lg font-bold text-ink">{entered.length}</dd>
-          </div>
-          <div className="rounded-xl bg-secondary p-2.5">
-            <dt className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Streak
-            </dt>
-            <dd className="mt-0.5 font-display text-lg font-bold text-ink">4</dd>
-          </div>
-        </dl>
-        <div className="mt-4 flex items-center justify-between rounded-xl border border-dashed border-border p-3">
-          <div className="min-w-0">
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Entry Ninja
-            </p>
-            <p className="truncate font-mono text-xs text-ink-soft">
-              {currentRider.entryNinjaUserId ?? "not linked"}
-            </p>
-          </div>
-          <button className="rounded-lg bg-ink px-3 py-1.5 text-[11px] font-bold text-white">
-            Sync
+
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="T-shirt size">
+            <select
+              className="input"
+              value={form.tshirt_size}
+              onChange={(e) => setForm((f) => ({ ...f, tshirt_size: e.target.value }))}
+            >
+              <option value="">—</option>
+              {SIZES.map((s) => (
+                <option key={s} value={s}>{s}</option>
+              ))}
+            </select>
+          </Field>
+          <Field label="Jacket size">
+            <select
+              className="input"
+              value={form.jacket_size}
+              onChange={(e) => setForm((f) => ({ ...f, jacket_size: e.target.value }))}
+            >
+              <option value="">—</option>
+              {SIZES.map((s) => (
+                <option key={s} value={s}>{s}</option>
+              ))}
+            </select>
+          </Field>
+        </div>
+
+        <Field label="Entry Ninja ID">
+          <input
+            className="input"
+            value={form.entry_ninja_id}
+            onChange={(e) => setForm((f) => ({ ...f, entry_ninja_id: e.target.value }))}
+            placeholder="Optional — for entry sync"
+          />
+        </Field>
+
+        {msg ? (
+          <p className={`text-xs ${msg.kind === "ok" ? "text-emerald-600" : "text-cherry"}`}>{msg.text}</p>
+        ) : null}
+
+        <div className="flex items-center justify-between gap-2 pt-2">
+          <button
+            type="button"
+            onClick={handleSignOut}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-2 text-xs font-semibold text-ink-soft"
+          >
+            <LogOut className="h-3.5 w-3.5" /> Sign out
+          </button>
+          <button
+            type="submit"
+            disabled={saving}
+            className="inline-flex items-center gap-1.5 rounded-lg bg-cherry px-4 py-2 text-sm font-bold text-white disabled:opacity-60"
+          >
+            <Save className="h-4 w-4" /> {saving ? "Saving…" : "Save changes"}
           </button>
         </div>
-      </div>
+      </form>
 
-      {/* Rewards */}
-      <div className="px-5 pt-6">
-        <h2 className="font-display text-[13px] font-bold uppercase tracking-wider text-ink-soft">
-          Rewards unlocked
-        </h2>
-        <ul className="mt-3 space-y-2">
-          {[
-            { icon: Award, title: "Priority start pen", meta: "Gold tier perk" },
-            { icon: Zap, title: "10% off next entry", meta: "Redeem before 31 Aug" },
-            { icon: Trophy, title: "Free finisher kit upgrade", meta: "3 events completed" },
-          ].map((r, i) => {
-            const Icon = r.icon;
-            return (
-              <li
-                key={i}
-                className="flex items-center gap-3 rounded-xl bg-card p-3 ring-1 ring-border"
-              >
-                <span className="grid h-10 w-10 place-items-center rounded-full bg-accent text-cherry-deep">
-                  <Icon className="h-5 w-5" />
-                </span>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-semibold text-ink">{r.title}</p>
-                  <p className="truncate text-[11px] text-muted-foreground">{r.meta}</p>
-                </div>
-                <ChevronRight className="h-4 w-4 text-muted-foreground" />
-              </li>
-            );
-          })}
-        </ul>
-      </div>
-
-      {/* Promos shortcut */}
-      <div className="px-5 pt-6 pb-8">
-        <Link
-          to="/promos"
-          className="flex items-center justify-between rounded-2xl bg-ink p-4 text-white"
-        >
-          <div className="flex items-center gap-3">
-            <span className="grid h-10 w-10 place-items-center rounded-full bg-white/10">
-              <Tag className="h-5 w-5" />
-            </span>
-            <div>
-              <p className="font-display font-bold">Supplier promos</p>
-              <p className="text-[11px] opacity-75">{promos.length} active offers</p>
-            </div>
-          </div>
-          <ChevronRight className="h-5 w-5 opacity-70" />
-        </Link>
-      </div>
+      <style>{`
+        .input {
+          width: 100%;
+          border-radius: 0.6rem;
+          border: 1px solid hsl(var(--border));
+          background: hsl(var(--background));
+          padding: 0.55rem 0.7rem;
+          font-size: 0.875rem;
+          color: hsl(var(--ink));
+        }
+        .input:focus { outline: 2px solid hsl(var(--cherry) / 0.4); outline-offset: 1px; }
+      `}</style>
     </div>
+  );
+}
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <label className="block">
+      <span className="mb-1 block text-[11px] font-bold uppercase tracking-wider text-ink-soft">{label}</span>
+      {children}
+    </label>
   );
 }
