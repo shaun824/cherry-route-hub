@@ -6,26 +6,34 @@ import {
   CalendarDays,
   CheckSquare,
   Clock,
+  Facebook,
+  Globe,
   Info,
+  Instagram,
   MapPin,
   MessageCircle,
   MessagesSquare,
   Phone,
-  Route as RouteIcon,
   Send,
   Square,
+  Twitter,
+  Youtube,
+  Music2,
+  Activity,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/lib/auth";
 import { DEFAULT_PACKING_LIST, fetchEventInfo, type EventInfoBlock, type PackingItem } from "@/lib/event-info";
 import { RouteMap } from "@/components/route-map";
-import type { EventDay, EventRoute, ScheduleItem } from "@/lib/mock-data";
+import { SponsorScroller } from "@/components/sponsor-scroller";
+import { useAdminStore } from "@/lib/store";
+import type { EventDay, EventRoute, ScheduleItem, SocialLinks } from "@/lib/mock-data";
 
 export const Route = createFileRoute("/my-events/$eventId")({
   loader: async ({ params }) => {
     const { data, error } = await supabase
       .from("events")
-      .select("id, name, discipline, event_date, location, map_query, distance_km, description, hero_color, days, schedule")
+      .select("id, name, discipline, event_date, location, map_query, distance_km, description, hero_color, days, schedule, social_links")
       .eq("id", params.eventId)
       .maybeSingle();
     if (error || !data) throw notFound();
@@ -118,13 +126,13 @@ const DESCRIPTION_PREVIEW_LENGTH = 50;
 function InfoPanel({
   eventId,
   description,
-  distanceKm,
+  distanceKm: _distanceKm,
   event,
 }: {
   eventId: string;
   description: string | null;
   distanceKm: number;
-  event: { days?: EventDay[] | null; schedule?: ScheduleItem[] | null; location?: string | null; map_query?: string | null };
+  event: { days?: EventDay[] | null; schedule?: ScheduleItem[] | null; location?: string | null; map_query?: string | null; social_links?: SocialLinks | null };
 }) {
   const q = useQuery({ queryKey: ["event-info", eventId], queryFn: () => fetchEventInfo(eventId) });
   const info = q.data;
@@ -233,29 +241,10 @@ function InfoPanel({
       </section>
 
 
-      <section>
-        <SectionTitle>Route</SectionTitle>
-        <div className="mt-2 rounded-xl bg-card p-3 ring-1 ring-border">
-          <p className="flex items-center gap-2 text-sm font-semibold text-ink">
-            <RouteIcon className="h-4 w-4 text-cherry" />
-            {(info?.distance_km ?? distanceKm) || 0} km
-            {info?.elevation_m ? ` · ${info.elevation_m}m elevation` : ""}
-          </p>
-          {info?.route_description ? (
-            <p className="mt-2 whitespace-pre-line text-xs text-ink-soft">{info.route_description}</p>
-          ) : null}
-          {info?.gpx_url ? (
-            <a
-              href={info.gpx_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-2 inline-block text-xs font-semibold text-cherry underline"
-            >
-              Download GPX
-            </a>
-          ) : null}
-        </div>
-      </section>
+      <FollowSection links={event.social_links ?? undefined} />
+
+      <SponsorsBlock />
+
 
       {info?.rules_md ? (
         <section>
@@ -795,3 +784,89 @@ function EmptyBlock({ children }: { children: React.ReactNode }) {
     </div>
   );
 }
+
+const SOCIAL_META: {
+  key: keyof SocialLinks;
+  label: string;
+  icon: typeof Facebook;
+  color: string;
+}[] = [
+  { key: "website", label: "Website", icon: Globe, color: "bg-ink text-white" },
+  { key: "facebook", label: "Facebook", icon: Facebook, color: "bg-[#1877F2] text-white" },
+  { key: "instagram", label: "Instagram", icon: Instagram, color: "bg-gradient-to-br from-[#f58529] via-[#dd2a7b] to-[#8134af] text-white" },
+  { key: "twitter", label: "X", icon: Twitter, color: "bg-black text-white" },
+  { key: "youtube", label: "YouTube", icon: Youtube, color: "bg-[#FF0000] text-white" },
+  { key: "tiktok", label: "TikTok", icon: Music2, color: "bg-black text-white" },
+  { key: "strava", label: "Strava", icon: Activity, color: "bg-[#FC4C02] text-white" },
+];
+
+function FollowSection({ links }: { links?: SocialLinks }) {
+  const entries = SOCIAL_META.filter((m) => Boolean(links?.[m.key]));
+  if (entries.length === 0) return null;
+  return (
+    <section>
+      <SectionTitle>Follow this event</SectionTitle>
+      <div className="mt-2 flex flex-wrap gap-2">
+        {entries.map(({ key, label, icon: Icon, color }) => (
+          <a
+            key={key}
+            href={links![key]!}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold shadow-sm ${color}`}
+          >
+            <Icon className="h-3.5 w-3.5" />
+            {label}
+          </a>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function SponsorsBlock() {
+  const sponsors = useAdminStore((s) => s.sponsors).filter((sp) => sp.active);
+  if (sponsors.length === 0) return null;
+  const primary = sponsors.find((sp) => sp.tier === "Platinum") ?? sponsors[0];
+  const secondary = sponsors.filter((sp) => sp.id !== primary.id);
+
+  const primaryInner = primary.logoUrl ? (
+    <img src={primary.logoUrl} alt={primary.name} className="max-h-16 max-w-[220px] object-contain" loading="lazy" />
+  ) : (
+    <span className="font-display text-lg font-black tracking-[0.18em] text-white" style={{ textShadow: "0 1px 2px rgba(0,0,0,.25)" }}>
+      {primary.logoText || primary.name}
+    </span>
+  );
+
+  return (
+    <section aria-label="Sponsors" className="pt-2">
+      <SectionTitle>Proudly supported by</SectionTitle>
+
+      <div
+        className="mt-2 grid place-items-center rounded-2xl p-5 ring-1 ring-border"
+        style={{ background: primary.logoUrl ? "white" : primary.accent }}
+      >
+        {primary.url ? (
+          <a href={primary.url} target="_blank" rel="noopener noreferrer sponsored" aria-label={`Visit ${primary.name}`}>
+            {primaryInner}
+          </a>
+        ) : (
+          primaryInner
+        )}
+        <p className="mt-2 text-[10px] font-bold uppercase tracking-[0.2em] text-ink-soft">
+          Headline sponsor · {primary.name}
+        </p>
+      </div>
+
+      {secondary.length > 0 ? (
+        <div className="mt-3">
+          <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.2em] text-ink-soft">
+            Our partners
+          </p>
+          <SponsorScroller title="" compact />
+        </div>
+      ) : null}
+    </section>
+  );
+}
+

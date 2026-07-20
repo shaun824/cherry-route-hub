@@ -813,6 +813,38 @@ function EventEditor({
             />
           </Field>
 
+          <div className="md:col-span-2">
+            <p className="mb-2 text-[11px] font-bold uppercase tracking-widest text-ink-soft">
+              Social media (follow this event)
+            </p>
+            <div className="grid gap-3 md:grid-cols-2">
+              {([
+                ["website", "Website"],
+                ["facebook", "Facebook"],
+                ["instagram", "Instagram"],
+                ["twitter", "X / Twitter"],
+                ["youtube", "YouTube"],
+                ["tiktok", "TikTok"],
+                ["strava", "Strava club"],
+              ] as const).map(([key, label]) => (
+                <Field key={key} label={label}>
+                  <input
+                    className={inputCls}
+                    value={form.socialLinks?.[key] ?? ""}
+                    placeholder="https://…"
+                    onChange={(e) =>
+                      update("socialLinks", {
+                        ...(form.socialLinks ?? {}),
+                        [key]: e.target.value || undefined,
+                      })
+                    }
+                  />
+                </Field>
+              ))}
+            </div>
+          </div>
+
+
           <Field label="Event logo">
             <input
               className={inputCls}
