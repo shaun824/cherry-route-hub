@@ -16,12 +16,14 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/lib/auth";
 import { fetchEventInfo, type EventInfoBlock } from "@/lib/event-info";
+import { RouteMap } from "@/components/route-map";
+import type { EventDay, EventRoute } from "@/lib/mock-data";
 
 export const Route = createFileRoute("/my-events/$eventId")({
   loader: async ({ params }) => {
     const { data, error } = await supabase
       .from("events")
-      .select("id, name, discipline, event_date, location, distance_km, description, hero_color")
+      .select("id, name, discipline, event_date, location, distance_km, description, hero_color, days")
       .eq("id", params.eventId)
       .maybeSingle();
     if (error || !data) throw notFound();
