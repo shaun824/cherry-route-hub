@@ -32,6 +32,7 @@ import { Route as AdminMessagesRouteImport } from './routes/admin.messages'
 import { Route as AdminFeedRouteImport } from './routes/admin.feed'
 import { Route as AdminEventsRouteImport } from './routes/admin.events'
 import { Route as EventsEventIdIndexRouteImport } from './routes/events.$eventId.index'
+import { Route as AdminEventInfoIndexRouteImport } from './routes/admin.event-info.index'
 import { Route as EventsEventIdEnterRouteImport } from './routes/events.$eventId.enter'
 import { Route as AdminEventInfoEventIdRouteImport } from './routes/admin.event-info.$eventId'
 
@@ -150,6 +151,11 @@ const EventsEventIdIndexRoute = EventsEventIdIndexRouteImport.update({
   path: '/',
   getParentRoute: () => EventsEventIdRoute,
 } as any)
+const AdminEventInfoIndexRoute = AdminEventInfoIndexRouteImport.update({
+  id: '/event-info/',
+  path: '/event-info/',
+  getParentRoute: () => AdminRoute,
+} as any)
 const EventsEventIdEnterRoute = EventsEventIdEnterRouteImport.update({
   id: '/enter',
   path: '/enter',
@@ -186,6 +192,7 @@ export interface FileRoutesByFullPath {
   '/my-events/': typeof MyEventsIndexRoute
   '/admin/event-info/$eventId': typeof AdminEventInfoEventIdRoute
   '/events/$eventId/enter': typeof EventsEventIdEnterRoute
+  '/admin/event-info/': typeof AdminEventInfoIndexRoute
   '/events/$eventId/': typeof EventsEventIdIndexRoute
 }
 export interface FileRoutesByTo {
@@ -210,6 +217,7 @@ export interface FileRoutesByTo {
   '/my-events': typeof MyEventsIndexRoute
   '/admin/event-info/$eventId': typeof AdminEventInfoEventIdRoute
   '/events/$eventId/enter': typeof EventsEventIdEnterRoute
+  '/admin/event-info': typeof AdminEventInfoIndexRoute
   '/events/$eventId': typeof EventsEventIdIndexRoute
 }
 export interface FileRoutesById {
@@ -238,6 +246,7 @@ export interface FileRoutesById {
   '/my-events/': typeof MyEventsIndexRoute
   '/admin/event-info/$eventId': typeof AdminEventInfoEventIdRoute
   '/events/$eventId/enter': typeof EventsEventIdEnterRoute
+  '/admin/event-info/': typeof AdminEventInfoIndexRoute
   '/events/$eventId/': typeof EventsEventIdIndexRoute
 }
 export interface FileRouteTypes {
@@ -267,6 +276,7 @@ export interface FileRouteTypes {
     | '/my-events/'
     | '/admin/event-info/$eventId'
     | '/events/$eventId/enter'
+    | '/admin/event-info/'
     | '/events/$eventId/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -291,6 +301,7 @@ export interface FileRouteTypes {
     | '/my-events'
     | '/admin/event-info/$eventId'
     | '/events/$eventId/enter'
+    | '/admin/event-info'
     | '/events/$eventId'
   id:
     | '__root__'
@@ -318,6 +329,7 @@ export interface FileRouteTypes {
     | '/my-events/'
     | '/admin/event-info/$eventId'
     | '/events/$eventId/enter'
+    | '/admin/event-info/'
     | '/events/$eventId/'
   fileRoutesById: FileRoutesById
 }
@@ -498,6 +510,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EventsEventIdIndexRouteImport
       parentRoute: typeof EventsEventIdRoute
     }
+    '/admin/event-info/': {
+      id: '/admin/event-info/'
+      path: '/event-info'
+      fullPath: '/admin/event-info/'
+      preLoaderRoute: typeof AdminEventInfoIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/events/$eventId/enter': {
       id: '/events/$eventId/enter'
       path: '/enter'
@@ -526,6 +545,7 @@ interface AdminRouteChildren {
   AdminSponsorsRoute: typeof AdminSponsorsRoute
   AdminIndexRoute: typeof AdminIndexRoute
   AdminEventInfoEventIdRoute: typeof AdminEventInfoEventIdRoute
+  AdminEventInfoIndexRoute: typeof AdminEventInfoIndexRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
@@ -539,6 +559,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminSponsorsRoute: AdminSponsorsRoute,
   AdminIndexRoute: AdminIndexRoute,
   AdminEventInfoEventIdRoute: AdminEventInfoEventIdRoute,
+  AdminEventInfoIndexRoute: AdminEventInfoIndexRoute,
 }
 
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
