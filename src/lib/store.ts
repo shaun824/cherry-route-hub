@@ -79,7 +79,13 @@ export const useAdminStore = create<AdminState>()((set) => ({
       next[i] = e;
       return { events: next };
     });
-    void upsertEventCloud(e);
+    void upsertEventCloud(e).then((newId) => {
+      if (!newId || newId === e.id) return;
+      // Replace local id with cloud-assigned uuid so future edits target the same row.
+      useAdminStore.setState((s) => ({
+        events: s.events.map((x) => (x.id === e.id ? { ...x, id: newId } : x)),
+      }));
+    });
   },
   deleteEvent: (id) => {
     set((s) => ({ events: s.events.filter((e) => e.id !== id) }));
