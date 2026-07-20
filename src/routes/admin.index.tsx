@@ -28,22 +28,7 @@ function AdminDashboard() {
         </p>
       </div>
 
-      <Link
-        to="/admin/roster"
-        className="mb-6 flex items-center justify-between gap-3 rounded-2xl bg-gradient-to-br from-cherry to-cherry-deep p-5 text-white shadow-sm ring-1 ring-cherry-deep/20 hover:brightness-105"
-      >
-        <div className="flex items-center gap-3">
-          <span className="grid h-11 w-11 place-items-center rounded-xl bg-white/15 ring-1 ring-white/25">
-            <FileUp className="h-5 w-5" />
-          </span>
-          <div>
-            <p className="text-[11px] font-bold uppercase tracking-wider opacity-90">Rider roster</p>
-            <p className="font-display text-lg font-bold leading-tight">Upload CSV of entrants</p>
-            <p className="text-xs opacity-90">Import Entry Ninja exports so riders can link their events.</p>
-          </div>
-        </div>
-        <ArrowUpRight className="h-5 w-5 shrink-0" />
-      </Link>
+
 
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
