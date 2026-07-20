@@ -8,7 +8,7 @@ const rosterRowSchema = z.object({
   email: z.string().trim().email().max(255),
   id_number: z.string().trim().min(4).max(50),
   phone: z.string().trim().max(40).optional().default(""),
-  event_id: z.string().uuid(),
+  event_id: z.string().trim().min(1),
   category: z.string().trim().max(80).optional().default(""),
   batch: z.string().trim().max(80).optional().default(""),
   bib_number: z.string().trim().max(40).optional().default(""),
