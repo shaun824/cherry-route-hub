@@ -2,7 +2,7 @@
 // realtime changes so admin edits reflect live across sessions.
 import { useEffect, useState } from "react";
 import { useAdminStore } from "./store";
-import { fetchFeed, fetchPromos, fetchSponsors } from "./cloud";
+import { fetchEvents, fetchFeed, fetchPromos, fetchSponsors } from "./cloud";
 import { fetchSettings } from "./settings";
 import { supabase } from "@/integrations/supabase/client";
 
