@@ -12,22 +12,29 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as TrackerRouteImport } from './routes/tracker'
 import { Route as PromosRouteImport } from './routes/promos'
 import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as MyEventsRouteImport } from './routes/my-events'
 import { Route as GalleryRouteImport } from './routes/gallery'
 import { Route as FeedRouteImport } from './routes/feed'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as MyEventsIndexRouteImport } from './routes/my-events.index'
 import { Route as EventsIndexRouteImport } from './routes/events.index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
+import { Route as MyEventsEventIdRouteImport } from './routes/my-events.$eventId'
 import { Route as EventsEventIdRouteImport } from './routes/events.$eventId'
 import { Route as AdminSponsorsRouteImport } from './routes/admin.sponsors'
 import { Route as AdminSettingsRouteImport } from './routes/admin.settings'
+import { Route as AdminRosterRouteImport } from './routes/admin.roster'
 import { Route as AdminRidersRouteImport } from './routes/admin.riders'
 import { Route as AdminPromosRouteImport } from './routes/admin.promos'
+import { Route as AdminMessagesRouteImport } from './routes/admin.messages'
 import { Route as AdminFeedRouteImport } from './routes/admin.feed'
 import { Route as AdminEventsRouteImport } from './routes/admin.events'
 import { Route as EventsEventIdIndexRouteImport } from './routes/events.$eventId.index'
+import { Route as AdminEventInfoIndexRouteImport } from './routes/admin.event-info.index'
 import { Route as EventsEventIdEnterRouteImport } from './routes/events.$eventId.enter'
+import { Route as AdminEventInfoEventIdRouteImport } from './routes/admin.event-info.$eventId'
 
 const TrackerRoute = TrackerRouteImport.update({
   id: '/tracker',
@@ -42,6 +49,11 @@ const PromosRoute = PromosRouteImport.update({
 const ProfileRoute = ProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MyEventsRoute = MyEventsRouteImport.update({
+  id: '/my-events',
+  path: '/my-events',
   getParentRoute: () => rootRouteImport,
 } as any)
 const GalleryRoute = GalleryRouteImport.update({
@@ -69,6 +81,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MyEventsIndexRoute = MyEventsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => MyEventsRoute,
+} as any)
 const EventsIndexRoute = EventsIndexRouteImport.update({
   id: '/events/',
   path: '/events/',
@@ -78,6 +95,11 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AdminRoute,
+} as any)
+const MyEventsEventIdRoute = MyEventsEventIdRouteImport.update({
+  id: '/$eventId',
+  path: '/$eventId',
+  getParentRoute: () => MyEventsRoute,
 } as any)
 const EventsEventIdRoute = EventsEventIdRouteImport.update({
   id: '/events/$eventId',
@@ -94,6 +116,11 @@ const AdminSettingsRoute = AdminSettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminRosterRoute = AdminRosterRouteImport.update({
+  id: '/roster',
+  path: '/roster',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminRidersRoute = AdminRidersRouteImport.update({
   id: '/riders',
   path: '/riders',
@@ -102,6 +129,11 @@ const AdminRidersRoute = AdminRidersRouteImport.update({
 const AdminPromosRoute = AdminPromosRouteImport.update({
   id: '/promos',
   path: '/promos',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminMessagesRoute = AdminMessagesRouteImport.update({
+  id: '/messages',
+  path: '/messages',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminFeedRoute = AdminFeedRouteImport.update({
@@ -119,10 +151,20 @@ const EventsEventIdIndexRoute = EventsEventIdIndexRouteImport.update({
   path: '/',
   getParentRoute: () => EventsEventIdRoute,
 } as any)
+const AdminEventInfoIndexRoute = AdminEventInfoIndexRouteImport.update({
+  id: '/event-info/',
+  path: '/event-info/',
+  getParentRoute: () => AdminRoute,
+} as any)
 const EventsEventIdEnterRoute = EventsEventIdEnterRouteImport.update({
   id: '/enter',
   path: '/enter',
   getParentRoute: () => EventsEventIdRoute,
+} as any)
+const AdminEventInfoEventIdRoute = AdminEventInfoEventIdRouteImport.update({
+  id: '/event-info/$eventId',
+  path: '/event-info/$eventId',
+  getParentRoute: () => AdminRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -131,19 +173,26 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/feed': typeof FeedRoute
   '/gallery': typeof GalleryRoute
+  '/my-events': typeof MyEventsRouteWithChildren
   '/profile': typeof ProfileRoute
   '/promos': typeof PromosRoute
   '/tracker': typeof TrackerRoute
   '/admin/events': typeof AdminEventsRoute
   '/admin/feed': typeof AdminFeedRoute
+  '/admin/messages': typeof AdminMessagesRoute
   '/admin/promos': typeof AdminPromosRoute
   '/admin/riders': typeof AdminRidersRoute
+  '/admin/roster': typeof AdminRosterRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/sponsors': typeof AdminSponsorsRoute
   '/events/$eventId': typeof EventsEventIdRouteWithChildren
+  '/my-events/$eventId': typeof MyEventsEventIdRoute
   '/admin/': typeof AdminIndexRoute
   '/events/': typeof EventsIndexRoute
+  '/my-events/': typeof MyEventsIndexRoute
+  '/admin/event-info/$eventId': typeof AdminEventInfoEventIdRoute
   '/events/$eventId/enter': typeof EventsEventIdEnterRoute
+  '/admin/event-info/': typeof AdminEventInfoIndexRoute
   '/events/$eventId/': typeof EventsEventIdIndexRoute
 }
 export interface FileRoutesByTo {
@@ -156,13 +205,19 @@ export interface FileRoutesByTo {
   '/tracker': typeof TrackerRoute
   '/admin/events': typeof AdminEventsRoute
   '/admin/feed': typeof AdminFeedRoute
+  '/admin/messages': typeof AdminMessagesRoute
   '/admin/promos': typeof AdminPromosRoute
   '/admin/riders': typeof AdminRidersRoute
+  '/admin/roster': typeof AdminRosterRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/sponsors': typeof AdminSponsorsRoute
+  '/my-events/$eventId': typeof MyEventsEventIdRoute
   '/admin': typeof AdminIndexRoute
   '/events': typeof EventsIndexRoute
+  '/my-events': typeof MyEventsIndexRoute
+  '/admin/event-info/$eventId': typeof AdminEventInfoEventIdRoute
   '/events/$eventId/enter': typeof EventsEventIdEnterRoute
+  '/admin/event-info': typeof AdminEventInfoIndexRoute
   '/events/$eventId': typeof EventsEventIdIndexRoute
 }
 export interface FileRoutesById {
@@ -172,19 +227,26 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/feed': typeof FeedRoute
   '/gallery': typeof GalleryRoute
+  '/my-events': typeof MyEventsRouteWithChildren
   '/profile': typeof ProfileRoute
   '/promos': typeof PromosRoute
   '/tracker': typeof TrackerRoute
   '/admin/events': typeof AdminEventsRoute
   '/admin/feed': typeof AdminFeedRoute
+  '/admin/messages': typeof AdminMessagesRoute
   '/admin/promos': typeof AdminPromosRoute
   '/admin/riders': typeof AdminRidersRoute
+  '/admin/roster': typeof AdminRosterRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/sponsors': typeof AdminSponsorsRoute
   '/events/$eventId': typeof EventsEventIdRouteWithChildren
+  '/my-events/$eventId': typeof MyEventsEventIdRoute
   '/admin/': typeof AdminIndexRoute
   '/events/': typeof EventsIndexRoute
+  '/my-events/': typeof MyEventsIndexRoute
+  '/admin/event-info/$eventId': typeof AdminEventInfoEventIdRoute
   '/events/$eventId/enter': typeof EventsEventIdEnterRoute
+  '/admin/event-info/': typeof AdminEventInfoIndexRoute
   '/events/$eventId/': typeof EventsEventIdIndexRoute
 }
 export interface FileRouteTypes {
@@ -195,19 +257,26 @@ export interface FileRouteTypes {
     | '/auth'
     | '/feed'
     | '/gallery'
+    | '/my-events'
     | '/profile'
     | '/promos'
     | '/tracker'
     | '/admin/events'
     | '/admin/feed'
+    | '/admin/messages'
     | '/admin/promos'
     | '/admin/riders'
+    | '/admin/roster'
     | '/admin/settings'
     | '/admin/sponsors'
     | '/events/$eventId'
+    | '/my-events/$eventId'
     | '/admin/'
     | '/events/'
+    | '/my-events/'
+    | '/admin/event-info/$eventId'
     | '/events/$eventId/enter'
+    | '/admin/event-info/'
     | '/events/$eventId/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -220,13 +289,19 @@ export interface FileRouteTypes {
     | '/tracker'
     | '/admin/events'
     | '/admin/feed'
+    | '/admin/messages'
     | '/admin/promos'
     | '/admin/riders'
+    | '/admin/roster'
     | '/admin/settings'
     | '/admin/sponsors'
+    | '/my-events/$eventId'
     | '/admin'
     | '/events'
+    | '/my-events'
+    | '/admin/event-info/$eventId'
     | '/events/$eventId/enter'
+    | '/admin/event-info'
     | '/events/$eventId'
   id:
     | '__root__'
@@ -235,19 +310,26 @@ export interface FileRouteTypes {
     | '/auth'
     | '/feed'
     | '/gallery'
+    | '/my-events'
     | '/profile'
     | '/promos'
     | '/tracker'
     | '/admin/events'
     | '/admin/feed'
+    | '/admin/messages'
     | '/admin/promos'
     | '/admin/riders'
+    | '/admin/roster'
     | '/admin/settings'
     | '/admin/sponsors'
     | '/events/$eventId'
+    | '/my-events/$eventId'
     | '/admin/'
     | '/events/'
+    | '/my-events/'
+    | '/admin/event-info/$eventId'
     | '/events/$eventId/enter'
+    | '/admin/event-info/'
     | '/events/$eventId/'
   fileRoutesById: FileRoutesById
 }
@@ -257,6 +339,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   FeedRoute: typeof FeedRoute
   GalleryRoute: typeof GalleryRoute
+  MyEventsRoute: typeof MyEventsRouteWithChildren
   ProfileRoute: typeof ProfileRoute
   PromosRoute: typeof PromosRoute
   TrackerRoute: typeof TrackerRoute
@@ -285,6 +368,13 @@ declare module '@tanstack/react-router' {
       path: '/profile'
       fullPath: '/profile'
       preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/my-events': {
+      id: '/my-events'
+      path: '/my-events'
+      fullPath: '/my-events'
+      preLoaderRoute: typeof MyEventsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/gallery': {
@@ -322,6 +412,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/my-events/': {
+      id: '/my-events/'
+      path: '/'
+      fullPath: '/my-events/'
+      preLoaderRoute: typeof MyEventsIndexRouteImport
+      parentRoute: typeof MyEventsRoute
+    }
     '/events/': {
       id: '/events/'
       path: '/events'
@@ -335,6 +432,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/'
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof AdminRoute
+    }
+    '/my-events/$eventId': {
+      id: '/my-events/$eventId'
+      path: '/$eventId'
+      fullPath: '/my-events/$eventId'
+      preLoaderRoute: typeof MyEventsEventIdRouteImport
+      parentRoute: typeof MyEventsRoute
     }
     '/events/$eventId': {
       id: '/events/$eventId'
@@ -357,6 +461,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminSettingsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/roster': {
+      id: '/admin/roster'
+      path: '/roster'
+      fullPath: '/admin/roster'
+      preLoaderRoute: typeof AdminRosterRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/riders': {
       id: '/admin/riders'
       path: '/riders'
@@ -369,6 +480,13 @@ declare module '@tanstack/react-router' {
       path: '/promos'
       fullPath: '/admin/promos'
       preLoaderRoute: typeof AdminPromosRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/messages': {
+      id: '/admin/messages'
+      path: '/messages'
+      fullPath: '/admin/messages'
+      preLoaderRoute: typeof AdminMessagesRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/feed': {
@@ -392,6 +510,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EventsEventIdIndexRouteImport
       parentRoute: typeof EventsEventIdRoute
     }
+    '/admin/event-info/': {
+      id: '/admin/event-info/'
+      path: '/event-info'
+      fullPath: '/admin/event-info/'
+      preLoaderRoute: typeof AdminEventInfoIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/events/$eventId/enter': {
       id: '/events/$eventId/enter'
       path: '/enter'
@@ -399,30 +524,59 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EventsEventIdEnterRouteImport
       parentRoute: typeof EventsEventIdRoute
     }
+    '/admin/event-info/$eventId': {
+      id: '/admin/event-info/$eventId'
+      path: '/event-info/$eventId'
+      fullPath: '/admin/event-info/$eventId'
+      preLoaderRoute: typeof AdminEventInfoEventIdRouteImport
+      parentRoute: typeof AdminRoute
+    }
   }
 }
 
 interface AdminRouteChildren {
   AdminEventsRoute: typeof AdminEventsRoute
   AdminFeedRoute: typeof AdminFeedRoute
+  AdminMessagesRoute: typeof AdminMessagesRoute
   AdminPromosRoute: typeof AdminPromosRoute
   AdminRidersRoute: typeof AdminRidersRoute
+  AdminRosterRoute: typeof AdminRosterRoute
   AdminSettingsRoute: typeof AdminSettingsRoute
   AdminSponsorsRoute: typeof AdminSponsorsRoute
   AdminIndexRoute: typeof AdminIndexRoute
+  AdminEventInfoEventIdRoute: typeof AdminEventInfoEventIdRoute
+  AdminEventInfoIndexRoute: typeof AdminEventInfoIndexRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
   AdminEventsRoute: AdminEventsRoute,
   AdminFeedRoute: AdminFeedRoute,
+  AdminMessagesRoute: AdminMessagesRoute,
   AdminPromosRoute: AdminPromosRoute,
   AdminRidersRoute: AdminRidersRoute,
+  AdminRosterRoute: AdminRosterRoute,
   AdminSettingsRoute: AdminSettingsRoute,
   AdminSponsorsRoute: AdminSponsorsRoute,
   AdminIndexRoute: AdminIndexRoute,
+  AdminEventInfoEventIdRoute: AdminEventInfoEventIdRoute,
+  AdminEventInfoIndexRoute: AdminEventInfoIndexRoute,
 }
 
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
+
+interface MyEventsRouteChildren {
+  MyEventsEventIdRoute: typeof MyEventsEventIdRoute
+  MyEventsIndexRoute: typeof MyEventsIndexRoute
+}
+
+const MyEventsRouteChildren: MyEventsRouteChildren = {
+  MyEventsEventIdRoute: MyEventsEventIdRoute,
+  MyEventsIndexRoute: MyEventsIndexRoute,
+}
+
+const MyEventsRouteWithChildren = MyEventsRoute._addFileChildren(
+  MyEventsRouteChildren,
+)
 
 interface EventsEventIdRouteChildren {
   EventsEventIdEnterRoute: typeof EventsEventIdEnterRoute
@@ -444,6 +598,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   FeedRoute: FeedRoute,
   GalleryRoute: GalleryRoute,
+  MyEventsRoute: MyEventsRouteWithChildren,
   ProfileRoute: ProfileRoute,
   PromosRoute: PromosRoute,
   TrackerRoute: TrackerRoute,
@@ -453,13 +608,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

@@ -49,10 +49,17 @@ export type Waivers = {
   termsFullText: string;
 };
 
+export type Features = {
+  // When false, the app hides in-app entry flows.
+  // Entries currently happen on Entry Ninja; this app is the rider companion.
+  entriesEnabled: boolean;
+};
+
 export type SiteSettings = {
   branding: Branding;
   quickLinks: QuickLink[];
   waivers: Waivers;
+  features: Features;
 };
 
 export const DEFAULT_SETTINGS: SiteSettings = {
@@ -78,6 +85,10 @@ export const DEFAULT_SETTINGS: SiteSettings = {
     termsFullText:
       "Red Cherry Events processes your data solely to facilitate your entry, communications and race results, including sharing necessary details with Entry Ninja for entry management.",
   },
+  features: {
+    // Pivot: entries are handled on Entry Ninja for now.
+    entriesEnabled: false,
+  },
 };
 
 export async function fetchSettings(): Promise<Partial<SiteSettings> | null> {
@@ -95,6 +106,7 @@ export async function fetchSettings(): Promise<Partial<SiteSettings> | null> {
       const v = value as { items?: QuickLink[] };
       out.quickLinks = v.items ?? [];
     } else if (key === "waivers") out.waivers = value as Waivers;
+    else if (key === "features") out.features = value as Features;
   }
   return out;
 }
@@ -120,5 +132,13 @@ export async function saveWaivers(w: Waivers) {
     .from("site_settings")
     .upsert({ key: "waivers", value: w as never });
   if (error) console.warn("[settings:saveWaivers]", error);
+  return !error;
+}
+
+export async function saveFeatures(f: Features) {
+  const { error } = await supabase
+    .from("site_settings")
+    .upsert({ key: "features", value: f as never });
+  if (error) console.warn("[settings:saveFeatures]", error);
   return !error;
 }

@@ -29,6 +29,7 @@ export function useHydratedStore() {
               branding: settings.branding ?? s.settings.branding,
               quickLinks: settings.quickLinks ?? s.settings.quickLinks,
               waivers: settings.waivers ?? s.settings.waivers,
+              features: settings.features ?? s.settings.features,
             }
           : s.settings,
       }));
@@ -55,6 +56,7 @@ export function useHydratedStore() {
               branding: settings.branding ?? s.settings.branding,
               quickLinks: settings.quickLinks ?? s.settings.quickLinks,
               waivers: settings.waivers ?? s.settings.waivers,
+              features: settings.features ?? s.settings.features,
             },
           }));
         });

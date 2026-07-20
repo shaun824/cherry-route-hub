@@ -52,6 +52,7 @@ function Home() {
   const promos = useAdminStore((s) => s.promos);
   const branding = useAdminStore((s) => s.settings.branding);
   const quickLinks = useAdminStore((s) => s.settings.quickLinks).filter((q) => q.enabled);
+  const entriesEnabled = useAdminStore((s) => s.settings.features.entriesEnabled);
   const upcoming = events
     .filter((e) => (e.lifecycle ?? "published") === "published" && e.status !== "closed")
     .slice(0, 3);
@@ -196,13 +197,22 @@ function Home() {
                 >
                   Details
                 </Link>
-                <Link
-                  to="/events/$eventId/enter"
-                  params={{ eventId: e.id }}
-                  className="grid place-items-center rounded-xl cherry-gradient py-2 text-[12px] font-bold text-white shadow-sm active:scale-[0.98] transition"
-                >
-                  RSVP
-                </Link>
+                {entriesEnabled ? (
+                  <Link
+                    to="/events/$eventId/enter"
+                    params={{ eventId: e.id }}
+                    className="grid place-items-center rounded-xl cherry-gradient py-2 text-[12px] font-bold text-white shadow-sm active:scale-[0.98] transition"
+                  >
+                    RSVP
+                  </Link>
+                ) : (
+                  <Link
+                    to="/my-events"
+                    className="grid place-items-center rounded-xl cherry-gradient py-2 text-[12px] font-bold text-white shadow-sm active:scale-[0.98] transition"
+                  >
+                    My Events
+                  </Link>
+                )}
               </div>
             </div>
           </article>

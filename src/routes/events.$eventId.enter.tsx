@@ -59,9 +59,41 @@ function EnterEvent() {
   useHydratedStore();
   const loader = Route.useLoaderData();
   const waivers = useAdminStore((s) => s.settings.waivers);
+  const entriesEnabled = useAdminStore((s) => s.settings.features.entriesEnabled);
   const storeEvent = useAdminStore((s) => s.events.find((e) => e.id === loader.event.id));
   const event = storeEvent ?? loader.event;
   const config = loader.config;
+
+  if (!entriesEnabled) {
+    return (
+      <div className="mx-auto max-w-md space-y-4 px-5 py-10 text-center">
+        <h1 className="font-display text-xl font-bold text-ink">Entries handled on Entry Ninja</h1>
+        <p className="text-sm text-ink-soft">
+          In-app entries are turned off. Please enter this event on Entry Ninja — once we have
+          your entry on file, your event will appear in <b>My Events</b> with all the info you
+          need.
+        </p>
+        <div className="flex flex-wrap justify-center gap-2 pt-2">
+          <a
+            href="https://entryninja.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="rounded-xl cherry-gradient px-4 py-2 text-sm font-bold text-white"
+          >
+            Enter on Entry Ninja
+          </a>
+          <Link
+            to="/events/$eventId"
+            params={{ eventId: event.id }}
+            className="rounded-xl border border-border bg-card px-4 py-2 text-sm font-semibold text-ink"
+          >
+            Back to event
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
 
   // Admin-managed classes override the default config; same for batches.
   const classes: EntryCategory[] = (event.classes && event.classes.length > 0 ? event.classes : config.categories);
