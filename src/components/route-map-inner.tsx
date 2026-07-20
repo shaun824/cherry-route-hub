@@ -66,7 +66,7 @@ type Loaded = {
   dayLabel: string;
   color: string;
   lines: LatLngAlt[][];
-  points: { name: string | null; description: string | null; coord: LatLngAlt }[];
+  markers: CustomMarker[];
   distanceKm: number;
   gainFromKmlM: number | null;
 };
@@ -98,26 +98,28 @@ export default function RouteMapInner({
   const fetchElev = useServerFn(getRouteElevation);
   const elevationRequested = useRef(new Set<string>());
 
-  // Collect all routes with KMLs across days.
+  // Collect all routes across days that have either KMLs or custom markers.
   const routes = useMemo(() => {
     const out: { route: EventRoute; dayLabel: string }[] = [];
     for (const day of event.days ?? []) {
       const dayLabel = day.label || new Date(day.date).toLocaleDateString("en-ZA", { weekday: "short", day: "numeric", month: "short" });
       for (const r of day.routes ?? []) {
-        if ((r.kmlUrls ?? []).length > 0) out.push({ route: r, dayLabel });
+        const hasKml = (r.kmlUrls ?? []).length > 0;
+        const hasMarkers = (r.customMarkers ?? []).length > 0;
+        if (hasKml || hasMarkers) out.push({ route: r, dayLabel });
       }
     }
     return out;
   }, [event]);
 
-  // Fetch + parse all KMLs.
+  // Fetch + parse all KMLs. Waypoints in the KML are intentionally ignored —
+  // only admin-defined custom markers are rendered.
   useEffect(() => {
     let cancelled = false;
     (async () => {
       const results: Loaded[] = [];
       for (const { route, dayLabel } of routes) {
         const lines: LatLngAlt[][] = [];
-        const points: Loaded["points"] = [];
         for (const url of route.kmlUrls ?? []) {
           try {
             const res = await fetch(url);
@@ -125,12 +127,11 @@ export default function RouteMapInner({
             const text = await res.text();
             const layer = parseKml(text);
             for (const line of layer.lines) lines.push(line);
-            for (const pt of layer.points) points.push(pt);
+            // layer.points intentionally discarded — KML waypoints are noise.
           } catch (err) {
             console.warn("[route-map] failed to load", url, err);
           }
         }
-        // Distance/elevation come from the ORIGINAL points so stats stay accurate.
         const distanceKm = lines.reduce((acc, l) => acc + polylineKm(l), 0);
         const gainFromKmlM = lines.length
           ? lines.reduce<number | null>((acc, l) => {
@@ -140,20 +141,19 @@ export default function RouteMapInner({
             }, null)
           : null;
 
-        // For rendering, simplify each line so Leaflet doesn't stall on huge tracks.
-        // Tolerance ~6m keeps route shape visually identical; hard cap prevents pathological inputs.
         const simplifiedLines = lines
           .map((l) => simplifyPolyline(l, 6))
           .map((l) => capPolyline(l, 2000));
 
-        if (simplifiedLines.length || points.length) {
+        const markers = route.customMarkers ?? [];
+
+        if (simplifiedLines.length || markers.length) {
           results.push({
             route,
             dayLabel,
             color: route.color || TIER_COLORS[route.tier] || TIER_COLORS.Custom,
             lines: simplifiedLines,
-            // Cap markers too — 500 pins is already a lot to click through.
-            points: points.slice(0, 500),
+            markers,
             distanceKm,
             gainFromKmlM,
           });
@@ -167,6 +167,7 @@ export default function RouteMapInner({
       cancelled = true;
     };
   }, [routes]);
+
 
 
   // For routes without KML altitude, fetch elevation from Google.
