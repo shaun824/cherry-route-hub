@@ -166,7 +166,7 @@ export async function fetchEvents(): Promise<Event[] | null> {
 }
 
 export async function upsertEventCloud(e: Event): Promise<string | null> {
-  const row: Row = {
+  const row = {
     ...(isUuid(e.id) ? { id: e.id } : {}),
     name: e.name || "Untitled event",
     discipline: e.discipline,
