@@ -1,10 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useState } from "react";
 import { TypeBadge } from "@/components/ui-bits";
 import { feed, formatDate, formatTime, relativeTime } from "@/lib/mock-data";
 import type { EventDay, EventRoute, ScheduleItem } from "@/lib/mock-data";
 import { useAdminStore } from "@/lib/store";
 import { RouteMap } from "@/components/route-map";
 import { MessageSquare, ChevronRight, ExternalLink, Map as MapIcon, Maximize2 } from "lucide-react";
+
+const DESCRIPTION_PREVIEW_LENGTH = 50;
 
 export const Route = createFileRoute("/events/$eventId/")({
   component: EventDetailIndex,
@@ -14,6 +17,32 @@ function EventDetailIndex() {
   const { event } = Route.useLoaderData();
   const entriesEnabled = useAdminStore((s) => s.settings.features.entriesEnabled);
   const eventPosts = feed.filter((p) => p.eventId === event.id);
+
+  const description: string = event.description ?? "";
+  const isLongDescription = description.length > DESCRIPTION_PREVIEW_LENGTH;
+  const [descExpanded, setDescExpanded] = useState(false);
+
+  const days: EventDay[] = event.days ?? [];
+  const schedule: ScheduleItem[] = event.schedule ?? [];
+  const scheduleDayIds = Array.from(
+    new Set(
+      schedule
+        .map((s) => s.dayId)
+        .filter((id): id is string => Boolean(id && days.some((d) => d.id === id))),
+    ),
+  );
+  const scheduleDays = days.filter((d) => scheduleDayIds.includes(d.id));
+  const hasUnscheduled = schedule.some((s) => !s.dayId || !days.some((d) => d.id === s.dayId));
+  const scheduleTabs: { id: string; label: string; date?: string }[] = [
+    ...scheduleDays.map((d, i) => ({ id: d.id, label: d.label || `Day ${i + 1}`, date: d.date })),
+    ...(hasUnscheduled ? [{ id: "__unscheduled", label: "Other" }] : []),
+  ];
+  const [activeDayId, setActiveDayId] = useState<string | undefined>(scheduleTabs[0]?.id);
+  const activeItems = schedule.filter((s) =>
+    activeDayId === "__unscheduled"
+      ? !s.dayId || !days.some((d) => d.id === s.dayId)
+      : s.dayId === activeDayId,
+  );
 
   return (
     <div>
@@ -75,7 +104,20 @@ function EventDetailIndex() {
         <h2 className="font-display text-[13px] font-bold uppercase tracking-wider text-ink-soft">
           About this event
         </h2>
-        <p className="mt-2 text-sm leading-relaxed text-ink-soft">{event.description}</p>
+        <p className="mt-2 text-sm leading-relaxed text-ink-soft">
+          {isLongDescription && !descExpanded
+            ? `${description.slice(0, DESCRIPTION_PREVIEW_LENGTH).trimEnd()}…`
+            : description}
+        </p>
+        {isLongDescription ? (
+          <button
+            type="button"
+            onClick={() => setDescExpanded((v) => !v)}
+            className="mt-2 text-xs font-semibold text-cherry"
+          >
+            {descExpanded ? "Show less" : "Learn more"}
+          </button>
+        ) : null}
       </section>
 
       {/* Interactive route map */}
@@ -168,39 +210,65 @@ function EventDetailIndex() {
       ) : null}
 
       {/* Schedule */}
-      <section className="px-5 pt-6">
-        <h2 className="font-display text-[13px] font-bold uppercase tracking-wider text-ink-soft">
-          Schedule
-        </h2>
-        <ol className="mt-3 space-y-2">
-          {event.schedule.map((s: ScheduleItem, i: number) => {
-            const day = s.dayId ? event.days?.find((d: EventDay) => d.id === s.dayId) : undefined;
-            return (
-              <li
-                key={i}
-                className="flex items-start gap-3 rounded-xl bg-card p-3 ring-1 ring-border"
-              >
-                <span className="mt-0.5 rounded-md bg-accent px-2 py-1 font-mono text-[11px] font-bold text-cherry-deep">
-                  {s.time}
-                </span>
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold text-ink">{s.label}</p>
-                  {day ? (
-                    <p className="mt-0.5 text-[10px] font-bold uppercase tracking-wider text-ink-soft">
-                      {day.label || "Day"} {day.date ? `· ${day.date}` : ""}
-                    </p>
-                  ) : null}
-                  {s.details ? (
-                    <p className="mt-1 whitespace-pre-wrap text-xs leading-relaxed text-ink-soft">
-                      {s.details}
-                    </p>
-                  ) : null}
-                </div>
+      {schedule.length > 0 ? (
+        <section className="px-5 pt-6">
+          <h2 className="font-display text-[13px] font-bold uppercase tracking-wider text-ink-soft">
+            Schedule
+          </h2>
+          {scheduleTabs.length > 1 ? (
+            <div className="mt-3 flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
+              {scheduleTabs.map((tab) => {
+                const active = tab.id === activeDayId;
+                return (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    onClick={() => setActiveDayId(tab.id)}
+                    className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ring-1 ${
+                      active
+                        ? "bg-cherry text-white ring-cherry shadow-sm"
+                        : "bg-card text-ink-soft ring-border hover:text-ink"
+                    }`}
+                  >
+                    {tab.label}
+                    {tab.date ? (
+                      <span className={`ml-1.5 text-[10px] ${active ? "text-white/80" : "text-muted-foreground"}`}>
+                        {tab.date}
+                      </span>
+                    ) : null}
+                  </button>
+                );
+              })}
+            </div>
+          ) : null}
+          <ol key={activeDayId} className="mt-3 space-y-2 animate-fade-in">
+            {activeItems.length === 0 ? (
+              <li className="rounded-xl border border-dashed border-border p-4 text-center text-xs text-muted-foreground">
+                Nothing scheduled for this day yet.
               </li>
-            );
-          })}
-        </ol>
-      </section>
+            ) : (
+              activeItems.map((s: ScheduleItem, i: number) => (
+                <li
+                  key={i}
+                  className="flex items-start gap-3 rounded-xl bg-card p-3 ring-1 ring-border"
+                >
+                  <span className="mt-0.5 rounded-md bg-accent px-2 py-1 font-mono text-[11px] font-bold text-cherry-deep">
+                    {s.time}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold text-ink">{s.label}</p>
+                    {s.details ? (
+                      <p className="mt-1 whitespace-pre-wrap text-xs leading-relaxed text-ink-soft">
+                        {s.details}
+                      </p>
+                    ) : null}
+                  </div>
+                </li>
+              ))
+            )}
+          </ol>
+        </section>
+      ) : null}
 
       {/* Location */}
       <section className="px-5 pt-6">
