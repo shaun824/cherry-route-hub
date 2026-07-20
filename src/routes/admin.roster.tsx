@@ -216,7 +216,8 @@ function RosterPage() {
             </a>
             <p className="text-[11px] text-ink-soft">
               Required columns: <code>full_name, email, id_number, event_id</code>. Optional:{" "}
-              <code>phone, category, batch, bib_number</code>.
+              <code>phone, category, batch, bib_number</code>. The <code>event_id</code> column can be
+              the event's UUID or the exact event name from Admin → Events.
             </p>
           </div>
 
