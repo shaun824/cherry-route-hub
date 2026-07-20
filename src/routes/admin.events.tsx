@@ -335,8 +335,8 @@ function EventEditor({
   }
 
   const addScheduleItem = () =>
-    update("schedule", [...form.schedule, { time: "08:00", label: "" }]);
-  const updateScheduleItem = (i: number, patch: Partial<{ time: string; label: string }>) =>
+    update("schedule", [...form.schedule, { time: "08:00", label: "", details: "", dayId: undefined }]);
+  const updateScheduleItem = (i: number, patch: Partial<ScheduleItem>) =>
     update(
       "schedule",
       form.schedule.map((s, idx) => (idx === i ? { ...s, ...patch } : s)),
