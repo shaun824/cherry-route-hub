@@ -726,3 +726,57 @@ function SaveBar({
     </div>
   );
 }
+
+/* ---------- Features Card ---------- */
+
+function FeaturesCard({ value, onSaved }: { value: Features; onSaved: (f: Features) => void }) {
+  const [draft, setDraft] = useState<Features>(value);
+  const [saving, setSaving] = useState(false);
+  useEffect(() => setDraft(value), [value]);
+  const dirty = JSON.stringify(draft) !== JSON.stringify(value);
+
+  async function commit() {
+    setSaving(true);
+    const ok = await saveFeatures(draft);
+    setSaving(false);
+    if (ok) onSaved(draft);
+  }
+
+  return (
+    <section className="rounded-2xl bg-card p-5 ring-1 ring-border">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h2 className="font-display text-lg font-bold text-ink">Feature flags</h2>
+          <p className="text-xs text-ink-soft">
+            Turn app-wide features on or off. Currently entries live on Entry Ninja and this app
+            is the rider companion.
+          </p>
+        </div>
+        <button
+          onClick={() => void commit()}
+          disabled={!dirty || saving}
+          className="inline-flex items-center gap-1.5 rounded-lg bg-cherry px-3 py-2 text-xs font-bold text-white shadow-sm disabled:opacity-40"
+        >
+          <Save className="h-3.5 w-3.5" />
+          {saving ? "Saving…" : "Save changes"}
+        </button>
+      </div>
+
+      <label className="mt-4 flex items-center justify-between gap-3 rounded-xl border border-border bg-background p-3">
+        <div>
+          <p className="text-sm font-semibold text-ink">In-app entries</p>
+          <p className="text-xs text-ink-soft">
+            When on, riders can enter events inside the app. When off, we deep-link to Entry Ninja.
+          </p>
+        </div>
+        <input
+          type="checkbox"
+          checked={draft.entriesEnabled}
+          onChange={(e) => setDraft({ ...draft, entriesEnabled: e.target.checked })}
+          className="h-5 w-9 shrink-0"
+        />
+      </label>
+    </section>
+  );
+}
+
