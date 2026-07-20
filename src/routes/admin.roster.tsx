@@ -59,11 +59,14 @@ function RosterPage() {
   const [rows, setRows] = useState<CsvRow[]>([]);
   const [errors, setErrors] = useState<string[]>([]);
   const [running, setRunning] = useState(false);
+  const [selectedFileName, setSelectedFileName] = useState("");
   const [result, setResult] = useState<{ created: number; updated: number; linkedToEvent: number; errors: { row: number; error: string }[] } | null>(null);
 
-  function handleFile(file: File) {
+  function handleFile(file?: File | null) {
+    if (!file) return;
     setResult(null);
     setErrors([]);
+    setSelectedFileName(file.name);
     Papa.parse<CsvRow>(file, {
       header: true,
       skipEmptyLines: true,
@@ -141,12 +144,32 @@ function RosterPage() {
             </select>
           </label>
 
-          <input
-            type="file"
-            accept=".csv,text/csv"
-            onChange={(e) => e.target.files && handleFile(e.target.files[0])}
-            className="block w-full text-sm"
-          />
+          <div>
+            <input
+              id="roster-csv-upload"
+              type="file"
+              accept=".csv,text/csv"
+              onChange={(e) => handleFile(e.target.files?.[0])}
+              className="sr-only"
+            />
+            <label
+              htmlFor="roster-csv-upload"
+              className="flex min-h-36 cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-cherry/45 bg-cherry/5 px-4 py-6 text-center transition hover:border-cherry hover:bg-cherry/10"
+            >
+              <span className="grid h-12 w-12 place-items-center rounded-2xl bg-cherry text-white shadow-sm">
+                <FileUp className="h-6 w-6" />
+              </span>
+              <span className="mt-3 text-sm font-bold text-ink">Upload CSV document</span>
+              <span className="mt-1 text-xs text-ink-soft">
+                Tap here to choose your Entry Ninja export from your device.
+              </span>
+              {selectedFileName ? (
+                <span className="mt-3 rounded-full bg-card px-3 py-1 text-[11px] font-semibold text-ink ring-1 ring-border">
+                  Selected: {selectedFileName}
+                </span>
+              ) : null}
+            </label>
+          </div>
 
           <div className="flex flex-wrap items-center gap-2">
             <a
