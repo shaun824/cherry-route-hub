@@ -124,7 +124,7 @@ function InfoPanel({
   eventId: string;
   description: string | null;
   distanceKm: number;
-  event: { days?: EventDay[] | null; schedule?: ScheduleItem[] | null };
+  event: { days?: EventDay[] | null; schedule?: ScheduleItem[] | null; location?: string | null; map_query?: string | null };
 }) {
   const q = useQuery({ queryKey: ["event-info", eventId], queryFn: () => fetchEventInfo(eventId) });
   const info = q.data;
