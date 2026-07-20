@@ -104,7 +104,20 @@ function EventDetailIndex() {
         <h2 className="font-display text-[13px] font-bold uppercase tracking-wider text-ink-soft">
           About this event
         </h2>
-        <p className="mt-2 text-sm leading-relaxed text-ink-soft">{event.description}</p>
+        <p className="mt-2 text-sm leading-relaxed text-ink-soft">
+          {isLongDescription && !descExpanded
+            ? `${description.slice(0, DESCRIPTION_PREVIEW_LENGTH).trimEnd()}…`
+            : description}
+        </p>
+        {isLongDescription ? (
+          <button
+            type="button"
+            onClick={() => setDescExpanded((v) => !v)}
+            className="mt-2 text-xs font-semibold text-cherry"
+          >
+            {descExpanded ? "Show less" : "Learn more"}
+          </button>
+        ) : null}
       </section>
 
       {/* Interactive route map */}
