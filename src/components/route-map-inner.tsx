@@ -228,6 +228,7 @@ export default function RouteMapInner({
           zoom={bounds ? undefined : 9}
           style={{ height, width: "100%" }}
           scrollWheelZoom
+          preferCanvas
         >
           <TileLayer
             attribution='&copy; <a href="https://openstreetmap.org">OpenStreetMap</a>'
