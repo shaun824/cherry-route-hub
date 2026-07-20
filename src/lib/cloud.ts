@@ -2,8 +2,11 @@
 // Feed, promos, sponsors are backed by Lovable Cloud. Reads are anon-public;
 // writes require admin RLS. Callers should fire-and-forget; failures are logged.
 import { supabase } from "@/integrations/supabase/client";
-import type { FeedPost, Promo } from "./mock-data";
+import type { Batch, EntryCategory, Event, EventDay, FeedPost, Promo, ScheduleItem } from "./mock-data";
 import type { Sponsor } from "./store";
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const isUuid = (v: string) => UUID_RE.test(v);
 
 type Row = Record<string, unknown>;
 
