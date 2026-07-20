@@ -1,5 +1,5 @@
-// Client-safe helpers for KML → GeoJSON parsing and distance/elevation math.
-import { kml as kmlToGeoJson } from "@tmcw/togeojson";
+// Client-safe helpers for KML/GPX → GeoJSON parsing and distance/elevation math.
+import { kml as kmlToGeoJson, gpx as gpxToGeoJson } from "@tmcw/togeojson";
 
 export type LatLngAlt = [number, number, number?]; // [lng, lat, alt?]
 
@@ -14,10 +14,11 @@ export type ParsedRouteLayer = {
   }[];
 };
 
-/** Parses a KML string in the browser. Returns lines + placemarks. */
+/** Parses a KML or GPX string in the browser. Returns lines + placemarks. */
 export function parseKml(kmlText: string): ParsedRouteLayer {
   const doc = new DOMParser().parseFromString(kmlText, "application/xml");
-  const gj = kmlToGeoJson(doc);
+  const root = doc.documentElement?.nodeName?.toLowerCase() ?? "";
+  const gj = root === "gpx" ? gpxToGeoJson(doc) : kmlToGeoJson(doc);
 
   const lines: LatLngAlt[][] = [];
   const points: ParsedRouteLayer["points"] = [];
@@ -51,6 +52,71 @@ export function parseKml(kmlText: string): ParsedRouteLayer {
 
   return { name: topName, description: topDesc, lines, points };
 }
+
+/**
+ * Ramer–Douglas–Peucker polyline simplification.
+ * `tolerance` in metres — points closer than this to the segment are dropped.
+ * Preserves altitude on the retained points.
+ */
+export function simplifyPolyline(coords: LatLngAlt[], toleranceMeters = 6): LatLngAlt[] {
+  if (coords.length <= 2) return coords;
+
+  // Convert lat/lng to local metric plane for accurate perpendicular distance.
+  const lat0 = coords[0][1];
+  const mPerDegLat = 111_320;
+  const mPerDegLng = 111_320 * Math.cos((lat0 * Math.PI) / 180);
+  const proj = (c: LatLngAlt): [number, number] => [c[0] * mPerDegLng, c[1] * mPerDegLat];
+
+  const keep = new Uint8Array(coords.length);
+  keep[0] = 1;
+  keep[coords.length - 1] = 1;
+
+  const stack: [number, number][] = [[0, coords.length - 1]];
+  const tol2 = toleranceMeters * toleranceMeters;
+
+  while (stack.length) {
+    const [i, j] = stack.pop()!;
+    if (j - i < 2) continue;
+    const [ax, ay] = proj(coords[i]);
+    const [bx, by] = proj(coords[j]);
+    const dx = bx - ax;
+    const dy = by - ay;
+    const len2 = dx * dx + dy * dy || 1;
+    let maxD2 = 0;
+    let maxIdx = -1;
+    for (let k = i + 1; k < j; k++) {
+      const [px, py] = proj(coords[k]);
+      const t = ((px - ax) * dx + (py - ay) * dy) / len2;
+      const tc = Math.max(0, Math.min(1, t));
+      const cx = ax + tc * dx;
+      const cy = ay + tc * dy;
+      const d2 = (px - cx) * (px - cx) + (py - cy) * (py - cy);
+      if (d2 > maxD2) {
+        maxD2 = d2;
+        maxIdx = k;
+      }
+    }
+    if (maxD2 > tol2 && maxIdx !== -1) {
+      keep[maxIdx] = 1;
+      stack.push([i, maxIdx], [maxIdx, j]);
+    }
+  }
+
+  const out: LatLngAlt[] = [];
+  for (let i = 0; i < coords.length; i++) if (keep[i]) out.push(coords[i]);
+  return out;
+}
+
+/** Hard cap: uniform stride down-sample as a fallback when RDP still leaves too many points. */
+export function capPolyline(coords: LatLngAlt[], max: number): LatLngAlt[] {
+  if (coords.length <= max) return coords;
+  const step = coords.length / max;
+  const out: LatLngAlt[] = [];
+  for (let i = 0; i < max; i++) out.push(coords[Math.floor(i * step)]);
+  out.push(coords[coords.length - 1]);
+  return out;
+}
+
 
 /** Haversine distance in metres between two [lng, lat] points. */
 export function haversineMeters(a: LatLngAlt, b: LatLngAlt): number {

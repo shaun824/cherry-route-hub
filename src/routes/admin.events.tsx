@@ -122,12 +122,12 @@ function KmlManager({
     <div>
       <div className="mb-1 flex items-center justify-between">
         <span className="text-[10px] font-bold uppercase tracking-wider text-ink-soft">
-          Route maps (KML)
+          Route maps (KML / GPX)
         </span>
         <input
           ref={ref}
           type="file"
-          accept=".kml,application/vnd.google-earth.kml+xml,application/xml,text/xml"
+          accept=".kml,.gpx,application/vnd.google-earth.kml+xml,application/gpx+xml,application/xml,text/xml"
           multiple
           className="hidden"
           onChange={async (e) => {

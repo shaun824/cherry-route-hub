@@ -15,6 +15,8 @@ import {
   polylineElevationGainM,
   polylineKm,
   samplePolyline,
+  simplifyPolyline,
+  capPolyline,
   type LatLngAlt,
 } from "@/lib/geo";
 import { getRouteElevation } from "@/lib/elevation.functions";
@@ -103,7 +105,7 @@ export default function RouteMapInner({
             console.warn("[route-map] failed to load", url, err);
           }
         }
-        const flat = lines.flat();
+        // Distance/elevation come from the ORIGINAL points so stats stay accurate.
         const distanceKm = lines.reduce((acc, l) => acc + polylineKm(l), 0);
         const gainFromKmlM = lines.length
           ? lines.reduce<number | null>((acc, l) => {
@@ -112,19 +114,25 @@ export default function RouteMapInner({
               return (acc ?? 0) + g;
             }, null)
           : null;
-        if (lines.length || points.length) {
+
+        // For rendering, simplify each line so Leaflet doesn't stall on huge tracks.
+        // Tolerance ~6m keeps route shape visually identical; hard cap prevents pathological inputs.
+        const simplifiedLines = lines
+          .map((l) => simplifyPolyline(l, 6))
+          .map((l) => capPolyline(l, 2000));
+
+        if (simplifiedLines.length || points.length) {
           results.push({
             route,
             dayLabel,
             color: route.color || TIER_COLORS[route.tier] || TIER_COLORS.Custom,
-            lines,
-            points,
+            lines: simplifiedLines,
+            // Cap markers too — 500 pins is already a lot to click through.
+            points: points.slice(0, 500),
             distanceKm,
             gainFromKmlM,
           });
         }
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const _touch = flat.length;
       }
       if (cancelled) return;
       setLoaded(results);
@@ -134,6 +142,7 @@ export default function RouteMapInner({
       cancelled = true;
     };
   }, [routes]);
+
 
   // For routes without KML altitude, fetch elevation from Google.
   useEffect(() => {
@@ -219,6 +228,7 @@ export default function RouteMapInner({
           zoom={bounds ? undefined : 9}
           style={{ height, width: "100%" }}
           scrollWheelZoom
+          preferCanvas
         >
           <TileLayer
             attribution='&copy; <a href="https://openstreetmap.org">OpenStreetMap</a>'
