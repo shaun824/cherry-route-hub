@@ -210,39 +210,65 @@ function EventDetailIndex() {
       ) : null}
 
       {/* Schedule */}
-      <section className="px-5 pt-6">
-        <h2 className="font-display text-[13px] font-bold uppercase tracking-wider text-ink-soft">
-          Schedule
-        </h2>
-        <ol className="mt-3 space-y-2">
-          {event.schedule.map((s: ScheduleItem, i: number) => {
-            const day = s.dayId ? event.days?.find((d: EventDay) => d.id === s.dayId) : undefined;
-            return (
-              <li
-                key={i}
-                className="flex items-start gap-3 rounded-xl bg-card p-3 ring-1 ring-border"
-              >
-                <span className="mt-0.5 rounded-md bg-accent px-2 py-1 font-mono text-[11px] font-bold text-cherry-deep">
-                  {s.time}
-                </span>
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold text-ink">{s.label}</p>
-                  {day ? (
-                    <p className="mt-0.5 text-[10px] font-bold uppercase tracking-wider text-ink-soft">
-                      {day.label || "Day"} {day.date ? `· ${day.date}` : ""}
-                    </p>
-                  ) : null}
-                  {s.details ? (
-                    <p className="mt-1 whitespace-pre-wrap text-xs leading-relaxed text-ink-soft">
-                      {s.details}
-                    </p>
-                  ) : null}
-                </div>
+      {schedule.length > 0 ? (
+        <section className="px-5 pt-6">
+          <h2 className="font-display text-[13px] font-bold uppercase tracking-wider text-ink-soft">
+            Schedule
+          </h2>
+          {scheduleTabs.length > 1 ? (
+            <div className="mt-3 flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
+              {scheduleTabs.map((tab) => {
+                const active = tab.id === activeDayId;
+                return (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    onClick={() => setActiveDayId(tab.id)}
+                    className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ring-1 ${
+                      active
+                        ? "bg-cherry text-white ring-cherry shadow-sm"
+                        : "bg-card text-ink-soft ring-border hover:text-ink"
+                    }`}
+                  >
+                    {tab.label}
+                    {tab.date ? (
+                      <span className={`ml-1.5 text-[10px] ${active ? "text-white/80" : "text-muted-foreground"}`}>
+                        {tab.date}
+                      </span>
+                    ) : null}
+                  </button>
+                );
+              })}
+            </div>
+          ) : null}
+          <ol key={activeDayId} className="mt-3 space-y-2 animate-fade-in">
+            {activeItems.length === 0 ? (
+              <li className="rounded-xl border border-dashed border-border p-4 text-center text-xs text-muted-foreground">
+                Nothing scheduled for this day yet.
               </li>
-            );
-          })}
-        </ol>
-      </section>
+            ) : (
+              activeItems.map((s: ScheduleItem, i: number) => (
+                <li
+                  key={i}
+                  className="flex items-start gap-3 rounded-xl bg-card p-3 ring-1 ring-border"
+                >
+                  <span className="mt-0.5 rounded-md bg-accent px-2 py-1 font-mono text-[11px] font-bold text-cherry-deep">
+                    {s.time}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold text-ink">{s.label}</p>
+                    {s.details ? (
+                      <p className="mt-1 whitespace-pre-wrap text-xs leading-relaxed text-ink-soft">
+                        {s.details}
+                      </p>
+                    ) : null}
+                  </div>
+                </li>
+              ))
+            )}
+          </ol>
+        </section>
+      ) : null}
 
       {/* Location */}
       <section className="px-5 pt-6">
