@@ -14,7 +14,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { useAdminStore, newId } from "@/lib/store";
-import type { Batch, BatchPrice, EntryCategory, Event } from "@/lib/mock-data";
+import type { Batch, BatchPrice, EntryCategory, Event, EventDay, EventRoute, RouteTier, ScheduleItem } from "@/lib/mock-data";
 import { supabase } from "@/integrations/supabase/client";
 
 async function uploadEventImage(file: File): Promise<string> {
@@ -335,8 +335,8 @@ function EventEditor({
   }
 
   const addScheduleItem = () =>
-    update("schedule", [...form.schedule, { time: "08:00", label: "" }]);
-  const updateScheduleItem = (i: number, patch: Partial<{ time: string; label: string }>) =>
+    update("schedule", [...form.schedule, { time: "08:00", label: "", details: "", dayId: undefined }]);
+  const updateScheduleItem = (i: number, patch: Partial<ScheduleItem>) =>
     update(
       "schedule",
       form.schedule.map((s, idx) => (idx === i ? { ...s, ...patch } : s)),
@@ -526,11 +526,21 @@ function EventEditor({
           </Field>
 
 
+          <DaysEditor
+            days={form.days ?? []}
+            onChange={(next) => update("days", next)}
+          />
+
           <div className="md:col-span-2">
             <div className="mb-2 flex items-center justify-between">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-ink-soft">
-                Schedule
-              </span>
+              <div>
+                <span className="text-[11px] font-bold uppercase tracking-wider text-ink-soft">
+                  Schedule
+                </span>
+                <p className="text-[11px] text-ink-soft">
+                  Registration, briefings, starts, cut-offs. Add extra details per item and optionally link to a day.
+                </p>
+              </div>
               <button
                 type="button"
                 onClick={addScheduleItem}
@@ -539,52 +549,86 @@ function EventEditor({
                 <Plus className="h-3.5 w-3.5" /> Add item
               </button>
             </div>
-            <ul className="space-y-2">
+            <ul className="space-y-3">
               {form.schedule.map((item, i) => (
                 <li
                   key={i}
-                  className="flex items-center gap-2 rounded-lg border border-border bg-background p-2"
+                  className="rounded-lg border border-border bg-background p-3"
                 >
-                  <div className="flex flex-col">
-                    <button
-                      type="button"
-                      onClick={() => moveScheduleItem(i, -1)}
-                      className="text-ink-soft hover:text-ink disabled:opacity-30"
-                      disabled={i === 0}
-                      aria-label="Move up"
-                    >
-                      <GripVertical className="h-3 w-3 rotate-90" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => moveScheduleItem(i, 1)}
-                      className="text-ink-soft hover:text-ink disabled:opacity-30"
-                      disabled={i === form.schedule.length - 1}
-                      aria-label="Move down"
-                    >
-                      <GripVertical className="h-3 w-3 -rotate-90" />
-                    </button>
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-ink-soft">
+                      Item {i + 1}
+                    </span>
+                    <div className="flex items-center gap-1">
+                      <button
+                        type="button"
+                        onClick={() => moveScheduleItem(i, -1)}
+                        disabled={i === 0}
+                        className="rounded-md p-1 text-ink-soft hover:bg-secondary disabled:opacity-30"
+                        aria-label="Move up"
+                      >
+                        <GripVertical className="h-3 w-3 rotate-90" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => moveScheduleItem(i, 1)}
+                        disabled={i === form.schedule.length - 1}
+                        className="rounded-md p-1 text-ink-soft hover:bg-secondary disabled:opacity-30"
+                        aria-label="Move down"
+                      >
+                        <GripVertical className="h-3 w-3 -rotate-90" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => removeScheduleItem(i)}
+                        className="rounded-md p-1 text-cherry hover:bg-accent"
+                        aria-label="Remove"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
                   </div>
-                  <input
-                    type="time"
-                    className={`${inputCls} w-28`}
-                    value={item.time}
-                    onChange={(e) => updateScheduleItem(i, { time: e.target.value })}
+                  <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-[7rem_1fr]">
+                    <input
+                      type="time"
+                      className={inputCls}
+                      value={item.time}
+                      onChange={(e) => updateScheduleItem(i, { time: e.target.value })}
+                    />
+                    <input
+                      className={inputCls}
+                      placeholder="Title (e.g. Race briefing at start line)"
+                      value={item.label}
+                      onChange={(e) => updateScheduleItem(i, { label: e.target.value })}
+                    />
+                  </div>
+                  <textarea
+                    className={`${inputCls} mt-2 min-h-20`}
+                    placeholder="Details (optional) — meeting point, kit, what to bring, notes for riders…"
+                    value={item.details ?? ""}
+                    onChange={(e) => updateScheduleItem(i, { details: e.target.value })}
                   />
-                  <input
-                    className={`${inputCls} flex-1`}
-                    placeholder="e.g. Race briefing at start line"
-                    value={item.label}
-                    onChange={(e) => updateScheduleItem(i, { label: e.target.value })}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => removeScheduleItem(i)}
-                    className="rounded-md p-1.5 text-cherry hover:bg-accent"
-                    aria-label="Remove"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
+                  {(form.days?.length ?? 0) > 0 ? (
+                    <div className="mt-2">
+                      <label className="text-[10px] font-bold uppercase tracking-wider text-ink-soft">
+                        Day (optional)
+                      </label>
+                      <select
+                        className={inputCls}
+                        value={item.dayId ?? ""}
+                        onChange={(e) =>
+                          updateScheduleItem(i, { dayId: e.target.value || undefined })
+                        }
+                      >
+                        <option value="">— No day —</option>
+                        {(form.days ?? []).map((d, idx) => (
+                          <option key={d.id} value={d.id}>
+                            {d.label || `Day ${idx + 1}`} {d.date ? `· ${d.date}` : ""}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  ) : null}
                 </li>
               ))}
               {form.schedule.length === 0 ? (
@@ -604,6 +648,7 @@ function EventEditor({
             batches={form.batches ?? []}
             onChange={(next) => update("batches", next)}
           />
+
 
 
 
@@ -1069,6 +1114,263 @@ function BatchPricesEditor({
         {prices.length === 0 ? (
           <li className="rounded-lg border border-dashed border-border bg-background p-3 text-center text-[11px] text-ink-soft">
             No tiered pricing. Riders pay the class price.
+          </li>
+        ) : null}
+      </ul>
+    </div>
+  );
+}
+
+const ROUTE_TIERS: RouteTier[] = ["Gold", "Silver", "Bronze", "Custom"];
+
+function DaysEditor({
+  days,
+  onChange,
+}: {
+  days: EventDay[];
+  onChange: (next: EventDay[]) => void;
+}) {
+  const addDay = () =>
+    onChange([
+      ...days,
+      {
+        id: newId("day"),
+        date: new Date(Date.now() + (days.length + 1) * 86400000).toISOString().slice(0, 10),
+        label: `Day ${days.length + 1}`,
+        routes: [],
+      },
+    ]);
+  const updateDay = (i: number, patch: Partial<EventDay>) =>
+    onChange(days.map((d, idx) => (idx === i ? { ...d, ...patch } : d)));
+  const removeDay = (i: number) => onChange(days.filter((_, idx) => idx !== i));
+  const moveDay = (i: number, dir: -1 | 1) => {
+    const j = i + dir;
+    if (j < 0 || j >= days.length) return;
+    const next = [...days];
+    [next[i], next[j]] = [next[j], next[i]];
+    onChange(next);
+  };
+
+  const addRoute = (dayIdx: number, tier: RouteTier = "Gold") => {
+    const next = [...days];
+    next[dayIdx] = {
+      ...next[dayIdx],
+      routes: [
+        ...next[dayIdx].routes,
+        {
+          id: newId("rt"),
+          tier,
+          name: `${tier} route`,
+          distanceKm: 0,
+        },
+      ],
+    };
+    onChange(next);
+  };
+  const updateRoute = (dayIdx: number, rIdx: number, patch: Partial<EventRoute>) => {
+    const next = [...days];
+    const routes = [...next[dayIdx].routes];
+    routes[rIdx] = { ...routes[rIdx], ...patch };
+    next[dayIdx] = { ...next[dayIdx], routes };
+    onChange(next);
+  };
+  const removeRoute = (dayIdx: number, rIdx: number) => {
+    const next = [...days];
+    next[dayIdx] = {
+      ...next[dayIdx],
+      routes: next[dayIdx].routes.filter((_, i) => i !== rIdx),
+    };
+    onChange(next);
+  };
+
+  return (
+    <div className="md:col-span-2">
+      <div className="mb-2 flex items-center justify-between">
+        <div>
+          <span className="text-[11px] font-bold uppercase tracking-wider text-ink-soft">
+            Days & routes
+          </span>
+          <p className="text-[11px] text-ink-soft">
+            Multi-day events. Add each day, then add Gold / Silver / Bronze route options riders can choose from.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={addDay}
+          className="inline-flex items-center gap-1 rounded-md bg-secondary px-2.5 py-1 text-xs font-semibold text-ink"
+        >
+          <Plus className="h-3.5 w-3.5" /> Add day
+        </button>
+      </div>
+
+      <ul className="space-y-3">
+        {days.map((d, i) => (
+          <li key={d.id} className="rounded-xl border border-border bg-background p-3">
+            <div className="mb-2 flex items-center justify-between gap-2">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-ink-soft">
+                Day {i + 1}
+              </span>
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => moveDay(i, -1)}
+                  disabled={i === 0}
+                  className="rounded-md p-1 text-ink-soft hover:bg-secondary disabled:opacity-30"
+                  aria-label="Move up"
+                >
+                  <GripVertical className="h-3 w-3 rotate-90" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => moveDay(i, 1)}
+                  disabled={i === days.length - 1}
+                  className="rounded-md p-1 text-ink-soft hover:bg-secondary disabled:opacity-30"
+                  aria-label="Move down"
+                >
+                  <GripVertical className="h-3 w-3 -rotate-90" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => removeDay(i)}
+                  className="rounded-md p-1 text-cherry hover:bg-accent"
+                  aria-label="Remove day"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              <input
+                type="date"
+                className={inputCls}
+                value={d.date?.slice(0, 10) ?? ""}
+                onChange={(e) => updateDay(i, { date: e.target.value })}
+              />
+              <input
+                className={inputCls}
+                placeholder="Label (e.g. Day 1 — Prologue)"
+                value={d.label ?? ""}
+                onChange={(e) => updateDay(i, { label: e.target.value })}
+              />
+            </div>
+
+            <div className="mt-3 rounded-lg bg-card p-3 ring-1 ring-border">
+              <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-ink-soft">
+                  Routes on this day
+                </span>
+                <div className="flex flex-wrap gap-1">
+                  {ROUTE_TIERS.map((t) => (
+                    <button
+                      key={t}
+                      type="button"
+                      onClick={() => addRoute(i, t)}
+                      className="inline-flex items-center gap-1 rounded-md bg-secondary px-2 py-1 text-[11px] font-semibold text-ink hover:bg-accent"
+                    >
+                      <Plus className="h-3 w-3" /> {t}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <ul className="space-y-2">
+                {d.routes.map((r, rIdx) => (
+                  <li key={r.id} className="rounded-lg border border-border bg-background p-3">
+                    <div className="mb-2 flex items-center justify-between">
+                      <span
+                        className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
+                          r.tier === "Gold"
+                            ? "bg-amber-100 text-amber-800"
+                            : r.tier === "Silver"
+                              ? "bg-slate-200 text-slate-800"
+                              : r.tier === "Bronze"
+                                ? "bg-orange-100 text-orange-900"
+                                : "bg-secondary text-ink-soft"
+                        }`}
+                      >
+                        {r.tier}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => removeRoute(i, rIdx)}
+                        className="rounded-md p-1 text-cherry hover:bg-accent"
+                        aria-label="Remove route"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                      <select
+                        className={inputCls}
+                        value={r.tier}
+                        onChange={(e) =>
+                          updateRoute(i, rIdx, { tier: e.target.value as RouteTier })
+                        }
+                      >
+                        {ROUTE_TIERS.map((t) => (
+                          <option key={t} value={t}>
+                            {t}
+                          </option>
+                        ))}
+                      </select>
+                      <input
+                        className={inputCls}
+                        placeholder="Route name (e.g. Gold — 120km Queen Stage)"
+                        value={r.name}
+                        onChange={(e) => updateRoute(i, rIdx, { name: e.target.value })}
+                      />
+                      <input
+                        type="number"
+                        min={0}
+                        className={inputCls}
+                        placeholder="Distance km"
+                        value={r.distanceKm}
+                        onChange={(e) =>
+                          updateRoute(i, rIdx, { distanceKm: Number(e.target.value) })
+                        }
+                      />
+                      <input
+                        type="number"
+                        min={0}
+                        className={inputCls}
+                        placeholder="Elevation m (opt)"
+                        value={r.elevationM ?? ""}
+                        onChange={(e) =>
+                          updateRoute(i, rIdx, {
+                            elevationM: e.target.value === "" ? undefined : Number(e.target.value),
+                          })
+                        }
+                      />
+                      <input
+                        className={`${inputCls} sm:col-span-2`}
+                        placeholder="GPX download URL (optional)"
+                        value={r.gpxUrl ?? ""}
+                        onChange={(e) =>
+                          updateRoute(i, rIdx, { gpxUrl: e.target.value || undefined })
+                        }
+                      />
+                      <textarea
+                        className={`${inputCls} sm:col-span-2 min-h-20`}
+                        placeholder="Route description — climbs, surface, cut-offs, notes for riders…"
+                        value={r.description ?? ""}
+                        onChange={(e) =>
+                          updateRoute(i, rIdx, { description: e.target.value || undefined })
+                        }
+                      />
+                    </div>
+                  </li>
+                ))}
+                {d.routes.length === 0 ? (
+                  <li className="rounded-lg border border-dashed border-border p-3 text-center text-[11px] text-ink-soft">
+                    No routes yet. Add Gold, Silver or Bronze options above.
+                  </li>
+                ) : null}
+              </ul>
+            </div>
+          </li>
+        ))}
+        {days.length === 0 ? (
+          <li className="rounded-lg border border-dashed border-border p-4 text-center text-xs text-ink-soft">
+            Single-day event. Add days here if the event spans multiple days with different routes.
           </li>
         ) : null}
       </ul>

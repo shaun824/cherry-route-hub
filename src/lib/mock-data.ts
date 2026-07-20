@@ -17,6 +17,33 @@ export type Batch = {
   prices?: BatchPrice[]; // optional tiered pricing; overrides the class price when set
 };
 
+export type RouteTier = "Gold" | "Silver" | "Bronze" | "Custom";
+
+export type EventRoute = {
+  id: string;
+  tier: RouteTier;
+  name: string;            // e.g. "Gold — 120km Queen Stage"
+  distanceKm: number;
+  elevationM?: number;
+  description?: string;
+  gpxUrl?: string;
+  mapEmbedUrl?: string;
+};
+
+export type EventDay = {
+  id: string;
+  date: string;            // ISO date (YYYY-MM-DD acceptable)
+  label?: string;          // e.g. "Day 1 — Prologue"
+  routes: EventRoute[];
+};
+
+export type ScheduleItem = {
+  time: string;
+  label: string;
+  details?: string;        // optional longer description shown under the label
+  dayId?: string;          // optional link to an EventDay
+};
+
 export type Event = {
   id: string;
   externalId: string | null; // Entry Ninja event ID
@@ -31,11 +58,12 @@ export type Event = {
   logoUrl?: string;    // event logo (square/transparent works best)
   coverUrl?: string;   // wide cover image shown behind the hero
   description: string;
-  schedule: { time: string; label: string }[];
+  schedule: ScheduleItem[];
   mapQuery: string; // used for embed
   entered: boolean;
   classes?: EntryCategory[]; // admin-managed race classes / categories
   batches?: Batch[];         // admin-managed start batches / waves
+  days?: EventDay[];         // multi-day itinerary with routes per day
 };
 
 // Returns the currently active price tier for a batch, or null if none defined.
