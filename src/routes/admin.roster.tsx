@@ -23,7 +23,7 @@ type CsvRow = {
 };
 
 const SAMPLE = `full_name,email,id_number,phone,event_id,category,batch,bib_number
-Jane Doe,jane@example.com,9204115000080,+27820000000,<event-uuid>,Elite,A,101
+Jane Doe,jane@example.com,9204115000080,+27820000000,My Event Name,Elite,A,101
 `;
 
 function RosterPage() {
