@@ -79,7 +79,7 @@ function EventDetailIndex() {
       </section>
 
       {/* Interactive route map */}
-      {(event.days ?? []).some((d) => (d.routes ?? []).some((r) => (r.kmlUrls ?? []).length > 0)) ? (
+      {(event.days ?? []).some((d: EventDay) => (d.routes ?? []).some((r: EventRoute) => (r.kmlUrls ?? []).length > 0)) ? (
         <section className="px-5 pt-6">
           <div className="flex items-center justify-between">
             <h2 className="flex items-center gap-2 font-display text-[13px] font-bold uppercase tracking-wider text-ink-soft">
