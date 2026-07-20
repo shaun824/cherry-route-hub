@@ -3,7 +3,8 @@ import { TypeBadge } from "@/components/ui-bits";
 import { feed, formatDate, formatTime, relativeTime } from "@/lib/mock-data";
 import type { EventDay, EventRoute, ScheduleItem } from "@/lib/mock-data";
 import { useAdminStore } from "@/lib/store";
-import { MessageSquare, ChevronRight, ExternalLink } from "lucide-react";
+import { RouteMap } from "@/components/route-map";
+import { MessageSquare, ChevronRight, ExternalLink, Map as MapIcon, Maximize2 } from "lucide-react";
 
 export const Route = createFileRoute("/events/$eventId/")({
   component: EventDetailIndex,
