@@ -38,12 +38,16 @@ async function uploadEventKml(file: File): Promise<{ url: string; path: string }
     .from("event-kmls")
     .upload(path, file, { contentType: file.type || "application/vnd.google-earth.kml+xml", upsert: false });
   if (error) throw error;
-  const { data } = supabase.storage.from("event-kmls").getPublicUrl(path);
-  return { url: data.publicUrl, path };
+  const { data, error: signErr } = await supabase.storage
+    .from("event-kmls")
+    .createSignedUrl(path, 60 * 60 * 24 * 365 * 10);
+  if (signErr || !data?.signedUrl) throw signErr ?? new Error("Sign URL failed");
+  return { url: data.signedUrl, path };
 }
 
 async function deleteEventKml(url: string): Promise<void> {
-  const match = url.match(/\/event-kmls\/(.+)$/);
+  const bare = url.split("?")[0];
+  const match = bare.match(/\/event-kmls\/(.+)$/);
   if (!match) return;
   await supabase.storage.from("event-kmls").remove([decodeURIComponent(match[1])]);
 }
