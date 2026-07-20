@@ -526,11 +526,21 @@ function EventEditor({
           </Field>
 
 
+          <DaysEditor
+            days={form.days ?? []}
+            onChange={(next) => update("days", next)}
+          />
+
           <div className="md:col-span-2">
             <div className="mb-2 flex items-center justify-between">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-ink-soft">
-                Schedule
-              </span>
+              <div>
+                <span className="text-[11px] font-bold uppercase tracking-wider text-ink-soft">
+                  Schedule
+                </span>
+                <p className="text-[11px] text-ink-soft">
+                  Registration, briefings, starts, cut-offs. Add extra details per item and optionally link to a day.
+                </p>
+              </div>
               <button
                 type="button"
                 onClick={addScheduleItem}
@@ -539,52 +549,86 @@ function EventEditor({
                 <Plus className="h-3.5 w-3.5" /> Add item
               </button>
             </div>
-            <ul className="space-y-2">
+            <ul className="space-y-3">
               {form.schedule.map((item, i) => (
                 <li
                   key={i}
-                  className="flex items-center gap-2 rounded-lg border border-border bg-background p-2"
+                  className="rounded-lg border border-border bg-background p-3"
                 >
-                  <div className="flex flex-col">
-                    <button
-                      type="button"
-                      onClick={() => moveScheduleItem(i, -1)}
-                      className="text-ink-soft hover:text-ink disabled:opacity-30"
-                      disabled={i === 0}
-                      aria-label="Move up"
-                    >
-                      <GripVertical className="h-3 w-3 rotate-90" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => moveScheduleItem(i, 1)}
-                      className="text-ink-soft hover:text-ink disabled:opacity-30"
-                      disabled={i === form.schedule.length - 1}
-                      aria-label="Move down"
-                    >
-                      <GripVertical className="h-3 w-3 -rotate-90" />
-                    </button>
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-ink-soft">
+                      Item {i + 1}
+                    </span>
+                    <div className="flex items-center gap-1">
+                      <button
+                        type="button"
+                        onClick={() => moveScheduleItem(i, -1)}
+                        disabled={i === 0}
+                        className="rounded-md p-1 text-ink-soft hover:bg-secondary disabled:opacity-30"
+                        aria-label="Move up"
+                      >
+                        <GripVertical className="h-3 w-3 rotate-90" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => moveScheduleItem(i, 1)}
+                        disabled={i === form.schedule.length - 1}
+                        className="rounded-md p-1 text-ink-soft hover:bg-secondary disabled:opacity-30"
+                        aria-label="Move down"
+                      >
+                        <GripVertical className="h-3 w-3 -rotate-90" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => removeScheduleItem(i)}
+                        className="rounded-md p-1 text-cherry hover:bg-accent"
+                        aria-label="Remove"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
                   </div>
-                  <input
-                    type="time"
-                    className={`${inputCls} w-28`}
-                    value={item.time}
-                    onChange={(e) => updateScheduleItem(i, { time: e.target.value })}
+                  <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-[7rem_1fr]">
+                    <input
+                      type="time"
+                      className={inputCls}
+                      value={item.time}
+                      onChange={(e) => updateScheduleItem(i, { time: e.target.value })}
+                    />
+                    <input
+                      className={inputCls}
+                      placeholder="Title (e.g. Race briefing at start line)"
+                      value={item.label}
+                      onChange={(e) => updateScheduleItem(i, { label: e.target.value })}
+                    />
+                  </div>
+                  <textarea
+                    className={`${inputCls} mt-2 min-h-20`}
+                    placeholder="Details (optional) — meeting point, kit, what to bring, notes for riders…"
+                    value={item.details ?? ""}
+                    onChange={(e) => updateScheduleItem(i, { details: e.target.value })}
                   />
-                  <input
-                    className={`${inputCls} flex-1`}
-                    placeholder="e.g. Race briefing at start line"
-                    value={item.label}
-                    onChange={(e) => updateScheduleItem(i, { label: e.target.value })}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => removeScheduleItem(i)}
-                    className="rounded-md p-1.5 text-cherry hover:bg-accent"
-                    aria-label="Remove"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
+                  {(form.days?.length ?? 0) > 0 ? (
+                    <div className="mt-2">
+                      <label className="text-[10px] font-bold uppercase tracking-wider text-ink-soft">
+                        Day (optional)
+                      </label>
+                      <select
+                        className={inputCls}
+                        value={item.dayId ?? ""}
+                        onChange={(e) =>
+                          updateScheduleItem(i, { dayId: e.target.value || undefined })
+                        }
+                      >
+                        <option value="">— No day —</option>
+                        {(form.days ?? []).map((d, idx) => (
+                          <option key={d.id} value={d.id}>
+                            {d.label || `Day ${idx + 1}`} {d.date ? `· ${d.date}` : ""}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  ) : null}
                 </li>
               ))}
               {form.schedule.length === 0 ? (
@@ -604,6 +648,7 @@ function EventEditor({
             batches={form.batches ?? []}
             onChange={(next) => update("batches", next)}
           />
+
 
 
 
