@@ -11,7 +11,19 @@ const isUuid = (v: string) => UUID_RE.test(v);
 type Row = Record<string, unknown>;
 
 function log(err: unknown, ctx: string) {
-  if (err) console.warn(`[cloud:${ctx}]`, err);
+  if (!err) return;
+  console.warn(`[cloud:${ctx}]`, err);
+  // Surface write failures so admins don't think a save worked when it didn't.
+  const isWrite = ctx.startsWith("upsert") || ctx.startsWith("delete");
+  if (!isWrite || typeof window === "undefined") return;
+  const e = err as { message?: string; code?: string };
+  const msg = e?.message ?? String(err);
+  const permissionDenied =
+    e?.code === "42501" || /row-level security|permission denied/i.test(msg);
+  const hint = permissionDenied
+    ? "\n\nYou need to be signed in as a super admin. Go to /auth and sign in with your admin Google account, then try again."
+    : "";
+  window.alert(`Save failed (${ctx}):\n${msg}${hint}`);
 }
 
 // ---------- FEED ----------
