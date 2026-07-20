@@ -202,35 +202,35 @@ function EventDetailIndex() {
         </ol>
       </section>
 
-      {/* Location / Map placeholder */}
+      {/* Location */}
       <section className="px-5 pt-6">
         <h2 className="font-display text-[13px] font-bold uppercase tracking-wider text-ink-soft">
           Location
         </h2>
-        <div className="relative mt-3 h-44 overflow-hidden rounded-2xl ring-1 ring-border">
-          <div
-            className="absolute inset-0"
-            style={{
-              backgroundImage:
-                "radial-gradient(circle at 30% 40%, oklch(0.9 0.02 260) 0, transparent 60%), radial-gradient(circle at 70% 60%, oklch(0.92 0.03 25) 0, transparent 60%), linear-gradient(180deg, oklch(0.96 0.005 260), oklch(0.92 0.01 260))",
-            }}
-          />
-          <svg viewBox="0 0 300 180" className="absolute inset-0 h-full w-full">
-            <path
-              d="M20 140 Q 80 40 150 90 T 280 60"
-              stroke="oklch(0.585 0.235 25)"
-              strokeWidth="3"
-              strokeDasharray="6 4"
-              fill="none"
+        {event.mapQuery || event.location ? (
+          <a
+            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.mapQuery || event.location)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-3 block overflow-hidden rounded-2xl ring-1 ring-border"
+          >
+            <iframe
+              title="Event venue map"
+              src={`https://www.google.com/maps?q=${encodeURIComponent(event.mapQuery || event.location)}&output=embed`}
+              className="pointer-events-none h-44 w-full"
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
             />
-            <circle cx="20" cy="140" r="6" fill="oklch(0.585 0.235 25)" />
-            <circle cx="280" cy="60" r="6" fill="oklch(0.2 0.02 260)" />
-          </svg>
-          <div className="absolute inset-x-3 bottom-3 rounded-xl bg-card/95 px-3 py-2 text-xs ring-1 ring-border backdrop-blur">
-            <p className="font-semibold text-ink">{event.mapQuery}</p>
-            <p className="text-muted-foreground">Tap to open in Maps</p>
+            <div className="flex items-center justify-between bg-card px-3 py-2 text-xs">
+              <span className="font-semibold text-ink">{event.mapQuery || event.location}</span>
+              <span className="font-semibold text-cherry">Navigate ↗</span>
+            </div>
+          </a>
+        ) : (
+          <div className="mt-3 rounded-2xl border border-dashed border-border p-4 text-center text-xs text-ink-soft">
+            No venue set yet.
           </div>
-        </div>
+        )}
       </section>
 
       {/* Event-specific comms */}
