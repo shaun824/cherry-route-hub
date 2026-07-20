@@ -1,14 +1,15 @@
 // Interactive route map. Client-only — lazy-loaded so Leaflet never runs during
 // SSR. Given an event, fetches every KML referenced by its routes, parses them,
-// renders coloured polylines + placemark pins, and shows total distance + total
-// elevation gain (from KML altitude when available, otherwise Google Elevation
-// API through the Lovable connector).
+// renders coloured polylines, and shows total distance + total elevation gain
+// (from KML altitude when available, otherwise Google Elevation API through the
+// Lovable connector). Waypoints are NOT parsed from KML — only admin-added
+// custom markers are rendered on top of the routes.
 import { useEffect, useMemo, useRef, useState } from "react";
 import { MapContainer, TileLayer, Polyline, Marker, Popup, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { useServerFn } from "@tanstack/react-start";
-import type { Event, EventRoute } from "@/lib/mock-data";
+import type { CustomMarker, Event, EventRoute } from "@/lib/mock-data";
 import {
   boundsFromCoords,
   parseKml,
@@ -29,6 +30,30 @@ L.Icon.Default.mergeOptions({
   shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
 });
 
+// Coloured circular marker with an emoji glyph.
+const MARKER_GLYPH: Record<NonNullable<CustomMarker["icon"]>, string> = {
+  pin: "📍",
+  start: "🚩",
+  finish: "🏁",
+  aid: "🩹",
+  warning: "⚠️",
+  photo: "📷",
+  food: "🍎",
+  water: "💧",
+};
+
+function customIcon(color: string, icon: CustomMarker["icon"]) {
+  const glyph = MARKER_GLYPH[icon ?? "pin"];
+  return L.divIcon({
+    className: "rce-custom-marker",
+    html: `<div style="background:${color};" class="flex h-8 w-8 items-center justify-center rounded-full text-base ring-2 ring-white shadow-lg">${glyph}</div>`,
+    iconSize: [32, 32],
+    iconAnchor: [16, 16],
+    popupAnchor: [0, -16],
+  });
+}
+
+
 const TIER_COLORS: Record<string, string> = {
   Gold: "#d4a017",
   Silver: "#64748b",
@@ -41,7 +66,7 @@ type Loaded = {
   dayLabel: string;
   color: string;
   lines: LatLngAlt[][];
-  points: { name: string | null; description: string | null; coord: LatLngAlt }[];
+  markers: CustomMarker[];
   distanceKm: number;
   gainFromKmlM: number | null;
 };
@@ -73,26 +98,28 @@ export default function RouteMapInner({
   const fetchElev = useServerFn(getRouteElevation);
   const elevationRequested = useRef(new Set<string>());
 
-  // Collect all routes with KMLs across days.
+  // Collect all routes across days that have either KMLs or custom markers.
   const routes = useMemo(() => {
     const out: { route: EventRoute; dayLabel: string }[] = [];
     for (const day of event.days ?? []) {
       const dayLabel = day.label || new Date(day.date).toLocaleDateString("en-ZA", { weekday: "short", day: "numeric", month: "short" });
       for (const r of day.routes ?? []) {
-        if ((r.kmlUrls ?? []).length > 0) out.push({ route: r, dayLabel });
+        const hasKml = (r.kmlUrls ?? []).length > 0;
+        const hasMarkers = (r.customMarkers ?? []).length > 0;
+        if (hasKml || hasMarkers) out.push({ route: r, dayLabel });
       }
     }
     return out;
   }, [event]);
 
-  // Fetch + parse all KMLs.
+  // Fetch + parse all KMLs. Waypoints in the KML are intentionally ignored —
+  // only admin-defined custom markers are rendered.
   useEffect(() => {
     let cancelled = false;
     (async () => {
       const results: Loaded[] = [];
       for (const { route, dayLabel } of routes) {
         const lines: LatLngAlt[][] = [];
-        const points: Loaded["points"] = [];
         for (const url of route.kmlUrls ?? []) {
           try {
             const res = await fetch(url);
@@ -100,12 +127,11 @@ export default function RouteMapInner({
             const text = await res.text();
             const layer = parseKml(text);
             for (const line of layer.lines) lines.push(line);
-            for (const pt of layer.points) points.push(pt);
+            // layer.points intentionally discarded — KML waypoints are noise.
           } catch (err) {
             console.warn("[route-map] failed to load", url, err);
           }
         }
-        // Distance/elevation come from the ORIGINAL points so stats stay accurate.
         const distanceKm = lines.reduce((acc, l) => acc + polylineKm(l), 0);
         const gainFromKmlM = lines.length
           ? lines.reduce<number | null>((acc, l) => {
@@ -115,20 +141,19 @@ export default function RouteMapInner({
             }, null)
           : null;
 
-        // For rendering, simplify each line so Leaflet doesn't stall on huge tracks.
-        // Tolerance ~6m keeps route shape visually identical; hard cap prevents pathological inputs.
         const simplifiedLines = lines
           .map((l) => simplifyPolyline(l, 6))
           .map((l) => capPolyline(l, 2000));
 
-        if (simplifiedLines.length || points.length) {
+        const markers = route.customMarkers ?? [];
+
+        if (simplifiedLines.length || markers.length) {
           results.push({
             route,
             dayLabel,
             color: route.color || TIER_COLORS[route.tier] || TIER_COLORS.Custom,
             lines: simplifiedLines,
-            // Cap markers too — 500 pins is already a lot to click through.
-            points: points.slice(0, 500),
+            markers,
             distanceKm,
             gainFromKmlM,
           });
@@ -142,6 +167,7 @@ export default function RouteMapInner({
       cancelled = true;
     };
   }, [routes]);
+
 
 
   // For routes without KML altitude, fetch elevation from Google.
@@ -170,7 +196,10 @@ export default function RouteMapInner({
   }, [loaded, fetchElev]);
 
   const visible = loaded.filter((l) => enabled[l.route.id]);
-  const allCoords = visible.flatMap((l) => l.lines.flat());
+  const allCoords: LatLngAlt[] = [
+    ...visible.flatMap((l) => l.lines.flat()),
+    ...visible.flatMap((l) => l.markers.map((m) => [m.lng, m.lat, undefined] as LatLngAlt)),
+  ];
   const bounds = boundsFromCoords(allCoords);
 
   const totalDistance = visible.reduce((acc, l) => acc + l.distanceKm, 0);
@@ -245,31 +274,40 @@ export default function RouteMapInner({
             )),
           )}
           {visible.flatMap((l) =>
-            l.points.map((pt, i) => (
-              <Marker
-                key={`${l.route.id}-pt-${i}`}
-                position={[pt.coord[1], pt.coord[0]] as [number, number]}
-              >
-                <Popup>
-                  <div className="max-w-[220px] space-y-1">
-                    {pt.name && <p className="font-semibold text-ink">{pt.name}</p>}
-                    {pt.description && (
-                      <p
-                        className="text-xs text-ink-soft"
-                        // Descriptions in KML can be plain text or HTML.
-                        dangerouslySetInnerHTML={{ __html: pt.description }}
-                      />
-                    )}
-                    <p className="text-[10px] uppercase tracking-wider text-ink-soft/70">
-                      {l.route.name || l.route.tier}
-                    </p>
-                  </div>
-                </Popup>
-              </Marker>
-            )),
+            l.markers.map((m) => {
+              const color = m.color || l.color;
+              return (
+                <Marker
+                  key={`${l.route.id}-mk-${m.id}`}
+                  position={[m.lat, m.lng] as [number, number]}
+                  icon={customIcon(color, m.icon)}
+                >
+                  <Popup>
+                    <div className="max-w-[240px] space-y-1">
+                      <p className="font-semibold text-ink">{m.name}</p>
+                      {m.description ? (
+                        <p className="whitespace-pre-line text-xs text-ink-soft">{m.description}</p>
+                      ) : null}
+                      <p className="text-[10px] uppercase tracking-wider text-ink-soft/70">
+                        {l.route.name || l.route.tier} · {l.dayLabel}
+                      </p>
+                      <a
+                        href={`https://www.google.com/maps/dir/?api=1&destination=${m.lat},${m.lng}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-1 inline-block rounded-md bg-ink px-2 py-1 text-[11px] font-semibold text-white"
+                      >
+                        Navigate
+                      </a>
+                    </div>
+                  </Popup>
+                </Marker>
+              );
+            }),
           )}
         </MapContainer>
       </div>
+
 
       {showStats && visible.length > 0 && (
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
