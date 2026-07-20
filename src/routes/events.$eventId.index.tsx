@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { TypeBadge } from "@/components/ui-bits";
 import { feed, formatDate, formatTime, relativeTime } from "@/lib/mock-data";
+import type { EventDay, EventRoute, ScheduleItem } from "@/lib/mock-data";
 import { useAdminStore } from "@/lib/store";
 import { MessageSquare, ChevronRight, ExternalLink } from "lucide-react";
 
