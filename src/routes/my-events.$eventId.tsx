@@ -417,39 +417,57 @@ function ScheduleView({ schedule, days }: { schedule: ScheduleItem[]; days: Even
     return `Day ${index + 1}`;
   };
 
+  const tabs = useMemo(() => {
+    const dayTabs = grouped.orderedDays
+      .filter(({ items }) => items.length > 0)
+      .map(({ day, items }, i) => ({ id: day.id, label: dayLabel(day, i), items }));
+    if (grouped.orphaned.length > 0) {
+      dayTabs.push({
+        id: "__orphaned__",
+        label: "General",
+        items: grouped.orphaned,
+      } as typeof dayTabs[number]);
+    }
+    return dayTabs;
+  }, [grouped]);
+
+  const [activeId, setActiveId] = useState<string | undefined>(tabs[0]?.id);
+  useEffect(() => {
+    if (!tabs.some((t) => t.id === activeId)) setActiveId(tabs[0]?.id);
+  }, [tabs, activeId]);
+
+  const active = tabs.find((t) => t.id === activeId);
+  if (tabs.length === 0) return null;
+
   return (
-    <div className="mt-2 space-y-3">
-      {grouped.orderedDays.map(({ day, items }, i) =>
-        items.length === 0 ? null : (
-          <div key={day.id} className="rounded-xl bg-card p-3 ring-1 ring-border">
-            <p className="flex items-center gap-2 text-sm font-semibold text-ink">
-              <CalendarDays className="h-4 w-4 text-cherry" />
-              {dayLabel(day, i)}
-            </p>
-            <ul className="mt-2 space-y-2">
-              {items.map((it, idx) => (
-                <li key={`${it.time}-${idx}`} className="flex gap-3">
-                  <span className="flex w-16 shrink-0 items-start gap-1 text-xs font-bold text-cherry-deep">
-                    <Clock className="mt-0.5 h-3 w-3" />
-                    {it.time || "—"}
-                  </span>
-                  <div className="flex-1">
-                    <p className="text-sm font-semibold text-ink">{it.label}</p>
-                    {it.details ? (
-                      <p className="mt-0.5 whitespace-pre-line text-xs text-ink-soft">{it.details}</p>
-                    ) : null}
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </div>
-        ),
-      )}
-      {grouped.orphaned.length > 0 ? (
-        <div className="rounded-xl bg-card p-3 ring-1 ring-border">
-          <p className="text-sm font-semibold text-ink">General</p>
+    <div className="mt-2">
+      <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
+        {tabs.map((t) => {
+          const isActive = t.id === activeId;
+          return (
+            <button
+              key={t.id}
+              type="button"
+              onClick={() => setActiveId(t.id)}
+              className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ring-1 ${
+                isActive
+                  ? "bg-cherry text-white ring-cherry shadow-sm"
+                  : "bg-card text-ink-soft ring-border hover:text-ink"
+              }`}
+            >
+              {t.label}
+            </button>
+          );
+        })}
+      </div>
+      {active ? (
+        <div key={active.id} className="mt-3 rounded-xl bg-card p-3 ring-1 ring-border animate-fade-in">
+          <p className="flex items-center gap-2 text-sm font-semibold text-ink">
+            <CalendarDays className="h-4 w-4 text-cherry" />
+            {active.label}
+          </p>
           <ul className="mt-2 space-y-2">
-            {grouped.orphaned.map((it, idx) => (
+            {active.items.map((it, idx) => (
               <li key={`${it.time}-${idx}`} className="flex gap-3">
                 <span className="flex w-16 shrink-0 items-start gap-1 text-xs font-bold text-cherry-deep">
                   <Clock className="mt-0.5 h-3 w-3" />
