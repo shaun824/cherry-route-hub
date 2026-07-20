@@ -71,15 +71,20 @@ export const useAdminStore = create<AdminState>()((set) => ({
   setSettings: (patch) =>
     set((s) => ({ settings: { ...s.settings, ...patch } })),
 
-  upsertEvent: (e) =>
+  upsertEvent: (e) => {
     set((s) => {
       const i = s.events.findIndex((x) => x.id === e.id);
       if (i === -1) return { events: [e, ...s.events] };
       const next = [...s.events];
       next[i] = e;
       return { events: next };
-    }),
-  deleteEvent: (id) => set((s) => ({ events: s.events.filter((e) => e.id !== id) })),
+    });
+    void upsertEventCloud(e);
+  },
+  deleteEvent: (id) => {
+    set((s) => ({ events: s.events.filter((e) => e.id !== id) }));
+    void deleteEventCloud(id);
+  },
 
   upsertPost: (p) => {
     set((s) => {
