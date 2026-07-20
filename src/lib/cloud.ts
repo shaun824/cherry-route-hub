@@ -165,6 +165,7 @@ function eventFromRow(r: Row): Event {
     classes: (r.classes as EntryCategory[] | null) ?? [],
     batches: (r.batches as Batch[] | null) ?? [],
     days: (r.days as EventDay[] | null) ?? [],
+    socialLinks: ((r as Row).social_links as Event["socialLinks"]) ?? {},
   };
 }
 
