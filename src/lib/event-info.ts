@@ -2,7 +2,71 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
 
-export type PackingItem = { key: string; label: string; essential?: boolean };
+export type PackingItem = { key: string; label: string; essential?: boolean; category?: string };
+
+// Default packing list for multi-day cycling stage races (Tour de Addo style).
+// Used when an event has no custom packing list configured.
+export const DEFAULT_PACKING_LIST: PackingItem[] = [
+  // Riding clothes
+  { key: "rc-shoes", label: "Shoes", category: "Riding clothes", essential: true },
+  { key: "rc-socks", label: "Socks (fresh pair per day x4)", category: "Riding clothes" },
+  { key: "rc-bibs", label: "Bib shorts (x2, wash twice)", category: "Riding clothes", essential: true },
+  { key: "rc-shorts", label: "Ride shorts", category: "Riding clothes" },
+  { key: "rc-jersey", label: "Jersey", category: "Riding clothes" },
+  { key: "rc-armwarmers", label: "Arm warmers", category: "Riding clothes" },
+  { key: "rc-gloves", label: "Gloves", category: "Riding clothes" },
+  { key: "rc-buffs", label: "2x buffs", category: "Riding clothes" },
+  { key: "rc-sunnies", label: "Sunglasses", category: "Riding clothes" },
+  { key: "rc-rainjkt", label: "Rain jacket", category: "Riding clothes" },
+  { key: "rc-warmjkt", label: "Warm jacket", category: "Riding clothes" },
+  { key: "rc-helmet", label: "Helmet", category: "Riding clothes", essential: true },
+  // Jersey pockets
+  { key: "jp-phone", label: "Cellphone", category: "In jersey pockets", essential: true },
+  { key: "jp-tools", label: "Tools and spares", category: "In jersey pockets" },
+  { key: "jp-padkos", label: "Padkos", category: "In jersey pockets" },
+  { key: "jp-lipice", label: "Lip ice SPF50", category: "In jersey pockets" },
+  // Fixed to / carried on bike
+  { key: "bk-tube", label: "Spare tube", category: "Fixed to / carried on bike", essential: true },
+  { key: "bk-gaffer", label: "Gaffer tape", category: "Fixed to / carried on bike" },
+  { key: "bk-bottles", label: "2x 900ml bottles", category: "Fixed to / carried on bike", essential: true },
+  { key: "bk-bombs", label: "3x CO₂ bombs", category: "Fixed to / carried on bike" },
+  { key: "bk-lube", label: "2x chain lube", category: "Fixed to / carried on bike" },
+  { key: "bk-levers", label: "Tyre levers", category: "Fixed to / carried on bike" },
+  { key: "bk-cloth", label: "Cloth", category: "Fixed to / carried on bike" },
+  // Overnight bag
+  { key: "ob-clothes", label: "Spare clothing", category: "Overnight bag" },
+  { key: "ob-sleepingbag", label: "Sleeping bag for extra warmth", category: "Overnight bag" },
+  { key: "ob-hotwater", label: "Hot water bottle", category: "Overnight bag" },
+  { key: "ob-towel", label: "Towel", category: "Overnight bag" },
+  { key: "ob-toiletries", label: "Toiletries (body wash, toothbrush & paste, mosquito repellent, earplugs, SPF50)", category: "Overnight bag" },
+  { key: "ob-cords", label: "Lightning and mini-USB cords", category: "Overnight bag" },
+  { key: "ob-headlight", label: "Headlight", category: "Overnight bag" },
+  { key: "ob-adaptor", label: "2-pin and USB adaptor", category: "Overnight bag" },
+  { key: "ob-plakkies", label: "Plakkies", category: "Overnight bag" },
+  // Tools & spares
+  { key: "ts-hangar", label: "Derailleur hangar (NB!)", category: "Tools and spares", essential: true },
+  { key: "ts-multi", label: "Multi-tool and chain breaker", category: "Tools and spares" },
+  { key: "ts-chainlinks", label: "Chain links", category: "Tools and spares" },
+  { key: "ts-plugs", label: "Tyre plugs", category: "Tools and spares" },
+  { key: "ts-cableties", label: "Cable ties", category: "Tools and spares" },
+  { key: "ts-valve", label: "Valve stem remover", category: "Tools and spares" },
+  { key: "ts-sidewall", label: "Side-wall boot", category: "Tools and spares" },
+  { key: "ts-lube2", label: "Lube", category: "Tools and spares" },
+  { key: "ts-bombs2", label: "CO₂ bombs and bomb valve", category: "Tools and spares" },
+  { key: "ts-brakepads", label: "2x brake pads", category: "Tools and spares" },
+  // First aid
+  { key: "fa-bandages", label: "Bandages and closures", category: "First aid kit" },
+  { key: "fa-plasters", label: "Plasters (incl. heel plasters)", category: "First aid kit" },
+  { key: "fa-opsite", label: "\"Opsite\" waterproof dressings (NB!)", category: "First aid kit", essential: true },
+  { key: "fa-blanket", label: "Emergency survival blanket", category: "First aid kit" },
+  { key: "fa-bactroban", label: "Bactroban", category: "First aid kit" },
+  { key: "fa-bettadine", label: "Bettadine", category: "First aid kit" },
+  { key: "fa-panado", label: "Panado", category: "First aid kit" },
+  { key: "fa-voltaren", label: "Voltaren", category: "First aid kit" },
+  { key: "fa-antihist", label: "Antihistamine", category: "First aid kit" },
+  { key: "fa-smecta", label: "Smecta", category: "First aid kit" },
+  { key: "fa-buscopan", label: "Buscopan", category: "First aid kit" },
+];
 export type FaqItem = { q: string; a: string };
 export type EmergencyContact = { label: string; phone: string };
 
