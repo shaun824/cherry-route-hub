@@ -754,17 +754,57 @@ function EventEditor({
               onChange={(e) => update("externalId", e.target.value || null)}
             />
           </Field>
-          <Field label="Map query" className="md:col-span-2">
+          <Field label="Venue (Google Maps)" className="md:col-span-2">
             <input
               className={inputCls}
               value={form.mapQuery}
               onChange={(e) => update("mapQuery", e.target.value)}
-              placeholder="e.g. Swartberg Pass, South Africa"
+              placeholder="e.g. Coetzenburg Stadium, Stellenbosch — or paste lat,lng"
             />
+            <div className="mt-2 flex flex-wrap gap-2">
+              <a
+                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(form.mapQuery || form.location || "")}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="rounded-md border border-border bg-background px-2.5 py-1.5 text-[11px] font-semibold hover:bg-surface"
+              >
+                Find venue on Google Maps ↗
+              </a>
+              <button
+                type="button"
+                onClick={() => {
+                  const url = window.prompt(
+                    "Paste the Google Maps share link for the venue (open Google Maps → find the place → Share → Copy link)",
+                  );
+                  if (!url) return;
+                  const patterns = [
+                    /@(-?\d+\.\d+),(-?\d+\.\d+)/,
+                    /!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/,
+                    /q=(-?\d+\.\d+),\s*(-?\d+\.\d+)/,
+                    /ll=(-?\d+\.\d+),\s*(-?\d+\.\d+)/,
+                    /destination=(-?\d+\.\d+),\s*(-?\d+\.\d+)/,
+                  ];
+                  for (const rx of patterns) {
+                    const m = url.match(rx);
+                    if (m) {
+                      update("mapQuery", `${m[1]},${m[2]}`);
+                      return;
+                    }
+                  }
+                  alert(
+                    "Could not read coordinates from that link. Open the venue in Google Maps, right-click the exact spot, then click the numeric coordinates at the top of the menu to copy them, and paste those here.",
+                  );
+                }}
+                className="rounded-md border border-border bg-background px-2.5 py-1.5 text-[11px] font-semibold hover:bg-surface"
+              >
+                Paste share link → pin exact spot
+              </button>
+            </div>
             <span className="mt-1 block text-[11px] text-ink-soft">
-              Used to embed a location map on the event page.
+              This drives the embedded map and the "Navigate" button on the event page. Paste a share link to pin the exact venue by coordinates.
             </span>
           </Field>
+
           <Field label="Description" className="md:col-span-2">
             <textarea
               className={`${inputCls} min-h-24`}
