@@ -1,10 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useState } from "react";
 import { TypeBadge } from "@/components/ui-bits";
 import { feed, formatDate, formatTime, relativeTime } from "@/lib/mock-data";
 import type { EventDay, EventRoute, ScheduleItem } from "@/lib/mock-data";
 import { useAdminStore } from "@/lib/store";
 import { RouteMap } from "@/components/route-map";
 import { MessageSquare, ChevronRight, ExternalLink, Map as MapIcon, Maximize2 } from "lucide-react";
+
+const DESCRIPTION_PREVIEW_LENGTH = 50;
 
 export const Route = createFileRoute("/events/$eventId/")({
   component: EventDetailIndex,
