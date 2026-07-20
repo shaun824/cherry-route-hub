@@ -40,6 +40,9 @@ export function useHydratedStore() {
 
     const ch = supabase
       .channel("admin-content")
+      .on("postgres_changes", { event: "*", schema: "public", table: "events" }, () => {
+        fetchEvents().then((events) => events && setState({ events }));
+      })
       .on("postgres_changes", { event: "*", schema: "public", table: "feed_posts" }, () => {
         fetchFeed().then((feed) => feed && setState({ feed }));
       })
