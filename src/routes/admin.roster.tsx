@@ -3,9 +3,9 @@ import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Papa from "papaparse";
 import { useServerFn } from "@tanstack/react-start";
-import { Download, FileUp, UserPlus, Users } from "lucide-react";
+import { Download, FileUp, Plus, Trash2, UserPlus, Users, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { importRoster } from "@/lib/roster.functions";
+import { importRoster, quickAddEntrant, unassignEntrant } from "@/lib/roster.functions";
 
 export const Route = createFileRoute("/admin/roster")({
   component: RosterPage,
