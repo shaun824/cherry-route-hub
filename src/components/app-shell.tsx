@@ -1,10 +1,10 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Home, CalendarDays, Radio, User, Siren } from "lucide-react";
+import { Home, Ticket, Radio, User, Siren } from "lucide-react";
 import type { ReactNode } from "react";
 
 const tabs = [
   { to: "/", label: "Home", icon: Home, match: (p: string) => p === "/" },
-  { to: "/events", label: "Events", icon: CalendarDays, match: (p: string) => p.startsWith("/events") },
+  { to: "/my-events", label: "My Events", icon: Ticket, match: (p: string) => p.startsWith("/my-events") || p.startsWith("/events") },
   { to: "/tracker", label: "Tracker", icon: Radio, match: (p: string) => p.startsWith("/tracker") },
   { to: "/profile", label: "Profile", icon: User, match: (p: string) => p.startsWith("/profile") },
 ] as const;
