@@ -452,8 +452,11 @@ function EventEditor({
     setForm((f) => ({ ...f, [k]: v }));
   }
 
-  const addScheduleItem = () =>
-    update("schedule", [...form.schedule, { time: "08:00", label: "", details: "", dayId: undefined }]);
+  const addScheduleItem = (dayId?: string) =>
+    update("schedule", [
+      ...form.schedule,
+      { time: "08:00", label: "", details: "", dayId },
+    ]);
   const updateScheduleItem = (i: number, patch: Partial<ScheduleItem>) =>
     update(
       "schedule",
@@ -464,12 +467,28 @@ function EventEditor({
       "schedule",
       form.schedule.filter((_, idx) => idx !== i),
     );
-  const moveScheduleItem = (i: number, dir: -1 | 1) => {
-    const j = i + dir;
-    if (j < 0 || j >= form.schedule.length) return;
+  const moveScheduleItemWithin = (i: number, dir: -1 | 1) => {
+    const item = form.schedule[i];
+    const siblings = form.schedule
+      .map((s, idx) => ({ s, idx }))
+      .filter((x) => (x.s.dayId ?? "") === (item.dayId ?? ""));
+    const pos = siblings.findIndex((x) => x.idx === i);
+    const targetPos = pos + dir;
+    if (targetPos < 0 || targetPos >= siblings.length) return;
+    const j = siblings[targetPos].idx;
     const next = [...form.schedule];
     [next[i], next[j]] = [next[j], next[i]];
     update("schedule", next);
+  };
+  const addDayFromSchedule = () => {
+    const existing = form.days ?? [];
+    const newDay: EventDay = {
+      id: newId("day"),
+      date: new Date(Date.now() + (existing.length + 1) * 86400000).toISOString().slice(0, 10),
+      label: `Day ${existing.length + 1}`,
+      routes: [],
+    };
+    update("days", [...existing, newDay]);
   };
 
   const canSave = form.name.trim().length > 0 && form.location.trim().length > 0;
