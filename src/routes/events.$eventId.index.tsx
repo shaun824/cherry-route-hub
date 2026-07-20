@@ -78,6 +78,27 @@ function EventDetailIndex() {
         <p className="mt-2 text-sm leading-relaxed text-ink-soft">{event.description}</p>
       </section>
 
+      {/* Interactive route map */}
+      {(event.days ?? []).some((d) => (d.routes ?? []).some((r) => (r.kmlUrls ?? []).length > 0)) ? (
+        <section className="px-5 pt-6">
+          <div className="flex items-center justify-between">
+            <h2 className="flex items-center gap-2 font-display text-[13px] font-bold uppercase tracking-wider text-ink-soft">
+              <MapIcon className="h-3.5 w-3.5" /> Route map
+            </h2>
+            <Link
+              to="/events/$eventId/map"
+              params={{ eventId: event.id }}
+              className="inline-flex items-center gap-1 text-[11px] font-semibold text-cherry"
+            >
+              Fullscreen <Maximize2 className="h-3 w-3" />
+            </Link>
+          </div>
+          <div className="mt-3">
+            <RouteMap event={event} height="320px" />
+          </div>
+        </section>
+      ) : null}
+
       {/* Days & routes */}
       {event.days && event.days.length > 0 ? (
         <section className="px-5 pt-6">
