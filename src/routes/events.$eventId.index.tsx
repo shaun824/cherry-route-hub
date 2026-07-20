@@ -76,23 +76,106 @@ function EventDetailIndex() {
         <p className="mt-2 text-sm leading-relaxed text-ink-soft">{event.description}</p>
       </section>
 
+      {/* Days & routes */}
+      {event.days && event.days.length > 0 ? (
+        <section className="px-5 pt-6">
+          <h2 className="font-display text-[13px] font-bold uppercase tracking-wider text-ink-soft">
+            Days & routes
+          </h2>
+          <div className="mt-3 space-y-4">
+            {event.days.map((d, di) => (
+              <div key={d.id} className="rounded-2xl bg-card p-4 ring-1 ring-border">
+                <div className="flex items-baseline justify-between gap-2">
+                  <p className="font-display text-base font-bold text-ink">
+                    {d.label || `Day ${di + 1}`}
+                  </p>
+                  {d.date ? (
+                    <span className="text-[11px] font-semibold text-ink-soft">{d.date}</span>
+                  ) : null}
+                </div>
+                {d.routes.length === 0 ? (
+                  <p className="mt-2 text-xs text-ink-soft">Routes to be announced.</p>
+                ) : (
+                  <ul className="mt-3 space-y-2">
+                    {d.routes.map((r) => (
+                      <li key={r.id} className="rounded-xl bg-background p-3 ring-1 ring-border">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span
+                            className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
+                              r.tier === "Gold"
+                                ? "bg-amber-100 text-amber-800"
+                                : r.tier === "Silver"
+                                  ? "bg-slate-200 text-slate-800"
+                                  : r.tier === "Bronze"
+                                    ? "bg-orange-100 text-orange-900"
+                                    : "bg-secondary text-ink-soft"
+                            }`}
+                          >
+                            {r.tier}
+                          </span>
+                          <span className="text-sm font-semibold text-ink">{r.name}</span>
+                        </div>
+                        <p className="mt-1 text-[11px] text-ink-soft">
+                          {r.distanceKm ? `${r.distanceKm} km` : ""}
+                          {r.elevationM ? ` · ${r.elevationM} m elevation` : ""}
+                        </p>
+                        {r.description ? (
+                          <p className="mt-1.5 text-xs leading-relaxed text-ink-soft">
+                            {r.description}
+                          </p>
+                        ) : null}
+                        {r.gpxUrl ? (
+                          <a
+                            href={r.gpxUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="mt-2 inline-flex items-center gap-1 text-[11px] font-semibold text-cherry"
+                          >
+                            Download GPX <ExternalLink className="h-3 w-3" />
+                          </a>
+                        ) : null}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            ))}
+          </div>
+        </section>
+      ) : null}
+
       {/* Schedule */}
       <section className="px-5 pt-6">
         <h2 className="font-display text-[13px] font-bold uppercase tracking-wider text-ink-soft">
           Schedule
         </h2>
         <ol className="mt-3 space-y-2">
-          {event.schedule.map((s: { time: string; label: string }, i: number) => (
-            <li
-              key={i}
-              className="flex items-start gap-3 rounded-xl bg-card p-3 ring-1 ring-border"
-            >
-              <span className="mt-0.5 rounded-md bg-accent px-2 py-1 font-mono text-[11px] font-bold text-cherry-deep">
-                {s.time}
-              </span>
-              <span className="text-sm text-ink">{s.label}</span>
-            </li>
-          ))}
+          {event.schedule.map((s, i: number) => {
+            const day = s.dayId ? event.days?.find((d) => d.id === s.dayId) : undefined;
+            return (
+              <li
+                key={i}
+                className="flex items-start gap-3 rounded-xl bg-card p-3 ring-1 ring-border"
+              >
+                <span className="mt-0.5 rounded-md bg-accent px-2 py-1 font-mono text-[11px] font-bold text-cherry-deep">
+                  {s.time}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold text-ink">{s.label}</p>
+                  {day ? (
+                    <p className="mt-0.5 text-[10px] font-bold uppercase tracking-wider text-ink-soft">
+                      {day.label || "Day"} {day.date ? `· ${day.date}` : ""}
+                    </p>
+                  ) : null}
+                  {s.details ? (
+                    <p className="mt-1 whitespace-pre-wrap text-xs leading-relaxed text-ink-soft">
+                      {s.details}
+                    </p>
+                  ) : null}
+                </div>
+              </li>
+            );
+          })}
         </ol>
       </section>
 
