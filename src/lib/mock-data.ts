@@ -57,6 +57,16 @@ export type ScheduleItem = {
   dayId?: string;          // optional link to an EventDay
 };
 
+export type SocialLinks = {
+  website?: string;
+  facebook?: string;
+  instagram?: string;
+  twitter?: string;
+  youtube?: string;
+  tiktok?: string;
+  strava?: string;
+};
+
 export type Event = {
   id: string;
   externalId: string | null; // Entry Ninja event ID
@@ -77,6 +87,7 @@ export type Event = {
   classes?: EntryCategory[]; // admin-managed race classes / categories
   batches?: Batch[];         // admin-managed start batches / waves
   days?: EventDay[];         // multi-day itinerary with routes per day
+  socialLinks?: SocialLinks; // per-event follow links
 };
 
 // Returns the currently active price tier for a batch, or null if none defined.
