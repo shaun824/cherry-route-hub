@@ -23,7 +23,7 @@ type CsvRow = {
 };
 
 const SAMPLE = `full_name,email,id_number,phone,event_id,category,batch,bib_number
-Jane Doe,jane@example.com,9204115000080,+27820000000,<event-uuid>,Elite,A,101
+Jane Doe,jane@example.com,9204115000080,+27820000000,My Event Name,Elite,A,101
 `;
 
 function RosterPage() {
@@ -62,6 +62,39 @@ function RosterPage() {
   const [selectedFileName, setSelectedFileName] = useState("");
   const [result, setResult] = useState<{ created: number; updated: number; linkedToEvent: number; errors: { row: number; error: string }[] } | null>(null);
 
+  const eventNameById = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const e of eventsQ.data ?? []) {
+      map.set(e.id, e.name);
+    }
+    return map;
+  }, [eventsQ.data]);
+
+  const eventIdByName = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const e of eventsQ.data ?? []) {
+      map.set(e.name.trim().toLowerCase(), e.id);
+    }
+    return map;
+  }, [eventsQ.data]);
+
+  function looksLikeUuid(value: string) {
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value.trim());
+  }
+
+  function resolveEventIdLocal(raw: string): { id: string; name: string; isName: boolean } | null {
+    const trimmed = raw.trim();
+    if (!trimmed) return null;
+    const byName = eventIdByName.get(trimmed.toLowerCase());
+    if (byName) {
+      return { id: byName, name: eventNameById.get(byName) ?? trimmed, isName: true };
+    }
+    if (looksLikeUuid(trimmed) && eventNameById.has(trimmed)) {
+      return { id: trimmed, name: eventNameById.get(trimmed) ?? trimmed, isName: false };
+    }
+    return null;
+  }
+
   function handleFile(file?: File | null) {
     if (!file) return;
     setResult(null);
@@ -86,7 +119,8 @@ function RosterPage() {
           if (!r.full_name) errs.push(`Row ${i + 1}: missing full_name`);
           if (!r.email) errs.push(`Row ${i + 1}: missing email`);
           if (!r.id_number) errs.push(`Row ${i + 1}: missing id_number`);
-          if (!r.event_id) errs.push(`Row ${i + 1}: missing event_id`);
+          if (!r.event_id) errs.push(`Row ${i + 1}: missing event_id (choose a default event or add an event_id column)`);
+          else if (!resolveEventIdLocal(r.event_id)) errs.push(`Row ${i + 1}: event_id '${r.event_id}' did not match any event`);
         });
         setRows(parsed);
         setErrors(errs);
@@ -182,7 +216,8 @@ function RosterPage() {
             </a>
             <p className="text-[11px] text-ink-soft">
               Required columns: <code>full_name, email, id_number, event_id</code>. Optional:{" "}
-              <code>phone, category, batch, bib_number</code>.
+              <code>phone, category, batch, bib_number</code>. The <code>event_id</code> column can be
+              the event's UUID or the exact event name from Admin → Events.
             </p>
           </div>
 
@@ -209,14 +244,30 @@ function RosterPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {previewRows.map((r, i) => (
-                    <tr key={i} className="border-t border-border">
-                      <td className="py-1">{r.full_name}</td>
-                      <td className="truncate">{r.email}</td>
-                      <td className="truncate">{r.event_id.slice(0, 8)}…</td>
-                      <td>{r.category ?? ""}</td>
-                    </tr>
-                  ))}
+                  {previewRows.map((r, i) => {
+                    const resolved = resolveEventIdLocal(r.event_id);
+                    return (
+                      <tr key={i} className="border-t border-border">
+                        <td className="py-1">{r.full_name}</td>
+                        <td className="truncate">{r.email}</td>
+                        <td className="truncate">
+                          {resolved ? (
+                            <span className="flex items-center gap-1">
+                              {resolved.name}
+                              {resolved.isName ? (
+                                <span className="rounded bg-cherry/10 px-1 py-0.5 text-[9px] font-bold text-cherry-deep">
+                                  by name
+                                </span>
+                              ) : null}
+                            </span>
+                          ) : (
+                            <span className="text-cherry-deep">{r.event_id.slice(0, 20)}…</span>
+                          )}
+                        </td>
+                        <td>{r.category ?? ""}</td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
               {rows.length > 5 ? (
