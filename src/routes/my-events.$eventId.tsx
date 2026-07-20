@@ -187,9 +187,10 @@ function InfoPanel({
         {(() => {
           const venue =
             info?.venue_address ||
-            (event as any).map_query ||
+            event.map_query ||
             event.location ||
             "";
+
           if (!venue) return <EmptyBlock>Venue details will appear here.</EmptyBlock>;
           const q = encodeURIComponent(venue);
           return (
