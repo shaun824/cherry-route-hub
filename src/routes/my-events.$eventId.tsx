@@ -784,3 +784,89 @@ function EmptyBlock({ children }: { children: React.ReactNode }) {
     </div>
   );
 }
+
+const SOCIAL_META: {
+  key: keyof SocialLinks;
+  label: string;
+  icon: typeof Facebook;
+  color: string;
+}[] = [
+  { key: "website", label: "Website", icon: Globe, color: "bg-ink text-white" },
+  { key: "facebook", label: "Facebook", icon: Facebook, color: "bg-[#1877F2] text-white" },
+  { key: "instagram", label: "Instagram", icon: Instagram, color: "bg-gradient-to-br from-[#f58529] via-[#dd2a7b] to-[#8134af] text-white" },
+  { key: "twitter", label: "X", icon: Twitter, color: "bg-black text-white" },
+  { key: "youtube", label: "YouTube", icon: Youtube, color: "bg-[#FF0000] text-white" },
+  { key: "tiktok", label: "TikTok", icon: Music2, color: "bg-black text-white" },
+  { key: "strava", label: "Strava", icon: Activity, color: "bg-[#FC4C02] text-white" },
+];
+
+function FollowSection({ links }: { links?: SocialLinks }) {
+  const entries = SOCIAL_META.filter((m) => Boolean(links?.[m.key]));
+  if (entries.length === 0) return null;
+  return (
+    <section>
+      <SectionTitle>Follow this event</SectionTitle>
+      <div className="mt-2 flex flex-wrap gap-2">
+        {entries.map(({ key, label, icon: Icon, color }) => (
+          <a
+            key={key}
+            href={links![key]!}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold shadow-sm ${color}`}
+          >
+            <Icon className="h-3.5 w-3.5" />
+            {label}
+          </a>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function SponsorsBlock() {
+  const sponsors = useAdminStore((s) => s.sponsors).filter((sp) => sp.active);
+  if (sponsors.length === 0) return null;
+  const primary = sponsors.find((sp) => sp.tier === "Platinum") ?? sponsors[0];
+  const secondary = sponsors.filter((sp) => sp.id !== primary.id);
+
+  const primaryInner = primary.logoUrl ? (
+    <img src={primary.logoUrl} alt={primary.name} className="max-h-16 max-w-[220px] object-contain" loading="lazy" />
+  ) : (
+    <span className="font-display text-lg font-black tracking-[0.18em] text-white" style={{ textShadow: "0 1px 2px rgba(0,0,0,.25)" }}>
+      {primary.logoText || primary.name}
+    </span>
+  );
+
+  return (
+    <section aria-label="Sponsors" className="pt-2">
+      <SectionTitle>Proudly supported by</SectionTitle>
+
+      <div
+        className="mt-2 grid place-items-center rounded-2xl p-5 ring-1 ring-border"
+        style={{ background: primary.logoUrl ? "white" : primary.accent }}
+      >
+        {primary.url ? (
+          <a href={primary.url} target="_blank" rel="noopener noreferrer sponsored" aria-label={`Visit ${primary.name}`}>
+            {primaryInner}
+          </a>
+        ) : (
+          primaryInner
+        )}
+        <p className="mt-2 text-[10px] font-bold uppercase tracking-[0.2em] text-ink-soft">
+          Headline sponsor · {primary.name}
+        </p>
+      </div>
+
+      {secondary.length > 0 ? (
+        <div className="mt-3">
+          <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.2em] text-ink-soft">
+            Our partners
+          </p>
+          <SponsorScroller title="" compact />
+        </div>
+      ) : null}
+    </section>
+  );
+}
+
