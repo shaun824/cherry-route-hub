@@ -1,4 +1,4 @@
-import { createFileRoute, Link, notFound, Outlet } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet } from "@tanstack/react-router";
 import { events, formatDate, formatTime } from "@/lib/mock-data";
 import { useAdminStore } from "@/lib/store";
 import { useHydratedStore } from "@/lib/use-hydrated-store";
@@ -6,9 +6,17 @@ import { ArrowLeft, Clock, MapPin, Route as RouteIcon } from "lucide-react";
 
 export const Route = createFileRoute("/events/$eventId")({
   loader: ({ params }) => {
-    const event = events.find((e) => e.id === params.eventId);
-    if (!event) throw notFound();
-    return { event };
+    const seed = events.find((e) => e.id === params.eventId);
+    // Return a fallback so newly-created (cloud-only) events aren't 404'd —
+    // the component resolves the real event from the hydrated store.
+    return {
+      event:
+        seed ?? {
+          id: params.eventId,
+          name: "Event",
+          description: "",
+        },
+    };
   },
   head: ({ loaderData }) => ({
     meta: loaderData
@@ -33,7 +41,7 @@ function EventLayout() {
   useHydratedStore();
   const { event: loaderEvent } = Route.useLoaderData();
   const storeEvent = useAdminStore((s) => s.events.find((e) => e.id === loaderEvent.id));
-  const event = storeEvent ?? loaderEvent;
+  const event = (storeEvent ?? loaderEvent) as import("@/lib/mock-data").Event;
 
   return (
     <div>

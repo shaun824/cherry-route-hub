@@ -2,7 +2,7 @@
 // realtime changes so admin edits reflect live across sessions.
 import { useEffect, useState } from "react";
 import { useAdminStore } from "./store";
-import { fetchFeed, fetchPromos, fetchSponsors } from "./cloud";
+import { fetchEvents, fetchFeed, fetchPromos, fetchSponsors } from "./cloud";
 import { fetchSettings } from "./settings";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -17,10 +17,11 @@ export function useHydratedStore() {
     const setState = useAdminStore.setState;
 
     const load = async () => {
-      const [feed, promos, sponsors, settings] = await Promise.all([
-        fetchFeed(), fetchPromos(), fetchSponsors(), fetchSettings(),
+      const [events, feed, promos, sponsors, settings] = await Promise.all([
+        fetchEvents(), fetchFeed(), fetchPromos(), fetchSponsors(), fetchSettings(),
       ]);
       setState((s) => ({
+        events: events && events.length > 0 ? events : s.events,
         feed: feed ?? s.feed,
         promos: promos ?? s.promos,
         sponsors: sponsors ?? s.sponsors,
@@ -39,6 +40,9 @@ export function useHydratedStore() {
 
     const ch = supabase
       .channel("admin-content")
+      .on("postgres_changes", { event: "*", schema: "public", table: "events" }, () => {
+        fetchEvents().then((events) => events && setState({ events }));
+      })
       .on("postgres_changes", { event: "*", schema: "public", table: "feed_posts" }, () => {
         fetchFeed().then((feed) => feed && setState({ feed }));
       })

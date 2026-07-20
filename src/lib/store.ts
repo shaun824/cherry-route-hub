@@ -12,6 +12,7 @@ import {
   type Promo,
 } from "./mock-data";
 import {
+  upsertEventCloud, deleteEventCloud,
   upsertFeedCloud, deleteFeedCloud,
   upsertPromoCloud, deletePromoCloud,
   upsertSponsorCloud, deleteSponsorCloud,
@@ -70,15 +71,26 @@ export const useAdminStore = create<AdminState>()((set) => ({
   setSettings: (patch) =>
     set((s) => ({ settings: { ...s.settings, ...patch } })),
 
-  upsertEvent: (e) =>
+  upsertEvent: (e) => {
     set((s) => {
       const i = s.events.findIndex((x) => x.id === e.id);
       if (i === -1) return { events: [e, ...s.events] };
       const next = [...s.events];
       next[i] = e;
       return { events: next };
-    }),
-  deleteEvent: (id) => set((s) => ({ events: s.events.filter((e) => e.id !== id) })),
+    });
+    void upsertEventCloud(e).then((newId) => {
+      if (!newId || newId === e.id) return;
+      // Replace local id with cloud-assigned uuid so future edits target the same row.
+      useAdminStore.setState((s) => ({
+        events: s.events.map((x) => (x.id === e.id ? { ...x, id: newId } : x)),
+      }));
+    });
+  },
+  deleteEvent: (id) => {
+    set((s) => ({ events: s.events.filter((e) => e.id !== id) }));
+    void deleteEventCloud(id);
+  },
 
   upsertPost: (p) => {
     set((s) => {
