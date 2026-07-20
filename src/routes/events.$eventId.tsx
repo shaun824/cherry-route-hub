@@ -1,4 +1,4 @@
-import { createFileRoute, Link, notFound, Outlet } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet } from "@tanstack/react-router";
 import { events, formatDate, formatTime } from "@/lib/mock-data";
 import { useAdminStore } from "@/lib/store";
 import { useHydratedStore } from "@/lib/use-hydrated-store";
