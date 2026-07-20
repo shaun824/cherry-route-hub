@@ -113,6 +113,8 @@ function MyEventDetail() {
   );
 }
 
+const DESCRIPTION_PREVIEW_LENGTH = 50;
+
 function InfoPanel({
   eventId,
   description,
@@ -130,12 +132,29 @@ function InfoPanel({
   const hasKml = days.some((d) => (d.routes ?? []).some((r: EventRoute) => (r.kmlUrls ?? []).length > 0));
   const schedule: ScheduleItem[] = Array.isArray(event.schedule) ? event.schedule : [];
 
+  const aboutText = description ?? "";
+  const isLongAbout = aboutText.length > DESCRIPTION_PREVIEW_LENGTH;
+  const [aboutExpanded, setAboutExpanded] = useState(false);
+
   return (
     <div className="space-y-4">
-      {description ? (
+      {aboutText ? (
         <section>
           <SectionTitle>About</SectionTitle>
-          <p className="mt-1.5 text-sm leading-relaxed text-ink-soft">{description}</p>
+          <p className="mt-1.5 text-sm leading-relaxed text-ink-soft">
+            {isLongAbout && !aboutExpanded
+              ? `${aboutText.slice(0, DESCRIPTION_PREVIEW_LENGTH).trimEnd()}…`
+              : aboutText}
+          </p>
+          {isLongAbout ? (
+            <button
+              type="button"
+              onClick={() => setAboutExpanded((v) => !v)}
+              className="mt-2 text-xs font-semibold text-cherry"
+            >
+              {aboutExpanded ? "Show less" : "Learn more"}
+            </button>
+          ) : null}
         </section>
       ) : null}
 
