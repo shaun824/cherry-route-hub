@@ -29,7 +29,9 @@ import {
   saveBranding,
   saveQuickLinks,
   saveWaivers,
+  saveFeatures,
   type Branding,
+  type Features,
   type QuickLink,
   type QuickLinkIcon,
   type Waivers,
@@ -117,6 +119,10 @@ function AdminSettings() {
           onChange={setWaivers}
           initial={settings.waivers}
           onSaved={(w) => setSettings({ waivers: w })}
+        />
+        <FeaturesCard
+          value={settings.features}
+          onSaved={(f) => setSettings({ features: f })}
         />
       </div>
 
