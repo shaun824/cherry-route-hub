@@ -6,26 +6,34 @@ import {
   CalendarDays,
   CheckSquare,
   Clock,
+  Facebook,
+  Globe,
   Info,
+  Instagram,
   MapPin,
   MessageCircle,
   MessagesSquare,
   Phone,
-  Route as RouteIcon,
   Send,
   Square,
+  Twitter,
+  Youtube,
+  Music2,
+  Activity,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/lib/auth";
 import { DEFAULT_PACKING_LIST, fetchEventInfo, type EventInfoBlock, type PackingItem } from "@/lib/event-info";
 import { RouteMap } from "@/components/route-map";
-import type { EventDay, EventRoute, ScheduleItem } from "@/lib/mock-data";
+import { SponsorScroller } from "@/components/sponsor-scroller";
+import { useAdminStore } from "@/lib/store";
+import type { EventDay, EventRoute, ScheduleItem, SocialLinks } from "@/lib/mock-data";
 
 export const Route = createFileRoute("/my-events/$eventId")({
   loader: async ({ params }) => {
     const { data, error } = await supabase
       .from("events")
-      .select("id, name, discipline, event_date, location, map_query, distance_km, description, hero_color, days, schedule")
+      .select("id, name, discipline, event_date, location, map_query, distance_km, description, hero_color, days, schedule, social_links")
       .eq("id", params.eventId)
       .maybeSingle();
     if (error || !data) throw notFound();
