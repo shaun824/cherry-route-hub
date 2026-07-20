@@ -244,14 +244,30 @@ function RosterPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {previewRows.map((r, i) => (
-                    <tr key={i} className="border-t border-border">
-                      <td className="py-1">{r.full_name}</td>
-                      <td className="truncate">{r.email}</td>
-                      <td className="truncate">{r.event_id.slice(0, 8)}…</td>
-                      <td>{r.category ?? ""}</td>
-                    </tr>
-                  ))}
+                  {previewRows.map((r, i) => {
+                    const resolved = resolveEventIdLocal(r.event_id);
+                    return (
+                      <tr key={i} className="border-t border-border">
+                        <td className="py-1">{r.full_name}</td>
+                        <td className="truncate">{r.email}</td>
+                        <td className="truncate">
+                          {resolved ? (
+                            <span className="flex items-center gap-1">
+                              {resolved.name}
+                              {resolved.isName ? (
+                                <span className="rounded bg-cherry/10 px-1 py-0.5 text-[9px] font-bold text-cherry-deep">
+                                  by name
+                                </span>
+                              ) : null}
+                            </span>
+                          ) : (
+                            <span className="text-cherry-deep">{r.event_id.slice(0, 20)}…</span>
+                          )}
+                        </td>
+                        <td>{r.category ?? ""}</td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
               {rows.length > 5 ? (
