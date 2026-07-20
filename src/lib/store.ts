@@ -12,6 +12,7 @@ import {
   type Promo,
 } from "./mock-data";
 import {
+  upsertEventCloud, deleteEventCloud,
   upsertFeedCloud, deleteFeedCloud,
   upsertPromoCloud, deletePromoCloud,
   upsertSponsorCloud, deleteSponsorCloud,
