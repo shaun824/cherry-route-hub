@@ -17,10 +17,11 @@ export function useHydratedStore() {
     const setState = useAdminStore.setState;
 
     const load = async () => {
-      const [feed, promos, sponsors, settings] = await Promise.all([
-        fetchFeed(), fetchPromos(), fetchSponsors(), fetchSettings(),
+      const [events, feed, promos, sponsors, settings] = await Promise.all([
+        fetchEvents(), fetchFeed(), fetchPromos(), fetchSponsors(), fetchSettings(),
       ]);
       setState((s) => ({
+        events: events && events.length > 0 ? events : s.events,
         feed: feed ?? s.feed,
         promos: promos ?? s.promos,
         sponsors: sponsors ?? s.sponsors,
