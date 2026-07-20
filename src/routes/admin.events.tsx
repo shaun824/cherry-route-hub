@@ -194,6 +194,175 @@ function KmlManager({
   );
 }
 
+const MARKER_ICONS: NonNullable<CustomMarker["icon"]>[] = [
+  "pin",
+  "start",
+  "finish",
+  "aid",
+  "warning",
+  "photo",
+  "food",
+  "water",
+];
+const MARKER_ICON_GLYPH: Record<NonNullable<CustomMarker["icon"]>, string> = {
+  pin: "📍",
+  start: "🚩",
+  finish: "🏁",
+  aid: "🩹",
+  warning: "⚠️",
+  photo: "📷",
+  food: "🍎",
+  water: "💧",
+};
+
+function CustomMarkerEditor({
+  markers,
+  onChange,
+}: {
+  markers: CustomMarker[];
+  onChange: (m: CustomMarker[]) => void;
+}) {
+  function add() {
+    onChange([
+      ...markers,
+      { id: crypto.randomUUID(), name: "New marker", lat: 0, lng: 0, icon: "pin" },
+    ]);
+  }
+  function update(id: string, patch: Partial<CustomMarker>) {
+    onChange(markers.map((m) => (m.id === id ? { ...m, ...patch } : m)));
+  }
+  function remove(id: string) {
+    onChange(markers.filter((m) => m.id !== id));
+  }
+
+  async function pasteGoogleMapsUrl(id: string) {
+    const url = window.prompt(
+      "Paste a Google Maps link (e.g. https://maps.google.com/?q=-33.9,18.4 or a full share URL)",
+    );
+    if (!url) return;
+    // Try to pull lat,lng from common Google Maps URL forms.
+    const patterns = [
+      /@(-?\d+\.\d+),(-?\d+\.\d+)/, // /@lat,lng
+      /!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/,
+      /q=(-?\d+\.\d+),\s*(-?\d+\.\d+)/,
+      /ll=(-?\d+\.\d+),\s*(-?\d+\.\d+)/,
+      /destination=(-?\d+\.\d+),\s*(-?\d+\.\d+)/,
+    ];
+    for (const rx of patterns) {
+      const m = url.match(rx);
+      if (m) {
+        update(id, { lat: Number(m[1]), lng: Number(m[2]) });
+        return;
+      }
+    }
+    alert("Could not read coordinates from that link. Right‑click a point in Google Maps and copy the numeric coordinates.");
+  }
+
+  return (
+    <div>
+      <div className="mb-1 flex items-center justify-between">
+        <span className="text-[10px] font-bold uppercase tracking-wider text-ink-soft">
+          Custom markers
+        </span>
+        <button
+          type="button"
+          onClick={add}
+          className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-2 py-1 text-[11px] font-semibold hover:bg-surface"
+        >
+          <Plus className="h-3 w-3" /> Add marker
+        </button>
+      </div>
+      {markers.length === 0 ? (
+        <p className="rounded-md border border-dashed border-border px-2 py-1.5 text-[11px] text-ink-soft">
+          No custom markers yet. Add start/finish, water tables, warnings or photo spots.
+        </p>
+      ) : (
+        <ul className="space-y-2">
+          {markers.map((m) => (
+            <li key={m.id} className="rounded-md bg-secondary p-2">
+              <div className="flex items-center gap-2">
+                <select
+                  value={m.icon ?? "pin"}
+                  onChange={(e) => update(m.id, { icon: e.target.value as CustomMarker["icon"] })}
+                  className="rounded border border-border bg-background px-1.5 py-1 text-[11px]"
+                >
+                  {MARKER_ICONS.map((k) => (
+                    <option key={k} value={k}>
+                      {MARKER_ICON_GLYPH[k]} {k}
+                    </option>
+                  ))}
+                </select>
+                <input
+                  value={m.name}
+                  onChange={(e) => update(m.id, { name: e.target.value })}
+                  placeholder="Marker name"
+                  className="min-w-0 flex-1 rounded border border-border bg-background px-2 py-1 text-[11px]"
+                />
+                <input
+                  type="color"
+                  value={m.color ?? "#e11d48"}
+                  onChange={(e) => update(m.id, { color: e.target.value })}
+                  className="h-6 w-8 shrink-0 rounded border border-border"
+                  aria-label="Marker colour"
+                />
+                <button
+                  type="button"
+                  onClick={() => remove(m.id)}
+                  className="text-ink-soft hover:text-cherry"
+                  aria-label="Remove marker"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              </div>
+              <div className="mt-1.5 grid grid-cols-2 gap-1.5">
+                <input
+                  type="number"
+                  step="0.000001"
+                  value={m.lat}
+                  onChange={(e) => update(m.id, { lat: Number(e.target.value) })}
+                  placeholder="Latitude"
+                  className="rounded border border-border bg-background px-2 py-1 text-[11px]"
+                />
+                <input
+                  type="number"
+                  step="0.000001"
+                  value={m.lng}
+                  onChange={(e) => update(m.id, { lng: Number(e.target.value) })}
+                  placeholder="Longitude"
+                  className="rounded border border-border bg-background px-2 py-1 text-[11px]"
+                />
+              </div>
+              <input
+                value={m.description ?? ""}
+                onChange={(e) => update(m.id, { description: e.target.value || undefined })}
+                placeholder="Description (optional)"
+                className="mt-1.5 w-full rounded border border-border bg-background px-2 py-1 text-[11px]"
+              />
+              <div className="mt-1.5 flex flex-wrap gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => pasteGoogleMapsUrl(m.id)}
+                  className="rounded border border-border bg-background px-2 py-1 text-[10px] font-semibold hover:bg-surface"
+                >
+                  Paste Google Maps link
+                </button>
+                <a
+                  href={`https://www.google.com/maps/@${m.lat || 0},${m.lng || 0},15z`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="rounded border border-border bg-background px-2 py-1 text-[10px] font-semibold hover:bg-surface"
+                >
+                  Open in Google Maps ↗
+                </a>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
 
 
 
