@@ -84,7 +84,7 @@ function EventDetailIndex() {
             Days & routes
           </h2>
           <div className="mt-3 space-y-4">
-            {event.days.map((d, di) => (
+            {event.days.map((d: EventDay, di: number) => (
               <div key={d.id} className="rounded-2xl bg-card p-4 ring-1 ring-border">
                 <div className="flex items-baseline justify-between gap-2">
                   <p className="font-display text-base font-bold text-ink">
@@ -98,7 +98,7 @@ function EventDetailIndex() {
                   <p className="mt-2 text-xs text-ink-soft">Routes to be announced.</p>
                 ) : (
                   <ul className="mt-3 space-y-2">
-                    {d.routes.map((r) => (
+                    {d.routes.map((r: EventRoute) => (
                       <li key={r.id} className="rounded-xl bg-background p-3 ring-1 ring-border">
                         <div className="flex flex-wrap items-center gap-2">
                           <span
@@ -151,8 +151,8 @@ function EventDetailIndex() {
           Schedule
         </h2>
         <ol className="mt-3 space-y-2">
-          {event.schedule.map((s, i: number) => {
-            const day = s.dayId ? event.days?.find((d) => d.id === s.dayId) : undefined;
+          {event.schedule.map((s: ScheduleItem, i: number) => {
+            const day = s.dayId ? event.days?.find((d: EventDay) => d.id === s.dayId) : undefined;
             return (
               <li
                 key={i}
