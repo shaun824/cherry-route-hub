@@ -115,13 +115,16 @@ function InfoPanel({
   eventId,
   description,
   distanceKm,
+  event,
 }: {
   eventId: string;
   description: string | null;
   distanceKm: number;
+  event: { days?: EventDay[] | null };
 }) {
   const q = useQuery({ queryKey: ["event-info", eventId], queryFn: () => fetchEventInfo(eventId) });
   const info = q.data;
+  const hasKml = (event.days ?? []).some((d) => (d.routes ?? []).some((r: EventRoute) => (r.kmlUrls ?? []).length > 0));
 
   return (
     <div className="space-y-4">
@@ -131,6 +134,23 @@ function InfoPanel({
           <p className="mt-1.5 text-sm leading-relaxed text-ink-soft">{description}</p>
         </section>
       ) : null}
+
+      {hasKml ? (
+        <section>
+          <SectionTitle>Route map</SectionTitle>
+          <div className="mt-2">
+            <RouteMap event={event as never} height="300px" />
+            <Link
+              to="/events/$eventId/map"
+              params={{ eventId }}
+              className="mt-2 inline-block text-[11px] font-semibold text-cherry"
+            >
+              Open fullscreen map →
+            </Link>
+          </div>
+        </section>
+      ) : null}
+
 
       <section>
         <SectionTitle>Venue</SectionTitle>
