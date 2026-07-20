@@ -241,29 +241,10 @@ function InfoPanel({
       </section>
 
 
-      <section>
-        <SectionTitle>Route</SectionTitle>
-        <div className="mt-2 rounded-xl bg-card p-3 ring-1 ring-border">
-          <p className="flex items-center gap-2 text-sm font-semibold text-ink">
-            <RouteIcon className="h-4 w-4 text-cherry" />
-            {(info?.distance_km ?? distanceKm) || 0} km
-            {info?.elevation_m ? ` · ${info.elevation_m}m elevation` : ""}
-          </p>
-          {info?.route_description ? (
-            <p className="mt-2 whitespace-pre-line text-xs text-ink-soft">{info.route_description}</p>
-          ) : null}
-          {info?.gpx_url ? (
-            <a
-              href={info.gpx_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-2 inline-block text-xs font-semibold text-cherry underline"
-            >
-              Download GPX
-            </a>
-          ) : null}
-        </div>
-      </section>
+      <FollowSection links={event.social_links ?? undefined} />
+
+      <SponsorsBlock />
+
 
       {info?.rules_md ? (
         <section>
