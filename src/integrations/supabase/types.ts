@@ -14,6 +14,115 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_qa_messages: {
+        Row: {
+          author_id: string
+          body: string
+          created_at: string
+          id: string
+          is_admin_msg: boolean
+          thread_id: string
+        }
+        Insert: {
+          author_id: string
+          body: string
+          created_at?: string
+          id?: string
+          is_admin_msg?: boolean
+          thread_id: string
+        }
+        Update: {
+          author_id?: string
+          body?: string
+          created_at?: string
+          id?: string
+          is_admin_msg?: boolean
+          thread_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_qa_messages_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "admin_qa_threads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      admin_qa_threads: {
+        Row: {
+          created_at: string
+          event_id: string
+          id: string
+          last_message_at: string | null
+          rider_user_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          event_id: string
+          id?: string
+          last_message_at?: string | null
+          rider_user_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          event_id?: string
+          id?: string
+          last_message_at?: string | null
+          rider_user_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_qa_threads_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      entrants: {
+        Row: {
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          id_number_hash: string | null
+          id_number_last4: string | null
+          notes: string | null
+          phone: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          full_name: string
+          id?: string
+          id_number_hash?: string | null
+          id_number_last4?: string | null
+          notes?: string | null
+          phone?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          full_name?: string
+          id?: string
+          id_number_hash?: string | null
+          id_number_last4?: string | null
+          notes?: string | null
+          phone?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       entries: {
         Row: {
           category: string
@@ -65,6 +174,157 @@ export type Database = {
             foreignKeyName: "entries_event_id_fkey"
             columns: ["event_id"]
             isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_chat_messages: {
+        Row: {
+          author_id: string
+          body: string
+          created_at: string
+          event_id: string
+          id: string
+        }
+        Insert: {
+          author_id: string
+          body: string
+          created_at?: string
+          event_id: string
+          id?: string
+        }
+        Update: {
+          author_id?: string
+          body?: string
+          created_at?: string
+          event_id?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_chat_messages_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_entrants: {
+        Row: {
+          batch: string | null
+          bib_number: string | null
+          category: string | null
+          created_at: string
+          entrant_id: string
+          event_id: string
+          external_id: string | null
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          batch?: string | null
+          bib_number?: string | null
+          category?: string | null
+          created_at?: string
+          entrant_id: string
+          event_id: string
+          external_id?: string | null
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          batch?: string | null
+          bib_number?: string | null
+          category?: string | null
+          created_at?: string
+          entrant_id?: string
+          event_id?: string
+          external_id?: string | null
+          id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_entrants_entrant_id_fkey"
+            columns: ["entrant_id"]
+            isOneToOne: false
+            referencedRelation: "entrants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_entrants_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_info_blocks: {
+        Row: {
+          created_at: string
+          distance_km: number | null
+          elevation_m: number | null
+          emergency_contacts: Json
+          event_id: string
+          faqs: Json
+          gpx_url: string | null
+          map_embed_url: string | null
+          packing_list: Json
+          parking_notes: string | null
+          route_description: string | null
+          rules_md: string | null
+          updated_at: string
+          venue_address: string | null
+          venue_lat: number | null
+          venue_lng: number | null
+          waivers_md: string | null
+        }
+        Insert: {
+          created_at?: string
+          distance_km?: number | null
+          elevation_m?: number | null
+          emergency_contacts?: Json
+          event_id: string
+          faqs?: Json
+          gpx_url?: string | null
+          map_embed_url?: string | null
+          packing_list?: Json
+          parking_notes?: string | null
+          route_description?: string | null
+          rules_md?: string | null
+          updated_at?: string
+          venue_address?: string | null
+          venue_lat?: number | null
+          venue_lng?: number | null
+          waivers_md?: string | null
+        }
+        Update: {
+          created_at?: string
+          distance_km?: number | null
+          elevation_m?: number | null
+          emergency_contacts?: Json
+          event_id?: string
+          faqs?: Json
+          gpx_url?: string | null
+          map_embed_url?: string | null
+          packing_list?: Json
+          parking_notes?: string | null
+          route_description?: string | null
+          rules_md?: string | null
+          updated_at?: string
+          venue_address?: string | null
+          venue_lat?: number | null
+          venue_lng?: number | null
+          waivers_md?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_info_blocks_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: true
             referencedRelation: "events"
             referencedColumns: ["id"]
           },
@@ -167,6 +427,38 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "feed_posts_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      packing_checklist_state: {
+        Row: {
+          checked: boolean
+          event_id: string
+          item_key: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          checked?: boolean
+          event_id: string
+          item_key: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          checked?: boolean
+          event_id?: string
+          item_key?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "packing_checklist_state_event_id_fkey"
             columns: ["event_id"]
             isOneToOne: false
             referencedRelation: "events"
@@ -349,6 +641,7 @@ export type Database = {
         Returns: boolean
       }
       is_admin: { Args: never; Returns: boolean }
+      is_event_entrant: { Args: { _event_id: string }; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "rider"
