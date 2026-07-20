@@ -134,20 +134,6 @@ function InfoPanel({
   distanceKm: number;
   event: { days?: EventDay[] | null; schedule?: ScheduleItem[] | null; location?: string | null; map_query?: string | null; social_links?: SocialLinks | null };
 }) {
-
-const DESCRIPTION_PREVIEW_LENGTH = 50;
-
-function InfoPanel({
-  eventId,
-  description,
-  distanceKm,
-  event,
-}: {
-  eventId: string;
-  description: string | null;
-  distanceKm: number;
-  event: { days?: EventDay[] | null; schedule?: ScheduleItem[] | null; location?: string | null; map_query?: string | null };
-}) {
   const q = useQuery({ queryKey: ["event-info", eventId], queryFn: () => fetchEventInfo(eventId) });
   const info = q.data;
   const days: EventDay[] = event.days ?? [];
