@@ -14,7 +14,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { useAdminStore, newId } from "@/lib/store";
-import type { Batch, BatchPrice, EntryCategory, Event, EventDay, EventRoute, RouteTier, ScheduleItem } from "@/lib/mock-data";
+import type { Batch, BatchPrice, CustomMarker, EntryCategory, Event, EventDay, EventRoute, RouteTier, ScheduleItem } from "@/lib/mock-data";
 import { supabase } from "@/integrations/supabase/client";
 
 async function uploadEventImage(file: File): Promise<string> {
