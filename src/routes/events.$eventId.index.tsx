@@ -18,6 +18,32 @@ function EventDetailIndex() {
   const entriesEnabled = useAdminStore((s) => s.settings.features.entriesEnabled);
   const eventPosts = feed.filter((p) => p.eventId === event.id);
 
+  const description: string = event.description ?? "";
+  const isLongDescription = description.length > DESCRIPTION_PREVIEW_LENGTH;
+  const [descExpanded, setDescExpanded] = useState(false);
+
+  const days: EventDay[] = event.days ?? [];
+  const schedule: ScheduleItem[] = event.schedule ?? [];
+  const scheduleDayIds = Array.from(
+    new Set(
+      schedule
+        .map((s) => s.dayId)
+        .filter((id): id is string => Boolean(id && days.some((d) => d.id === id))),
+    ),
+  );
+  const scheduleDays = days.filter((d) => scheduleDayIds.includes(d.id));
+  const hasUnscheduled = schedule.some((s) => !s.dayId || !days.some((d) => d.id === s.dayId));
+  const scheduleTabs: { id: string; label: string; date?: string }[] = [
+    ...scheduleDays.map((d, i) => ({ id: d.id, label: d.label || `Day ${i + 1}`, date: d.date })),
+    ...(hasUnscheduled ? [{ id: "__unscheduled", label: "Other" }] : []),
+  ];
+  const [activeDayId, setActiveDayId] = useState<string | undefined>(scheduleTabs[0]?.id);
+  const activeItems = schedule.filter((s) =>
+    activeDayId === "__unscheduled"
+      ? !s.dayId || !days.some((d) => d.id === s.dayId)
+      : s.dayId === activeDayId,
+  );
+
   return (
     <div>
       {/* Enter CTA / Entry Ninja handoff */}
