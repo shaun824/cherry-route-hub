@@ -332,7 +332,11 @@ export type Database = {
       }
       events: {
         Row: {
+          batches: Json
+          classes: Json
+          cover_url: string | null
           created_at: string
+          days: Json
           description: string | null
           discipline: string
           distance_km: number
@@ -341,16 +345,22 @@ export type Database = {
           event_date: string
           hero_color: string | null
           id: string
+          lifecycle: string
           location: string
+          logo_url: string | null
           map_query: string | null
           name: string
           schedule: Json
-          slug: string
+          slug: string | null
           status: string
           updated_at: string
         }
         Insert: {
+          batches?: Json
+          classes?: Json
+          cover_url?: string | null
           created_at?: string
+          days?: Json
           description?: string | null
           discipline: string
           distance_km?: number
@@ -359,16 +369,22 @@ export type Database = {
           event_date: string
           hero_color?: string | null
           id?: string
+          lifecycle?: string
           location: string
+          logo_url?: string | null
           map_query?: string | null
           name: string
           schedule?: Json
-          slug: string
+          slug?: string | null
           status?: string
           updated_at?: string
         }
         Update: {
+          batches?: Json
+          classes?: Json
+          cover_url?: string | null
           created_at?: string
+          days?: Json
           description?: string | null
           discipline?: string
           distance_km?: number
@@ -377,11 +393,13 @@ export type Database = {
           event_date?: string
           hero_color?: string | null
           id?: string
+          lifecycle?: string
           location?: string
+          logo_url?: string | null
           map_query?: string | null
           name?: string
           schedule?: Json
-          slug?: string
+          slug?: string | null
           status?: string
           updated_at?: string
         }
