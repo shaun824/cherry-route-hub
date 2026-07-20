@@ -28,6 +28,27 @@ export const importRoster = createServerFn({ method: "POST" })
 
     const { hashIdNumber, idNumberLast4 } = await import("./id-hash.server");
 
+    // Build a case-insensitive event name -> UUID map so CSVs can use names
+    const { data: events, error: eventsErr } = await context.supabase
+      .from("events")
+      .select("id, name");
+    if (eventsErr) throw eventsErr;
+
+    const eventByName = new Map<string, string>();
+    for (const e of events ?? []) {
+      if (e.name) eventByName.set(e.name.trim().toLowerCase(), e.id);
+    }
+
+    function resolveEventId(raw: string): { id: string } | { error: string } {
+      const trimmed = raw.trim();
+      const byName = eventByName.get(trimmed.toLowerCase());
+      if (byName) return { id: byName };
+      // Accept raw UUIDs as-is
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+      if (uuidRegex.test(trimmed)) return { id: trimmed };
+      return { error: `'${trimmed}' did not match any event name or UUID` };
+    }
+
     let created = 0;
     let updated = 0;
     let linkedToEvent = 0;
@@ -36,6 +57,12 @@ export const importRoster = createServerFn({ method: "POST" })
     for (let i = 0; i < data.rows.length; i++) {
       const r = data.rows[i];
       try {
+        const resolved = resolveEventId(r.event_id);
+        if ("error" in resolved) {
+          errors.push({ row: i + 1, error: resolved.error });
+          continue;
+        }
+
         const emailLower = r.email.toLowerCase();
         // Upsert entrant by email
         const { data: existing, error: findErr } = await context.supabase
@@ -80,7 +107,7 @@ export const importRoster = createServerFn({ method: "POST" })
           .from("event_entrants")
           .upsert(
             {
-              event_id: r.event_id,
+              event_id: resolved.id,
               entrant_id: entrantId,
               category: r.category || null,
               batch: r.batch || null,
