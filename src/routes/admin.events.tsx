@@ -1375,6 +1375,12 @@ function DaysEditor({
                           updateRoute(i, rIdx, { description: e.target.value || undefined })
                         }
                       />
+                      <div className="sm:col-span-2">
+                        <KmlManager
+                          urls={r.kmlUrls ?? []}
+                          onChange={(urls) => updateRoute(i, rIdx, { kmlUrls: urls })}
+                        />
+                      </div>
                     </div>
                   </li>
                 ))}
