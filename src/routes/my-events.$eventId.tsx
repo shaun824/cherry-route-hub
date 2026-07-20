@@ -126,6 +126,20 @@ const DESCRIPTION_PREVIEW_LENGTH = 50;
 function InfoPanel({
   eventId,
   description,
+  distanceKm: _distanceKm,
+  event,
+}: {
+  eventId: string;
+  description: string | null;
+  distanceKm: number;
+  event: { days?: EventDay[] | null; schedule?: ScheduleItem[] | null; location?: string | null; map_query?: string | null; social_links?: SocialLinks | null };
+}) {
+
+const DESCRIPTION_PREVIEW_LENGTH = 50;
+
+function InfoPanel({
+  eventId,
+  description,
   distanceKm,
   event,
 }: {
