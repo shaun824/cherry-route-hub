@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { CalendarDays, Newspaper, Tag, Handshake, ArrowUpRight } from "lucide-react";
+import { CalendarDays, Newspaper, Tag, Handshake, ArrowUpRight, FileUp } from "lucide-react";
 import { useAdminStore } from "@/lib/store";
 
 export const Route = createFileRoute("/admin/")({
