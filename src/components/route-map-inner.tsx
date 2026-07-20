@@ -15,6 +15,8 @@ import {
   polylineElevationGainM,
   polylineKm,
   samplePolyline,
+  simplifyPolyline,
+  capPolyline,
   type LatLngAlt,
 } from "@/lib/geo";
 import { getRouteElevation } from "@/lib/elevation.functions";
