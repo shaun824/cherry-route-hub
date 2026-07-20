@@ -1717,6 +1717,12 @@ function DaysEditor({
                           onChange={(urls) => updateRoute(i, rIdx, { kmlUrls: urls })}
                         />
                       </div>
+                      <div className="sm:col-span-2">
+                        <CustomMarkerEditor
+                          markers={r.customMarkers ?? []}
+                          onChange={(markers) => updateRoute(i, rIdx, { customMarkers: markers })}
+                        />
+                      </div>
                     </div>
                   </li>
                 ))}
