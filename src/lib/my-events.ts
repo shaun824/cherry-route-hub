@@ -28,8 +28,10 @@ export type MyEventRow = {
     status: string;
     hero_color: string | null;
     description: string | null;
+    social_links: Record<string, string> | null;
   };
 };
+
 
 function normalizeExtras(raw: unknown): ExtraItem[] {
   if (!Array.isArray(raw)) return [];
@@ -53,7 +55,7 @@ export async function fetchMyEvents(): Promise<MyEventRow[]> {
   const { data, error } = await supabase
     .from("event_entrants")
     .select(
-      "id, event_id, category, batch, bib_number, jacket_size, tshirt_size, extras, notes, event:events(id, name, discipline, event_date, location, distance_km, status, hero_color, description)",
+      "id, event_id, category, batch, bib_number, jacket_size, tshirt_size, extras, notes, event:events(id, name, discipline, event_date, location, distance_km, status, hero_color, description, social_links)",
     )
     .order("created_at", { ascending: false });
   if (error) {
