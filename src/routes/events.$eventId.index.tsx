@@ -14,8 +14,17 @@ export const Route = createFileRoute("/events/$eventId/")({
 });
 
 function EventDetailIndex() {
-  const { event } = Route.useLoaderData();
+  const { eventId } = Route.useParams();
+  const event = useAdminStore((s) => s.events.find((e) => e.id === eventId));
   const entriesEnabled = useAdminStore((s) => s.settings.features.entriesEnabled);
+  if (!event) {
+    return (
+      <div className="p-8 text-center text-sm text-ink-soft">
+        Event not found.{" "}
+        <Link to="/my-events" className="font-semibold text-cherry">Back</Link>
+      </div>
+    );
+  }
   const eventPosts = feed.filter((p) => p.eventId === event.id);
 
   const description: string = event.description ?? "";
