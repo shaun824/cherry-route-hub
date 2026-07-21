@@ -104,31 +104,21 @@ function RosterPage() {
     setResult(null);
     setErrors([]);
     setSelectedFileName(file.name);
-    Papa.parse<CsvRow>(file, {
+    Papa.parse<Record<string, string>>(file, {
       header: true,
       skipEmptyLines: true,
+      // Papa auto-detects delimiter when empty; Entry Ninja uses `;`.
+      delimiter: "",
       complete: (res) => {
-        const parsed = (res.data ?? []).map((r) => ({
-          full_name: (r.full_name ?? "").trim(),
-          email: (r.email ?? "").trim(),
-          id_number: (r.id_number ?? "").trim(),
-          phone: (r.phone ?? "").trim(),
-          event_id: (r.event_id ?? "").trim() || defaultEventId,
-          category: (r.category ?? "").trim(),
-          batch: (r.batch ?? "").trim(),
-          bib_number: (r.bib_number ?? "").trim(),
-          jacket_size: (r.jacket_size ?? "").trim(),
-          tshirt_size: (r.tshirt_size ?? "").trim(),
-          extras: (r.extras ?? "").trim(),
-          notes: (r.notes ?? "").trim(),
-        }));
+        const raw = (res.data ?? []) as Record<string, string>[];
+        const parsed = raw.map((r) => mapRowFlexible(r, defaultEventId));
         const errs: string[] = [];
         parsed.forEach((r, i) => {
-          if (!r.full_name) errs.push(`Row ${i + 1}: missing full_name`);
+          if (!r.full_name) errs.push(`Row ${i + 1}: missing name`);
           if (!r.email) errs.push(`Row ${i + 1}: missing email`);
-          if (!r.id_number) errs.push(`Row ${i + 1}: missing id_number`);
-          if (!r.event_id) errs.push(`Row ${i + 1}: missing event_id (choose a default event or add an event_id column)`);
-          else if (!resolveEventIdLocal(r.event_id)) errs.push(`Row ${i + 1}: event_id '${r.event_id}' did not match any event`);
+          if (!r.id_number) errs.push(`Row ${i + 1}: missing ID number`);
+          if (!r.event_id) errs.push(`Row ${i + 1}: missing event (choose a default event or ensure an Event Name column)`);
+          else if (!resolveEventIdLocal(r.event_id)) errs.push(`Row ${i + 1}: event '${r.event_id}' did not match any event`);
         });
         setRows(parsed);
         setErrors(errs);
