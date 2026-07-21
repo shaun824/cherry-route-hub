@@ -678,7 +678,7 @@ function AskAdminPanel({ eventId, userId }: { eventId: string; userId: string | 
       if (!threadQ.data?.id) return [];
       const { data } = await supabase
         .from("admin_qa_messages")
-        .select("id, author_id, body, is_admin_msg, created_at")
+        .select("id, author_id, body, is_admin_msg, is_bot, created_at")
         .eq("thread_id", threadQ.data.id)
         .order("created_at", { ascending: true });
       return data ?? [];
@@ -701,68 +701,88 @@ function AskAdminPanel({ eventId, userId }: { eventId: string; userId: string | 
     };
   }, [threadQ.data?.id, qc]);
 
+  const askBot = useServerFn(askEventBot);
+
   async function send() {
     if (!text.trim() || !userId) return;
     setBusy(true);
     const body = text.trim();
     setText("");
-    let threadId = threadQ.data?.id;
-    if (!threadId) {
-      const { data } = await supabase
-        .from("admin_qa_threads")
-        .insert({ event_id: eventId, rider_user_id: userId })
-        .select("id")
-        .single();
-      threadId = data?.id;
+    try {
+      await askBot({ data: { eventId, question: body } });
       qc.invalidateQueries({ queryKey: ["qa-thread", eventId, userId] });
+      qc.invalidateQueries({ queryKey: ["qa-messages", threadQ.data?.id] });
+    } catch (err) {
+      console.error("askEventBot failed", err);
+      // Fallback: post the question directly so the admin still sees it.
+      let threadId = threadQ.data?.id;
+      if (!threadId) {
+        const { data } = await supabase
+          .from("admin_qa_threads")
+          .insert({ event_id: eventId, rider_user_id: userId })
+          .select("id")
+          .single();
+        threadId = data?.id;
+        qc.invalidateQueries({ queryKey: ["qa-thread", eventId, userId] });
+      }
+      if (threadId) {
+        await supabase.from("admin_qa_messages").insert({
+          thread_id: threadId,
+          author_id: userId,
+          body,
+          is_admin_msg: false,
+        });
+        await supabase
+          .from("admin_qa_threads")
+          .update({ last_message_at: new Date().toISOString() })
+          .eq("id", threadId);
+        qc.invalidateQueries({ queryKey: ["qa-messages", threadId] });
+      }
+    } finally {
+      setBusy(false);
     }
-    if (threadId) {
-      await supabase.from("admin_qa_messages").insert({
-        thread_id: threadId,
-        author_id: userId,
-        body,
-        is_admin_msg: false,
-      });
-      await supabase
-        .from("admin_qa_threads")
-        .update({ last_message_at: new Date().toISOString() })
-        .eq("id", threadId);
-    }
-    setBusy(false);
   }
 
   return (
     <div className="flex h-[60vh] flex-col rounded-2xl bg-card ring-1 ring-border">
       <div className="border-b border-border p-3 text-xs text-ink-soft">
-        Private thread between you and Red Cherry admin. Ask anything about this event.
+        Ask anything about this event — our assistant bot 🍒 answers instantly from the event details & website, and loops in a Red Cherry admin when it isn't sure.
       </div>
       <div className="flex-1 overflow-y-auto p-3">
         {(messagesQ.data ?? []).length === 0 ? (
           <p className="mt-6 text-center text-xs text-ink-soft">
-            No messages yet. Send us a question below.
+            No messages yet. Ask a question below and the bot will try first.
           </p>
         ) : (
           <ul className="space-y-2">
             {(messagesQ.data ?? []).map((m: any) => {
-              const mine = m.author_id === userId;
+              const mine = m.author_id === userId && !m.is_bot;
+              const isBot = Boolean(m.is_bot);
+              const bubbleCls = mine
+                ? "ml-auto bg-cherry text-white"
+                : isBot
+                  ? "bg-sky-100 text-sky-950 ring-1 ring-sky-200"
+                  : "bg-emerald-100 text-emerald-950";
+              const label = isBot ? "🍒 Assistant bot" : "Red Cherry admin";
               return (
-                <li
-                  key={m.id}
-                  className={`max-w-[80%] rounded-2xl px-3 py-2 text-sm ${
-                    mine
-                      ? "ml-auto bg-cherry text-white"
-                      : "bg-emerald-100 text-emerald-950"
-                  }`}
-                >
+                <li key={m.id} className={`max-w-[80%] rounded-2xl px-3 py-2 text-sm ${bubbleCls}`}>
                   {!mine && (
                     <p className="text-[10px] font-bold uppercase tracking-wider opacity-70">
-                      Red Cherry admin
+                      {label}
                     </p>
                   )}
                   <p className="whitespace-pre-line">{m.body}</p>
                 </li>
               );
             })}
+            {busy && (
+              <li className="max-w-[80%] rounded-2xl bg-sky-100 px-3 py-2 text-sm text-sky-950 ring-1 ring-sky-200">
+                <p className="text-[10px] font-bold uppercase tracking-wider opacity-70">
+                  🍒 Assistant bot
+                </p>
+                <p className="italic opacity-70">Thinking…</p>
+              </li>
+            )}
           </ul>
         )}
       </div>
@@ -776,7 +796,7 @@ function AskAdminPanel({ eventId, userId }: { eventId: string; userId: string | 
               void send();
             }
           }}
-          placeholder="Ask Red Cherry admin…"
+          placeholder="Ask about schedule, packing, venue…"
           maxLength={1000}
           className="flex-1 rounded-lg bg-background px-3 py-2 text-sm ring-1 ring-border focus:outline-none focus:ring-cherry"
         />
