@@ -200,6 +200,7 @@ export async function upsertEventCloud(e: Event): Promise<string | null> {
     batches: e.batches ?? [],
     days: e.days ?? [],
     social_links: e.socialLinks ?? {},
+    spectator_mode: e.spectatorMode ?? false,
   };
   const { data, error } = await supabase.from("events").upsert(row).select().single();
   log(error, "upsertEvent");

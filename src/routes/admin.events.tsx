@@ -746,6 +746,21 @@ function EventEditor({
               <option value="archived">archived (hidden, kept in records)</option>
             </select>
           </Field>
+          <Field label="Spectator mode">
+            <label className="flex items-center gap-2 rounded-md border border-border bg-background px-3 py-2 text-sm">
+              <input
+                type="checkbox"
+                checked={form.spectatorMode ?? false}
+                onChange={(e) => update("spectatorMode", e.target.checked)}
+              />
+              <span>
+                Open to spectators
+                <span className="ml-1 text-[11px] text-ink-soft">
+                  (unlocks the event card on the public Spectate tab)
+                </span>
+              </span>
+            </label>
+          </Field>
           <Field label="Entry Ninja external ID">
             <input
               className={inputCls}
