@@ -28,8 +28,10 @@ export type MyEventRow = {
     status: string;
     hero_color: string | null;
     description: string | null;
+    social_links: Record<string, string> | null;
   };
 };
+
 
 function normalizeExtras(raw: unknown): ExtraItem[] {
   if (!Array.isArray(raw)) return [];
