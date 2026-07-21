@@ -389,6 +389,8 @@ function NextEventHero({ row }: { row: MyEventRow }) {
         ) : null}
       </div>
 
+      <EventSocialRow links={row.event.social_links} />
+
       <div className="mt-4 flex items-center justify-between rounded-xl bg-white/15 px-3 py-2 backdrop-blur">
         <span className="text-xs font-bold">Open my event</span>
         <ChevronRight className="h-4 w-4" />
@@ -396,6 +398,7 @@ function NextEventHero({ row }: { row: MyEventRow }) {
     </Link>
   );
 }
+
 
 function NoEventsCard({ hasAnyLinked }: { hasAnyLinked: boolean }) {
   return (
