@@ -219,7 +219,7 @@ export const importRoster = createServerFn({ method: "POST" })
       }
     }
 
-    return { created, updated, linkedToEvent, errors };
+    return { created, updated, linkedToEvent, errors, autoCreatedEvents };
   });
 
 const linkSchema = z.object({
