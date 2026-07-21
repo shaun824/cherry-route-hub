@@ -82,14 +82,62 @@ export const importRoster = createServerFn({ method: "POST" })
       if (e.name) eventByName.set(e.name.trim().toLowerCase(), e.id);
     }
 
-    function resolveEventId(raw: string): { id: string } | { error: string } {
+    // Parse an Entry Ninja date like "2026/08/19" or "2026-08-19" → ISO.
+    function parseEventDate(raw: string): string | null {
+      const s = raw.trim();
+      if (!s) return null;
+      const m = s.match(/^(\d{4})[/-](\d{1,2})[/-](\d{1,2})/);
+      if (m) {
+        const iso = `${m[1]}-m2(m[2])-m2(m[3])T08:00:00Z`
+          .replace("m2(m[2])", m[2].padStart(2, "0"))
+          .replace("m2(m[3])", m[3].padStart(2, "0"));
+        const d = new Date(iso);
+        if (!isNaN(d.getTime())) return d.toISOString();
+      }
+      const d = new Date(s);
+      return isNaN(d.getTime()) ? null : d.toISOString();
+    }
+
+    const autoCreatedEvents: { id: string; name: string }[] = [];
+
+    async function resolveOrCreateEventId(
+      raw: string,
+      row: { event_date: string; external_event_id: string },
+    ): Promise<{ id: string } | { error: string }> {
       const trimmed = raw.trim();
       const byName = eventByName.get(trimmed.toLowerCase());
       if (byName) return { id: byName };
-      // Accept raw UUIDs as-is
       const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
       if (uuidRegex.test(trimmed)) return { id: trimmed };
-      return { error: `'${trimmed}' did not match any event name or UUID` };
+
+      // Auto-create a stub event so the import doesn't fail. Admin gets an
+      // alert to fill in the missing fields (logo, cover, description, etc.).
+      const eventDate = parseEventDate(row.event_date) ?? new Date().toISOString();
+      const insertPayload = {
+        name: trimmed,
+        discipline: "Cycling",
+        event_date: eventDate,
+        location: "TBC",
+        distance_km: 0,
+        status: "upcoming",
+        lifecycle: "draft",
+        schedule: [],
+        classes: [],
+        batches: [],
+        days: [],
+        social_links: {},
+        auto_created: true,
+        entry_ninja_id: row.external_event_id || null,
+      };
+      const { data: ins, error: insErr } = await context.supabase
+        .from("events")
+        .insert(insertPayload)
+        .select("id, name")
+        .single();
+      if (insErr || !ins) return { error: `Could not auto-create event '${trimmed}': ${insErr?.message ?? "unknown"}` };
+      eventByName.set(ins.name.trim().toLowerCase(), ins.id);
+      autoCreatedEvents.push({ id: ins.id, name: ins.name });
+      return { id: ins.id };
     }
 
     let created = 0;
@@ -100,7 +148,10 @@ export const importRoster = createServerFn({ method: "POST" })
     for (let i = 0; i < data.rows.length; i++) {
       const r = data.rows[i];
       try {
-        const resolved = resolveEventId(r.event_id);
+        const resolved = await resolveOrCreateEventId(r.event_id, {
+          event_date: r.event_date,
+          external_event_id: r.external_event_id,
+        });
         if ("error" in resolved) {
           errors.push({ row: i + 1, error: resolved.error });
           continue;
