@@ -1,20 +1,28 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import {
+  Activity,
   Bell,
   Calendar,
   CalendarDays,
   ChevronRight,
+  Facebook,
+  Globe,
   Handshake,
   Image as ImageIcon,
+  Instagram,
   LogIn,
   MapPin,
+  Music2,
   Newspaper,
   Sparkles,
   ShieldCheck,
   Tag,
   Trophy,
+  Twitter,
+  Youtube,
 } from "lucide-react";
+
 import { BrandMark, SectionTitle, TypeBadge } from "@/components/ui-bits";
 import { SponsorScroller } from "@/components/sponsor-scroller";
 import { currentRider, relativeTime } from "@/lib/mock-data";
