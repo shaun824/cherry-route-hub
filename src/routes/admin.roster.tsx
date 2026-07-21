@@ -167,7 +167,7 @@ function RosterPage() {
   const [errors, setErrors] = useState<string[]>([]);
   const [running, setRunning] = useState(false);
   const [selectedFileName, setSelectedFileName] = useState("");
-  const [result, setResult] = useState<{ created: number; updated: number; linkedToEvent: number; errors: { row: number; error: string }[] } | null>(null);
+  const [result, setResult] = useState<{ created: number; updated: number; linkedToEvent: number; errors: { row: number; error: string }[]; autoCreatedEvents: { id: string; name: string }[] } | null>(null);
 
   const eventNameById = useMemo(() => {
     const map = new Map<string, string>();
@@ -221,7 +221,7 @@ function RosterPage() {
           if (!r.email) errs.push(`Row ${i + 1}: missing email`);
           if (!r.id_number) errs.push(`Row ${i + 1}: missing ID number`);
           if (!r.event_id) errs.push(`Row ${i + 1}: missing event (choose a default event or ensure an Event Name column)`);
-          else if (!resolveEventIdLocal(r.event_id)) errs.push(`Row ${i + 1}: event '${r.event_id}' did not match any event`);
+          // Unmatched event names are OK — the server auto-creates a stub event.
         });
         setRows(parsed);
         setErrors(errs);
