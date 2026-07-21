@@ -30,6 +30,105 @@ const SAMPLE = `full_name,email,id_number,phone,event_id,category,batch,bib_numb
 Jane Doe,jane@example.com,9204115000080,+27820000000,My Event Name,Elite,A,101,M,L,Jacket M x1; Buff x2,VIP guest
 `;
 
+// Column aliases so we accept either our lowercase schema or the raw
+// Entry Ninja export headers ("First Name", "Last Name", "ID Number", ...).
+function pick(row: Record<string, string>, keys: string[]): string {
+  for (const k of keys) {
+    // Case-insensitive lookup
+    const hit = Object.keys(row).find((h) => h.trim().toLowerCase() === k.toLowerCase());
+    if (hit && row[hit] != null && String(row[hit]).trim() !== "") return String(row[hit]).trim();
+  }
+  return "";
+}
+
+// Extract size letter from a value like "Large (R 0.00)" or "M" → "M".
+function parseSizeLetter(v: string): string {
+  const s = v.trim().toLowerCase();
+  if (!s) return "";
+  if (/^x?x?s\b/.test(s) || s.startsWith("small")) return s.startsWith("xs") ? "XS" : "S";
+  if (/^m\b/.test(s) || s.startsWith("medium")) return "M";
+  if (/^l\b/.test(s) || s.startsWith("large")) return "L";
+  if (/^xxl\b/.test(s) || s.startsWith("xxl") || s.startsWith("2xl")) return "XXL";
+  if (/^xl\b/.test(s) || s.startsWith("xl") || s.startsWith("extra large")) return "XL";
+  const m = v.match(/^([A-Z]{1,4})\b/i);
+  return m ? m[1].toUpperCase() : "";
+}
+
+// Entry Ninja add-on columns that we treat as merchandise/extras.
+const EXTRA_COLUMNS = [
+  "E-Bike Rental",
+  "Bike Transfer",
+  "Normal MTB Rental - Carbon Dual Suspension",
+  "Shuttle Transfer",
+  "2x 25 Minute Massages",
+  "No Hassle Package",
+];
+
+function mapRowFlexible(r: Record<string, string>, defaultEventId: string): CsvRow {
+  // Direct schema headers win if present.
+  const direct: CsvRow = {
+    full_name: pick(r, ["full_name"]),
+    email: pick(r, ["email", "Email"]),
+    id_number: pick(r, ["id_number", "ID Number"]),
+    phone: pick(r, ["phone", "Mobile", "WhatsApp Number"]),
+    event_id: pick(r, ["event_id"]) || pick(r, ["Event Name"]) || defaultEventId,
+    category: pick(r, ["category", "Class"]),
+    batch: pick(r, ["batch", "Batch"]),
+    bib_number: pick(r, ["bib_number", "Race Number"]),
+    jacket_size: pick(r, ["jacket_size"]),
+    tshirt_size: pick(r, ["tshirt_size"]),
+    extras: pick(r, ["extras"]),
+    notes: pick(r, ["notes"]),
+  };
+
+  // Fill full_name from First/Last if not already set.
+  if (!direct.full_name) {
+    const first = pick(r, ["First Name"]);
+    const last = pick(r, ["Last Name"]);
+    direct.full_name = [first, last].filter(Boolean).join(" ").trim();
+  }
+
+  // Jacket / T-shirt sizes from Entry Ninja add-on columns.
+  if (!direct.jacket_size) {
+    direct.jacket_size = parseSizeLetter(pick(r, ["Complimentary jacket"]));
+  }
+  if (!direct.tshirt_size) {
+    direct.tshirt_size = parseSizeLetter(pick(r, ["Custom Riding Shirt"]));
+  }
+
+  // Build extras from add-on columns (each becomes "<name> x1").
+  if (!direct.extras) {
+    const parts: string[] = [];
+    for (const col of EXTRA_COLUMNS) {
+      const v = pick(r, [col]);
+      if (!v) continue;
+      const size = parseSizeLetter(v);
+      parts.push(size ? `${col} ${size} x1` : `${col} x1`);
+    }
+    if (parts.length) direct.extras = parts.join("; ");
+  }
+
+  // Build notes from medical/dietary/emergency fields if not explicitly set.
+  if (!direct.notes) {
+    const bits: string[] = [];
+    const diet = pick(r, ["Dietary requirements"]);
+    if (diet) bits.push(`Diet: ${diet}`);
+    const allergies = pick(r, ["Allergies"]);
+    if (allergies && allergies.toLowerCase() !== "none") bits.push(`Allergies: ${allergies}`);
+    const blood = pick(r, ["Blood Type"]);
+    if (blood) bits.push(`Blood: ${blood}`);
+    const extraMed = pick(r, ["Extra Medical Info"]);
+    if (extraMed) bits.push(`Medical: ${extraMed}`);
+    const ecName = pick(r, ["Emergency Contact Person"]);
+    const ecNum = pick(r, ["Emergency Contact Number"]);
+    if (ecName || ecNum) bits.push(`ICE: ${[ecName, ecNum].filter(Boolean).join(" ")}`);
+    if (bits.length) direct.notes = bits.join(" · ");
+  }
+
+  return direct;
+}
+
+
 function RosterPage() {
   const qc = useQueryClient();
   const importFn = useServerFn(importRoster);
