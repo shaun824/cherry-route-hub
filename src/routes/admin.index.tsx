@@ -29,7 +29,7 @@ function AdminDashboard() {
           Everything the rider hub sees is managed here. Edits appear live on the app.
         </p>
       </div>
-
+      <NeedsAttentionBanner />
 
 
 
