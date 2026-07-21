@@ -457,18 +457,21 @@ function EventSocialRow({
   return (
     <div className={`${compact ? "mt-2" : "mt-3"} flex flex-wrap gap-1.5`}>
       {entries.map(({ key, label, icon: Icon }) => (
-        <a
+        <button
           key={key}
-          href={links![key]}
-          target="_blank"
-          rel="noopener noreferrer"
-          onClick={(e) => e.stopPropagation()}
+          type="button"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            window.open(links![key], "_blank", "noopener,noreferrer");
+          }}
           aria-label={`Follow on ${label}`}
           title={label}
           className={`grid ${size} place-items-center rounded-full bg-white/20 text-white ring-1 ring-white/25 backdrop-blur transition hover:bg-white/30`}
         >
           <Icon className={icon} strokeWidth={2.2} />
-        </a>
+        </button>
+
       ))}
     </div>
   );
