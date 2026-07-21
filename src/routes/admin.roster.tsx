@@ -494,7 +494,7 @@ function QuickAddSection({
       setEmail("");
       setIdNumber("");
       setPhone("");
-      setAssignments([{ event_id: "", category: "", batch: "", bib_number: "" }]);
+      setAssignments([{ ...EMPTY_ASSIGNMENT }]);
       onAdded();
     } catch (err) {
       setMsg({ kind: "err", text: (err as Error).message });
