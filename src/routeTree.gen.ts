@@ -33,6 +33,7 @@ import { Route as AdminFeedRouteImport } from './routes/admin.feed'
 import { Route as AdminEventsRouteImport } from './routes/admin.events'
 import { Route as EventsEventIdIndexRouteImport } from './routes/events.$eventId.index'
 import { Route as AdminEventInfoIndexRouteImport } from './routes/admin.event-info.index'
+import { Route as MyEventsEventIdReportRouteImport } from './routes/my-events.$eventId.report'
 import { Route as EventsEventIdMapRouteImport } from './routes/events.$eventId.map'
 import { Route as EventsEventIdEnterRouteImport } from './routes/events.$eventId.enter'
 import { Route as AdminEventInfoEventIdRouteImport } from './routes/admin.event-info.$eventId'
@@ -157,6 +158,11 @@ const AdminEventInfoIndexRoute = AdminEventInfoIndexRouteImport.update({
   path: '/event-info/',
   getParentRoute: () => AdminRoute,
 } as any)
+const MyEventsEventIdReportRoute = MyEventsEventIdReportRouteImport.update({
+  id: '/report',
+  path: '/report',
+  getParentRoute: () => MyEventsEventIdRoute,
+} as any)
 const EventsEventIdMapRoute = EventsEventIdMapRouteImport.update({
   id: '/map',
   path: '/map',
@@ -192,13 +198,14 @@ export interface FileRoutesByFullPath {
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/sponsors': typeof AdminSponsorsRoute
   '/events/$eventId': typeof EventsEventIdRouteWithChildren
-  '/my-events/$eventId': typeof MyEventsEventIdRoute
+  '/my-events/$eventId': typeof MyEventsEventIdRouteWithChildren
   '/admin/': typeof AdminIndexRoute
   '/events/': typeof EventsIndexRoute
   '/my-events/': typeof MyEventsIndexRoute
   '/admin/event-info/$eventId': typeof AdminEventInfoEventIdRoute
   '/events/$eventId/enter': typeof EventsEventIdEnterRoute
   '/events/$eventId/map': typeof EventsEventIdMapRoute
+  '/my-events/$eventId/report': typeof MyEventsEventIdReportRoute
   '/admin/event-info/': typeof AdminEventInfoIndexRoute
   '/events/$eventId/': typeof EventsEventIdIndexRoute
 }
@@ -218,13 +225,14 @@ export interface FileRoutesByTo {
   '/admin/roster': typeof AdminRosterRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/sponsors': typeof AdminSponsorsRoute
-  '/my-events/$eventId': typeof MyEventsEventIdRoute
+  '/my-events/$eventId': typeof MyEventsEventIdRouteWithChildren
   '/admin': typeof AdminIndexRoute
   '/events': typeof EventsIndexRoute
   '/my-events': typeof MyEventsIndexRoute
   '/admin/event-info/$eventId': typeof AdminEventInfoEventIdRoute
   '/events/$eventId/enter': typeof EventsEventIdEnterRoute
   '/events/$eventId/map': typeof EventsEventIdMapRoute
+  '/my-events/$eventId/report': typeof MyEventsEventIdReportRoute
   '/admin/event-info': typeof AdminEventInfoIndexRoute
   '/events/$eventId': typeof EventsEventIdIndexRoute
 }
@@ -248,13 +256,14 @@ export interface FileRoutesById {
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/sponsors': typeof AdminSponsorsRoute
   '/events/$eventId': typeof EventsEventIdRouteWithChildren
-  '/my-events/$eventId': typeof MyEventsEventIdRoute
+  '/my-events/$eventId': typeof MyEventsEventIdRouteWithChildren
   '/admin/': typeof AdminIndexRoute
   '/events/': typeof EventsIndexRoute
   '/my-events/': typeof MyEventsIndexRoute
   '/admin/event-info/$eventId': typeof AdminEventInfoEventIdRoute
   '/events/$eventId/enter': typeof EventsEventIdEnterRoute
   '/events/$eventId/map': typeof EventsEventIdMapRoute
+  '/my-events/$eventId/report': typeof MyEventsEventIdReportRoute
   '/admin/event-info/': typeof AdminEventInfoIndexRoute
   '/events/$eventId/': typeof EventsEventIdIndexRoute
 }
@@ -286,6 +295,7 @@ export interface FileRouteTypes {
     | '/admin/event-info/$eventId'
     | '/events/$eventId/enter'
     | '/events/$eventId/map'
+    | '/my-events/$eventId/report'
     | '/admin/event-info/'
     | '/events/$eventId/'
   fileRoutesByTo: FileRoutesByTo
@@ -312,6 +322,7 @@ export interface FileRouteTypes {
     | '/admin/event-info/$eventId'
     | '/events/$eventId/enter'
     | '/events/$eventId/map'
+    | '/my-events/$eventId/report'
     | '/admin/event-info'
     | '/events/$eventId'
   id:
@@ -341,6 +352,7 @@ export interface FileRouteTypes {
     | '/admin/event-info/$eventId'
     | '/events/$eventId/enter'
     | '/events/$eventId/map'
+    | '/my-events/$eventId/report'
     | '/admin/event-info/'
     | '/events/$eventId/'
   fileRoutesById: FileRoutesById
@@ -529,6 +541,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminEventInfoIndexRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/my-events/$eventId/report': {
+      id: '/my-events/$eventId/report'
+      path: '/report'
+      fullPath: '/my-events/$eventId/report'
+      preLoaderRoute: typeof MyEventsEventIdReportRouteImport
+      parentRoute: typeof MyEventsEventIdRoute
+    }
     '/events/$eventId/map': {
       id: '/events/$eventId/map'
       path: '/map'
@@ -583,13 +602,25 @@ const AdminRouteChildren: AdminRouteChildren = {
 
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
+interface MyEventsEventIdRouteChildren {
+  MyEventsEventIdReportRoute: typeof MyEventsEventIdReportRoute
+}
+
+const MyEventsEventIdRouteChildren: MyEventsEventIdRouteChildren = {
+  MyEventsEventIdReportRoute: MyEventsEventIdReportRoute,
+}
+
+const MyEventsEventIdRouteWithChildren = MyEventsEventIdRoute._addFileChildren(
+  MyEventsEventIdRouteChildren,
+)
+
 interface MyEventsRouteChildren {
-  MyEventsEventIdRoute: typeof MyEventsEventIdRoute
+  MyEventsEventIdRoute: typeof MyEventsEventIdRouteWithChildren
   MyEventsIndexRoute: typeof MyEventsIndexRoute
 }
 
 const MyEventsRouteChildren: MyEventsRouteChildren = {
-  MyEventsEventIdRoute: MyEventsEventIdRoute,
+  MyEventsEventIdRoute: MyEventsEventIdRouteWithChildren,
   MyEventsIndexRoute: MyEventsIndexRoute,
 }
 
@@ -629,13 +660,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

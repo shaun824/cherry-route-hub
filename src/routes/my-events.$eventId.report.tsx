@@ -1,0 +1,142 @@
+import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { ArrowLeft, Printer } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { fetchMyEventById, type MyEventRow } from "@/lib/my-events";
+
+export const Route = createFileRoute("/my-events/$eventId/report")({
+  loader: async ({ params }) => {
+    const { data, error } = await supabase
+      .from("events")
+      .select("id, name, discipline, event_date, location")
+      .eq("id", params.eventId)
+      .maybeSingle();
+    if (error || !data) throw notFound();
+    return { event: data };
+  },
+  component: ReportPage,
+  notFoundComponent: () => (
+    <div className="p-8 text-center text-sm">Event not found.</div>
+  ),
+});
+
+function ReportPage() {
+  const { event } = Route.useLoaderData();
+  const q = useQuery({
+    queryKey: ["my-entry", event.id],
+    queryFn: () => fetchMyEventById(event.id),
+  });
+
+  useEffect(() => {
+    document.body.classList.add("print-body");
+    return () => document.body.classList.remove("print-body");
+  }, []);
+
+  const row: MyEventRow | null = q.data ?? null;
+
+  return (
+    <div className="min-h-screen bg-secondary/40">
+      <div className="mx-auto max-w-2xl px-4 py-6">
+        <div className="mb-4 flex items-center justify-between print:hidden">
+          <Link
+            to="/my-events/$eventId"
+            params={{ eventId: event.id }}
+            className="inline-flex items-center gap-1 rounded-lg bg-card px-3 py-1.5 text-xs font-semibold text-ink ring-1 ring-border"
+          >
+            <ArrowLeft className="h-3.5 w-3.5" /> Back
+          </Link>
+          <button
+            type="button"
+            onClick={() => window.print()}
+            className="inline-flex items-center gap-1.5 rounded-lg bg-ink px-3 py-1.5 text-xs font-bold text-white"
+          >
+            <Printer className="h-3.5 w-3.5" /> Print / Save as PDF
+          </button>
+        </div>
+
+        <div className="rounded-2xl bg-white p-8 shadow-sm ring-1 ring-border print:rounded-none print:shadow-none print:ring-0">
+          <header className="border-b border-border pb-4">
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-cherry-deep">
+              Red Cherry Events · Rider Report
+            </p>
+            <h1 className="mt-1 font-display text-2xl font-bold text-ink">{event.name}</h1>
+            <p className="mt-1 text-sm text-ink-soft">
+              {event.discipline} · {new Date(event.event_date).toLocaleString("en-ZA", {
+                weekday: "long",
+                day: "numeric",
+                month: "short",
+                year: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
+            </p>
+            <p className="text-sm text-ink-soft">{event.location}</p>
+          </header>
+
+          {q.isLoading ? (
+            <p className="mt-6 text-sm text-ink-soft">Loading your entry…</p>
+          ) : !row ? (
+            <p className="mt-6 text-sm text-ink-soft">
+              No entry found on file for this event.
+            </p>
+          ) : (
+            <>
+              <Row label="Category" value={row.category} />
+              <Row label="Batch" value={row.batch} />
+              <Row label="Bib number" value={row.bib_number ? `#${row.bib_number}` : null} />
+              <Row label="Jacket size" value={row.jacket_size} />
+              <Row label="T-shirt size" value={row.tshirt_size} />
+              <Row label="Notes" value={row.notes} />
+
+              <div className="mt-5">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-ink-soft">
+                  Extras purchased
+                </p>
+                {row.extras.length === 0 ? (
+                  <p className="mt-1 text-sm text-ink-soft">None recorded.</p>
+                ) : (
+                  <table className="mt-2 w-full border-collapse text-sm">
+                    <thead>
+                      <tr className="border-b border-border text-left text-[11px] uppercase tracking-widest text-ink-soft">
+                        <th className="py-1.5">Item</th>
+                        <th>Size</th>
+                        <th className="text-right">Qty</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {row.extras.map((x, i) => (
+                        <tr key={i} className="border-b border-border/50">
+                          <td className="py-1.5 text-ink">{x.name}</td>
+                          <td className="text-ink-soft">{x.size ?? "—"}</td>
+                          <td className="text-right font-semibold text-ink">×{x.qty}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+              </div>
+            </>
+          )}
+
+          <footer className="mt-8 border-t border-border pt-3 text-[10px] text-ink-soft">
+            Generated {new Date().toLocaleString("en-ZA")} · redcherryevents.co.za
+          </footer>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Row({ label, value }: { label: string; value: string | null }) {
+  return (
+    <div className="mt-4 flex items-baseline justify-between gap-3 border-b border-border/50 pb-2">
+      <span className="text-[10px] font-bold uppercase tracking-widest text-ink-soft">
+        {label}
+      </span>
+      <span className="text-right text-sm font-semibold text-ink">
+        {value && value.trim() ? value : "—"}
+      </span>
+    </div>
+  );
+}

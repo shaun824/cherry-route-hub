@@ -20,10 +20,14 @@ type CsvRow = {
   category?: string;
   batch?: string;
   bib_number?: string;
+  jacket_size?: string;
+  tshirt_size?: string;
+  extras?: string;
+  notes?: string;
 };
 
-const SAMPLE = `full_name,email,id_number,phone,event_id,category,batch,bib_number
-Jane Doe,jane@example.com,9204115000080,+27820000000,My Event Name,Elite,A,101
+const SAMPLE = `full_name,email,id_number,phone,event_id,category,batch,bib_number,jacket_size,tshirt_size,extras,notes
+Jane Doe,jane@example.com,9204115000080,+27820000000,My Event Name,Elite,A,101,M,L,Jacket M x1; Buff x2,VIP guest
 `;
 
 function RosterPage() {
@@ -113,6 +117,10 @@ function RosterPage() {
           category: (r.category ?? "").trim(),
           batch: (r.batch ?? "").trim(),
           bib_number: (r.bib_number ?? "").trim(),
+          jacket_size: (r.jacket_size ?? "").trim(),
+          tshirt_size: (r.tshirt_size ?? "").trim(),
+          extras: (r.extras ?? "").trim(),
+          notes: (r.notes ?? "").trim(),
         }));
         const errs: string[] = [];
         parsed.forEach((r, i) => {
@@ -215,9 +223,11 @@ function RosterPage() {
               Download sample CSV
             </a>
             <p className="text-[11px] text-ink-soft">
-              Required columns: <code>full_name, email, id_number, event_id</code>. Optional:{" "}
-              <code>phone, category, batch, bib_number</code>. The <code>event_id</code> column can be
-              the event's UUID or the exact event name from Admin → Events.
+              Required: <code>full_name, email, id_number, event_id</code>. Optional:{" "}
+              <code>phone, category, batch, bib_number, jacket_size, tshirt_size, extras, notes</code>. The{" "}
+              <code>event_id</code> column can be the event's UUID or the exact event name. For{" "}
+              <code>extras</code>, use shorthand like <code>Jacket M x1; Buff x2</code> — separated by
+              semicolons.
             </p>
           </div>
 

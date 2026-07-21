@@ -1,12 +1,23 @@
 // Client helpers for the rider's own events (from the entrants roster).
 import { supabase } from "@/integrations/supabase/client";
 
+export type ExtraItem = {
+  name: string;
+  qty: number;
+  size?: string;
+  price?: number;
+};
+
 export type MyEventRow = {
   event_entrant_id: string;
   event_id: string;
   category: string | null;
   batch: string | null;
   bib_number: string | null;
+  jacket_size: string | null;
+  tshirt_size: string | null;
+  extras: ExtraItem[];
+  notes: string | null;
   event: {
     id: string;
     name: string;
@@ -20,11 +31,29 @@ export type MyEventRow = {
   };
 };
 
+function normalizeExtras(raw: unknown): ExtraItem[] {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .map((r) => {
+      if (!r || typeof r !== "object") return null;
+      const obj = r as Record<string, unknown>;
+      const name = String(obj.name ?? "").trim();
+      if (!name) return null;
+      return {
+        name,
+        qty: Number(obj.qty ?? 1) || 1,
+        size: obj.size ? String(obj.size) : undefined,
+        price: obj.price != null ? Number(obj.price) : undefined,
+      } as ExtraItem;
+    })
+    .filter((x): x is ExtraItem => x !== null);
+}
+
 export async function fetchMyEvents(): Promise<MyEventRow[]> {
   const { data, error } = await supabase
     .from("event_entrants")
     .select(
-      "id, event_id, category, batch, bib_number, event:events(id, name, discipline, event_date, location, distance_km, status, hero_color, description)",
+      "id, event_id, category, batch, bib_number, jacket_size, tshirt_size, extras, notes, event:events(id, name, discipline, event_date, location, distance_km, status, hero_color, description)",
     )
     .order("created_at", { ascending: false });
   if (error) {
@@ -39,6 +68,15 @@ export async function fetchMyEvents(): Promise<MyEventRow[]> {
       category: r.category,
       batch: r.batch,
       bib_number: r.bib_number,
+      jacket_size: (r as { jacket_size: string | null }).jacket_size ?? null,
+      tshirt_size: (r as { tshirt_size: string | null }).tshirt_size ?? null,
+      extras: normalizeExtras((r as { extras: unknown }).extras),
+      notes: (r as { notes: string | null }).notes ?? null,
       event: r.event as MyEventRow["event"],
     }));
+}
+
+export async function fetchMyEventById(eventId: string): Promise<MyEventRow | null> {
+  const rows = await fetchMyEvents();
+  return rows.find((r) => r.event_id === eventId) ?? null;
 }
