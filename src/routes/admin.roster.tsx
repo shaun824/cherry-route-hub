@@ -390,14 +390,32 @@ function RosterPage() {
           ) : null}
 
           {result ? (
-            <div className="rounded-lg bg-emerald-50 p-3 text-xs text-emerald-900">
-              ✓ Created {result.created}, updated {result.updated}, linked {result.linkedToEvent} event entries.
-              {result.errors.length > 0 ? (
-                <ul className="mt-1">
-                  {result.errors.slice(0, 10).map((e, i) => (
-                    <li key={i}>Row {e.row}: {e.error}</li>
-                  ))}
-                </ul>
+            <div className="space-y-2">
+              <div className="rounded-lg bg-emerald-50 p-3 text-xs text-emerald-900">
+                ✓ Created {result.created}, updated {result.updated}, linked {result.linkedToEvent} event entries.
+                {result.errors.length > 0 ? (
+                  <ul className="mt-1">
+                    {result.errors.slice(0, 10).map((e, i) => (
+                      <li key={i}>Row {e.row}: {e.error}</li>
+                    ))}
+                  </ul>
+                ) : null}
+              </div>
+              {result.autoCreatedEvents.length > 0 ? (
+                <div className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-xs text-amber-900">
+                  <p className="font-bold">
+                    ⚠ {result.autoCreatedEvents.length} new event{result.autoCreatedEvents.length === 1 ? "" : "s"} auto-created from the CSV
+                  </p>
+                  <p className="mt-1">
+                    These stubs are missing key details (logo, cover, distance, discipline, location, description).
+                    Open <a href="/admin/events" className="underline font-semibold">Admin → Events</a> to fill them in.
+                  </p>
+                  <ul className="mt-2 list-disc pl-4">
+                    {result.autoCreatedEvents.map((e) => (
+                      <li key={e.id}>{e.name}</li>
+                    ))}
+                  </ul>
+                </div>
               ) : null}
             </div>
           ) : null}
