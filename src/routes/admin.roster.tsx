@@ -17,6 +17,8 @@ type CsvRow = {
   id_number: string;
   phone?: string;
   event_id: string;
+  event_date?: string;
+  external_event_id?: string;
   category?: string;
   batch?: string;
   bib_number?: string;
@@ -72,6 +74,8 @@ function mapRowFlexible(r: Record<string, string>, defaultEventId: string): CsvR
     id_number: pick(r, ["id_number", "ID Number"]),
     phone: pick(r, ["phone", "Mobile", "WhatsApp Number"]),
     event_id: pick(r, ["event_id"]) || pick(r, ["Event Name"]) || defaultEventId,
+    event_date: pick(r, ["event_date", "Event Date"]),
+    external_event_id: pick(r, ["external_event_id", "Event #"]),
     category: pick(r, ["category", "Class"]),
     batch: pick(r, ["batch", "Batch"]),
     bib_number: pick(r, ["bib_number", "Race Number"]),
@@ -163,7 +167,7 @@ function RosterPage() {
   const [errors, setErrors] = useState<string[]>([]);
   const [running, setRunning] = useState(false);
   const [selectedFileName, setSelectedFileName] = useState("");
-  const [result, setResult] = useState<{ created: number; updated: number; linkedToEvent: number; errors: { row: number; error: string }[] } | null>(null);
+  const [result, setResult] = useState<{ created: number; updated: number; linkedToEvent: number; errors: { row: number; error: string }[]; autoCreatedEvents: { id: string; name: string }[] } | null>(null);
 
   const eventNameById = useMemo(() => {
     const map = new Map<string, string>();
@@ -217,7 +221,7 @@ function RosterPage() {
           if (!r.email) errs.push(`Row ${i + 1}: missing email`);
           if (!r.id_number) errs.push(`Row ${i + 1}: missing ID number`);
           if (!r.event_id) errs.push(`Row ${i + 1}: missing event (choose a default event or ensure an Event Name column)`);
-          else if (!resolveEventIdLocal(r.event_id)) errs.push(`Row ${i + 1}: event '${r.event_id}' did not match any event`);
+          // Unmatched event names are OK — the server auto-creates a stub event.
         });
         setRows(parsed);
         setErrors(errs);
@@ -386,14 +390,32 @@ function RosterPage() {
           ) : null}
 
           {result ? (
-            <div className="rounded-lg bg-emerald-50 p-3 text-xs text-emerald-900">
-              ✓ Created {result.created}, updated {result.updated}, linked {result.linkedToEvent} event entries.
-              {result.errors.length > 0 ? (
-                <ul className="mt-1">
-                  {result.errors.slice(0, 10).map((e, i) => (
-                    <li key={i}>Row {e.row}: {e.error}</li>
-                  ))}
-                </ul>
+            <div className="space-y-2">
+              <div className="rounded-lg bg-emerald-50 p-3 text-xs text-emerald-900">
+                ✓ Created {result.created}, updated {result.updated}, linked {result.linkedToEvent} event entries.
+                {result.errors.length > 0 ? (
+                  <ul className="mt-1">
+                    {result.errors.slice(0, 10).map((e, i) => (
+                      <li key={i}>Row {e.row}: {e.error}</li>
+                    ))}
+                  </ul>
+                ) : null}
+              </div>
+              {result.autoCreatedEvents.length > 0 ? (
+                <div className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-xs text-amber-900">
+                  <p className="font-bold">
+                    ⚠ {result.autoCreatedEvents.length} new event{result.autoCreatedEvents.length === 1 ? "" : "s"} auto-created from the CSV
+                  </p>
+                  <p className="mt-1">
+                    These stubs are missing key details (logo, cover, distance, discipline, location, description).
+                    Open <a href="/admin/events" className="underline font-semibold">Admin → Events</a> to fill them in.
+                  </p>
+                  <ul className="mt-2 list-disc pl-4">
+                    {result.autoCreatedEvents.map((e) => (
+                      <li key={e.id}>{e.name}</li>
+                    ))}
+                  </ul>
+                </div>
               ) : null}
             </div>
           ) : null}

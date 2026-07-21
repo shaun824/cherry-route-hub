@@ -344,6 +344,7 @@ export type Database = {
       }
       events: {
         Row: {
+          auto_created: boolean
           batches: Json
           classes: Json
           cover_url: string | null
@@ -370,6 +371,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          auto_created?: boolean
           batches?: Json
           classes?: Json
           cover_url?: string | null
@@ -396,6 +398,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          auto_created?: boolean
           batches?: Json
           classes?: Json
           cover_url?: string | null
