@@ -464,9 +464,8 @@ function QuickAddSection({
   const [email, setEmail] = useState("");
   const [idNumber, setIdNumber] = useState("");
   const [phone, setPhone] = useState("");
-  const [assignments, setAssignments] = useState<Assignment[]>([
-    { event_id: "", category: "", batch: "", bib_number: "" },
-  ]);
+  const [assignments, setAssignments] = useState<Assignment[]>([{ ...EMPTY_ASSIGNMENT }]);
+
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<{ kind: "ok" | "err"; text: string } | null>(null);
 
