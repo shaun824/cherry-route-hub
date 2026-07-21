@@ -35,7 +35,7 @@ export const Route = createFileRoute("/my-events/$eventId")({
   loader: async ({ params }) => {
     const { data, error } = await supabase
       .from("events")
-      .select("id, name, discipline, event_date, location, map_query, distance_km, description, hero_color, days, schedule, social_links")
+      .select("id, name, discipline, event_date, location, map_query, distance_km, description, hero_color, days, schedule, social_links, status")
       .eq("id", params.eventId)
       .maybeSingle();
     if (error || !data) throw notFound();
