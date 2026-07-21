@@ -91,6 +91,10 @@ export type Event = {
   spectatorMode?: boolean;   // when true, event unlocks on the public Spectate tab
   websiteUrl?: string;       // official event website; assistant bot scans it for answers
   faqUrl?: string;           // optional dedicated FAQ page for the bot to prioritise
+  spectatorParking?: string; // where spectators can park at the venue
+  spectatorFood?: string;    // food / refreshments available at the venue
+  spectatorNotes?: string;   // any extra spectator-only notes
+  hasToilets?: boolean;      // toilets available on-site (default true)
 };
 
 // Returns the currently active price tier for a batch, or null if none defined.

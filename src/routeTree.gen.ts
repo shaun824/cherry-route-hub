@@ -21,6 +21,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as MyEventsIndexRouteImport } from './routes/my-events.index'
 import { Route as EventsIndexRouteImport } from './routes/events.index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
+import { Route as SpectateEventIdRouteImport } from './routes/spectate.$eventId'
 import { Route as MyEventsEventIdRouteImport } from './routes/my-events.$eventId'
 import { Route as EventsEventIdRouteImport } from './routes/events.$eventId'
 import { Route as AdminSponsorsRouteImport } from './routes/admin.sponsors'
@@ -97,6 +98,11 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AdminRoute,
+} as any)
+const SpectateEventIdRoute = SpectateEventIdRouteImport.update({
+  id: '/$eventId',
+  path: '/$eventId',
+  getParentRoute: () => SpectateRoute,
 } as any)
 const MyEventsEventIdRoute = MyEventsEventIdRouteImport.update({
   id: '/$eventId',
@@ -188,7 +194,7 @@ export interface FileRoutesByFullPath {
   '/my-events': typeof MyEventsRouteWithChildren
   '/profile': typeof ProfileRoute
   '/promos': typeof PromosRoute
-  '/spectate': typeof SpectateRoute
+  '/spectate': typeof SpectateRouteWithChildren
   '/admin/events': typeof AdminEventsRoute
   '/admin/feed': typeof AdminFeedRoute
   '/admin/messages': typeof AdminMessagesRoute
@@ -199,6 +205,7 @@ export interface FileRoutesByFullPath {
   '/admin/sponsors': typeof AdminSponsorsRoute
   '/events/$eventId': typeof EventsEventIdRouteWithChildren
   '/my-events/$eventId': typeof MyEventsEventIdRouteWithChildren
+  '/spectate/$eventId': typeof SpectateEventIdRoute
   '/admin/': typeof AdminIndexRoute
   '/events/': typeof EventsIndexRoute
   '/my-events/': typeof MyEventsIndexRoute
@@ -216,7 +223,7 @@ export interface FileRoutesByTo {
   '/gallery': typeof GalleryRoute
   '/profile': typeof ProfileRoute
   '/promos': typeof PromosRoute
-  '/spectate': typeof SpectateRoute
+  '/spectate': typeof SpectateRouteWithChildren
   '/admin/events': typeof AdminEventsRoute
   '/admin/feed': typeof AdminFeedRoute
   '/admin/messages': typeof AdminMessagesRoute
@@ -226,6 +233,7 @@ export interface FileRoutesByTo {
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/sponsors': typeof AdminSponsorsRoute
   '/my-events/$eventId': typeof MyEventsEventIdRouteWithChildren
+  '/spectate/$eventId': typeof SpectateEventIdRoute
   '/admin': typeof AdminIndexRoute
   '/events': typeof EventsIndexRoute
   '/my-events': typeof MyEventsIndexRoute
@@ -246,7 +254,7 @@ export interface FileRoutesById {
   '/my-events': typeof MyEventsRouteWithChildren
   '/profile': typeof ProfileRoute
   '/promos': typeof PromosRoute
-  '/spectate': typeof SpectateRoute
+  '/spectate': typeof SpectateRouteWithChildren
   '/admin/events': typeof AdminEventsRoute
   '/admin/feed': typeof AdminFeedRoute
   '/admin/messages': typeof AdminMessagesRoute
@@ -257,6 +265,7 @@ export interface FileRoutesById {
   '/admin/sponsors': typeof AdminSponsorsRoute
   '/events/$eventId': typeof EventsEventIdRouteWithChildren
   '/my-events/$eventId': typeof MyEventsEventIdRouteWithChildren
+  '/spectate/$eventId': typeof SpectateEventIdRoute
   '/admin/': typeof AdminIndexRoute
   '/events/': typeof EventsIndexRoute
   '/my-events/': typeof MyEventsIndexRoute
@@ -289,6 +298,7 @@ export interface FileRouteTypes {
     | '/admin/sponsors'
     | '/events/$eventId'
     | '/my-events/$eventId'
+    | '/spectate/$eventId'
     | '/admin/'
     | '/events/'
     | '/my-events/'
@@ -316,6 +326,7 @@ export interface FileRouteTypes {
     | '/admin/settings'
     | '/admin/sponsors'
     | '/my-events/$eventId'
+    | '/spectate/$eventId'
     | '/admin'
     | '/events'
     | '/my-events'
@@ -346,6 +357,7 @@ export interface FileRouteTypes {
     | '/admin/sponsors'
     | '/events/$eventId'
     | '/my-events/$eventId'
+    | '/spectate/$eventId'
     | '/admin/'
     | '/events/'
     | '/my-events/'
@@ -366,7 +378,7 @@ export interface RootRouteChildren {
   MyEventsRoute: typeof MyEventsRouteWithChildren
   ProfileRoute: typeof ProfileRoute
   PromosRoute: typeof PromosRoute
-  SpectateRoute: typeof SpectateRoute
+  SpectateRoute: typeof SpectateRouteWithChildren
   EventsEventIdRoute: typeof EventsEventIdRouteWithChildren
   EventsIndexRoute: typeof EventsIndexRoute
 }
@@ -456,6 +468,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/'
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof AdminRoute
+    }
+    '/spectate/$eventId': {
+      id: '/spectate/$eventId'
+      path: '/$eventId'
+      fullPath: '/spectate/$eventId'
+      preLoaderRoute: typeof SpectateEventIdRouteImport
+      parentRoute: typeof SpectateRoute
     }
     '/my-events/$eventId': {
       id: '/my-events/$eventId'
@@ -628,6 +647,18 @@ const MyEventsRouteWithChildren = MyEventsRoute._addFileChildren(
   MyEventsRouteChildren,
 )
 
+interface SpectateRouteChildren {
+  SpectateEventIdRoute: typeof SpectateEventIdRoute
+}
+
+const SpectateRouteChildren: SpectateRouteChildren = {
+  SpectateEventIdRoute: SpectateEventIdRoute,
+}
+
+const SpectateRouteWithChildren = SpectateRoute._addFileChildren(
+  SpectateRouteChildren,
+)
+
 interface EventsEventIdRouteChildren {
   EventsEventIdEnterRoute: typeof EventsEventIdEnterRoute
   EventsEventIdMapRoute: typeof EventsEventIdMapRoute
@@ -653,7 +684,7 @@ const rootRouteChildren: RootRouteChildren = {
   MyEventsRoute: MyEventsRouteWithChildren,
   ProfileRoute: ProfileRoute,
   PromosRoute: PromosRoute,
-  SpectateRoute: SpectateRoute,
+  SpectateRoute: SpectateRouteWithChildren,
   EventsEventIdRoute: EventsEventIdRouteWithChildren,
   EventsIndexRoute: EventsIndexRoute,
 }

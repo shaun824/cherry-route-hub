@@ -224,9 +224,11 @@ export type Database = {
           event_id: string
           external_id: string | null
           extras: Json
+          finished_at: string | null
           id: string
           jacket_size: string | null
           notes: string | null
+          started_at: string | null
           tshirt_size: string | null
           updated_at: string
         }
@@ -239,9 +241,11 @@ export type Database = {
           event_id: string
           external_id?: string | null
           extras?: Json
+          finished_at?: string | null
           id?: string
           jacket_size?: string | null
           notes?: string | null
+          started_at?: string | null
           tshirt_size?: string | null
           updated_at?: string
         }
@@ -254,9 +258,11 @@ export type Database = {
           event_id?: string
           external_id?: string | null
           extras?: Json
+          finished_at?: string | null
           id?: string
           jacket_size?: string | null
           notes?: string | null
+          started_at?: string | null
           tshirt_size?: string | null
           updated_at?: string
         }
@@ -360,6 +366,7 @@ export type Database = {
           entry_ninja_url: string | null
           event_date: string
           faq_url: string | null
+          has_toilets: boolean
           hero_color: string | null
           id: string
           lifecycle: string
@@ -370,7 +377,10 @@ export type Database = {
           schedule: Json
           slug: string | null
           social_links: Json
+          spectator_food: string | null
           spectator_mode: boolean
+          spectator_notes: string | null
+          spectator_parking: string | null
           status: string
           updated_at: string
           website_url: string | null
@@ -389,6 +399,7 @@ export type Database = {
           entry_ninja_url?: string | null
           event_date: string
           faq_url?: string | null
+          has_toilets?: boolean
           hero_color?: string | null
           id?: string
           lifecycle?: string
@@ -399,7 +410,10 @@ export type Database = {
           schedule?: Json
           slug?: string | null
           social_links?: Json
+          spectator_food?: string | null
           spectator_mode?: boolean
+          spectator_notes?: string | null
+          spectator_parking?: string | null
           status?: string
           updated_at?: string
           website_url?: string | null
@@ -418,6 +432,7 @@ export type Database = {
           entry_ninja_url?: string | null
           event_date?: string
           faq_url?: string | null
+          has_toilets?: boolean
           hero_color?: string | null
           id?: string
           lifecycle?: string
@@ -428,7 +443,10 @@ export type Database = {
           schedule?: Json
           slug?: string | null
           social_links?: Json
+          spectator_food?: string | null
           spectator_mode?: boolean
+          spectator_notes?: string | null
+          spectator_parking?: string | null
           status?: string
           updated_at?: string
           website_url?: string | null
