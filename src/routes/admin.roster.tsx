@@ -429,7 +429,28 @@ function EntrantsTable({
   );
 }
 
-type Assignment = { event_id: string; category: string; batch: string; bib_number: string };
+type Assignment = {
+  event_id: string;
+  category: string;
+  batch: string;
+  bib_number: string;
+  jacket_size: string;
+  tshirt_size: string;
+  extras: string;
+  notes: string;
+};
+
+const EMPTY_ASSIGNMENT: Assignment = {
+  event_id: "",
+  category: "",
+  batch: "",
+  bib_number: "",
+  jacket_size: "",
+  tshirt_size: "",
+  extras: "",
+  notes: "",
+};
+
 
 function QuickAddSection({
   events,
