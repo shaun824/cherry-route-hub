@@ -167,6 +167,8 @@ function eventFromRow(r: Row): Event {
     days: (r.days as EventDay[] | null) ?? [],
     socialLinks: ((r as Row).social_links as Event["socialLinks"]) ?? {},
     spectatorMode: Boolean((r as Row).spectator_mode ?? false),
+    websiteUrl: ((r as Row).website_url as string | null) ?? undefined,
+    faqUrl: ((r as Row).faq_url as string | null) ?? undefined,
   };
 }
 
@@ -201,6 +203,8 @@ export async function upsertEventCloud(e: Event): Promise<string | null> {
     days: e.days ?? [],
     social_links: e.socialLinks ?? {},
     spectator_mode: e.spectatorMode ?? false,
+    website_url: e.websiteUrl ?? null,
+    faq_url: e.faqUrl ?? null,
   };
   const { data, error } = await supabase.from("events").upsert(row).select().single();
   log(error, "upsertEvent");
