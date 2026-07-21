@@ -23,9 +23,10 @@ export function SponsorScroller({
       ) : null}
       <div className="relative overflow-hidden [mask-image:linear-gradient(to_right,transparent,#000_10%,#000_90%,transparent)]">
         <ul
-          className="flex w-max items-center gap-3 animate-marquee will-change-transform"
+          className="flex w-max items-center gap-3 animate-marquee will-change-transform hover:[animation-play-state:paused]"
           style={{ animationDuration: `${Math.max(18, sponsors.length * 4)}s` }}
         >
+
           {row.map((sp, i) => {
             const inner = sp.logoUrl ? (
               <div
