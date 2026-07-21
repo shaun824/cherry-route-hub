@@ -209,6 +209,10 @@ export async function upsertEventCloud(e: Event): Promise<string | null> {
     spectator_mode: e.spectatorMode ?? false,
     website_url: e.websiteUrl ?? null,
     faq_url: e.faqUrl ?? null,
+    spectator_parking: e.spectatorParking ?? null,
+    spectator_food: e.spectatorFood ?? null,
+    spectator_notes: e.spectatorNotes ?? null,
+    has_toilets: e.hasToilets ?? true,
   };
   const { data, error } = await supabase.from("events").upsert(row).select().single();
   log(error, "upsertEvent");
