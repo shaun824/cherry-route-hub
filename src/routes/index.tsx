@@ -320,6 +320,8 @@ function NextEventCard() {
                     month: "short",
                   })}
                 </p>
+                <EventSocialRow links={r.event.social_links} compact />
+
               </Link>
             ))}
           </div>
