@@ -119,18 +119,22 @@ function Home() {
           </div>
           <button
             aria-label="Notifications"
-            className="grid h-10 w-10 place-items-center rounded-full bg-white/15 backdrop-blur"
+            onClick={() => setNotifOpen(true)}
+            className="relative grid h-10 w-10 place-items-center rounded-full bg-white/15 backdrop-blur"
           >
             <Bell className="h-5 w-5" />
-            <span className="absolute mt-[-14px] ml-[14px] h-2 w-2 rounded-full bg-white ring-2 ring-cherry" />
+            {hasUnread ? (
+              <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-white ring-2 ring-cherry" />
+            ) : null}
           </button>
         </div>
 
         <div className="relative mt-7">
           <p className="text-sm opacity-85">{branding.welcomeMessage}</p>
           <p className="font-display text-xl font-bold">
-            {user ? currentRider.name : "Rider"}
+            {user ? displayName : "Rider"}
           </p>
+
         </div>
 
         {user ? (
