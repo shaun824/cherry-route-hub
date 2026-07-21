@@ -88,9 +88,7 @@ export const importRoster = createServerFn({ method: "POST" })
       if (!s) return null;
       const m = s.match(/^(\d{4})[/-](\d{1,2})[/-](\d{1,2})/);
       if (m) {
-        const iso = `${m[1]}-m2(m[2])-m2(m[3])T08:00:00Z`
-          .replace("m2(m[2])", m[2].padStart(2, "0"))
-          .replace("m2(m[3])", m[3].padStart(2, "0"));
+        const iso = `${m[1]}-${m[2].padStart(2, "0")}-${m[3].padStart(2, "0")}T08:00:00Z`;
         const d = new Date(iso);
         if (!isNaN(d.getTime())) return d.toISOString();
       }
