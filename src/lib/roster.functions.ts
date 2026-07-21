@@ -3,6 +3,41 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
+const extraItemSchema = z.object({
+  name: z.string().trim().min(1).max(120),
+  qty: z.number().int().min(1).max(999).default(1),
+  size: z.string().trim().max(40).optional(),
+  price: z.number().nonnegative().optional(),
+});
+
+// Accept "Jacket M x2; Buff x1" shorthand or a JSON array string, produce ExtraItem[].
+function parseExtras(raw: string | undefined | null): z.infer<typeof extraItemSchema>[] {
+  const s = (raw ?? "").trim();
+  if (!s) return [];
+  if (s.startsWith("[")) {
+    try {
+      const parsed = JSON.parse(s);
+      return z.array(extraItemSchema).parse(parsed);
+    } catch {
+      return [];
+    }
+  }
+  return s
+    .split(/[;\n]+/)
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .map((part) => {
+      const m = part.match(/^(.+?)(?:\s+([A-Z0-9]{1,4}))?\s*(?:[x×]\s*(\d+))?$/i);
+      if (!m) return { name: part, qty: 1 } as z.infer<typeof extraItemSchema>;
+      const [, name, size, qty] = m;
+      return {
+        name: name.trim(),
+        qty: qty ? Number(qty) : 1,
+        size: size ? size.trim() : undefined,
+      };
+    });
+}
+
 const rosterRowSchema = z.object({
   full_name: z.string().trim().min(1).max(200),
   email: z.string().trim().email().max(255),
@@ -12,6 +47,10 @@ const rosterRowSchema = z.object({
   category: z.string().trim().max(80).optional().default(""),
   batch: z.string().trim().max(80).optional().default(""),
   bib_number: z.string().trim().max(40).optional().default(""),
+  jacket_size: z.string().trim().max(20).optional().default(""),
+  tshirt_size: z.string().trim().max(20).optional().default(""),
+  extras: z.string().max(2000).optional().default(""),
+  notes: z.string().max(1000).optional().default(""),
 });
 
 const importSchema = z.object({
@@ -103,6 +142,7 @@ export const importRoster = createServerFn({ method: "POST" })
         }
 
         // Upsert event_entrants
+        const parsedExtras = parseExtras(r.extras);
         const { error: eeErr } = await context.supabase
           .from("event_entrants")
           .upsert(
@@ -112,6 +152,10 @@ export const importRoster = createServerFn({ method: "POST" })
               category: r.category || null,
               batch: r.batch || null,
               bib_number: r.bib_number || null,
+              jacket_size: r.jacket_size || null,
+              tshirt_size: r.tshirt_size || null,
+              extras: parsedExtras,
+              notes: r.notes || null,
             },
             { onConflict: "event_id,entrant_id" },
           );
