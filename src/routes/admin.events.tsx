@@ -769,6 +769,27 @@ function EventEditor({
               onChange={(e) => update("externalId", e.target.value || null)}
             />
           </Field>
+          <Field label="Event website URL">
+            <input
+              className={inputCls}
+              type="url"
+              value={form.websiteUrl ?? ""}
+              placeholder="https://www.tourdeaddo.com"
+              onChange={(e) => update("websiteUrl", e.target.value || undefined)}
+            />
+            <p className="mt-1 text-[11px] text-ink-soft">
+              The rider Q&amp;A bot will read this page (and the FAQ page below if set) to answer questions before escalating to an admin.
+            </p>
+          </Field>
+          <Field label="FAQ page URL (optional)">
+            <input
+              className={inputCls}
+              type="url"
+              value={form.faqUrl ?? ""}
+              placeholder="https://www.tourdeaddo.com/faq"
+              onChange={(e) => update("faqUrl", e.target.value || undefined)}
+            />
+          </Field>
           <Field label="Venue (Google Maps)" className="md:col-span-2">
             <input
               className={inputCls}

@@ -16,27 +16,30 @@ export type Database = {
     Tables: {
       admin_qa_messages: {
         Row: {
-          author_id: string
+          author_id: string | null
           body: string
           created_at: string
           id: string
           is_admin_msg: boolean
+          is_bot: boolean
           thread_id: string
         }
         Insert: {
-          author_id: string
+          author_id?: string | null
           body: string
           created_at?: string
           id?: string
           is_admin_msg?: boolean
+          is_bot?: boolean
           thread_id: string
         }
         Update: {
-          author_id?: string
+          author_id?: string | null
           body?: string
           created_at?: string
           id?: string
           is_admin_msg?: boolean
+          is_bot?: boolean
           thread_id?: string
         }
         Relationships: [
@@ -356,6 +359,7 @@ export type Database = {
           entry_ninja_id: string | null
           entry_ninja_url: string | null
           event_date: string
+          faq_url: string | null
           hero_color: string | null
           id: string
           lifecycle: string
@@ -369,6 +373,7 @@ export type Database = {
           spectator_mode: boolean
           status: string
           updated_at: string
+          website_url: string | null
         }
         Insert: {
           auto_created?: boolean
@@ -383,6 +388,7 @@ export type Database = {
           entry_ninja_id?: string | null
           entry_ninja_url?: string | null
           event_date: string
+          faq_url?: string | null
           hero_color?: string | null
           id?: string
           lifecycle?: string
@@ -396,6 +402,7 @@ export type Database = {
           spectator_mode?: boolean
           status?: string
           updated_at?: string
+          website_url?: string | null
         }
         Update: {
           auto_created?: boolean
@@ -410,6 +417,7 @@ export type Database = {
           entry_ninja_id?: string | null
           entry_ninja_url?: string | null
           event_date?: string
+          faq_url?: string | null
           hero_color?: string | null
           id?: string
           lifecycle?: string
@@ -423,6 +431,7 @@ export type Database = {
           spectator_mode?: boolean
           status?: string
           updated_at?: string
+          website_url?: string | null
         }
         Relationships: []
       }
