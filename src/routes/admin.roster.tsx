@@ -312,11 +312,14 @@ function RosterPage() {
               Download sample CSV
             </a>
             <p className="text-[11px] text-ink-soft">
-              Required: <code>full_name, email, id_number, event_id</code>. Optional:{" "}
-              <code>phone, category, batch, bib_number, jacket_size, tshirt_size, extras, notes</code>. The{" "}
-              <code>event_id</code> column can be the event's UUID or the exact event name. For{" "}
-              <code>extras</code>, use shorthand like <code>Jacket M x1; Buff x2</code> — separated by
-              semicolons.
+              <strong>Entry Ninja exports work out of the box</strong> — drop the raw CSV
+              here and we auto-map <code>First Name + Last Name</code>, <code>ID Number</code>,{" "}
+              <code>Email</code>, <code>Mobile</code>, <code>Event Name</code>, <code>Class</code> →
+              category, <code>Batch</code>, <code>Race Number</code> → bib, plus{" "}
+              <code>Complimentary jacket</code>/<code>Custom Riding Shirt</code> sizes, add-ons
+              (E-Bike, Bike Transfer, Shuttle, Massages, No Hassle Package) as extras, and
+              dietary/medical/emergency contact into notes. If your event's name in the app
+              differs from the export, either rename it or set a default event below.
             </p>
           </div>
 
