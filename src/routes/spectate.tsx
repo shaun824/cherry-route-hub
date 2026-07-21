@@ -149,7 +149,7 @@ function SpectatorCard({ event }: { event: Event }) {
   return (
     <li>
       {unlocked ? (
-        <Link to="/events/$eventId" params={{ eventId: event.id }} className="block">
+        <Link to="/spectate/$eventId" params={{ eventId: event.id }} className="block">
           {inner}
         </Link>
       ) : (
