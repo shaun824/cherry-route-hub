@@ -220,7 +220,11 @@ export type Database = {
           entrant_id: string
           event_id: string
           external_id: string | null
+          extras: Json
           id: string
+          jacket_size: string | null
+          notes: string | null
+          tshirt_size: string | null
           updated_at: string
         }
         Insert: {
@@ -231,7 +235,11 @@ export type Database = {
           entrant_id: string
           event_id: string
           external_id?: string | null
+          extras?: Json
           id?: string
+          jacket_size?: string | null
+          notes?: string | null
+          tshirt_size?: string | null
           updated_at?: string
         }
         Update: {
@@ -242,7 +250,11 @@ export type Database = {
           entrant_id?: string
           event_id?: string
           external_id?: string | null
+          extras?: Json
           id?: string
+          jacket_size?: string | null
+          notes?: string | null
+          tshirt_size?: string | null
           updated_at?: string
         }
         Relationships: [
