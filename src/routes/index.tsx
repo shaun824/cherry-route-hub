@@ -258,9 +258,90 @@ function Home() {
       <SponsorScroller />
 
       <div className="pb-6" />
+
+      <NotificationsSheet
+        open={notifOpen}
+        onClose={() => setNotifOpen(false)}
+        items={notifications}
+      />
     </div>
   );
 }
+
+function NotificationsSheet({
+  open,
+  onClose,
+  items,
+}: {
+  open: boolean;
+  onClose: () => void;
+  items: ReturnType<typeof useAdminStore.getState>["feed"];
+}) {
+  const [expanded, setExpanded] = useState<string | null>(null);
+  if (!open) return null;
+  return (
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center sm:justify-center">
+      <div
+        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+        onClick={onClose}
+        aria-hidden
+      />
+      <div className="relative w-full sm:max-w-md max-h-[80vh] overflow-hidden rounded-t-3xl sm:rounded-3xl bg-card shadow-2xl ring-1 ring-border animate-in slide-in-from-bottom duration-200">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-border">
+          <div className="flex items-center gap-2">
+            <Bell className="h-5 w-5 text-cherry-deep" />
+            <p className="font-display text-lg font-bold text-ink">Notifications</p>
+          </div>
+          <button
+            onClick={onClose}
+            aria-label="Close"
+            className="grid h-8 w-8 place-items-center rounded-full bg-secondary text-ink"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+        <div className="overflow-y-auto px-4 py-3 space-y-2" style={{ maxHeight: "calc(80vh - 64px)" }}>
+          {items.length === 0 ? (
+            <p className="py-10 text-center text-sm text-ink-soft">You're all caught up.</p>
+          ) : (
+            items.map((p) => {
+              const isOpen = expanded === p.id;
+              return (
+                <button
+                  key={p.id}
+                  onClick={() => setExpanded(isOpen ? null : p.id)}
+                  className="w-full text-left rounded-2xl bg-secondary/50 p-3 ring-1 ring-border transition hover:bg-secondary"
+                >
+                  <div className="flex items-center gap-2">
+                    <TypeBadge type={p.type} />
+                    <span className="text-[11px] text-muted-foreground">
+                      {relativeTime(p.postedAt)}
+                    </span>
+                    {p.pinned ? (
+                      <span className="ml-auto text-[10px] font-bold uppercase tracking-widest text-cherry-deep">
+                        Pinned
+                      </span>
+                    ) : null}
+                  </div>
+                  <p className="mt-1.5 font-display text-sm font-bold text-ink">{p.title}</p>
+                  <p
+                    className={`mt-1 text-sm text-ink-soft ${isOpen ? "" : "line-clamp-2"}`}
+                  >
+                    {p.body}
+                  </p>
+                  <p className="mt-1.5 text-[11px] font-semibold text-cherry-deep">
+                    {isOpen ? "Show less" : "Read more"}
+                  </p>
+                </button>
+              );
+            })
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 
 function SignedOutCTA() {
   return (
