@@ -146,6 +146,8 @@ function InfoPanel({
 
   return (
     <div className="space-y-4">
+      <YourEntryCard eventId={eventId} />
+
       {aboutText ? (
         <section>
           <SectionTitle>About</SectionTitle>
