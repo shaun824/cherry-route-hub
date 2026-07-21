@@ -1,0 +1,1 @@
+ALTER TABLE public.events ADD COLUMN IF NOT EXISTS spectator_mode boolean NOT NULL DEFAULT false;

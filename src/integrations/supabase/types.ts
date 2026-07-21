@@ -365,6 +365,7 @@ export type Database = {
           schedule: Json
           slug: string | null
           social_links: Json
+          spectator_mode: boolean
           status: string
           updated_at: string
         }
@@ -390,6 +391,7 @@ export type Database = {
           schedule?: Json
           slug?: string | null
           social_links?: Json
+          spectator_mode?: boolean
           status?: string
           updated_at?: string
         }
@@ -415,6 +417,7 @@ export type Database = {
           schedule?: Json
           slug?: string | null
           social_links?: Json
+          spectator_mode?: boolean
           status?: string
           updated_at?: string
         }

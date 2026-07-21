@@ -9,7 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as TrackerRouteImport } from './routes/tracker'
+import { Route as SpectateRouteImport } from './routes/spectate'
 import { Route as PromosRouteImport } from './routes/promos'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as MyEventsRouteImport } from './routes/my-events'
@@ -38,9 +38,9 @@ import { Route as EventsEventIdMapRouteImport } from './routes/events.$eventId.m
 import { Route as EventsEventIdEnterRouteImport } from './routes/events.$eventId.enter'
 import { Route as AdminEventInfoEventIdRouteImport } from './routes/admin.event-info.$eventId'
 
-const TrackerRoute = TrackerRouteImport.update({
-  id: '/tracker',
-  path: '/tracker',
+const SpectateRoute = SpectateRouteImport.update({
+  id: '/spectate',
+  path: '/spectate',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PromosRoute = PromosRouteImport.update({
@@ -188,7 +188,7 @@ export interface FileRoutesByFullPath {
   '/my-events': typeof MyEventsRouteWithChildren
   '/profile': typeof ProfileRoute
   '/promos': typeof PromosRoute
-  '/tracker': typeof TrackerRoute
+  '/spectate': typeof SpectateRoute
   '/admin/events': typeof AdminEventsRoute
   '/admin/feed': typeof AdminFeedRoute
   '/admin/messages': typeof AdminMessagesRoute
@@ -216,7 +216,7 @@ export interface FileRoutesByTo {
   '/gallery': typeof GalleryRoute
   '/profile': typeof ProfileRoute
   '/promos': typeof PromosRoute
-  '/tracker': typeof TrackerRoute
+  '/spectate': typeof SpectateRoute
   '/admin/events': typeof AdminEventsRoute
   '/admin/feed': typeof AdminFeedRoute
   '/admin/messages': typeof AdminMessagesRoute
@@ -246,7 +246,7 @@ export interface FileRoutesById {
   '/my-events': typeof MyEventsRouteWithChildren
   '/profile': typeof ProfileRoute
   '/promos': typeof PromosRoute
-  '/tracker': typeof TrackerRoute
+  '/spectate': typeof SpectateRoute
   '/admin/events': typeof AdminEventsRoute
   '/admin/feed': typeof AdminFeedRoute
   '/admin/messages': typeof AdminMessagesRoute
@@ -278,7 +278,7 @@ export interface FileRouteTypes {
     | '/my-events'
     | '/profile'
     | '/promos'
-    | '/tracker'
+    | '/spectate'
     | '/admin/events'
     | '/admin/feed'
     | '/admin/messages'
@@ -306,7 +306,7 @@ export interface FileRouteTypes {
     | '/gallery'
     | '/profile'
     | '/promos'
-    | '/tracker'
+    | '/spectate'
     | '/admin/events'
     | '/admin/feed'
     | '/admin/messages'
@@ -335,7 +335,7 @@ export interface FileRouteTypes {
     | '/my-events'
     | '/profile'
     | '/promos'
-    | '/tracker'
+    | '/spectate'
     | '/admin/events'
     | '/admin/feed'
     | '/admin/messages'
@@ -366,18 +366,18 @@ export interface RootRouteChildren {
   MyEventsRoute: typeof MyEventsRouteWithChildren
   ProfileRoute: typeof ProfileRoute
   PromosRoute: typeof PromosRoute
-  TrackerRoute: typeof TrackerRoute
+  SpectateRoute: typeof SpectateRoute
   EventsEventIdRoute: typeof EventsEventIdRouteWithChildren
   EventsIndexRoute: typeof EventsIndexRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/tracker': {
-      id: '/tracker'
-      path: '/tracker'
-      fullPath: '/tracker'
-      preLoaderRoute: typeof TrackerRouteImport
+    '/spectate': {
+      id: '/spectate'
+      path: '/spectate'
+      fullPath: '/spectate'
+      preLoaderRoute: typeof SpectateRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/promos': {
@@ -653,7 +653,7 @@ const rootRouteChildren: RootRouteChildren = {
   MyEventsRoute: MyEventsRouteWithChildren,
   ProfileRoute: ProfileRoute,
   PromosRoute: PromosRoute,
-  TrackerRoute: TrackerRoute,
+  SpectateRoute: SpectateRoute,
   EventsEventIdRoute: EventsEventIdRouteWithChildren,
   EventsIndexRoute: EventsIndexRoute,
 }

@@ -28,14 +28,15 @@ import { RouteMap } from "@/components/route-map";
 import { SponsorScroller } from "@/components/sponsor-scroller";
 import { useAdminStore } from "@/lib/store";
 import { fetchMyEventById, type MyEventRow } from "@/lib/my-events";
-import { Printer, Shirt, Package } from "lucide-react";
+import { Printer, Shirt, Package, Siren } from "lucide-react";
 import type { EventDay, EventRoute, ScheduleItem, SocialLinks } from "@/lib/mock-data";
+import { TrackerPanel } from "@/components/tracker-panel";
 
 export const Route = createFileRoute("/my-events/$eventId")({
   loader: async ({ params }) => {
     const { data, error } = await supabase
       .from("events")
-      .select("id, name, discipline, event_date, location, map_query, distance_km, description, hero_color, days, schedule, social_links")
+      .select("id, name, discipline, event_date, location, map_query, distance_km, description, hero_color, days, schedule, social_links, status")
       .eq("id", params.eventId)
       .maybeSingle();
     if (error || !data) throw notFound();
@@ -114,7 +115,7 @@ function MyEventDetail() {
       </nav>
 
       <div className="px-5 py-4">
-        {tab === "info" && <InfoPanel eventId={event.id} description={event.description} distanceKm={event.distance_km} event={event} />}
+        {tab === "info" && <InfoPanel eventId={event.id} description={event.description} distanceKm={event.distance_km} event={event} isLive={event.status === "live"} eventName={event.name} />}
         {tab === "packing" && <PackingPanel eventId={event.id} userId={user?.id ?? null} />}
         {tab === "chat" && <ChatPanel eventId={event.id} userId={user?.id ?? null} />}
         {tab === "ask" && <AskAdminPanel eventId={event.id} userId={user?.id ?? null} />}
@@ -130,11 +131,15 @@ function InfoPanel({
   description,
   distanceKm: _distanceKm,
   event,
+  isLive,
+  eventName,
 }: {
   eventId: string;
   description: string | null;
   distanceKm: number;
   event: { days?: EventDay[] | null; schedule?: ScheduleItem[] | null; location?: string | null; map_query?: string | null; social_links?: SocialLinks | null };
+  isLive: boolean;
+  eventName: string;
 }) {
   const q = useQuery({ queryKey: ["event-info", eventId], queryFn: () => fetchEventInfo(eventId) });
   const info = q.data;
@@ -148,6 +153,20 @@ function InfoPanel({
 
   return (
     <div className="space-y-4">
+      {isLive ? (
+        <section>
+          <SectionTitle>Live tracking & SOS</SectionTitle>
+          <div className="mt-2">
+            <TrackerPanel eventName={eventName} />
+          </div>
+        </section>
+      ) : (
+        <div className="flex items-start gap-2 rounded-2xl bg-card p-3 text-xs text-ink-soft ring-1 ring-border">
+          <Siren className="mt-0.5 h-4 w-4 shrink-0 text-cherry" />
+          <p>Live tracking and SOS activate on race day, once this event goes live.</p>
+        </div>
+      )}
+
       <YourEntryCard eventId={eventId} />
 
       {aboutText ? (
