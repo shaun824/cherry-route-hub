@@ -11,7 +11,8 @@ const extraItemSchema = z.object({
 });
 
 // Accept "Jacket M x2; Buff x1" shorthand or a JSON array string, produce ExtraItem[].
-function parseExtras(raw: string | undefined | null): z.infer<typeof extraItemSchema>[] {
+export function parseExtras(raw: string | undefined | null): z.infer<typeof extraItemSchema>[] {
+
   const s = (raw ?? "").trim();
   if (!s) return [];
   if (s.startsWith("[")) {
