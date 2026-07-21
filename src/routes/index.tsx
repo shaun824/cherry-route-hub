@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 import {
   Activity,
   Bell,
@@ -20,6 +21,7 @@ import {
   Tag,
   Trophy,
   Twitter,
+  X,
   Youtube,
 } from "lucide-react";
 
@@ -29,8 +31,10 @@ import { currentRider, relativeTime } from "@/lib/mock-data";
 import { useAdminStore } from "@/lib/store";
 import { useHydratedStore } from "@/lib/use-hydrated-store";
 import { useSession } from "@/lib/auth";
+import { supabase } from "@/integrations/supabase/client";
 import { fetchMyEvents, type MyEventRow } from "@/lib/my-events";
 import type { QuickLinkIcon } from "@/lib/settings";
+
 
 const QUICK_ICONS: Record<QuickLinkIcon, typeof Newspaper> = {
   Newspaper,
