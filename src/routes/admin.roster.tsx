@@ -429,7 +429,28 @@ function EntrantsTable({
   );
 }
 
-type Assignment = { event_id: string; category: string; batch: string; bib_number: string };
+type Assignment = {
+  event_id: string;
+  category: string;
+  batch: string;
+  bib_number: string;
+  jacket_size: string;
+  tshirt_size: string;
+  extras: string;
+  notes: string;
+};
+
+const EMPTY_ASSIGNMENT: Assignment = {
+  event_id: "",
+  category: "",
+  batch: "",
+  bib_number: "",
+  jacket_size: "",
+  tshirt_size: "",
+  extras: "",
+  notes: "",
+};
+
 
 function QuickAddSection({
   events,
@@ -443,9 +464,8 @@ function QuickAddSection({
   const [email, setEmail] = useState("");
   const [idNumber, setIdNumber] = useState("");
   const [phone, setPhone] = useState("");
-  const [assignments, setAssignments] = useState<Assignment[]>([
-    { event_id: "", category: "", batch: "", bib_number: "" },
-  ]);
+  const [assignments, setAssignments] = useState<Assignment[]>([{ ...EMPTY_ASSIGNMENT }]);
+
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<{ kind: "ok" | "err"; text: string } | null>(null);
 
@@ -474,7 +494,7 @@ function QuickAddSection({
       setEmail("");
       setIdNumber("");
       setPhone("");
-      setAssignments([{ event_id: "", category: "", batch: "", bib_number: "" }]);
+      setAssignments([{ ...EMPTY_ASSIGNMENT }]);
       onAdded();
     } catch (err) {
       setMsg({ kind: "err", text: (err as Error).message });
@@ -551,15 +571,40 @@ function QuickAddSection({
               >
                 <Trash2 className="h-4 w-4" />
               </button>
+              <input
+                value={a.jacket_size}
+                onChange={(e) => update(i, { jacket_size: e.target.value })}
+                placeholder="Jacket size (e.g. M)"
+                className="col-span-6 rounded-md border border-border bg-card px-2 py-1.5 text-sm md:col-span-3"
+              />
+              <input
+                value={a.tshirt_size}
+                onChange={(e) => update(i, { tshirt_size: e.target.value })}
+                placeholder="T-shirt size (e.g. L)"
+                className="col-span-6 rounded-md border border-border bg-card px-2 py-1.5 text-sm md:col-span-3"
+              />
+              <input
+                value={a.extras}
+                onChange={(e) => update(i, { extras: e.target.value })}
+                placeholder="Extras — e.g. Buff x2; Cap M x1"
+                className="col-span-12 rounded-md border border-border bg-card px-2 py-1.5 text-sm md:col-span-6"
+              />
+              <input
+                value={a.notes}
+                onChange={(e) => update(i, { notes: e.target.value })}
+                placeholder="Notes (optional)"
+                className="col-span-12 rounded-md border border-border bg-card px-2 py-1.5 text-sm"
+              />
             </div>
           ))}
           <button
             type="button"
-            onClick={() => setAssignments((a) => [...a, { event_id: "", category: "", batch: "", bib_number: "" }])}
+            onClick={() => setAssignments((a) => [...a, { ...EMPTY_ASSIGNMENT }])}
             className="inline-flex items-center gap-1 rounded-lg border border-dashed border-border px-3 py-1.5 text-xs font-semibold text-ink-soft hover:bg-secondary"
           >
             <Plus className="h-3.5 w-3.5" /> Add another event
           </button>
+
         </div>
 
         {msg ? (
