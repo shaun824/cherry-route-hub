@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 import {
   Activity,
   Bell,
@@ -20,6 +21,7 @@ import {
   Tag,
   Trophy,
   Twitter,
+  X,
   Youtube,
 } from "lucide-react";
 
@@ -29,8 +31,10 @@ import { currentRider, relativeTime } from "@/lib/mock-data";
 import { useAdminStore } from "@/lib/store";
 import { useHydratedStore } from "@/lib/use-hydrated-store";
 import { useSession } from "@/lib/auth";
+import { supabase } from "@/integrations/supabase/client";
 import { fetchMyEvents, type MyEventRow } from "@/lib/my-events";
 import type { QuickLinkIcon } from "@/lib/settings";
+
 
 const QUICK_ICONS: Record<QuickLinkIcon, typeof Newspaper> = {
   Newspaper,
@@ -67,6 +71,32 @@ function Home() {
   const pinned = feed.filter((p) => p.pinned)[0];
   const recentNews = feed.filter((p) => !p.pinned).slice(0, 3);
   const qlCols = Math.min(Math.max(quickLinks.length, 1), 4);
+  const [notifOpen, setNotifOpen] = useState(false);
+
+  const profile = useQuery({
+    queryKey: ["home-profile", user?.id],
+    enabled: !!user,
+    staleTime: 60_000,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("full_name")
+        .eq("id", user!.id)
+        .maybeSingle();
+      return data;
+    },
+  });
+
+  const displayName =
+    profile.data?.full_name?.trim() ||
+    (user?.user_metadata as { full_name?: string; name?: string } | undefined)?.full_name ||
+    (user?.user_metadata as { full_name?: string; name?: string } | undefined)?.name ||
+    user?.email?.split("@")[0] ||
+    "Rider";
+
+  const notifications = [pinned, ...feed.filter((p) => !p.pinned)].filter(Boolean).slice(0, 8);
+  const hasUnread = notifications.length > 0;
+
 
   return (
     <div>
@@ -89,18 +119,22 @@ function Home() {
           </div>
           <button
             aria-label="Notifications"
-            className="grid h-10 w-10 place-items-center rounded-full bg-white/15 backdrop-blur"
+            onClick={() => setNotifOpen(true)}
+            className="relative grid h-10 w-10 place-items-center rounded-full bg-white/15 backdrop-blur"
           >
             <Bell className="h-5 w-5" />
-            <span className="absolute mt-[-14px] ml-[14px] h-2 w-2 rounded-full bg-white ring-2 ring-cherry" />
+            {hasUnread ? (
+              <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-white ring-2 ring-cherry" />
+            ) : null}
           </button>
         </div>
 
         <div className="relative mt-7">
           <p className="text-sm opacity-85">{branding.welcomeMessage}</p>
           <p className="font-display text-xl font-bold">
-            {user ? currentRider.name : "Rider"}
+            {user ? displayName : "Rider"}
           </p>
+
         </div>
 
         {user ? (
@@ -224,9 +258,90 @@ function Home() {
       <SponsorScroller />
 
       <div className="pb-6" />
+
+      <NotificationsSheet
+        open={notifOpen}
+        onClose={() => setNotifOpen(false)}
+        items={notifications}
+      />
     </div>
   );
 }
+
+function NotificationsSheet({
+  open,
+  onClose,
+  items,
+}: {
+  open: boolean;
+  onClose: () => void;
+  items: ReturnType<typeof useAdminStore.getState>["feed"];
+}) {
+  const [expanded, setExpanded] = useState<string | null>(null);
+  if (!open) return null;
+  return (
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center sm:justify-center">
+      <div
+        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+        onClick={onClose}
+        aria-hidden
+      />
+      <div className="relative w-full sm:max-w-md max-h-[80vh] overflow-hidden rounded-t-3xl sm:rounded-3xl bg-card shadow-2xl ring-1 ring-border animate-in slide-in-from-bottom duration-200">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-border">
+          <div className="flex items-center gap-2">
+            <Bell className="h-5 w-5 text-cherry-deep" />
+            <p className="font-display text-lg font-bold text-ink">Notifications</p>
+          </div>
+          <button
+            onClick={onClose}
+            aria-label="Close"
+            className="grid h-8 w-8 place-items-center rounded-full bg-secondary text-ink"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+        <div className="overflow-y-auto px-4 py-3 space-y-2" style={{ maxHeight: "calc(80vh - 64px)" }}>
+          {items.length === 0 ? (
+            <p className="py-10 text-center text-sm text-ink-soft">You're all caught up.</p>
+          ) : (
+            items.map((p) => {
+              const isOpen = expanded === p.id;
+              return (
+                <button
+                  key={p.id}
+                  onClick={() => setExpanded(isOpen ? null : p.id)}
+                  className="w-full text-left rounded-2xl bg-secondary/50 p-3 ring-1 ring-border transition hover:bg-secondary"
+                >
+                  <div className="flex items-center gap-2">
+                    <TypeBadge type={p.type} />
+                    <span className="text-[11px] text-muted-foreground">
+                      {relativeTime(p.postedAt)}
+                    </span>
+                    {p.pinned ? (
+                      <span className="ml-auto text-[10px] font-bold uppercase tracking-widest text-cherry-deep">
+                        Pinned
+                      </span>
+                    ) : null}
+                  </div>
+                  <p className="mt-1.5 font-display text-sm font-bold text-ink">{p.title}</p>
+                  <p
+                    className={`mt-1 text-sm text-ink-soft ${isOpen ? "" : "line-clamp-2"}`}
+                  >
+                    {p.body}
+                  </p>
+                  <p className="mt-1.5 text-[11px] font-semibold text-cherry-deep">
+                    {isOpen ? "Show less" : "Read more"}
+                  </p>
+                </button>
+              );
+            })
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 
 function SignedOutCTA() {
   return (
