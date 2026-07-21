@@ -166,6 +166,7 @@ function eventFromRow(r: Row): Event {
     batches: (r.batches as Batch[] | null) ?? [],
     days: (r.days as EventDay[] | null) ?? [],
     socialLinks: ((r as Row).social_links as Event["socialLinks"]) ?? {},
+    spectatorMode: Boolean((r as Row).spectator_mode ?? false),
   };
 }
 
