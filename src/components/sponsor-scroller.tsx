@@ -51,28 +51,29 @@ export function SponsorScroller({
                 </span>
               </div>
             );
+            const href =
+              sp.url && sp.url.trim().length > 0
+                ? sp.url
+                : `https://www.google.com/search?q=${encodeURIComponent(sp.name)}`;
             return (
               <li
                 key={`${sp.id}-${i}`}
                 aria-hidden={i >= sponsors.length ? "true" : undefined}
                 className="shrink-0"
               >
-                {sp.url ? (
-                  <a
-                    href={sp.url}
-                    target="_blank"
-                    rel="noopener noreferrer sponsored"
-                    aria-label={`Visit ${sp.name}`}
-                    className="block transition-transform hover:scale-[1.03]"
-                  >
-                    {inner}
-                  </a>
-                ) : (
-                  inner
-                )}
+                <a
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer sponsored"
+                  aria-label={`Visit ${sp.name}`}
+                  className="block transition-transform hover:scale-[1.03]"
+                >
+                  {inner}
+                </a>
               </li>
             );
           })}
+
         </ul>
       </div>
     </section>
