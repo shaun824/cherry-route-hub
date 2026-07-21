@@ -790,6 +790,45 @@ function EventEditor({
               onChange={(e) => update("faqUrl", e.target.value || undefined)}
             />
           </Field>
+
+          <Field label="Spectator: parking" className="md:col-span-2">
+            <textarea
+              className={inputCls}
+              rows={2}
+              value={form.spectatorParking ?? ""}
+              placeholder="Where spectators can park (main lot, overflow, disabled bays, cost, walk-in distance)…"
+              onChange={(e) => update("spectatorParking", e.target.value || undefined)}
+            />
+          </Field>
+          <Field label="Spectator: food & refreshments" className="md:col-span-2">
+            <textarea
+              className={inputCls}
+              rows={2}
+              value={form.spectatorFood ?? ""}
+              placeholder="Food trucks, coffee, bar, kids' snacks, cash/card, opening times…"
+              onChange={(e) => update("spectatorFood", e.target.value || undefined)}
+            />
+          </Field>
+          <Field label="Toilets on site">
+            <label className="flex items-center gap-2 rounded-md border border-border bg-background px-3 py-2 text-sm">
+              <input
+                type="checkbox"
+                checked={form.hasToilets ?? true}
+                onChange={(e) => update("hasToilets", e.target.checked)}
+              />
+              <span>Portable / venue toilets are available</span>
+            </label>
+          </Field>
+          <Field label="Spectator: extra notes" className="md:col-span-2">
+            <textarea
+              className={inputCls}
+              rows={2}
+              value={form.spectatorNotes ?? ""}
+              placeholder="Best viewing spots, prize-giving time, kids' area, dogs allowed, etc."
+              onChange={(e) => update("spectatorNotes", e.target.value || undefined)}
+            />
+          </Field>
+
           <Field label="Venue (Google Maps)" className="md:col-span-2">
             <input
               className={inputCls}
