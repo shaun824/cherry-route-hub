@@ -74,6 +74,8 @@ function mapRowFlexible(r: Record<string, string>, defaultEventId: string): CsvR
     id_number: pick(r, ["id_number", "ID Number"]),
     phone: pick(r, ["phone", "Mobile", "WhatsApp Number"]),
     event_id: pick(r, ["event_id"]) || pick(r, ["Event Name"]) || defaultEventId,
+    event_date: pick(r, ["event_date", "Event Date"]),
+    external_event_id: pick(r, ["external_event_id", "Event #"]),
     category: pick(r, ["category", "Class"]),
     batch: pick(r, ["batch", "Batch"]),
     bib_number: pick(r, ["bib_number", "Race Number"]),
