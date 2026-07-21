@@ -23,9 +23,10 @@ export function SponsorScroller({
       ) : null}
       <div className="relative overflow-hidden [mask-image:linear-gradient(to_right,transparent,#000_10%,#000_90%,transparent)]">
         <ul
-          className="flex w-max items-center gap-3 animate-marquee will-change-transform"
+          className="flex w-max items-center gap-3 animate-marquee will-change-transform hover:[animation-play-state:paused]"
           style={{ animationDuration: `${Math.max(18, sponsors.length * 4)}s` }}
         >
+
           {row.map((sp, i) => {
             const inner = sp.logoUrl ? (
               <div
@@ -50,28 +51,29 @@ export function SponsorScroller({
                 </span>
               </div>
             );
+            const href =
+              sp.url && sp.url.trim().length > 0
+                ? sp.url
+                : `https://www.google.com/search?q=${encodeURIComponent(sp.name)}`;
             return (
               <li
                 key={`${sp.id}-${i}`}
                 aria-hidden={i >= sponsors.length ? "true" : undefined}
                 className="shrink-0"
               >
-                {sp.url ? (
-                  <a
-                    href={sp.url}
-                    target="_blank"
-                    rel="noopener noreferrer sponsored"
-                    aria-label={`Visit ${sp.name}`}
-                    className="block transition-transform hover:scale-[1.03]"
-                  >
-                    {inner}
-                  </a>
-                ) : (
-                  inner
-                )}
+                <a
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer sponsored"
+                  aria-label={`Visit ${sp.name}`}
+                  className="block transition-transform hover:scale-[1.03]"
+                >
+                  {inner}
+                </a>
               </li>
             );
           })}
+
         </ul>
       </div>
     </section>
