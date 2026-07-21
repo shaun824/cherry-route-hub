@@ -45,6 +45,9 @@ const rosterRowSchema = z.object({
   id_number: z.string().trim().min(4).max(50),
   phone: z.string().trim().max(40).optional().default(""),
   event_id: z.string().trim().min(1),
+  // Fallback fields for auto-creating a stub event when event_id doesn't match.
+  event_date: z.string().trim().max(40).optional().default(""),
+  external_event_id: z.string().trim().max(80).optional().default(""),
   category: z.string().trim().max(80).optional().default(""),
   batch: z.string().trim().max(80).optional().default(""),
   bib_number: z.string().trim().max(40).optional().default(""),
