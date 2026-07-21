@@ -71,6 +71,32 @@ function Home() {
   const pinned = feed.filter((p) => p.pinned)[0];
   const recentNews = feed.filter((p) => !p.pinned).slice(0, 3);
   const qlCols = Math.min(Math.max(quickLinks.length, 1), 4);
+  const [notifOpen, setNotifOpen] = useState(false);
+
+  const profile = useQuery({
+    queryKey: ["home-profile", user?.id],
+    enabled: !!user,
+    staleTime: 60_000,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("full_name")
+        .eq("id", user!.id)
+        .maybeSingle();
+      return data;
+    },
+  });
+
+  const displayName =
+    profile.data?.full_name?.trim() ||
+    (user?.user_metadata as { full_name?: string; name?: string } | undefined)?.full_name ||
+    (user?.user_metadata as { full_name?: string; name?: string } | undefined)?.name ||
+    user?.email?.split("@")[0] ||
+    "Rider";
+
+  const notifications = [pinned, ...feed.filter((p) => !p.pinned)].filter(Boolean).slice(0, 8);
+  const hasUnread = notifications.length > 0;
+
 
   return (
     <div>
