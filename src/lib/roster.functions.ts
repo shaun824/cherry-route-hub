@@ -241,6 +241,10 @@ const quickAddSchema = z.object({
         category: z.string().trim().max(80).optional().default(""),
         batch: z.string().trim().max(80).optional().default(""),
         bib_number: z.string().trim().max(40).optional().default(""),
+        jacket_size: z.string().trim().max(20).optional().default(""),
+        tshirt_size: z.string().trim().max(20).optional().default(""),
+        extras: z.string().max(2000).optional().default(""),
+        notes: z.string().max(1000).optional().default(""),
       }),
     )
     .min(1)
@@ -304,6 +308,10 @@ export const quickAddEntrant = createServerFn({ method: "POST" })
             category: a.category || null,
             batch: a.batch || null,
             bib_number: a.bib_number || null,
+            jacket_size: a.jacket_size || null,
+            tshirt_size: a.tshirt_size || null,
+            extras: parseExtras(a.extras),
+            notes: a.notes || null,
           },
           { onConflict: "event_id,entrant_id" },
         );
@@ -312,6 +320,7 @@ export const quickAddEntrant = createServerFn({ method: "POST" })
 
     return { entrantId, linked };
   });
+
 
 // Admin-only: remove an event assignment.
 const unassignSchema = z.object({
