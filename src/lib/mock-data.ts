@@ -88,6 +88,7 @@ export type Event = {
   batches?: Batch[];         // admin-managed start batches / waves
   days?: EventDay[];         // multi-day itinerary with routes per day
   socialLinks?: SocialLinks; // per-event follow links
+  spectatorMode?: boolean;   // when true, event unlocks on the public Spectate tab
 };
 
 // Returns the currently active price tier for a batch, or null if none defined.
