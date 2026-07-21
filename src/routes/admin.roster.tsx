@@ -17,6 +17,8 @@ type CsvRow = {
   id_number: string;
   phone?: string;
   event_id: string;
+  event_date?: string;
+  external_event_id?: string;
   category?: string;
   batch?: string;
   bib_number?: string;
