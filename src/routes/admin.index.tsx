@@ -1,6 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { CalendarDays, Newspaper, Tag, Handshake, ArrowUpRight } from "lucide-react";
+import { CalendarDays, Newspaper, Tag, Handshake, ArrowUpRight, AlertTriangle } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import { useAdminStore } from "@/lib/store";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/admin/")({
   component: AdminDashboard,
