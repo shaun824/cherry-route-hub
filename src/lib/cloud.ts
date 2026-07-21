@@ -169,6 +169,10 @@ function eventFromRow(r: Row): Event {
     spectatorMode: Boolean((r as Row).spectator_mode ?? false),
     websiteUrl: ((r as Row).website_url as string | null) ?? undefined,
     faqUrl: ((r as Row).faq_url as string | null) ?? undefined,
+    spectatorParking: ((r as Row).spectator_parking as string | null) ?? undefined,
+    spectatorFood: ((r as Row).spectator_food as string | null) ?? undefined,
+    spectatorNotes: ((r as Row).spectator_notes as string | null) ?? undefined,
+    hasToilets: (r as Row).has_toilets == null ? true : Boolean((r as Row).has_toilets),
   };
 }
 
