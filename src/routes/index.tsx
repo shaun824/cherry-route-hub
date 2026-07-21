@@ -425,3 +425,51 @@ function NoEventsCard({ hasAnyLinked }: { hasAnyLinked: boolean }) {
     </div>
   );
 }
+
+const SOCIAL_ICONS: {
+  key: string;
+  label: string;
+  icon: typeof Facebook;
+}[] = [
+  { key: "website", label: "Website", icon: Globe },
+  { key: "facebook", label: "Facebook", icon: Facebook },
+  { key: "instagram", label: "Instagram", icon: Instagram },
+  { key: "twitter", label: "X", icon: Twitter },
+  { key: "youtube", label: "YouTube", icon: Youtube },
+  { key: "tiktok", label: "TikTok", icon: Music2 },
+  { key: "strava", label: "Strava", icon: Activity },
+];
+
+function EventSocialRow({
+  links,
+  compact = false,
+}: {
+  links: Record<string, string> | null | undefined;
+  compact?: boolean;
+}) {
+  const entries = SOCIAL_ICONS.filter((s) => {
+    const url = links?.[s.key];
+    return typeof url === "string" && url.trim().length > 0;
+  });
+  if (entries.length === 0) return null;
+  const size = compact ? "h-6 w-6" : "h-8 w-8";
+  const icon = compact ? "h-3 w-3" : "h-4 w-4";
+  return (
+    <div className={`${compact ? "mt-2" : "mt-3"} flex flex-wrap gap-1.5`}>
+      {entries.map(({ key, label, icon: Icon }) => (
+        <a
+          key={key}
+          href={links![key]}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={(e) => e.stopPropagation()}
+          aria-label={`Follow on ${label}`}
+          title={label}
+          className={`grid ${size} place-items-center rounded-full bg-white/20 text-white ring-1 ring-white/25 backdrop-blur transition hover:bg-white/30`}
+        >
+          <Icon className={icon} strokeWidth={2.2} />
+        </a>
+      ))}
+    </div>
+  );
+}
