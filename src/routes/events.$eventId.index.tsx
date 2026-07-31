@@ -83,7 +83,7 @@ function EventDetailIndex() {
           ) : (
             <div className="space-y-2">
               <a
-                href="https://entryninja.com"
+                href={event.entryUrl ?? event.websiteUrl ?? "https://entries.redcherryevents.co.za/"}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex w-full items-center justify-center gap-2 rounded-xl cherry-gradient py-3 text-sm font-bold text-white shadow-md shadow-cherry/25 active:scale-[0.99] transition-transform"

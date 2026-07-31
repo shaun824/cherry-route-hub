@@ -75,7 +75,7 @@ function EnterEvent() {
         </p>
         <div className="flex flex-wrap justify-center gap-2 pt-2">
           <a
-            href="https://entryninja.com"
+            href={event.entryUrl ?? event.websiteUrl ?? "https://entries.redcherryevents.co.za/"}
             target="_blank"
             rel="noopener noreferrer"
             className="rounded-xl cherry-gradient px-4 py-2 text-sm font-bold text-white"
