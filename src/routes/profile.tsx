@@ -85,8 +85,6 @@ function Profile() {
         phone: form.phone || null,
         emergency_contact_name: form.emergency_contact_name || null,
         emergency_contact_phone: form.emergency_contact_phone || null,
-        jacket_size: form.jacket_size || null,
-        tshirt_size: form.tshirt_size || null,
         entry_ninja_id: form.entry_ninja_id || null,
       })
       .eq("id", user.id);
