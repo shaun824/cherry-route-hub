@@ -263,13 +263,6 @@ function HomePreview({ branding, quickLinks }: { branding: Branding; quickLinks:
           <p className="text-xs opacity-85">{branding.welcomeMessage}</p>
           <p className="font-display text-base font-bold">Alex Rider</p>
         </div>
-        <div className="relative mt-4 flex items-center justify-between rounded-xl bg-white/12 p-2.5 ring-1 ring-white/15">
-          <div>
-            <p className="text-[9px] font-semibold uppercase tracking-widest opacity-80">Gold tier</p>
-            <p className="text-sm font-bold">2,450 pts</p>
-          </div>
-          <ChevronRight className="h-4 w-4 opacity-70" />
-        </div>
       </div>
 
       {enabled.length > 0 ? (
