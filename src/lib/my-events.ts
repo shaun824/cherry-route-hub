@@ -52,11 +52,28 @@ function normalizeExtras(raw: unknown): ExtraItem[] {
 }
 
 export async function fetchMyEvents(): Promise<MyEventRow[]> {
+  const { data: auth } = await supabase.auth.getUser();
+  const uid = auth.user?.id;
+  if (!uid) return [];
+
+  // Only the entrant records linked to this signed-in person (admins included).
+  const { data: mine, error: entrantErr } = await supabase
+    .from("entrants")
+    .select("id")
+    .eq("user_id", uid);
+  if (entrantErr) {
+    console.warn("[my-events] entrants", entrantErr);
+    return [];
+  }
+  const entrantIds = (mine ?? []).map((e) => e.id);
+  if (entrantIds.length === 0) return [];
+
   const { data, error } = await supabase
     .from("event_entrants")
     .select(
       "id, event_id, category, batch, bib_number, jacket_size, tshirt_size, extras, notes, event:events(id, name, discipline, event_date, location, distance_km, status, hero_color, description, social_links)",
     )
+    .in("entrant_id", entrantIds)
     .order("created_at", { ascending: false });
   if (error) {
     console.warn("[my-events]", error);
