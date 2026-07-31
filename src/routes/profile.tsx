@@ -36,7 +36,7 @@ const empty: ProfileForm = {
   entry_ninja_id: "",
 };
 
-const SIZES = ["XS", "S", "M", "L", "XL", "XXL", "3XL"];
+
 
 function Profile() {
   const { user, loading } = useSession();
@@ -85,8 +85,6 @@ function Profile() {
         phone: form.phone || null,
         emergency_contact_name: form.emergency_contact_name || null,
         emergency_contact_phone: form.emergency_contact_phone || null,
-        jacket_size: form.jacket_size || null,
-        tshirt_size: form.tshirt_size || null,
         entry_ninja_id: form.entry_ninja_id || null,
       })
       .eq("id", user.id);
@@ -193,30 +191,23 @@ function Profile() {
 
         <div className="grid grid-cols-2 gap-3">
           <Field label="T-shirt size">
-            <select
-              className="input"
-              value={form.tshirt_size}
-              onChange={(e) => setForm((f) => ({ ...f, tshirt_size: e.target.value }))}
-            >
-              <option value="">—</option>
-              {SIZES.map((s) => (
-                <option key={s} value={s}>{s}</option>
-              ))}
-            </select>
+            <div className="input flex items-center justify-between opacity-70">
+              <span>{form.tshirt_size || "—"}</span>
+              <span className="text-[10px] uppercase tracking-wide text-muted-foreground">Locked</span>
+            </div>
           </Field>
           <Field label="Jacket size">
-            <select
-              className="input"
-              value={form.jacket_size}
-              onChange={(e) => setForm((f) => ({ ...f, jacket_size: e.target.value }))}
-            >
-              <option value="">—</option>
-              {SIZES.map((s) => (
-                <option key={s} value={s}>{s}</option>
-              ))}
-            </select>
+            <div className="input flex items-center justify-between opacity-70">
+              <span>{form.jacket_size || "—"}</span>
+              <span className="text-[10px] uppercase tracking-wide text-muted-foreground">Locked</span>
+            </div>
           </Field>
         </div>
+        <p className="-mt-1 text-xs text-muted-foreground">
+          Apparel sizes come from your entry on the entry system and can't be changed here. Contact the
+          organisers if a size is wrong.
+        </p>
+
 
         <Field label="Entry Ninja ID">
           <input
