@@ -27,7 +27,7 @@ import {
 
 import { BrandMark, SectionTitle, TypeBadge } from "@/components/ui-bits";
 import { SponsorScroller } from "@/components/sponsor-scroller";
-import { currentRider, relativeTime } from "@/lib/mock-data";
+import { relativeTime } from "@/lib/mock-data";
 import { useAdminStore } from "@/lib/store";
 import { useHydratedStore } from "@/lib/use-hydrated-store";
 import { useSession } from "@/lib/auth";

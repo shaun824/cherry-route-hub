@@ -4,7 +4,6 @@ import {
   Bell,
   Calendar,
   Check,
-  ChevronRight,
   Eye,
   EyeOff,
   Handshake,
