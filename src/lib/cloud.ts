@@ -167,6 +167,7 @@ function eventFromRow(r: Row): Event {
     days: (r.days as EventDay[] | null) ?? [],
     socialLinks: ((r as Row).social_links as Event["socialLinks"]) ?? {},
     spectatorMode: Boolean((r as Row).spectator_mode ?? false),
+    entryUrl: ((r as Row).entry_ninja_url as string | null) ?? undefined,
     websiteUrl: ((r as Row).website_url as string | null) ?? undefined,
     faqUrl: ((r as Row).faq_url as string | null) ?? undefined,
     spectatorParking: ((r as Row).spectator_parking as string | null) ?? undefined,
