@@ -768,7 +768,19 @@ function EventEditor({
               placeholder="en_evt_00000"
               onChange={(e) => update("externalId", e.target.value || null)}
             />
+          <Field label="Entry / registration link">
+            <input
+              className={inputCls}
+              type="url"
+              value={form.entryUrl ?? ""}
+              placeholder="https://entries.redcherryevents.co.za/events/..."
+              onChange={(e) => update("entryUrl", e.target.value || undefined)}
+            />
+            <p className="mt-1 text-[11px] text-ink-soft">
+              Used by the “Enter on Entry Ninja” buttons in the app.
+            </p>
           </Field>
+
           <Field label="Event website URL">
             <input
               className={inputCls}

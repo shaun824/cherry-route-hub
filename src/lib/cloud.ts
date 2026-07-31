@@ -197,6 +197,7 @@ export async function upsertEventCloud(e: Event): Promise<string | null> {
     status: e.status,
     lifecycle: e.lifecycle ?? "published",
     entry_ninja_id: e.externalId ?? null,
+    entry_ninja_url: e.entryUrl ?? null,
     description: e.description ?? "",
     hero_color: e.heroColor,
     logo_url: e.logoUrl ?? null,
