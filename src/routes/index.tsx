@@ -27,7 +27,7 @@ import {
 
 import { BrandMark, SectionTitle, TypeBadge } from "@/components/ui-bits";
 import { SponsorScroller } from "@/components/sponsor-scroller";
-import { currentRider, relativeTime } from "@/lib/mock-data";
+import { relativeTime } from "@/lib/mock-data";
 import { useAdminStore } from "@/lib/store";
 import { useHydratedStore } from "@/lib/use-hydrated-store";
 import { useSession } from "@/lib/auth";
@@ -137,33 +137,6 @@ function Home() {
 
         </div>
 
-        {user ? (
-          <Link
-            to="/profile"
-            className="relative mt-5 flex items-center justify-between rounded-2xl bg-white/12 p-3 backdrop-blur ring-1 ring-white/15"
-          >
-            <div>
-              <p className="text-[10px] font-semibold uppercase tracking-widest opacity-80">
-                {currentRider.tier} tier
-              </p>
-              <p className="text-lg font-bold">{currentRider.points.toLocaleString()} pts</p>
-            </div>
-            <div className="flex-1 px-4">
-              <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/20">
-                <div
-                  className="h-full rounded-full bg-white"
-                  style={{
-                    width: `${(currentRider.points / (currentRider.points + currentRider.pointsToNext)) * 100}%`,
-                  }}
-                />
-              </div>
-              <p className="mt-1 text-[10px] opacity-80">
-                {currentRider.pointsToNext} pts to {currentRider.nextTier}
-              </p>
-            </div>
-            <ChevronRight className="h-5 w-5 opacity-70" />
-          </Link>
-        ) : null}
       </div>
 
       {/* Primary: next event or sign-in CTA */}
