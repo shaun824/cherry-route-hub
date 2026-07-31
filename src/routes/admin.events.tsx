@@ -768,6 +768,7 @@ function EventEditor({
               placeholder="en_evt_00000"
               onChange={(e) => update("externalId", e.target.value || null)}
             />
+          </Field>
           <Field label="Entry / registration link">
             <input
               className={inputCls}
