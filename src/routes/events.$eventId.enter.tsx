@@ -58,11 +58,9 @@ const ZAR = (n: number) =>
 function EnterEvent() {
   useHydratedStore();
   const loader = Route.useLoaderData();
-  const waivers = useAdminStore((s) => s.settings.waivers);
   const entriesEnabled = useAdminStore((s) => s.settings.features.entriesEnabled);
   const storeEvent = useAdminStore((s) => s.events.find((e) => e.id === loader.event.id));
   const event = storeEvent ?? loader.event;
-  const config = loader.config;
 
   if (!entriesEnabled) {
     return (
@@ -93,6 +91,18 @@ function EnterEvent() {
       </div>
     );
   }
+
+  return <EnterEventForm />;
+}
+
+function EnterEventForm() {
+  const loader = Route.useLoaderData();
+  const waivers = useAdminStore((s) => s.settings.waivers);
+  const storeEvent = useAdminStore((s) => s.events.find((e) => e.id === loader.event.id));
+  const event = storeEvent ?? loader.event;
+  const config = loader.config;
+
+
 
 
   // Admin-managed classes override the default config; same for batches.
