@@ -36,7 +36,7 @@ const empty: ProfileForm = {
   entry_ninja_id: "",
 };
 
-const SIZES = ["XS", "S", "M", "L", "XL", "XXL", "3XL"];
+
 
 function Profile() {
   const { user, loading } = useSession();
