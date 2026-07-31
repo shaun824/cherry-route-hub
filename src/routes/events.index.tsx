@@ -3,7 +3,8 @@ import { PageHeader, TypeBadge } from "@/components/ui-bits";
 import { formatDate, formatTime } from "@/lib/mock-data";
 import { useAdminStore } from "@/lib/store";
 import { useHydratedStore } from "@/lib/use-hydrated-store";
-import { MapPin, ChevronRight } from "lucide-react";
+import { MapPin, ChevronRight, Bike, Motorbike } from "lucide-react";
+import { getEventSport, getEventSportLabel } from "@/lib/event-sport";
 
 export const Route = createFileRoute("/events/")({
   head: () => ({
@@ -25,7 +26,11 @@ function Events() {
     <div>
       <PageHeader title="Events" subtitle="Upcoming races & rides" />
       <ul className="space-y-3 px-5 py-5">
-        {events.map((e) => (
+        {events.map((e) => {
+          const sport = getEventSport(e.discipline, e.name);
+          const SportIcon = sport === "moto" ? Motorbike : Bike;
+          const sportLabel = getEventSportLabel(sport);
+          return (
           <li key={e.id}>
             <Link
               to="/events/$eventId"
@@ -41,7 +46,14 @@ function Events() {
                 ) : null}
                 <div className="relative flex items-center justify-between">
                   <TypeBadge type={e.status} />
-                  <span className="text-[11px] font-semibold uppercase tracking-widest opacity-85">
+                  <span className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-widest opacity-85">
+                    <span
+                      className="flex h-6 w-6 items-center justify-center rounded-full bg-white/20 ring-1 ring-white/30"
+                      title={sportLabel}
+                      aria-label={sportLabel}
+                    >
+                      <SportIcon className="h-3.5 w-3.5" aria-hidden="true" />
+                    </span>
                     {e.discipline}
                   </span>
                 </div>
@@ -76,7 +88,8 @@ function Events() {
               </div>
             </Link>
           </li>
-        ))}
+          );
+        })}
       </ul>
     </div>
   );
