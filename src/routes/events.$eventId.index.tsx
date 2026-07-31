@@ -17,6 +17,10 @@ function EventDetailIndex() {
   const { eventId } = Route.useParams();
   const event = useAdminStore((s) => s.events.find((e) => e.id === eventId));
   const entriesEnabled = useAdminStore((s) => s.settings.features.entriesEnabled);
+  // Hooks must run before any early return.
+  const [descExpanded, setDescExpanded] = useState(false);
+  const [activeDayIdState, setActiveDayId] = useState<string | undefined>(undefined);
+
   if (!event) {
     return (
       <div className="p-8 text-center text-sm text-ink-soft">
@@ -29,7 +33,6 @@ function EventDetailIndex() {
 
   const description: string = event.description ?? "";
   const isLongDescription = description.length > DESCRIPTION_PREVIEW_LENGTH;
-  const [descExpanded, setDescExpanded] = useState(false);
 
   const days: EventDay[] = event.days ?? [];
   const schedule: ScheduleItem[] = event.schedule ?? [];
@@ -46,7 +49,11 @@ function EventDetailIndex() {
     ...scheduleDays.map((d, i) => ({ id: d.id, label: d.label || `Day ${i + 1}`, date: d.date })),
     ...(hasUnscheduled ? [{ id: "__unscheduled", label: "Other" }] : []),
   ];
-  const [activeDayId, setActiveDayId] = useState<string | undefined>(scheduleTabs[0]?.id);
+  const activeDayId =
+    activeDayIdState && scheduleTabs.some((t) => t.id === activeDayIdState)
+      ? activeDayIdState
+      : scheduleTabs[0]?.id;
+
   const activeItems = schedule.filter((s) =>
     activeDayId === "__unscheduled"
       ? !s.dayId || !days.some((d) => d.id === s.dayId)
