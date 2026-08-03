@@ -57,7 +57,7 @@ export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "Red Cherry Events — Rider Hub" },
-      { name: "description", content: "Your race dashboard: next event countdown, event details, news and supplier promos." },
+      { name: "description", content: "Your race dashboard: next event countdown plus upcoming motorbike and bicycle events." },
       { property: "og:title", content: "Red Cherry Events — Rider Hub" },
       { property: "og:description", content: "Your race dashboard for Red Cherry Events." },
     ],
