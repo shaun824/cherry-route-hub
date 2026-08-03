@@ -306,7 +306,8 @@ function SportSection({
   collapsed?: boolean;
   collapseHint?: string;
 }) {
-  const [expanded, setExpanded] = useState(!collapsed);
+  const [userExpanded, setUserExpanded] = useState(false);
+  const showExpanded = !collapsed || userExpanded;
   if (events.length === 0) return null;
   return (
     <section>
