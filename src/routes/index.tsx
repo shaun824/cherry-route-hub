@@ -4,6 +4,7 @@ import { useState } from "react";
 import {
   Activity,
   Bell,
+  Bike,
   Calendar,
   CalendarDays,
   ChevronRight,
@@ -14,6 +15,7 @@ import {
   Instagram,
   LogIn,
   MapPin,
+  Motorbike,
   Music2,
   Newspaper,
   Sparkles,
@@ -27,13 +29,15 @@ import {
 
 import { BrandMark, SectionTitle, TypeBadge } from "@/components/ui-bits";
 import { SponsorScroller } from "@/components/sponsor-scroller";
-import { relativeTime } from "@/lib/mock-data";
+import { formatDate, relativeTime, type Event } from "@/lib/mock-data";
+import { getEventSport } from "@/lib/event-sport";
 import { useAdminStore } from "@/lib/store";
 import { useHydratedStore } from "@/lib/use-hydrated-store";
 import { useSession } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchMyEvents, type MyEventRow } from "@/lib/my-events";
 import type { QuickLinkIcon } from "@/lib/settings";
+
 
 
 const QUICK_ICONS: Record<QuickLinkIcon, typeof Newspaper> = {
