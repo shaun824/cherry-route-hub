@@ -2,6 +2,7 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import { Home, Ticket, Binoculars, User, LogIn, X } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { useSession } from "@/lib/auth";
+import { Footer } from "@/components/footer";
 
 const tabs = [
   { to: "/", label: "Home", icon: Home, match: (p: string) => p === "/" },
@@ -25,7 +26,10 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="mx-auto flex min-h-screen w-full max-w-md flex-col bg-background">
-      <main className="flex-1 pb-28">{children}</main>
+      <main className="flex-1 pb-28">
+        {children}
+        <Footer />
+      </main>
 
       {showSignInCta ? (
         <div
