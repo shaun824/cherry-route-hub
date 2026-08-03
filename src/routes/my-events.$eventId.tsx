@@ -265,6 +265,139 @@ function EventNewsPanel({ posts }: { posts: FeedPost[] }) {
 const DESCRIPTION_PREVIEW_LENGTH = 50;
 
 
+function fileNameFromUrl(url: string, fallback: string) {
+  try {
+    const p = decodeURIComponent(new URL(url, "https://x.invalid").pathname);
+    const last = p.split("/").filter(Boolean).pop();
+    return last && /\.\w{2,4}$/.test(last) ? last : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function DownloadLink({ url, label }: { url: string; label: string }) {
+  return (
+    <a
+      href={url}
+      download={label}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="inline-flex items-center gap-1.5 rounded-lg bg-ink px-2.5 py-1.5 text-[11px] font-semibold text-white"
+    >
+      <Download className="h-3.5 w-3.5" />
+      {label}
+    </a>
+  );
+}
+
+function RoutesPanel({
+  eventId,
+  event,
+}: {
+  eventId: string;
+  event: { days?: EventDay[] | null };
+}) {
+  const days: EventDay[] = Array.isArray(event.days) ? event.days : [];
+  const allRoutes = days.flatMap((d) => d.routes ?? []);
+  const hasMap = allRoutes.some((r) => (r.kmlUrls ?? []).length > 0);
+
+  if (allRoutes.length === 0) {
+    return <EmptyBlock>Routes for this event will be published here soon.</EmptyBlock>;
+  }
+
+  return (
+    <div className="space-y-5">
+      {hasMap ? (
+        <section>
+          <SectionTitle>Interactive map</SectionTitle>
+          <div className="mt-2">
+            <RouteMap event={event as never} height="320px" />
+            <Link
+              to="/events/$eventId/map"
+              params={{ eventId }}
+              className="mt-2 inline-block text-[11px] font-semibold text-cherry"
+            >
+              Open fullscreen map →
+            </Link>
+          </div>
+        </section>
+      ) : null}
+
+      {days.map((day, di) => {
+        const routes = day.routes ?? [];
+        if (routes.length === 0) return null;
+        return (
+          <section key={day.id || di}>
+            <SectionTitle>
+              {day.label || (day.date ? new Date(day.date).toDateString() : `Day ${di + 1}`)}
+            </SectionTitle>
+            <ul className="mt-2 space-y-3">
+              {routes.map((r: EventRoute, ri) => {
+                const kmls = r.kmlUrls ?? [];
+                return (
+                  <li key={r.id || ri} className="rounded-2xl bg-card p-4 ring-1 ring-border">
+                    <div className="flex items-center gap-2">
+                      <span
+                        className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white"
+                        style={{ backgroundColor: r.color || "#b91c1c" }}
+                      >
+                        <RouteIcon className="h-3 w-3" />
+                        {r.tier}
+                      </span>
+                      <p className="text-sm font-semibold text-ink">{r.name}</p>
+                    </div>
+                    <div className="mt-2 flex flex-wrap gap-3 text-xs text-ink-soft">
+                      {r.distanceKm ? (
+                        <span className="inline-flex items-center gap-1">
+                          <Activity className="h-3.5 w-3.5 text-cherry" />
+                          {r.distanceKm} km
+                        </span>
+                      ) : null}
+                      {r.elevationM ? (
+                        <span className="inline-flex items-center gap-1">
+                          <Mountain className="h-3.5 w-3.5 text-cherry" />
+                          {r.elevationM} m climbing
+                        </span>
+                      ) : null}
+                    </div>
+                    {r.description ? (
+                      <p className="mt-2 text-xs leading-relaxed text-ink-soft">{r.description}</p>
+                    ) : null}
+                    {kmls.length > 0 || r.gpxUrl ? (
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {kmls.map((u, i) => (
+                          <DownloadLink
+                            key={u}
+                            url={u}
+                            label={fileNameFromUrl(
+                              u,
+                              `${r.name || "route"}${kmls.length > 1 ? `-${i + 1}` : ""}.kml`,
+                            )}
+                          />
+                        ))}
+                        {r.gpxUrl ? (
+                          <DownloadLink
+                            url={r.gpxUrl}
+                            label={fileNameFromUrl(r.gpxUrl, `${r.name || "route"}.gpx`)}
+                          />
+                        ) : null}
+                      </div>
+                    ) : (
+                      <p className="mt-3 text-[11px] text-muted-foreground">
+                        No route file uploaded yet.
+                      </p>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
+        );
+      })}
+    </div>
+  );
+}
+
 function InfoPanel({
   eventId,
   description,
