@@ -1,7 +1,9 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { z } from "zod";
+import { Info } from "lucide-react";
 import { lovable } from "@/integrations/lovable/index";
+import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/lib/auth";
 import { BrandMark } from "@/components/ui-bits";
 
@@ -12,12 +14,14 @@ export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
       { title: "Sign in · Red Cherry Events" },
-      { name: "description", content: "Sign in to Red Cherry Events with Google." },
+      { name: "description", content: "Sign in to Red Cherry Events with Google or your Entry Ninja email address." },
       { name: "robots", content: "noindex,nofollow" },
     ],
   }),
   component: AuthPage,
 });
+
+type Mode = "signin" | "signup" | "reset";
 
 function AuthPage() {
   const { user, loading } = useSession();
@@ -25,6 +29,10 @@ function AuthPage() {
   const navigate = useNavigate();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+  const [mode, setMode] = useState<Mode>("signin");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
   const target = next && next.startsWith("/") ? next : "/";
 
@@ -35,6 +43,7 @@ function AuthPage() {
   async function handleGoogle() {
     setBusy(true);
     setError(null);
+    setNotice(null);
     const result = await lovable.auth.signInWithOAuth("google", {
       redirect_uri: window.location.origin + "/auth",
     });
@@ -47,30 +56,143 @@ function AuthPage() {
     navigate({ to: target, replace: true });
   }
 
+  async function handleEmail(e: React.FormEvent) {
+    e.preventDefault();
+    setBusy(true);
+    setError(null);
+    setNotice(null);
+    try {
+      if (mode === "reset") {
+        const { error: err } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+          redirectTo: `${window.location.origin}/reset-password`,
+        });
+        if (err) throw err;
+        setNotice("Check your inbox for a password reset link.");
+      } else if (mode === "signup") {
+        const { data, error: err } = await supabase.auth.signUp({
+          email: email.trim(),
+          password,
+          options: { emailRedirectTo: window.location.origin },
+        });
+        if (err) throw err;
+        if (!data.session) {
+          setNotice("Almost there — check your email to confirm your account, then sign in.");
+        }
+      } else {
+        const { error: err } = await supabase.auth.signInWithPassword({
+          email: email.trim(),
+          password,
+        });
+        if (err) throw err;
+      }
+    } catch (err) {
+      setError((err as Error).message || "Something went wrong.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return (
-    <div className="grid min-h-screen place-items-center bg-secondary/40 px-6">
+    <div className="grid min-h-screen place-items-center bg-secondary/40 px-6 py-10">
       <div className="w-full max-w-sm rounded-3xl bg-card p-6 shadow-lg ring-1 ring-border">
         <div className="flex flex-col items-center text-center">
           <BrandMark size={56} />
           <p className="mt-3 text-[11px] font-bold uppercase tracking-[0.18em] text-ink-soft">Red Cherry Events</p>
           <h1 className="font-display text-2xl font-bold">Sign in to the Rider Hub</h1>
-          <p className="mt-2 text-sm text-ink-soft">
-            Use your Google account. Admin access is granted by invitation.
+        </div>
+
+        <div className="mt-4 flex gap-2 rounded-2xl bg-accent/60 p-3 text-left ring-1 ring-border">
+          <Info className="mt-0.5 h-4 w-4 shrink-0 text-cherry" />
+          <p className="text-[12px] leading-snug text-ink">
+            <span className="font-bold">Use the same details you entered with on Entry Ninja.</span>{" "}
+            Matching your Entry Ninja email is how we link you to your events.
           </p>
         </div>
 
         <button
           onClick={handleGoogle}
           disabled={busy}
-          className="mt-6 flex w-full items-center justify-center gap-3 rounded-xl border border-border bg-white px-4 py-3 text-sm font-semibold text-ink shadow-sm transition hover:bg-secondary disabled:opacity-60"
+          className="mt-4 flex w-full items-center justify-center gap-3 rounded-xl border border-border bg-white px-4 py-3 text-sm font-semibold text-ink shadow-sm transition hover:bg-secondary disabled:opacity-60"
         >
           <GoogleIcon />
-          {busy ? "Redirecting…" : "Continue with Google"}
+          Continue with Google
         </button>
 
-        {error ? <p className="mt-3 text-center text-xs text-cherry">{error}</p> : null}
+        <div className="my-4 flex items-center gap-3">
+          <span className="h-px flex-1 bg-border" />
+          <span className="text-[10px] font-bold uppercase tracking-widest text-ink-soft">or use email</span>
+          <span className="h-px flex-1 bg-border" />
+        </div>
 
-        <p className="mt-6 text-center text-[11px] text-ink-soft">
+        <form onSubmit={handleEmail} className="space-y-3">
+          <label className="block">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-ink-soft">Email</span>
+            <input
+              required
+              type="email"
+              autoComplete="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="you@example.com"
+              className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+            />
+          </label>
+          {mode !== "reset" ? (
+            <label className="block">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-ink-soft">Password</span>
+              <input
+                required
+                type="password"
+                minLength={6}
+                autoComplete={mode === "signup" ? "new-password" : "current-password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+              />
+            </label>
+          ) : null}
+
+          <button
+            type="submit"
+            disabled={busy}
+            className="w-full rounded-xl cherry-gradient py-2.5 text-sm font-bold text-white disabled:opacity-60"
+          >
+            {busy
+              ? "Please wait…"
+              : mode === "signup"
+                ? "Create account"
+                : mode === "reset"
+                  ? "Send reset link"
+                  : "Sign in"}
+          </button>
+        </form>
+
+        {error ? <p className="mt-3 text-center text-xs font-semibold text-cherry">{error}</p> : null}
+        {notice ? (
+          <p className="mt-3 rounded-lg bg-accent px-3 py-2 text-center text-xs font-semibold text-cherry-deep">
+            {notice}
+          </p>
+        ) : null}
+
+        <div className="mt-4 flex items-center justify-between text-[11px] font-semibold text-ink-soft">
+          {mode === "signin" ? (
+            <>
+              <button type="button" className="underline" onClick={() => { setMode("signup"); setError(null); setNotice(null); }}>
+                Create an account
+              </button>
+              <button type="button" className="underline" onClick={() => { setMode("reset"); setError(null); setNotice(null); }}>
+                Forgot password?
+              </button>
+            </>
+          ) : (
+            <button type="button" className="underline" onClick={() => { setMode("signin"); setError(null); setNotice(null); }}>
+              ← Back to sign in
+            </button>
+          )}
+        </div>
+
+        <p className="mt-5 text-center text-[11px] text-ink-soft">
           By continuing you agree to Red Cherry Events'{" "}
           <Link to="/" className="underline">terms</Link>.
         </p>
@@ -78,6 +200,7 @@ function AuthPage() {
     </div>
   );
 }
+
 
 function GoogleIcon() {
   return (
