@@ -144,7 +144,66 @@ function MyEventDetail() {
   );
 }
 
+function EventSponsorsPanel({ eventId }: { eventId: string }) {
+  const load = useServerFn(fetchEventSponsors);
+  const q = useQuery({
+    queryKey: ["event-sponsors", eventId],
+    queryFn: () => load({ data: { eventId } }),
+    staleTime: 60 * 60 * 1000,
+  });
+
+  if (q.isLoading) {
+    return <p className="py-8 text-center text-sm text-ink-soft">Loading sponsors…</p>;
+  }
+  const sponsors = q.data?.sponsors ?? [];
+  if (sponsors.length === 0) {
+    return (
+      <p className="py-8 text-center text-sm text-ink-soft">
+        No sponsors found for this event yet.
+      </p>
+    );
+  }
+
+  return (
+    <div>
+      <p className="mb-3 text-xs text-ink-soft">
+        Proudly supported by these partners. Tap a logo to visit their site.
+      </p>
+      <div className="grid grid-cols-2 gap-3">
+        {sponsors.map((s) => {
+          const inner = (
+            <div className="grid h-24 place-items-center rounded-2xl border border-border bg-card p-3">
+              <img
+                src={s.logoUrl}
+                alt={s.name}
+                loading="lazy"
+                className="max-h-16 max-w-full object-contain"
+              />
+            </div>
+          );
+          return s.linkUrl ? (
+            <a key={s.logoUrl} href={s.linkUrl} target="_blank" rel="noreferrer noopener">
+              {inner}
+            </a>
+          ) : (
+            <div key={s.logoUrl}>{inner}</div>
+          );
+        })}
+      </div>
+      {q.data?.source ? (
+        <p className="mt-3 text-center text-[11px] text-ink-soft">
+          Pulled from{" "}
+          <a href={q.data.source} target="_blank" rel="noreferrer noopener" className="underline">
+            the official event site
+          </a>
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
 function EventNewsPanel({ posts }: { posts: FeedPost[] }) {
+
   const now = Date.now();
   const sorted = posts
     .filter((p) => new Date(p.postedAt).getTime() <= now)
