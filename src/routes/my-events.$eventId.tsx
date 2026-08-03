@@ -15,6 +15,9 @@ import {
   MapPin,
   MessageCircle,
   MessagesSquare,
+  Newspaper,
+  Pin,
+
   Phone,
   Send,
   Square,
