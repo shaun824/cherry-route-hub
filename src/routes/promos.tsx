@@ -1,10 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { PageHeader } from "@/components/ui-bits";
 import { SponsorScroller } from "@/components/sponsor-scroller";
 import { useAdminStore } from "@/lib/store";
 import { useHydratedStore } from "@/lib/use-hydrated-store";
-import { Copy, Check, ExternalLink } from "lucide-react";
+import { Copy, Check, ExternalLink, X } from "lucide-react";
 
 export const Route = createFileRoute("/promos")({
   head: () => ({
@@ -20,13 +20,26 @@ function Promos() {
   useHydratedStore();
   const promos = useAdminStore((s) => s.promos);
   const [copied, setCopied] = useState<string | null>(null);
+  const [pending, setPending] = useState<{ code: string; url: string; brand: string } | null>(null);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  useEffect(() => {
+    if (!pending) return;
+    timer.current = setTimeout(() => {
+      window.open(pending.url, "_blank", "noopener,noreferrer");
+      setPending(null);
+    }, 3000);
+    return () => {
+      if (timer.current) clearTimeout(timer.current);
+    };
+  }, [pending]);
 
   function copy(code: string) {
     navigator.clipboard?.writeText(code);
     setCopied(code);
     setTimeout(() => setCopied(null), 1600);
   }
+
 
   return (
     <div>
@@ -89,6 +102,11 @@ function Promos() {
                   href={p.url}
                   target="_blank"
                   rel="noopener noreferrer"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    copy(p.code);
+                    setPending({ code: p.code, url: p.url!, brand: p.brand });
+                  }}
                   className="inline-flex shrink-0 items-center gap-1 rounded-md bg-accent px-2 py-1 text-xs font-black uppercase text-cherry-deep hover:underline"
                 >
                   {p.discount} <ExternalLink className="h-3 w-3" />
@@ -104,7 +122,29 @@ function Promos() {
       </ul>
       <SponsorScroller title="Our sponsors" />
       <div className="pb-6" />
+
+      {pending ? (
+        <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 px-6">
+          <div className="relative w-full max-w-sm rounded-2xl bg-card p-6 text-center ring-1 ring-border">
+            <button
+              onClick={() => setPending(null)}
+              aria-label="Close"
+              className="absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-full bg-muted text-muted-foreground"
+            >
+              <X className="h-4 w-4" />
+            </button>
+            <p className="text-sm text-muted-foreground">
+              Use this code on {pending.brand}'s website
+            </p>
+            <p className="mt-3 font-mono text-2xl font-black text-ink">{pending.code}</p>
+            <p className="mt-3 text-xs text-muted-foreground">
+              Code copied — taking you there in a moment…
+            </p>
+          </div>
+        </div>
+      ) : null}
     </div>
+
   );
 }
 
