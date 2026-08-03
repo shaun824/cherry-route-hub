@@ -422,6 +422,39 @@ function BrandingCard({
             onChange={(e) => setForm({ ...form, welcomeMessage: e.target.value })}
           />
         </Field>
+        <Field label="Title sponsor name (home banner)">
+          <input
+            className={input()}
+            value={form.titleSponsorName ?? ""}
+            placeholder="e.g. M&G Investments"
+            onChange={(e) => setForm({ ...form, titleSponsorName: e.target.value })}
+          />
+        </Field>
+        <Field label="Title sponsor website">
+          <input
+            className={input()}
+            value={form.titleSponsorUrl ?? ""}
+            placeholder="https://sponsor.co.za"
+            onChange={(e) => setForm({ ...form, titleSponsorUrl: e.target.value })}
+          />
+        </Field>
+        <Field label="Title sponsor logo URL (shown on the home banner)">
+          <input
+            className={input()}
+            value={form.titleSponsorLogoUrl ?? ""}
+            placeholder="https://…/logo.png"
+            onChange={(e) => setForm({ ...form, titleSponsorLogoUrl: e.target.value })}
+          />
+          {form.titleSponsorLogoUrl ? (
+            <div className="mt-2 inline-flex items-center rounded-lg bg-ink p-2">
+              <img
+                src={form.titleSponsorLogoUrl}
+                alt="Title sponsor preview"
+                className="h-8 max-w-[160px] object-contain"
+              />
+            </div>
+          ) : null}
+        </Field>
       </div>
 
       <SaveBar dirty={dirty} saving={saving} saved={saved} onSave={submit} />
