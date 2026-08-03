@@ -243,13 +243,18 @@ function Home() {
         icon={Motorbike}
         sport="moto"
         events={motoEvents}
+        collapsed={collapseMoto}
+        collapseHint="Not your sport? Tap to view motorbike events."
       />
       <SportSection
         title="Bicycle events"
         icon={Bike}
         sport="mtb"
         events={mtbEvents}
+        collapsed={collapseMtb}
+        collapseHint="Not your sport? Tap to view bicycle events."
       />
+
 
 
       {/* Promo teaser */}
