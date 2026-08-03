@@ -1,0 +1,1 @@
+ALTER TABLE public.promos ADD COLUMN IF NOT EXISTS logo_url text, ADD COLUMN IF NOT EXISTS url text;
