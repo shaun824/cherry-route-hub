@@ -1,41 +1,39 @@
+# Home page: event discovery by sport, news moves per event
+
 ## Goal
 
-Reframe the third bottom-nav slot from **Tracker** (mock rider tool) to **Spectate** (public event browser for supporters). Move rider tracking + SOS into the per-event My Events page, where it only appears when that event is live.
+Make the home page a live, always-changing view of what's coming up, split into Motorbike and Bicycle events. Retire the general news section from home and move news to a per-event tab, so riders read updates in the context of the event they entered.
 
-## Changes
+## New home page structure (top to bottom)
 
-### 1. Data model
-- Add `spectator_mode boolean not null default false` to `public.events`.
-- Admin editor (`admin.events.tsx`): new toggle "Open to spectators" in the event form, saved alongside status.
+1. Hero header — brand, welcome, notifications bell (unchanged)
+2. Your next event — countdown hero for signed-in riders with a linked entry (unchanged, stays on top). Signed-out riders keep the sign-in CTA card.
+3. Pinned notice strip — a single slim alert row, only when a pinned post exists that isn't tied to a specific event. Tappable to expand; nothing shows when there's no pinned notice.
+4. Motorbike events — section with the moto icon, showing the next 4 upcoming motorbike events, each card with date, countdown ("In 12d"), location, distance and status badge. "See all" link to the events list filtered to moto.
+5. Bicycle events — same layout for MTB/gravel/road events, "See all" to the events list filtered to bike.
+6. Supplier promos (unchanged)
+7. Sponsor scroller (unchanged)
 
-### 2. New Spectate tab
-- Replace `src/routes/tracker.tsx` with `src/routes/spectate.tsx` (keep old file until routes swap to avoid dead links).
-- Lists **all non-archived events**, ordered by date.
-- Each card shows: event name, date, location, discipline, live countdown.
-- Card is **clickable only when `spectator_mode = true`**. Otherwise renders as a locked tile with a small "Opens closer to race day" hint and a subtle lock glyph — no navigation.
-- Unlocked cards link to a new **public spectator view** `src/routes/spectate.$eventId.tsx` (lean version of the current event page: hero, venue map, schedule, routes, sponsors, socials — no rider-private data, no chat, no report).
-- Header pill filter: **Upcoming / Live** (Live = `status = 'live'`).
+Removed from home: the "Latest from the pits" news list. General news is still reachable from the notifications bell and the existing feed page.
 
-### 3. Bottom nav
-- `src/components/app-shell.tsx`: swap the Tracker tab for Spectate (icon: `Binoculars` or `Eye`, label "Spectate"). Update the match predicate to `/spectate`.
-- **Remove the floating SOS button** from `app-shell.tsx` — it no longer belongs at the app-shell level.
+Event cards sort by soonest date, exclude archived/past events, and show a live pulse badge when an event is running. Sections hide themselves if that sport has no upcoming events.
 
-### 4. Rider tracking moves into My Events
-- Add a `TrackerPanel` section to `src/routes/my-events.$eventId.tsx`, rendered only when the event's `status === 'live'`.
-- Panel contains: Start/Stop live tracking, current GPS card, and the prominent SOS button (same behaviour as today's tracker page).
-- When the event isn't live yet, show a small muted note: "Tracking activates on race day."
+## Per-event news tab
 
-### 5. Cleanup
-- Delete `src/routes/tracker.tsx` once Spectate is wired and nothing links to `/tracker`.
-- Update any remaining links (search for `to="/tracker"`).
+The event page (My Events > event) gains a "News" tab alongside Info, Packing, Chat and Ask. It lists posts assigned to that event, pinned first, newest first, with type badge and relative time — same visual treatment as today's feed cards. A badge dot appears on the tab when there are posts from the last 7 days.
+
+Empty state: "No updates for this event yet."
+
+## Events list filtering
+
+The events page gets Motorbike / Bicycle / All filter pills so the "See all" links from home land on the right list.
 
 ## Technical notes
 
-- `spectator_mode` migration includes the toggle only; no new tables, no new policies (existing events SELECT policy already covers reads).
-- Spectator view reuses existing components (`RouteMap`, sponsor scroller, venue embed) but is a separate route so we can trim it independently from the rider-owned My Events page.
-- Countdown logic already exists on Home — extract into a small `useCountdown(date)` hook in `src/lib/utils.ts` and reuse on Spectate cards.
-- Tracker panel reuses the geolocation + SOS logic lifted from `tracker.tsx` into a new `src/components/tracker-panel.tsx` for clean removal of the old route.
+- Sport classification reuses `src/lib/event-sport.ts` (`getEventSport`), already used on the events list.
+- Home reads events from the existing `useAdminStore` + `useHydratedStore` hydration; no schema changes needed.
+- Per-event news filters `feed` on the existing `eventId` field on `FeedPost`; the admin feed editor already supports assigning a post to an event.
+- Home page `head()` description updated to reflect event discovery instead of news.
+- New home sections extracted into small components inside `src/routes/index.tsx` to keep the file readable.
 
-## Overall app take
-
-The app is in a strong spot: Home → My Events → Report is a clean rider funnel, admin coverage is broad, and the sponsor/socials work adds real value. Two lingering rough edges beyond this plan: (1) mock data still bleeds into a few components via `src/lib/mock-data.ts` — worth a follow-up pass to fully cut over to Supabase-hydrated state; (2) the packing-checklist and chat features are built but under-surfaced on the event page — a small "What's here" strip on My Events could lift engagement. Happy to line those up as separate plans after Spectate lands.
+Files touched: `src/routes/index.tsx`, `src/routes/my-events.$eventId.tsx`, `src/routes/events.index.tsx`.
