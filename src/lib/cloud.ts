@@ -79,6 +79,8 @@ export async function fetchPromos(): Promise<Promo[] | null> {
     discount: String(r.discount ?? ""),
     expires: (r.expires as string | null) ?? "",
     accent: String(r.accent ?? "oklch(0.5 0.2 25)"),
+    logoUrl: (r.logo_url as string | null) ?? undefined,
+    url: (r.url as string | null) ?? undefined,
   }));
 }
 export async function upsertPromoCloud(p: Promo) {
@@ -91,6 +93,8 @@ export async function upsertPromoCloud(p: Promo) {
     discount: p.discount,
     expires: p.expires || null,
     accent: p.accent,
+    logo_url: p.logoUrl ?? null,
+    url: p.url ?? null,
   };
   const { data, error } = await supabase.from("promos").upsert(row).select().single();
   log(error, "upsertPromo");
