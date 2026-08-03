@@ -4,7 +4,7 @@ import { PageHeader } from "@/components/ui-bits";
 import { SponsorScroller } from "@/components/sponsor-scroller";
 import { useAdminStore } from "@/lib/store";
 import { useHydratedStore } from "@/lib/use-hydrated-store";
-import { Copy, Check } from "lucide-react";
+import { Copy, Check, ExternalLink } from "lucide-react";
 
 export const Route = createFileRoute("/promos")({
   head: () => ({
@@ -41,13 +41,27 @@ function Promos() {
               className="px-4 py-4 text-white"
               style={{ background: `linear-gradient(135deg, ${p.accent}, oklch(0.2 0.02 260))` }}
             >
-              <p className="text-[11px] font-semibold uppercase tracking-widest opacity-85">
-                {p.brand}
-              </p>
-              <p className="mt-1 font-display text-lg font-bold leading-tight">{p.title}</p>
-              <p className="mt-2 text-[11px] opacity-80">
-                Expires {new Date(p.expires).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" })}
-              </p>
+              <div className="flex items-start gap-3">
+                {p.logoUrl ? (
+                  <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-white/95 p-1 ring-1 ring-white/40">
+                    <img
+                      src={p.logoUrl}
+                      alt={`${p.brand} logo`}
+                      loading="lazy"
+                      className="max-h-10 max-w-10 object-contain"
+                    />
+                  </span>
+                ) : null}
+                <div className="min-w-0">
+                  <p className="text-[11px] font-semibold uppercase tracking-widest opacity-85">
+                    {p.brand}
+                  </p>
+                  <p className="mt-1 font-display text-lg font-bold leading-tight">{p.title}</p>
+                  <p className="mt-2 text-[11px] opacity-80">
+                    Expires {new Date(p.expires).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" })}
+                  </p>
+                </div>
+              </div>
             </div>
             <div className="flex items-center justify-between gap-3 px-4 py-3">
               <div className="min-w-0">
@@ -70,9 +84,20 @@ function Promos() {
                   </>
                 )}
               </button>
-              <span className="rounded-md bg-accent px-2 py-1 text-xs font-black uppercase text-cherry-deep">
-                {p.discount}
-              </span>
+              {p.url ? (
+                <a
+                  href={p.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex shrink-0 items-center gap-1 rounded-md bg-accent px-2 py-1 text-xs font-black uppercase text-cherry-deep hover:underline"
+                >
+                  {p.discount} <ExternalLink className="h-3 w-3" />
+                </a>
+              ) : (
+                <span className="rounded-md bg-accent px-2 py-1 text-xs font-black uppercase text-cherry-deep">
+                  {p.discount}
+                </span>
+              )}
             </div>
           </li>
         ))}

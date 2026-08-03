@@ -586,8 +586,10 @@ export type Database = {
           discount: string
           expires: string | null
           id: string
+          logo_url: string | null
           title: string
           updated_at: string
+          url: string | null
         }
         Insert: {
           accent?: string
@@ -597,8 +599,10 @@ export type Database = {
           discount: string
           expires?: string | null
           id?: string
+          logo_url?: string | null
           title: string
           updated_at?: string
+          url?: string | null
         }
         Update: {
           accent?: string
@@ -608,8 +612,10 @@ export type Database = {
           discount?: string
           expires?: string | null
           id?: string
+          logo_url?: string | null
           title?: string
           updated_at?: string
+          url?: string | null
         }
         Relationships: []
       }
