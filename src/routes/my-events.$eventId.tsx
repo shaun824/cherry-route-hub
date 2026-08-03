@@ -141,7 +141,56 @@ function MyEventDetail() {
   );
 }
 
+function EventNewsPanel({ posts }: { posts: FeedPost[] }) {
+  const now = Date.now();
+  const sorted = posts
+    .filter((p) => new Date(p.postedAt).getTime() <= now)
+    .sort((a, b) => {
+      if (a.pinned !== b.pinned) return a.pinned ? -1 : 1;
+      return new Date(b.postedAt).getTime() - new Date(a.postedAt).getTime();
+    });
+
+  if (sorted.length === 0) {
+    return (
+      <div className="rounded-2xl bg-card p-6 text-center text-sm text-ink-soft ring-1 ring-border">
+        No updates for this event yet.
+      </div>
+    );
+  }
+
+  return (
+    <ul className="space-y-3">
+      {sorted.map((p) => (
+        <li
+          key={p.id}
+          className={`rounded-2xl p-4 ring-1 ${
+            p.pinned ? "bg-amber-50 ring-amber-300/60" : "bg-card ring-border"
+          }`}
+        >
+          <div className="flex items-center gap-2">
+            <TypeBadge type={p.type} />
+            {p.pinned ? (
+              <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-900">
+                <Pin className="h-3 w-3" /> Pinned
+              </span>
+            ) : null}
+            <span className="ml-auto text-[11px] text-muted-foreground">
+              {relativeTime(p.postedAt)}
+            </span>
+          </div>
+          <h3 className="mt-2 font-display text-base font-bold leading-snug text-ink">{p.title}</h3>
+          <p className="mt-1.5 text-sm leading-relaxed text-ink-soft">{p.body}</p>
+          <p className="mt-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            {p.author}
+          </p>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 const DESCRIPTION_PREVIEW_LENGTH = 50;
+
 
 function InfoPanel({
   eventId,
