@@ -1,6 +1,7 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { askEventBot } from "@/lib/event-bot.functions";
+import { fetchEventSponsors } from "@/lib/event-sponsors.functions";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -16,6 +17,7 @@ import {
   MessageCircle,
   MessagesSquare,
   Newspaper,
+  Handshake,
   Pin,
 
   Phone,
@@ -61,7 +63,7 @@ export const Route = createFileRoute("/my-events/$eventId")({
   ),
 });
 
-type Tab = "info" | "news" | "chat" | "ask" | "packing";
+type Tab = "info" | "news" | "chat" | "ask" | "packing" | "sponsors";
 
 function MyEventDetail() {
   const { event } = Route.useLoaderData();
@@ -110,6 +112,7 @@ function MyEventDetail() {
             { id: "packing", label: "Packing", icon: CheckSquare },
             { id: "chat", label: "Event chat", icon: MessageCircle },
             { id: "ask", label: "Ask admin", icon: MessagesSquare },
+            { id: "sponsors", label: "Sponsors", icon: Handshake },
           ] as { id: Tab; label: string; icon: typeof Info }[]
         ).map((t) => {
           const Icon = t.icon;
@@ -138,6 +141,7 @@ function MyEventDetail() {
         {tab === "packing" && <PackingPanel eventId={event.id} userId={user?.id ?? null} />}
         {tab === "chat" && <ChatPanel eventId={event.id} userId={user?.id ?? null} />}
         {tab === "ask" && <AskAdminPanel eventId={event.id} userId={user?.id ?? null} />}
+        {tab === "sponsors" && <EventSponsorsPanel eventId={event.id} />}
 
       </div>
     </div>
@@ -170,7 +174,7 @@ function EventSponsorsPanel({ eventId }: { eventId: string }) {
         Proudly supported by these partners. Tap a logo to visit their site.
       </p>
       <div className="grid grid-cols-2 gap-3">
-        {sponsors.map((s) => {
+        {sponsors.map((s: { name: string; logoUrl: string; linkUrl: string | null }) => {
           const inner = (
             <div className="grid h-24 place-items-center rounded-2xl border border-border bg-card p-3">
               <img
