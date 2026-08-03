@@ -382,6 +382,9 @@ export type Database = {
           spectator_notes: string | null
           spectator_parking: string | null
           status: string
+          title_sponsor_logo_url: string | null
+          title_sponsor_name: string | null
+          title_sponsor_url: string | null
           updated_at: string
           website_url: string | null
         }
@@ -415,6 +418,9 @@ export type Database = {
           spectator_notes?: string | null
           spectator_parking?: string | null
           status?: string
+          title_sponsor_logo_url?: string | null
+          title_sponsor_name?: string | null
+          title_sponsor_url?: string | null
           updated_at?: string
           website_url?: string | null
         }
@@ -448,6 +454,9 @@ export type Database = {
           spectator_notes?: string | null
           spectator_parking?: string | null
           status?: string
+          title_sponsor_logo_url?: string | null
+          title_sponsor_name?: string | null
+          title_sponsor_url?: string | null
           updated_at?: string
           website_url?: string | null
         }
