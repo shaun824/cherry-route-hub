@@ -222,6 +222,9 @@ export async function upsertEventCloud(e: Event): Promise<string | null> {
     spectator_food: e.spectatorFood ?? null,
     spectator_notes: e.spectatorNotes ?? null,
     has_toilets: e.hasToilets ?? true,
+    title_sponsor_name: e.titleSponsorName ?? null,
+    title_sponsor_logo_url: e.titleSponsorLogoUrl ?? null,
+    title_sponsor_url: e.titleSponsorUrl ?? null,
   };
   const { data, error } = await supabase.from("events").upsert(row).select().single();
   log(error, "upsertEvent");
