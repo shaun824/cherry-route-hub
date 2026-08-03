@@ -161,12 +161,18 @@ function Home() {
           </button>
         </div>
 
-        <div className="relative mt-7">
-          <p className="text-sm opacity-85">{branding.welcomeMessage}</p>
-          <p className="font-display text-xl font-bold">
-            {user ? displayName : "Rider"}
-          </p>
-
+        <div className="relative mt-7 flex items-end justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-sm opacity-85">{branding.welcomeMessage}</p>
+            <p className="font-display text-xl font-bold">
+              {user ? displayName : "Rider"}
+            </p>
+          </div>
+          <TitleSponsorBadge
+            name={branding.titleSponsorName}
+            logoUrl={branding.titleSponsorLogoUrl}
+            url={branding.titleSponsorUrl}
+          />
         </div>
 
       </div>
@@ -607,6 +613,42 @@ function NextEventCard() {
   );
 }
 
+function TitleSponsorBadge({
+  name,
+  logoUrl,
+  url,
+}: {
+  name?: string;
+  logoUrl?: string;
+  url?: string;
+}) {
+  if (!logoUrl && !name?.trim()) return null;
+  const inner = (
+    <div className="flex flex-col items-end gap-1 rounded-xl bg-white/15 px-3 py-2 backdrop-blur">
+      <span className="text-[9px] font-bold uppercase tracking-[0.18em] opacity-80">
+        Title sponsor
+      </span>
+      {logoUrl ? (
+        <img
+          src={logoUrl}
+          alt={name ? `${name} logo` : "Title sponsor"}
+          className="h-6 max-w-[112px] object-contain"
+          loading="lazy"
+        />
+      ) : (
+        <span className="text-xs font-bold">{name}</span>
+      )}
+    </div>
+  );
+  return url ? (
+    <a href={url} target="_blank" rel="noreferrer" className="shrink-0">
+      {inner}
+    </a>
+  ) : (
+    <div className="shrink-0">{inner}</div>
+  );
+}
+
 function NextEventHero({ row }: { row: MyEventRow }) {
   const cd = countdownLabel(row.event.event_date);
   const date = new Date(row.event.event_date);
@@ -627,6 +669,24 @@ function NextEventHero({ row }: { row: MyEventRow }) {
         ) : null}
       </div>
       <p className="mt-1 font-display text-2xl font-bold leading-tight">{row.event.name}</p>
+
+      {row.event.title_sponsor_logo_url || row.event.title_sponsor_name ? (
+        <div className="mt-3 flex items-center gap-2.5 rounded-xl bg-white/12 px-3 py-2 backdrop-blur">
+          <span className="text-[9px] font-bold uppercase tracking-widest opacity-75">
+            Title sponsor
+          </span>
+          {row.event.title_sponsor_logo_url ? (
+            <img
+              src={row.event.title_sponsor_logo_url}
+              alt={row.event.title_sponsor_name ?? "Title sponsor"}
+              className="h-7 max-w-[120px] object-contain"
+              loading="lazy"
+            />
+          ) : (
+            <span className="truncate text-xs font-bold">{row.event.title_sponsor_name}</span>
+          )}
+        </div>
+      ) : null}
 
       <div className="mt-4 flex items-end justify-between gap-3">
         <div>
