@@ -34,7 +34,10 @@ import { SponsorScroller } from "@/components/sponsor-scroller";
 import { useAdminStore } from "@/lib/store";
 import { fetchMyEventById, type MyEventRow } from "@/lib/my-events";
 import { Printer, Shirt, Package, Siren } from "lucide-react";
-import type { EventDay, EventRoute, ScheduleItem, SocialLinks } from "@/lib/mock-data";
+import type { EventDay, EventRoute, FeedPost, ScheduleItem, SocialLinks } from "@/lib/mock-data";
+import { relativeTime } from "@/lib/mock-data";
+import { TypeBadge } from "@/components/ui-bits";
+
 import { TrackerPanel } from "@/components/tracker-panel";
 
 export const Route = createFileRoute("/my-events/$eventId")({
