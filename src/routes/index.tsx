@@ -7,6 +7,7 @@ import {
   Bike,
   Calendar,
   CalendarDays,
+  ChevronDown,
   ChevronRight,
   Facebook,
   Globe,
@@ -308,36 +309,69 @@ function SportSection({
 }) {
   const [userExpanded, setUserExpanded] = useState(false);
   const showExpanded = !collapsed || userExpanded;
+  const toggle = () => setUserExpanded((v) => !v);
   if (events.length === 0) return null;
   return (
     <section>
       <div className="flex items-baseline justify-between px-5 pb-2 pt-6">
-        <h2 className="flex items-center gap-2 font-display text-[15px] font-bold uppercase tracking-wider text-ink-soft">
-          <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-accent text-cherry-deep">
-            <Icon className="h-3.5 w-3.5" />
-          </span>
-          {title}
-        </h2>
-        <Link to="/events" search={{ sport }} className="text-xs font-semibold text-cherry">
-          See all →
-        </Link>
+        {collapsed ? (
+          <button
+            type="button"
+            onClick={toggle}
+            aria-expanded={showExpanded}
+            className="flex items-center gap-2 font-display text-[15px] font-bold uppercase tracking-wider text-ink-soft active:opacity-70 transition"
+          >
+            <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-accent text-cherry-deep">
+              <Icon className="h-3.5 w-3.5" />
+            </span>
+            {title}
+            <ChevronDown
+              className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-300 ${
+                showExpanded ? "rotate-180" : ""
+              }`}
+            />
+          </button>
+        ) : (
+          <h2 className="flex items-center gap-2 font-display text-[15px] font-bold uppercase tracking-wider text-ink-soft">
+            <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-accent text-cherry-deep">
+              <Icon className="h-3.5 w-3.5" />
+            </span>
+            {title}
+          </h2>
+        )}
+        {showExpanded ? (
+          <Link to="/events" search={{ sport }} className="text-xs font-semibold text-cherry">
+            See all →
+          </Link>
+        ) : null}
       </div>
+
+      {/* Clear "Tap to expand" prompt shown only while collapsed */}
       {collapsed && !showExpanded ? (
         <button
           type="button"
-          onClick={() => setUserExpanded(true)}
-          className="mx-5 mt-1 flex w-[calc(100%-2.5rem)] items-center justify-between gap-3 rounded-2xl bg-secondary/60 px-4 py-3 text-left ring-1 ring-border active:scale-[0.99] transition"
+          onClick={toggle}
+          className="mx-5 mt-1 flex w-[calc(100%-2.5rem)] items-center justify-between gap-3 rounded-2xl bg-secondary/60 px-4 py-3 text-left ring-1 ring-border active:scale-[0.99] transition animate-fade-in"
         >
           <span className="flex items-center gap-2.5 text-sm text-ink-soft">
-            <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
-            {collapseHint ?? "Tap to view events."}
+            <ChevronDown className="h-4 w-4 shrink-0 text-cherry-deep" />
+            <span>
+              <span className="font-semibold text-ink">Tap to expand</span>
+              <span className="ml-1.5">{collapseHint ?? "view these events."}</span>
+            </span>
           </span>
           <span className="shrink-0 rounded-full bg-accent px-2 py-0.5 text-[11px] font-bold text-cherry-deep">
             {events.length}
           </span>
         </button>
-      ) : (
-        <ul className="space-y-2 px-5">
+      ) : null}
+
+      {/* Smooth height + opacity animation for the event list */}
+      <div
+        className="overflow-hidden transition-[max-height,opacity] duration-300 ease-out"
+        style={{ maxHeight: showExpanded ? "800px" : "0px", opacity: showExpanded ? 1 : 0 }}
+      >
+        <ul className="space-y-2 px-5 pt-1">
           {events.map((e) => (
             <li key={e.id}>
               <Link
@@ -377,7 +411,7 @@ function SportSection({
             </li>
           ))}
         </ul>
-      )}
+      </div>
     </section>
   );
 }
