@@ -86,6 +86,23 @@ function Home() {
   const motoEvents = upcoming.filter((e) => getEventSport(e.discipline, e.name) === "moto").slice(0, 4);
   const mtbEvents = upcoming.filter((e) => getEventSport(e.discipline, e.name) === "mtb").slice(0, 4);
 
+  // Determine which sport(s) this signed-in rider has actually entered.
+  // The query shares its cache with NextEventCard.
+  const myEventsQ = useQuery({
+    queryKey: ["my-events-home"],
+    queryFn: () => fetchMyEvents(),
+    enabled: !!user,
+    staleTime: 60_000,
+  });
+  const enteredSports = new Set<"moto" | "mtb">(
+    (myEventsQ.data ?? []).map((r) => getEventSport(r.event.discipline, r.event.name)),
+  );
+  const hasEntered = !!user && enteredSports.size > 0;
+  // When the rider has entered events, collapse the sport they haven't entered.
+  const collapseMoto = hasEntered && !enteredSports.has("moto");
+  const collapseMtb = hasEntered && !enteredSports.has("mtb");
+
+
 
   const profile = useQuery({
     queryKey: ["home-profile", user?.id],
