@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SpectateRouteImport } from './routes/spectate'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as PromosRouteImport } from './routes/promos'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as MyEventsRouteImport } from './routes/my-events'
@@ -42,6 +43,11 @@ import { Route as AdminEventInfoEventIdRouteImport } from './routes/admin.event-
 const SpectateRoute = SpectateRouteImport.update({
   id: '/spectate',
   path: '/spectate',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PromosRoute = PromosRouteImport.update({
@@ -194,6 +200,7 @@ export interface FileRoutesByFullPath {
   '/my-events': typeof MyEventsRouteWithChildren
   '/profile': typeof ProfileRoute
   '/promos': typeof PromosRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/spectate': typeof SpectateRouteWithChildren
   '/admin/events': typeof AdminEventsRoute
   '/admin/feed': typeof AdminFeedRoute
@@ -223,6 +230,7 @@ export interface FileRoutesByTo {
   '/gallery': typeof GalleryRoute
   '/profile': typeof ProfileRoute
   '/promos': typeof PromosRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/spectate': typeof SpectateRouteWithChildren
   '/admin/events': typeof AdminEventsRoute
   '/admin/feed': typeof AdminFeedRoute
@@ -254,6 +262,7 @@ export interface FileRoutesById {
   '/my-events': typeof MyEventsRouteWithChildren
   '/profile': typeof ProfileRoute
   '/promos': typeof PromosRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/spectate': typeof SpectateRouteWithChildren
   '/admin/events': typeof AdminEventsRoute
   '/admin/feed': typeof AdminFeedRoute
@@ -287,6 +296,7 @@ export interface FileRouteTypes {
     | '/my-events'
     | '/profile'
     | '/promos'
+    | '/reset-password'
     | '/spectate'
     | '/admin/events'
     | '/admin/feed'
@@ -316,6 +326,7 @@ export interface FileRouteTypes {
     | '/gallery'
     | '/profile'
     | '/promos'
+    | '/reset-password'
     | '/spectate'
     | '/admin/events'
     | '/admin/feed'
@@ -346,6 +357,7 @@ export interface FileRouteTypes {
     | '/my-events'
     | '/profile'
     | '/promos'
+    | '/reset-password'
     | '/spectate'
     | '/admin/events'
     | '/admin/feed'
@@ -378,6 +390,7 @@ export interface RootRouteChildren {
   MyEventsRoute: typeof MyEventsRouteWithChildren
   ProfileRoute: typeof ProfileRoute
   PromosRoute: typeof PromosRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   SpectateRoute: typeof SpectateRouteWithChildren
   EventsEventIdRoute: typeof EventsEventIdRouteWithChildren
   EventsIndexRoute: typeof EventsIndexRoute
@@ -390,6 +403,13 @@ declare module '@tanstack/react-router' {
       path: '/spectate'
       fullPath: '/spectate'
       preLoaderRoute: typeof SpectateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/promos': {
@@ -684,6 +704,7 @@ const rootRouteChildren: RootRouteChildren = {
   MyEventsRoute: MyEventsRouteWithChildren,
   ProfileRoute: ProfileRoute,
   PromosRoute: PromosRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   SpectateRoute: SpectateRouteWithChildren,
   EventsEventIdRoute: EventsEventIdRouteWithChildren,
   EventsIndexRoute: EventsIndexRoute,
