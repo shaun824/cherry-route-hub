@@ -1,10 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { PageHeader } from "@/components/ui-bits";
 import { SponsorScroller } from "@/components/sponsor-scroller";
 import { useAdminStore } from "@/lib/store";
 import { useHydratedStore } from "@/lib/use-hydrated-store";
-import { Copy, Check, ExternalLink } from "lucide-react";
+import { Copy, Check, ExternalLink, X } from "lucide-react";
 
 export const Route = createFileRoute("/promos")({
   head: () => ({
@@ -20,13 +20,26 @@ function Promos() {
   useHydratedStore();
   const promos = useAdminStore((s) => s.promos);
   const [copied, setCopied] = useState<string | null>(null);
+  const [pending, setPending] = useState<{ code: string; url: string; brand: string } | null>(null);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  useEffect(() => {
+    if (!pending) return;
+    timer.current = setTimeout(() => {
+      window.open(pending.url, "_blank", "noopener,noreferrer");
+      setPending(null);
+    }, 3000);
+    return () => {
+      if (timer.current) clearTimeout(timer.current);
+    };
+  }, [pending]);
 
   function copy(code: string) {
     navigator.clipboard?.writeText(code);
     setCopied(code);
     setTimeout(() => setCopied(null), 1600);
   }
+
 
   return (
     <div>
