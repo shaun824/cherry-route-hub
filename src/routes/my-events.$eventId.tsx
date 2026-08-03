@@ -100,6 +100,7 @@ function MyEventDetail() {
         {(
           [
             { id: "info", label: "Info", icon: Info },
+            { id: "news", label: "News", icon: Newspaper },
             { id: "packing", label: "Packing", icon: CheckSquare },
             { id: "chat", label: "Event chat", icon: MessageCircle },
             { id: "ask", label: "Ask admin", icon: MessagesSquare },
@@ -111,12 +112,15 @@ function MyEventDetail() {
             <button
               key={t.id}
               onClick={() => setTab(t.id)}
-              className={`flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold ${
+              className={`relative flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold ${
                 active ? "bg-cherry text-white" : "text-ink-soft"
               }`}
             >
               <Icon className="h-3.5 w-3.5" />
               {t.label}
+              {t.id === "news" && hasFreshNews && !active ? (
+                <span className="absolute right-1.5 top-1 h-1.5 w-1.5 rounded-full bg-cherry" />
+              ) : null}
             </button>
           );
         })}
@@ -124,9 +128,11 @@ function MyEventDetail() {
 
       <div className="px-5 py-4">
         {tab === "info" && <InfoPanel eventId={event.id} description={event.description} distanceKm={event.distance_km} event={event} isLive={event.status === "live"} eventName={event.name} />}
+        {tab === "news" && <EventNewsPanel posts={eventNews} />}
         {tab === "packing" && <PackingPanel eventId={event.id} userId={user?.id ?? null} />}
         {tab === "chat" && <ChatPanel eventId={event.id} userId={user?.id ?? null} />}
         {tab === "ask" && <AskAdminPanel eventId={event.id} userId={user?.id ?? null} />}
+
       </div>
     </div>
   );
