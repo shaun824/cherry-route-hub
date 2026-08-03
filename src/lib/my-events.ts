@@ -29,6 +29,9 @@ export type MyEventRow = {
     hero_color: string | null;
     description: string | null;
     social_links: Record<string, string> | null;
+    title_sponsor_name: string | null;
+    title_sponsor_logo_url: string | null;
+    title_sponsor_url: string | null;
   };
 };
 
