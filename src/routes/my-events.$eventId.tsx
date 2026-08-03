@@ -416,7 +416,7 @@ function InfoPanel({
   const q = useQuery({ queryKey: ["event-info", eventId], queryFn: () => fetchEventInfo(eventId) });
   const info = q.data;
   const days: EventDay[] = event.days ?? [];
-  const hasKml = days.some((d) => (d.routes ?? []).some((r: EventRoute) => (r.kmlUrls ?? []).length > 0));
+  
   const schedule: ScheduleItem[] = Array.isArray(event.schedule) ? event.schedule : [];
 
   const aboutText = description ?? "";
