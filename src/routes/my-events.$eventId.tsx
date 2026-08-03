@@ -63,7 +63,7 @@ export const Route = createFileRoute("/my-events/$eventId")({
   ),
 });
 
-type Tab = "info" | "news" | "chat" | "ask" | "packing" | "sponsors";
+type Tab = "info" | "routes" | "news" | "chat" | "ask" | "packing" | "sponsors";
 
 function MyEventDetail() {
   const { event } = Route.useLoaderData();
