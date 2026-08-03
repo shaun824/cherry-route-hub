@@ -96,6 +96,9 @@ export type Event = {
   spectatorFood?: string;    // food / refreshments available at the venue
   spectatorNotes?: string;   // any extra spectator-only notes
   hasToilets?: boolean;      // toilets available on-site (default true)
+  titleSponsorName?: string;    // headline / title sponsor for this event
+  titleSponsorLogoUrl?: string; // logo shown on the event banner
+  titleSponsorUrl?: string;     // sponsor website
 };
 
 // Returns the currently active price tier for a batch, or null if none defined.
