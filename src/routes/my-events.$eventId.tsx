@@ -113,7 +113,7 @@ function MyEventDetail() {
         {(
           [
             { id: "info", label: "Info", icon: Info },
-            { id: "routes", label: "Routes", icon: Map },
+            { id: "routes", label: "Routes", icon: MapIcon },
             { id: "news", label: "News", icon: Newspaper },
             { id: "packing", label: "Packing", icon: CheckSquare },
             { id: "chat", label: "Event chat", icon: MessageCircle },
