@@ -61,6 +61,12 @@ function MyEventDetail() {
   const { event } = Route.useLoaderData();
   const { user } = useSession();
   const [tab, setTab] = useState<Tab>("info");
+  const eventNews = useAdminStore((s) => s.feed).filter((p) => p.eventId === event.id);
+  const hasFreshNews = eventNews.some(
+    (p) => Date.now() - new Date(p.postedAt).getTime() < 7 * 24 * 60 * 60 * 1000,
+  );
+
+
 
   return (
     <div>
