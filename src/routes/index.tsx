@@ -4,6 +4,7 @@ import { useState } from "react";
 import {
   Activity,
   Bell,
+  Bike,
   Calendar,
   CalendarDays,
   ChevronRight,
@@ -14,6 +15,7 @@ import {
   Instagram,
   LogIn,
   MapPin,
+  Motorbike,
   Music2,
   Newspaper,
   Sparkles,
@@ -27,13 +29,15 @@ import {
 
 import { BrandMark, SectionTitle, TypeBadge } from "@/components/ui-bits";
 import { SponsorScroller } from "@/components/sponsor-scroller";
-import { relativeTime } from "@/lib/mock-data";
+import { formatDate, relativeTime, type Event } from "@/lib/mock-data";
+import { getEventSport } from "@/lib/event-sport";
 import { useAdminStore } from "@/lib/store";
 import { useHydratedStore } from "@/lib/use-hydrated-store";
 import { useSession } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchMyEvents, type MyEventRow } from "@/lib/my-events";
 import type { QuickLinkIcon } from "@/lib/settings";
+
 
 
 const QUICK_ICONS: Record<QuickLinkIcon, typeof Newspaper> = {
@@ -53,7 +57,7 @@ export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "Red Cherry Events — Rider Hub" },
-      { name: "description", content: "Your race dashboard: next event countdown, event details, news and supplier promos." },
+      { name: "description", content: "Your race dashboard: next event countdown plus upcoming motorbike and bicycle events." },
       { property: "og:title", content: "Red Cherry Events — Rider Hub" },
       { property: "og:description", content: "Your race dashboard for Red Cherry Events." },
     ],
@@ -65,13 +69,23 @@ function Home() {
   useHydratedStore();
   const { user, loading } = useSession();
   const feed = useAdminStore((s) => s.feed);
+  const allEvents = useAdminStore((s) => s.events);
   const promos = useAdminStore((s) => s.promos);
   const branding = useAdminStore((s) => s.settings.branding);
   const quickLinks = useAdminStore((s) => s.settings.quickLinks).filter((q) => q.enabled);
   const pinned = feed.filter((p) => p.pinned)[0];
-  const recentNews = feed.filter((p) => !p.pinned).slice(0, 3);
+  const pinnedGeneral = feed.filter((p) => p.pinned && !p.eventId)[0];
   const qlCols = Math.min(Math.max(quickLinks.length, 1), 4);
   const [notifOpen, setNotifOpen] = useState(false);
+  const [noticeOpen, setNoticeOpen] = useState(false);
+
+  const upcoming = allEvents
+    .filter((e) => (e.lifecycle ?? "published") === "published")
+    .filter((e) => new Date(e.date).getTime() >= Date.now() - 12 * 60 * 60 * 1000)
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  const motoEvents = upcoming.filter((e) => getEventSport(e.discipline, e.name) === "moto").slice(0, 4);
+  const mtbEvents = upcoming.filter((e) => getEventSport(e.discipline, e.name) === "mtb").slice(0, 4);
+
 
   const profile = useQuery({
     queryKey: ["home-profile", user?.id],
@@ -176,36 +190,50 @@ function Home() {
         </div>
       ) : null}
 
-      {/* Pinned notice */}
-      {pinned ? (
-        <div className="mt-6 px-5">
-          <div className="rounded-2xl border border-amber-300/60 bg-amber-50 p-4">
-            <div className="flex items-center gap-2">
-              <TypeBadge type={pinned.type} />
-              <span className="text-[11px] text-amber-900/80">
-                Pinned · {relativeTime(pinned.postedAt)}
-              </span>
+      {/* Pinned general notice (slim, expandable) */}
+      {pinnedGeneral ? (
+        <div className="mt-5 px-5">
+          <button
+            type="button"
+            onClick={() => setNoticeOpen((v) => !v)}
+            className="w-full rounded-2xl border border-amber-300/60 bg-amber-50 px-4 py-3 text-left"
+          >
+            <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
+              <div className="min-w-0">
+                <p className="truncate font-display text-sm font-bold text-ink">
+                  {pinnedGeneral.title}
+                </p>
+                <p className="text-[11px] text-amber-900/80">
+                  Pinned · {relativeTime(pinnedGeneral.postedAt)}
+                </p>
+              </div>
+              <ChevronRight
+                className={`h-4 w-4 shrink-0 text-amber-900/70 transition-transform ${
+                  noticeOpen ? "rotate-90" : ""
+                }`}
+              />
             </div>
-            <p className="mt-2 font-display font-bold text-ink">{pinned.title}</p>
-            <p className="mt-1 text-sm leading-relaxed text-ink-soft">{pinned.body}</p>
-          </div>
+            {noticeOpen ? (
+              <p className="mt-2 text-sm leading-relaxed text-ink-soft">{pinnedGeneral.body}</p>
+            ) : null}
+          </button>
         </div>
       ) : null}
 
-      {/* Latest news preview */}
-      <SectionTitle title="Latest from the pits" action="Open feed" actionTo="/feed" />
-      <ul className="space-y-2 px-5">
-        {recentNews.map((p) => (
-          <li key={p.id} className="rounded-2xl bg-card p-4 ring-1 ring-border">
-            <div className="flex items-center gap-2">
-              <TypeBadge type={p.type} />
-              <span className="text-[11px] text-muted-foreground">{relativeTime(p.postedAt)}</span>
-            </div>
-            <p className="mt-1.5 font-display text-[15px] font-bold text-ink">{p.title}</p>
-            <p className="mt-1 line-clamp-2 text-sm text-ink-soft">{p.body}</p>
-          </li>
-        ))}
-      </ul>
+      {/* Upcoming events by sport */}
+      <SportSection
+        title="Motorbike events"
+        icon={Motorbike}
+        sport="moto"
+        events={motoEvents}
+      />
+      <SportSection
+        title="Bicycle events"
+        icon={Bike}
+        sport="mtb"
+        events={mtbEvents}
+      />
+
 
       {/* Promo teaser */}
       {promos[0] ? (
@@ -241,7 +269,89 @@ function Home() {
   );
 }
 
+function SportSection({
+  title,
+  icon: Icon,
+  sport,
+  events,
+}: {
+  title: string;
+  icon: typeof Bike;
+  sport: "moto" | "mtb";
+  events: Event[];
+}) {
+  if (events.length === 0) return null;
+  return (
+    <section>
+      <div className="flex items-baseline justify-between px-5 pb-2 pt-6">
+        <h2 className="flex items-center gap-2 font-display text-[15px] font-bold uppercase tracking-wider text-ink-soft">
+          <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-accent text-cherry-deep">
+            <Icon className="h-3.5 w-3.5" />
+          </span>
+          {title}
+        </h2>
+        <Link to="/events" search={{ sport }} className="text-xs font-semibold text-cherry">
+          See all →
+        </Link>
+      </div>
+      <ul className="space-y-2 px-5">
+        {events.map((e) => (
+          <li key={e.id}>
+            <Link
+              to="/events/$eventId"
+              params={{ eventId: e.id }}
+              className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-2xl bg-card p-3 ring-1 ring-border active:scale-[0.99] transition-transform"
+            >
+              <div className="flex min-w-0 items-center gap-3">
+                {e.logoUrl ? (
+                  <img
+                    src={e.logoUrl}
+                    alt=""
+                    className="h-11 w-11 shrink-0 rounded-xl bg-secondary object-contain p-1 ring-1 ring-border"
+                  />
+                ) : (
+                  <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-accent text-cherry-deep">
+                    <Icon className="h-5 w-5" />
+                  </span>
+                )}
+                <div className="min-w-0">
+                  <p className="truncate font-display text-[15px] font-bold text-ink">{e.name}</p>
+                  <p className="mt-0.5 truncate text-xs text-muted-foreground">
+                    {formatDate(e.date)} · {e.location}
+                  </p>
+                  <div className="mt-1 flex items-center gap-2">
+                    <span className="text-[11px] font-bold text-cherry">{daysAway(e.date)}</span>
+                    {e.status === "live" ? (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-cherry px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-widest text-white">
+                        <span className="h-1 w-1 animate-pulse rounded-full bg-white" /> Live
+                      </span>
+                    ) : null}
+                  </div>
+                </div>
+              </div>
+              <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" />
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
+function daysAway(iso: string): string {
+  const diff = new Date(iso).getTime() - Date.now();
+  if (!Number.isFinite(diff)) return "";
+  if (diff <= 0) return "Underway";
+  const days = Math.floor(diff / 86_400_000);
+  if (days === 0) return "Today";
+  if (days === 1) return "Tomorrow";
+  if (days < 31) return `In ${days} days`;
+  const months = Math.round(days / 30);
+  return `In ${months} month${months > 1 ? "s" : ""}`;
+}
+
 function NotificationsSheet({
+
   open,
   onClose,
   items,

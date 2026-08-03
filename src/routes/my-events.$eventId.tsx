@@ -15,6 +15,9 @@ import {
   MapPin,
   MessageCircle,
   MessagesSquare,
+  Newspaper,
+  Pin,
+
   Phone,
   Send,
   Square,
@@ -31,7 +34,10 @@ import { SponsorScroller } from "@/components/sponsor-scroller";
 import { useAdminStore } from "@/lib/store";
 import { fetchMyEventById, type MyEventRow } from "@/lib/my-events";
 import { Printer, Shirt, Package, Siren } from "lucide-react";
-import type { EventDay, EventRoute, ScheduleItem, SocialLinks } from "@/lib/mock-data";
+import type { EventDay, EventRoute, FeedPost, ScheduleItem, SocialLinks } from "@/lib/mock-data";
+import { relativeTime } from "@/lib/mock-data";
+import { TypeBadge } from "@/components/ui-bits";
+
 import { TrackerPanel } from "@/components/tracker-panel";
 
 export const Route = createFileRoute("/my-events/$eventId")({
@@ -55,12 +61,18 @@ export const Route = createFileRoute("/my-events/$eventId")({
   ),
 });
 
-type Tab = "info" | "chat" | "ask" | "packing";
+type Tab = "info" | "news" | "chat" | "ask" | "packing";
 
 function MyEventDetail() {
   const { event } = Route.useLoaderData();
   const { user } = useSession();
   const [tab, setTab] = useState<Tab>("info");
+  const eventNews = useAdminStore((s) => s.feed).filter((p) => p.eventId === event.id);
+  const hasFreshNews = eventNews.some(
+    (p) => Date.now() - new Date(p.postedAt).getTime() < 7 * 24 * 60 * 60 * 1000,
+  );
+
+
 
   return (
     <div>
@@ -94,6 +106,7 @@ function MyEventDetail() {
         {(
           [
             { id: "info", label: "Info", icon: Info },
+            { id: "news", label: "News", icon: Newspaper },
             { id: "packing", label: "Packing", icon: CheckSquare },
             { id: "chat", label: "Event chat", icon: MessageCircle },
             { id: "ask", label: "Ask admin", icon: MessagesSquare },
@@ -105,12 +118,15 @@ function MyEventDetail() {
             <button
               key={t.id}
               onClick={() => setTab(t.id)}
-              className={`flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold ${
+              className={`relative flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold ${
                 active ? "bg-cherry text-white" : "text-ink-soft"
               }`}
             >
               <Icon className="h-3.5 w-3.5" />
               {t.label}
+              {t.id === "news" && hasFreshNews && !active ? (
+                <span className="absolute right-1.5 top-1 h-1.5 w-1.5 rounded-full bg-cherry" />
+              ) : null}
             </button>
           );
         })}
@@ -118,15 +134,66 @@ function MyEventDetail() {
 
       <div className="px-5 py-4">
         {tab === "info" && <InfoPanel eventId={event.id} description={event.description} distanceKm={event.distance_km} event={event} isLive={event.status === "live"} eventName={event.name} />}
+        {tab === "news" && <EventNewsPanel posts={eventNews} />}
         {tab === "packing" && <PackingPanel eventId={event.id} userId={user?.id ?? null} />}
         {tab === "chat" && <ChatPanel eventId={event.id} userId={user?.id ?? null} />}
         {tab === "ask" && <AskAdminPanel eventId={event.id} userId={user?.id ?? null} />}
+
       </div>
     </div>
   );
 }
 
+function EventNewsPanel({ posts }: { posts: FeedPost[] }) {
+  const now = Date.now();
+  const sorted = posts
+    .filter((p) => new Date(p.postedAt).getTime() <= now)
+    .sort((a, b) => {
+      if (a.pinned !== b.pinned) return a.pinned ? -1 : 1;
+      return new Date(b.postedAt).getTime() - new Date(a.postedAt).getTime();
+    });
+
+  if (sorted.length === 0) {
+    return (
+      <div className="rounded-2xl bg-card p-6 text-center text-sm text-ink-soft ring-1 ring-border">
+        No updates for this event yet.
+      </div>
+    );
+  }
+
+  return (
+    <ul className="space-y-3">
+      {sorted.map((p) => (
+        <li
+          key={p.id}
+          className={`rounded-2xl p-4 ring-1 ${
+            p.pinned ? "bg-amber-50 ring-amber-300/60" : "bg-card ring-border"
+          }`}
+        >
+          <div className="flex items-center gap-2">
+            <TypeBadge type={p.type} />
+            {p.pinned ? (
+              <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-900">
+                <Pin className="h-3 w-3" /> Pinned
+              </span>
+            ) : null}
+            <span className="ml-auto text-[11px] text-muted-foreground">
+              {relativeTime(p.postedAt)}
+            </span>
+          </div>
+          <h3 className="mt-2 font-display text-base font-bold leading-snug text-ink">{p.title}</h3>
+          <p className="mt-1.5 text-sm leading-relaxed text-ink-soft">{p.body}</p>
+          <p className="mt-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            {p.author}
+          </p>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 const DESCRIPTION_PREVIEW_LENGTH = 50;
+
 
 function InfoPanel({
   eventId,

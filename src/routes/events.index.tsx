@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { PageHeader, TypeBadge } from "@/components/ui-bits";
 import { formatDate, formatTime } from "@/lib/mock-data";
 import { useAdminStore } from "@/lib/store";
@@ -6,11 +6,17 @@ import { useHydratedStore } from "@/lib/use-hydrated-store";
 import { MapPin, ChevronRight, Bike, Motorbike } from "lucide-react";
 import { getEventSport, getEventSportLabel } from "@/lib/event-sport";
 
+type SportFilter = "all" | "moto" | "mtb";
+
 export const Route = createFileRoute("/events/")({
+  validateSearch: (search: Record<string, unknown>): { sport?: SportFilter } => {
+    const s = search.sport;
+    return s === "moto" || s === "mtb" || s === "all" ? { sport: s } : {};
+  },
   head: () => ({
     meta: [
       { title: "Events — Red Cherry Events" },
-      { name: "description", content: "Browse upcoming Red Cherry events, view details and enter." },
+      { name: "description", content: "Browse upcoming Red Cherry motorbike and mountain bike events." },
     ],
   }),
   component: Events,
@@ -18,15 +24,45 @@ export const Route = createFileRoute("/events/")({
 
 function Events() {
   useHydratedStore();
-  const events = useAdminStore((s) => s.events).filter(
-    (e) => (e.lifecycle ?? "published") === "published",
-  );
+  const { sport: sportParam } = Route.useSearch();
+  const navigate = useNavigate({ from: "/events" });
+  const filter: SportFilter = sportParam ?? "all";
+  const events = useAdminStore((s) => s.events)
+    .filter((e) => (e.lifecycle ?? "published") === "published")
+    .filter((e) => filter === "all" || getEventSport(e.discipline, e.name) === filter);
 
   return (
     <div>
       <PageHeader title="Events" subtitle="Upcoming races & rides" />
+      <div className="flex gap-2 px-5 pt-4">
+        {([
+          { id: "all", label: "All" },
+          { id: "moto", label: "Motorbike" },
+          { id: "mtb", label: "Bicycle" },
+        ] as { id: SportFilter; label: string }[]).map((f) => {
+          const active = filter === f.id;
+          return (
+            <button
+              key={f.id}
+              type="button"
+              onClick={() => navigate({ search: f.id === "all" ? {} : { sport: f.id } })}
+              className={`rounded-full px-3 py-1.5 text-xs font-semibold ring-1 ${
+                active ? "bg-cherry text-white ring-cherry" : "bg-card text-ink-soft ring-border"
+              }`}
+            >
+              {f.label}
+            </button>
+          );
+        })}
+      </div>
       <ul className="space-y-3 px-5 py-5">
+        {events.length === 0 ? (
+          <li className="rounded-2xl bg-card p-6 text-center text-sm text-ink-soft ring-1 ring-border">
+            No events in this category yet.
+          </li>
+        ) : null}
         {events.map((e) => {
+
           const sport = getEventSport(e.discipline, e.name);
           const SportIcon = sport === "moto" ? Motorbike : Bike;
           const sportLabel = getEventSportLabel(sport);
