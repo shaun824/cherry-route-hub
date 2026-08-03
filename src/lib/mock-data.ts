@@ -139,6 +139,8 @@ export type Promo = {
   discount: string;
   expires: string;
   accent: string;
+  logoUrl?: string;
+  url?: string;
 };
 
 export type Rider = {
