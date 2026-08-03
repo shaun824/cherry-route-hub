@@ -322,10 +322,10 @@ function SportSection({
           See all →
         </Link>
       </div>
-      {collapsed && !expanded ? (
+      {collapsed && !showExpanded ? (
         <button
           type="button"
-          onClick={() => setExpanded(true)}
+          onClick={() => setUserExpanded(true)}
           className="mx-5 mt-1 flex w-[calc(100%-2.5rem)] items-center justify-between gap-3 rounded-2xl bg-secondary/60 px-4 py-3 text-left ring-1 ring-border active:scale-[0.99] transition"
         >
           <span className="flex items-center gap-2.5 text-sm text-ink-soft">
