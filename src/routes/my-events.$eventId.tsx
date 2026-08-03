@@ -416,7 +416,7 @@ function InfoPanel({
   const q = useQuery({ queryKey: ["event-info", eventId], queryFn: () => fetchEventInfo(eventId) });
   const info = q.data;
   const days: EventDay[] = event.days ?? [];
-  const hasKml = days.some((d) => (d.routes ?? []).some((r: EventRoute) => (r.kmlUrls ?? []).length > 0));
+  
   const schedule: ScheduleItem[] = Array.isArray(event.schedule) ? event.schedule : [];
 
   const aboutText = description ?? "";
@@ -468,18 +468,11 @@ function InfoPanel({
         </section>
       ) : null}
 
-      {hasKml ? (
+      {days.some((d) => (d.routes ?? []).length > 0) ? (
         <section>
-          <SectionTitle>Route map</SectionTitle>
+          <SectionTitle>Routes</SectionTitle>
           <div className="mt-2">
-            <RouteMap event={event as never} height="300px" />
-            <Link
-              to="/events/$eventId/map"
-              params={{ eventId }}
-              className="mt-2 inline-block text-[11px] font-semibold text-cherry"
-            >
-              Open fullscreen map →
-            </Link>
+            <RoutesPanel eventId={eventId} event={event} />
           </div>
         </section>
       ) : null}
