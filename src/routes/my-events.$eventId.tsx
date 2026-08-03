@@ -27,6 +27,10 @@ import {
   Youtube,
   Music2,
   Activity,
+  Map,
+  Download,
+  Mountain,
+  Route as RouteIcon,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/lib/auth";
