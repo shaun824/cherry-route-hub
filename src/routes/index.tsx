@@ -7,6 +7,7 @@ import {
   Bike,
   Calendar,
   CalendarDays,
+  ChevronDown,
   ChevronRight,
   Facebook,
   Globe,
