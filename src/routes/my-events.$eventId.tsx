@@ -27,7 +27,7 @@ import {
   Youtube,
   Music2,
   Activity,
-  Map,
+  Map as MapIcon,
   Download,
   Mountain,
   Route as RouteIcon,
