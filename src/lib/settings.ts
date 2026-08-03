@@ -40,6 +40,10 @@ export type Branding = {
   tagline: string;
   welcomeMessage: string;
   eyebrow: string;
+  // Optional platform-wide title sponsor shown on the home hero banner.
+  titleSponsorName?: string;
+  titleSponsorLogoUrl?: string;
+  titleSponsorUrl?: string;
 };
 
 export type Waivers = {
@@ -68,6 +72,9 @@ export const DEFAULT_SETTINGS: SiteSettings = {
     tagline: "Rider Hub",
     welcomeMessage: "Welcome back,",
     eyebrow: "Red Cherry",
+    titleSponsorName: "",
+    titleSponsorLogoUrl: "",
+    titleSponsorUrl: "",
   },
   quickLinks: [
     { id: "ql_news", label: "News", to: "/feed", icon: "Newspaper", enabled: true },
