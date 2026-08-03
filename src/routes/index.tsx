@@ -269,7 +269,89 @@ function Home() {
   );
 }
 
+function SportSection({
+  title,
+  icon: Icon,
+  sport,
+  events,
+}: {
+  title: string;
+  icon: typeof Bike;
+  sport: "moto" | "mtb";
+  events: Event[];
+}) {
+  if (events.length === 0) return null;
+  return (
+    <section>
+      <div className="flex items-baseline justify-between px-5 pb-2 pt-6">
+        <h2 className="flex items-center gap-2 font-display text-[15px] font-bold uppercase tracking-wider text-ink-soft">
+          <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-accent text-cherry-deep">
+            <Icon className="h-3.5 w-3.5" />
+          </span>
+          {title}
+        </h2>
+        <Link to="/events" search={{ sport }} className="text-xs font-semibold text-cherry">
+          See all →
+        </Link>
+      </div>
+      <ul className="space-y-2 px-5">
+        {events.map((e) => (
+          <li key={e.id}>
+            <Link
+              to="/events/$eventId"
+              params={{ eventId: e.id }}
+              className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-2xl bg-card p-3 ring-1 ring-border active:scale-[0.99] transition-transform"
+            >
+              <div className="flex min-w-0 items-center gap-3">
+                {e.logoUrl ? (
+                  <img
+                    src={e.logoUrl}
+                    alt=""
+                    className="h-11 w-11 shrink-0 rounded-xl bg-secondary object-contain p-1 ring-1 ring-border"
+                  />
+                ) : (
+                  <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-accent text-cherry-deep">
+                    <Icon className="h-5 w-5" />
+                  </span>
+                )}
+                <div className="min-w-0">
+                  <p className="truncate font-display text-[15px] font-bold text-ink">{e.name}</p>
+                  <p className="mt-0.5 truncate text-xs text-muted-foreground">
+                    {formatDate(e.date)} · {e.location}
+                  </p>
+                  <div className="mt-1 flex items-center gap-2">
+                    <span className="text-[11px] font-bold text-cherry">{daysAway(e.date)}</span>
+                    {e.status === "live" ? (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-cherry px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-widest text-white">
+                        <span className="h-1 w-1 animate-pulse rounded-full bg-white" /> Live
+                      </span>
+                    ) : null}
+                  </div>
+                </div>
+              </div>
+              <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" />
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
+function daysAway(iso: string): string {
+  const diff = new Date(iso).getTime() - Date.now();
+  if (!Number.isFinite(diff)) return "";
+  if (diff <= 0) return "Underway";
+  const days = Math.floor(diff / 86_400_000);
+  if (days === 0) return "Today";
+  if (days === 1) return "Tomorrow";
+  if (days < 31) return `In ${days} days`;
+  const months = Math.round(days / 30);
+  return `In ${months} month${months > 1 ? "s" : ""}`;
+}
+
 function NotificationsSheet({
+
   open,
   onClose,
   items,
