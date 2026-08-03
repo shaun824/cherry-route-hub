@@ -178,6 +178,9 @@ function eventFromRow(r: Row): Event {
     spectatorFood: ((r as Row).spectator_food as string | null) ?? undefined,
     spectatorNotes: ((r as Row).spectator_notes as string | null) ?? undefined,
     hasToilets: (r as Row).has_toilets == null ? true : Boolean((r as Row).has_toilets),
+    titleSponsorName: ((r as Row).title_sponsor_name as string | null) ?? undefined,
+    titleSponsorLogoUrl: ((r as Row).title_sponsor_logo_url as string | null) ?? undefined,
+    titleSponsorUrl: ((r as Row).title_sponsor_url as string | null) ?? undefined,
   };
 }
 
@@ -219,6 +222,9 @@ export async function upsertEventCloud(e: Event): Promise<string | null> {
     spectator_food: e.spectatorFood ?? null,
     spectator_notes: e.spectatorNotes ?? null,
     has_toilets: e.hasToilets ?? true,
+    title_sponsor_name: e.titleSponsorName ?? null,
+    title_sponsor_logo_url: e.titleSponsorLogoUrl ?? null,
+    title_sponsor_url: e.titleSponsorUrl ?? null,
   };
   const { data, error } = await supabase.from("events").upsert(row).select().single();
   log(error, "upsertEvent");

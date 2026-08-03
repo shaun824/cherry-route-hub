@@ -991,6 +991,55 @@ function EventEditor({
             ) : null}
           </Field>
 
+          <Field label="Title sponsor name">
+            <input
+              className={inputCls}
+              value={form.titleSponsorName ?? ""}
+              placeholder="e.g. M&G Investments"
+              onChange={(e) => update("titleSponsorName", e.target.value || undefined)}
+            />
+          </Field>
+          <Field label="Title sponsor website">
+            <input
+              className={inputCls}
+              value={form.titleSponsorUrl ?? ""}
+              placeholder="https://sponsor.co.za"
+              onChange={(e) => update("titleSponsorUrl", e.target.value || undefined)}
+            />
+          </Field>
+          <Field label="Title sponsor logo (shown on the event banner)">
+            <input
+              className={inputCls}
+              value={form.titleSponsorLogoUrl ?? ""}
+              placeholder="Upload or paste a URL"
+              onChange={(e) => update("titleSponsorLogoUrl", e.target.value || undefined)}
+            />
+            <div className="mt-2 flex items-center gap-2">
+              <ImageUploadButton
+                label={form.titleSponsorLogoUrl ? "Replace sponsor logo" : "Upload sponsor logo"}
+                onUploaded={(url) => update("titleSponsorLogoUrl", url)}
+              />
+              {form.titleSponsorLogoUrl ? (
+                <button
+                  type="button"
+                  onClick={() => update("titleSponsorLogoUrl", undefined)}
+                  className="text-[11px] font-semibold text-ink-soft hover:text-cherry"
+                >
+                  Remove
+                </button>
+              ) : null}
+            </div>
+            {form.titleSponsorLogoUrl ? (
+              <div className="mt-2 inline-flex items-center gap-2 rounded-lg bg-ink p-2">
+                <img
+                  src={form.titleSponsorLogoUrl}
+                  alt="Title sponsor preview"
+                  className="h-8 max-w-[140px] object-contain"
+                />
+              </div>
+            ) : null}
+          </Field>
+
 
           <DaysEditor
             days={form.days ?? []}
