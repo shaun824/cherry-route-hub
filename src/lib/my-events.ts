@@ -74,7 +74,7 @@ export async function fetchMyEvents(): Promise<MyEventRow[]> {
   const { data, error } = await supabase
     .from("event_entrants")
     .select(
-      "id, event_id, category, batch, bib_number, jacket_size, tshirt_size, extras, notes, event:events(id, name, discipline, event_date, location, distance_km, status, hero_color, description, social_links)",
+      "id, event_id, category, batch, bib_number, jacket_size, tshirt_size, extras, notes, event:events(id, name, discipline, event_date, location, distance_km, status, hero_color, description, social_links, title_sponsor_name, title_sponsor_logo_url, title_sponsor_url)",
     )
     .in("entrant_id", entrantIds)
     .order("created_at", { ascending: false });
