@@ -86,6 +86,23 @@ function Home() {
   const motoEvents = upcoming.filter((e) => getEventSport(e.discipline, e.name) === "moto").slice(0, 4);
   const mtbEvents = upcoming.filter((e) => getEventSport(e.discipline, e.name) === "mtb").slice(0, 4);
 
+  // Determine which sport(s) this signed-in rider has actually entered.
+  // The query shares its cache with NextEventCard.
+  const myEventsQ = useQuery({
+    queryKey: ["my-events-home"],
+    queryFn: () => fetchMyEvents(),
+    enabled: !!user,
+    staleTime: 60_000,
+  });
+  const enteredSports = new Set<"moto" | "mtb">(
+    (myEventsQ.data ?? []).map((r) => getEventSport(r.event.discipline, r.event.name)),
+  );
+  const hasEntered = !!user && enteredSports.size > 0;
+  // When the rider has entered events, collapse the sport they haven't entered.
+  const collapseMoto = hasEntered && !enteredSports.has("moto");
+  const collapseMtb = hasEntered && !enteredSports.has("mtb");
+
+
 
   const profile = useQuery({
     queryKey: ["home-profile", user?.id],
@@ -226,13 +243,18 @@ function Home() {
         icon={Motorbike}
         sport="moto"
         events={motoEvents}
+        collapsed={collapseMoto}
+        collapseHint="Not your sport? Tap to view motorbike events."
       />
       <SportSection
         title="Bicycle events"
         icon={Bike}
         sport="mtb"
         events={mtbEvents}
+        collapsed={collapseMtb}
+        collapseHint="Not your sport? Tap to view bicycle events."
       />
+
 
 
       {/* Promo teaser */}
@@ -274,12 +296,18 @@ function SportSection({
   icon: Icon,
   sport,
   events,
+  collapsed = false,
+  collapseHint,
 }: {
   title: string;
   icon: typeof Bike;
   sport: "moto" | "mtb";
   events: Event[];
+  collapsed?: boolean;
+  collapseHint?: string;
 }) {
+  const [userExpanded, setUserExpanded] = useState(false);
+  const showExpanded = !collapsed || userExpanded;
   if (events.length === 0) return null;
   return (
     <section>
@@ -294,46 +322,62 @@ function SportSection({
           See all →
         </Link>
       </div>
-      <ul className="space-y-2 px-5">
-        {events.map((e) => (
-          <li key={e.id}>
-            <Link
-              to="/events/$eventId"
-              params={{ eventId: e.id }}
-              className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-2xl bg-card p-3 ring-1 ring-border active:scale-[0.99] transition-transform"
-            >
-              <div className="flex min-w-0 items-center gap-3">
-                {e.logoUrl ? (
-                  <img
-                    src={e.logoUrl}
-                    alt=""
-                    className="h-11 w-11 shrink-0 rounded-xl bg-secondary object-contain p-1 ring-1 ring-border"
-                  />
-                ) : (
-                  <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-accent text-cherry-deep">
-                    <Icon className="h-5 w-5" />
-                  </span>
-                )}
-                <div className="min-w-0">
-                  <p className="truncate font-display text-[15px] font-bold text-ink">{e.name}</p>
-                  <p className="mt-0.5 truncate text-xs text-muted-foreground">
-                    {formatDate(e.date)} · {e.location}
-                  </p>
-                  <div className="mt-1 flex items-center gap-2">
-                    <span className="text-[11px] font-bold text-cherry">{daysAway(e.date)}</span>
-                    {e.status === "live" ? (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-cherry px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-widest text-white">
-                        <span className="h-1 w-1 animate-pulse rounded-full bg-white" /> Live
-                      </span>
-                    ) : null}
+      {collapsed && !showExpanded ? (
+        <button
+          type="button"
+          onClick={() => setUserExpanded(true)}
+          className="mx-5 mt-1 flex w-[calc(100%-2.5rem)] items-center justify-between gap-3 rounded-2xl bg-secondary/60 px-4 py-3 text-left ring-1 ring-border active:scale-[0.99] transition"
+        >
+          <span className="flex items-center gap-2.5 text-sm text-ink-soft">
+            <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+            {collapseHint ?? "Tap to view events."}
+          </span>
+          <span className="shrink-0 rounded-full bg-accent px-2 py-0.5 text-[11px] font-bold text-cherry-deep">
+            {events.length}
+          </span>
+        </button>
+      ) : (
+        <ul className="space-y-2 px-5">
+          {events.map((e) => (
+            <li key={e.id}>
+              <Link
+                to="/events/$eventId"
+                params={{ eventId: e.id }}
+                className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-2xl bg-card p-3 ring-1 ring-border active:scale-[0.99] transition-transform"
+              >
+                <div className="flex min-w-0 items-center gap-3">
+                  {e.logoUrl ? (
+                    <img
+                      src={e.logoUrl}
+                      alt=""
+                      className="h-11 w-11 shrink-0 rounded-xl bg-secondary object-contain p-1 ring-1 ring-border"
+                    />
+                  ) : (
+                    <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-accent text-cherry-deep">
+                      <Icon className="h-5 w-5" />
+                    </span>
+                  )}
+                  <div className="min-w-0">
+                    <p className="truncate font-display text-[15px] font-bold text-ink">{e.name}</p>
+                    <p className="mt-0.5 truncate text-xs text-muted-foreground">
+                      {formatDate(e.date)} · {e.location}
+                    </p>
+                    <div className="mt-1 flex items-center gap-2">
+                      <span className="text-[11px] font-bold text-cherry">{daysAway(e.date)}</span>
+                      {e.status === "live" ? (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-cherry px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-widest text-white">
+                          <span className="h-1 w-1 animate-pulse rounded-full bg-white" /> Live
+                        </span>
+                      ) : null}
+                    </div>
                   </div>
                 </div>
-              </div>
-              <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" />
-            </Link>
-          </li>
-        ))}
-      </ul>
+                <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" />
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
     </section>
   );
 }
