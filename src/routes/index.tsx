@@ -65,13 +65,23 @@ function Home() {
   useHydratedStore();
   const { user, loading } = useSession();
   const feed = useAdminStore((s) => s.feed);
+  const allEvents = useAdminStore((s) => s.events);
   const promos = useAdminStore((s) => s.promos);
   const branding = useAdminStore((s) => s.settings.branding);
   const quickLinks = useAdminStore((s) => s.settings.quickLinks).filter((q) => q.enabled);
   const pinned = feed.filter((p) => p.pinned)[0];
-  const recentNews = feed.filter((p) => !p.pinned).slice(0, 3);
+  const pinnedGeneral = feed.filter((p) => p.pinned && !p.eventId)[0];
   const qlCols = Math.min(Math.max(quickLinks.length, 1), 4);
   const [notifOpen, setNotifOpen] = useState(false);
+  const [noticeOpen, setNoticeOpen] = useState(false);
+
+  const upcoming = allEvents
+    .filter((e) => (e.lifecycle ?? "published") === "published")
+    .filter((e) => new Date(e.date).getTime() >= Date.now() - 12 * 60 * 60 * 1000)
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  const motoEvents = upcoming.filter((e) => getEventSport(e.discipline, e.name) === "moto").slice(0, 4);
+  const mtbEvents = upcoming.filter((e) => getEventSport(e.discipline, e.name) === "mtb").slice(0, 4);
+
 
   const profile = useQuery({
     queryKey: ["home-profile", user?.id],
