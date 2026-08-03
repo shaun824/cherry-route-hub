@@ -176,36 +176,50 @@ function Home() {
         </div>
       ) : null}
 
-      {/* Pinned notice */}
-      {pinned ? (
-        <div className="mt-6 px-5">
-          <div className="rounded-2xl border border-amber-300/60 bg-amber-50 p-4">
-            <div className="flex items-center gap-2">
-              <TypeBadge type={pinned.type} />
-              <span className="text-[11px] text-amber-900/80">
-                Pinned · {relativeTime(pinned.postedAt)}
-              </span>
+      {/* Pinned general notice (slim, expandable) */}
+      {pinnedGeneral ? (
+        <div className="mt-5 px-5">
+          <button
+            type="button"
+            onClick={() => setNoticeOpen((v) => !v)}
+            className="w-full rounded-2xl border border-amber-300/60 bg-amber-50 px-4 py-3 text-left"
+          >
+            <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
+              <div className="min-w-0">
+                <p className="truncate font-display text-sm font-bold text-ink">
+                  {pinnedGeneral.title}
+                </p>
+                <p className="text-[11px] text-amber-900/80">
+                  Pinned · {relativeTime(pinnedGeneral.postedAt)}
+                </p>
+              </div>
+              <ChevronRight
+                className={`h-4 w-4 shrink-0 text-amber-900/70 transition-transform ${
+                  noticeOpen ? "rotate-90" : ""
+                }`}
+              />
             </div>
-            <p className="mt-2 font-display font-bold text-ink">{pinned.title}</p>
-            <p className="mt-1 text-sm leading-relaxed text-ink-soft">{pinned.body}</p>
-          </div>
+            {noticeOpen ? (
+              <p className="mt-2 text-sm leading-relaxed text-ink-soft">{pinnedGeneral.body}</p>
+            ) : null}
+          </button>
         </div>
       ) : null}
 
-      {/* Latest news preview */}
-      <SectionTitle title="Latest from the pits" action="Open feed" actionTo="/feed" />
-      <ul className="space-y-2 px-5">
-        {recentNews.map((p) => (
-          <li key={p.id} className="rounded-2xl bg-card p-4 ring-1 ring-border">
-            <div className="flex items-center gap-2">
-              <TypeBadge type={p.type} />
-              <span className="text-[11px] text-muted-foreground">{relativeTime(p.postedAt)}</span>
-            </div>
-            <p className="mt-1.5 font-display text-[15px] font-bold text-ink">{p.title}</p>
-            <p className="mt-1 line-clamp-2 text-sm text-ink-soft">{p.body}</p>
-          </li>
-        ))}
-      </ul>
+      {/* Upcoming events by sport */}
+      <SportSection
+        title="Motorbike events"
+        icon={Motorbike}
+        sport="moto"
+        events={motoEvents}
+      />
+      <SportSection
+        title="Bicycle events"
+        icon={Bike}
+        sport="mtb"
+        events={mtbEvents}
+      />
+
 
       {/* Promo teaser */}
       {promos[0] ? (
