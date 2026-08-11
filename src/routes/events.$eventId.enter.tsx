@@ -19,6 +19,7 @@ import {
 import { currentRider, events, formatDate, formatTime, getEntryConfig, activeBatchPrice, type Batch, type EntryCategory, type MerchItem } from "@/lib/mock-data";
 import { useAdminStore } from "@/lib/store";
 import { useHydratedStore } from "@/lib/use-hydrated-store";
+import { brandHeader } from "@/lib/event-brand";
 
 export const Route = createFileRoute("/events/$eventId/enter")({
   loader: ({ params }) => {
@@ -268,8 +269,8 @@ function EnterEventForm() {
     <div className="pb-8">
       {/* Header */}
       <div
-        className={`relative bg-gradient-to-br ${event.heroColor} px-5 pb-5 text-white`}
-        style={{ paddingTop: "calc(env(safe-area-inset-top) + 3.5rem)" }}
+        className={`relative ${brandHeader(event.heroColor).className} px-5 pb-5 text-white`}
+        style={{ ...brandHeader(event.heroColor).style, paddingTop: "calc(env(safe-area-inset-top) + 3.5rem)" }}
       >
         <Link
           to="/events/$eventId"
