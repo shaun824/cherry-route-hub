@@ -25,7 +25,7 @@ export const Route = createFileRoute("/events/")({
 function Events() {
   useHydratedStore();
   const { sport: sportParam } = Route.useSearch();
-  const navigate = useNavigate({ from: "/events" });
+  const navigate = useNavigate({ from: "/events/" });
   const filter: SportFilter = sportParam ?? "all";
   const events = useAdminStore((s) => s.events)
     .filter((e) => (e.lifecycle ?? "published") === "published")
@@ -45,7 +45,7 @@ function Events() {
             <button
               key={f.id}
               type="button"
-              onClick={() => navigate({ search: f.id === "all" ? {} : { sport: f.id } })}
+              onClick={() => navigate({ search: (f.id === "all" ? {} : { sport: f.id }) as { sport?: SportFilter } })}
               className={`rounded-full px-3 py-1.5 text-xs font-semibold ring-1 ${
                 active ? "bg-cherry text-white ring-cherry" : "bg-card text-ink-soft ring-border"
               }`}
