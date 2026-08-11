@@ -20,6 +20,7 @@ import {
   MessagesSquare,
   Newspaper,
   Handshake,
+  Tent,
   Pin,
 
   Phone,
@@ -36,6 +37,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/lib/auth";
+import { VillageMapView } from "@/components/village-map-view";
 import { DEFAULT_PACKING_LIST, fetchEventInfo, type EventInfoBlock, type PackingItem } from "@/lib/event-info";
 import { RouteMap } from "@/components/route-map";
 import { RouteFileStats } from "@/components/route-file-stats";
@@ -94,7 +96,7 @@ export const Route = createFileRoute("/my-events/$eventId")({
   ),
 });
 
-type Tab = "info" | "routes" | "news" | "chat" | "ask" | "packing" | "sponsors";
+type Tab = "info" | "village" | "routes" | "news" | "chat" | "ask" | "packing" | "sponsors";
 
 function MyEventDetail() {
   const { event } = Route.useLoaderData();
@@ -142,6 +144,7 @@ function MyEventDetail() {
           [
             { id: "info", label: "Info", icon: Info },
             { id: "routes", label: "Routes", icon: MapIcon },
+            { id: "village", label: "Village", icon: Tent },
             { id: "news", label: "News", icon: Newspaper },
             { id: "packing", label: "Packing", icon: CheckSquare },
             { id: "chat", label: "Event chat", icon: MessageCircle },
@@ -180,6 +183,12 @@ function MyEventDetail() {
             </section>
             <InfoPanel eventId={event.id} description={event.description} distanceKm={event.distance_km} event={event} isLive={event.status === "live"} eventName={event.name} />
           </div>
+        )}
+        {tab === "village" && (
+          <section className="space-y-3">
+            <SectionTitle>Race village</SectionTitle>
+            <VillageMapView eventId={event.id} />
+          </section>
         )}
         {tab === "routes" && <RoutesPanel eventId={event.id} event={event} />}
         {tab === "news" && <EventNewsPanel posts={eventNews} />}

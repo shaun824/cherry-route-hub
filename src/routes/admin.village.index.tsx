@@ -1,0 +1,62 @@
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+import { ChevronRight, Tent } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+
+export const Route = createFileRoute("/admin/village/")({
+  component: VillageIndex,
+});
+
+function VillageIndex() {
+  const q = useQuery({
+    queryKey: ["admin-village-list"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("events")
+        .select("id, name, event_date, event_village_maps:event_village_maps(event_id, image_url, hotspots)")
+        .order("event_date", { ascending: true });
+      return data ?? [];
+    },
+  });
+
+  return (
+    <div className="space-y-4">
+      <header>
+        <h1 className="font-display text-2xl font-bold text-ink">Village maps</h1>
+        <p className="text-sm text-ink-soft">
+          Upload a site plan per event and drop interactive points so riders can explore the
+          village — registration, food, camping, bike wash and more.
+        </p>
+      </header>
+
+      <ul className="space-y-2">
+        {(q.data ?? []).map((e: any) => {
+          const row = e.event_village_maps?.[0];
+          const points = Array.isArray(row?.hotspots) ? row.hotspots.length : 0;
+          return (
+            <li key={e.id}>
+              <Link
+                to="/admin/village/$eventId"
+                params={{ eventId: e.id }}
+                className="flex items-center justify-between rounded-2xl bg-card p-4 ring-1 ring-border hover:bg-secondary"
+              >
+                <div className="flex items-center gap-3">
+                  <span className="grid h-9 w-9 place-items-center rounded-xl bg-muted">
+                    <Tent className="h-4 w-4 text-ink-soft" />
+                  </span>
+                  <div>
+                    <p className="font-semibold text-ink">{e.name}</p>
+                    <p className="text-xs text-ink-soft">
+                      {row?.image_url ? `${points} point${points === 1 ? "" : "s"} placed` : "No map yet"}
+                    </p>
+                  </div>
+                </div>
+                <ChevronRight className="h-4 w-4 text-ink-soft" />
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+}
