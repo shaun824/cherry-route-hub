@@ -1075,13 +1075,14 @@ function AskAdminPanel({ eventId, userId, compact = false }: { eventId: string; 
               void send();
             }
           }}
-          placeholder="Ask about schedule, packing, venue…"
+          placeholder={userId ? "Ask about schedule, packing, venue…" : "Sign in to ask a question"}
           maxLength={1000}
-          className="flex-1 rounded-lg bg-background px-3 py-2 text-sm ring-1 ring-border focus:outline-none focus:ring-cherry"
+          disabled={!userId}
+          className="flex-1 rounded-lg bg-background px-3 py-2 text-sm ring-1 ring-border focus:outline-none focus:ring-cherry disabled:opacity-60"
         />
         <button
           onClick={() => void send()}
-          disabled={busy || !text.trim()}
+          disabled={busy || !text.trim() || !userId}
           className="grid h-9 w-9 place-items-center rounded-full cherry-gradient text-white disabled:opacity-60"
         >
           <Send className="h-4 w-4" />
