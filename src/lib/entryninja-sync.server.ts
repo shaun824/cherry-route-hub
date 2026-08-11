@@ -1,6 +1,6 @@
 // Server-only: shared Entry Ninja -> app sync used by the admin action and the cron hook.
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { fetchEnEvents, fetchEnEntries, normaliseSize, toLineArray, type EnEvent } from "./entryninja.server";
+import { fetchEnEvents, fetchEnEntries, normaliseSize, toLineArray, linePrice, type EnEvent } from "./entryninja.server";
 import { hashIdNumber, idNumberLast4 } from "./id-hash.server";
 
 // The generated Database type isn't needed here; the callers pass typed clients.
@@ -171,6 +171,7 @@ export async function syncEnEvent(
           batch: entry.batch?.name ?? null,
           bib_number: entry.race_number || null,
           external_id: String(entry.id),
+          registration_ref: entry.registration_reference || null,
           jacket_size: jacket,
           tshirt_size: tshirt,
           extras,
