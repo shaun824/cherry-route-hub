@@ -43,7 +43,7 @@ import { curatedSponsorsFor } from "@/lib/event-sponsor-overrides";
 import { eventHasTshirt } from "@/lib/apparel";
 import { useAdminStore } from "@/lib/store";
 import { fetchMyEventById, type MyEventRow } from "@/lib/my-events";
-import { Printer, Shirt, Package, Siren, BedDouble } from "lucide-react";
+import { Printer, Shirt, Package, Siren, BedDouble, ExternalLink } from "lucide-react";
 import type { EventDay, EventRoute, FeedPost, ScheduleItem, SocialLinks } from "@/lib/mock-data";
 import { relativeTime } from "@/lib/mock-data";
 import { TypeBadge } from "@/components/ui-bits";
