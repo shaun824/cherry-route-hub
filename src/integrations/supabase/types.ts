@@ -589,6 +589,41 @@ export type Database = {
           },
         ]
       }
+      event_village_maps: {
+        Row: {
+          created_at: string
+          event_id: string
+          hotspots: Json
+          image_url: string | null
+          intro: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          event_id: string
+          hotspots?: Json
+          image_url?: string | null
+          intro?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          event_id?: string
+          hotspots?: Json
+          image_url?: string | null
+          intro?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_village_maps_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: true
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       events: {
         Row: {
           auto_created: boolean
