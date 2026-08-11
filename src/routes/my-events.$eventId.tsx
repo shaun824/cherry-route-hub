@@ -1436,6 +1436,7 @@ function YourEntryCard({ eventId, entryUrl = null }: { eventId: string; entryUrl
   if (!signedIn) {
     if (sessionLoading) return <div className="h-32 animate-pulse rounded-2xl bg-secondary" />;
     return (
+      <div className="space-y-2">
       <LockedSection locked message="Sign in to see your entry, sizes, merchandise and tent number">
         <section className="rounded-2xl bg-card p-4 ring-1 ring-border">
           <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-ink-soft">
@@ -1456,6 +1457,8 @@ function YourEntryCard({ eventId, entryUrl = null }: { eventId: string; entryUrl
           <div className="mt-3 h-16 rounded-xl bg-secondary/60" />
         </section>
       </LockedSection>
+      <EnterEventCta entryUrl={entryUrl} />
+      </div>
     );
   }
 
