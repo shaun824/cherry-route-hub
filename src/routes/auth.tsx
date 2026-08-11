@@ -214,7 +214,7 @@ function FindMyEmail() {
   const [idNumber, setIdNumber] = useState("");
   const [busy, setBusy] = useState(false);
   const [cooldown, setCooldown] = useState(false);
-  const [result, setResult] = useState<{ found: boolean; emails: string[] } | null>(null);
+  const [result, setResult] = useState<{ found: boolean; needsEmail: boolean; emails: string[] } | null>(null);
   const [err, setErr] = useState<string | null>(null);
 
   async function handleLookup(e: React.FormEvent) {
