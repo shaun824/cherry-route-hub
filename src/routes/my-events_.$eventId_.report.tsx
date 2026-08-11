@@ -5,6 +5,7 @@ import { ArrowLeft, Download, Printer } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchMyEventById, type MyEventRow } from "@/lib/my-events";
 import { eventHasTshirt } from "@/lib/apparel";
+import { fetchMyRooming } from "@/lib/rooming";
 
 export const Route = createFileRoute("/my-events_/$eventId_/report")({
   loader: async ({ params }) => {
@@ -28,6 +29,11 @@ function ReportPage() {
     queryKey: ["my-entry", event.id],
     queryFn: () => fetchMyEventById(event.id),
   });
+  const roomingQ = useQuery({
+    queryKey: ["my-rooming", event.id],
+    queryFn: () => fetchMyRooming(event.id),
+  });
+  const rooming = roomingQ.data ?? null;
 
   useEffect(() => {
     document.body.classList.add("print-body");
@@ -50,6 +56,9 @@ function ReportPage() {
       ["Bib number", row?.bib_number ?? ""],
       ["Jacket size", row?.jacket_size ?? ""],
       ...(showTshirt ? [["T-shirt size", row?.tshirt_size ?? ""]] : []),
+      ["Accommodation venue", rooming?.venue?.name ?? ""],
+      ["Tent / room number", rooming?.tent_number ?? ""],
+      ["Room type", rooming?.room_type ?? ""],
       ["Notes", row?.notes ?? ""],
       ...(row?.extras ?? []).map((x) => [
         "Extra",
@@ -133,6 +142,24 @@ function ReportPage() {
               <Row label="Jacket size" value={row.jacket_size} />
               {showTshirt ? <Row label="T-shirt size" value={row.tshirt_size} /> : null}
               <Row label="Notes" value={row.notes} />
+
+              <div className="mt-5">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-ink-soft">
+                  Accommodation
+                </p>
+                {!rooming ? (
+                  <p className="mt-1 text-sm text-ink-soft">
+                    No accommodation allocated for you on this event.
+                  </p>
+                ) : (
+                  <>
+                    <Row label="Venue" value={rooming.venue?.name ?? null} />
+                    <Row label="Tent / room number" value={rooming.tent_number} />
+                    <Row label="Room type" value={rooming.room_type} />
+                    <Row label="Accommodation notes" value={rooming.notes} />
+                  </>
+                )}
+              </div>
 
               <div className="mt-5">
                 <p className="text-[10px] font-bold uppercase tracking-widest text-ink-soft">
