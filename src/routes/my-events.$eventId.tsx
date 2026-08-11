@@ -49,6 +49,7 @@ import { relativeTime } from "@/lib/mock-data";
 import { TypeBadge } from "@/components/ui-bits";
 
 import { TrackerPanel } from "@/components/tracker-panel";
+import { LockedSection } from "@/components/locked-section";
 
 export const Route = createFileRoute("/my-events/$eventId")({
   loader: async ({ params }) => {
@@ -59,6 +60,24 @@ export const Route = createFileRoute("/my-events/$eventId")({
       .maybeSingle();
     if (error || !data) throw notFound();
     return { event: data };
+  },
+  head: ({ loaderData }) => {
+    const ev = loaderData?.event;
+    if (!ev) {
+      return { meta: [{ title: "Event — Red Cherry Events" }, { name: "robots", content: "noindex" }] };
+    }
+    const title = `${ev.name} — Red Cherry Events`;
+    const description = `${ev.name} in ${ev.location}: schedule, routes, venue, packing list and event info.`;
+    return {
+      meta: [
+        { title },
+        { name: "description", content: description },
+        { property: "og:title", content: title },
+        { property: "og:description", content: description },
+        { property: "og:type", content: "website" },
+        { name: "twitter:card", content: "summary_large_image" },
+      ],
+    };
   },
   component: MyEventDetail,
   notFoundComponent: () => (
