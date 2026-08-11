@@ -38,6 +38,7 @@ import { DEFAULT_PACKING_LIST, fetchEventInfo, type EventInfoBlock, type Packing
 import { RouteMap } from "@/components/route-map";
 import { SponsorScroller } from "@/components/sponsor-scroller";
 import { curatedSponsorsFor } from "@/lib/event-sponsor-overrides";
+import { eventHasTshirt } from "@/lib/apparel";
 import { useAdminStore } from "@/lib/store";
 import { fetchMyEventById, type MyEventRow } from "@/lib/my-events";
 import { Printer, Shirt, Package, Siren } from "lucide-react";
@@ -1404,7 +1405,7 @@ function YourEntryCard({ eventId }: { eventId: string }) {
         </p>
       ) : null}
 
-      {chips.length === 0 && !row.jacket_size && !row.tshirt_size && row.extras.length === 0 ? (
+      {chips.length === 0 && !row.jacket_size && !(showTshirt && row.tshirt_size) && row.extras.length === 0 ? (
         <p className="mt-3 text-xs text-ink-soft">
           Your entry is confirmed. Extras and sizes will appear here once they sync from Entry Ninja.
         </p>
