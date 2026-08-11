@@ -9,7 +9,11 @@ export const Route = createFileRoute("/api/public/hooks/entry-ninja-sync")({
           request.headers.get("apikey") ??
           request.headers.get("authorization")?.replace("Bearer ", "") ??
           "";
-        const expected = process.env["SUPABASE_PUBLISHABLE_KEY"] ?? process.env["SUPABASE_ANON_KEY"] ?? "";
+        const expected =
+          import.meta.env["VITE_SUPABASE_PUBLISHABLE_KEY"] ??
+          process.env["SUPABASE_PUBLISHABLE_KEY"] ??
+          "";
+
         if (!apikey || (expected && apikey !== expected)) {
           return new Response(JSON.stringify({ error: "Unauthorized" }), {
             status: 401,
