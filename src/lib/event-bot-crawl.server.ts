@@ -139,6 +139,17 @@ function scoreLink(url: string): number {
     "day1",
     "day2",
     "day3",
+    "package",
+    "packages",
+    "enter-here",
+    "enter",
+    "transport",
+    "transfer",
+    "bike",
+    "bikes",
+    "luggage",
+    "tour",
+    "itinerary",
   ];
   for (const k of keywords) if (u.includes(k)) score += 3;
   // Prefer shallow paths.
@@ -147,39 +158,84 @@ function scoreLink(url: string): number {
   return score;
 }
 
-async function crawlSite(seedUrls: string[], maxPages = 8): Promise<{ url: string; text: string }[]> {
+async function fetchSitemapUrls(seedUrls: string[]): Promise<string[]> {
+  const out = new Set<string>();
+  const origins = new Set<string>();
+  for (const s of seedUrls) {
+    try {
+      origins.add(new URL(s).origin);
+    } catch {
+      /* ignore */
+    }
+  }
+  for (const origin of origins) {
+    for (const path of ["/sitemap.xml", "/sitemap_index.xml", "/wp-sitemap.xml"]) {
+      try {
+        const res = await fetch(origin + path, { signal: AbortSignal.timeout(8000), redirect: "follow" });
+        if (!res.ok) continue;
+        const xml = await res.text();
+        const re = /<loc>\s*([^<\s]+)\s*<\/loc>/gi;
+        let m: RegExpExecArray | null;
+        while ((m = re.exec(xml))) {
+          const loc = m[1]!;
+          if (/\.(jpg|jpeg|png|gif|webp|svg|pdf|zip|mp4|mp3|ico|css|js)(\?|$)/i.test(loc)) continue;
+          if (loc.endsWith(".xml")) {
+            // nested sitemap: fetch one level deep
+            try {
+              const sub = await fetch(loc, { signal: AbortSignal.timeout(8000) });
+              if (sub.ok) {
+                const subXml = await sub.text();
+                const re2 = /<loc>\s*([^<\s]+)\s*<\/loc>/gi;
+                let m2: RegExpExecArray | null;
+                while ((m2 = re2.exec(subXml))) {
+                  const l2 = m2[1]!;
+                  if (!l2.endsWith(".xml")) out.add(l2);
+                }
+              }
+            } catch {
+              /* ignore */
+            }
+            continue;
+          }
+          out.add(loc);
+        }
+      } catch {
+        /* ignore */
+      }
+    }
+  }
+  return Array.from(out);
+}
+
+async function crawlSite(seedUrls: string[], maxPages = 40): Promise<{ url: string; text: string }[]> {
   const visited = new Set<string>();
   const results: { url: string; text: string }[] = [];
   const queue: string[] = [];
 
   for (const s of seedUrls) if (s) queue.push(s);
 
-  // Seed pages first.
-  for (const url of queue.slice()) {
-    if (visited.has(url) || results.length >= maxPages) continue;
-    visited.add(url);
-    const page = await fetchPage(url);
-    if (!page) continue;
-    results.push({ url, text: page.text });
-    // Gather candidate links.
-    const links = extractLinks(page.html, url)
-      .filter((l) => !visited.has(l))
-      .map((l) => ({ l, score: scoreLink(l) }))
-      .sort((a, b) => b.score - a.score)
-      .slice(0, 30)
-      .map((x) => x.l);
-    for (const l of links) if (!queue.includes(l)) queue.push(l);
+  // Discover the full URL set from sitemaps where available.
+  const sitemapUrls = await fetchSitemapUrls(seedUrls);
+  for (const u of sitemapUrls.sort((a, b) => scoreLink(b) - scoreLink(a))) {
+    if (!queue.includes(u)) queue.push(u);
   }
 
-  // BFS remaining until cap.
+  // BFS: every fetched page also contributes its own links.
   while (queue.length && results.length < maxPages) {
     const url = queue.shift()!;
     if (visited.has(url)) continue;
     visited.add(url);
     const page = await fetchPage(url);
     if (!page) continue;
-    if (page.text.length < 200) continue; // skip near-empty pages
-    results.push({ url, text: page.text });
+    if (page.text.length >= 120) results.push({ url, text: page.text });
+
+    const links = extractLinks(page.html, url)
+      .filter((l) => !visited.has(l) && !queue.includes(l))
+      .map((l) => ({ l, score: scoreLink(l) }))
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 40)
+      .map((x) => x.l);
+    for (const l of links) queue.push(l);
   }
 
   return results;
@@ -187,9 +243,10 @@ async function crawlSite(seedUrls: string[], maxPages = 8): Promise<{ url: strin
 
 // ---------- knowledge base ----------
 
-export const KNOWLEDGE_MAX_AGE_MS = 24 * 60 * 60 * 1000; // refresh once per day
-const TOTAL_CAP = 28000;
-const PER_PAGE_CAP = 6000;
+export const KNOWLEDGE_MAX_AGE_MS = 3 * 24 * 60 * 60 * 1000; // refresh every 3 days
+const TOTAL_CAP = 90000;
+const PER_PAGE_CAP = 9000;
+
 
 export function buildKnowledgeText(pages: { url: string; text: string }[]): string {
   let used = 0;
@@ -209,7 +266,7 @@ type EventRow = { id: string; name?: string | null; website_url?: string | null;
 export async function refreshEventKnowledge(
   admin: SupabaseClient<any>,
   event: EventRow,
-  maxPages = 12,
+  maxPages = 40,
 ): Promise<{ eventId: string; pages: number; chars: number; error?: string }> {
   const seeds = [event.website_url, event.faq_url]
     .filter((u): u is string => Boolean(u && /^https?:\/\//i.test(u)));
