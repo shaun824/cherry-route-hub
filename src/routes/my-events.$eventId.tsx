@@ -1578,36 +1578,27 @@ function YourEntryCard({ eventId, entryUrl = null }: { eventId: string; entryUrl
       ) : null}
 
       {row.extras.length > 0 ? (
-        <div className="mt-3">
-          <p className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-ink-soft">
-            <Package className="h-3 w-3" /> Merchandise &amp; extras
-          </p>
-          <ul className="mt-1.5 divide-y divide-border rounded-xl bg-secondary/60">
-            {row.extras.map((x, i) => (
-              <li key={i} className="flex items-start justify-between gap-3 px-3 py-2 text-xs">
-                <span className="min-w-0 text-ink">
-                  {x.name}
-                  {x.size ? <span className="text-ink-soft"> · {x.size}</span> : null}
-                </span>
-                <span className="shrink-0 text-right">
-                  <span className="font-semibold text-ink-soft">×{x.qty}</span>
-                  {x.price != null ? (
-                    <span className="ml-2 font-display font-bold text-ink">
-                      R{(x.price * x.qty).toLocaleString("en-ZA", { maximumFractionDigits: 2 })}
+        <div className="mt-3 space-y-3">
+          {groupExtras(row.extras).map((g) => (
+            <div key={g.key}>
+              <p className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-ink-soft">
+                <Package className="h-3 w-3" /> {g.label}
+              </p>
+              <ul className="mt-1.5 divide-y divide-border rounded-xl bg-secondary/60">
+                {g.items.map((x, i) => (
+                  <li key={i} className="flex items-start justify-between gap-3 px-3 py-2 text-xs">
+                    <span className="min-w-0 text-ink">
+                      {x.name}
+                      {x.option ? <span className="text-ink-soft"> · {x.option}</span> : null}
                     </span>
-                  ) : null}
-                </span>
-              </li>
-            ))}
-          </ul>
-          {row.extras.some((x) => x.price != null) ? (
-            <p className="mt-1.5 text-right text-[11px] font-semibold text-ink-soft">
-              Total extras: R
-              {row.extras
-                .reduce((sum, x) => sum + (x.price ?? 0) * x.qty, 0)
-                .toLocaleString("en-ZA", { maximumFractionDigits: 2 })}
-            </p>
-          ) : null}
+                    {x.qty > 1 ? (
+                      <span className="shrink-0 font-semibold text-ink-soft">×{x.qty}</span>
+                    ) : null}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
         </div>
       ) : null}
 
