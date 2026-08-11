@@ -143,8 +143,26 @@ function ReportPage() {
               {showTshirt ? <Row label="T-shirt size" value={row.tshirt_size} /> : null}
               <Row label="Notes" value={row.notes} />
 
+              <Row label="Notes" value={row.notes} />
+
               <div className="mt-5">
                 <p className="text-[10px] font-bold uppercase tracking-widest text-ink-soft">
+                  Accommodation
+                </p>
+                {!rooming ? (
+                  <p className="mt-1 text-sm text-ink-soft">
+                    No accommodation allocated for you on this event.
+                  </p>
+                ) : (
+                  <>
+                    <Row label="Venue" value={rooming.venue?.name ?? null} />
+                    <Row label="Tent / room number" value={rooming.tent_number} />
+                    <Row label="Room type" value={rooming.room_type} />
+                    <Row label="Accommodation notes" value={rooming.notes} />
+                  </>
+                )}
+              </div>
+
                   Extras purchased
                 </p>
                 {row.extras.length === 0 ? (
