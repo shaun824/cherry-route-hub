@@ -471,24 +471,26 @@ function RoutesPanel({
                       <p className="mt-2 text-xs leading-relaxed text-ink-soft">{r.description}</p>
                     ) : null}
                     {kmls.length > 0 || r.gpxUrl ? (
-                      <div className="mt-3 flex flex-wrap gap-2">
-                        {kmls.map((u, i) => (
-                          <DownloadLink
-                            key={u}
-                            url={u}
-                            label={fileNameFromUrl(
-                              u,
-                              `${r.name || "route"}${kmls.length > 1 ? `-${i + 1}` : ""}.kml`,
-                            )}
-                          />
-                        ))}
-                        {r.gpxUrl ? (
-                          <DownloadLink
-                            url={r.gpxUrl}
-                            label={fileNameFromUrl(r.gpxUrl, `${r.name || "route"}.gpx`)}
-                          />
-                        ) : null}
-                      </div>
+                      <LockedSection locked={locked} message="Sign in to download route files">
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          {kmls.map((u, i) => (
+                            <DownloadLink
+                              key={u}
+                              url={u}
+                              label={fileNameFromUrl(
+                                u,
+                                `${r.name || "route"}${kmls.length > 1 ? `-${i + 1}` : ""}.kml`,
+                              )}
+                            />
+                          ))}
+                          {r.gpxUrl ? (
+                            <DownloadLink
+                              url={r.gpxUrl}
+                              label={fileNameFromUrl(r.gpxUrl, `${r.name || "route"}.gpx`)}
+                            />
+                          ) : null}
+                        </div>
+                      </LockedSection>
                     ) : (
                       <p className="mt-3 text-[11px] text-muted-foreground">
                         No route file uploaded yet.
