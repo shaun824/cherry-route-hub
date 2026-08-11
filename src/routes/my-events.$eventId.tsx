@@ -36,6 +36,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/lib/auth";
 import { DEFAULT_PACKING_LIST, fetchEventInfo, type EventInfoBlock, type PackingItem } from "@/lib/event-info";
 import { RouteMap } from "@/components/route-map";
+import { RouteFileStats } from "@/components/route-file-stats";
 import { SponsorScroller } from "@/components/sponsor-scroller";
 import { curatedSponsorsFor } from "@/lib/event-sponsor-overrides";
 import { eventHasTshirt } from "@/lib/apparel";
