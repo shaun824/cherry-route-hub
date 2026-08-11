@@ -29,6 +29,11 @@ function ReportPage() {
     queryKey: ["my-entry", event.id],
     queryFn: () => fetchMyEventById(event.id),
   });
+  const roomingQ = useQuery({
+    queryKey: ["my-rooming", event.id],
+    queryFn: () => fetchMyRooming(event.id),
+  });
+  const rooming = roomingQ.data ?? null;
 
   useEffect(() => {
     document.body.classList.add("print-body");
