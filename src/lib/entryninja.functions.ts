@@ -2,11 +2,12 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { checkIsAdmin } from "./is-admin";
 
 export const listEntryNinjaEvents = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { data: isAdmin } = await context.supabase.rpc("is_admin");
+    const isAdmin = await checkIsAdmin(context.supabase as never);
     if (!isAdmin) throw new Error("Forbidden");
 
     const { fetchEnEvents } = await import("./entryninja.server");
@@ -47,7 +48,7 @@ export const syncEntryNinjaEvent = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => syncSchema.parse(data))
   .handler(async ({ data, context }) => {
-    const { data: isAdmin } = await context.supabase.rpc("is_admin");
+    const isAdmin = await checkIsAdmin(context.supabase as never);
     if (!isAdmin) throw new Error("Forbidden");
 
     const { syncEnEvent } = await import("./entryninja-sync.server");

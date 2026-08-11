@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
+import { checkIsAdmin } from "./is-admin";
 
 export function useSession() {
   const [session, setSession] = useState<Session | null>(null);
@@ -26,9 +27,7 @@ export function useIsAdmin() {
     queryKey: ["is-admin", user?.id ?? "anon"],
     queryFn: async () => {
       if (!user) return false;
-      const { data, error } = await supabase.rpc("is_admin");
-      if (error) return false;
-      return Boolean(data);
+      return await checkIsAdmin(supabase as never);
     },
     enabled: !loading,
     staleTime: 60_000,
