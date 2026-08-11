@@ -37,6 +37,7 @@ import { useSession } from "@/lib/auth";
 import { DEFAULT_PACKING_LIST, fetchEventInfo, type EventInfoBlock, type PackingItem } from "@/lib/event-info";
 import { RouteMap } from "@/components/route-map";
 import { SponsorScroller } from "@/components/sponsor-scroller";
+import { curatedSponsorsFor } from "@/lib/event-sponsor-overrides";
 import { useAdminStore } from "@/lib/store";
 import { fetchMyEventById, type MyEventRow } from "@/lib/my-events";
 import { Printer, Shirt, Package, Siren } from "lucide-react";
@@ -158,14 +159,15 @@ function MyEventDetail() {
         {tab === "packing" && <PackingPanel eventId={event.id} userId={user?.id ?? null} />}
         {tab === "chat" && <ChatPanel eventId={event.id} userId={user?.id ?? null} />}
         {tab === "ask" && <AskAdminPanel eventId={event.id} userId={user?.id ?? null} />}
-        {tab === "sponsors" && <EventSponsorsPanel eventId={event.id} />}
+        {tab === "sponsors" && <EventSponsorsPanel eventId={event.id} eventName={event.name} />}
 
       </div>
     </div>
   );
 }
 
-function EventSponsorsPanel({ eventId }: { eventId: string }) {
+function EventSponsorsPanel({ eventId, eventName }: { eventId: string; eventName?: string }) {
+  const curated = curatedSponsorsFor(eventName);
   const load = useServerFn(fetchEventSponsors);
   const q = useQuery({
     queryKey: ["event-sponsors", eventId],
@@ -173,9 +175,44 @@ function EventSponsorsPanel({ eventId }: { eventId: string }) {
     staleTime: 60 * 60 * 1000,
   });
 
+  if (curated) {
+    const all = [curated.title, ...curated.partners];
+    return (
+      <div>
+        <p className="mb-3 text-xs text-ink-soft">
+          {curated.title.name} is the title sponsor. Tap a logo to visit their site.
+        </p>
+        <div className="grid grid-cols-2 gap-3">
+          {all.map((s, i) => (
+            <a
+              key={s.name}
+              href={s.url}
+              target="_blank"
+              rel="noopener noreferrer sponsored"
+              className={i === 0 ? "col-span-2" : undefined}
+            >
+              <div className="grid h-24 place-items-center rounded-2xl bg-white p-3 ring-1 ring-black/10">
+                <img
+                  src={s.logoUrl}
+                  alt={s.name}
+                  loading="lazy"
+                  className="max-h-16 max-w-full object-contain"
+                />
+              </div>
+              <p className="mt-1 text-center text-[10px] uppercase tracking-[0.16em] text-ink-soft">
+                {i === 0 ? "Title sponsor" : s.name}
+              </p>
+            </a>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   if (q.isLoading) {
     return <p className="py-8 text-center text-sm text-ink-soft">Loading sponsors…</p>;
   }
+
   const sponsors = q.data?.sponsors ?? [];
   if (sponsors.length === 0) {
     return (
@@ -541,7 +578,7 @@ function InfoPanel({
 
       <FollowSection links={(event.social_links as SocialLinks | null) ?? undefined} />
 
-      <SponsorsBlock />
+      <SponsorsBlock eventName={eventName} />
 
 
       {info?.rules_md ? (
@@ -1147,8 +1184,69 @@ function FollowSection({ links }: { links?: SocialLinks }) {
   );
 }
 
-function SponsorsBlock() {
+function SponsorsBlock({ eventName }: { eventName?: string }) {
+  const curated = curatedSponsorsFor(eventName);
   const sponsors = useAdminStore((s) => s.sponsors).filter((sp) => sp.active);
+
+  if (curated) {
+    const row = [...curated.partners, ...curated.partners];
+    return (
+      <section aria-label="Sponsors" className="pt-2">
+        <SectionTitle>Proudly supported by</SectionTitle>
+
+        <div className="mt-2 grid place-items-center rounded-2xl bg-white p-5 ring-1 ring-black/10">
+          <a
+            href={curated.title.url}
+            target="_blank"
+            rel="noopener noreferrer sponsored"
+            aria-label={`Visit ${curated.title.name}`}
+          >
+            <img
+              src={curated.title.logoUrl}
+              alt={curated.title.name}
+              className="max-h-16 max-w-[260px] object-contain"
+              loading="lazy"
+            />
+          </a>
+        </div>
+        <p className="mt-2 text-center text-[10px] font-bold uppercase tracking-[0.2em] text-ink-soft">
+          Title sponsor · {curated.title.name}
+        </p>
+
+        <div className="mt-3">
+          <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.2em] text-ink-soft">
+            Our partners
+          </p>
+          <div className="relative overflow-hidden [mask-image:linear-gradient(to_right,transparent,#000_8%,#000_92%,transparent)]">
+            <ul
+              className="flex w-max items-center gap-3 animate-marquee will-change-transform hover:[animation-play-state:paused]"
+              style={{ animationDuration: `${Math.max(18, curated.partners.length * 6)}s` }}
+            >
+              {row.map((sp, i) => (
+                <li key={`${sp.name}-${i}`}>
+                  <a
+                    href={sp.url}
+                    target="_blank"
+                    rel="noopener noreferrer sponsored"
+                    title={sp.name}
+                    className="grid h-16 min-w-[150px] place-items-center rounded-xl bg-white px-5 shadow-sm ring-1 ring-black/10"
+                  >
+                    <img
+                      src={sp.logoUrl}
+                      alt={sp.name}
+                      className="max-h-11 max-w-[130px] object-contain"
+                      loading="lazy"
+                    />
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
   if (sponsors.length === 0) return null;
   const primary = sponsors.find((sp) => sp.tier === "Platinum") ?? sponsors[0];
   const secondary = sponsors.filter((sp) => sp.id !== primary.id);
@@ -1192,6 +1290,7 @@ function SponsorsBlock() {
     </section>
   );
 }
+
 
 
 function YourEntryCard({ eventId }: { eventId: string }) {
