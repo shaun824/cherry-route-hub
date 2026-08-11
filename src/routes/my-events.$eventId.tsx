@@ -1376,6 +1376,22 @@ function YourEntryCard({ eventId }: { eventId: string }) {
       ) : null}
 
 
+      {rooming ? (
+        <div className="mt-3 rounded-xl bg-secondary p-2.5">
+          <p className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-ink-soft">
+            <BedDouble className="h-3 w-3" /> Accommodation
+          </p>
+          <p className="mt-0.5 font-display text-sm font-bold text-ink">
+            {rooming.tent_number ? `Tent / room ${rooming.tent_number}` : "Allocated"}
+            {rooming.room_type ? <span className="font-semibold text-ink-soft"> · {rooming.room_type}</span> : null}
+          </p>
+          {rooming.venue?.name ? (
+            <p className="text-[11px] text-ink-soft">{rooming.venue.name}</p>
+          ) : null}
+          {rooming.notes ? <p className="mt-1 text-[11px] text-ink-soft">{rooming.notes}</p> : null}
+        </div>
+      ) : null}
+
       {row.extras.length > 0 ? (
         <div className="mt-3">
           <p className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-ink-soft">
