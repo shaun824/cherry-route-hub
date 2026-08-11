@@ -7,6 +7,7 @@ import { useSession } from "@/lib/auth";
 import { fetchMyEvents } from "@/lib/my-events";
 import { linkMyEntry, getMyEntrant } from "@/lib/roster.functions";
 import { useServerFn } from "@tanstack/react-start";
+import { UpcomingBySport } from "@/components/upcoming-by-sport";
 
 export const Route = createFileRoute("/my-events/")({
   component: MyEventsIndex,
@@ -48,6 +49,8 @@ function SignedOutState() {
           — schedules, venues and route details are open to everyone.
         </p>
       </div>
+      <UpcomingBySport heading="Events coming up" />
+      <div className="pb-6" />
     </div>
   );
 }
@@ -139,6 +142,8 @@ function SignedInState() {
           ))}
         </ul>
       )}
+      <UpcomingBySport excludeIds={rows.map((r) => r.event_id)} />
+      <div className="pb-6" />
     </div>
   );
 }
@@ -207,6 +212,8 @@ function LinkEntrantForm({ onLinked }: { onLinked: () => void }) {
           {busy ? "Checking…" : "Link my entry"}
         </button>
       </form>
+      <UpcomingBySport heading="Events coming up" />
+      <div className="pb-6" />
     </div>
   );
 }
