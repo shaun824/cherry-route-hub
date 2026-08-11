@@ -195,6 +195,10 @@ function AuthPage() {
           )}
         </div>
 
+        <FindMyEmail />
+
+
+
         <p className="mt-5 text-center text-[11px] text-ink-soft">
           By continuing you agree to Red Cherry Events'{" "}
           <Link to="/" className="underline">terms</Link>.
