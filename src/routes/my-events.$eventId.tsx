@@ -1019,14 +1019,18 @@ function AskAdminPanel({ eventId, userId, compact = false }: { eventId: string; 
   }
 
   return (
-    <div className="flex h-[60vh] flex-col rounded-2xl bg-card ring-1 ring-border">
+    <div className={`flex ${compact ? "max-h-[46vh] min-h-[220px]" : "h-[60vh]"} flex-col rounded-2xl bg-card ring-1 ring-border`}>
       <div className="border-b border-border p-3 text-xs text-ink-soft">
-        Ask anything about this event — our assistant bot 🍒 answers instantly from the event details & website, and loops in a Red Cherry admin when it isn't sure.
+        {compact
+          ? "Got a question about this event? Ask our assistant bot 🍒 — it answers from the event details & website, and loops in a Red Cherry admin if it isn't sure."
+          : "Ask anything about this event — our assistant bot 🍒 answers instantly from the event details & website, and loops in a Red Cherry admin when it isn't sure."}
       </div>
       <div className="flex-1 overflow-y-auto p-3">
         {(messagesQ.data ?? []).length === 0 ? (
           <p className="mt-6 text-center text-xs text-ink-soft">
-            No messages yet. Ask a question below and the bot will try first.
+            {userId
+              ? "No messages yet. Ask a question below and the bot will try first."
+              : "Sign in to ask the assistant about this event."}
           </p>
         ) : (
           <ul className="space-y-2">
