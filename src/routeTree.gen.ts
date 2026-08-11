@@ -42,6 +42,7 @@ import { Route as MyEventsEventIdReportRouteImport } from './routes/my-events_.$
 import { Route as EventsEventIdMapRouteImport } from './routes/events.$eventId.map'
 import { Route as EventsEventIdEnterRouteImport } from './routes/events.$eventId.enter'
 import { Route as AdminEventInfoEventIdRouteImport } from './routes/admin.event-info.$eventId'
+import { Route as ApiPublicHooksEntryNinjaSyncRouteImport } from './routes/api/public/hooks/entry-ninja-sync'
 
 const SpectateRoute = SpectateRouteImport.update({
   id: '/spectate',
@@ -208,6 +209,12 @@ const AdminEventInfoEventIdRoute = AdminEventInfoEventIdRouteImport.update({
   path: '/event-info/$eventId',
   getParentRoute: () => AdminRoute,
 } as any)
+const ApiPublicHooksEntryNinjaSyncRoute =
+  ApiPublicHooksEntryNinjaSyncRouteImport.update({
+    id: '/api/public/hooks/entry-ninja-sync',
+    path: '/api/public/hooks/entry-ninja-sync',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -243,6 +250,7 @@ export interface FileRoutesByFullPath {
   '/my-events/$eventId/report': typeof MyEventsEventIdReportRoute
   '/admin/event-info/': typeof AdminEventInfoIndexRoute
   '/events/$eventId/': typeof EventsEventIdIndexRoute
+  '/api/public/hooks/entry-ninja-sync': typeof ApiPublicHooksEntryNinjaSyncRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -275,6 +283,7 @@ export interface FileRoutesByTo {
   '/my-events/$eventId/report': typeof MyEventsEventIdReportRoute
   '/admin/event-info': typeof AdminEventInfoIndexRoute
   '/events/$eventId': typeof EventsEventIdIndexRoute
+  '/api/public/hooks/entry-ninja-sync': typeof ApiPublicHooksEntryNinjaSyncRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -311,6 +320,7 @@ export interface FileRoutesById {
   '/my-events_/$eventId_/report': typeof MyEventsEventIdReportRoute
   '/admin/event-info/': typeof AdminEventInfoIndexRoute
   '/events/$eventId/': typeof EventsEventIdIndexRoute
+  '/api/public/hooks/entry-ninja-sync': typeof ApiPublicHooksEntryNinjaSyncRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -348,6 +358,7 @@ export interface FileRouteTypes {
     | '/my-events/$eventId/report'
     | '/admin/event-info/'
     | '/events/$eventId/'
+    | '/api/public/hooks/entry-ninja-sync'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -380,6 +391,7 @@ export interface FileRouteTypes {
     | '/my-events/$eventId/report'
     | '/admin/event-info'
     | '/events/$eventId'
+    | '/api/public/hooks/entry-ninja-sync'
   id:
     | '__root__'
     | '/'
@@ -415,6 +427,7 @@ export interface FileRouteTypes {
     | '/my-events_/$eventId_/report'
     | '/admin/event-info/'
     | '/events/$eventId/'
+    | '/api/public/hooks/entry-ninja-sync'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -431,6 +444,7 @@ export interface RootRouteChildren {
   EventsEventIdRoute: typeof EventsEventIdRouteWithChildren
   EventsIndexRoute: typeof EventsIndexRoute
   MyEventsEventIdReportRoute: typeof MyEventsEventIdReportRoute
+  ApiPublicHooksEntryNinjaSyncRoute: typeof ApiPublicHooksEntryNinjaSyncRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -666,6 +680,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminEventInfoEventIdRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/api/public/hooks/entry-ninja-sync': {
+      id: '/api/public/hooks/entry-ninja-sync'
+      path: '/api/public/hooks/entry-ninja-sync'
+      fullPath: '/api/public/hooks/entry-ninja-sync'
+      preLoaderRoute: typeof ApiPublicHooksEntryNinjaSyncRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -761,6 +782,7 @@ const rootRouteChildren: RootRouteChildren = {
   EventsEventIdRoute: EventsEventIdRouteWithChildren,
   EventsIndexRoute: EventsIndexRoute,
   MyEventsEventIdReportRoute: MyEventsEventIdReportRoute,
+  ApiPublicHooksEntryNinjaSyncRoute: ApiPublicHooksEntryNinjaSyncRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
