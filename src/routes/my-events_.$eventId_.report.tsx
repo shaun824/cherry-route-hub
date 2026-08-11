@@ -1,3 +1,7 @@
+import {
+  entryNinjaRegistrationId,
+  entryNinjaRegistrationUrl,
+} from "@/lib/entry-ninja-link";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
