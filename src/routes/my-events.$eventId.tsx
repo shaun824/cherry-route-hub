@@ -175,9 +175,44 @@ function EventSponsorsPanel({ eventId, eventName }: { eventId: string; eventName
     staleTime: 60 * 60 * 1000,
   });
 
+  if (curated) {
+    const all = [curated.title, ...curated.partners];
+    return (
+      <div>
+        <p className="mb-3 text-xs text-ink-soft">
+          {curated.title.name} is the title sponsor. Tap a logo to visit their site.
+        </p>
+        <div className="grid grid-cols-2 gap-3">
+          {all.map((s, i) => (
+            <a
+              key={s.name}
+              href={s.url}
+              target="_blank"
+              rel="noopener noreferrer sponsored"
+              className={i === 0 ? "col-span-2" : undefined}
+            >
+              <div className="grid h-24 place-items-center rounded-2xl bg-white p-3 ring-1 ring-black/10">
+                <img
+                  src={s.logoUrl}
+                  alt={s.name}
+                  loading="lazy"
+                  className="max-h-16 max-w-full object-contain"
+                />
+              </div>
+              <p className="mt-1 text-center text-[10px] uppercase tracking-[0.16em] text-ink-soft">
+                {i === 0 ? "Title sponsor" : s.name}
+              </p>
+            </a>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   if (q.isLoading) {
     return <p className="py-8 text-center text-sm text-ink-soft">Loading sponsors…</p>;
   }
+
   const sponsors = q.data?.sponsors ?? [];
   if (sponsors.length === 0) {
     return (
