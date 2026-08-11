@@ -223,7 +223,7 @@ export default function VillageMapGeo({
           ) : null}
         </MapContainer>
 
-        <div className="pointer-events-none absolute left-3 top-3 z-[500] flex gap-2">
+        <div className="pointer-events-none absolute right-3 top-3 z-[500] flex gap-2">
           <button
             type="button"
             onClick={() => setSatellite((s) => !s)}
