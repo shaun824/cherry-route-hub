@@ -65,6 +65,15 @@ const PARTNERS: CuratedSponsor[] = [
     logoUrl: customConstruction.url,
     url: "https://www.google.com/search?q=Custom+Construction+Port+Elizabeth",
   },
+  { name: "Herotel", logoUrl: herotel.url, url: "https://herotel.com/" },
+  { name: "Quinton", logoUrl: quinton.url, url: "https://www.quinton.co.za/" },
+  { name: "Nutri-Go", logoUrl: nutriGo.url, url: "https://nutrigo.co.za/" },
+  { name: "Rudy Project", logoUrl: rudy.url, url: "https://www.rudyproject.co.za/" },
+  { name: "BUCO", logoUrl: buco.url, url: "https://www.buco.co.za/" },
+  { name: "Enjoy", logoUrl: enjoy.url, url: "https://www.google.com/search?q=Enjoy+brand" },
+  { name: "Plett Realty", logoUrl: plettRealty.url, url: "https://www.plettrealty.co.za/" },
+  { name: "Doolhof Wine Estate", logoUrl: doolhof.url, url: "https://www.doolhof.com/" },
+  { name: "Knysna Realty", logoUrl: knysnaRealty.url, url: "https://www.knysnarealty.co.za/" },
 ];
 
 const RCE_SET: CuratedSponsors = { title: TITLE_SPONSOR, partners: PARTNERS };
