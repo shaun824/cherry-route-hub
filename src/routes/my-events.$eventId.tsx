@@ -927,7 +927,7 @@ function ChatPanel({ eventId, userId }: { eventId: string; userId: string | null
   );
 }
 
-function AskAdminPanel({ eventId, userId }: { eventId: string; userId: string | null }) {
+function AskAdminPanel({ eventId, userId, compact = false }: { eventId: string; userId: string | null; compact?: boolean }) {
   const qc = useQueryClient();
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
