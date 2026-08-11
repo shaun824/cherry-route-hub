@@ -1288,6 +1288,13 @@ function YourEntryCard({ eventId }: { eventId: string }) {
     queryFn: () => fetchMyEventById(eventId),
     staleTime: 30_000,
   });
+  const roomingQ = useQuery({
+    queryKey: ["my-rooming", eventId],
+    queryFn: () => fetchMyRooming(eventId),
+    staleTime: 30_000,
+  });
+  const rooming = roomingQ.data ?? null;
+
 
   if (q.isLoading) {
     return <div className="h-32 animate-pulse rounded-2xl bg-secondary" />;
