@@ -8,6 +8,15 @@ import kazin from "@/assets/sponsors/kazin.png.asset.json";
 import kranzle from "@/assets/sponsors/kranzle.png.asset.json";
 import squirt from "@/assets/sponsors/squirt.png.asset.json";
 import customConstruction from "@/assets/sponsors/custom-construction.png.asset.json";
+import herotel from "@/assets/sponsors/herotel.png.asset.json";
+import quinton from "@/assets/sponsors/quinton.png.asset.json";
+import nutriGo from "@/assets/sponsors/nutri-go.png.asset.json";
+import rudy from "@/assets/sponsors/rudy-project.png.asset.json";
+import buco from "@/assets/sponsors/buco.png.asset.json";
+import enjoy from "@/assets/sponsors/enjoy.png.asset.json";
+import plettRealty from "@/assets/sponsors/plett-realty.jpg.asset.json";
+import doolhof from "@/assets/sponsors/doolhof.png.asset.json";
+import knysnaRealty from "@/assets/sponsors/knysna-realty.jpg.asset.json";
 
 export type CuratedSponsor = {
   name: string;
@@ -56,6 +65,15 @@ const PARTNERS: CuratedSponsor[] = [
     logoUrl: customConstruction.url,
     url: "https://www.google.com/search?q=Custom+Construction+Port+Elizabeth",
   },
+  { name: "Herotel", logoUrl: herotel.url, url: "https://herotel.com/" },
+  { name: "Quinton", logoUrl: quinton.url, url: "https://www.quinton.co.za/" },
+  { name: "Nutri-Go", logoUrl: nutriGo.url, url: "https://nutrigo.co.za/" },
+  { name: "Rudy Project", logoUrl: rudy.url, url: "https://www.rudyproject.co.za/" },
+  { name: "BUCO", logoUrl: buco.url, url: "https://www.buco.co.za/" },
+  { name: "Enjoy", logoUrl: enjoy.url, url: "https://www.google.com/search?q=Enjoy+brand" },
+  { name: "Plett Realty", logoUrl: plettRealty.url, url: "https://www.plettrealty.co.za/" },
+  { name: "Doolhof Wine Estate", logoUrl: doolhof.url, url: "https://www.doolhof.com/" },
+  { name: "Knysna Realty", logoUrl: knysnaRealty.url, url: "https://www.knysnarealty.co.za/" },
 ];
 
 const RCE_SET: CuratedSponsors = { title: TITLE_SPONSOR, partners: PARTNERS };
