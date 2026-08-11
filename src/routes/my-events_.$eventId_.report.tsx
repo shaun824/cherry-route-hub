@@ -5,6 +5,7 @@ import { ArrowLeft, Download, Printer } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchMyEventById, type MyEventRow } from "@/lib/my-events";
 import { eventHasTshirt } from "@/lib/apparel";
+import { fetchMyRooming } from "@/lib/rooming";
 
 export const Route = createFileRoute("/my-events_/$eventId_/report")({
   loader: async ({ params }) => {
