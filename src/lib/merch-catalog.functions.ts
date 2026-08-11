@@ -2,6 +2,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { checkIsAdmin } from "./is-admin";
 
 const syncSchema = z.object({ eventId: z.string().uuid().optional() });
 
@@ -21,7 +22,7 @@ export const syncMerchCatalog = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => syncSchema.parse(data ?? {}))
   .handler(async ({ data, context }) => {
-    const { data: isAdmin } = await context.supabase.rpc("is_admin");
+    const isAdmin = await checkIsAdmin(context.supabase as never);
     if (!isAdmin) throw new Error("Forbidden");
 
     const { fetchEnEventDetail } = await import("./entryninja.server");
@@ -82,7 +83,7 @@ export const syncMerchCatalog = createServerFn({ method: "POST" })
 export const listMerchCatalog = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }): Promise<MerchCatalogEvent[]> => {
-    const { data: isAdmin } = await context.supabase.rpc("is_admin");
+    const isAdmin = await checkIsAdmin(context.supabase as never);
     if (!isAdmin) throw new Error("Forbidden");
 
     const [{ data: events }, { data: options }] = await Promise.all([
@@ -133,7 +134,7 @@ export const upsertMerchItem = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => upsertSchema.parse(data))
   .handler(async ({ data, context }) => {
-    const { data: isAdmin } = await context.supabase.rpc("is_admin");
+    const isAdmin = await checkIsAdmin(context.supabase as never);
     if (!isAdmin) throw new Error("Forbidden");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
@@ -164,7 +165,7 @@ export const deleteMerchItem = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
   .handler(async ({ data, context }) => {
-    const { data: isAdmin } = await context.supabase.rpc("is_admin");
+    const isAdmin = await checkIsAdmin(context.supabase as never);
     if (!isAdmin) throw new Error("Forbidden");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin.from("event_merch_options").delete().eq("id", data.id);

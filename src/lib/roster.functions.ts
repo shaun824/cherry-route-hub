@@ -2,6 +2,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { checkIsAdmin } from "./is-admin";
 
 const extraItemSchema = z.object({
   name: z.string().trim().min(1).max(120),
@@ -66,7 +67,7 @@ export const importRoster = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => importSchema.parse(data))
   .handler(async ({ data, context }) => {
     // Verify admin
-    const { data: isAdmin } = await context.supabase.rpc("is_admin");
+    const isAdmin = await checkIsAdmin(context.supabase as never);
     if (!isAdmin) throw new Error("Forbidden");
 
     const { hashIdNumber, idNumberLast4 } = await import("./id-hash.server");
@@ -314,7 +315,7 @@ export const quickAddEntrant = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => quickAddSchema.parse(data))
   .handler(async ({ data, context }) => {
-    const { data: isAdmin } = await context.supabase.rpc("is_admin");
+    const isAdmin = await checkIsAdmin(context.supabase as never);
     if (!isAdmin) throw new Error("Forbidden");
 
     const { hashIdNumber, idNumberLast4 } = await import("./id-hash.server");
@@ -390,7 +391,7 @@ export const unassignEntrant = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => unassignSchema.parse(data))
   .handler(async ({ data, context }) => {
-    const { data: isAdmin } = await context.supabase.rpc("is_admin");
+    const isAdmin = await checkIsAdmin(context.supabase as never);
     if (!isAdmin) throw new Error("Forbidden");
     const { error } = await context.supabase
       .from("event_entrants")

@@ -26,9 +26,7 @@ export function useIsAdmin() {
     queryKey: ["is-admin", user?.id ?? "anon"],
     queryFn: async () => {
       if (!user) return false;
-      const { data, error } = await supabase.rpc("is_admin");
-      if (error) return false;
-      return Boolean(data);
+      return await checkIsAdmin(supabase as never);
     },
     enabled: !loading,
     staleTime: 60_000,
