@@ -56,6 +56,9 @@ function ReportPage() {
       ["Bib number", row?.bib_number ?? ""],
       ["Jacket size", row?.jacket_size ?? ""],
       ...(showTshirt ? [["T-shirt size", row?.tshirt_size ?? ""]] : []),
+      ["Accommodation venue", rooming?.venue?.name ?? ""],
+      ["Tent / room number", rooming?.tent_number ?? ""],
+      ["Room type", rooming?.room_type ?? ""],
       ["Notes", row?.notes ?? ""],
       ...(row?.extras ?? []).map((x) => [
         "Extra",
