@@ -3,6 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { askEventBot } from "@/lib/event-bot.functions";
 import { fetchEventSponsors } from "@/lib/event-sponsors.functions";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { EventWeatherCard } from "@/components/event-weather";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowLeft,
@@ -518,10 +519,16 @@ function InfoPanel({
   eventId: string;
   description: string | null;
   distanceKm: number;
-  event: { days?: unknown; schedule?: unknown; location?: string | null; map_query?: string | null; social_links?: unknown; entry_ninja_url?: string | null; website_url?: string | null };
+  event: { days?: unknown; schedule?: unknown; location?: string | null; map_query?: string | null; social_links?: unknown; entry_ninja_url?: string | null; website_url?: string | null; event_date?: string | null };
   isLive: boolean;
   eventName: string;
 }) {
+  // Weather is only worth showing (and refreshing) inside the forecast window.
+  const daysToEvent = event.event_date
+    ? Math.ceil((new Date(event.event_date).getTime() - Date.now()) / 86_400_000)
+    : null;
+  const showWeather =
+    daysToEvent !== null && daysToEvent <= 10 && daysToEvent >= -1 && Boolean(event.location);
   const q = useQuery({ queryKey: ["event-info", eventId], queryFn: () => fetchEventInfo(eventId) });
   const info = q.data;
   const days: EventDay[] = Array.isArray(event.days) ? (event.days as EventDay[]) : [];
@@ -547,6 +554,15 @@ function InfoPanel({
           <p>Live tracking and SOS activate on race day, once this event goes live.</p>
         </div>
       )}
+
+      {showWeather ? (
+        <EventWeatherCard
+          eventName={eventName}
+          location={event.location ?? ""}
+          mapQuery={event.map_query}
+          eventDate={event.event_date ?? undefined}
+        />
+      ) : null}
 
       <YourEntryCard
         eventId={eventId}
