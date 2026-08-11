@@ -1,15 +1,27 @@
 import { useAdminStore } from "@/lib/store";
 
+type SponsorScrollerSponsor = {
+  id?: string;
+  name: string;
+  logoUrl?: string | null;
+  url?: string | null;
+  logoText?: string | null;
+  accent?: string | null;
+};
+
 // Continuous horizontal marquee of sponsor logos. Duplicates the list so the
 // loop reads seamlessly.
 export function SponsorScroller({
   title = "Proudly supported by",
   compact = false,
+  sponsors: sponsorsProp,
 }: {
   title?: string;
   compact?: boolean;
+  sponsors?: SponsorScrollerSponsor[];
 }) {
-  const sponsors = useAdminStore((s) => s.sponsors).filter((sp) => sp.active);
+  const storeSponsors = useAdminStore((s) => s.sponsors).filter((sp) => sp.active);
+  const sponsors = sponsorsProp ?? storeSponsors;
   if (sponsors.length === 0) return null;
 
   const row = [...sponsors, ...sponsors]; // duplicate for seamless loop
@@ -43,11 +55,11 @@ export function SponsorScroller({
             ) : (
               <div
                 className="grid h-14 min-w-[140px] place-items-center rounded-xl px-5 text-white shadow-sm ring-1 ring-black/10"
-                style={{ background: sp.accent }}
+                style={{ background: sp.accent || "var(--cherry)" }}
                 title={sp.name}
               >
                 <span className="font-display text-sm font-black tracking-[0.18em]">
-                  {sp.logoText}
+                  {sp.logoText || sp.name}
                 </span>
               </div>
             );
