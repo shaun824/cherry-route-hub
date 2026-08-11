@@ -136,6 +136,15 @@
   animation: marquee linear infinite;
 }
 
+@keyframes marquee-reverse {
+  from { transform: translateX(-50%); }
+  to { transform: translateX(0); }
+}
+
+@utility animate-marquee-reverse {
+  animation: marquee-reverse linear infinite;
+}
+
 
 /* ---------- App-like smoothness ---------- */
 @layer base {
