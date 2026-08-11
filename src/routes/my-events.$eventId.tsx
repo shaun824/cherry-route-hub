@@ -1304,6 +1304,8 @@ function YourEntryCard({ eventId }: { eventId: string }) {
     return <div className="h-32 animate-pulse rounded-2xl bg-secondary" />;
   }
   const row: MyEventRow | null = q.data ?? null;
+  const showTshirt = eventHasTshirt(row?.event?.name);
+
   if (!row) {
     return (
       <section className="rounded-2xl border border-dashed border-border p-4 text-center text-xs text-ink-soft">
