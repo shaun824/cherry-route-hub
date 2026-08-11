@@ -411,6 +411,8 @@ function RoutesPanel({
   eventId: string;
   event: { days?: unknown };
 }) {
+  const { user, loading } = useSession();
+  const locked = !loading && !user;
   const days: EventDay[] = Array.isArray(event.days) ? (event.days as EventDay[]) : [];
   const allRoutes = days.flatMap((d) => d.routes ?? []);
   const hasMap = allRoutes.some((r) => (r.kmlUrls ?? []).length > 0);
@@ -425,14 +427,18 @@ function RoutesPanel({
         <section>
           <SectionTitle>Interactive map</SectionTitle>
           <div className="mt-2">
-            <RouteMap event={event as never} height="320px" />
-            <Link
-              to="/events/$eventId/map"
-              params={{ eventId }}
-              className="mt-2 inline-block text-[11px] font-semibold text-cherry"
-            >
-              Open fullscreen map →
-            </Link>
+            <LockedSection locked={locked} message="Sign in to view the interactive route map">
+              <RouteMap event={event as never} height="320px" />
+            </LockedSection>
+            {!locked ? (
+              <Link
+                to="/events/$eventId/map"
+                params={{ eventId }}
+                className="mt-2 inline-block text-[11px] font-semibold text-cherry"
+              >
+                Open fullscreen map →
+              </Link>
+            ) : null}
           </div>
         </section>
       ) : null}
