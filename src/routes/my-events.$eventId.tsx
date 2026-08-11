@@ -1394,24 +1394,54 @@ function SponsorsBlock({ eventName }: { eventName?: string }) {
 
 
 function YourEntryCard({ eventId }: { eventId: string }) {
+  const { user, loading: sessionLoading } = useSession();
+  const signedIn = Boolean(user);
   const q = useQuery({
     queryKey: ["my-entry", eventId],
     queryFn: () => fetchMyEventById(eventId),
     staleTime: 30_000,
+    enabled: signedIn,
   });
   const roomingQ = useQuery({
     queryKey: ["my-rooming", eventId],
     queryFn: () => fetchMyRooming(eventId),
     staleTime: 30_000,
+    enabled: signedIn,
   });
   const rooming = roomingQ.data ?? null;
 
+  if (!signedIn) {
+    if (sessionLoading) return <div className="h-32 animate-pulse rounded-2xl bg-secondary" />;
+    return (
+      <LockedSection locked message="Sign in to see your entry, sizes, merchandise and tent number">
+        <section className="rounded-2xl bg-card p-4 ring-1 ring-border">
+          <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-ink-soft">
+            Your entry
+          </p>
+          <p className="mt-0.5 font-display text-base font-bold text-ink">
+            Everything Red Cherry has on file for you
+          </p>
+          <div className="mt-3 flex flex-wrap gap-1.5 text-[11px] font-semibold">
+            <span className="rounded bg-accent px-2 py-0.5 text-cherry-deep">Category</span>
+            <span className="rounded bg-accent px-2 py-0.5 text-cherry-deep">Batch</span>
+            <span className="rounded bg-ink px-2 py-0.5 text-white">Bib</span>
+          </div>
+          <div className="mt-3 grid grid-cols-2 gap-2">
+            <div className="h-14 rounded-xl bg-secondary" />
+            <div className="h-14 rounded-xl bg-secondary" />
+          </div>
+          <div className="mt-3 h-16 rounded-xl bg-secondary/60" />
+        </section>
+      </LockedSection>
+    );
+  }
 
   if (q.isLoading) {
     return <div className="h-32 animate-pulse rounded-2xl bg-secondary" />;
   }
   const row: MyEventRow | null = q.data ?? null;
   const showTshirt = eventHasTshirt(row?.event?.name);
+
 
   if (!row) {
     return (
