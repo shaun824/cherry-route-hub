@@ -1204,33 +1204,27 @@ function SponsorsBlock({ eventName }: { eventName?: string }) {
         </p>
 
         <div className="mt-3">
-          <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.2em] text-ink-soft">
+          <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.2em] text-ink-soft">
             Our partners
           </p>
-          <div className="relative overflow-hidden [mask-image:linear-gradient(to_right,transparent,#000_8%,#000_92%,transparent)]">
-            <ul
-              className="flex w-max items-center gap-3 animate-marquee will-change-transform hover:[animation-play-state:paused]"
-              style={{ animationDuration: `${Math.max(18, curated.partners.length * 6)}s` }}
-            >
-              {row.map((sp, i) => (
-                <li key={`${sp.name}-${i}`}>
-                  <a
-                    href={sp.url}
-                    target="_blank"
-                    rel="noopener noreferrer sponsored"
-                    title={sp.name}
-                    className="grid h-16 min-w-[150px] place-items-center rounded-xl bg-white px-5 shadow-sm ring-1 ring-black/10"
-                  >
-                    <img
-                      src={sp.logoUrl}
-                      alt={sp.name}
-                      className="max-h-11 max-w-[130px] object-contain"
-                      loading="lazy"
-                    />
-                  </a>
-                </li>
-              ))}
-            </ul>
+          <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
+            {curated.partners.map((sp) => (
+              <a
+                key={sp.name}
+                href={sp.url}
+                target="_blank"
+                rel="noopener noreferrer sponsored"
+                title={sp.name}
+                className="grid h-14 place-items-center rounded-xl bg-white px-2 shadow-sm ring-1 ring-black/10"
+              >
+                <img
+                  src={sp.logoUrl}
+                  alt={sp.name}
+                  className="max-h-9 max-w-[90px] object-contain"
+                  loading="lazy"
+                />
+              </a>
+            ))}
           </div>
         </div>
 
