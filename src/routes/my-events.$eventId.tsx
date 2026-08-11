@@ -142,7 +142,17 @@ function MyEventDetail() {
       </nav>
 
       <div className="px-5 py-4">
-        {tab === "info" && <InfoPanel eventId={event.id} description={event.description} distanceKm={event.distance_km} event={event} isLive={event.status === "live"} eventName={event.name} />}
+        {tab === "info" && (
+          <div className="space-y-5">
+            <section>
+              <SectionTitle>Ask the assistant</SectionTitle>
+              <div className="mt-2">
+                <AskAdminPanel eventId={event.id} userId={user?.id ?? null} compact />
+              </div>
+            </section>
+            <InfoPanel eventId={event.id} description={event.description} distanceKm={event.distance_km} event={event} isLive={event.status === "live"} eventName={event.name} />
+          </div>
+        )}
         {tab === "routes" && <RoutesPanel eventId={event.id} event={event} />}
         {tab === "news" && <EventNewsPanel posts={eventNews} />}
         {tab === "packing" && <PackingPanel eventId={event.id} userId={user?.id ?? null} />}
@@ -917,7 +927,7 @@ function ChatPanel({ eventId, userId }: { eventId: string; userId: string | null
   );
 }
 
-function AskAdminPanel({ eventId, userId }: { eventId: string; userId: string | null }) {
+function AskAdminPanel({ eventId, userId, compact = false }: { eventId: string; userId: string | null; compact?: boolean }) {
   const qc = useQueryClient();
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
@@ -1009,14 +1019,18 @@ function AskAdminPanel({ eventId, userId }: { eventId: string; userId: string | 
   }
 
   return (
-    <div className="flex h-[60vh] flex-col rounded-2xl bg-card ring-1 ring-border">
+    <div className={`flex ${compact ? "max-h-[46vh] min-h-[220px]" : "h-[60vh]"} flex-col rounded-2xl bg-card ring-1 ring-border`}>
       <div className="border-b border-border p-3 text-xs text-ink-soft">
-        Ask anything about this event — our assistant bot 🍒 answers instantly from the event details & website, and loops in a Red Cherry admin when it isn't sure.
+        {compact
+          ? "Got a question about this event? Ask our assistant bot 🍒 — it answers from the event details & website, and loops in a Red Cherry admin if it isn't sure."
+          : "Ask anything about this event — our assistant bot 🍒 answers instantly from the event details & website, and loops in a Red Cherry admin when it isn't sure."}
       </div>
       <div className="flex-1 overflow-y-auto p-3">
         {(messagesQ.data ?? []).length === 0 ? (
           <p className="mt-6 text-center text-xs text-ink-soft">
-            No messages yet. Ask a question below and the bot will try first.
+            {userId
+              ? "No messages yet. Ask a question below and the bot will try first."
+              : "Sign in to ask the assistant about this event."}
           </p>
         ) : (
           <ul className="space-y-2">
@@ -1061,13 +1075,14 @@ function AskAdminPanel({ eventId, userId }: { eventId: string; userId: string | 
               void send();
             }
           }}
-          placeholder="Ask about schedule, packing, venue…"
+          placeholder={userId ? "Ask about schedule, packing, venue…" : "Sign in to ask a question"}
           maxLength={1000}
-          className="flex-1 rounded-lg bg-background px-3 py-2 text-sm ring-1 ring-border focus:outline-none focus:ring-cherry"
+          disabled={!userId}
+          className="flex-1 rounded-lg bg-background px-3 py-2 text-sm ring-1 ring-border focus:outline-none focus:ring-cherry disabled:opacity-60"
         />
         <button
           onClick={() => void send()}
-          disabled={busy || !text.trim()}
+          disabled={busy || !text.trim() || !userId}
           className="grid h-9 w-9 place-items-center rounded-full cherry-gradient text-white disabled:opacity-60"
         >
           <Send className="h-4 w-4" />
