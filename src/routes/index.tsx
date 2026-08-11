@@ -319,7 +319,9 @@ function Home() {
         </>
       ) : null}
 
-      <SponsorScroller />
+      {/* Sponsor scroller hidden while sponsor assets are being refreshed. */}
+      {/* <SponsorScroller /> */}
+
 
       <div className="pb-6" />
 
