@@ -179,35 +179,80 @@ function EventSponsorsPanel({ eventId, eventName }: { eventId: string; eventName
   });
 
   if (curated) {
-    const all = [curated.title, ...curated.partners, ...(curated.supporters ?? [])];
     return (
-      <div>
-        <p className="mb-3 text-xs text-ink-soft">
-          {curated.title.name} is the title sponsor. Tap a logo to visit their site.
-        </p>
-        <div className="grid grid-cols-2 gap-3">
-          {all.map((s, i) => (
-            <a
-              key={s.name}
-              href={s.url}
-              target="_blank"
-              rel="noopener noreferrer sponsored"
-              className={i === 0 ? "col-span-2" : undefined}
-            >
-              <div className="grid h-24 place-items-center rounded-2xl bg-white p-3 ring-1 ring-black/10">
-                <img
-                  src={s.logoUrl}
-                  alt={s.name}
-                  loading="lazy"
-                  className="max-h-16 max-w-full object-contain"
-                />
-              </div>
-              <p className="mt-1 text-center text-[10px] uppercase tracking-[0.16em] text-ink-soft">
-                {i === 0 ? "Title sponsor" : s.name}
-              </p>
-            </a>
-          ))}
+      <div className="space-y-5">
+        <div>
+          <p className="mb-3 text-xs text-ink-soft">
+            {curated.title.name} is the title sponsor. Tap a logo to visit their site.
+          </p>
+          <a
+            href={curated.title.url}
+            target="_blank"
+            rel="noopener noreferrer sponsored"
+          >
+            <div className="grid h-32 place-items-center rounded-2xl bg-white p-5 ring-1 ring-black/10 shadow-sm sm:h-40">
+              <img
+                src={curated.title.logoUrl}
+                alt={curated.title.name}
+                loading="lazy"
+                className="max-h-20 max-w-full object-contain sm:max-h-24"
+              />
+            </div>
+            <p className="mt-2 text-center text-[10px] uppercase tracking-[0.16em] text-ink-soft">
+              Title sponsor
+            </p>
+          </a>
         </div>
+
+        {curated.partners.length > 0 && (
+          <div>
+            <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-ink-soft">
+              Partners
+            </p>
+            <div
+              className={`grid w-full gap-3 ${
+                curated.partners.length === 1
+                  ? "grid-cols-1"
+                  : curated.partners.length === 2
+                    ? "grid-cols-2"
+                    : curated.partners.length === 3
+                      ? "grid-cols-1 sm:grid-cols-3"
+                      : "grid-cols-2 sm:grid-cols-3"
+              }`}
+            >
+              {curated.partners.map((s) => (
+                <a
+                  key={s.name}
+                  href={s.url}
+                  target="_blank"
+                  rel="noopener noreferrer sponsored"
+                  className="block"
+                >
+                  <div className="grid h-28 w-full place-items-center rounded-2xl bg-white p-3 ring-1 ring-black/10 shadow-sm sm:h-36">
+                    <img
+                      src={s.logoUrl}
+                      alt={s.name}
+                      loading="lazy"
+                      className="max-h-18 w-full object-contain sm:max-h-24"
+                    />
+                  </div>
+                  <p className="mt-2 text-center text-[10px] uppercase tracking-[0.16em] text-ink-soft">
+                    {s.name}
+                  </p>
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
+
+
+        {curated.supporters && curated.supporters.length > 0 && (
+          <SponsorScroller
+            title="Supported by"
+            compact
+            sponsors={curated.supporters.map((s) => ({ ...s, id: s.name }))}
+          />
+        )}
       </div>
     );
   }
@@ -1206,7 +1251,17 @@ function SponsorsBlock({ eventName }: { eventName?: string }) {
           <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.2em] text-ink-soft">
             Our partners
           </p>
-          <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
+          <div
+            className={`grid w-full gap-2 sm:gap-3 ${
+              curated.partners.length === 1
+                ? "grid-cols-1"
+                : curated.partners.length === 2
+                  ? "grid-cols-2"
+                  : curated.partners.length === 3
+                    ? "grid-cols-1 sm:grid-cols-3"
+                    : "grid-cols-2 sm:grid-cols-3"
+            }`}
+          >
             {curated.partners.map((sp) => (
               <a
                 key={sp.name}
@@ -1214,18 +1269,20 @@ function SponsorsBlock({ eventName }: { eventName?: string }) {
                 target="_blank"
                 rel="noopener noreferrer sponsored"
                 title={sp.name}
-                className="grid h-14 place-items-center rounded-xl bg-white px-2 shadow-sm ring-1 ring-black/10"
+                className="grid h-24 w-full place-items-center rounded-2xl bg-white p-3 shadow-sm ring-1 ring-black/10 sm:h-28"
               >
                 <img
                   src={sp.logoUrl}
                   alt={sp.name}
-                  className="max-h-9 max-w-[90px] object-contain"
+                  className="max-h-16 w-full object-contain sm:max-h-20"
                   loading="lazy"
                 />
               </a>
             ))}
           </div>
         </div>
+
+
 
         {curated.supporters && curated.supporters.length > 0 ? (
           <div className="mt-3">
