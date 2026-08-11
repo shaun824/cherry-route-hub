@@ -1,3 +1,4 @@
+import { entryNinjaRegistrationUrl } from "@/lib/entry-ninja-link";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { askEventBot } from "@/lib/event-bot.functions";
@@ -1607,7 +1608,7 @@ function YourEntryCard({ eventId, entryUrl = null }: { eventId: string; entryUrl
 
       {row.registration_ref ? (
         <a
-          href={`https://entries.redcherryevents.co.za/registrations/${encodeURIComponent(row.registration_ref)}`}
+          href={entryNinjaRegistrationUrl(row.registration_ref) ?? "#"}
           target="_blank"
           rel="noreferrer"
           className="mt-3 inline-flex w-full items-center justify-center gap-1.5 rounded-xl bg-cherry px-3 py-2.5 text-xs font-bold text-white"

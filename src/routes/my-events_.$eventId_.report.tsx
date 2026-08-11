@@ -1,3 +1,7 @@
+import {
+  entryNinjaRegistrationId,
+  entryNinjaRegistrationUrl,
+} from "@/lib/entry-ninja-link";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -196,11 +200,13 @@ function ReportPage() {
                     Manage this entry:{" "}
                     <a
                       className="font-semibold text-cherry underline"
-                      href={`https://entries.redcherryevents.co.za/registrations/${encodeURIComponent(row.registration_ref)}`}
+                      href={entryNinjaRegistrationUrl(row.registration_ref) ?? "#"}
                       target="_blank"
                       rel="noreferrer"
                     >
-                      entries.redcherryevents.co.za/registrations/{row.registration_ref}
+                      entries.redcherryevents.co.za/registrations/
+                      {entryNinjaRegistrationId(row.registration_ref)}
+
                     </a>
                   </p>
                 ) : null}
