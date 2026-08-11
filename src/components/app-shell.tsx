@@ -4,6 +4,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { useSession } from "@/lib/auth";
 import { Footer } from "@/components/footer";
 import { BrandMark } from "@/components/ui-bits";
+import { FeedbackWidget } from "@/components/feedback-widget";
 
 const tabs = [
   { to: "/", label: "Home", icon: Home, match: (p: string) => p === "/" },
@@ -158,6 +159,8 @@ export function AppShell({ children }: { children: ReactNode }) {
           })}
         </ul>
       </nav>
+
+      <FeedbackWidget />
     </div>
   );
 }
