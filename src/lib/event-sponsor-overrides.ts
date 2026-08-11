@@ -8,6 +8,15 @@ import kazin from "@/assets/sponsors/kazin.png.asset.json";
 import kranzle from "@/assets/sponsors/kranzle.png.asset.json";
 import squirt from "@/assets/sponsors/squirt.png.asset.json";
 import customConstruction from "@/assets/sponsors/custom-construction.png.asset.json";
+import herotel from "@/assets/sponsors/herotel.png.asset.json";
+import quinton from "@/assets/sponsors/quinton.png.asset.json";
+import nutriGo from "@/assets/sponsors/nutri-go.png.asset.json";
+import rudy from "@/assets/sponsors/rudy-project.png.asset.json";
+import buco from "@/assets/sponsors/buco.png.asset.json";
+import enjoy from "@/assets/sponsors/enjoy.png.asset.json";
+import plettRealty from "@/assets/sponsors/plett-realty.jpg.asset.json";
+import doolhof from "@/assets/sponsors/doolhof.png.asset.json";
+import knysnaRealty from "@/assets/sponsors/knysna-realty.jpg.asset.json";
 
 export type CuratedSponsor = {
   name: string;
