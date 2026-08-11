@@ -38,6 +38,7 @@ import { Route as AdminEventInfoIndexRouteImport } from './routes/admin.event-in
 import { Route as MyEventsEventIdReportRouteImport } from './routes/my-events.$eventId.report'
 import { Route as EventsEventIdMapRouteImport } from './routes/events.$eventId.map'
 import { Route as EventsEventIdEnterRouteImport } from './routes/events.$eventId.enter'
+import { Route as ApiPublicSignKmlsRouteImport } from './routes/api/public/sign-kmls'
 import { Route as AdminEventInfoEventIdRouteImport } from './routes/admin.event-info.$eventId'
 
 const SpectateRoute = SpectateRouteImport.update({
@@ -185,6 +186,11 @@ const EventsEventIdEnterRoute = EventsEventIdEnterRouteImport.update({
   path: '/enter',
   getParentRoute: () => EventsEventIdRoute,
 } as any)
+const ApiPublicSignKmlsRoute = ApiPublicSignKmlsRouteImport.update({
+  id: '/api/public/sign-kmls',
+  path: '/api/public/sign-kmls',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminEventInfoEventIdRoute = AdminEventInfoEventIdRouteImport.update({
   id: '/event-info/$eventId',
   path: '/event-info/$eventId',
@@ -217,6 +223,7 @@ export interface FileRoutesByFullPath {
   '/events/': typeof EventsIndexRoute
   '/my-events/': typeof MyEventsIndexRoute
   '/admin/event-info/$eventId': typeof AdminEventInfoEventIdRoute
+  '/api/public/sign-kmls': typeof ApiPublicSignKmlsRoute
   '/events/$eventId/enter': typeof EventsEventIdEnterRoute
   '/events/$eventId/map': typeof EventsEventIdMapRoute
   '/my-events/$eventId/report': typeof MyEventsEventIdReportRoute
@@ -246,6 +253,7 @@ export interface FileRoutesByTo {
   '/events': typeof EventsIndexRoute
   '/my-events': typeof MyEventsIndexRoute
   '/admin/event-info/$eventId': typeof AdminEventInfoEventIdRoute
+  '/api/public/sign-kmls': typeof ApiPublicSignKmlsRoute
   '/events/$eventId/enter': typeof EventsEventIdEnterRoute
   '/events/$eventId/map': typeof EventsEventIdMapRoute
   '/my-events/$eventId/report': typeof MyEventsEventIdReportRoute
@@ -279,6 +287,7 @@ export interface FileRoutesById {
   '/events/': typeof EventsIndexRoute
   '/my-events/': typeof MyEventsIndexRoute
   '/admin/event-info/$eventId': typeof AdminEventInfoEventIdRoute
+  '/api/public/sign-kmls': typeof ApiPublicSignKmlsRoute
   '/events/$eventId/enter': typeof EventsEventIdEnterRoute
   '/events/$eventId/map': typeof EventsEventIdMapRoute
   '/my-events/$eventId/report': typeof MyEventsEventIdReportRoute
@@ -313,6 +322,7 @@ export interface FileRouteTypes {
     | '/events/'
     | '/my-events/'
     | '/admin/event-info/$eventId'
+    | '/api/public/sign-kmls'
     | '/events/$eventId/enter'
     | '/events/$eventId/map'
     | '/my-events/$eventId/report'
@@ -342,6 +352,7 @@ export interface FileRouteTypes {
     | '/events'
     | '/my-events'
     | '/admin/event-info/$eventId'
+    | '/api/public/sign-kmls'
     | '/events/$eventId/enter'
     | '/events/$eventId/map'
     | '/my-events/$eventId/report'
@@ -374,6 +385,7 @@ export interface FileRouteTypes {
     | '/events/'
     | '/my-events/'
     | '/admin/event-info/$eventId'
+    | '/api/public/sign-kmls'
     | '/events/$eventId/enter'
     | '/events/$eventId/map'
     | '/my-events/$eventId/report'
@@ -394,6 +406,7 @@ export interface RootRouteChildren {
   SpectateRoute: typeof SpectateRouteWithChildren
   EventsEventIdRoute: typeof EventsEventIdRouteWithChildren
   EventsIndexRoute: typeof EventsIndexRoute
+  ApiPublicSignKmlsRoute: typeof ApiPublicSignKmlsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -601,6 +614,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EventsEventIdEnterRouteImport
       parentRoute: typeof EventsEventIdRoute
     }
+    '/api/public/sign-kmls': {
+      id: '/api/public/sign-kmls'
+      path: '/api/public/sign-kmls'
+      fullPath: '/api/public/sign-kmls'
+      preLoaderRoute: typeof ApiPublicSignKmlsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/event-info/$eventId': {
       id: '/admin/event-info/$eventId'
       path: '/event-info/$eventId'
@@ -708,7 +728,18 @@ const rootRouteChildren: RootRouteChildren = {
   SpectateRoute: SpectateRouteWithChildren,
   EventsEventIdRoute: EventsEventIdRouteWithChildren,
   EventsIndexRoute: EventsIndexRoute,
+  ApiPublicSignKmlsRoute: ApiPublicSignKmlsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
