@@ -440,6 +440,50 @@ export type Database = {
           },
         ]
       }
+      event_merch_options: {
+        Row: {
+          created_at: string
+          en_item_id: number | null
+          event_id: string
+          id: string
+          name: string
+          options: Json
+          position: number
+          synced_at: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          en_item_id?: number | null
+          event_id: string
+          id?: string
+          name: string
+          options?: Json
+          position?: number
+          synced_at?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          en_item_id?: number | null
+          event_id?: string
+          id?: string
+          name?: string
+          options?: Json
+          position?: number
+          synced_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_merch_options_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       event_rooming: {
         Row: {
           created_at: string
