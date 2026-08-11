@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
+import { checkIsAdmin } from "./is-admin";
 
 export function useSession() {
   const [session, setSession] = useState<Session | null>(null);
