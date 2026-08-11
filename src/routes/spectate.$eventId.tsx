@@ -19,6 +19,8 @@ import { useAdminStore } from "@/lib/store";
 import { useHydratedStore } from "@/lib/use-hydrated-store";
 import { formatDate, formatTime } from "@/lib/mock-data";
 import { getSpectatorRoster, type SpectatorEntrant } from "@/lib/spectator.functions";
+import { LockedSection } from "@/components/locked-section";
+import { useSession } from "@/lib/auth";
 
 export const Route = createFileRoute("/spectate/$eventId")({
   head: ({ params }) => ({
@@ -49,11 +51,15 @@ function SpectatorEventPage() {
   const [tab, setTab] = useState<Tab>("info");
   const [categoryFilter, setCategoryFilter] = useState<string>("__all");
 
+  const { user, loading: sessionLoading } = useSession();
+  const locked = !sessionLoading && !user;
+
   const fetchRoster = useServerFn(getSpectatorRoster);
   const rosterQ = useQuery<SpectatorEntrant[]>({
     queryKey: ["spectator-roster", eventId],
     queryFn: () => fetchRoster({ data: { eventId } }),
     staleTime: 30_000,
+    enabled: !locked,
   });
   const roster: SpectatorEntrant[] = rosterQ.data ?? [];
 
