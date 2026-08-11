@@ -89,7 +89,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       {/* Content column: phone-width on mobile, roomy centred column on larger screens */}
       <div className="mx-auto flex min-h-screen w-full max-w-md flex-col bg-background md:max-w-3xl md:shadow-sm md:ring-1 md:ring-border/60 lg:max-w-4xl">
         <main className="flex-1 pb-28 md:pb-10">
-          {children}
+          <div key={pathname} className="page-enter">{children}</div>
           <Footer />
         </main>
       </div>
@@ -130,7 +130,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       {/* Mobile-only bottom tab bar */}
       <nav
         aria-label="Primary"
-        className="fixed inset-x-0 bottom-0 z-30 mx-auto w-full max-w-md border-t border-border/70 bg-card/95 backdrop-blur-md md:hidden"
+        className="fixed inset-x-0 bottom-0 z-30 mx-auto w-full max-w-md border-t border-border/70 bg-card md:hidden"
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       >
         <ul className="grid grid-cols-4">
@@ -141,13 +141,14 @@ export function AppShell({ children }: { children: ReactNode }) {
               <li key={t.to}>
                 <Link
                   to={t.to}
-                  className="flex flex-col items-center gap-1 py-3 text-[11px] font-medium"
+                  preload="intent"
+                  className="flex select-none flex-col items-center gap-1 py-3 text-[11px] font-medium"
                 >
                   <span
                     className={
                       active
-                        ? "grid h-9 w-14 place-items-center rounded-full bg-cherry text-white"
-                        : "grid h-9 w-14 place-items-center rounded-full text-ink-soft"
+                        ? "grid h-9 w-14 place-items-center rounded-full bg-cherry text-white transition-all duration-200"
+                        : "grid h-9 w-14 place-items-center rounded-full text-ink-soft transition-all duration-200"
                     }
                   >
                     <Icon className="h-5 w-5" strokeWidth={active ? 2.4 : 2} />
