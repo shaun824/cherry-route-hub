@@ -230,6 +230,44 @@ export type Database = {
           },
         ]
       }
+      event_bot_knowledge: {
+        Row: {
+          content: string
+          created_at: string
+          event_id: string
+          last_error: string | null
+          refreshed_at: string | null
+          sources: Json
+          updated_at: string
+        }
+        Insert: {
+          content?: string
+          created_at?: string
+          event_id: string
+          last_error?: string | null
+          refreshed_at?: string | null
+          sources?: Json
+          updated_at?: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          event_id?: string
+          last_error?: string | null
+          refreshed_at?: string | null
+          sources?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_bot_knowledge_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: true
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       event_chat_messages: {
         Row: {
           author_id: string
