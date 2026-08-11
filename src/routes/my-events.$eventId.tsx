@@ -38,6 +38,7 @@ import { DEFAULT_PACKING_LIST, fetchEventInfo, type EventInfoBlock, type Packing
 import { RouteMap } from "@/components/route-map";
 import { SponsorScroller } from "@/components/sponsor-scroller";
 import { curatedSponsorsFor } from "@/lib/event-sponsor-overrides";
+import { eventHasTshirt } from "@/lib/apparel";
 import { useAdminStore } from "@/lib/store";
 import { fetchMyEventById, type MyEventRow } from "@/lib/my-events";
 import { Printer, Shirt, Package, Siren } from "lucide-react";
@@ -1304,6 +1305,8 @@ function YourEntryCard({ eventId }: { eventId: string }) {
     return <div className="h-32 animate-pulse rounded-2xl bg-secondary" />;
   }
   const row: MyEventRow | null = q.data ?? null;
+  const showTshirt = eventHasTshirt(row?.event?.name);
+
   if (!row) {
     return (
       <section className="rounded-2xl border border-dashed border-border p-4 text-center text-xs text-ink-soft">
@@ -1355,7 +1358,7 @@ function YourEntryCard({ eventId }: { eventId: string }) {
         </div>
       ) : null}
 
-      {(row.jacket_size || row.tshirt_size) ? (
+      {(row.jacket_size || (showTshirt && row.tshirt_size)) ? (
         <div className="mt-3 grid grid-cols-2 gap-2">
           {row.jacket_size ? (
             <div className="rounded-xl bg-secondary p-2.5">
@@ -1365,7 +1368,7 @@ function YourEntryCard({ eventId }: { eventId: string }) {
               <p className="mt-0.5 font-display text-sm font-bold text-ink">{row.jacket_size}</p>
             </div>
           ) : null}
-          {row.tshirt_size ? (
+          {showTshirt && row.tshirt_size ? (
             <div className="rounded-xl bg-secondary p-2.5">
               <p className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-ink-soft">
                 <Shirt className="h-3 w-3" /> T-Shirt
@@ -1375,6 +1378,7 @@ function YourEntryCard({ eventId }: { eventId: string }) {
           ) : null}
         </div>
       ) : null}
+
 
       {row.extras.length > 0 ? (
         <div className="mt-3">
@@ -1401,7 +1405,7 @@ function YourEntryCard({ eventId }: { eventId: string }) {
         </p>
       ) : null}
 
-      {chips.length === 0 && !row.jacket_size && !row.tshirt_size && row.extras.length === 0 ? (
+      {chips.length === 0 && !row.jacket_size && !(showTshirt && row.tshirt_size) && row.extras.length === 0 ? (
         <p className="mt-3 text-xs text-ink-soft">
           Your entry is confirmed. Extras and sizes will appear here once they sync from Entry Ninja.
         </p>
