@@ -32,10 +32,16 @@ export const lookupEntryEmail = createServerFn({ method: "POST" })
     ).map(maskEmail);
 
     if (emails.length === 0) {
+      // An entry exists for this ID but has no email on file yet — the rider
+      // signs up with any email and links the entry with their ID number.
+      if ((rows ?? []).length > 0) {
+        return { found: false as const, needsEmail: true as const, emails: [] as string[] };
+      }
       // Slow down bulk guessing on misses.
       await new Promise((resolve) => setTimeout(resolve, 700));
-      return { found: false as const, emails: [] as string[] };
+      return { found: false as const, needsEmail: false as const, emails: [] as string[] };
     }
 
-    return { found: true as const, emails };
+    return { found: true as const, needsEmail: false as const, emails };
   });
+
