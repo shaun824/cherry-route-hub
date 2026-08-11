@@ -37,6 +37,7 @@ import { useHydratedStore } from "@/lib/use-hydrated-store";
 import { useSession } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchMyEvents, type MyEventRow } from "@/lib/my-events";
+import { EventWeatherCard } from "@/components/event-weather";
 import type { QuickLinkIcon } from "@/lib/settings";
 
 
@@ -75,7 +76,7 @@ function Home() {
   const branding = useAdminStore((s) => s.settings.branding);
   const quickLinks = useAdminStore((s) => s.settings.quickLinks).filter((q) => q.enabled);
   const pinned = feed.filter((p) => p.pinned)[0];
-  const pinnedGeneral = feed.filter((p) => p.pinned && !p.eventId)[0];
+  const pinnedGeneral = feed.filter((p) => p.pinned && !p.eventId && p.type !== "weather")[0];
   const qlCols = Math.min(Math.max(quickLinks.length, 1), 4);
   const [notifOpen, setNotifOpen] = useState(false);
   const [noticeOpen, setNoticeOpen] = useState(false);
@@ -125,6 +126,27 @@ function Home() {
     (user?.user_metadata as { full_name?: string; name?: string } | undefined)?.name ||
     user?.email?.split("@")[0] ||
     "Rider";
+
+  // Weather is shown for the rider's own next event when linked, otherwise the
+  // next upcoming event on the calendar.
+  const myNext = (myEventsQ.data ?? [])
+    .filter((r) => new Date(r.event.event_date).getTime() >= Date.now() - 12 * 60 * 60 * 1000)
+    .sort((a, b) => new Date(a.event.event_date).getTime() - new Date(b.event.event_date).getTime())[0];
+  const weatherEvent = myNext
+    ? {
+        name: myNext.event.name,
+        location: myNext.event.location,
+        date: myNext.event.event_date,
+        mapQuery: allEvents.find((e) => e.id === myNext.event_id)?.mapQuery ?? null,
+      }
+    : upcoming[0]
+      ? {
+          name: upcoming[0].name,
+          location: upcoming[0].location,
+          date: upcoming[0].date,
+          mapQuery: upcoming[0].mapQuery ?? null,
+        }
+      : null;
 
   const notifications = [pinned, ...feed.filter((p) => !p.pinned)].filter(Boolean).slice(0, 8);
   const hasUnread = notifications.length > 0;
@@ -187,6 +209,18 @@ function Home() {
           <SignedOutCTA />
         )}
       </div>
+
+      {/* Weather at the next event venue */}
+      {weatherEvent ? (
+        <div className="mt-4 px-5">
+          <EventWeatherCard
+            eventName={weatherEvent.name}
+            location={weatherEvent.location}
+            mapQuery={weatherEvent.mapQuery}
+            eventDate={weatherEvent.date}
+          />
+        </div>
+      ) : null}
 
       {/* Quick links */}
       {quickLinks.length > 0 ? (

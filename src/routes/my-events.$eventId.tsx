@@ -295,9 +295,9 @@ function RoutesPanel({
   event,
 }: {
   eventId: string;
-  event: { days?: EventDay[] | null };
+  event: { days?: unknown };
 }) {
-  const days: EventDay[] = Array.isArray(event.days) ? event.days : [];
+  const days: EventDay[] = Array.isArray(event.days) ? (event.days as EventDay[]) : [];
   const allRoutes = days.flatMap((d) => d.routes ?? []);
   const hasMap = allRoutes.some((r) => (r.kmlUrls ?? []).length > 0);
 
@@ -409,15 +409,15 @@ function InfoPanel({
   eventId: string;
   description: string | null;
   distanceKm: number;
-  event: { days?: EventDay[] | null; schedule?: ScheduleItem[] | null; location?: string | null; map_query?: string | null; social_links?: SocialLinks | null };
+  event: { days?: unknown; schedule?: unknown; location?: string | null; map_query?: string | null; social_links?: unknown };
   isLive: boolean;
   eventName: string;
 }) {
   const q = useQuery({ queryKey: ["event-info", eventId], queryFn: () => fetchEventInfo(eventId) });
   const info = q.data;
-  const days: EventDay[] = event.days ?? [];
+  const days: EventDay[] = Array.isArray(event.days) ? (event.days as EventDay[]) : [];
   
-  const schedule: ScheduleItem[] = Array.isArray(event.schedule) ? event.schedule : [];
+  const schedule: ScheduleItem[] = Array.isArray(event.schedule) ? (event.schedule as ScheduleItem[]) : [];
 
   const aboutText = description ?? "";
   const isLongAbout = aboutText.length > DESCRIPTION_PREVIEW_LENGTH;
@@ -529,7 +529,7 @@ function InfoPanel({
       </section>
 
 
-      <FollowSection links={event.social_links ?? undefined} />
+      <FollowSection links={(event.social_links as SocialLinks | null) ?? undefined} />
 
       <SponsorsBlock />
 
