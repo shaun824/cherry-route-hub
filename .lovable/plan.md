@@ -1,37 +1,33 @@
-# Better merchandise, extras and package details
+# Get prices onto Entry Ninja merchandise lines
 
-## What's wrong now
+## What's already working
 
-Your Tour de Addo entry currently holds one extra literally named "7011" (a raw Entry Ninja value, not a product), so the card shows a meaningless line. Across other riders the data is real but raw: names like "Double - Luxury tent for 2 nights" with an option value of "Yes I want this" rendered as if it were a size, and no prices (Entry Ninja isn't returning them on these lines). There is also nowhere to explain what a package actually includes.
+Merchandise and extras are being pulled from Entry Ninja for every event that has them:
 
-## What to build
+- PE PLETT 2027 — Bike Wash, CSA temp license, vehicle transfer service, 3-day bike service, chalet/hotel accommodation options, No Hassles Package, apparel sizes, dietary requests (153 of 154 entrants)
+- Tour de Addo — E-Bike Rental (with size)
+- Weekend Warrior Lourensford — luxury tents, RCE tent rental, camping options
+- Sea to Sea North, Ride For Change — extras present
+- Forest Boogie, Inner City Enduro, Rallye Raid — no extras, but these have only 1–6 entrants each, so there is likely nothing to pull yet
 
-### 1. Fix the demo entry
-Replace the "7011" extra on your Tour de Addo entry with two realistic lines: "E-Bike Rental" (size Medium) and "No Hassle Package" (bike transfer), so the section can be judged on real content.
+## The actual gap
 
-### 2. Per-event package catalogue (admin-managed)
-A new "Packages & extras" editor inside the existing event info admin, where each item has:
-- match name (matches the Entry Ninja item name, case-insensitive, partial allowed)
-- display name, short summary, category (Accommodation, Bike & rental, Transfers, Services, Merchandise)
-- price, and a list of "what's included" bullet points plus optional notes (e.g. collection dates for the No Hassle Package)
+Not one stored extras line has a price. Across all events, zero lines have a price value, so riders see "Bike Wash — Yes I want a bike wash" with no amount, and the extras total on the entry card and report always reads blank.
 
-Items on a rider's entry are matched against this catalogue; anything unmatched still shows with a tidied name.
+The sync code already looks for several possible price keys, but none of them are matching what Entry Ninja actually returns. That is unconfirmed as the root cause — it could equally be that the entries endpoint omits pricing entirely and it lives on a separate products/registration endpoint.
 
-### 3. Redesigned rider display
-Rename the block to "Your packages & extras" and:
-- group lines by category with a small icon per group
-- each line becomes a tappable row that expands to show the summary, inclusions and notes from the catalogue
-- clean up option values: show them as a size chip only when they look like a size, otherwise as a plain option chip, and hide filler answers like "Yes I want this"
-- show price and a total only when prices exist (catalogue price used as fallback when Entry Ninja returns none)
-- keep the "Add or edit on Entry Ninja" link, and show an empty state ("No extras booked — add accommodation, transfers or rentals on Entry Ninja") when a rider has none
-- apply the same grouping and detail to the downloadable report
+## Plan
 
-### 4. Accommodation cross-link
-When a rider's extras include an accommodation item and rooming data exists for them, surface the tent/room number inline in that row so accommodation reads as one story.
+1. Capture the raw Entry Ninja payload for one PE PLETT entry that has a bike wash, and log the exact shape of the merchandise/extra objects. This confirms whether a price is present and under what key, or absent from that endpoint.
+2. If a price key exists: extend the price extraction in the sync to read it (including nested item/option price objects and string amounts like "R350.00"), then re-sync all events to backfill.
+3. If the entries endpoint has no pricing: check the Entry Ninja products/event-options endpoint for a per-event price list, store it as a per-event lookup keyed by item + option name, and resolve prices at display time.
+4. If Entry Ninja exposes no pricing at all through the API: add a small admin screen where prices can be set per event per merchandise item, used as the fallback for display and totals.
+
+Whichever path applies, the entry card and the downloadable report then show line prices and a correct extras total.
 
 ## Technical notes
 
-- New table `public.event_extra_items` (event_id, match_name, display_name, category, summary, price_cents, inclusions jsonb, notes, sort_order) with public read and admin write, following existing RLS/GRANT patterns.
-- Extras normalisation stays in `src/lib/my-events.ts`; matching/formatting helpers go in a new `src/lib/extras.ts` shared by `src/routes/my-events.$eventId.tsx` and `src/routes/my-events_.$eventId_.report.tsx`.
-- Admin editor added to `src/routes/admin.event-info.$eventId.tsx`.
-- Entry Ninja sync is unchanged apart from continuing to store raw lines; the catalogue is the presentation layer, so re-syncs never wipe curated copy.
+- Sync entry points: `src/lib/entryninja.server.ts` (API client, `toLineArray`, price key resolution) and `src/lib/entryninja-sync.server.ts` (builds the `extras` JSONB array of `{ name, qty, size, price }`).
+- Display: `src/routes/my-events.$eventId.tsx` entry card and `src/routes/my-events_.$eventId_.report.tsx`.
+- Storage: `event_entrants.extras` JSONB — no schema change needed for steps 1–3; step 4 would add a per-event price table.
+- Note: a few older rows store `extras` as an object rather than an array; normalise those during any backfill.
