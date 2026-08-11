@@ -20,6 +20,7 @@ const nav: { to: string; label: string; icon: typeof LayoutDashboard; exact?: bo
   { to: "/admin/events", label: "Events", icon: CalendarDays },
   { to: "/admin/event-info", label: "Rider info", icon: Newspaper },
   { to: "/admin/roster", label: "Roster", icon: UserPlus },
+  { to: "/admin/rooming", label: "Rooming", icon: BedDouble },
   { to: "/admin/messages", label: "Messages", icon: MessagesSquare },
   { to: "/admin/feed", label: "News feed", icon: Newspaper },
   { to: "/admin/promos", label: "Promos", icon: Tag },

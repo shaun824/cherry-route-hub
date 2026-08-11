@@ -28,6 +28,7 @@ import { Route as EventsEventIdRouteImport } from './routes/events.$eventId'
 import { Route as AdminSponsorsRouteImport } from './routes/admin.sponsors'
 import { Route as AdminSettingsRouteImport } from './routes/admin.settings'
 import { Route as AdminRosterRouteImport } from './routes/admin.roster'
+import { Route as AdminRoomingRouteImport } from './routes/admin.rooming'
 import { Route as AdminRidersRouteImport } from './routes/admin.riders'
 import { Route as AdminPromosRouteImport } from './routes/admin.promos'
 import { Route as AdminMessagesRouteImport } from './routes/admin.messages'
@@ -135,6 +136,11 @@ const AdminRosterRoute = AdminRosterRouteImport.update({
   path: '/roster',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminRoomingRoute = AdminRoomingRouteImport.update({
+  id: '/rooming',
+  path: '/rooming',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminRidersRoute = AdminRidersRouteImport.update({
   id: '/riders',
   path: '/riders',
@@ -207,6 +213,7 @@ export interface FileRoutesByFullPath {
   '/admin/messages': typeof AdminMessagesRoute
   '/admin/promos': typeof AdminPromosRoute
   '/admin/riders': typeof AdminRidersRoute
+  '/admin/rooming': typeof AdminRoomingRoute
   '/admin/roster': typeof AdminRosterRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/sponsors': typeof AdminSponsorsRoute
@@ -237,6 +244,7 @@ export interface FileRoutesByTo {
   '/admin/messages': typeof AdminMessagesRoute
   '/admin/promos': typeof AdminPromosRoute
   '/admin/riders': typeof AdminRidersRoute
+  '/admin/rooming': typeof AdminRoomingRoute
   '/admin/roster': typeof AdminRosterRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/sponsors': typeof AdminSponsorsRoute
@@ -269,6 +277,7 @@ export interface FileRoutesById {
   '/admin/messages': typeof AdminMessagesRoute
   '/admin/promos': typeof AdminPromosRoute
   '/admin/riders': typeof AdminRidersRoute
+  '/admin/rooming': typeof AdminRoomingRoute
   '/admin/roster': typeof AdminRosterRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/sponsors': typeof AdminSponsorsRoute
@@ -303,6 +312,7 @@ export interface FileRouteTypes {
     | '/admin/messages'
     | '/admin/promos'
     | '/admin/riders'
+    | '/admin/rooming'
     | '/admin/roster'
     | '/admin/settings'
     | '/admin/sponsors'
@@ -333,6 +343,7 @@ export interface FileRouteTypes {
     | '/admin/messages'
     | '/admin/promos'
     | '/admin/riders'
+    | '/admin/rooming'
     | '/admin/roster'
     | '/admin/settings'
     | '/admin/sponsors'
@@ -364,6 +375,7 @@ export interface FileRouteTypes {
     | '/admin/messages'
     | '/admin/promos'
     | '/admin/riders'
+    | '/admin/rooming'
     | '/admin/roster'
     | '/admin/settings'
     | '/admin/sponsors'
@@ -532,6 +544,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminRosterRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/rooming': {
+      id: '/admin/rooming'
+      path: '/rooming'
+      fullPath: '/admin/rooming'
+      preLoaderRoute: typeof AdminRoomingRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/riders': {
       id: '/admin/riders'
       path: '/riders'
@@ -618,6 +637,7 @@ interface AdminRouteChildren {
   AdminMessagesRoute: typeof AdminMessagesRoute
   AdminPromosRoute: typeof AdminPromosRoute
   AdminRidersRoute: typeof AdminRidersRoute
+  AdminRoomingRoute: typeof AdminRoomingRoute
   AdminRosterRoute: typeof AdminRosterRoute
   AdminSettingsRoute: typeof AdminSettingsRoute
   AdminSponsorsRoute: typeof AdminSponsorsRoute
@@ -632,6 +652,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminMessagesRoute: AdminMessagesRoute,
   AdminPromosRoute: AdminPromosRoute,
   AdminRidersRoute: AdminRidersRoute,
+  AdminRoomingRoute: AdminRoomingRoute,
   AdminRosterRoute: AdminRosterRoute,
   AdminSettingsRoute: AdminSettingsRoute,
   AdminSponsorsRoute: AdminSponsorsRoute,
