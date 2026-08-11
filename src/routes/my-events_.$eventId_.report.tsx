@@ -1,11 +1,11 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Printer } from "lucide-react";
+import { ArrowLeft, Download, Printer } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchMyEventById, type MyEventRow } from "@/lib/my-events";
 
-export const Route = createFileRoute("/my-events/$eventId/report")({
+export const Route = createFileRoute("/my-events_/$eventId_/report")({
   loader: async ({ params }) => {
     const { data, error } = await supabase
       .from("events")
@@ -35,10 +35,42 @@ function ReportPage() {
 
   const row: MyEventRow | null = q.data ?? null;
 
+  function downloadCsv() {
+    const esc = (v: unknown) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+    const lines: string[][] = [
+      ["Field", "Value"],
+      ["Event", event.name],
+      ["Discipline", event.discipline],
+      ["Date", new Date(event.event_date).toLocaleString("en-ZA")],
+      ["Location", event.location],
+      ["Category", row?.category ?? ""],
+      ["Batch", row?.batch ?? ""],
+      ["Bib number", row?.bib_number ?? ""],
+      ["Jacket size", row?.jacket_size ?? ""],
+      ["T-shirt size", row?.tshirt_size ?? ""],
+      ["Notes", row?.notes ?? ""],
+      ...(row?.extras ?? []).map((x) => [
+        "Extra",
+        `${x.name}${x.size ? ` (${x.size})` : ""} x${x.qty}`,
+      ]),
+      ["Generated", new Date().toLocaleString("en-ZA")],
+    ];
+    const csv = lines.map((r) => r.map(esc).join(",")).join("\r\n");
+    const blob = new Blob([`\uFEFF${csv}`], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `rce-report-${event.name.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+
   return (
     <div className="min-h-screen bg-secondary/40">
       <div className="mx-auto max-w-2xl px-4 py-6">
-        <div className="mb-4 flex items-center justify-between print:hidden">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-2 print:hidden">
           <Link
             to="/my-events/$eventId"
             params={{ eventId: event.id }}
@@ -46,14 +78,24 @@ function ReportPage() {
           >
             <ArrowLeft className="h-3.5 w-3.5" /> Back
           </Link>
-          <button
-            type="button"
-            onClick={() => window.print()}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-ink px-3 py-1.5 text-xs font-bold text-white"
-          >
-            <Printer className="h-3.5 w-3.5" /> Print / Save as PDF
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={downloadCsv}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-card px-3 py-1.5 text-xs font-bold text-ink ring-1 ring-border"
+            >
+              <Download className="h-3.5 w-3.5" /> Download CSV
+            </button>
+            <button
+              type="button"
+              onClick={() => window.print()}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-ink px-3 py-1.5 text-xs font-bold text-white"
+            >
+              <Printer className="h-3.5 w-3.5" /> Download PDF
+            </button>
+          </div>
         </div>
+
 
         <div className="rounded-2xl bg-white p-8 shadow-sm ring-1 ring-border print:rounded-none print:shadow-none print:ring-0">
           <header className="border-b border-border pb-4">
