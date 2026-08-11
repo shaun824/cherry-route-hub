@@ -18,6 +18,7 @@ import plettRealty from "@/assets/sponsors/plett-realty.jpg.asset.json";
 import doolhof from "@/assets/sponsors/doolhof.png.asset.json";
 import knysnaRealty from "@/assets/sponsors/knysna-realty.jpg.asset.json";
 import otto1890 from "@/assets/sponsors/otto1890.png.asset.json";
+import westvaal from "@/assets/sponsors/westvaal.png.asset.json";
 
 export type CuratedSponsor = {
   name: string;
@@ -85,7 +86,19 @@ const WEEKEND_WARRIOR_SET: CuratedSponsors = {
     logoUrl: otto1890.url,
     url: "https://otto1890.co.za/",
   },
-  partners: [],
+  partners: [
+    { name: "Cycle Lab", logoUrl: cycleLab.url, url: "https://www.cyclelab.com/" },
+    {
+      name: "Westvaal Motor Group",
+      logoUrl: westvaal.url,
+      url: "https://www.westvaal.co.za/",
+    },
+    {
+      name: "Green Motion Car and Van Rental",
+      logoUrl: gm.url,
+      url: "https://www.greenmotion.com/",
+    },
+  ],
 };
 
 /** Curated sponsor sets keyed by a match on the event name. */
