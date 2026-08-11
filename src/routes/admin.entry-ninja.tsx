@@ -74,7 +74,7 @@ function EntryNinjaPage() {
           <p className="text-ink-soft">
             {result.totalEntries} entries · {result.created} new riders · {result.updated} updated ·{" "}
             {result.linked} linked to the event
-            {result.skipped ? ` · ${result.skipped} skipped (no email)` : ""}
+            {result.skipped ? ` · ${result.skipped} skipped (no email or ID)` : ""}
             {result.createdEvent ? " · event created as a draft — add the details next" : ""}
           </p>
           {result.errors.length > 0 && (
