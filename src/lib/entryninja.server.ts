@@ -114,3 +114,20 @@ export function linePrice(line: unknown): number | null {
   }
   return null;
 }
+
+export type EnMerchItem = {
+  id: number;
+  name: string;
+  options?: { id: number; name: string; price?: number | string | null }[] | null;
+  price?: number | string | null;
+};
+
+export type EnEventDetail = EnEvent & {
+  extra?: { name?: string; question?: string }[] | null;
+  available_merchandise?: EnMerchItem[] | null;
+};
+
+export async function fetchEnEventDetail(enEventId: number): Promise<EnEventDetail> {
+  const json = await enGet<{ data: EnEventDetail }>(`/api/events/${enEventId}`);
+  return json.data;
+}
