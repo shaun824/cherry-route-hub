@@ -64,13 +64,6 @@ export const syncMerchCatalog = createServerFn({ method: "POST" })
         }
         itemCount += rows.length;
 
-        const questions = (detail.extra ?? [])
-          .filter((x) => x?.question)
-          .map((x) => ({ name: String(x.name ?? ""), question: String(x.question ?? "") }));
-        await context.supabase
-          .from("events")
-          .update({ merch_questions: questions } as never)
-          .eq("id", ev.id);
       } catch (err) {
         errors.push(`${ev.name}: ${(err as Error).message}`);
       }
@@ -86,7 +79,7 @@ export const listMerchCatalog = createServerFn({ method: "POST" })
     if (!isAdmin) throw new Error("Forbidden");
 
     const [{ data: events }, { data: options }] = await Promise.all([
-      context.supabase.from("events").select("id, name, date, entry_ninja_id").order("date"),
+      context.supabase.from("events").select("id, name, event_date, entry_ninja_id").order("event_date"),
       context.supabase
         .from("event_merch_options")
         .select("id, event_id, name, en_item_id, options, position, synced_at")
@@ -98,13 +91,11 @@ export const listMerchCatalog = createServerFn({ method: "POST" })
       byEvent.set(ev.id, {
         eventId: ev.id,
         eventName: ev.name,
-        eventDate: (ev as { date?: string | null }).date ?? null,
+        eventDate: (ev as { event_date?: string | null }).event_date ?? null,
         entryNinjaId: (ev as { entry_ninja_id?: string | null }).entry_ninja_id ?? null,
         syncedAt: null,
         items: [],
-        questions: ((ev as { merch_questions?: unknown }).merch_questions as
-          | { name: string; question: string }[]
-          | undefined) ?? [],
+        questions: [],
       });
     }
 
