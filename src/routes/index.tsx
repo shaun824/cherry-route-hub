@@ -417,7 +417,7 @@ function SportSection({
           {events.map((e) => (
             <li key={e.id}>
               <Link
-                to="/events/$eventId"
+                to="/my-events/$eventId"
                 params={{ eventId: e.id }}
                 className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-2xl bg-card p-3 ring-1 ring-border active:scale-[0.99] transition-transform"
               >
