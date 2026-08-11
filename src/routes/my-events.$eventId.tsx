@@ -109,7 +109,7 @@ function MyEventDetail() {
         className={`relative overflow-hidden bg-gradient-to-br ${event.hero_color ?? "from-cherry to-cherry-deep"} px-5 pb-5 pt-14 text-white`}
       >
         <Link
-          to="/my-events"
+          to={user ? "/my-events" : "/events"}
           className="absolute left-4 top-10 grid h-9 w-9 place-items-center rounded-full bg-white/15"
         >
           <ArrowLeft className="h-5 w-5" />

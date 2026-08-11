@@ -16,7 +16,7 @@ export function LockedSection({
   const next = useRouterState({ select: (s) => s.location.href });
   if (!locked) return <>{children}</>;
   return (
-    <div className="relative overflow-hidden rounded-2xl">
+    <div className="relative min-h-[7rem] overflow-hidden rounded-2xl">
       <div
         aria-hidden
         className="pointer-events-none select-none blur-[5px] saturate-50 opacity-60"
