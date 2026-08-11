@@ -40,6 +40,13 @@ function SignedOutState() {
         >
           Sign in <ChevronRight className="h-4 w-4" />
         </Link>
+        <p className="mt-4 text-xs text-ink-soft">
+          Not entered yet? You can still{" "}
+          <Link to="/events" className="font-semibold text-cherry">
+            browse every Red Cherry event
+          </Link>{" "}
+          — schedules, venues and route details are open to everyone.
+        </p>
       </div>
     </div>
   );

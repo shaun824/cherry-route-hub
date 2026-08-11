@@ -5,7 +5,9 @@ import { feed, formatDate, formatTime, relativeTime } from "@/lib/mock-data";
 import type { EventDay, EventRoute, ScheduleItem } from "@/lib/mock-data";
 import { useAdminStore } from "@/lib/store";
 import { RouteMap } from "@/components/route-map";
-import { MessageSquare, ChevronRight, ExternalLink, Map as MapIcon, Maximize2 } from "lucide-react";
+import { MessageSquare, ChevronRight, ExternalLink, Map as MapIcon, Maximize2, Info } from "lucide-react";
+import { LockedSection } from "@/components/locked-section";
+import { useSession } from "@/lib/auth";
 
 const DESCRIPTION_PREVIEW_LENGTH = 50;
 
@@ -20,6 +22,8 @@ function EventDetailIndex() {
   // Hooks must run before any early return.
   const [descExpanded, setDescExpanded] = useState(false);
   const [activeDayIdState, setActiveDayId] = useState<string | undefined>(undefined);
+  const { user, loading: sessionLoading } = useSession();
+  const locked = !sessionLoading && !user;
 
   if (!event) {
     return (
@@ -107,6 +111,13 @@ function EventDetailIndex() {
               </p>
             </div>
           )}
+          <Link
+            to="/my-events/$eventId"
+            params={{ eventId: event.id }}
+            className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-xl bg-secondary py-2.5 text-xs font-bold text-ink"
+          >
+            <Info className="h-3.5 w-3.5" /> View full event info
+          </Link>
           {event.externalId ? (
             <p className="mt-2 text-center text-[10px] uppercase tracking-widest text-muted-foreground">
               Entry Ninja ID · {event.externalId}
@@ -152,7 +163,9 @@ function EventDetailIndex() {
             </Link>
           </div>
           <div className="mt-3">
-            <RouteMap event={event} height="320px" />
+            <LockedSection locked={locked} message="Sign in to view the interactive route map">
+              <RouteMap event={event} height="320px" />
+            </LockedSection>
           </div>
         </section>
       ) : null}
@@ -206,6 +219,7 @@ function EventDetailIndex() {
                           </p>
                         ) : null}
                         {r.gpxUrl ? (
+                          <LockedSection locked={locked} message="Sign in to download route files">
                           <a
                             href={r.gpxUrl}
                             target="_blank"
@@ -214,6 +228,7 @@ function EventDetailIndex() {
                           >
                             Download GPX <ExternalLink className="h-3 w-3" />
                           </a>
+                          </LockedSection>
                         ) : null}
                       </li>
                     ))}
