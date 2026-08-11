@@ -142,7 +142,17 @@ function MyEventDetail() {
       </nav>
 
       <div className="px-5 py-4">
-        {tab === "info" && <InfoPanel eventId={event.id} description={event.description} distanceKm={event.distance_km} event={event} isLive={event.status === "live"} eventName={event.name} />}
+        {tab === "info" && (
+          <div className="space-y-5">
+            <section>
+              <SectionTitle>Ask the assistant</SectionTitle>
+              <div className="mt-2">
+                <AskAdminPanel eventId={event.id} userId={user?.id ?? null} compact />
+              </div>
+            </section>
+            <InfoPanel eventId={event.id} description={event.description} distanceKm={event.distance_km} event={event} isLive={event.status === "live"} eventName={event.name} />
+          </div>
+        )}
         {tab === "routes" && <RoutesPanel eventId={event.id} event={event} />}
         {tab === "news" && <EventNewsPanel posts={eventNews} />}
         {tab === "packing" && <PackingPanel eventId={event.id} userId={user?.id ?? null} />}
