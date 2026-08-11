@@ -212,6 +212,8 @@ function LinkEntrantForm({ onLinked }: { onLinked: () => void }) {
           {busy ? "Checking…" : "Link my entry"}
         </button>
       </form>
+      <UpcomingBySport heading="Events coming up" />
+      <div className="pb-6" />
     </div>
   );
 }
