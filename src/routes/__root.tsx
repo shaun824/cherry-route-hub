@@ -15,6 +15,7 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { AppShell } from "../components/app-shell";
 import { FeedbackWidget } from "../components/feedback-widget";
 import { supabase } from "../integrations/supabase/client";
+import { usePageTracking } from "../lib/analytics";
 
 
 function NotFoundComponent() {
@@ -125,6 +126,9 @@ function RootComponent() {
   const isAdmin = useRouterState({
     select: (s) => s.location.pathname.startsWith("/admin") || s.location.pathname.startsWith("/auth"),
   });
+
+  usePageTracking();
+
 
   useEffect(() => {
     const { data: sub } = supabase.auth.onAuthStateChange((event) => {
