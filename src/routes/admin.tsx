@@ -1,5 +1,5 @@
 import { createFileRoute, Outlet, Link, useRouterState, Navigate } from "@tanstack/react-router";
-import { LayoutDashboard, CalendarDays, Newspaper, Tag, Handshake, ArrowLeft, LogOut, Users, Settings, UserPlus, MessagesSquare, BedDouble } from "lucide-react";
+import { LayoutDashboard, CalendarDays, Newspaper, Tag, Handshake, ArrowLeft, LogOut, Users, Settings, UserPlus, MessagesSquare, BedDouble, Plug } from "lucide-react";
 import rceLogo from "@/assets/rce-logo.png.asset.json";
 import { useHydratedStore } from "@/lib/use-hydrated-store";
 import { useIsAdmin, signOut } from "@/lib/auth";
@@ -20,6 +20,7 @@ const nav: { to: string; label: string; icon: typeof LayoutDashboard; exact?: bo
   { to: "/admin/events", label: "Events", icon: CalendarDays },
   { to: "/admin/event-info", label: "Rider info", icon: Newspaper },
   { to: "/admin/roster", label: "Roster", icon: UserPlus },
+  { to: "/admin/entry-ninja", label: "Entry Ninja", icon: Plug },
   { to: "/admin/rooming", label: "Rooming", icon: BedDouble },
   { to: "/admin/messages", label: "Messages", icon: MessagesSquare },
   { to: "/admin/feed", label: "News feed", icon: Newspaper },
