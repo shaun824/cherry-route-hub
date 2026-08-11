@@ -36,6 +36,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/lib/auth";
 import { DEFAULT_PACKING_LIST, fetchEventInfo, type EventInfoBlock, type PackingItem } from "@/lib/event-info";
 import { RouteMap } from "@/components/route-map";
+import { RouteFileStats } from "@/components/route-file-stats";
 import { SponsorScroller } from "@/components/sponsor-scroller";
 import { curatedSponsorsFor } from "@/lib/event-sponsor-overrides";
 import { eventHasTshirt } from "@/lib/apparel";
@@ -394,20 +395,7 @@ function RoutesPanel({
                       </span>
                       <p className="text-sm font-semibold text-ink">{r.name}</p>
                     </div>
-                    <div className="mt-2 flex flex-wrap gap-3 text-xs text-ink-soft">
-                      {r.distanceKm ? (
-                        <span className="inline-flex items-center gap-1">
-                          <Activity className="h-3.5 w-3.5 text-cherry" />
-                          {r.distanceKm} km
-                        </span>
-                      ) : null}
-                      {r.elevationM ? (
-                        <span className="inline-flex items-center gap-1">
-                          <Mountain className="h-3.5 w-3.5 text-cherry" />
-                          {r.elevationM} m climbing
-                        </span>
-                      ) : null}
-                    </div>
+                    <RouteFileStats route={r} />
                     {r.description ? (
                       <p className="mt-2 text-xs leading-relaxed text-ink-soft">{r.description}</p>
                     ) : null}
