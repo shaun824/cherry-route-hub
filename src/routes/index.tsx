@@ -37,7 +37,6 @@ import { useHydratedStore } from "@/lib/use-hydrated-store";
 import { useSession } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchMyEvents, type MyEventRow } from "@/lib/my-events";
-import { EventWeatherCard } from "@/components/event-weather";
 import type { QuickLinkIcon } from "@/lib/settings";
 
 
@@ -127,26 +126,26 @@ function Home() {
     user?.email?.split("@")[0] ||
     "Rider";
 
-  // Weather is shown for the rider's own next event when linked, otherwise the
-  // next upcoming event on the calendar.
+  // Spotlight: the rider's own next event when linked, otherwise the next event
+  // on the calendar (used to build FOMO for people who haven't entered).
   const myNext = (myEventsQ.data ?? [])
     .filter((r) => new Date(r.event.event_date).getTime() >= Date.now() - 12 * 60 * 60 * 1000)
     .sort((a, b) => new Date(a.event.event_date).getTime() - new Date(b.event.event_date).getTime())[0];
-  const weatherEvent = myNext
+  const spotlightSource = myNext
+    ? allEvents.find((e) => e.id === myNext.event_id) ?? null
+    : upcoming[0] ?? null;
+  const spotlight = spotlightSource
     ? {
-        name: myNext.event.name,
-        location: myNext.event.location,
-        date: myNext.event.event_date,
-        mapQuery: allEvents.find((e) => e.id === myNext.event_id)?.mapQuery ?? null,
+        id: spotlightSource.id,
+        name: spotlightSource.name,
+        location: spotlightSource.location,
+        date: spotlightSource.date,
+        logoUrl: spotlightSource.logoUrl ?? null,
+        heroColor: spotlightSource.heroColor ?? null,
+        description: spotlightSource.description ?? "",
+        entered: Boolean(myNext),
       }
-    : upcoming[0]
-      ? {
-          name: upcoming[0].name,
-          location: upcoming[0].location,
-          date: upcoming[0].date,
-          mapQuery: upcoming[0].mapQuery ?? null,
-        }
-      : null;
+    : null;
 
   const notifications = [pinned, ...feed.filter((p) => !p.pinned)].filter(Boolean).slice(0, 8);
   const hasUnread = notifications.length > 0;
@@ -210,14 +209,18 @@ function Home() {
         )}
       </div>
 
-      {/* Weather at the next event venue */}
-      {weatherEvent ? (
+      {/* Spotlight on the next event — FOMO for guests, a deep link for entrants */}
+      {spotlight ? (
         <div className="mt-4 px-5">
-          <EventWeatherCard
-            eventName={weatherEvent.name}
-            location={weatherEvent.location}
-            mapQuery={weatherEvent.mapQuery}
-            eventDate={weatherEvent.date}
+          <EventSpotlight
+            eventId={spotlight.id}
+            name={spotlight.name}
+            location={spotlight.location}
+            date={spotlight.date}
+            logoUrl={spotlight.logoUrl}
+            heroColor={spotlight.heroColor}
+            description={spotlight.description}
+            entered={spotlight.entered}
           />
         </div>
       ) : null}
@@ -331,6 +334,77 @@ function Home() {
         items={notifications}
       />
     </div>
+  );
+}
+
+function EventSpotlight({
+  eventId,
+  name,
+  location,
+  date,
+  logoUrl,
+  heroColor,
+  description,
+  entered,
+}: {
+  eventId: string;
+  name: string;
+  location: string;
+  date: string;
+  logoUrl?: string | null;
+  heroColor?: string | null;
+  description?: string;
+  entered: boolean;
+}) {
+  const blurb = (description ?? "").trim();
+  const teaser = blurb.length > 170 ? `${blurb.slice(0, 170).trimEnd()}…` : blurb;
+  return (
+    <Link
+      to="/my-events/$eventId"
+      params={{ eventId }}
+      className="block overflow-hidden rounded-2xl bg-card shadow-sm ring-1 ring-border active:scale-[0.99] transition-transform"
+    >
+      <div
+        className={`bg-gradient-to-br ${heroColor ?? "from-cherry to-cherry-deep"} px-4 py-3 text-white`}
+      >
+        <p className="text-[11px] font-bold uppercase tracking-widest opacity-85">
+          {entered ? "You're entered · Your event" : "Coming up · Don't miss out"}
+        </p>
+        <p className="font-display text-lg font-bold leading-tight">{name}</p>
+      </div>
+      <div className="flex items-start gap-3 px-4 py-3">
+        {logoUrl ? (
+          <img
+            src={logoUrl}
+            alt=""
+            className="h-12 w-12 shrink-0 rounded-xl bg-secondary object-contain p-1 ring-1 ring-border"
+          />
+        ) : (
+          <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-accent text-cherry-deep">
+            <CalendarDays className="h-5 w-5" />
+          </span>
+        )}
+        <div className="min-w-0">
+          <p className="text-sm font-semibold text-ink">
+            {formatDate(date)} · <span className="text-cherry">{daysAway(date)}</span>
+          </p>
+          <p className="mt-0.5 flex items-center gap-1 truncate text-xs text-muted-foreground">
+            <MapPin className="h-3.5 w-3.5 shrink-0" /> {location}
+          </p>
+          <p className="mt-2 text-sm leading-relaxed text-ink-soft">
+            {entered
+              ? teaser ||
+                "Everything you need for race weekend — schedule, routes, venue, packing list and your entry details."
+              : teaser ||
+                "Riders are already locking in their spots. Read the route, venue and weekend plan before entries close."}
+          </p>
+          <span className="mt-2 inline-flex items-center gap-1 text-xs font-bold text-cherry">
+            {entered ? "Open your event hub" : "Read about this event"}
+            <ChevronRight className="h-3.5 w-3.5" />
+          </span>
+        </div>
+      </div>
+    </Link>
   );
 }
 
