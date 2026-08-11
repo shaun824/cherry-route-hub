@@ -1355,7 +1355,7 @@ function YourEntryCard({ eventId }: { eventId: string }) {
         </div>
       ) : null}
 
-      {(row.jacket_size || row.tshirt_size) ? (
+      {(row.jacket_size || (showTshirt && row.tshirt_size)) ? (
         <div className="mt-3 grid grid-cols-2 gap-2">
           {row.jacket_size ? (
             <div className="rounded-xl bg-secondary p-2.5">
@@ -1365,7 +1365,7 @@ function YourEntryCard({ eventId }: { eventId: string }) {
               <p className="mt-0.5 font-display text-sm font-bold text-ink">{row.jacket_size}</p>
             </div>
           ) : null}
-          {row.tshirt_size ? (
+          {showTshirt && row.tshirt_size ? (
             <div className="rounded-xl bg-secondary p-2.5">
               <p className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-ink-soft">
                 <Shirt className="h-3 w-3" /> T-Shirt
@@ -1375,6 +1375,7 @@ function YourEntryCard({ eventId }: { eventId: string }) {
           ) : null}
         </div>
       ) : null}
+
 
       {row.extras.length > 0 ? (
         <div className="mt-3">
