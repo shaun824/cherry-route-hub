@@ -3,7 +3,12 @@ import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { AlertTriangle, CheckCircle2, Package, RefreshCw } from "lucide-react";
-import { listMerchCatalog, syncMerchCatalog } from "@/lib/merch-catalog.functions";
+import {
+  deleteMerchItem,
+  listMerchCatalog,
+  syncMerchCatalog,
+  upsertMerchItem,
+} from "@/lib/merch-catalog.functions";
 
 export const Route = createFileRoute("/admin/merchandise")({
   component: MerchandisePage,
@@ -43,7 +48,12 @@ function MerchandisePage() {
   useEffect(() => {
     if (autoPulled.current || !catalog.data) return;
     autoPulled.current = true;
-    const stale = catalog.data.some((e) => e.entryNinjaId && e.items.length === 0);
+    const cutoff = Date.now() - 12 * 60 * 60 * 1000;
+    const stale = catalog.data.some(
+      (e) =>
+        e.entryNinjaId &&
+        (e.items.length === 0 || !e.syncedAt || new Date(e.syncedAt).getTime() < cutoff),
+    );
     if (stale) void runSync();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [catalog.data]);
@@ -108,38 +118,157 @@ function MerchandisePage() {
               )}
             </div>
 
-            {ev.items.length === 0 ? (
+            {ev.items.length === 0 && (
               <p className="mt-3 text-sm text-ink-soft">
                 {ev.entryNinjaId
-                  ? "No merchandise options configured on this event."
+                  ? "No merchandise options configured on this event yet."
                   : "Link this event to Entry Ninja to pull its merchandise."}
               </p>
-            ) : (
-              <ul className="mt-3 grid gap-2 md:grid-cols-2">
-                {ev.items.map((item) => (
-                  <li key={item.id} className="rounded-xl border border-border/70 bg-background p-3">
-                    <p className="text-sm font-semibold text-ink">{item.name}</p>
-                    <div className="mt-2 flex flex-wrap gap-1.5">
-                      {item.options.length === 0 && (
-                        <span className="text-xs text-ink-soft">No options listed</span>
-                      )}
-                      {item.options.map((o, i) => (
-                        <span
-                          key={`${item.id}-${i}`}
-                          className="rounded-full bg-muted px-2.5 py-1 text-xs text-ink"
-                        >
-                          {o.name}
-                          {o.price ? ` · R${o.price}` : ""}
-                        </span>
-                      ))}
-                    </div>
-                  </li>
-                ))}
-              </ul>
             )}
+
+            <ul className="mt-3 grid gap-2 md:grid-cols-2">
+              {ev.items.map((item) => (
+                <MerchItemCard
+                  key={item.id}
+                  eventId={ev.eventId}
+                  item={item}
+                  onChanged={() => void catalog.refetch()}
+                  onError={setError}
+                />
+              ))}
+              <MerchItemCard
+                key={`new-${ev.eventId}`}
+                eventId={ev.eventId}
+                onChanged={() => void catalog.refetch()}
+                onError={setError}
+              />
+            </ul>
+
           </section>
         ))}
       </div>
     </div>
+  );
+}
+
+type Item = { id: string; name: string; enItemId: number | null; options: { name: string; price?: number | null }[] };
+
+function MerchItemCard({
+  eventId,
+  item,
+  onChanged,
+  onError,
+}: {
+  eventId: string;
+  item?: Item;
+  onChanged: () => void;
+  onError: (msg: string | null) => void;
+}) {
+  const upsertFn = useServerFn(upsertMerchItem);
+  const deleteFn = useServerFn(deleteMerchItem);
+  const [editing, setEditing] = useState(!item);
+  const [name, setName] = useState(item?.name ?? "");
+  const [options, setOptions] = useState((item?.options ?? []).map((o) => o.name).join(", "));
+  const [saving, setSaving] = useState(false);
+
+  async function save() {
+    if (!name.trim()) return;
+    setSaving(true);
+    onError(null);
+    try {
+      await upsertFn({
+        data: {
+          ...(item ? { id: item.id } : {}),
+          eventId,
+          name: name.trim(),
+          options: options.split(",").map((o) => o.trim()).filter(Boolean),
+        },
+      });
+      if (!item) {
+        setName("");
+        setOptions("");
+      } else {
+        setEditing(false);
+      }
+      onChanged();
+    } catch (err) {
+      onError((err as Error).message ?? "Could not save");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function remove() {
+    if (!item) return;
+    setSaving(true);
+    try {
+      await deleteFn({ data: { id: item.id } });
+      onChanged();
+    } catch (err) {
+      onError((err as Error).message ?? "Could not delete");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  if (!editing && item) {
+    return (
+      <li className="rounded-xl border border-border/70 bg-background p-3">
+        <div className="flex items-start gap-2">
+          <p className="text-sm font-semibold text-ink">{item.name}</p>
+          <button
+            onClick={() => setEditing(true)}
+            className="ml-auto text-xs font-semibold text-cherry"
+          >
+            Edit
+          </button>
+        </div>
+        <div className="mt-2 flex flex-wrap gap-1.5">
+          {item.options.length === 0 && <span className="text-xs text-ink-soft">No options listed</span>}
+          {item.options.map((o, i) => (
+            <span key={`${item.id}-${i}`} className="rounded-full bg-muted px-2.5 py-1 text-xs text-ink">
+              {o.name}
+              {o.price ? ` · R${o.price}` : ""}
+            </span>
+          ))}
+        </div>
+      </li>
+    );
+  }
+
+  return (
+    <li className="space-y-2 rounded-xl border border-dashed border-border bg-background p-3">
+      <input
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        placeholder={item ? "Item name" : "Add an option (e.g. Tent rental)"}
+        className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm"
+      />
+      <input
+        value={options}
+        onChange={(e) => setOptions(e.target.value)}
+        placeholder="Choices, comma separated — e.g. Small, Medium, Large"
+        className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm"
+      />
+      <div className="flex items-center gap-2">
+        <button
+          onClick={() => void save()}
+          disabled={saving || !name.trim()}
+          className="rounded-lg bg-cherry px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-50"
+        >
+          {item ? "Save" : "Add option"}
+        </button>
+        {item && (
+          <>
+            <button onClick={() => setEditing(false)} className="text-xs font-semibold text-ink-soft">
+              Cancel
+            </button>
+            <button onClick={() => void remove()} className="ml-auto text-xs font-semibold text-destructive">
+              Delete
+            </button>
+          </>
+        )}
+      </div>
+    </li>
   );
 }

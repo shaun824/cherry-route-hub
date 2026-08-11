@@ -25,8 +25,9 @@ export const syncMerchCatalog = createServerFn({ method: "POST" })
     if (!isAdmin) throw new Error("Forbidden");
 
     const { fetchEnEventDetail } = await import("./entryninja.server");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-    let q = context.supabase
+    let q = supabaseAdmin
       .from("events")
       .select("id, name, entry_ninja_id")
       .not("entry_ninja_id", "is", null);
@@ -56,13 +57,19 @@ export const syncMerchCatalog = createServerFn({ method: "POST" })
           synced_at: new Date().toISOString(),
         }));
 
-        // Replace the stored catalogue for this event with the live one.
-        await context.supabase.from("event_merch_options").delete().eq("event_id", ev.id);
+        // Replace the synced catalogue for this event with the live one, but
+        // keep any manually added items (they have no Entry Ninja item id).
+        await supabaseAdmin
+          .from("event_merch_options")
+          .delete()
+          .eq("event_id", ev.id)
+          .not("en_item_id", "is", null);
         if (rows.length) {
-          const { error: insErr } = await context.supabase.from("event_merch_options").insert(rows);
+          const { error: insErr } = await supabaseAdmin.from("event_merch_options").insert(rows);
           if (insErr) throw insErr;
         }
         itemCount += rows.length;
+
 
       } catch (err) {
         errors.push(`${ev.name}: ${(err as Error).message}`);
@@ -113,4 +120,54 @@ export const listMerchCatalog = createServerFn({ method: "POST" })
     }
 
     return [...byEvent.values()];
+  });
+
+const upsertSchema = z.object({
+  id: z.string().uuid().optional(),
+  eventId: z.string().uuid(),
+  name: z.string().min(1).max(200),
+  options: z.array(z.string().max(200)).max(60),
+});
+
+export const upsertMerchItem = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => upsertSchema.parse(data))
+  .handler(async ({ data, context }) => {
+    const { data: isAdmin } = await context.supabase.rpc("is_admin");
+    if (!isAdmin) throw new Error("Forbidden");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const options = data.options
+      .map((o) => o.trim())
+      .filter(Boolean)
+      .map((name) => ({ id: null, name, price: null }));
+
+    if (data.id) {
+      const { error } = await supabaseAdmin
+        .from("event_merch_options")
+        .update({ name: data.name, options })
+        .eq("id", data.id);
+      if (error) throw error;
+      return { id: data.id };
+    }
+
+    const { data: row, error } = await supabaseAdmin
+      .from("event_merch_options")
+      .insert({ event_id: data.eventId, name: data.name, options, position: 999 })
+      .select("id")
+      .single();
+    if (error) throw error;
+    return { id: row.id };
+  });
+
+export const deleteMerchItem = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
+  .handler(async ({ data, context }) => {
+    const { data: isAdmin } = await context.supabase.rpc("is_admin");
+    if (!isAdmin) throw new Error("Forbidden");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin.from("event_merch_options").delete().eq("id", data.id);
+    if (error) throw error;
+    return { ok: true };
   });
