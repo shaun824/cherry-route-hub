@@ -87,6 +87,54 @@ export type Database = {
           },
         ]
       }
+      analytics_events: {
+        Row: {
+          created_at: string
+          device: string | null
+          duration_ms: number | null
+          event_name: string
+          id: string
+          path: string
+          props: Json
+          referrer: string | null
+          route_label: string | null
+          session_id: string
+          user_agent: string | null
+          user_id: string | null
+          viewport_width: number | null
+        }
+        Insert: {
+          created_at?: string
+          device?: string | null
+          duration_ms?: number | null
+          event_name?: string
+          id?: string
+          path: string
+          props?: Json
+          referrer?: string | null
+          route_label?: string | null
+          session_id: string
+          user_agent?: string | null
+          user_id?: string | null
+          viewport_width?: number | null
+        }
+        Update: {
+          created_at?: string
+          device?: string | null
+          duration_ms?: number | null
+          event_name?: string
+          id?: string
+          path?: string
+          props?: Json
+          referrer?: string | null
+          route_label?: string | null
+          session_id?: string
+          user_agent?: string | null
+          user_id?: string | null
+          viewport_width?: number | null
+        }
+        Relationships: []
+      }
       entrants: {
         Row: {
           created_at: string
