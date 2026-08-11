@@ -214,7 +214,7 @@ function FindMyEmail() {
   const [idNumber, setIdNumber] = useState("");
   const [busy, setBusy] = useState(false);
   const [cooldown, setCooldown] = useState(false);
-  const [result, setResult] = useState<{ found: boolean; emails: string[] } | null>(null);
+  const [result, setResult] = useState<{ found: boolean; needsEmail: boolean; emails: string[] } | null>(null);
   const [err, setErr] = useState<string | null>(null);
 
   async function handleLookup(e: React.FormEvent) {
@@ -225,7 +225,7 @@ function FindMyEmail() {
     setResult(null);
     try {
       const res = await lookup({ data: { id_number: idNumber.trim() } });
-      setResult({ found: res.found, emails: res.emails });
+      setResult({ found: res.found, needsEmail: res.needsEmail, emails: res.emails });
     } catch {
       setErr("Couldn't check that right now. Please try again.");
     } finally {
@@ -283,11 +283,20 @@ function FindMyEmail() {
                 </ul>
                 <p className="mt-1">Sign in with that address above.</p>
               </div>
+            ) : result.needsEmail ? (
+              <div className="rounded-lg bg-accent px-3 py-2 text-[11px] text-cherry-deep">
+                <p className="font-bold">We found your entry, but no email on file.</p>
+                <p className="mt-1">
+                  Create an account above with any email you use, then go to My Events and link your
+                  entry with this ID number — we'll save that email to your entry.
+                </p>
+              </div>
             ) : (
               <p className="rounded-lg bg-card px-3 py-2 text-[11px] text-ink-soft ring-1 ring-border">
                 No entry found for that ID number. Double-check the number, or contact us and we'll help.
               </p>
             )
+
           ) : null}
         </form>
       ) : null}

@@ -85,7 +85,10 @@ export async function syncEnEvent(
     const p = entry.entrant;
     const email = (p?.email ?? "").trim().toLowerCase();
     const fullName = [p?.first_name, p?.last_name].filter(Boolean).join(" ").trim();
-    if (!email || !fullName) {
+    const idNumber = (p?.id_number ?? "").trim();
+    // Riders without an email are still imported and keyed on their ID number;
+    // the email is filled in when they sign in and claim the entry.
+    if (!fullName || (!email && idNumber.length < 4)) {
       skipped++;
       continue;
     }
@@ -105,37 +108,53 @@ export async function syncEnEvent(
         else extras.push({ name: option ? `${itemName}: ${option}` : itemName, qty: 1 });
       }
 
-      const { data: existing, error: findErr } = await supabase
-        .from("entrants")
-        .select("id")
-        .ilike("email", email)
-        .maybeSingle();
-      if (findErr) throw findErr;
+      const idHash = idNumber.length >= 4 ? hashIdNumber(idNumber) : null;
 
-      const idNumber = (p?.id_number ?? "").trim();
+      // Match on ID number first (stable), then email.
+      let existingId: string | null = null;
+      if (idHash) {
+        const { data: byId, error: byIdErr } = await supabase
+          .from("entrants")
+          .select("id")
+          .eq("id_number_hash", idHash)
+          .maybeSingle();
+        if (byIdErr) throw byIdErr;
+        existingId = byId?.id ?? null;
+      }
+      if (!existingId && email) {
+        const { data: byEmail, error: findErr } = await supabase
+          .from("entrants")
+          .select("id")
+          .ilike("email", email)
+          .maybeSingle();
+        if (findErr) throw findErr;
+        existingId = byEmail?.id ?? null;
+      }
+
       const entrantPayload = {
         full_name: fullName,
         phone: p?.cell_phone_number || null,
-        ...(idNumber.length >= 4
-          ? { id_number_hash: hashIdNumber(idNumber), id_number_last4: idNumberLast4(idNumber) }
-          : {}),
+        ...(idHash ? { id_number_hash: idHash, id_number_last4: idNumberLast4(idNumber) } : {}),
+        // Never wipe an email a rider has already supplied in the app.
+        ...(email ? { email } : {}),
       };
 
       let entrantId: string;
-      if (existing?.id) {
-        entrantId = existing.id as string;
+      if (existingId) {
+        entrantId = existingId;
         await supabase.from("entrants").update(entrantPayload).eq("id", entrantId);
         updated++;
       } else {
         const { data: ins, error: insErr } = await supabase
           .from("entrants")
-          .insert({ email, ...entrantPayload })
+          .insert({ email: email || null, ...entrantPayload })
           .select("id")
           .single();
         if (insErr || !ins) throw insErr ?? new Error("insert failed");
         entrantId = ins.id as string;
         created++;
       }
+
 
       const { error: eeErr } = await supabase.from("event_entrants").upsert(
         {

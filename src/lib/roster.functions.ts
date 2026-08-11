@@ -242,11 +242,12 @@ export const linkMyEntry = createServerFn({ method: "POST" })
     // under RLS via the user's client below.
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-    let match: { id: string; user_id: string | null; id_number_hash: string | null } | null = null;
+    let match: { id: string; user_id: string | null; id_number_hash: string | null; email: string | null } | null =
+      null;
     if (email) {
       const { data: byEmail } = await supabaseAdmin
         .from("entrants")
-        .select("id, user_id, id_number_hash")
+        .select("id, user_id, id_number_hash, email")
         .ilike("email", email)
         .maybeSingle();
       if (byEmail) match = byEmail;
@@ -254,7 +255,7 @@ export const linkMyEntry = createServerFn({ method: "POST" })
     if (!match) {
       const { data: byId } = await supabaseAdmin
         .from("entrants")
-        .select("id, user_id, id_number_hash")
+        .select("id, user_id, id_number_hash, email")
         .eq("id_number_hash", idHash)
         .maybeSingle();
       if (byId) match = byId;
@@ -269,16 +270,22 @@ export const linkMyEntry = createServerFn({ method: "POST" })
     }
 
     // Write with admin client so RLS can't block the claim on a legacy row.
+    // Riders imported without an email get theirs filled in from this sign-in.
     const { error: upErr } = await supabaseAdmin
       .from("entrants")
-      .update({ user_id: userId, id_number_hash: idHash })
+      .update({
+        user_id: userId,
+        id_number_hash: idHash,
+        ...(!match.email && email ? { email } : {}),
+      })
       .eq("id", match.id);
     if (upErr) throw upErr;
 
     // Ensure the signed-in user actually has SELECT visibility now.
     void supabase;
-    return { ok: true as const, entrantId: match.id };
+    return { ok: true as const, entrantId: match.id, emailAdded: !match.email && !!email };
   });
+
 
 // Admin-only: create/update a single entrant and tag them to events in one call.
 const quickAddSchema = z.object({
