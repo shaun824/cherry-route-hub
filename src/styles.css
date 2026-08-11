@@ -136,3 +136,62 @@
   animation: marquee linear infinite;
 }
 
+
+/* ---------- App-like smoothness ---------- */
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    /* Avoid horizontal jump when page height changes between routes */
+    scrollbar-gutter: stable;
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    /* Kill the rubber-band chaining + grey tap flash that makes it feel "webby" */
+    overscroll-behavior-y: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  a, button, [role="button"], summary, label, input, select, textarea {
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+  a, button, [role="button"] {
+    transition: background-color 150ms ease, color 150ms ease, opacity 150ms ease,
+      transform 150ms ease, box-shadow 150ms ease;
+  }
+  a:active, button:active, [role="button"]:active {
+    transform: scale(0.975);
+  }
+  /* Smooth momentum scrolling for horizontal rails (tabs, carousels) */
+  .overflow-x-auto, .overflow-y-auto, .overflow-auto {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    scrollbar-width: none;
+  }
+  .overflow-x-auto::-webkit-scrollbar,
+  .overflow-y-auto::-webkit-scrollbar,
+  .overflow-auto::-webkit-scrollbar {
+    display: none;
+  }
+  img {
+    /* Reduce paint jank while images decode */
+    content-visibility: auto;
+  }
+}
+
+@keyframes page-enter {
+  from { opacity: 0; transform: translate3d(0, 6px, 0); }
+  to { opacity: 1; transform: none; }
+}
+
+@utility page-enter {
+  animation: page-enter 220ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
