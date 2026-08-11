@@ -1,11 +1,14 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { z } from "zod";
-import { Info } from "lucide-react";
+import { Info, HelpCircle } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
 import { lovable } from "@/integrations/lovable/index";
 import { supabase } from "@/integrations/supabase/client";
+import { lookupEntryEmail } from "@/lib/id-lookup.functions";
 import { useSession } from "@/lib/auth";
 import { BrandMark } from "@/components/ui-bits";
+
 
 const searchSchema = z.object({ next: z.string().optional() });
 
