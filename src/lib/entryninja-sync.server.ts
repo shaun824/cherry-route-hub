@@ -1,6 +1,6 @@
 // Server-only: shared Entry Ninja -> app sync used by the admin action and the cron hook.
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { fetchEnEvents, fetchEnEntries, normaliseSize, toLineArray, type EnEvent } from "./entryninja.server";
+import { fetchEnEvents, fetchEnEntries, normaliseSize, toLineArray, linePrice, type EnEvent } from "./entryninja.server";
 import { hashIdNumber, idNumberLast4 } from "./id-hash.server";
 
 // The generated Database type isn't needed here; the callers pass typed clients.
@@ -95,7 +95,7 @@ export async function syncEnEvent(
     try {
       let jacket: string | null = null;
       let tshirt: string | null = null;
-      const extras: { name: string; qty: number; size?: string }[] = [];
+      const extras: { name: string; qty: number; size?: string; price?: number }[] = [];
       const lines = [...toLineArray(entry.merchandise), ...toLineArray(entry.extra)];
       for (const line of lines) {
         const itemName = (line?.item?.name ?? "").trim();
@@ -105,8 +105,15 @@ export async function syncEnEvent(
         const lower = itemName.toLowerCase();
         if (size && lower.includes("jacket")) jacket = size;
         else if (size && (lower.includes("shirt") || lower.includes("tee"))) tshirt = size;
-        else extras.push({ name: option ? `${itemName}: ${option}` : itemName, qty: 1 });
+        const price = linePrice(line);
+        extras.push({
+          name: itemName,
+          qty: Number(line?.quantity ?? 1) || 1,
+          ...(option ? { size: option } : {}),
+          ...(price != null ? { price } : {}),
+        });
       }
+
 
       const idHash = idNumber.length >= 4 ? hashIdNumber(idNumber) : null;
 
@@ -164,6 +171,7 @@ export async function syncEnEvent(
           batch: entry.batch?.name ?? null,
           bib_number: entry.race_number || null,
           external_id: String(entry.id),
+          registration_ref: entry.registration_reference || null,
           jacket_size: jacket,
           tshirt_size: tshirt,
           extras,

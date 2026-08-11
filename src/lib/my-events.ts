@@ -14,6 +14,7 @@ export type MyEventRow = {
   category: string | null;
   batch: string | null;
   bib_number: string | null;
+  registration_ref: string | null;
   jacket_size: string | null;
   tshirt_size: string | null;
   extras: ExtraItem[];
@@ -74,7 +75,7 @@ export async function fetchMyEvents(): Promise<MyEventRow[]> {
   const { data, error } = await supabase
     .from("event_entrants")
     .select(
-      "id, event_id, category, batch, bib_number, jacket_size, tshirt_size, extras, notes, event:events(id, name, discipline, event_date, location, distance_km, status, hero_color, description, social_links, title_sponsor_name, title_sponsor_logo_url, title_sponsor_url)",
+      "id, event_id, category, batch, bib_number, registration_ref, jacket_size, tshirt_size, extras, notes, event:events(id, name, discipline, event_date, location, distance_km, status, hero_color, description, social_links, title_sponsor_name, title_sponsor_logo_url, title_sponsor_url)",
     )
     .in("entrant_id", entrantIds)
     .order("created_at", { ascending: false });
@@ -90,6 +91,7 @@ export async function fetchMyEvents(): Promise<MyEventRow[]> {
       category: r.category,
       batch: r.batch,
       bib_number: r.bib_number,
+      registration_ref: (r as { registration_ref: string | null }).registration_ref ?? null,
       jacket_size: (r as { jacket_size: string | null }).jacket_size ?? null,
       tshirt_size: (r as { tshirt_size: string | null }).tshirt_size ?? null,
       extras: normalizeExtras((r as { extras: unknown }).extras),

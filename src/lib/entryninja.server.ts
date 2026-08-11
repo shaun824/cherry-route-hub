@@ -101,3 +101,16 @@ export function toLineArray(value: unknown): EnLine[] {
   if (typeof value === "object") return Object.values(value as Record<string, EnLine>).filter(Boolean);
   return [];
 }
+
+// Entry Ninja exposes merchandise/extra pricing under a few different keys
+// depending on the event setup — pick the first sensible number we find.
+export function linePrice(line: unknown): number | null {
+  if (!line || typeof line !== "object") return null;
+  const l = line as Record<string, any>;
+  const candidates = [l["price"], l["amount"], l["unit_price"], l["total"], l["item"]?.price, l["option"]?.price];
+  for (const c of candidates) {
+    const n = typeof c === "string" ? Number(c.replace(/[^0-9.]/g, "")) : Number(c);
+    if (Number.isFinite(n) && n > 0) return n;
+  }
+  return null;
+}

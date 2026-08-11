@@ -60,9 +60,10 @@ function ReportPage() {
       ["Tent / room number", rooming?.tent_number ?? ""],
       ["Room type", rooming?.room_type ?? ""],
       ["Notes", row?.notes ?? ""],
+      ["Entry Ninja reference", row?.registration_ref ?? ""],
       ...(row?.extras ?? []).map((x) => [
         "Extra",
-        `${x.name}${x.size ? ` (${x.size})` : ""} x${x.qty}`,
+        `${x.name}${x.size ? ` (${x.size})` : ""} x${x.qty}${x.price != null ? ` @ R${x.price}` : ""}`,
       ]),
       ["Generated", new Date().toLocaleString("en-ZA", { timeZone: "Africa/Johannesburg" })],
     ];
@@ -163,7 +164,7 @@ function ReportPage() {
 
               <div className="mt-5">
                 <p className="text-[10px] font-bold uppercase tracking-widest text-ink-soft">
-                  Extras purchased
+                  Merchandise &amp; extras
                 </p>
                 {row.extras.length === 0 ? (
                   <p className="mt-1 text-sm text-ink-soft">None recorded.</p>
@@ -172,8 +173,9 @@ function ReportPage() {
                     <thead>
                       <tr className="border-b border-border text-left text-[11px] uppercase tracking-widest text-ink-soft">
                         <th className="py-1.5">Item</th>
-                        <th>Size</th>
+                        <th>Option</th>
                         <th className="text-right">Qty</th>
+                        <th className="text-right">Price</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -182,12 +184,31 @@ function ReportPage() {
                           <td className="py-1.5 text-ink">{x.name}</td>
                           <td className="text-ink-soft">{x.size ?? "—"}</td>
                           <td className="text-right font-semibold text-ink">×{x.qty}</td>
+                          <td className="text-right text-ink">
+                            {x.price != null
+                              ? `R${(x.price * x.qty).toLocaleString("en-ZA", { maximumFractionDigits: 2 })}`
+                              : "—"}
+                          </td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
                 )}
+                {row.registration_ref ? (
+                  <p className="mt-2 text-xs text-ink-soft">
+                    Manage this entry:{" "}
+                    <a
+                      className="font-semibold text-cherry underline"
+                      href={`https://entries.redcherryevents.co.za/registrations/${encodeURIComponent(row.registration_ref)}`}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      entries.redcherryevents.co.za/registrations/{row.registration_ref}
+                    </a>
+                  </p>
+                ) : null}
               </div>
+
             </>
           )}
 
