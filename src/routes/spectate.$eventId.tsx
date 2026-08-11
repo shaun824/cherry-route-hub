@@ -293,7 +293,18 @@ function SpectatorEventPage() {
             onChange={setCategoryFilter}
           />
 
-          {rosterQ.isLoading ? (
+          {locked ? (
+            <LockedSection locked message="Sign in to view start and finish lists">
+              <ul className="mt-4 space-y-2">
+                {[0, 1, 2, 3, 4].map((i) => (
+                  <li key={i} className="flex items-center gap-3 rounded-xl bg-card p-3 ring-1 ring-border">
+                    <span className="h-7 w-11 rounded-md bg-secondary" />
+                    <span className="h-3 flex-1 rounded bg-secondary" />
+                  </li>
+                ))}
+              </ul>
+            </LockedSection>
+          ) : rosterQ.isLoading ? (
             <p className="mt-6 text-center text-sm text-ink-soft">Loading riders…</p>
           ) : roster.length === 0 ? (
             <div className="mt-6 rounded-2xl border border-dashed border-border p-6 text-center text-sm text-ink-soft">
