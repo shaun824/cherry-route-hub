@@ -19,6 +19,12 @@ import doolhof from "@/assets/sponsors/doolhof.png.asset.json";
 import knysnaRealty from "@/assets/sponsors/knysna-realty.jpg.asset.json";
 import otto1890 from "@/assets/sponsors/otto1890.png.asset.json";
 import westvaal from "@/assets/sponsors/westvaal.png.asset.json";
+import triumphCt from "@/assets/sponsors/triumph-cape-town.png.asset.json";
+import sab from "@/assets/sponsors/sab.png.asset.json";
+import isuzu from "@/assets/sponsors/isuzu.png.asset.json";
+import hyperclear from "@/assets/sponsors/hyperclear.png.asset.json";
+import peninsulaPower from "@/assets/sponsors/peninsula-power.png.asset.json";
+import redCherry from "@/assets/sponsors/red-cherry-events.png.asset.json";
 
 export type CuratedSponsor = {
   name: string;
@@ -29,6 +35,8 @@ export type CuratedSponsor = {
 export type CuratedSponsors = {
   title: CuratedSponsor;
   partners: CuratedSponsor[];
+  /** Third-tier supporters, shown in their own rolling marquee. */
+  supporters?: CuratedSponsor[];
 };
 
 const TITLE_SPONSOR: CuratedSponsor = {
@@ -98,6 +106,17 @@ const WEEKEND_WARRIOR_SET: CuratedSponsors = {
       logoUrl: gm.url,
       url: "https://www.greenmotion.com/",
     },
+  ],
+  supporters: [
+    { name: "Triumph Cape Town", logoUrl: triumphCt.url, url: "https://www.triumphcapetown.co.za/" },
+    { name: "Squirt Cycling Products", logoUrl: squirt.url, url: "https://squirtcyclingproducts.com/" },
+    { name: "SAB", logoUrl: sab.url, url: "https://www.sab.co.za/" },
+    { name: "Isuzu", logoUrl: isuzu.url, url: "https://www.isuzu.co.za/" },
+    { name: "Hyperclear", logoUrl: hyperclear.url, url: "https://www.hyperclear.co.za/" },
+    { name: "Rudy Project", logoUrl: rudy.url, url: "https://www.rudyproject.co.za/" },
+    { name: "Kazin Sales & Rentals", logoUrl: kazin.url, url: "https://www.kazin.co.za/" },
+    { name: "Peninsula Power Products", logoUrl: peninsulaPower.url, url: "https://www.peninsulapower.co.za/" },
+    { name: "Red Cherry Events", logoUrl: redCherry.url, url: "https://www.redcherryevents.co.za/" },
   ],
 };
 
