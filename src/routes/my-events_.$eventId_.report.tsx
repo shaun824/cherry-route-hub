@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Download, Printer } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchMyEventById, type MyEventRow } from "@/lib/my-events";
+import { flattenExtras } from "@/lib/extras-display";
 import { eventHasTshirt } from "@/lib/apparel";
 import { fetchMyRooming } from "@/lib/rooming";
 
@@ -61,9 +62,9 @@ function ReportPage() {
       ["Room type", rooming?.room_type ?? ""],
       ["Notes", row?.notes ?? ""],
       ["Entry Ninja reference", row?.registration_ref ?? ""],
-      ...(row?.extras ?? []).map((x) => [
-        "Extra",
-        `${x.name}${x.size ? ` (${x.size})` : ""} x${x.qty}${x.price != null ? ` @ R${x.price}` : ""}`,
+      ...flattenExtras(row?.extras).map((x) => [
+        x.group,
+        `${x.name}${x.option ? ` (${x.option})` : ""}${x.qty > 1 ? ` x${x.qty}` : ""}`,
       ]),
       ["Generated", new Date().toLocaleString("en-ZA", { timeZone: "Africa/Johannesburg" })],
     ];
@@ -172,23 +173,19 @@ function ReportPage() {
                   <table className="mt-2 w-full border-collapse text-sm">
                     <thead>
                       <tr className="border-b border-border text-left text-[11px] uppercase tracking-widest text-ink-soft">
-                        <th className="py-1.5">Item</th>
+                        <th className="py-1.5">Section</th>
+                        <th>Item</th>
                         <th>Option</th>
                         <th className="text-right">Qty</th>
-                        <th className="text-right">Price</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {row.extras.map((x, i) => (
+                      {flattenExtras(row.extras).map((x, i) => (
                         <tr key={i} className="border-b border-border/50">
-                          <td className="py-1.5 text-ink">{x.name}</td>
-                          <td className="text-ink-soft">{x.size ?? "—"}</td>
+                          <td className="py-1.5 text-ink-soft">{x.group}</td>
+                          <td className="text-ink">{x.name}</td>
+                          <td className="text-ink-soft">{x.option ?? "—"}</td>
                           <td className="text-right font-semibold text-ink">×{x.qty}</td>
-                          <td className="text-right text-ink">
-                            {x.price != null
-                              ? `R${(x.price * x.qty).toLocaleString("en-ZA", { maximumFractionDigits: 2 })}`
-                              : "—"}
-                          </td>
                         </tr>
                       ))}
                     </tbody>
