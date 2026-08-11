@@ -55,7 +55,7 @@ export const Route = createFileRoute("/my-events/$eventId")({
   loader: async ({ params }) => {
     const { data, error } = await supabase
       .from("events")
-      .select("id, name, discipline, event_date, location, map_query, distance_km, description, hero_color, days, schedule, social_links, status")
+      .select("id, name, discipline, event_date, location, map_query, distance_km, description, hero_color, days, schedule, social_links, status, entry_ninja_url, website_url")
       .eq("id", params.eventId)
       .maybeSingle();
     if (error || !data) throw notFound();
@@ -518,7 +518,7 @@ function InfoPanel({
   eventId: string;
   description: string | null;
   distanceKm: number;
-  event: { days?: unknown; schedule?: unknown; location?: string | null; map_query?: string | null; social_links?: unknown };
+  event: { days?: unknown; schedule?: unknown; location?: string | null; map_query?: string | null; social_links?: unknown; entry_ninja_url?: string | null; website_url?: string | null };
   isLive: boolean;
   eventName: string;
 }) {
@@ -548,7 +548,10 @@ function InfoPanel({
         </div>
       )}
 
-      <YourEntryCard eventId={eventId} />
+      <YourEntryCard
+        eventId={eventId}
+        entryUrl={event.entry_ninja_url ?? event.website_url ?? null}
+      />
 
       {aboutText ? (
         <section>
@@ -1393,7 +1396,27 @@ function SponsorsBlock({ eventName }: { eventName?: string }) {
 
 
 
-function YourEntryCard({ eventId }: { eventId: string }) {
+function EnterEventCta({ entryUrl }: { entryUrl: string | null }) {
+  return (
+    <section className="rounded-2xl bg-card p-4 ring-1 ring-border">
+      <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-ink-soft">Not entered yet</p>
+      <p className="mt-0.5 font-display text-base font-bold text-ink">Enter this event</p>
+      <p className="mt-1 text-xs text-ink-soft">
+        Secure your spot on Entry Ninja — your entry details then appear here automatically.
+      </p>
+      <a
+        href={entryUrl ?? "https://entries.redcherryevents.co.za/"}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl cherry-gradient py-3 text-sm font-bold text-white shadow-md shadow-cherry/25"
+      >
+        Enter on Entry Ninja <ExternalLink className="h-4 w-4" />
+      </a>
+    </section>
+  );
+}
+
+function YourEntryCard({ eventId, entryUrl = null }: { eventId: string; entryUrl?: string | null }) {
   const { user, loading: sessionLoading } = useSession();
   const signedIn = Boolean(user);
   const q = useQuery({
@@ -1445,10 +1468,13 @@ function YourEntryCard({ eventId }: { eventId: string }) {
 
   if (!row) {
     return (
-      <section className="rounded-2xl border border-dashed border-border p-4 text-center text-xs text-ink-soft">
-        We don't have your entry on file for this event yet. Contact the Red Cherry admins if this
-        looks wrong.
-      </section>
+      <div className="space-y-2">
+        <EnterEventCta entryUrl={entryUrl} />
+        <p className="px-1 text-[11px] text-ink-soft">
+          Already entered? Your entry appears here once Entry Ninja syncs — contact the Red Cherry
+          admins if it stays missing.
+        </p>
+      </div>
     );
   }
 
