@@ -15,6 +15,7 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { AppShell } from "../components/app-shell";
 import { FeedbackWidget } from "../components/feedback-widget";
 import { supabase } from "../integrations/supabase/client";
+import { usePageTracking } from "../lib/analytics";
 
 
 function NotFoundComponent() {

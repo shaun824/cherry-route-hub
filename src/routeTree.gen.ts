@@ -35,6 +35,7 @@ import { Route as AdminMessagesRouteImport } from './routes/admin.messages'
 import { Route as AdminFeedRouteImport } from './routes/admin.feed'
 import { Route as AdminEventsRouteImport } from './routes/admin.events'
 import { Route as AdminEntryNinjaRouteImport } from './routes/admin.entry-ninja'
+import { Route as AdminAnalyticsRouteImport } from './routes/admin.analytics'
 import { Route as EventsEventIdIndexRouteImport } from './routes/events.$eventId.index'
 import { Route as AdminEventInfoIndexRouteImport } from './routes/admin.event-info.index'
 import { Route as MyEventsEventIdReportRouteImport } from './routes/my-events_.$eventId_.report'
@@ -172,6 +173,11 @@ const AdminEntryNinjaRoute = AdminEntryNinjaRouteImport.update({
   path: '/entry-ninja',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminAnalyticsRoute = AdminAnalyticsRouteImport.update({
+  id: '/analytics',
+  path: '/analytics',
+  getParentRoute: () => AdminRoute,
+} as any)
 const EventsEventIdIndexRoute = EventsEventIdIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -214,6 +220,7 @@ export interface FileRoutesByFullPath {
   '/promos': typeof PromosRoute
   '/reset-password': typeof ResetPasswordRoute
   '/spectate': typeof SpectateRouteWithChildren
+  '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/entry-ninja': typeof AdminEntryNinjaRoute
   '/admin/events': typeof AdminEventsRoute
   '/admin/feed': typeof AdminFeedRoute
@@ -246,6 +253,7 @@ export interface FileRoutesByTo {
   '/promos': typeof PromosRoute
   '/reset-password': typeof ResetPasswordRoute
   '/spectate': typeof SpectateRouteWithChildren
+  '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/entry-ninja': typeof AdminEntryNinjaRoute
   '/admin/events': typeof AdminEventsRoute
   '/admin/feed': typeof AdminFeedRoute
@@ -280,6 +288,7 @@ export interface FileRoutesById {
   '/promos': typeof PromosRoute
   '/reset-password': typeof ResetPasswordRoute
   '/spectate': typeof SpectateRouteWithChildren
+  '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/entry-ninja': typeof AdminEntryNinjaRoute
   '/admin/events': typeof AdminEventsRoute
   '/admin/feed': typeof AdminFeedRoute
@@ -316,6 +325,7 @@ export interface FileRouteTypes {
     | '/promos'
     | '/reset-password'
     | '/spectate'
+    | '/admin/analytics'
     | '/admin/entry-ninja'
     | '/admin/events'
     | '/admin/feed'
@@ -348,6 +358,7 @@ export interface FileRouteTypes {
     | '/promos'
     | '/reset-password'
     | '/spectate'
+    | '/admin/analytics'
     | '/admin/entry-ninja'
     | '/admin/events'
     | '/admin/feed'
@@ -381,6 +392,7 @@ export interface FileRouteTypes {
     | '/promos'
     | '/reset-password'
     | '/spectate'
+    | '/admin/analytics'
     | '/admin/entry-ninja'
     | '/admin/events'
     | '/admin/feed'
@@ -605,6 +617,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminEntryNinjaRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/analytics': {
+      id: '/admin/analytics'
+      path: '/analytics'
+      fullPath: '/admin/analytics'
+      preLoaderRoute: typeof AdminAnalyticsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/events/$eventId/': {
       id: '/events/$eventId/'
       path: '/'
@@ -651,6 +670,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AdminRouteChildren {
+  AdminAnalyticsRoute: typeof AdminAnalyticsRoute
   AdminEntryNinjaRoute: typeof AdminEntryNinjaRoute
   AdminEventsRoute: typeof AdminEventsRoute
   AdminFeedRoute: typeof AdminFeedRoute
@@ -667,6 +687,7 @@ interface AdminRouteChildren {
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
+  AdminAnalyticsRoute: AdminAnalyticsRoute,
   AdminEntryNinjaRoute: AdminEntryNinjaRoute,
   AdminEventsRoute: AdminEventsRoute,
   AdminFeedRoute: AdminFeedRoute,
