@@ -95,7 +95,7 @@ export async function syncEnEvent(
     try {
       let jacket: string | null = null;
       let tshirt: string | null = null;
-      const extras: { name: string; qty: number; size?: string }[] = [];
+      const extras: { name: string; qty: number; size?: string; price?: number }[] = [];
       const lines = [...toLineArray(entry.merchandise), ...toLineArray(entry.extra)];
       for (const line of lines) {
         const itemName = (line?.item?.name ?? "").trim();
@@ -105,8 +105,15 @@ export async function syncEnEvent(
         const lower = itemName.toLowerCase();
         if (size && lower.includes("jacket")) jacket = size;
         else if (size && (lower.includes("shirt") || lower.includes("tee"))) tshirt = size;
-        else extras.push({ name: option ? `${itemName}: ${option}` : itemName, qty: 1 });
+        const price = linePrice(line);
+        extras.push({
+          name: itemName,
+          qty: Number(line?.quantity ?? 1) || 1,
+          ...(option ? { size: option } : {}),
+          ...(price != null ? { price } : {}),
+        });
       }
+
 
       const idHash = idNumber.length >= 4 ? hashIdNumber(idNumber) : null;
 
