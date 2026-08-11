@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Download, Printer } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchMyEventById, type MyEventRow } from "@/lib/my-events";
+import { eventHasTshirt } from "@/lib/apparel";
 
 export const Route = createFileRoute("/my-events_/$eventId_/report")({
   loader: async ({ params }) => {
@@ -34,6 +35,7 @@ function ReportPage() {
   }, []);
 
   const row: MyEventRow | null = q.data ?? null;
+  const showTshirt = eventHasTshirt(event.name);
 
   function downloadCsv() {
     const esc = (v: unknown) => `"${String(v ?? "").replace(/"/g, '""')}"`;
@@ -41,19 +43,19 @@ function ReportPage() {
       ["Field", "Value"],
       ["Event", event.name],
       ["Discipline", event.discipline],
-      ["Date", new Date(event.event_date).toLocaleString("en-ZA")],
+      ["Date", new Date(event.event_date).toLocaleString("en-ZA", { timeZone: "Africa/Johannesburg" })],
       ["Location", event.location],
       ["Category", row?.category ?? ""],
       ["Batch", row?.batch ?? ""],
       ["Bib number", row?.bib_number ?? ""],
       ["Jacket size", row?.jacket_size ?? ""],
-      ["T-shirt size", row?.tshirt_size ?? ""],
+      ...(showTshirt ? [["T-shirt size", row?.tshirt_size ?? ""]] : []),
       ["Notes", row?.notes ?? ""],
       ...(row?.extras ?? []).map((x) => [
         "Extra",
         `${x.name}${x.size ? ` (${x.size})` : ""} x${x.qty}`,
       ]),
-      ["Generated", new Date().toLocaleString("en-ZA")],
+      ["Generated", new Date().toLocaleString("en-ZA", { timeZone: "Africa/Johannesburg" })],
     ];
     const csv = lines.map((r) => r.map(esc).join(",")).join("\r\n");
     const blob = new Blob([`\uFEFF${csv}`], { type: "text/csv;charset=utf-8" });
@@ -105,6 +107,7 @@ function ReportPage() {
             <h1 className="mt-1 font-display text-2xl font-bold text-ink">{event.name}</h1>
             <p className="mt-1 text-sm text-ink-soft">
               {event.discipline} · {new Date(event.event_date).toLocaleString("en-ZA", {
+                timeZone: "Africa/Johannesburg",
                 weekday: "long",
                 day: "numeric",
                 month: "short",
@@ -128,7 +131,7 @@ function ReportPage() {
               <Row label="Batch" value={row.batch} />
               <Row label="Bib number" value={row.bib_number ? `#${row.bib_number}` : null} />
               <Row label="Jacket size" value={row.jacket_size} />
-              <Row label="T-shirt size" value={row.tshirt_size} />
+              {showTshirt ? <Row label="T-shirt size" value={row.tshirt_size} /> : null}
               <Row label="Notes" value={row.notes} />
 
               <div className="mt-5">
@@ -162,7 +165,7 @@ function ReportPage() {
           )}
 
           <footer className="mt-8 border-t border-border pt-3 text-[10px] text-ink-soft">
-            Generated {new Date().toLocaleString("en-ZA")} · redcherryevents.co.za
+            Generated {new Date().toLocaleString("en-ZA", { timeZone: "Africa/Johannesburg" })} · redcherryevents.co.za
           </footer>
         </div>
       </div>
