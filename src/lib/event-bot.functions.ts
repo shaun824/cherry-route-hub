@@ -147,31 +147,20 @@ export const askEventBot = createServerFn({ method: "POST" })
     // Structured event data.
     const structured = formatEventStructured(event, info);
 
-    // Crawl website + FAQ (BFS, cached).
-    const seeds = [event.website_url, event.faq_url].filter(Boolean) as string[];
-    const pages = seeds.length ? await crawlSite(seeds, 8) : [];
-
-    // Budget the scraped text (~28k chars total).
-    const PER_PAGE_CAP = 6000;
-    const TOTAL_CAP = 28000;
-    let used = 0;
-    const scrapedParts: string[] = [];
-    for (const p of pages) {
-      if (used >= TOTAL_CAP) break;
-      const remaining = TOTAL_CAP - used;
-      const slice = p.text.slice(0, Math.min(PER_PAGE_CAP, remaining));
-      scrapedParts.push(`SOURCE: ${p.url}\n${slice}`);
-      used += slice.length;
-    }
+    // Website knowledge base (crawled and cached, auto-refreshed daily).
+    const { supabaseAdmin: adminForKb } = await import("@/integrations/supabase/client.server");
+    const { getEventKnowledge } = await import("@/lib/event-bot-crawl.server");
+    const scraped = await getEventKnowledge(adminForKb, event as any);
 
     const context_text = [
       "STRUCTURED EVENT DATA (authoritative):",
       structured,
-      scrapedParts.length ? "\n\nWEBSITE PAGES:" : "",
-      ...scrapedParts,
+      scraped ? "\n\nWEBSITE PAGES:" : "",
+      scraped,
     ]
       .filter(Boolean)
       .join("\n\n---\n\n");
+
 
     const apiKey = process.env.LOVABLE_API_KEY;
     if (!apiKey) throw new Error("Missing LOVABLE_API_KEY");
