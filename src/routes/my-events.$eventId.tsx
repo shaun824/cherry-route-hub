@@ -1179,7 +1179,6 @@ function SponsorsBlock({ eventName }: { eventName?: string }) {
   const sponsors = useAdminStore((s) => s.sponsors).filter((sp) => sp.active);
 
   if (curated) {
-    const row = [...curated.partners, ...curated.partners];
     return (
       <section aria-label="Sponsors" className="pt-2">
         <SectionTitle>Proudly supported by</SectionTitle>
