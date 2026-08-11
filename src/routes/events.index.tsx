@@ -69,7 +69,7 @@ function Events() {
           return (
           <li key={e.id}>
             <Link
-              to="/events/$eventId"
+              to="/my-events/$eventId"
               params={{ eventId: e.id }}
               className="block overflow-hidden rounded-2xl bg-card ring-1 ring-border active:scale-[0.99] transition-transform"
             >
