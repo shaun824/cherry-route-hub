@@ -1,11 +1,14 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { z } from "zod";
-import { Info } from "lucide-react";
+import { Info, HelpCircle } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
 import { lovable } from "@/integrations/lovable/index";
 import { supabase } from "@/integrations/supabase/client";
+import { lookupEntryEmail } from "@/lib/id-lookup.functions";
 import { useSession } from "@/lib/auth";
 import { BrandMark } from "@/components/ui-bits";
+
 
 const searchSchema = z.object({ next: z.string().optional() });
 
@@ -192,11 +195,102 @@ function AuthPage() {
           )}
         </div>
 
+        <FindMyEmail />
+
+
+
         <p className="mt-5 text-center text-[11px] text-ink-soft">
           By continuing you agree to Red Cherry Events'{" "}
           <Link to="/" className="underline">terms</Link>.
         </p>
       </div>
+    </div>
+  );
+}
+
+function FindMyEmail() {
+  const lookup = useServerFn(lookupEntryEmail);
+  const [open, setOpen] = useState(false);
+  const [idNumber, setIdNumber] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [cooldown, setCooldown] = useState(false);
+  const [result, setResult] = useState<{ found: boolean; emails: string[] } | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+
+  async function handleLookup(e: React.FormEvent) {
+    e.preventDefault();
+    if (busy || cooldown) return;
+    setBusy(true);
+    setErr(null);
+    setResult(null);
+    try {
+      const res = await lookup({ data: { id_number: idNumber.trim() } });
+      setResult({ found: res.found, emails: res.emails });
+    } catch {
+      setErr("Couldn't check that right now. Please try again.");
+    } finally {
+      setBusy(false);
+      setCooldown(true);
+      setTimeout(() => setCooldown(false), 3000);
+    }
+  }
+
+  return (
+    <div className="mt-4 border-t border-border pt-3">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="flex w-full items-center justify-center gap-1.5 text-[11px] font-semibold text-ink-soft underline"
+      >
+        <HelpCircle className="h-3.5 w-3.5" />
+        Not sure which email you used?
+      </button>
+
+      {open ? (
+        <form onSubmit={handleLookup} className="mt-3 space-y-2 rounded-xl bg-secondary/60 p-3 ring-1 ring-border">
+          <p className="text-[11px] leading-snug text-ink-soft">
+            Enter the ID number you entered with and we'll show a hidden version of the email on your entry.
+          </p>
+          <input
+            required
+            minLength={6}
+            inputMode="numeric"
+            value={idNumber}
+            onChange={(e) => setIdNumber(e.target.value)}
+            placeholder="ID number"
+            className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+          />
+          <button
+            type="submit"
+            disabled={busy || cooldown}
+            className="w-full rounded-lg border border-border bg-card py-2 text-xs font-bold text-ink disabled:opacity-60"
+          >
+            {busy ? "Checking…" : cooldown ? "Please wait…" : "Find my email"}
+          </button>
+
+          {err ? <p className="text-[11px] font-semibold text-cherry">{err}</p> : null}
+
+          {result ? (
+            result.found ? (
+              <div className="rounded-lg bg-accent px-3 py-2 text-[11px] text-cherry-deep">
+                <p className="font-bold">
+                  {result.emails.length > 1 ? "We found these entries:" : "We have an entry under:"}
+                </p>
+                <ul className="mt-1 space-y-0.5">
+                  {result.emails.map((e) => (
+                    <li key={e} className="font-mono text-[12px]">{e}</li>
+                  ))}
+                </ul>
+                <p className="mt-1">Sign in with that address above.</p>
+              </div>
+            ) : (
+              <p className="rounded-lg bg-card px-3 py-2 text-[11px] text-ink-soft ring-1 ring-border">
+                No entry found for that ID number. Double-check the number, or contact us and we'll help.
+              </p>
+            )
+          ) : null}
+        </form>
+      ) : null}
     </div>
   );
 }
