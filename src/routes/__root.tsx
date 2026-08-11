@@ -136,7 +136,16 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      {isAdmin ? <Outlet /> : <AppShell><Outlet /></AppShell>}
+      {isAdmin ? (
+        <>
+          <Outlet />
+          <FeedbackWidget />
+        </>
+      ) : (
+        <AppShell>
+          <Outlet />
+        </AppShell>
+      )}
     </QueryClientProvider>
   );
 }
