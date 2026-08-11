@@ -159,14 +159,15 @@ function MyEventDetail() {
         {tab === "packing" && <PackingPanel eventId={event.id} userId={user?.id ?? null} />}
         {tab === "chat" && <ChatPanel eventId={event.id} userId={user?.id ?? null} />}
         {tab === "ask" && <AskAdminPanel eventId={event.id} userId={user?.id ?? null} />}
-        {tab === "sponsors" && <EventSponsorsPanel eventId={event.id} />}
+        {tab === "sponsors" && <EventSponsorsPanel eventId={event.id} eventName={event.name} />}
 
       </div>
     </div>
   );
 }
 
-function EventSponsorsPanel({ eventId }: { eventId: string }) {
+function EventSponsorsPanel({ eventId, eventName }: { eventId: string; eventName?: string }) {
+  const curated = curatedSponsorsFor(eventName);
   const load = useServerFn(fetchEventSponsors);
   const q = useQuery({
     queryKey: ["event-sponsors", eventId],
@@ -542,7 +543,7 @@ function InfoPanel({
 
       <FollowSection links={(event.social_links as SocialLinks | null) ?? undefined} />
 
-      <SponsorsBlock />
+      <SponsorsBlock eventName={eventName} />
 
 
       {info?.rules_md ? (
