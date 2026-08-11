@@ -42,6 +42,7 @@ import { Route as MyEventsEventIdReportRouteImport } from './routes/my-events_.$
 import { Route as EventsEventIdMapRouteImport } from './routes/events.$eventId.map'
 import { Route as EventsEventIdEnterRouteImport } from './routes/events.$eventId.enter'
 import { Route as AdminEventInfoEventIdRouteImport } from './routes/admin.event-info.$eventId'
+import { Route as ApiPublicHooksEventBotRefreshRouteImport } from './routes/api/public/hooks/event-bot-refresh'
 import { Route as ApiPublicHooksEntryNinjaSyncRouteImport } from './routes/api/public/hooks/entry-ninja-sync'
 
 const SpectateRoute = SpectateRouteImport.update({
@@ -209,6 +210,12 @@ const AdminEventInfoEventIdRoute = AdminEventInfoEventIdRouteImport.update({
   path: '/event-info/$eventId',
   getParentRoute: () => AdminRoute,
 } as any)
+const ApiPublicHooksEventBotRefreshRoute =
+  ApiPublicHooksEventBotRefreshRouteImport.update({
+    id: '/api/public/hooks/event-bot-refresh',
+    path: '/api/public/hooks/event-bot-refresh',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksEntryNinjaSyncRoute =
   ApiPublicHooksEntryNinjaSyncRouteImport.update({
     id: '/api/public/hooks/entry-ninja-sync',
@@ -251,6 +258,7 @@ export interface FileRoutesByFullPath {
   '/admin/event-info/': typeof AdminEventInfoIndexRoute
   '/events/$eventId/': typeof EventsEventIdIndexRoute
   '/api/public/hooks/entry-ninja-sync': typeof ApiPublicHooksEntryNinjaSyncRoute
+  '/api/public/hooks/event-bot-refresh': typeof ApiPublicHooksEventBotRefreshRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -284,6 +292,7 @@ export interface FileRoutesByTo {
   '/admin/event-info': typeof AdminEventInfoIndexRoute
   '/events/$eventId': typeof EventsEventIdIndexRoute
   '/api/public/hooks/entry-ninja-sync': typeof ApiPublicHooksEntryNinjaSyncRoute
+  '/api/public/hooks/event-bot-refresh': typeof ApiPublicHooksEventBotRefreshRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -321,6 +330,7 @@ export interface FileRoutesById {
   '/admin/event-info/': typeof AdminEventInfoIndexRoute
   '/events/$eventId/': typeof EventsEventIdIndexRoute
   '/api/public/hooks/entry-ninja-sync': typeof ApiPublicHooksEntryNinjaSyncRoute
+  '/api/public/hooks/event-bot-refresh': typeof ApiPublicHooksEventBotRefreshRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -359,6 +369,7 @@ export interface FileRouteTypes {
     | '/admin/event-info/'
     | '/events/$eventId/'
     | '/api/public/hooks/entry-ninja-sync'
+    | '/api/public/hooks/event-bot-refresh'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -392,6 +403,7 @@ export interface FileRouteTypes {
     | '/admin/event-info'
     | '/events/$eventId'
     | '/api/public/hooks/entry-ninja-sync'
+    | '/api/public/hooks/event-bot-refresh'
   id:
     | '__root__'
     | '/'
@@ -428,6 +440,7 @@ export interface FileRouteTypes {
     | '/admin/event-info/'
     | '/events/$eventId/'
     | '/api/public/hooks/entry-ninja-sync'
+    | '/api/public/hooks/event-bot-refresh'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -445,6 +458,7 @@ export interface RootRouteChildren {
   EventsIndexRoute: typeof EventsIndexRoute
   MyEventsEventIdReportRoute: typeof MyEventsEventIdReportRoute
   ApiPublicHooksEntryNinjaSyncRoute: typeof ApiPublicHooksEntryNinjaSyncRoute
+  ApiPublicHooksEventBotRefreshRoute: typeof ApiPublicHooksEventBotRefreshRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -680,6 +694,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminEventInfoEventIdRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/api/public/hooks/event-bot-refresh': {
+      id: '/api/public/hooks/event-bot-refresh'
+      path: '/api/public/hooks/event-bot-refresh'
+      fullPath: '/api/public/hooks/event-bot-refresh'
+      preLoaderRoute: typeof ApiPublicHooksEventBotRefreshRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/entry-ninja-sync': {
       id: '/api/public/hooks/entry-ninja-sync'
       path: '/api/public/hooks/entry-ninja-sync'
@@ -783,6 +804,7 @@ const rootRouteChildren: RootRouteChildren = {
   EventsIndexRoute: EventsIndexRoute,
   MyEventsEventIdReportRoute: MyEventsEventIdReportRoute,
   ApiPublicHooksEntryNinjaSyncRoute: ApiPublicHooksEntryNinjaSyncRoute,
+  ApiPublicHooksEventBotRefreshRoute: ApiPublicHooksEventBotRefreshRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
