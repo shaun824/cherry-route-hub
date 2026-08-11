@@ -48,7 +48,12 @@ function MerchandisePage() {
   useEffect(() => {
     if (autoPulled.current || !catalog.data) return;
     autoPulled.current = true;
-    const stale = catalog.data.some((e) => e.entryNinjaId && e.items.length === 0);
+    const cutoff = Date.now() - 12 * 60 * 60 * 1000;
+    const stale = catalog.data.some(
+      (e) =>
+        e.entryNinjaId &&
+        (e.items.length === 0 || !e.syncedAt || new Date(e.syncedAt).getTime() < cutoff),
+    );
     if (stale) void runSync();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [catalog.data]);
