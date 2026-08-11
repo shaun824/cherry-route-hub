@@ -108,35 +108,32 @@ function MerchandisePage() {
               )}
             </div>
 
-            {ev.items.length === 0 ? (
+            {ev.items.length === 0 && (
               <p className="mt-3 text-sm text-ink-soft">
                 {ev.entryNinjaId
-                  ? "No merchandise options configured on this event."
+                  ? "No merchandise options configured on this event yet."
                   : "Link this event to Entry Ninja to pull its merchandise."}
               </p>
-            ) : (
-              <ul className="mt-3 grid gap-2 md:grid-cols-2">
-                {ev.items.map((item) => (
-                  <li key={item.id} className="rounded-xl border border-border/70 bg-background p-3">
-                    <p className="text-sm font-semibold text-ink">{item.name}</p>
-                    <div className="mt-2 flex flex-wrap gap-1.5">
-                      {item.options.length === 0 && (
-                        <span className="text-xs text-ink-soft">No options listed</span>
-                      )}
-                      {item.options.map((o, i) => (
-                        <span
-                          key={`${item.id}-${i}`}
-                          className="rounded-full bg-muted px-2.5 py-1 text-xs text-ink"
-                        >
-                          {o.name}
-                          {o.price ? ` · R${o.price}` : ""}
-                        </span>
-                      ))}
-                    </div>
-                  </li>
-                ))}
-              </ul>
             )}
+
+            <ul className="mt-3 grid gap-2 md:grid-cols-2">
+              {ev.items.map((item) => (
+                <MerchItemCard
+                  key={item.id}
+                  eventId={ev.eventId}
+                  item={item}
+                  onChanged={() => void catalog.refetch()}
+                  onError={setError}
+                />
+              ))}
+              <MerchItemCard
+                key={`new-${ev.eventId}`}
+                eventId={ev.eventId}
+                onChanged={() => void catalog.refetch()}
+                onError={setError}
+              />
+            </ul>
+
           </section>
         ))}
       </div>
