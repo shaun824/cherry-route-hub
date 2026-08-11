@@ -42,6 +42,7 @@ import { Route as AdminEventInfoIndexRouteImport } from './routes/admin.event-in
 import { Route as MyEventsEventIdReportRouteImport } from './routes/my-events_.$eventId_.report'
 import { Route as EventsEventIdMapRouteImport } from './routes/events.$eventId.map'
 import { Route as EventsEventIdEnterRouteImport } from './routes/events.$eventId.enter'
+import { Route as AdminVillageEventIdRouteImport } from './routes/admin.village.$eventId'
 import { Route as AdminEventInfoEventIdRouteImport } from './routes/admin.event-info.$eventId'
 import { Route as ApiPublicHooksEventBotRefreshRouteImport } from './routes/api/public/hooks/event-bot-refresh'
 import { Route as ApiPublicHooksEntryNinjaSyncRouteImport } from './routes/api/public/hooks/entry-ninja-sync'
@@ -211,6 +212,11 @@ const EventsEventIdEnterRoute = EventsEventIdEnterRouteImport.update({
   path: '/enter',
   getParentRoute: () => EventsEventIdRoute,
 } as any)
+const AdminVillageEventIdRoute = AdminVillageEventIdRouteImport.update({
+  id: '/village/$eventId',
+  path: '/village/$eventId',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminEventInfoEventIdRoute = AdminEventInfoEventIdRouteImport.update({
   id: '/event-info/$eventId',
   path: '/event-info/$eventId',
@@ -259,6 +265,7 @@ export interface FileRoutesByFullPath {
   '/events/': typeof EventsIndexRoute
   '/my-events/': typeof MyEventsIndexRoute
   '/admin/event-info/$eventId': typeof AdminEventInfoEventIdRoute
+  '/admin/village/$eventId': typeof AdminVillageEventIdRoute
   '/events/$eventId/enter': typeof EventsEventIdEnterRoute
   '/events/$eventId/map': typeof EventsEventIdMapRoute
   '/my-events/$eventId/report': typeof MyEventsEventIdReportRoute
@@ -294,6 +301,7 @@ export interface FileRoutesByTo {
   '/events': typeof EventsIndexRoute
   '/my-events': typeof MyEventsIndexRoute
   '/admin/event-info/$eventId': typeof AdminEventInfoEventIdRoute
+  '/admin/village/$eventId': typeof AdminVillageEventIdRoute
   '/events/$eventId/enter': typeof EventsEventIdEnterRoute
   '/events/$eventId/map': typeof EventsEventIdMapRoute
   '/my-events/$eventId/report': typeof MyEventsEventIdReportRoute
@@ -333,6 +341,7 @@ export interface FileRoutesById {
   '/events/': typeof EventsIndexRoute
   '/my-events/': typeof MyEventsIndexRoute
   '/admin/event-info/$eventId': typeof AdminEventInfoEventIdRoute
+  '/admin/village/$eventId': typeof AdminVillageEventIdRoute
   '/events/$eventId/enter': typeof EventsEventIdEnterRoute
   '/events/$eventId/map': typeof EventsEventIdMapRoute
   '/my-events_/$eventId_/report': typeof MyEventsEventIdReportRoute
@@ -373,6 +382,7 @@ export interface FileRouteTypes {
     | '/events/'
     | '/my-events/'
     | '/admin/event-info/$eventId'
+    | '/admin/village/$eventId'
     | '/events/$eventId/enter'
     | '/events/$eventId/map'
     | '/my-events/$eventId/report'
@@ -408,6 +418,7 @@ export interface FileRouteTypes {
     | '/events'
     | '/my-events'
     | '/admin/event-info/$eventId'
+    | '/admin/village/$eventId'
     | '/events/$eventId/enter'
     | '/events/$eventId/map'
     | '/my-events/$eventId/report'
@@ -446,6 +457,7 @@ export interface FileRouteTypes {
     | '/events/'
     | '/my-events/'
     | '/admin/event-info/$eventId'
+    | '/admin/village/$eventId'
     | '/events/$eventId/enter'
     | '/events/$eventId/map'
     | '/my-events_/$eventId_/report'
@@ -706,6 +718,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EventsEventIdEnterRouteImport
       parentRoute: typeof EventsEventIdRoute
     }
+    '/admin/village/$eventId': {
+      id: '/admin/village/$eventId'
+      path: '/village/$eventId'
+      fullPath: '/admin/village/$eventId'
+      preLoaderRoute: typeof AdminVillageEventIdRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/event-info/$eventId': {
       id: '/admin/event-info/$eventId'
       path: '/event-info/$eventId'
@@ -745,6 +764,7 @@ interface AdminRouteChildren {
   AdminSponsorsRoute: typeof AdminSponsorsRoute
   AdminIndexRoute: typeof AdminIndexRoute
   AdminEventInfoEventIdRoute: typeof AdminEventInfoEventIdRoute
+  AdminVillageEventIdRoute: typeof AdminVillageEventIdRoute
   AdminEventInfoIndexRoute: typeof AdminEventInfoIndexRoute
 }
 
@@ -763,6 +783,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminSponsorsRoute: AdminSponsorsRoute,
   AdminIndexRoute: AdminIndexRoute,
   AdminEventInfoEventIdRoute: AdminEventInfoEventIdRoute,
+  AdminVillageEventIdRoute: AdminVillageEventIdRoute,
   AdminEventInfoIndexRoute: AdminEventInfoIndexRoute,
 }
 
