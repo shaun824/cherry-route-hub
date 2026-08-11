@@ -5,7 +5,7 @@ import { ArrowLeft, Printer } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchMyEventById, type MyEventRow } from "@/lib/my-events";
 
-export const Route = createFileRoute("/my-events/$eventId/report")({
+export const Route = createFileRoute("/my-events_/$eventId_/report")({
   loader: async ({ params }) => {
     const { data, error } = await supabase
       .from("events")
