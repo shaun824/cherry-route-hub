@@ -143,8 +143,6 @@ function ReportPage() {
               {showTshirt ? <Row label="T-shirt size" value={row.tshirt_size} /> : null}
               <Row label="Notes" value={row.notes} />
 
-              <Row label="Notes" value={row.notes} />
-
               <div className="mt-5">
                 <p className="text-[10px] font-bold uppercase tracking-widest text-ink-soft">
                   Accommodation
@@ -163,6 +161,8 @@ function ReportPage() {
                 )}
               </div>
 
+              <div className="mt-5">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-ink-soft">
                   Extras purchased
                 </p>
                 {row.extras.length === 0 ? (
