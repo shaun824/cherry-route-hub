@@ -17,6 +17,7 @@ import enjoy from "@/assets/sponsors/enjoy.png.asset.json";
 import plettRealty from "@/assets/sponsors/plett-realty.jpg.asset.json";
 import doolhof from "@/assets/sponsors/doolhof.png.asset.json";
 import knysnaRealty from "@/assets/sponsors/knysna-realty.jpg.asset.json";
+import otto1890 from "@/assets/sponsors/otto1890.png.asset.json";
 
 export type CuratedSponsor = {
   name: string;
@@ -78,9 +79,19 @@ const PARTNERS: CuratedSponsor[] = [
 
 const RCE_SET: CuratedSponsors = { title: TITLE_SPONSOR, partners: PARTNERS };
 
+const WEEKEND_WARRIOR_SET: CuratedSponsors = {
+  title: {
+    name: "Otto 1890 Investment Specialists",
+    logoUrl: otto1890.url,
+    url: "https://otto1890.co.za/",
+  },
+  partners: [],
+};
+
 /** Curated sponsor sets keyed by a match on the event name. */
 export function curatedSponsorsFor(eventName: string | null | undefined): CuratedSponsors | null {
   const n = (eventName ?? "").toLowerCase();
+  if (n.includes("weekend warrior") || n.includes("weekend-warrior")) return WEEKEND_WARRIOR_SET;
   if (n.includes("addo")) return RCE_SET;
   if (n.includes("plett") || n.includes("pe-plett") || n.includes("pe plett")) return RCE_SET;
   return null;
