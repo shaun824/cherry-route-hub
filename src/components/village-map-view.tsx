@@ -1,5 +1,6 @@
 import { Suspense, lazy, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { ClientOnly } from "@tanstack/react-router";
 import { MapPin, Minus, Plus, X } from "lucide-react";
 import {
   categoryMeta,
@@ -137,15 +138,17 @@ export function VillageMapView({ eventId }: { eventId: string }) {
       ) : null}
 
       {geoReady && mode === "live" ? (
-        <Suspense fallback={<div className="h-[65vh] min-h-[340px] animate-pulse rounded-2xl bg-muted" />}>
-          <VillageMapGeo
-            imageUrl={map.image_url}
-            geo={map.geo!}
-            hotspots={spots}
-            selected={selected}
-            onSelect={setSelected}
-          />
-        </Suspense>
+        <ClientOnly fallback={<div className="h-[65vh] min-h-[340px] animate-pulse rounded-2xl bg-muted" />}>
+          <Suspense fallback={<div className="h-[65vh] min-h-[340px] animate-pulse rounded-2xl bg-muted" />}>
+            <VillageMapGeo
+              imageUrl={map.image_url}
+              geo={map.geo!}
+              hotspots={spots}
+              selected={selected}
+              onSelect={setSelected}
+            />
+          </Suspense>
+        </ClientOnly>
       ) : (
       <div className="relative overflow-hidden rounded-2xl ring-1 ring-border">
         <div ref={wrapRef} className="max-h-[70vh] overflow-auto bg-muted">
