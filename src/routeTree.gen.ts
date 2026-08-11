@@ -38,6 +38,7 @@ import { Route as AdminEventsRouteImport } from './routes/admin.events'
 import { Route as AdminEntryNinjaRouteImport } from './routes/admin.entry-ninja'
 import { Route as AdminAnalyticsRouteImport } from './routes/admin.analytics'
 import { Route as EventsEventIdIndexRouteImport } from './routes/events.$eventId.index'
+import { Route as AdminVillageIndexRouteImport } from './routes/admin.village.index'
 import { Route as AdminEventInfoIndexRouteImport } from './routes/admin.event-info.index'
 import { Route as MyEventsEventIdReportRouteImport } from './routes/my-events_.$eventId_.report'
 import { Route as EventsEventIdMapRouteImport } from './routes/events.$eventId.map'
@@ -192,6 +193,11 @@ const EventsEventIdIndexRoute = EventsEventIdIndexRouteImport.update({
   path: '/',
   getParentRoute: () => EventsEventIdRoute,
 } as any)
+const AdminVillageIndexRoute = AdminVillageIndexRouteImport.update({
+  id: '/village/',
+  path: '/village/',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminEventInfoIndexRoute = AdminEventInfoIndexRouteImport.update({
   id: '/event-info/',
   path: '/event-info/',
@@ -270,6 +276,7 @@ export interface FileRoutesByFullPath {
   '/events/$eventId/map': typeof EventsEventIdMapRoute
   '/my-events/$eventId/report': typeof MyEventsEventIdReportRoute
   '/admin/event-info/': typeof AdminEventInfoIndexRoute
+  '/admin/village/': typeof AdminVillageIndexRoute
   '/events/$eventId/': typeof EventsEventIdIndexRoute
   '/api/public/hooks/entry-ninja-sync': typeof ApiPublicHooksEntryNinjaSyncRoute
   '/api/public/hooks/event-bot-refresh': typeof ApiPublicHooksEventBotRefreshRoute
@@ -306,6 +313,7 @@ export interface FileRoutesByTo {
   '/events/$eventId/map': typeof EventsEventIdMapRoute
   '/my-events/$eventId/report': typeof MyEventsEventIdReportRoute
   '/admin/event-info': typeof AdminEventInfoIndexRoute
+  '/admin/village': typeof AdminVillageIndexRoute
   '/events/$eventId': typeof EventsEventIdIndexRoute
   '/api/public/hooks/entry-ninja-sync': typeof ApiPublicHooksEntryNinjaSyncRoute
   '/api/public/hooks/event-bot-refresh': typeof ApiPublicHooksEventBotRefreshRoute
@@ -346,6 +354,7 @@ export interface FileRoutesById {
   '/events/$eventId/map': typeof EventsEventIdMapRoute
   '/my-events_/$eventId_/report': typeof MyEventsEventIdReportRoute
   '/admin/event-info/': typeof AdminEventInfoIndexRoute
+  '/admin/village/': typeof AdminVillageIndexRoute
   '/events/$eventId/': typeof EventsEventIdIndexRoute
   '/api/public/hooks/entry-ninja-sync': typeof ApiPublicHooksEntryNinjaSyncRoute
   '/api/public/hooks/event-bot-refresh': typeof ApiPublicHooksEventBotRefreshRoute
@@ -387,6 +396,7 @@ export interface FileRouteTypes {
     | '/events/$eventId/map'
     | '/my-events/$eventId/report'
     | '/admin/event-info/'
+    | '/admin/village/'
     | '/events/$eventId/'
     | '/api/public/hooks/entry-ninja-sync'
     | '/api/public/hooks/event-bot-refresh'
@@ -423,6 +433,7 @@ export interface FileRouteTypes {
     | '/events/$eventId/map'
     | '/my-events/$eventId/report'
     | '/admin/event-info'
+    | '/admin/village'
     | '/events/$eventId'
     | '/api/public/hooks/entry-ninja-sync'
     | '/api/public/hooks/event-bot-refresh'
@@ -462,6 +473,7 @@ export interface FileRouteTypes {
     | '/events/$eventId/map'
     | '/my-events_/$eventId_/report'
     | '/admin/event-info/'
+    | '/admin/village/'
     | '/events/$eventId/'
     | '/api/public/hooks/entry-ninja-sync'
     | '/api/public/hooks/event-bot-refresh'
@@ -690,6 +702,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EventsEventIdIndexRouteImport
       parentRoute: typeof EventsEventIdRoute
     }
+    '/admin/village/': {
+      id: '/admin/village/'
+      path: '/village'
+      fullPath: '/admin/village/'
+      preLoaderRoute: typeof AdminVillageIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/event-info/': {
       id: '/admin/event-info/'
       path: '/event-info'
@@ -766,6 +785,7 @@ interface AdminRouteChildren {
   AdminEventInfoEventIdRoute: typeof AdminEventInfoEventIdRoute
   AdminVillageEventIdRoute: typeof AdminVillageEventIdRoute
   AdminEventInfoIndexRoute: typeof AdminEventInfoIndexRoute
+  AdminVillageIndexRoute: typeof AdminVillageIndexRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
@@ -785,6 +805,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminEventInfoEventIdRoute: AdminEventInfoEventIdRoute,
   AdminVillageEventIdRoute: AdminVillageEventIdRoute,
   AdminEventInfoIndexRoute: AdminEventInfoIndexRoute,
+  AdminVillageIndexRoute: AdminVillageIndexRoute,
 }
 
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)

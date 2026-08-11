@@ -20,6 +20,7 @@ const nav: { to: string; label: string; icon: typeof LayoutDashboard; exact?: bo
   { to: "/admin/analytics", label: "Analytics", icon: BarChart3 },
   { to: "/admin/events", label: "Events", icon: CalendarDays },
   { to: "/admin/event-info", label: "Rider info", icon: Newspaper },
+  { to: "/admin/village", label: "Village maps", icon: Tent },
   { to: "/admin/roster", label: "Roster", icon: UserPlus },
   { to: "/admin/entry-ninja", label: "Entry Ninja", icon: Plug },
   { to: "/admin/merchandise", label: "Merchandise", icon: Package },
