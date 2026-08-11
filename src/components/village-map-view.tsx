@@ -1,5 +1,6 @@
 import { Suspense, lazy, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { ClientOnly } from "@tanstack/react-router";
 import { MapPin, Minus, Plus, X } from "lucide-react";
 import {
   categoryMeta,
