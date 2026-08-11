@@ -21,6 +21,7 @@ import { formatDate, formatTime } from "@/lib/mock-data";
 import { getSpectatorRoster, type SpectatorEntrant } from "@/lib/spectator.functions";
 import { LockedSection } from "@/components/locked-section";
 import { useSession } from "@/lib/auth";
+import { brandHeader } from "@/lib/event-brand";
 
 export const Route = createFileRoute("/spectate/$eventId")({
   head: ({ params }) => ({
@@ -136,8 +137,8 @@ function SpectatorEventPage() {
     <div>
       {/* Hero */}
       <div
-        className={`relative overflow-hidden bg-gradient-to-br ${event.heroColor} px-5 pb-6 text-white`}
-        style={{ paddingTop: "calc(env(safe-area-inset-top) + 3.5rem)" }}
+        className={`relative overflow-hidden ${brandHeader(event.heroColor).className} px-5 pb-6 text-white`}
+        style={{ ...brandHeader(event.heroColor).style, paddingTop: "calc(env(safe-area-inset-top) + 3.5rem)" }}
       >
         {event.coverUrl ? (
           <>

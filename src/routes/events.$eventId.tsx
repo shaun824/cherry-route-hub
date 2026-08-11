@@ -3,6 +3,7 @@ import { events, formatDate, formatTime } from "@/lib/mock-data";
 import { useAdminStore } from "@/lib/store";
 import { useHydratedStore } from "@/lib/use-hydrated-store";
 import { ArrowLeft, Clock, MapPin, Route as RouteIcon } from "lucide-react";
+import { brandHeader } from "@/lib/event-brand";
 
 export const Route = createFileRoute("/events/$eventId")({
   loader: ({ params }) => {
@@ -47,8 +48,8 @@ function EventLayout() {
     <div>
       {/* Hero */}
       <div
-        className={`relative overflow-hidden bg-gradient-to-br ${event.heroColor} px-5 pb-6 text-white`}
-        style={{ paddingTop: "calc(env(safe-area-inset-top) + 3.5rem)" }}
+        className={`relative overflow-hidden ${brandHeader(event.heroColor).className} px-5 pb-6 text-white`}
+        style={{ ...brandHeader(event.heroColor).style, paddingTop: "calc(env(safe-area-inset-top) + 3.5rem)" }}
       >
         {event.coverUrl ? (
           <>

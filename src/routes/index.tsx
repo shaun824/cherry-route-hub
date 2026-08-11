@@ -38,6 +38,7 @@ import { useSession } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchMyEvents, type MyEventRow } from "@/lib/my-events";
 import type { QuickLinkIcon } from "@/lib/settings";
+import { brandHeader } from "@/lib/event-brand";
 
 
 
@@ -365,7 +366,8 @@ function EventSpotlight({
       className="block overflow-hidden rounded-2xl bg-card shadow-sm ring-1 ring-border active:scale-[0.99] transition-transform"
     >
       <div
-        className={`bg-gradient-to-br ${heroColor ?? "from-cherry to-cherry-deep"} px-4 py-3 text-white`}
+        {...brandHeader(heroColor)}
+        className={`${brandHeader(heroColor).className} px-4 py-3 text-white`}
       >
         <p className="text-[11px] font-bold uppercase tracking-widest opacity-85">
           {entered ? "You're entered · Your event" : "Coming up · Don't miss out"}
@@ -697,7 +699,8 @@ function NextEventCard() {
                 key={r.event_entrant_id}
                 to="/my-events/$eventId"
                 params={{ eventId: r.event_id }}
-                className={`snap-start shrink-0 w-56 rounded-2xl bg-gradient-to-br ${r.event.hero_color ?? "from-cherry to-cherry-deep"} p-3 text-white shadow-sm`}
+                style={brandHeader(r.event.hero_color).style}
+                className={`snap-start shrink-0 w-56 rounded-2xl ${brandHeader(r.event.hero_color).className} p-3 text-white shadow-sm`}
               >
                 <p className="text-[10px] font-semibold uppercase tracking-widest opacity-85">
                   {r.event.discipline}
@@ -766,7 +769,8 @@ function NextEventHero({ row }: { row: MyEventRow }) {
     <Link
       to="/my-events/$eventId"
       params={{ eventId: row.event_id }}
-      className={`block overflow-hidden rounded-3xl bg-gradient-to-br ${row.event.hero_color ?? "from-cherry to-cherry-deep"} p-5 text-white shadow-md ring-1 ring-black/5 active:scale-[0.99] transition`}
+      style={brandHeader(row.event.hero_color).style}
+      className={`block overflow-hidden rounded-3xl ${brandHeader(row.event.hero_color).className} p-5 text-white shadow-md ring-1 ring-black/5 active:scale-[0.99] transition`}
     >
       <div className="flex items-center justify-between">
         <p className="text-[11px] font-semibold uppercase tracking-widest opacity-85">

@@ -5,6 +5,7 @@ import { useAdminStore } from "@/lib/store";
 import { useHydratedStore } from "@/lib/use-hydrated-store";
 import { MapPin, ChevronRight, Bike, Motorbike } from "lucide-react";
 import { getEventSport, getEventSportLabel } from "@/lib/event-sport";
+import { brandHeader } from "@/lib/event-brand";
 
 type SportFilter = "all" | "moto" | "mtb";
 
@@ -73,7 +74,7 @@ function Events() {
               params={{ eventId: e.id }}
               className="block overflow-hidden rounded-2xl bg-card ring-1 ring-border active:scale-[0.99] transition-transform"
             >
-              <div className={`relative overflow-hidden bg-gradient-to-br ${e.heroColor} px-4 py-4 text-white`}>
+              <div style={brandHeader(e.heroColor).style} className={`relative overflow-hidden ${brandHeader(e.heroColor).className} px-4 py-4 text-white`}>
                 {e.coverUrl ? (
                   <>
                     <img src={e.coverUrl} alt="" className="absolute inset-0 h-full w-full object-cover opacity-40" />

@@ -52,6 +52,7 @@ import { TypeBadge } from "@/components/ui-bits";
 
 import { TrackerPanel } from "@/components/tracker-panel";
 import { LockedSection } from "@/components/locked-section";
+import { brandHeader } from "@/lib/event-brand";
 
 export const Route = createFileRoute("/my-events/$eventId")({
   loader: async ({ params }) => {
@@ -108,7 +109,8 @@ function MyEventDetail() {
   return (
     <div>
       <div
-        className={`relative overflow-hidden bg-gradient-to-br ${event.hero_color ?? "from-cherry to-cherry-deep"} px-5 pb-5 pt-14 text-white`}
+        style={brandHeader(event.hero_color).style}
+        className={`relative overflow-hidden ${brandHeader(event.hero_color).className} px-5 pb-5 pt-14 text-white`}
       >
         <Link
           to={user ? "/my-events" : "/events"}

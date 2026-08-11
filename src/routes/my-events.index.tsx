@@ -8,6 +8,7 @@ import { fetchMyEvents } from "@/lib/my-events";
 import { linkMyEntry, getMyEntrant } from "@/lib/roster.functions";
 import { useServerFn } from "@tanstack/react-start";
 import { UpcomingBySport } from "@/components/upcoming-by-sport";
+import { brandHeader } from "@/lib/event-brand";
 
 export const Route = createFileRoute("/my-events/")({
   component: MyEventsIndex,
@@ -96,7 +97,8 @@ function SignedInState() {
                 className="block overflow-hidden rounded-2xl bg-card ring-1 ring-border active:scale-[0.99] transition-transform"
               >
                 <div
-                  className={`bg-gradient-to-br ${r.event.hero_color ?? "from-cherry to-cherry-deep"} px-4 py-4 text-white`}
+                  style={brandHeader(r.event.hero_color).style}
+                  className={`${brandHeader(r.event.hero_color).className} px-4 py-4 text-white`}
                 >
                   <p className="text-[11px] font-semibold uppercase tracking-widest opacity-85">
                     {r.event.discipline}
