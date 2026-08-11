@@ -60,9 +60,10 @@ function ReportPage() {
       ["Tent / room number", rooming?.tent_number ?? ""],
       ["Room type", rooming?.room_type ?? ""],
       ["Notes", row?.notes ?? ""],
+      ["Entry Ninja reference", row?.registration_ref ?? ""],
       ...(row?.extras ?? []).map((x) => [
         "Extra",
-        `${x.name}${x.size ? ` (${x.size})` : ""} x${x.qty}`,
+        `${x.name}${x.size ? ` (${x.size})` : ""} x${x.qty}${x.price != null ? ` @ R${x.price}` : ""}`,
       ]),
       ["Generated", new Date().toLocaleString("en-ZA", { timeZone: "Africa/Johannesburg" })],
     ];
