@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Download, Printer } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchMyEventById, type MyEventRow } from "@/lib/my-events";
+import { flattenExtras } from "@/lib/extras-display";
 import { eventHasTshirt } from "@/lib/apparel";
 import { fetchMyRooming } from "@/lib/rooming";
 
