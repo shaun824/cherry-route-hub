@@ -90,3 +90,14 @@ export function normaliseSize(option: string | null | undefined): string | null 
   const lower = s.toLowerCase();
   return (map[lower] ?? s).toUpperCase();
 }
+
+// Entry Ninja returns merchandise/extra as an array on some events and as a
+// keyed object (or null) on others — normalise both to a flat array.
+export type EnLine = { item?: { name?: string } | null; option?: { name?: string } | null; quantity?: number };
+
+export function toLineArray(value: unknown): EnLine[] {
+  if (!value) return [];
+  if (Array.isArray(value)) return value as EnLine[];
+  if (typeof value === "object") return Object.values(value as Record<string, EnLine>).filter(Boolean);
+  return [];
+}

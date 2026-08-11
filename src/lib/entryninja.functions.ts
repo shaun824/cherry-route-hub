@@ -50,7 +50,7 @@ export const syncEntryNinjaEvent = createServerFn({ method: "POST" })
     const { data: isAdmin } = await context.supabase.rpc("is_admin");
     if (!isAdmin) throw new Error("Forbidden");
 
-    const { fetchEnEvents, fetchEnEntries, normaliseSize } = await import("./entryninja.server");
+    const { fetchEnEvents, fetchEnEntries, normaliseSize, toLineArray } = await import("./entryninja.server");
     const { hashIdNumber, idNumberLast4 } = await import("./id-hash.server");
     const supabase = context.supabase;
 
@@ -120,7 +120,7 @@ export const syncEntryNinjaEvent = createServerFn({ method: "POST" })
         let jacket: string | null = null;
         let tshirt: string | null = null;
         const extras: { name: string; qty: number; size?: string }[] = [];
-        const lines = [...(entry.merchandise ?? []), ...(entry.extra ?? [])];
+        const lines = [...toLineArray(entry.merchandise), ...toLineArray(entry.extra)];
         for (const line of lines) {
           const itemName = (line?.item?.name ?? "").trim();
           if (!itemName) continue;
