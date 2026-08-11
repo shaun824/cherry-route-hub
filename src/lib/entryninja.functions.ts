@@ -50,7 +50,7 @@ export const syncEntryNinjaEvent = createServerFn({ method: "POST" })
     const { data: isAdmin } = await context.supabase.rpc("is_admin");
     if (!isAdmin) throw new Error("Forbidden");
 
-    const { fetchEnEvents, fetchEnEntries, normaliseSize } = await import("./entryninja.server");
+    const { fetchEnEvents, fetchEnEntries, normaliseSize, toLineArray } = await import("./entryninja.server");
     const { hashIdNumber, idNumberLast4 } = await import("./id-hash.server");
     const supabase = context.supabase;
 
