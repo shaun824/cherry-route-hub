@@ -11,6 +11,7 @@ import {
   saveVillageMap,
   type VillageCategory,
   type VillageHotspot,
+  type VillageGeo,
   type VillageMap,
 } from "@/lib/village-map";
 
@@ -61,6 +62,11 @@ function VillageEditor() {
   function patch(next: Partial<VillageMap>) {
     setMap((prev) => ({ ...prev, ...next }));
     setSaved(false);
+  }
+
+  function patchGeo(next: Partial<VillageGeo>) {
+    const base: VillageGeo = map.geo ?? { lat: 0, lng: 0, widthM: 500, rotation: 0 };
+    patch({ geo: { ...base, ...next } });
   }
 
   function updateSpot(id: string, next: Partial<VillageHotspot>) {
@@ -191,6 +197,62 @@ function VillageEditor() {
             {placing ? "Click the map to place…" : "Add point"}
           </button>
         </div>
+      </div>
+
+      <div className="rounded-2xl bg-card p-4 ring-1 ring-border">
+        <p className="text-[11px] font-bold uppercase tracking-widest text-ink-soft">
+          Real-world placement (so riders see their live GPS on the map)
+        </p>
+        <div className="mt-2 grid gap-2 sm:grid-cols-4">
+          <label className="text-xs font-semibold text-ink-soft">
+            Centre latitude
+            <input
+              type="number"
+              step="0.00001"
+              value={map.geo?.lat ?? ""}
+              onChange={(e) => patchGeo({ lat: Number(e.target.value) })}
+              className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+              placeholder="-34.06400"
+            />
+          </label>
+          <label className="text-xs font-semibold text-ink-soft">
+            Centre longitude
+            <input
+              type="number"
+              step="0.00001"
+              value={map.geo?.lng ?? ""}
+              onChange={(e) => patchGeo({ lng: Number(e.target.value) })}
+              className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+              placeholder="18.89250"
+            />
+          </label>
+          <label className="text-xs font-semibold text-ink-soft">
+            Width on the ground (m)
+            <input
+              type="number"
+              step="10"
+              value={map.geo?.widthM ?? ""}
+              onChange={(e) => patchGeo({ widthM: Number(e.target.value) })}
+              className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+              placeholder="520"
+            />
+          </label>
+          <label className="text-xs font-semibold text-ink-soft">
+            Rotation (°)
+            <input
+              type="number"
+              step="1"
+              value={map.geo?.rotation ?? 0}
+              onChange={(e) => patchGeo({ rotation: Number(e.target.value) })}
+              className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+              placeholder="0"
+            />
+          </label>
+        </div>
+        <p className="mt-2 text-[11px] text-ink-soft">
+          Paste the venue centre from Google Maps, then nudge the width and rotation until the plan lines up with
+          the satellite image on the rider view. Leave blank to keep the plain plan view only.
+        </p>
       </div>
 
       {map.image_url ? (

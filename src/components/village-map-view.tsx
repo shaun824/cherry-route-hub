@@ -1,11 +1,14 @@
-import { useMemo, useRef, useState } from "react";
+import { Suspense, lazy, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { MapPin, Minus, Plus, X } from "lucide-react";
 import {
   categoryMeta,
   fetchVillageMap,
+  isPlacedGeo,
   type VillageHotspot,
 } from "@/lib/village-map";
+
+const VillageMapGeo = lazy(() => import("./village-map-geo"));
 
 function Pin({
   spot,
@@ -59,6 +62,7 @@ export function VillageMapView({ eventId }: { eventId: string }) {
   const [selected, setSelected] = useState<string | null>(null);
   const [filter, setFilter] = useState<string | null>(null);
   const [scale, setScale] = useState(1);
+  const [mode, setMode] = useState<"live" | "plan">("live");
   const wrapRef = useRef<HTMLDivElement>(null);
 
   const map = q.data;
@@ -70,6 +74,7 @@ export function VillageMapView({ eventId }: { eventId: string }) {
     const seen = new Set((map?.hotspots ?? []).map((s) => s.category));
     return Array.from(seen);
   }, [map]);
+  const geoReady = isPlacedGeo(map?.geo);
   const detail = (map?.hotspots ?? []).find((s) => s.id === (selected ?? hovered)) ?? null;
 
   if (q.isLoading) {
@@ -87,6 +92,22 @@ export function VillageMapView({ eventId }: { eventId: string }) {
   return (
     <div className="space-y-3">
       {map.intro ? <p className="text-sm leading-relaxed text-ink-soft">{map.intro}</p> : null}
+
+      {geoReady ? (
+        <div className="flex gap-1.5">
+          {(["live", "plan"] as const).map((m) => (
+            <button
+              key={m}
+              onClick={() => setMode(m)}
+              className={`rounded-full px-3 py-1 text-[11px] font-bold ${
+                mode === m ? "bg-cherry text-white" : "bg-muted text-ink-soft"
+              }`}
+            >
+              {m === "live" ? "Live map" : "Plan view"}
+            </button>
+          ))}
+        </div>
+      ) : null}
 
       {categories.length > 1 ? (
         <div className="flex flex-wrap gap-1.5">
@@ -115,6 +136,17 @@ export function VillageMapView({ eventId }: { eventId: string }) {
         </div>
       ) : null}
 
+      {geoReady && mode === "live" ? (
+        <Suspense fallback={<div className="h-[65vh] min-h-[340px] animate-pulse rounded-2xl bg-muted" />}>
+          <VillageMapGeo
+            imageUrl={map.image_url}
+            geo={map.geo!}
+            hotspots={spots}
+            selected={selected}
+            onSelect={setSelected}
+          />
+        </Suspense>
+      ) : (
       <div className="relative overflow-hidden rounded-2xl ring-1 ring-border">
         <div ref={wrapRef} className="max-h-[70vh] overflow-auto bg-muted">
           <div
@@ -157,6 +189,7 @@ export function VillageMapView({ eventId }: { eventId: string }) {
           </button>
         </div>
       </div>
+      )}
 
       {detail ? (
         <div className="rounded-2xl bg-card p-4 ring-1 ring-border">
