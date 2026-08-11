@@ -529,7 +529,7 @@ function InfoPanel({
       </section>
 
 
-      <FollowSection links={event.social_links ?? undefined} />
+      <FollowSection links={(event.social_links as SocialLinks | null) ?? undefined} />
 
       <SponsorsBlock />
 
