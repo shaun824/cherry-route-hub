@@ -660,8 +660,8 @@ function TitleSponsorBadge({
 }) {
   if (!logoUrl && !name?.trim()) return null;
   const inner = (
-    <div className="flex flex-col items-end gap-1 rounded-xl bg-white/15 px-3 py-2 backdrop-blur">
-      <span className="text-[9px] font-bold uppercase tracking-[0.18em] opacity-80">
+    <div className="flex flex-col items-end gap-1 rounded-xl bg-white px-3 py-2 shadow-sm ring-1 ring-black/10">
+      <span className="text-[9px] font-bold uppercase tracking-[0.18em] text-ink-soft">
         Title sponsor
       </span>
       {logoUrl ? (
@@ -672,7 +672,7 @@ function TitleSponsorBadge({
           loading="lazy"
         />
       ) : (
-        <span className="text-xs font-bold">{name}</span>
+        <span className="text-xs font-bold text-ink">{name}</span>
       )}
     </div>
   );
@@ -707,8 +707,8 @@ function NextEventHero({ row }: { row: MyEventRow }) {
       <p className="mt-1 font-display text-2xl font-bold leading-tight">{row.event.name}</p>
 
       {row.event.title_sponsor_logo_url || row.event.title_sponsor_name ? (
-        <div className="mt-3 flex items-center gap-2.5 rounded-xl bg-white/12 px-3 py-2 backdrop-blur">
-          <span className="text-[9px] font-bold uppercase tracking-widest opacity-75">
+        <div className="mt-3 flex items-center gap-2.5 rounded-xl bg-white px-3 py-2 shadow-sm ring-1 ring-black/10">
+          <span className="text-[9px] font-bold uppercase tracking-widest text-ink-soft">
             Title sponsor
           </span>
           {row.event.title_sponsor_logo_url ? (
@@ -719,7 +719,7 @@ function NextEventHero({ row }: { row: MyEventRow }) {
               loading="lazy"
             />
           ) : (
-            <span className="truncate text-xs font-bold">{row.event.title_sponsor_name}</span>
+            <span className="truncate text-xs font-bold text-ink">{row.event.title_sponsor_name}</span>
           )}
         </div>
       ) : null}
