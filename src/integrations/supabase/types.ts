@@ -314,6 +314,7 @@ export type Database = {
           id: string
           jacket_size: string | null
           notes: string | null
+          registration_ref: string | null
           started_at: string | null
           tshirt_size: string | null
           updated_at: string
@@ -331,6 +332,7 @@ export type Database = {
           id?: string
           jacket_size?: string | null
           notes?: string | null
+          registration_ref?: string | null
           started_at?: string | null
           tshirt_size?: string | null
           updated_at?: string
@@ -348,6 +350,7 @@ export type Database = {
           id?: string
           jacket_size?: string | null
           notes?: string | null
+          registration_ref?: string | null
           started_at?: string | null
           tshirt_size?: string | null
           updated_at?: string
