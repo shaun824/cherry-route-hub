@@ -25,8 +25,9 @@ export const syncMerchCatalog = createServerFn({ method: "POST" })
     if (!isAdmin) throw new Error("Forbidden");
 
     const { fetchEnEventDetail } = await import("./entryninja.server");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-    let q = context.supabase
+    let q = supabaseAdmin
       .from("events")
       .select("id, name, entry_ninja_id")
       .not("entry_ninja_id", "is", null);
@@ -56,13 +57,19 @@ export const syncMerchCatalog = createServerFn({ method: "POST" })
           synced_at: new Date().toISOString(),
         }));
 
-        // Replace the stored catalogue for this event with the live one.
-        await context.supabase.from("event_merch_options").delete().eq("event_id", ev.id);
+        // Replace the synced catalogue for this event with the live one, but
+        // keep any manually added items (they have no Entry Ninja item id).
+        await supabaseAdmin
+          .from("event_merch_options")
+          .delete()
+          .eq("event_id", ev.id)
+          .not("en_item_id", "is", null);
         if (rows.length) {
-          const { error: insErr } = await context.supabase.from("event_merch_options").insert(rows);
+          const { error: insErr } = await supabaseAdmin.from("event_merch_options").insert(rows);
           if (insErr) throw insErr;
         }
         itemCount += rows.length;
+
 
       } catch (err) {
         errors.push(`${ev.name}: ${(err as Error).message}`);
