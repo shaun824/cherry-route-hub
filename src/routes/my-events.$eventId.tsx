@@ -179,7 +179,7 @@ function EventSponsorsPanel({ eventId, eventName }: { eventId: string; eventName
   });
 
   if (curated) {
-    const all = [curated.title, ...curated.partners];
+    const all = [curated.title, ...curated.partners, ...(curated.supporters ?? [])];
     return (
       <div>
         <p className="mb-3 text-xs text-ink-soft">
@@ -1233,6 +1233,39 @@ function SponsorsBlock({ eventName }: { eventName?: string }) {
             </ul>
           </div>
         </div>
+
+        {curated.supporters && curated.supporters.length > 0 ? (
+          <div className="mt-3">
+            <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.2em] text-ink-soft">
+              Supported by
+            </p>
+            <div className="relative overflow-hidden [mask-image:linear-gradient(to_right,transparent,#000_8%,#000_92%,transparent)]">
+              <ul
+                className="flex w-max items-center gap-3 animate-marquee-reverse will-change-transform hover:[animation-play-state:paused]"
+                style={{ animationDuration: `${Math.max(24, curated.supporters.length * 5)}s` }}
+              >
+                {[...curated.supporters, ...curated.supporters].map((sp, i) => (
+                  <li key={`${sp.name}-${i}`}>
+                    <a
+                      href={sp.url}
+                      target="_blank"
+                      rel="noopener noreferrer sponsored"
+                      title={sp.name}
+                      className="grid h-14 min-w-[130px] place-items-center rounded-xl bg-white px-4 shadow-sm ring-1 ring-black/10"
+                    >
+                      <img
+                        src={sp.logoUrl}
+                        alt={sp.name}
+                        className="max-h-9 max-w-[110px] object-contain"
+                        loading="lazy"
+                      />
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        ) : null}
       </section>
     );
   }
