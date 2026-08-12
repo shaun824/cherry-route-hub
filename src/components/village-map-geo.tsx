@@ -274,27 +274,14 @@ export default function VillageMapGeo({
           <FitBounds bounds={bounds} />
           <Recenter position={me} token={recenterToken} />
 
-          {hotspots.map((s) => {
-            const meta = categoryMeta(s.category);
-            return (
-              <Marker
-                key={s.id}
-                position={hotspotLatLng(geo, s, heightM)}
-                icon={pinIcon(spotColor(s), s.title, selected === s.id, spotIcon(s))}
-                eventHandlers={{ click: () => onSelect(selected === s.id ? null : s.id) }}
-              >
-                <Popup>
-                  <strong>{s.title}</strong>
-                  <br />
-                  <span style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: 1 }}>
-                    {meta.label}
-                    {s.hours ? ` · ${s.hours}` : ""}
-                  </span>
-                  {s.description ? <p style={{ marginTop: 6 }}>{s.description}</p> : null}
-                </Popup>
-              </Marker>
-            );
-          })}
+          <ClusteredHotspots
+            hotspots={hotspots}
+            geo={geo}
+            heightM={heightM}
+            selected={selected}
+            onSelect={onSelect}
+          />
+
 
           {me ? (
             <>
