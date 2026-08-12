@@ -142,7 +142,7 @@ export function RouteProfile({ route, color }: { route: EventRoute; color?: stri
   }
 
   const stroke = color || route.color || "#b91c1c";
-  const gain = totalGain(series);
+  const climbM = gain ?? totalGain(series);
   const hoverPoint = hover !== null ? series[hover] : null;
 
   const onMove = (clientX: number) => {
