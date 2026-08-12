@@ -171,7 +171,7 @@ export function RouteProfile({ route, color }: { route: EventRoute; color?: stri
         <div className="flex gap-3 text-[11px] font-semibold text-ink">
           <span className="inline-flex items-center gap-1">
             <TrendingUp className="h-3.5 w-3.5 text-cherry" />
-            {gain.toLocaleString("en-ZA")} m climbing
+            {climbM.toLocaleString("en-ZA")} m climbing
           </span>
           <span className="inline-flex items-center gap-1">
             <Mountain className="h-3.5 w-3.5 text-cherry" />
