@@ -258,58 +258,9 @@ export const events: Event[] = [
   },
 ];
 
-export const feed: FeedPost[] = [
-  {
-    id: "post_1",
-    externalId: null,
-    type: "weather",
-    title: "Weather warning — Cherry Classic 100",
-    body: "Strong SE wind expected from 09:00, gusting 45km/h on the Franschhoek Pass descent. Ride to the conditions and hold your line through the crosswind section at KM72.",
-    author: "Race Control",
-    postedAt: "2026-07-19T08:12:00Z",
-    eventId: "evt_cherry_classic",
-    pinned: true,
-  },
-  {
-    id: "post_2",
-    externalId: null,
-    type: "notice",
-    title: "Number collection extended to 20:00",
-    body: "Number collection for the Night Crit has been extended tonight. Bring your ID and Entry Ninja confirmation email.",
-    author: "Red Cherry Ops",
-    postedAt: "2026-07-19T06:40:00Z",
-    eventId: "evt_night_crit",
-  },
-  {
-    id: "post_3",
-    externalId: null,
-    type: "update",
-    title: "Route change: KM 42 detour",
-    body: "Due to road works on the R310, we're rerouting via Blaauwklippen. Adds 1.2km. Updated GPX has been pushed to your device.",
-    author: "Race Director",
-    postedAt: "2026-07-18T17:22:00Z",
-    eventId: "evt_cherry_classic",
-  },
-  {
-    id: "post_4",
-    externalId: null,
-    type: "news",
-    title: "Karoo Gravel entries now open",
-    body: "165km of unfiltered Karoo. Early bird pricing until 31 July via Entry Ninja. Loyalty Gold+ members get priority start pens.",
-    author: "Red Cherry Events",
-    postedAt: "2026-07-17T12:00:00Z",
-    eventId: "evt_karoo_gravel",
-  },
-  {
-    id: "post_5",
-    externalId: null,
-    type: "news",
-    title: "New: live rider tracking",
-    body: "From this weekend, family and supporters can follow you live on the tracker map. Enable location in your profile.",
-    author: "Red Cherry Events",
-    postedAt: "2026-07-16T09:00:00Z",
-  },
-];
+// Real news is loaded from Lovable Cloud (feed_posts); no seeded sample posts.
+export const feed: FeedPost[] = [];
+
 
 export const media: MediaPost[] = [
   {
