@@ -10,7 +10,7 @@ import "leaflet.markercluster/dist/MarkerCluster.css";
 import "leaflet.markercluster/dist/MarkerCluster.Default.css";
 import { spotColor, spotIcon, categoryMeta, type VillageGeo, type VillageHotspot } from "@/lib/village-map";
 import { villageIconSvg } from "@/lib/village-icons";
-import { formatArea, zoneAreaM2, zoneColor, type VillageZone } from "@/lib/village-zones";
+import { zoneColor, type VillageZone } from "@/lib/village-zones";
 
 const M_PER_DEG_LAT = 111320;
 
