@@ -290,7 +290,7 @@ export default function RouteMapInner({
                 <Marker
                   key={`${l.route.id}-mk-${m.id}`}
                   position={[m.lat, m.lng] as [number, number]}
-                  icon={customIcon(color, m.icon)}
+                  icon={customIcon(color, m.icon, m.logoUrl)}
                 >
                   <Popup>
                     <div className="max-w-[240px] space-y-1">
