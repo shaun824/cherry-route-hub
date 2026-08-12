@@ -322,6 +322,7 @@ function VillageEditor() {
         ) : null}
       </div>
 
+      <div className="relative">
       {usingImage ? (
         <>
           <div className="rounded-2xl bg-card p-4 ring-1 ring-border">
