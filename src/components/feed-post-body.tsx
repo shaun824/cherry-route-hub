@@ -2,6 +2,8 @@ import { ExternalLink } from "lucide-react";
 import type { FeedPost } from "@/lib/mock-data";
 
 const URL_RE = /(https?:\/\/[^\s<>()]+[^\s<>().,;:!?])/g;
+const IS_URL = /^https?:\/\//;
+
 
 /** First link found in the post (explicit source link wins). */
 export function postLink(post: Pick<FeedPost, "body" | "sourceUrl">): string | null {

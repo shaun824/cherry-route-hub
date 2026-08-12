@@ -43,6 +43,8 @@ export async function fetchFeed(): Promise<FeedPost[] | null> {
     author: String(r.author ?? "Race Office"),
     postedAt: String(r.posted_at ?? new Date().toISOString()),
     pinned: Boolean(r.pinned),
+    sourceUrl: (r.source_url as string | null) ?? undefined,
+
     eventId: (r.event_id as string | null) ?? undefined,
   }));
 }
@@ -56,6 +58,8 @@ export async function upsertFeedCloud(p: FeedPost) {
     author: p.author,
     posted_at: p.postedAt,
     pinned: p.pinned ?? false,
+    ...(p.sourceUrl ? { source_url: p.sourceUrl } : {}),
+
   };
   const { data, error } = await supabase.from("feed_posts").upsert(row).select().single();
   log(error, "upsertFeed");

@@ -121,6 +121,8 @@ export type FeedPost = {
   body: string;
   author: string;
   postedAt: string; // ISO
+  sourceUrl?: string; // link to the full article on the website
+
   eventId?: string;
   pinned?: boolean;
   order?: number; // admin-controlled manual sort (lower = higher in feed within its pinned group)
