@@ -75,14 +75,17 @@ export function VillageMapView({ eventId }: { eventId: string }) {
     const seen = new Set((map?.hotspots ?? []).map((s) => s.category));
     return Array.from(seen);
   }, [map]);
-  const geoReady = isPlacedGeo(map?.geo);
+  const hasImage = !!map?.image_url;
+  const pinnedCount = (map?.hotspots ?? []).filter(isPinnedSpot).length;
+  const geoReady =
+    hasVenueCentre(map?.geo) && ((hasImage && isPlacedGeo(map?.geo)) || pinnedCount > 0);
   const detail = (map?.hotspots ?? []).find((s) => s.id === (selected ?? hovered)) ?? null;
 
   if (q.isLoading) {
     return <div className="h-56 animate-pulse rounded-2xl bg-muted" />;
   }
 
-  if (!map?.image_url) {
+  if (!map || (!hasImage && !geoReady)) {
     return (
       <div className="rounded-2xl border border-dashed border-border p-6 text-center text-sm text-ink-soft">
         The village map for this event hasn't been published yet — check back closer to race week.
@@ -90,11 +93,14 @@ export function VillageMapView({ eventId }: { eventId: string }) {
     );
   }
 
+  const showLive = geoReady && (mode === "live" || !hasImage);
+
   return (
     <div className="space-y-3">
       {map.intro ? <p className="text-sm leading-relaxed text-ink-soft">{map.intro}</p> : null}
 
-      {geoReady ? (
+      {geoReady && hasImage ? (
+
         <div className="flex gap-1.5">
           {(["live", "plan"] as const).map((m) => (
             <button
