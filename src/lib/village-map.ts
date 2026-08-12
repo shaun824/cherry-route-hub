@@ -172,8 +172,11 @@ export async function fetchVillageMap(eventId: string): Promise<VillageMap | nul
     event_id: data.event_id,
     image_url: data.image_url,
     intro: data.intro,
-    hotspots: raw.filter((h) => h && typeof h.x === "number" && typeof h.y === "number"),
-    geo: isPlacedGeo(rawGeo) ? rawGeo : null,
+    hotspots: raw
+      .filter((h) => h && (Number.isFinite(h.x) || Number.isFinite(h.lat)))
+      .map((h) => ({ ...h, x: Number.isFinite(h.x) ? h.x : 50, y: Number.isFinite(h.y) ? h.y : 50 })),
+    geo: hasVenueCentre(rawGeo) ? { ...rawGeo, widthM: rawGeo.widthM ?? 0 } : null,
+
   };
 }
 
