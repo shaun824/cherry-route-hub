@@ -1,7 +1,7 @@
 import { createFileRoute, ClientOnly, Link, notFound } from "@tanstack/react-router";
 import { Suspense, lazy, useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Loader2, MapPin, Save, Sparkles, Trash2, Upload } from "lucide-react";
+import { ArrowLeft, Loader2, MapPin, Save, Sparkles, Trash2, Upload, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   VILLAGE_CATEGORIES,
@@ -80,6 +80,10 @@ function VillageEditor() {
   const centre = useMemo(
     () => (hasVenueCentre(map.geo) ? { lat: map.geo.lat, lng: map.geo.lng } : null),
     [map.geo],
+  );
+  const selectedSpot = useMemo(
+    () => map.hotspots.find((s) => s.id === selected) ?? null,
+    [map.hotspots, selected],
   );
 
   function patch(next: Partial<VillageMap>) {
@@ -322,6 +326,7 @@ function VillageEditor() {
         ) : null}
       </div>
 
+      <div className="relative">
       {usingImage ? (
         <>
           <div className="rounded-2xl bg-card p-4 ring-1 ring-border">
@@ -407,6 +412,65 @@ function VillageEditor() {
           Set the venue location above (paste a Google Maps link) to start dropping points on the satellite map.
         </div>
       )}
+
+      {selectedSpot ? (
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[1000] p-3">
+          <div className="pointer-events-auto rounded-2xl bg-card/95 p-3 shadow-lg ring-1 ring-border backdrop-blur">
+            <div className="flex items-center gap-2">
+              <input
+                value={selectedSpot.title}
+                onChange={(e) => updateSpot(selectedSpot.id, { title: e.target.value })}
+                className="min-w-0 flex-1 rounded-lg border border-border bg-background px-3 py-2 text-sm font-semibold"
+                placeholder="Point name"
+              />
+              <button
+                onClick={() => {
+                  patch({ hotspots: map.hotspots.filter((h) => h.id !== selectedSpot.id) });
+                  setSelected(null);
+                }}
+                className="grid h-9 w-9 place-items-center rounded-lg bg-muted"
+                aria-label="Delete point"
+              >
+                <Trash2 className="h-4 w-4 text-ink-soft" />
+              </button>
+              <button
+                onClick={() => setSelected(null)}
+                className="grid h-9 w-9 place-items-center rounded-lg bg-muted"
+                aria-label="Close"
+              >
+                <X className="h-4 w-4 text-ink-soft" />
+              </button>
+            </div>
+            <div className="mt-2 grid gap-2 sm:grid-cols-2">
+              <select
+                value={selectedSpot.category}
+                onChange={(e) => updateSpot(selectedSpot.id, { category: e.target.value as VillageCategory })}
+                className="rounded-lg border border-border bg-background px-3 py-2 text-sm"
+              >
+                {VILLAGE_CATEGORIES.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.label}
+                  </option>
+                ))}
+              </select>
+              <input
+                value={selectedSpot.hours ?? ""}
+                onChange={(e) => updateSpot(selectedSpot.id, { hours: e.target.value || undefined })}
+                className="rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                placeholder="Open hours e.g. 07:00 – 18:00"
+              />
+            </div>
+            <textarea
+              value={selectedSpot.description ?? ""}
+              onChange={(e) => updateSpot(selectedSpot.id, { description: e.target.value || undefined })}
+              rows={2}
+              className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+              placeholder="What happens here?"
+            />
+          </div>
+        </div>
+      ) : null}
+      </div>
 
       {!usingImage && centre ? (
         <p className="text-xs text-ink-soft">
