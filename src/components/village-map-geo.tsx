@@ -19,8 +19,10 @@ function offsetLatLng(geo: VillageGeo, eastM: number, northM: number): [number, 
 }
 
 function hotspotLatLng(geo: VillageGeo, spot: VillageHotspot, heightM: number): [number, number] {
+  if (Number.isFinite(spot.lat) && Number.isFinite(spot.lng)) return [spot.lat as number, spot.lng as number];
   return offsetLatLng(geo, (spot.x / 100 - 0.5) * geo.widthM, (0.5 - spot.y / 100) * heightM);
 }
+
 
 function pinIcon(color: string, label: string, active: boolean) {
   return L.divIcon({
@@ -80,7 +82,7 @@ export default function VillageMapGeo({
   selected,
   onSelect,
 }: {
-  imageUrl: string;
+  imageUrl?: string | null;
   geo: VillageGeo;
   hotspots: VillageHotspot[];
   selected: string | null;
@@ -96,6 +98,7 @@ export default function VillageMapGeo({
   const watchRef = useRef<number | null>(null);
 
   useEffect(() => {
+    if (!imageUrl) return;
     const img = new Image();
     img.onload = () => {
       if (img.naturalWidth > 0) setRatio(img.naturalHeight / img.naturalWidth);
@@ -107,13 +110,24 @@ export default function VillageMapGeo({
     if (watchRef.current !== null) navigator.geolocation.clearWatch(watchRef.current);
   }, []);
 
-  const heightM = geo.widthM * ratio;
+  const showOverlay = !!imageUrl && (geo.widthM ?? 0) > 0;
+  const heightM = (geo.widthM || 300) * ratio;
   const bounds = useMemo<L.LatLngBoundsExpression>(() => {
+    if (!showOverlay) {
+      const pts = hotspots
+        .filter((s) => Number.isFinite(s.lat) && Number.isFinite(s.lng))
+        .map((s) => [s.lat as number, s.lng as number] as [number, number]);
+      if (pts.length > 0) return L.latLngBounds(pts).pad(0.25);
+      const flat: VillageGeo = { ...geo, rotation: 0, widthM: 300 };
+      return [offsetLatLng(flat, -150, -150), offsetLatLng(flat, 150, 150)];
+    }
     const flat: VillageGeo = { ...geo, rotation: 0 };
     const sw = offsetLatLng(flat, -geo.widthM / 2, -heightM / 2);
     const ne = offsetLatLng(flat, geo.widthM / 2, heightM / 2);
     return [sw, ne];
-  }, [geo, heightM]);
+  }, [geo, heightM, showOverlay, hotspots]);
+
+
 
   function locate() {
     if (!("geolocation" in navigator)) {
@@ -170,14 +184,19 @@ export default function VillageMapGeo({
             />
           )}
 
-          <ImageOverlay
-            url={imageUrl}
-            bounds={bounds}
-            opacity={0.95}
-            className="rce-village-overlay"
-            zIndex={400}
-          />
-          <RotateOverlay rotation={geo.rotation ?? 0} />
+          {showOverlay && imageUrl ? (
+            <>
+              <ImageOverlay
+                url={imageUrl}
+                bounds={bounds}
+                opacity={0.95}
+                className="rce-village-overlay"
+                zIndex={400}
+              />
+              <RotateOverlay rotation={geo.rotation ?? 0} />
+            </>
+          ) : null}
+
           <FitBounds bounds={bounds} />
           <Recenter position={me} token={recenterToken} />
 
