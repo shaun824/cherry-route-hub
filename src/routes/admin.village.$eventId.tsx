@@ -70,7 +70,7 @@ function VillageEditor() {
     if (!q.data) return;
     const loaded = q.data;
     if (!hasVenueCentre(loaded.geo) && info?.venue_lat && info?.venue_lng) {
-      setMap({ ...loaded, geo: { lat: info.venue_lat, lng: info.venue_lng, widthM: loaded.geo?.widthM ?? 0 } });
+      setMap({ ...loaded, geo: { lat: info.venue_lat, lng: info.venue_lng, widthM: 0 } });
     } else {
       setMap(loaded);
     }
