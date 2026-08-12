@@ -2,7 +2,7 @@
 // a satellite basemap at its real-world position, hotspots become map markers
 // and the rider's live GPS position is shown as a pulsing dot.
 import { useEffect, useMemo, useRef, useState } from "react";
-import { MapContainer, TileLayer, ImageOverlay, useMap, CircleMarker, Popup } from "react-leaflet";
+import { MapContainer, TileLayer, ImageOverlay, useMap, CircleMarker, Polygon, Popup, Tooltip } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import "leaflet.markercluster";
@@ -10,6 +10,7 @@ import "leaflet.markercluster/dist/MarkerCluster.css";
 import "leaflet.markercluster/dist/MarkerCluster.Default.css";
 import { spotColor, spotIcon, categoryMeta, type VillageGeo, type VillageHotspot } from "@/lib/village-map";
 import { villageIconSvg } from "@/lib/village-icons";
+import { formatArea, zoneAreaM2, zoneColor, type VillageZone } from "@/lib/village-zones";
 
 const M_PER_DEG_LAT = 111320;
 
@@ -153,12 +154,14 @@ export default function VillageMapGeo({
   imageUrl,
   geo,
   hotspots,
+  zones = [],
   selected,
   onSelect,
 }: {
   imageUrl?: string | null;
   geo: VillageGeo;
   hotspots: VillageHotspot[];
+  zones?: VillageZone[];
   selected: string | null;
   onSelect: (id: string | null) => void;
 }) {
@@ -270,6 +273,20 @@ export default function VillageMapGeo({
               <RotateOverlay rotation={geo.rotation ?? 0} />
             </>
           ) : null}
+
+          {zones.map((z) => (
+            <Polygon
+              key={z.id}
+              positions={z.points.map((p) => [p.lat, p.lng]) as [number, number][]}
+              pathOptions={{ color: zoneColor(z), weight: 2, fillColor: zoneColor(z), fillOpacity: 0.18 }}
+            >
+              <Tooltip direction="center" permanent className="rce-zone-label">
+                <span style={{ fontWeight: 800 }}>{z.name}</span>
+                <br />
+                {formatArea(zoneAreaM2(z))}
+              </Tooltip>
+            </Polygon>
+          ))}
 
           <FitBounds bounds={bounds} />
           <Recenter position={me} token={recenterToken} />
