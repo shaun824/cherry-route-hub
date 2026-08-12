@@ -1,6 +1,7 @@
 // Client-safe types + helpers for the interactive village map per event.
 import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
+import { guessVillageIcon } from "@/lib/village-icons";
 
 export type VillageCategory =
   | "registration"
@@ -30,6 +31,10 @@ export type VillageHotspot = {
   category: VillageCategory;
   description?: string;
   hours?: string;
+  /** icon id from VILLAGE_ICONS — auto-guessed from the title unless overridden */
+  icon?: string;
+  /** hex colour override for the pin */
+  color?: string;
 };
 
 /** Real-world placement of the plan image, so live GPS can be shown on it. */
@@ -126,6 +131,7 @@ export function templateSpots(centre: { lat: number; lng: number }): VillageHots
       title: t.title,
       category: t.category,
       description: t.description,
+      icon: guessVillageIcon(t.title, t.category),
     };
   });
 }
@@ -146,6 +152,16 @@ export const VILLAGE_CATEGORIES: { id: VillageCategory; label: string; color: st
   { id: "shop", label: "Merch / shop", color: "#ca8a04" },
   { id: "other", label: "Other", color: "#334155" },
 ];
+
+/** Effective pin colour: per-point override, else the category colour. */
+export function spotColor(spot: VillageHotspot): string {
+  return spot.color || categoryMeta(spot.category).color;
+}
+
+/** Effective icon id: per-point override, else guessed from the point name. */
+export function spotIcon(spot: VillageHotspot): string {
+  return spot.icon || guessVillageIcon(spot.title, spot.category);
+}
 
 export function categoryMeta(id: VillageCategory) {
   return VILLAGE_CATEGORIES.find((c) => c.id === id) ?? VILLAGE_CATEGORIES[VILLAGE_CATEGORIES.length - 1];

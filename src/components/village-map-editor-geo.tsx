@@ -4,15 +4,16 @@ import { useEffect } from "react";
 import { MapContainer, TileLayer, Marker, useMap, useMapEvents } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { categoryMeta, type VillageHotspot } from "@/lib/village-map";
+import { spotColor, spotIcon, type VillageHotspot } from "@/lib/village-map";
+import { villageIconSvg } from "@/lib/village-icons";
 
-function pinIcon(color: string, label: string, active: boolean) {
+function pinIcon(color: string, label: string, active: boolean, iconId?: string) {
   return L.divIcon({
     className: "rce-village-pin",
     html: `<div style="display:flex;flex-direction:column;align-items:center;transform:translateY(-6px)">
-      <span style="background:${color};color:#fff;font-size:10px;font-weight:800;padding:3px 7px;border-radius:999px;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,.35);border:${
+      <span style="display:inline-flex;align-items:center;gap:4px;background:${color};color:#fff;font-size:10px;font-weight:800;padding:3px 7px;border-radius:999px;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,.35);border:${
         active ? "2px solid #fff" : "1px solid rgba(255,255,255,.5)"
-      }">${label}</span>
+      }">${villageIconSvg(iconId)}${label}</span>
       <span style="width:8px;height:8px;background:${color};transform:rotate(45deg) translateY(-3px);border-radius:2px"></span>
     </div>`,
     iconSize: [10, 10],
@@ -79,13 +80,12 @@ export default function VillageMapEditorGeo({
         {hotspots
           .filter((s) => Number.isFinite(s.lat) && Number.isFinite(s.lng))
           .map((s) => {
-            const meta = categoryMeta(s.category);
             return (
               <Marker
                 key={s.id}
                 position={[s.lat as number, s.lng as number]}
                 draggable
-                icon={pinIcon(meta.color, s.title, selected === s.id)}
+                icon={pinIcon(spotColor(s), s.title, selected === s.id, spotIcon(s))}
                 eventHandlers={{
                   click: () => onSelect(s.id),
                   dragend: (e) => {
