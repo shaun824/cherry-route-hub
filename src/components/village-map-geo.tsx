@@ -19,8 +19,10 @@ function offsetLatLng(geo: VillageGeo, eastM: number, northM: number): [number, 
 }
 
 function hotspotLatLng(geo: VillageGeo, spot: VillageHotspot, heightM: number): [number, number] {
+  if (Number.isFinite(spot.lat) && Number.isFinite(spot.lng)) return [spot.lat as number, spot.lng as number];
   return offsetLatLng(geo, (spot.x / 100 - 0.5) * geo.widthM, (0.5 - spot.y / 100) * heightM);
 }
+
 
 function pinIcon(color: string, label: string, active: boolean) {
   return L.divIcon({
