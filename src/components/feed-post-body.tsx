@@ -29,7 +29,8 @@ export function FeedPostBody({ post }: { post: Pick<FeedPost, "body" | "sourceUr
     <>
       <p className="mt-1.5 whitespace-pre-line text-sm leading-relaxed text-ink-soft">
         {parts.map((part, i) =>
-          URL_RE.test(part) && /^https?:\/\//.test(part) ? (
+          IS_URL.test(part) ? (
+
             <a
               key={i}
               href={part}
