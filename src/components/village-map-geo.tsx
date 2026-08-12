@@ -82,7 +82,7 @@ export default function VillageMapGeo({
   selected,
   onSelect,
 }: {
-  imageUrl: string;
+  imageUrl?: string | null;
   geo: VillageGeo;
   hotspots: VillageHotspot[];
   selected: string | null;
@@ -98,6 +98,7 @@ export default function VillageMapGeo({
   const watchRef = useRef<number | null>(null);
 
   useEffect(() => {
+    if (!imageUrl) return;
     const img = new Image();
     img.onload = () => {
       if (img.naturalWidth > 0) setRatio(img.naturalHeight / img.naturalWidth);
@@ -109,13 +110,24 @@ export default function VillageMapGeo({
     if (watchRef.current !== null) navigator.geolocation.clearWatch(watchRef.current);
   }, []);
 
-  const heightM = geo.widthM * ratio;
+  const showOverlay = !!imageUrl && (geo.widthM ?? 0) > 0;
+  const heightM = (geo.widthM || 300) * ratio;
   const bounds = useMemo<L.LatLngBoundsExpression>(() => {
+    if (!showOverlay) {
+      const pts = hotspots
+        .filter((s) => Number.isFinite(s.lat) && Number.isFinite(s.lng))
+        .map((s) => [s.lat as number, s.lng as number] as [number, number]);
+      if (pts.length > 0) return L.latLngBounds(pts).pad(0.25);
+      const flat: VillageGeo = { ...geo, rotation: 0, widthM: 300 };
+      return [offsetLatLng(flat, -150, -150), offsetLatLng(flat, 150, 150)];
+    }
     const flat: VillageGeo = { ...geo, rotation: 0 };
     const sw = offsetLatLng(flat, -geo.widthM / 2, -heightM / 2);
     const ne = offsetLatLng(flat, geo.widthM / 2, heightM / 2);
     return [sw, ne];
-  }, [geo, heightM]);
+  }, [geo, heightM, showOverlay, hotspots]);
+
+
 
   function locate() {
     if (!("geolocation" in navigator)) {
