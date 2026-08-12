@@ -1,29 +1,39 @@
-import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { createFileRoute, ClientOnly, Link, notFound } from "@tanstack/react-router";
+import { Suspense, lazy, useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Loader2, Save, Trash2, Upload } from "lucide-react";
+import { ArrowLeft, Loader2, MapPin, Save, Sparkles, Trash2, Upload } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   VILLAGE_CATEGORIES,
   categoryMeta,
   emptyVillageMap,
   fetchVillageMap,
+  hasVenueCentre,
+  parseLatLngFromUrl,
   saveVillageMap,
+  templateSpots,
   type VillageCategory,
   type VillageHotspot,
   type VillageGeo,
   type VillageMap,
 } from "@/lib/village-map";
 
+const VillageMapEditorGeo = lazy(() => import("@/components/village-map-editor-geo"));
+
 export const Route = createFileRoute("/admin/village/$eventId")({
   loader: async ({ params }) => {
     const { data, error } = await supabase
       .from("events")
-      .select("id, name")
+      .select("id, name, location")
       .eq("id", params.eventId)
       .maybeSingle();
     if (error || !data) throw notFound();
-    return { event: data };
+    const { data: info } = await supabase
+      .from("event_info_blocks")
+      .select("venue_lat, venue_lng, venue_address")
+      .eq("event_id", params.eventId)
+      .maybeSingle();
+    return { event: data, info: info ?? null };
   },
   component: VillageEditor,
 });
@@ -43,7 +53,7 @@ async function uploadVillageImage(file: File): Promise<string> {
 }
 
 function VillageEditor() {
-  const { event } = Route.useLoaderData();
+  const { event, info } = Route.useLoaderData();
   const q = useQuery({ queryKey: ["village-map", event.id], queryFn: () => fetchVillageMap(event.id) });
   const [map, setMap] = useState<VillageMap>(() => emptyVillageMap(event.id));
   const [saving, setSaving] = useState(false);
@@ -51,13 +61,26 @@ function VillageEditor() {
   const [uploading, setUploading] = useState(false);
   const [placing, setPlacing] = useState(false);
   const [selected, setSelected] = useState<string | null>(null);
+  const [centreToken, setCentreToken] = useState(0);
   const fileRef = useRef<HTMLInputElement>(null);
   const dragRef = useRef<string | null>(null);
   const imgWrapRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (q.data) setMap(q.data);
-  }, [q.data]);
+    if (!q.data) return;
+    const loaded = q.data;
+    if (!hasVenueCentre(loaded.geo) && info?.venue_lat && info?.venue_lng) {
+      setMap({ ...loaded, geo: { lat: info.venue_lat, lng: info.venue_lng, widthM: loaded.geo?.widthM ?? 0 } });
+    } else {
+      setMap(loaded);
+    }
+  }, [q.data, info?.venue_lat, info?.venue_lng]);
+
+  const usingImage = !!map.image_url;
+  const centre = useMemo(
+    () => (hasVenueCentre(map.geo) ? { lat: map.geo.lat, lng: map.geo.lng } : null),
+    [map.geo],
+  );
 
   function patch(next: Partial<VillageMap>) {
     setMap((prev) => ({ ...prev, ...next }));
@@ -65,7 +88,7 @@ function VillageEditor() {
   }
 
   function patchGeo(next: Partial<VillageGeo>) {
-    const base: VillageGeo = map.geo ?? { lat: 0, lng: 0, widthM: 500, rotation: 0 };
+    const base: VillageGeo = map.geo ?? { lat: 0, lng: 0, widthM: 0, rotation: 0 };
     patch({ geo: { ...base, ...next } });
   }
 
@@ -73,6 +96,48 @@ function VillageEditor() {
     patch({ hotspots: map.hotspots.map((s) => (s.id === id ? { ...s, ...next } : s)) });
   }
 
+  function pasteVenueLink() {
+    const url = window.prompt(
+      "Paste a Google Maps link for the venue (or type lat,lng e.g. -34.0640, 18.8925)",
+    );
+    if (!url) return;
+    const c = parseLatLngFromUrl(url.trim());
+    if (!c) {
+      alert("Couldn't read coordinates from that. Right-click the venue in Google Maps and copy the numbers.");
+      return;
+    }
+    patchGeo(c);
+    setCentreToken((t) => t + 1);
+  }
+
+  function loadMasterLayout() {
+    if (!centre) {
+      alert("Set the venue location first, then load the master layout.");
+      return;
+    }
+    if (map.hotspots.length > 0 && !window.confirm("Add the master Weekend Warrior layout on top of the existing points?")) {
+      return;
+    }
+    patch({ hotspots: [...map.hotspots, ...templateSpots(centre)] });
+    setCentreToken((t) => t + 1);
+  }
+
+  function placeSpot(lat: number, lng: number) {
+    const spot: VillageHotspot = {
+      id: crypto.randomUUID(),
+      x: 50,
+      y: 50,
+      lat: +lat.toFixed(6),
+      lng: +lng.toFixed(6),
+      title: "New point",
+      category: "other",
+    };
+    patch({ hotspots: [...map.hotspots, spot] });
+    setSelected(spot.id);
+    setPlacing(false);
+  }
+
+  // ---- image-mode helpers (kept for events that still use a plan image) ----
   function coordsFromEvent(e: React.MouseEvent) {
     const el = imgWrapRef.current;
     if (!el) return null;
@@ -82,7 +147,7 @@ function VillageEditor() {
     return { x: Math.min(100, Math.max(0, +x.toFixed(2))), y: Math.min(100, Math.max(0, +y.toFixed(2))) };
   }
 
-  function handleMapClick(e: React.MouseEvent) {
+  function handleImageClick(e: React.MouseEvent) {
     if (!placing) return;
     const c = coordsFromEvent(e);
     if (!c) return;
@@ -159,53 +224,16 @@ function VillageEditor() {
           className="mt-1.5 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
           placeholder="Everything you need at race village — registration, food, camping and more."
         />
-        <div className="mt-3 flex flex-wrap items-center gap-2">
-          <input
-            ref={fileRef}
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={(e) => {
-              const f = e.target.files?.[0];
-              if (f) void onFile(f);
-              e.target.value = "";
-            }}
-          />
-          <button
-            onClick={() => fileRef.current?.click()}
-            disabled={uploading}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-muted px-3 py-1.5 text-xs font-bold text-ink"
-          >
-            {uploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
-            {map.image_url ? "Replace map image" : "Upload map image"}
-          </button>
-          {map.image_url ? (
-            <button
-              onClick={() => patch({ image_url: null })}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-muted px-3 py-1.5 text-xs font-bold text-ink"
-            >
-              <Trash2 className="h-3.5 w-3.5" /> Remove image
-            </button>
-          ) : null}
-          <button
-            onClick={() => setPlacing((p) => !p)}
-            disabled={!map.image_url}
-            className={`rounded-lg px-3 py-1.5 text-xs font-bold disabled:opacity-50 ${
-              placing ? "bg-cherry text-white" : "bg-muted text-ink"
-            }`}
-          >
-            {placing ? "Click the map to place…" : "Add point"}
-          </button>
-        </div>
       </div>
 
+      {/* Venue location — the anchor for pin-on-map mode */}
       <div className="rounded-2xl bg-card p-4 ring-1 ring-border">
         <p className="text-[11px] font-bold uppercase tracking-widest text-ink-soft">
-          Real-world placement (so riders see their live GPS on the map)
+          Venue location {event.location ? `· ${event.location}` : ""}
         </p>
-        <div className="mt-2 grid gap-2 sm:grid-cols-4">
+        <div className="mt-2 grid gap-2 sm:grid-cols-3">
           <label className="text-xs font-semibold text-ink-soft">
-            Centre latitude
+            Latitude
             <input
               type="number"
               step="0.00001"
@@ -216,7 +244,7 @@ function VillageEditor() {
             />
           </label>
           <label className="text-xs font-semibold text-ink-soft">
-            Centre longitude
+            Longitude
             <input
               type="number"
               step="0.00001"
@@ -226,73 +254,166 @@ function VillageEditor() {
               placeholder="18.89250"
             />
           </label>
-          <label className="text-xs font-semibold text-ink-soft">
-            Width on the ground (m)
-            <input
-              type="number"
-              step="10"
-              value={map.geo?.widthM ?? ""}
-              onChange={(e) => patchGeo({ widthM: Number(e.target.value) })}
-              className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
-              placeholder="520"
-            />
-          </label>
-          <label className="text-xs font-semibold text-ink-soft">
-            Rotation (°)
-            <input
-              type="number"
-              step="1"
-              value={map.geo?.rotation ?? 0}
-              onChange={(e) => patchGeo({ rotation: Number(e.target.value) })}
-              className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
-              placeholder="0"
-            />
-          </label>
+          <div className="flex items-end">
+            <button
+              onClick={pasteVenueLink}
+              className="inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-muted px-3 py-2 text-xs font-bold text-ink"
+            >
+              <MapPin className="h-3.5 w-3.5" /> Paste Google Maps link
+            </button>
+          </div>
         </div>
-        <p className="mt-2 text-[11px] text-ink-soft">
-          Paste the venue centre from Google Maps, then nudge the width and rotation until the plan lines up with
-          the satellite image on the rider view. Leave blank to keep the plain plan view only.
-        </p>
+        {info?.venue_lat && info?.venue_lng ? (
+          <button
+            onClick={() => {
+              patchGeo({ lat: info.venue_lat as number, lng: info.venue_lng as number });
+              setCentreToken((t) => t + 1);
+            }}
+            className="mt-2 text-[11px] font-bold text-cherry underline"
+          >
+            Use the venue saved on this event ({info.venue_address ?? `${info.venue_lat}, ${info.venue_lng}`})
+          </button>
+        ) : null}
       </div>
 
-      {map.image_url ? (
-        <div
-          ref={imgWrapRef}
-          onClick={handleMapClick}
-          onMouseMove={handleMouseMove}
-          onMouseUp={() => (dragRef.current = null)}
-          onMouseLeave={() => (dragRef.current = null)}
-          className={`relative overflow-hidden rounded-2xl ring-1 ring-border ${placing ? "cursor-crosshair" : ""}`}
+      <div className="flex flex-wrap items-center gap-2">
+        <button
+          onClick={() => setPlacing((p) => !p)}
+          disabled={!usingImage && !centre}
+          className={`rounded-lg px-3 py-1.5 text-xs font-bold disabled:opacity-50 ${
+            placing ? "bg-cherry text-white" : "bg-muted text-ink"
+          }`}
         >
-          <img src={map.image_url} alt="Village map" className="block w-full select-none" draggable={false} />
-          {map.hotspots.map((s) => {
-            const meta = categoryMeta(s.category);
-            return (
-              <button
-                key={s.id}
-                onMouseDown={(e) => {
-                  e.stopPropagation();
-                  dragRef.current = s.id;
-                }}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setSelected(s.id);
-                }}
-                style={{ left: `${s.x}%`, top: `${s.y}%`, backgroundColor: meta.color }}
-                className={`absolute -translate-x-1/2 -translate-y-1/2 cursor-move rounded-full px-2 py-1 text-[10px] font-bold text-white shadow ${
-                  selected === s.id ? "ring-2 ring-cherry" : ""
-                }`}
-              >
-                {s.title}
-              </button>
-            );
-          })}
-        </div>
+          {placing ? "Click the map to place…" : "Add point"}
+        </button>
+        <button
+          onClick={loadMasterLayout}
+          disabled={usingImage || !centre}
+          className="inline-flex items-center gap-1.5 rounded-lg bg-muted px-3 py-1.5 text-xs font-bold text-ink disabled:opacity-50"
+        >
+          <Sparkles className="h-3.5 w-3.5" /> Load master layout
+        </button>
+        <input
+          ref={fileRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            if (f) void onFile(f);
+            e.target.value = "";
+          }}
+        />
+        <button
+          onClick={() => fileRef.current?.click()}
+          disabled={uploading}
+          className="inline-flex items-center gap-1.5 rounded-lg bg-muted px-3 py-1.5 text-xs font-bold text-ink"
+        >
+          {uploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
+          {usingImage ? "Replace plan image" : "Use a plan image instead"}
+        </button>
+        {usingImage ? (
+          <button
+            onClick={() => patch({ image_url: null })}
+            className="inline-flex items-center gap-1.5 rounded-lg bg-muted px-3 py-1.5 text-xs font-bold text-ink"
+          >
+            <Trash2 className="h-3.5 w-3.5" /> Remove image
+          </button>
+        ) : null}
+      </div>
+
+      {usingImage ? (
+        <>
+          <div className="rounded-2xl bg-card p-4 ring-1 ring-border">
+            <p className="text-[11px] font-bold uppercase tracking-widest text-ink-soft">
+              Plan image placement
+            </p>
+            <div className="mt-2 grid gap-2 sm:grid-cols-2">
+              <label className="text-xs font-semibold text-ink-soft">
+                Width on the ground (m)
+                <input
+                  type="number"
+                  step="10"
+                  value={map.geo?.widthM ?? ""}
+                  onChange={(e) => patchGeo({ widthM: Number(e.target.value) })}
+                  className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                  placeholder="520"
+                />
+              </label>
+              <label className="text-xs font-semibold text-ink-soft">
+                Rotation (°)
+                <input
+                  type="number"
+                  step="1"
+                  value={map.geo?.rotation ?? 0}
+                  onChange={(e) => patchGeo({ rotation: Number(e.target.value) })}
+                  className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                  placeholder="0"
+                />
+              </label>
+            </div>
+          </div>
+
+          <div
+            ref={imgWrapRef}
+            onClick={handleImageClick}
+            onMouseMove={handleMouseMove}
+            onMouseUp={() => (dragRef.current = null)}
+            onMouseLeave={() => (dragRef.current = null)}
+            className={`relative overflow-hidden rounded-2xl ring-1 ring-border ${placing ? "cursor-crosshair" : ""}`}
+          >
+            <img src={map.image_url!} alt="Village map" className="block w-full select-none" draggable={false} />
+            {map.hotspots.map((s) => {
+              const meta = categoryMeta(s.category);
+              return (
+                <button
+                  key={s.id}
+                  onMouseDown={(e) => {
+                    e.stopPropagation();
+                    dragRef.current = s.id;
+                  }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelected(s.id);
+                  }}
+                  style={{ left: `${s.x}%`, top: `${s.y}%`, backgroundColor: meta.color }}
+                  className={`absolute -translate-x-1/2 -translate-y-1/2 cursor-move rounded-full px-2 py-1 text-[10px] font-bold text-white shadow ${
+                    selected === s.id ? "ring-2 ring-cherry" : ""
+                  }`}
+                >
+                  {s.title}
+                </button>
+              );
+            })}
+          </div>
+        </>
+      ) : centre ? (
+        <ClientOnly fallback={<div className="h-[65vh] min-h-[360px] animate-pulse rounded-2xl bg-muted" />}>
+          <Suspense fallback={<div className="h-[65vh] min-h-[360px] animate-pulse rounded-2xl bg-muted" />}>
+            <VillageMapEditorGeo
+              centre={centre}
+              centreToken={centreToken}
+              hotspots={map.hotspots}
+              selected={selected}
+              placing={placing}
+              onPlace={placeSpot}
+              onMove={(id, lat, lng) => updateSpot(id, { lat, lng })}
+              onSelect={setSelected}
+            />
+          </Suspense>
+        </ClientOnly>
       ) : (
         <div className="rounded-2xl border border-dashed border-border p-8 text-center text-sm text-ink-soft">
-          Upload a village map image (site plan, illustration or aerial photo) to start placing points.
+          Set the venue location above (paste a Google Maps link) to start dropping points on the satellite map.
         </div>
       )}
+
+      {!usingImage && centre ? (
+        <p className="text-xs text-ink-soft">
+          Tap “Add point”, then click the map to drop it. Drag any marker to move it — positions save when you hit
+          Save.
+        </p>
+      ) : null}
 
       <div className="space-y-3">
         {map.hotspots.map((s) => (
@@ -342,7 +463,9 @@ function VillageEditor() {
               placeholder="What happens here?"
             />
             <p className="mt-1 text-[11px] text-ink-soft">
-              Position: {s.x.toFixed(1)}% × {s.y.toFixed(1)}% — drag the marker on the map to move it.
+              {Number.isFinite(s.lat) && Number.isFinite(s.lng)
+                ? `Pinned at ${(s.lat as number).toFixed(5)}, ${(s.lng as number).toFixed(5)} — drag the marker to move it.`
+                : `Position: ${s.x.toFixed(1)}% × ${s.y.toFixed(1)}% — drag the marker on the plan to move it.`}
             </p>
           </div>
         ))}
