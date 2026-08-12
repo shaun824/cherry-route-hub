@@ -80,7 +80,6 @@ export default function VillageMapEditorGeo({
         {hotspots
           .filter((s) => Number.isFinite(s.lat) && Number.isFinite(s.lng))
           .map((s) => {
-            const meta = categoryMeta(s.category);
             return (
               <Marker
                 key={s.id}
