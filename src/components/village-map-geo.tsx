@@ -5,7 +5,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { MapContainer, TileLayer, ImageOverlay, Marker, Popup, useMap, CircleMarker } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { categoryMeta, type VillageGeo, type VillageHotspot } from "@/lib/village-map";
+import { spotColor, spotIcon, categoryMeta, type VillageGeo, type VillageHotspot } from "@/lib/village-map";
+import { villageIconSvg } from "@/lib/village-icons";
 
 const M_PER_DEG_LAT = 111320;
 
@@ -24,13 +25,13 @@ function hotspotLatLng(geo: VillageGeo, spot: VillageHotspot, heightM: number): 
 }
 
 
-function pinIcon(color: string, label: string, active: boolean) {
+function pinIcon(color: string, label: string, active: boolean, iconId?: string) {
   return L.divIcon({
     className: "rce-village-pin",
     html: `<div style="display:flex;flex-direction:column;align-items:center;transform:translateY(-6px)">
-      <span style="background:${color};color:#fff;font-size:10px;font-weight:800;padding:3px 7px;border-radius:999px;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,.35);border:${
+      <span style="display:inline-flex;align-items:center;gap:4px;background:${color};color:#fff;font-size:10px;font-weight:800;padding:3px 7px;border-radius:999px;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,.35);border:${
         active ? "2px solid #fff" : "1px solid rgba(255,255,255,.5)"
-      }">${label}</span>
+      }">${villageIconSvg(iconId)}${label}</span>
       <span style="width:8px;height:8px;background:${color};transform:rotate(45deg) translateY(-3px);border-radius:2px"></span>
     </div>`,
     iconSize: [10, 10],
@@ -206,7 +207,7 @@ export default function VillageMapGeo({
               <Marker
                 key={s.id}
                 position={hotspotLatLng(geo, s, heightM)}
-                icon={pinIcon(meta.color, s.title, selected === s.id)}
+                icon={pinIcon(spotColor(s), s.title, selected === s.id, spotIcon(s))}
                 eventHandlers={{ click: () => onSelect(selected === s.id ? null : s.id) }}
               >
                 <Popup>
