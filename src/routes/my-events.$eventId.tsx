@@ -41,6 +41,8 @@ import { VillageMapView } from "@/components/village-map-view";
 import { DEFAULT_PACKING_LIST, fetchEventInfo, type EventInfoBlock, type PackingItem } from "@/lib/event-info";
 import { RouteMap } from "@/components/route-map";
 import { RouteFileStats } from "@/components/route-file-stats";
+import { RouteProfile } from "@/components/route-profile";
+
 import { fetchMyRooming } from "@/lib/rooming";
 import { SponsorScroller } from "@/components/sponsor-scroller";
 import { curatedSponsorsFor } from "@/lib/event-sponsor-overrides";
