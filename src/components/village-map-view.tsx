@@ -5,9 +5,12 @@ import { MapPin, Minus, Plus, X } from "lucide-react";
 import {
   categoryMeta,
   fetchVillageMap,
+  hasVenueCentre,
+  isPinnedSpot,
   isPlacedGeo,
   type VillageHotspot,
 } from "@/lib/village-map";
+
 
 const VillageMapGeo = lazy(() => import("./village-map-geo"));
 
