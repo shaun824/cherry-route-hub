@@ -15,15 +15,22 @@ import type { EventRoute } from "@/lib/mock-data";
 
 type Point = { km: number; ele: number };
 
-function buildSeries(coords: LatLngAlt[], elevations: number[]): Point[] {
-  const out: Point[] = [];
-  let dist = 0;
-  for (let i = 0; i < coords.length; i++) {
-    if (i > 0) dist += haversineMeters(coords[i - 1], coords[i]);
-    const ele = elevations[i];
-    if (!Number.isFinite(ele)) continue;
-    out.push({ km: dist / 1000, ele });
+/** Cumulative distance (km) at every coordinate, at full resolution. */
+function cumulativeKm(coords: LatLngAlt[]): number[] {
+  const out = [0];
+  for (let i = 1; i < coords.length; i++) {
+    out.push(out[i - 1] + haversineMeters(coords[i - 1], coords[i]) / 1000);
   }
+  return out;
+}
+
+/** Down-samples a full-resolution series for drawing, keeping true distances. */
+function forDisplay(series: Point[], max = 300): Point[] {
+  if (series.length <= max) return series;
+  const step = series.length / max;
+  const out: Point[] = [];
+  for (let i = 0; i < max; i++) out.push(series[Math.floor(i * step)]);
+  out.push(series[series.length - 1]);
   return out;
 }
 
@@ -39,6 +46,7 @@ function totalGain(series: Point[]): number {
 export function RouteProfile({ route, color }: { route: EventRoute; color?: string }) {
   const kmls = route.kmlUrls ?? [];
   const [series, setSeries] = useState<Point[] | null>(null);
+  const [gain, setGain] = useState<number | null>(null);
   const [failed, setFailed] = useState(false);
   const [hover, setHover] = useState<number | null>(null);
   const fetchElev = useServerFn(getRouteElevation);
@@ -63,22 +71,37 @@ export function RouteProfile({ route, color }: { route: EventRoute; color?: stri
         if (!cancelled) setFailed(true);
         return;
       }
-      const sample = samplePolyline(merged, 300);
-      const hasAlt = sample.some(
+      const km = cumulativeKm(merged);
+      const hasAlt = merged.some(
         (c) => typeof c[2] === "number" && Number.isFinite(c[2]) && c[2] !== 0,
       );
       if (hasAlt) {
-        setSeries(buildSeries(sample, sample.map((c) => c[2] as number)));
+        const full: Point[] = [];
+        for (let i = 0; i < merged.length; i++) {
+          const ele = merged[i][2];
+          if (typeof ele === "number" && Number.isFinite(ele)) full.push({ km: km[i], ele });
+        }
+        setGain(totalGain(full));
+        setSeries(forDisplay(full));
         return;
       }
-      const capped = samplePolyline(sample, 300);
+      // No altitude in the file — look up terrain elevation for sampled points,
+      // keeping each sample's true along-route distance.
+      const maxPts = 200;
+      const idx: number[] = [];
+      const step = Math.max(1, merged.length / maxPts);
+      for (let i = 0; i < merged.length; i += step) idx.push(Math.floor(i));
+      if (idx[idx.length - 1] !== merged.length - 1) idx.push(merged.length - 1);
       try {
         const res = await fetchElev({
-          data: { coords: capped.map(([lng, lat]) => [lng, lat] as [number, number]) },
+          data: { coords: idx.map((i) => [merged[i][0], merged[i][1]] as [number, number]) },
         });
         if (cancelled) return;
-        if (res.available && res.profile) setSeries(buildSeries(capped, res.profile));
-        else setFailed(true);
+        if (res.available && res.profile) {
+          const pts = idx.map((i, n) => ({ km: km[i], ele: res.profile[n] }));
+          setGain(totalGain(pts));
+          setSeries(pts);
+        } else setFailed(true);
       } catch {
         if (!cancelled) setFailed(true);
       }
@@ -88,6 +111,7 @@ export function RouteProfile({ route, color }: { route: EventRoute; color?: stri
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [kmls.join("|")]);
+
 
   const chart = useMemo(() => {
     if (!series || series.length < 2) return null;
