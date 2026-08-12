@@ -146,7 +146,7 @@ export function VillageMapView({ eventId }: { eventId: string }) {
         </div>
       ) : null}
 
-      {geoReady && mode === "live" ? (
+      {showLive ? (
         <ClientOnly fallback={<div className="h-[65vh] min-h-[340px] animate-pulse rounded-2xl bg-muted" />}>
           <Suspense fallback={<div className="h-[65vh] min-h-[340px] animate-pulse rounded-2xl bg-muted" />}>
             <VillageMapGeo
