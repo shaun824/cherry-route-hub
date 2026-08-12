@@ -630,6 +630,113 @@ function VillageEditor() {
         </p>
       ) : null}
 
+      {!usingImage && centre ? (
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <p className="text-[11px] font-bold uppercase tracking-widest text-ink-soft">
+              Measured areas ({zones.length})
+            </p>
+            {overlapping.size > 0 ? (
+              <span className="rounded-full bg-red-100 px-2 py-1 text-[11px] font-bold text-red-700">
+                {overlapping.size} area{overlapping.size === 1 ? "" : "s"} overlap
+              </span>
+            ) : null}
+          </div>
+          {zones.length === 0 ? (
+            <p className="rounded-2xl border border-dashed border-border p-4 text-sm text-ink-soft">
+              Use “Draw area” to trace an outline on the satellite map, or “Add area by size” to drop an exact
+              rectangle in metres. Each area shows its size, footprint and perimeter, and clashes are flagged.
+            </p>
+          ) : null}
+          {zones.map((z) => {
+            const size = zoneSizeM(z);
+            const clash = overlapping.has(z.id);
+            return (
+              <div
+                key={z.id}
+                onClick={() => setSelectedZone(z.id)}
+                className={`cursor-pointer rounded-2xl bg-card p-4 ring-1 ${
+                  selectedZone === z.id ? "ring-cherry" : clash ? "ring-red-400" : "ring-border"
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <span className="h-4 w-4 shrink-0 rounded" style={{ backgroundColor: zoneColor(z) }} />
+                  <input
+                    value={z.name}
+                    onChange={(e) => updateZone(z.id, { name: e.target.value })}
+                    className="min-w-0 flex-1 rounded-lg border border-border bg-background px-3 py-2 text-sm font-semibold"
+                    placeholder="Area name e.g. Tented village"
+                  />
+                  <button
+                    onClick={() => {
+                      patch({ zones: zones.filter((o) => o.id !== z.id) });
+                      if (selectedZone === z.id) setSelectedZone(null);
+                    }}
+                    className="grid h-9 w-9 place-items-center rounded-lg bg-muted"
+                    aria-label="Delete area"
+                  >
+                    <Trash2 className="h-4 w-4 text-ink-soft" />
+                  </button>
+                </div>
+                <div className="mt-2 grid gap-2 sm:grid-cols-3">
+                  <label className="text-xs font-semibold text-ink-soft">
+                    Width (m)
+                    <input
+                      type="number"
+                      step="0.5"
+                      value={Math.round(size.w * 10) / 10}
+                      onChange={(e) => {
+                        const w = Number(e.target.value);
+                        if (w > 0) updateZone(z.id, resizeZone(z, w, size.h));
+                      }}
+                      className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                    />
+                  </label>
+                  <label className="text-xs font-semibold text-ink-soft">
+                    Length (m)
+                    <input
+                      type="number"
+                      step="0.5"
+                      value={Math.round(size.h * 10) / 10}
+                      onChange={(e) => {
+                        const h = Number(e.target.value);
+                        if (h > 0) updateZone(z.id, resizeZone(z, size.w, h));
+                      }}
+                      className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                    />
+                  </label>
+                  <div className="flex flex-wrap items-end gap-1">
+                    {ZONE_COLORS.map((c) => (
+                      <button
+                        key={c}
+                        onClick={() => updateZone(z.id, { color: c })}
+                        className={`h-6 w-6 rounded-full ring-1 ring-border ${
+                          zoneColor(z) === c ? "ring-2 ring-offset-2 ring-cherry" : ""
+                        }`}
+                        style={{ backgroundColor: c }}
+                        aria-label={`Colour ${c}`}
+                      />
+                    ))}
+                    <input
+                      type="color"
+                      value={zoneColor(z)}
+                      onChange={(e) => updateZone(z.id, { color: e.target.value })}
+                      className="h-6 w-8 cursor-pointer rounded border border-border bg-background"
+                      aria-label="Custom colour"
+                    />
+                  </div>
+                </div>
+                <p className={`mt-2 text-[11px] font-semibold ${clash ? "text-red-600" : "text-ink-soft"}`}>
+                  {formatArea(zoneAreaM2(z))} · {z.points.length} corners · {formatLength(zonePerimeterM(z))} perimeter
+                  {clash ? " · overlaps another area" : ""}
+                </p>
+              </div>
+            );
+          })}
+        </div>
+      ) : null}
+
+
       <div className="space-y-3">
         {map.hotspots.map((s) => (
           <div
