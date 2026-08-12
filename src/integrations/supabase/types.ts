@@ -636,6 +636,7 @@ export type Database = {
           image_url: string | null
           intro: string | null
           updated_at: string
+          zones: Json
         }
         Insert: {
           created_at?: string
@@ -645,6 +646,7 @@ export type Database = {
           image_url?: string | null
           intro?: string | null
           updated_at?: string
+          zones?: Json
         }
         Update: {
           created_at?: string
@@ -654,6 +656,7 @@ export type Database = {
           image_url?: string | null
           intro?: string | null
           updated_at?: string
+          zones?: Json
         }
         Relationships: [
           {

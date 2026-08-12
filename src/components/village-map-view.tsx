@@ -157,6 +157,7 @@ export function VillageMapView({ eventId }: { eventId: string }) {
               imageUrl={map.image_url}
               geo={map.geo!}
               hotspots={spots}
+              zones={map.zones ?? []}
               selected={selected}
               onSelect={setSelected}
             />

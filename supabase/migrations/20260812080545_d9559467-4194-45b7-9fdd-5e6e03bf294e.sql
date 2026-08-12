@@ -1,0 +1,1 @@
+ALTER TABLE public.event_village_maps ADD COLUMN IF NOT EXISTS zones jsonb NOT NULL DEFAULT '[]'::jsonb;

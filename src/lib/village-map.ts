@@ -2,6 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
 import { guessVillageIcon } from "@/lib/village-icons";
+import type { VillageZone } from "@/lib/village-zones";
 
 export type VillageCategory =
   | "registration"
@@ -54,6 +55,8 @@ export type VillageMap = {
   intro: string | null;
   hotspots: VillageHotspot[];
   geo: VillageGeo | null;
+  /** drawn areas used for field layout planning */
+  zones: VillageZone[];
 };
 
 export function isPlacedGeo(geo: VillageGeo | null | undefined): geo is VillageGeo {
@@ -168,13 +171,13 @@ export function categoryMeta(id: VillageCategory) {
 }
 
 export function emptyVillageMap(eventId: string): VillageMap {
-  return { event_id: eventId, image_url: null, intro: null, hotspots: [], geo: null };
+  return { event_id: eventId, image_url: null, intro: null, hotspots: [], geo: null, zones: [] };
 }
 
 export async function fetchVillageMap(eventId: string): Promise<VillageMap | null> {
   const { data, error } = await supabase
     .from("event_village_maps")
-    .select("event_id, image_url, intro, hotspots, geo")
+    .select("event_id, image_url, intro, hotspots, geo, zones")
     .eq("event_id", eventId)
     .maybeSingle();
   if (error) {
@@ -184,6 +187,10 @@ export async function fetchVillageMap(eventId: string): Promise<VillageMap | nul
   if (!data) return null;
   const raw = Array.isArray(data.hotspots) ? (data.hotspots as unknown as VillageHotspot[]) : [];
   const rawGeo = (data as { geo?: unknown }).geo as VillageGeo | null | undefined;
+  const rawZones = (data as { zones?: unknown }).zones;
+  const zones = Array.isArray(rawZones)
+    ? (rawZones as unknown as VillageZone[]).filter((z) => z && Array.isArray(z.points) && z.points.length > 2)
+    : [];
   return {
     event_id: data.event_id,
     image_url: data.image_url,
@@ -192,6 +199,7 @@ export async function fetchVillageMap(eventId: string): Promise<VillageMap | nul
       .filter((h) => h && (Number.isFinite(h.x) || Number.isFinite(h.lat)))
       .map((h) => ({ ...h, x: Number.isFinite(h.x) ? h.x : 50, y: Number.isFinite(h.y) ? h.y : 50 })),
     geo: hasVenueCentre(rawGeo) ? { ...rawGeo, widthM: rawGeo.widthM ?? 0 } : null,
+    zones,
 
   };
 }
@@ -203,6 +211,7 @@ export async function saveVillageMap(map: VillageMap): Promise<boolean> {
     intro: map.intro,
     hotspots: map.hotspots as unknown as Json,
     geo: (map.geo ?? {}) as unknown as Json,
+    zones: (map.zones ?? []) as unknown as Json,
   });
   if (error) console.warn("[village-map:save]", error);
   return !error;
