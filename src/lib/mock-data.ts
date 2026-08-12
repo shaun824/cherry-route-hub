@@ -26,7 +26,9 @@ export type CustomMarker = {
   lat: number;
   lng: number;
   color?: string;      // hex; falls back to the route colour
+  logoUrl?: string;    // optional sponsor/partner logo shown instead of the icon glyph
   icon?: "pin" | "start" | "finish" | "aid" | "warning" | "photo" | "food" | "water";
+
 };
 
 export type EventRoute = {
