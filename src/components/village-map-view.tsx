@@ -1,15 +1,18 @@
 import { Suspense, lazy, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ClientOnly } from "@tanstack/react-router";
-import { MapPin, Minus, Plus, X } from "lucide-react";
+import { Minus, Plus, X } from "lucide-react";
 import {
   categoryMeta,
   fetchVillageMap,
   hasVenueCentre,
   isPinnedSpot,
   isPlacedGeo,
+  spotColor,
+  spotIcon,
   type VillageHotspot,
 } from "@/lib/village-map";
+import { villageIcon } from "@/lib/village-icons";
 
 
 const VillageMapGeo = lazy(() => import("./village-map-geo"));
@@ -27,7 +30,8 @@ function Pin({
   onSelect: (id: string) => void;
   scale: number;
 }) {
-  const meta = categoryMeta(spot.category);
+  const color = spotColor(spot);
+  const Icon = villageIcon(spotIcon(spot)).Comp;
   return (
     <button
       type="button"
@@ -47,14 +51,14 @@ function Pin({
         className={`flex items-center gap-1 whitespace-nowrap rounded-full px-2 py-1 text-[10px] font-bold text-white shadow-lg transition ${
           active ? "ring-2 ring-white" : ""
         }`}
-        style={{ backgroundColor: meta.color }}
+        style={{ backgroundColor: color }}
       >
-        <MapPin className="h-3 w-3" />
+        <Icon className="h-3 w-3" />
         {spot.title}
       </span>
       <span
         className="h-2 w-2 -translate-y-[3px] rotate-45 rounded-[2px]"
-        style={{ backgroundColor: meta.color }}
+        style={{ backgroundColor: color }}
       />
     </button>
   );
@@ -206,10 +210,17 @@ export function VillageMapView({ eventId }: { eventId: string }) {
       {detail ? (
         <div className="rounded-2xl bg-card p-4 ring-1 ring-border">
           <div className="flex items-start gap-2">
-            <span
-              className="mt-0.5 h-3 w-3 shrink-0 rounded-full"
-              style={{ backgroundColor: categoryMeta(detail.category).color }}
-            />
+            {(() => {
+              const DetailIcon = villageIcon(spotIcon(detail)).Comp;
+              return (
+                <span
+                  className="mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full text-white"
+                  style={{ backgroundColor: spotColor(detail) }}
+                >
+                  <DetailIcon className="h-3.5 w-3.5" />
+                </span>
+              );
+            })()}
             <div className="min-w-0 flex-1">
               <p className="font-display text-base font-bold text-ink">{detail.title}</p>
               <p className="text-[11px] font-semibold uppercase tracking-widest text-ink-soft">
@@ -242,10 +253,17 @@ export function VillageMapView({ eventId }: { eventId: string }) {
               onMouseLeave={() => setHovered(null)}
               className="flex w-full items-center gap-2 rounded-xl bg-card px-3 py-2 text-left text-sm ring-1 ring-border"
             >
-              <span
-                className="h-2.5 w-2.5 shrink-0 rounded-full"
-                style={{ backgroundColor: categoryMeta(s.category).color }}
-              />
+              {(() => {
+                const ListIcon = villageIcon(spotIcon(s)).Comp;
+                return (
+                  <span
+                    className="grid h-6 w-6 shrink-0 place-items-center rounded-full text-white"
+                    style={{ backgroundColor: spotColor(s) }}
+                  >
+                    <ListIcon className="h-3.5 w-3.5" />
+                  </span>
+                );
+              })()}
               <span className="min-w-0 flex-1 truncate font-semibold text-ink">{s.title}</span>
               {s.hours ? <span className="text-[11px] text-ink-soft">{s.hours}</span> : null}
             </button>
