@@ -2,9 +2,12 @@
 // a satellite basemap at its real-world position, hotspots become map markers
 // and the rider's live GPS position is shown as a pulsing dot.
 import { useEffect, useMemo, useRef, useState } from "react";
-import { MapContainer, TileLayer, ImageOverlay, Marker, Popup, useMap, CircleMarker } from "react-leaflet";
+import { MapContainer, TileLayer, ImageOverlay, useMap, CircleMarker, Popup } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import "leaflet.markercluster";
+import "leaflet.markercluster/dist/MarkerCluster.css";
+import "leaflet.markercluster/dist/MarkerCluster.Default.css";
 import { spotColor, spotIcon, categoryMeta, type VillageGeo, type VillageHotspot } from "@/lib/village-map";
 import { villageIconSvg } from "@/lib/village-icons";
 
@@ -75,6 +78,76 @@ function Recenter({ position, token }: { position: [number, number] | null; toke
   }, [map, position, token]);
   return null;
 }
+
+function escapeHtml(v: string) {
+  return v.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c] as string);
+}
+
+function clusterIcon(cluster: { getChildCount: () => number }) {
+  const n = cluster.getChildCount();
+  const size = n < 10 ? 34 : n < 25 ? 40 : 46;
+  return L.divIcon({
+    className: "rce-village-cluster",
+    html: `<div style="width:${size}px;height:${size}px;border-radius:999px;display:flex;align-items:center;justify-content:center;background:hsl(var(--cherry,352 82% 47%),1);background:#c8102e;color:#fff;font-weight:800;font-size:13px;border:2px solid #fff;box-shadow:0 3px 10px rgba(0,0,0,.35)">${n}</div>`,
+    iconSize: [size, size],
+  });
+}
+
+/** Groups nearby hotspot pins; clicking a group spiderfies it so each point is tappable. */
+function ClusteredHotspots({
+  hotspots,
+  geo,
+  heightM,
+  selected,
+  onSelect,
+}: {
+  hotspots: VillageHotspot[];
+  geo: VillageGeo;
+  heightM: number;
+  selected: string | null;
+  onSelect: (id: string | null) => void;
+}) {
+  const map = useMap();
+  const selectRef = useRef(onSelect);
+  selectRef.current = onSelect;
+
+  useEffect(() => {
+    const group = (L as any).markerClusterGroup({
+      maxClusterRadius: 44,
+      showCoverageOnHover: false,
+      zoomToBoundsOnClick: false,
+      spiderfyOnMaxZoom: true,
+      spiderfyDistanceMultiplier: 1.6,
+      iconCreateFunction: clusterIcon,
+    });
+
+    for (const s of hotspots) {
+      const meta = categoryMeta(s.category);
+      const marker = L.marker(hotspotLatLng(geo, s, heightM), {
+        icon: pinIcon(spotColor(s), s.title, selected === s.id, spotIcon(s)),
+      });
+      marker.bindPopup(
+        `<strong>${escapeHtml(s.title)}</strong><br/><span style="font-size:11px;text-transform:uppercase;letter-spacing:1px">${escapeHtml(
+          meta.label,
+        )}${s.hours ? ` · ${escapeHtml(s.hours)}` : ""}</span>${
+          s.description ? `<p style="margin-top:6px">${escapeHtml(s.description)}</p>` : ""
+        }`,
+      );
+      marker.on("click", () => selectRef.current(selected === s.id ? null : s.id));
+      group.addLayer(marker);
+    }
+
+    // Always expand a group on tap instead of only zooming in.
+    group.on("clusterclick", (e: any) => e.layer.spiderfy());
+    map.addLayer(group);
+    return () => {
+      map.removeLayer(group);
+    };
+  }, [map, hotspots, geo, heightM, selected]);
+
+  return null;
+}
+
 
 export default function VillageMapGeo({
   imageUrl,
@@ -201,27 +274,14 @@ export default function VillageMapGeo({
           <FitBounds bounds={bounds} />
           <Recenter position={me} token={recenterToken} />
 
-          {hotspots.map((s) => {
-            const meta = categoryMeta(s.category);
-            return (
-              <Marker
-                key={s.id}
-                position={hotspotLatLng(geo, s, heightM)}
-                icon={pinIcon(spotColor(s), s.title, selected === s.id, spotIcon(s))}
-                eventHandlers={{ click: () => onSelect(selected === s.id ? null : s.id) }}
-              >
-                <Popup>
-                  <strong>{s.title}</strong>
-                  <br />
-                  <span style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: 1 }}>
-                    {meta.label}
-                    {s.hours ? ` · ${s.hours}` : ""}
-                  </span>
-                  {s.description ? <p style={{ marginTop: 6 }}>{s.description}</p> : null}
-                </Popup>
-              </Marker>
-            );
-          })}
+          <ClusteredHotspots
+            hotspots={hotspots}
+            geo={geo}
+            heightM={heightM}
+            selected={selected}
+            onSelect={onSelect}
+          />
+
 
           {me ? (
             <>
