@@ -144,8 +144,11 @@ export function polylineKm(coords: LatLngAlt[]): number {
  * small threshold (1.5m) to filter GPS noise. Returns null if no altitude data.
  */
 export function polylineElevationGainM(coords: LatLngAlt[]): number | null {
-  const hasAlt = coords.some((c) => typeof c[2] === "number" && Number.isFinite(c[2]));
+  // Some exports carry a literal 0 altitude for every point — treat that as
+  // "no elevation data" so callers fall back to a terrain lookup.
+  const hasAlt = coords.some((c) => typeof c[2] === "number" && Number.isFinite(c[2]) && c[2] !== 0);
   if (!hasAlt) return null;
+
   let gain = 0;
   let last: number | null = null;
   for (const c of coords) {

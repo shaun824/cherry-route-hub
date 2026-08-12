@@ -42,7 +42,16 @@ const MARKER_GLYPH: Record<NonNullable<CustomMarker["icon"]>, string> = {
   water: "💧",
 };
 
-function customIcon(color: string, icon: CustomMarker["icon"]) {
+function customIcon(color: string, icon: CustomMarker["icon"], logoUrl?: string) {
+  if (logoUrl) {
+    return L.divIcon({
+      className: "rce-custom-marker",
+      html: `<div style="border-color:${color};" class="flex h-11 w-11 items-center justify-center overflow-hidden rounded-full border-2 bg-white shadow-lg"><img src="${logoUrl}" alt="" style="max-width:82%;max-height:82%;object-fit:contain;" /></div>`,
+      iconSize: [44, 44],
+      iconAnchor: [22, 22],
+      popupAnchor: [0, -22],
+    });
+  }
   const glyph = MARKER_GLYPH[icon ?? "pin"];
   return L.divIcon({
     className: "rce-custom-marker",
@@ -52,6 +61,7 @@ function customIcon(color: string, icon: CustomMarker["icon"]) {
     popupAnchor: [0, -16],
   });
 }
+
 
 
 const TIER_COLORS: Record<string, string> = {
@@ -280,7 +290,7 @@ export default function RouteMapInner({
                 <Marker
                   key={`${l.route.id}-mk-${m.id}`}
                   position={[m.lat, m.lng] as [number, number]}
-                  icon={customIcon(color, m.icon)}
+                  icon={customIcon(color, m.icon, m.logoUrl)}
                 >
                   <Popup>
                     <div className="max-w-[240px] space-y-1">
