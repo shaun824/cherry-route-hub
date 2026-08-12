@@ -81,6 +81,10 @@ function VillageEditor() {
     () => (hasVenueCentre(map.geo) ? { lat: map.geo.lat, lng: map.geo.lng } : null),
     [map.geo],
   );
+  const selectedSpot = useMemo(
+    () => map.hotspots.find((s) => s.id === selected) ?? null,
+    [map.hotspots, selected],
+  );
 
   function patch(next: Partial<VillageMap>) {
     setMap((prev) => ({ ...prev, ...next }));
