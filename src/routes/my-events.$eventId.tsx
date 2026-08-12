@@ -56,6 +56,9 @@ import { TypeBadge } from "@/components/ui-bits";
 import { TrackerPanel } from "@/components/tracker-panel";
 import { LockedSection } from "@/components/locked-section";
 import { brandHeader } from "@/lib/event-brand";
+import { EventPhotosPanel } from "@/components/event-photos-panel";
+import { Image as ImageIcon } from "lucide-react";
+
 
 export const Route = createFileRoute("/my-events/$eventId")({
   loader: async ({ params }) => {
@@ -96,7 +99,7 @@ export const Route = createFileRoute("/my-events/$eventId")({
   ),
 });
 
-type Tab = "info" | "village" | "routes" | "news" | "chat" | "ask" | "packing" | "sponsors";
+type Tab = "info" | "village" | "routes" | "news" | "photos" | "chat" | "ask" | "packing" | "sponsors";
 
 function MyEventDetail() {
   const { event } = Route.useLoaderData();
@@ -146,6 +149,8 @@ function MyEventDetail() {
             { id: "routes", label: "Routes", icon: MapIcon },
             { id: "village", label: "Village", icon: Tent },
             { id: "news", label: "News", icon: Newspaper },
+            { id: "photos", label: "Photos", icon: ImageIcon },
+
             { id: "packing", label: "Packing", icon: CheckSquare },
             { id: "chat", label: "Event chat", icon: MessageCircle },
             { id: "ask", label: "Ask admin", icon: MessagesSquare },
@@ -192,6 +197,13 @@ function MyEventDetail() {
         )}
         {tab === "routes" && <RoutesPanel eventId={event.id} event={event} />}
         {tab === "news" && <EventNewsPanel posts={eventNews} />}
+        {tab === "photos" && (
+          <section className="space-y-3">
+            <SectionTitle>Event photos</SectionTitle>
+            <EventPhotosPanel eventId={event.id} />
+          </section>
+        )}
+
         {tab === "packing" && <PackingPanel eventId={event.id} userId={user?.id ?? null} />}
         {tab === "chat" && <ChatPanel eventId={event.id} userId={user?.id ?? null} />}
         {tab === "ask" && <AskAdminPanel eventId={event.id} userId={user?.id ?? null} />}

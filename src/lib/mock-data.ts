@@ -92,6 +92,8 @@ export type Event = {
   entryUrl?: string;         // external entry page (Entry Ninja / entries site) for this event
   websiteUrl?: string;       // official event website; assistant bot scans it for answers
   faqUrl?: string;           // optional dedicated FAQ page for the bot to prioritise
+  photosAlbumUrl?: string;   // public Google Photos shared album link for this event's gallery
+
   spectatorParking?: string; // where spectators can park at the venue
   spectatorFood?: string;    // food / refreshments available at the venue
   spectatorNotes?: string;   // any extra spectator-only notes

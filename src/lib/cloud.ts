@@ -174,6 +174,8 @@ function eventFromRow(r: Row): Event {
     entryUrl: ((r as Row).entry_ninja_url as string | null) ?? undefined,
     websiteUrl: ((r as Row).website_url as string | null) ?? undefined,
     faqUrl: ((r as Row).faq_url as string | null) ?? undefined,
+    photosAlbumUrl: ((r as Row).photos_album_url as string | null) ?? undefined,
+
     spectatorParking: ((r as Row).spectator_parking as string | null) ?? undefined,
     spectatorFood: ((r as Row).spectator_food as string | null) ?? undefined,
     spectatorNotes: ((r as Row).spectator_notes as string | null) ?? undefined,
@@ -218,6 +220,8 @@ export async function upsertEventCloud(e: Event): Promise<string | null> {
     spectator_mode: e.spectatorMode ?? false,
     website_url: e.websiteUrl ?? null,
     faq_url: e.faqUrl ?? null,
+    photos_album_url: e.photosAlbumUrl ?? null,
+
     spectator_parking: e.spectatorParking ?? null,
     spectator_food: e.spectatorFood ?? null,
     spectator_notes: e.spectatorNotes ?? null,

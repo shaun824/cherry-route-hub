@@ -803,6 +803,21 @@ function EventEditor({
               onChange={(e) => update("faqUrl", e.target.value || undefined)}
             />
           </Field>
+          <Field label="Google Photos album link (optional)" className="md:col-span-2">
+            <input
+              className={inputCls}
+              type="url"
+              value={form.photosAlbumUrl ?? ""}
+              placeholder="https://photos.app.goo.gl/…"
+              onChange={(e) => update("photosAlbumUrl", e.target.value || undefined)}
+            />
+            <p className="mt-1 text-[11px] text-ink-soft">
+              In Google Photos open the album → Share → Create link, and paste it here. The album must be
+              shared with “Anyone with the link”. Photos show in a Photos tab on the event page — nothing is
+              copied into the app.
+            </p>
+          </Field>
+
 
           <Field label="Spectator: parking" className="md:col-span-2">
             <textarea

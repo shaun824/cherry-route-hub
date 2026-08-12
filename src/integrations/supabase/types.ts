@@ -484,6 +484,44 @@ export type Database = {
           },
         ]
       }
+      event_photos_cache: {
+        Row: {
+          album_url: string | null
+          created_at: string
+          event_id: string
+          last_error: string | null
+          photos: Json
+          refreshed_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          album_url?: string | null
+          created_at?: string
+          event_id: string
+          last_error?: string | null
+          photos?: Json
+          refreshed_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          album_url?: string | null
+          created_at?: string
+          event_id?: string
+          last_error?: string | null
+          photos?: Json
+          refreshed_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_photos_cache_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: true
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       event_rooming: {
         Row: {
           created_at: string
@@ -650,6 +688,7 @@ export type Database = {
           logo_url: string | null
           map_query: string | null
           name: string
+          photos_album_url: string | null
           schedule: Json
           slug: string | null
           social_links: Json
@@ -686,6 +725,7 @@ export type Database = {
           logo_url?: string | null
           map_query?: string | null
           name: string
+          photos_album_url?: string | null
           schedule?: Json
           slug?: string | null
           social_links?: Json
@@ -722,6 +762,7 @@ export type Database = {
           logo_url?: string | null
           map_query?: string | null
           name?: string
+          photos_album_url?: string | null
           schedule?: Json
           slug?: string | null
           social_links?: Json
