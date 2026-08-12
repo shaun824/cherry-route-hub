@@ -2,7 +2,7 @@
 // a satellite basemap at its real-world position, hotspots become map markers
 // and the rider's live GPS position is shown as a pulsing dot.
 import { useEffect, useMemo, useRef, useState } from "react";
-import { MapContainer, TileLayer, ImageOverlay, useMap, CircleMarker, Polygon, Popup, Tooltip } from "react-leaflet";
+import { MapContainer, TileLayer, ImageOverlay, useMap, CircleMarker, Polygon, Popup } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import "leaflet.markercluster";
