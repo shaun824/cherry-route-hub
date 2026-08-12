@@ -184,14 +184,19 @@ export default function VillageMapGeo({
             />
           )}
 
-          <ImageOverlay
-            url={imageUrl}
-            bounds={bounds}
-            opacity={0.95}
-            className="rce-village-overlay"
-            zIndex={400}
-          />
-          <RotateOverlay rotation={geo.rotation ?? 0} />
+          {showOverlay && imageUrl ? (
+            <>
+              <ImageOverlay
+                url={imageUrl}
+                bounds={bounds}
+                opacity={0.95}
+                className="rce-village-overlay"
+                zIndex={400}
+              />
+              <RotateOverlay rotation={geo.rotation ?? 0} />
+            </>
+          ) : null}
+
           <FitBounds bounds={bounds} />
           <Recenter position={me} token={recenterToken} />
 
