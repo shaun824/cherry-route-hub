@@ -1,7 +1,7 @@
 import { createFileRoute, ClientOnly, Link, notFound } from "@tanstack/react-router";
 import { Suspense, lazy, useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Loader2, MapPin, Save, Sparkles, Trash2, Upload, X } from "lucide-react";
+import { ArrowLeft, Loader2, MapPin, PencilRuler, Save, Sparkles, Square, Trash2, Upload, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   VILLAGE_CATEGORIES,
@@ -21,6 +21,20 @@ import {
 } from "@/lib/village-map";
 
 import { VILLAGE_COLORS, VILLAGE_ICONS, guessVillageIcon, villageIcon } from "@/lib/village-icons";
+import {
+  ZONE_COLORS,
+  formatArea,
+  formatLength,
+  overlappingZoneIds,
+  rectangleZone,
+  resizeZone,
+  zoneAreaM2,
+  zoneColor,
+  zonePerimeterM,
+  zoneSizeM,
+  type VillageZone,
+  type ZonePoint,
+} from "@/lib/village-zones";
 
 const VillageMapEditorGeo = lazy(() => import("@/components/village-map-editor-geo"));
 
@@ -66,6 +80,8 @@ function VillageEditor() {
   const [placing, setPlacing] = useState(false);
   const [selected, setSelected] = useState<string | null>(null);
   const [centreToken, setCentreToken] = useState(0);
+  const [drawing, setDrawing] = useState(false);
+  const [selectedZone, setSelectedZone] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const dragRef = useRef<string | null>(null);
   const imgWrapRef = useRef<HTMLDivElement>(null);
@@ -85,6 +101,9 @@ function VillageEditor() {
     () => (hasVenueCentre(map.geo) ? { lat: map.geo.lat, lng: map.geo.lng } : null),
     [map.geo],
   );
+  const zones = map.zones ?? [];
+  const overlapping = useMemo(() => overlappingZoneIds(zones), [zones]);
+  const activeZone = useMemo(() => zones.find((z) => z.id === selectedZone) ?? null, [zones, selectedZone]);
   const selectedSpot = useMemo(
     () => map.hotspots.find((s) => s.id === selected) ?? null,
     [map.hotspots, selected],
@@ -102,6 +121,33 @@ function VillageEditor() {
 
   function updateSpot(id: string, next: Partial<VillageHotspot>) {
     patch({ hotspots: map.hotspots.map((s) => (s.id === id ? { ...s, ...next } : s)) });
+  }
+
+  function updateZone(id: string, next: Partial<VillageZone>) {
+    patch({ zones: zones.map((z) => (z.id === id ? { ...z, ...next } : z)) });
+  }
+
+  function addDrawnZone(points: ZonePoint[]) {
+    const zone: VillageZone = {
+      id: crypto.randomUUID(),
+      name: `Area ${zones.length + 1}`,
+      color: ZONE_COLORS[zones.length % ZONE_COLORS.length],
+      points,
+    };
+    patch({ zones: [...zones, zone] });
+    setSelectedZone(zone.id);
+    setDrawing(false);
+  }
+
+  function addRectangle() {
+    if (!centre) return;
+    const w = Number(window.prompt("Width in metres (east–west)", "20"));
+    const h = Number(window.prompt("Length in metres (north–south)", "10"));
+    if (!Number.isFinite(w) || !Number.isFinite(h) || w <= 0 || h <= 0) return;
+    const zone = rectangleZone(centre, w, h, `Area ${zones.length + 1}`);
+    zone.color = ZONE_COLORS[zones.length % ZONE_COLORS.length];
+    patch({ zones: [...zones, zone] });
+    setSelectedZone(zone.id);
   }
 
   function pasteVenueLink() {
@@ -295,6 +341,25 @@ function VillageEditor() {
           {placing ? "Click the map to place…" : "Add point"}
         </button>
         <button
+          onClick={() => {
+            setDrawing((d) => !d);
+            setPlacing(false);
+          }}
+          disabled={usingImage || !centre}
+          className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold disabled:opacity-50 ${
+            drawing ? "bg-cherry text-white" : "bg-muted text-ink"
+          }`}
+        >
+          <PencilRuler className="h-3.5 w-3.5" /> {drawing ? "Drawing area…" : "Draw area"}
+        </button>
+        <button
+          onClick={addRectangle}
+          disabled={usingImage || !centre}
+          className="inline-flex items-center gap-1.5 rounded-lg bg-muted px-3 py-1.5 text-xs font-bold text-ink disabled:opacity-50"
+        >
+          <Square className="h-3.5 w-3.5" /> Add area by size
+        </button>
+        <button
           onClick={loadMasterLayout}
           disabled={usingImage || !centre}
           className="inline-flex items-center gap-1.5 rounded-lg bg-muted px-3 py-1.5 text-xs font-bold text-ink disabled:opacity-50"
@@ -406,9 +471,17 @@ function VillageEditor() {
               hotspots={map.hotspots}
               selected={selected}
               placing={placing}
+              drawing={drawing}
+              zones={zones}
+              selectedZone={selectedZone}
+              overlapping={overlapping}
               onPlace={placeSpot}
               onMove={(id, lat, lng) => updateSpot(id, { lat, lng })}
               onSelect={setSelected}
+              onDrawn={addDrawnZone}
+              onCancelDraw={() => setDrawing(false)}
+              onZoneChange={(id, points) => updateZone(id, { points })}
+              onSelectZone={setSelectedZone}
             />
           </Suspense>
         </ClientOnly>
