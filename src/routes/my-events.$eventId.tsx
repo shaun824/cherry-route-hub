@@ -57,6 +57,8 @@ import { TrackerPanel } from "@/components/tracker-panel";
 import { LockedSection } from "@/components/locked-section";
 import { brandHeader } from "@/lib/event-brand";
 import { EventPhotosPanel } from "@/components/event-photos-panel";
+import { FeedPostBody } from "@/components/feed-post-body";
+
 import { Image as ImageIcon } from "lucide-react";
 
 
@@ -392,7 +394,7 @@ function EventNewsPanel({ posts }: { posts: FeedPost[] }) {
             </span>
           </div>
           <h3 className="mt-2 font-display text-base font-bold leading-snug text-ink">{p.title}</h3>
-          <p className="mt-1.5 text-sm leading-relaxed text-ink-soft">{p.body}</p>
+          <FeedPostBody post={p} />
           <p className="mt-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
             {p.author}
           </p>

@@ -789,6 +789,7 @@ export type Database = {
           pinned: boolean
           post_type: string
           posted_at: string
+          source_url: string | null
           title: string
           updated_at: string
         }
@@ -801,6 +802,7 @@ export type Database = {
           pinned?: boolean
           post_type?: string
           posted_at?: string
+          source_url?: string | null
           title: string
           updated_at?: string
         }
@@ -813,6 +815,7 @@ export type Database = {
           pinned?: boolean
           post_type?: string
           posted_at?: string
+          source_url?: string | null
           title?: string
           updated_at?: string
         }

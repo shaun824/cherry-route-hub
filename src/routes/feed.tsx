@@ -4,6 +4,8 @@ import { relativeTime } from "@/lib/mock-data";
 import { useAdminStore } from "@/lib/store";
 import { useHydratedStore } from "@/lib/use-hydrated-store";
 import { Pin } from "lucide-react";
+import { FeedPostBody } from "@/components/feed-post-body";
+
 
 export const Route = createFileRoute("/feed")({
   head: () => ({
@@ -58,7 +60,7 @@ function Feed() {
             <h3 className="mt-2 font-display text-base font-bold leading-snug text-ink">
               {p.title}
             </h3>
-            <p className="mt-1.5 text-sm leading-relaxed text-ink-soft">{p.body}</p>
+            <FeedPostBody post={p} />
             <p className="mt-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
               {p.author}
             </p>
