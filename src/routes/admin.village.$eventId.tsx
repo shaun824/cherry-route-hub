@@ -6,6 +6,8 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   VILLAGE_CATEGORIES,
   categoryMeta,
+  spotColor,
+  spotIcon,
   emptyVillageMap,
   fetchVillageMap,
   hasVenueCentre,
@@ -17,6 +19,8 @@ import {
   type VillageGeo,
   type VillageMap,
 } from "@/lib/village-map";
+
+import { VILLAGE_COLORS, VILLAGE_ICONS, guessVillageIcon, villageIcon } from "@/lib/village-icons";
 
 const VillageMapEditorGeo = lazy(() => import("@/components/village-map-editor-geo"));
 
@@ -369,7 +373,7 @@ function VillageEditor() {
           >
             <img src={map.image_url!} alt="Village map" className="block w-full select-none" draggable={false} />
             {map.hotspots.map((s) => {
-              const meta = categoryMeta(s.category);
+              const PinIcon = villageIcon(spotIcon(s)).Comp;
               return (
                 <button
                   key={s.id}
@@ -381,11 +385,12 @@ function VillageEditor() {
                     e.stopPropagation();
                     setSelected(s.id);
                   }}
-                  style={{ left: `${s.x}%`, top: `${s.y}%`, backgroundColor: meta.color }}
-                  className={`absolute -translate-x-1/2 -translate-y-1/2 cursor-move rounded-full px-2 py-1 text-[10px] font-bold text-white shadow ${
+                  style={{ left: `${s.x}%`, top: `${s.y}%`, backgroundColor: spotColor(s) }}
+                  className={`absolute inline-flex -translate-x-1/2 -translate-y-1/2 cursor-move items-center gap-1 rounded-full px-2 py-1 text-[10px] font-bold text-white shadow ${
                     selected === s.id ? "ring-2 ring-cherry" : ""
                   }`}
                 >
+                  <PinIcon className="h-3 w-3" />
                   {s.title}
                 </button>
               );
@@ -459,6 +464,79 @@ function VillageEditor() {
                 className="rounded-lg border border-border bg-background px-3 py-2 text-sm"
                 placeholder="Open hours e.g. 07:00 – 18:00"
               />
+            </div>
+            <div className="mt-2 space-y-2">
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-ink-soft">
+                  Icon
+                  {selectedSpot.icon ? (
+                    <button
+                      onClick={() => updateSpot(selectedSpot.id, { icon: undefined })}
+                      className="ml-2 text-cherry underline"
+                    >
+                      auto from name ({villageIcon(guessVillageIcon(selectedSpot.title, selectedSpot.category)).label})
+                    </button>
+                  ) : (
+                    <span className="ml-2 font-semibold normal-case tracking-normal">auto from name</span>
+                  )}
+                </p>
+                <div className="mt-1 flex max-h-24 flex-wrap gap-1 overflow-y-auto">
+                  {VILLAGE_ICONS.map((ic) => {
+                    const Ico = ic.Comp;
+                    const on = spotIcon(selectedSpot) === ic.id;
+                    return (
+                      <button
+                        key={ic.id}
+                        title={ic.label}
+                        onClick={() => updateSpot(selectedSpot.id, { icon: ic.id })}
+                        className={`grid h-8 w-8 place-items-center rounded-lg ring-1 ${
+                          on ? "ring-2 ring-cherry" : "ring-border"
+                        }`}
+                        style={on ? { backgroundColor: spotColor(selectedSpot), color: "#fff" } : undefined}
+                      >
+                        <Ico className="h-4 w-4" />
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-ink-soft">
+                  Colour
+                  {selectedSpot.color ? (
+                    <button
+                      onClick={() => updateSpot(selectedSpot.id, { color: undefined })}
+                      className="ml-2 text-cherry underline"
+                    >
+                      use category colour
+                    </button>
+                  ) : (
+                    <span className="ml-2 font-semibold normal-case tracking-normal">
+                      from category ({categoryMeta(selectedSpot.category).label})
+                    </span>
+                  )}
+                </p>
+                <div className="mt-1 flex flex-wrap items-center gap-1">
+                  {VILLAGE_COLORS.map((c) => (
+                    <button
+                      key={c}
+                      onClick={() => updateSpot(selectedSpot.id, { color: c })}
+                      className={`h-6 w-6 rounded-full ring-1 ring-border ${
+                        spotColor(selectedSpot) === c ? "ring-2 ring-offset-2 ring-cherry" : ""
+                      }`}
+                      style={{ backgroundColor: c }}
+                      aria-label={`Colour ${c}`}
+                    />
+                  ))}
+                  <input
+                    type="color"
+                    value={spotColor(selectedSpot)}
+                    onChange={(e) => updateSpot(selectedSpot.id, { color: e.target.value })}
+                    className="h-6 w-8 cursor-pointer rounded border border-border bg-background"
+                    aria-label="Custom colour"
+                  />
+                </div>
+              </div>
             </div>
             <textarea
               value={selectedSpot.description ?? ""}
