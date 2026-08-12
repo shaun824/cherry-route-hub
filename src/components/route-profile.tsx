@@ -7,7 +7,6 @@ import { Mountain, TrendingUp } from "lucide-react";
 import {
   haversineMeters,
   parseKml,
-  samplePolyline,
   type LatLngAlt,
 } from "@/lib/geo";
 import { getRouteElevation } from "@/lib/elevation.functions";
