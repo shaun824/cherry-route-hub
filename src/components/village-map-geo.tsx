@@ -279,14 +279,9 @@ export default function VillageMapGeo({
               key={z.id}
               positions={z.points.map((p) => [p.lat, p.lng]) as [number, number][]}
               pathOptions={{ color: zoneColor(z), weight: 2, fillColor: zoneColor(z), fillOpacity: 0.18 }}
-            >
-              <Tooltip direction="center" permanent className="rce-zone-label">
-                <span style={{ fontWeight: 800 }}>{z.name}</span>
-                <br />
-                {formatArea(zoneAreaM2(z))}
-              </Tooltip>
-            </Polygon>
+            />
           ))}
+
 
           <FitBounds bounds={bounds} />
           <Recenter position={me} token={recenterToken} />
