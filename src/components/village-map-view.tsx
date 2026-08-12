@@ -166,7 +166,7 @@ export function VillageMapView({ eventId }: { eventId: string }) {
             style={{ transform: `scale(${scale})`, width: `${100}%` }}
           >
             <img
-              src={map.image_url}
+              src={map.image_url ?? undefined}
               alt="Event village map"
               className="block w-full select-none"
               draggable={false}
