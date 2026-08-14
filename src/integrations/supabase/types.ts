@@ -347,6 +347,8 @@ export type Database = {
       }
       event_entrants: {
         Row: {
+          amount_due_cents: number | null
+          amount_paid_cents: number | null
           batch: string | null
           bib_number: string | null
           category: string | null
@@ -359,12 +361,16 @@ export type Database = {
           id: string
           jacket_size: string | null
           notes: string | null
+          paid: boolean | null
+          payment_synced_at: string | null
           registration_ref: string | null
           started_at: string | null
           tshirt_size: string | null
           updated_at: string
         }
         Insert: {
+          amount_due_cents?: number | null
+          amount_paid_cents?: number | null
           batch?: string | null
           bib_number?: string | null
           category?: string | null
@@ -377,12 +383,16 @@ export type Database = {
           id?: string
           jacket_size?: string | null
           notes?: string | null
+          paid?: boolean | null
+          payment_synced_at?: string | null
           registration_ref?: string | null
           started_at?: string | null
           tshirt_size?: string | null
           updated_at?: string
         }
         Update: {
+          amount_due_cents?: number | null
+          amount_paid_cents?: number | null
           batch?: string | null
           bib_number?: string | null
           category?: string | null
@@ -395,6 +405,8 @@ export type Database = {
           id?: string
           jacket_size?: string | null
           notes?: string | null
+          paid?: boolean | null
+          payment_synced_at?: string | null
           registration_ref?: string | null
           started_at?: string | null
           tshirt_size?: string | null
