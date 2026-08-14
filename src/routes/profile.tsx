@@ -2,8 +2,8 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { PageHeader } from "@/components/ui-bits";
 import { supabase } from "@/integrations/supabase/client";
-import { useSession, signOut } from "@/lib/auth";
-import { LogOut, Save, User as UserIcon, ShieldAlert } from "lucide-react";
+import { useSession, signOut, useIsCrew } from "@/lib/auth";
+import { LogOut, Save, User as UserIcon, ShieldAlert, HardHat } from "lucide-react";
 import { NotificationSettings } from "@/components/notification-settings";
 
 export const Route = createFileRoute("/profile")({
