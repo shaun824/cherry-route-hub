@@ -52,8 +52,9 @@ function BotLogPage() {
         supabase
           .from("admin_qa_threads")
           .select(
-            "id, channel, wa_name, wa_phone, event:events(name), rider:profiles!admin_qa_threads_rider_user_id_fkey(full_name, email)",
+            "id, channel, wa_name, wa_phone, event_id, event:events(name), rider:profiles!admin_qa_threads_rider_user_id_fkey(full_name, email)",
           ),
+
       ]);
 
       const meta = new Map<string, any>((threads ?? []).map((t: any) => [t.id, t]));
