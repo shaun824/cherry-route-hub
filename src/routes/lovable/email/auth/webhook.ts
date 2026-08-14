@@ -9,7 +9,7 @@ import { EmailChangeEmail } from '@/lib/email-templates/email-change'
 import { ReauthenticationEmail } from '@/lib/email-templates/reauthentication'
 
 // Configuration
-const SITE_NAME = "cherry-route-hub"
+const SITE_NAME = "Red Cherry Events Rider Hub"
 const SENDER_DOMAIN = "notify.riderapp.redcherryevents.co.za"
 const ROOT_DOMAIN = "riderapp.redcherryevents.co.za"
 const FROM_DOMAIN = "notify.riderapp.redcherryevents.co.za"
