@@ -64,6 +64,7 @@ function AuthPage() {
     setBusy(true);
     setError(null);
     setNotice(null);
+    setNoAccount(false);
     try {
       if (mode === "reset") {
         const { error: err } = await supabase.auth.resetPasswordForEmail(email.trim(), {
@@ -86,7 +87,23 @@ function AuthPage() {
           email: email.trim(),
           password,
         });
-        if (err) throw err;
+        if (err) {
+          // Entry Ninja logins don't exist here — tell them to create an account
+          // rather than leaving them stuck on "invalid credentials".
+          if (/invalid login credentials/i.test(err.message)) {
+            try {
+              const res = await checkAccount({ data: { email: email.trim() } });
+              if (!res.hasAccount) {
+                setNoAccount(true);
+                setHasEntries(res.hasEntries);
+                return;
+              }
+            } catch {
+              /* fall through to the normal error */
+            }
+          }
+          throw err;
+        }
       }
     } catch (err) {
       setError((err as Error).message || "Something went wrong.");
@@ -94,6 +111,7 @@ function AuthPage() {
       setBusy(false);
     }
   }
+
 
   return (
     <div className="grid min-h-screen place-items-center bg-secondary/40 px-6 py-10">
