@@ -6,6 +6,7 @@ import { useHydratedStore } from "@/lib/use-hydrated-store";
 import { MapPin, ChevronRight, Bike, Motorbike } from "lucide-react";
 import { getEventSport, getEventSportLabel } from "@/lib/event-sport";
 import { brandHeader } from "@/lib/event-brand";
+import { EventLogo } from "@/components/event-logo";
 
 type SportFilter = "all" | "moto" | "mtb";
 
@@ -94,15 +95,9 @@ function Events() {
                     {e.discipline}
                   </span>
                 </div>
-                <div className="relative mt-3 flex items-center gap-3">
-                  {e.logoUrl ? (
-                    <img
-                      src={e.logoUrl}
-                      alt=""
-                      className="h-10 w-10 shrink-0 rounded-lg bg-white/10 object-contain p-1 ring-1 ring-white/25"
-                    />
-                  ) : null}
-                  <p className="font-display text-lg font-bold leading-tight">{e.name}</p>
+                <div className="relative mt-3 flex items-center justify-between gap-3">
+                  <p className="min-w-0 font-display text-lg font-bold leading-tight">{e.name}</p>
+                  <EventLogo src={e.logoUrl} name={e.name} size="md" onBrand />
                 </div>
               </div>
               <div className="flex items-center justify-between px-4 py-3">
