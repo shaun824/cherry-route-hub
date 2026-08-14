@@ -1,0 +1,1 @@
+insert into public.site_settings (key, value) values ('support', '{"whatsappEnabled": true, "whatsappNumber": "27818180179", "whatsappLabel": "Chat on WhatsApp"}'::jsonb) on conflict (key) do update set value = excluded.value;
