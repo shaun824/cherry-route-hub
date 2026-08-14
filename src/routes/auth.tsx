@@ -140,7 +140,16 @@ function AuthPage() {
           },
         });
         if (err) throw err;
-        if (!data.session) {
+        // Supabase returns a user with no identities when the email is already
+        // registered — no email is sent, so don't tell them to check their inbox.
+        const alreadyRegistered =
+          !data.session && (data.user?.identities?.length ?? 0) === 0;
+        if (alreadyRegistered) {
+          setMode("signin");
+          setError(
+            "You already have an account with this email. Sign in below, or use \"Forgot password?\" to reset it.",
+          );
+        } else if (!data.session) {
           setNotice(
             "Almost there — check your email to confirm your account, then sign in and we'll link your entries.",
           );
