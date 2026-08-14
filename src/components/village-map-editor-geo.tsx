@@ -302,13 +302,23 @@ export default function VillageMapEditorGeo({
         </MapContainer>
       </div>
 
-      <button
-        type="button"
-        onClick={() => setShowLabels((v) => !v)}
-        className="absolute bottom-3 right-3 z-[500] rounded-xl bg-card/95 px-3 py-1.5 text-[11px] font-bold text-ink shadow ring-1 ring-border backdrop-blur"
-      >
-        {showLabels ? "Hide names" : "Show names"}
-      </button>
+      <div className="absolute bottom-3 right-3 z-[500] flex gap-2">
+        <button
+          type="button"
+          onClick={() => setFitToken((t) => t + 1)}
+          className="rounded-xl bg-card/95 px-3 py-1.5 text-[11px] font-bold text-ink shadow ring-1 ring-border backdrop-blur"
+        >
+          Zoom to areas
+        </button>
+        <button
+          type="button"
+          onClick={() => setShowLabels((v) => !v)}
+          className="rounded-xl bg-card/95 px-3 py-1.5 text-[11px] font-bold text-ink shadow ring-1 ring-border backdrop-blur"
+        >
+          {showLabels ? "Hide names" : "Show names"}
+        </button>
+      </div>
+
 
       {drawing ? (
         <div className="pointer-events-none absolute inset-x-0 top-3 z-[500] flex justify-center px-3">
