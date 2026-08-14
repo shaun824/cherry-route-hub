@@ -25,6 +25,9 @@ type CsvRow = {
   jacket_size?: string;
   tshirt_size?: string;
   extras?: string;
+  paid?: string;
+  amount_due?: string;
+  amount_paid?: string;
   notes?: string;
 };
 
@@ -83,6 +86,9 @@ function mapRowFlexible(r: Record<string, string>, defaultEventId: string): CsvR
     tshirt_size: pick(r, ["tshirt_size"]),
     extras: pick(r, ["extras"]),
     notes: pick(r, ["notes"]),
+    paid: pick(r, ["paid", "Paid", "Payment Status", "Payment"]),
+    amount_due: pick(r, ["amount_due", "Amount Due", "Total", "Entry Total", "Amount"]),
+    amount_paid: pick(r, ["amount_paid", "Amount Paid", "Paid Amount"]),
   };
 
   // Fill full_name from First/Last if not already set.
