@@ -851,9 +851,12 @@ function PackingPanel({
         </div>
         {usingDefault ? (
           <p className="mt-2 text-[11px] text-ink-soft">
-            Starter packing list for multi-day rides. Tick things off as you pack.
+            Sized for this event: {rideDays} riding day{rideDays > 1 ? "s" : ""}
+            {nights > 0 ? ` and ${nights} night${nights > 1 ? "s" : ""} away` : " (no overnight stay)"}. Everyone
+            runs tubeless — bring a spare tyre, sealant and plugs instead of tubes.
           </p>
         ) : null}
+
       </div>
 
       {groups.map(([cat, list]) => (
