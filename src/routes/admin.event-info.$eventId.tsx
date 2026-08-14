@@ -11,7 +11,8 @@ import {
 } from "@/lib/event-info";
 import { useServerFn } from "@tanstack/react-start";
 import { resolveMapLink } from "@/lib/map-link.functions";
-import { buildMapEmbedSrc, coordsFromMapInput, isShortMapLink } from "@/lib/map-embed";
+import { buildMapEmbedSrc, coordsFromMapInput, isShortMapLink, resolveVenuePoint } from "@/lib/map-embed";
+import { VenueMiniMap } from "@/components/venue-mini-map";
 
 export const Route = createFileRoute("/admin/event-info/$eventId")({
   loader: async ({ params }) => {
