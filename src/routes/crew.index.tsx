@@ -14,8 +14,10 @@ import {
 } from "lucide-react";
 import { useIsCrew } from "@/lib/auth";
 import { fetchCrewEvents, fetchCrewRooming, normaliseTent } from "@/lib/crew";
+import { buildCrewTimeline, groupScheduleByDay, pickCurrentDay } from "@/lib/crew-plan";
 import { supabase } from "@/integrations/supabase/client";
 import type { EventDay, ScheduleItem } from "@/lib/mock-data";
+
 
 export const Route = createFileRoute("/crew/")({
   head: () => ({
