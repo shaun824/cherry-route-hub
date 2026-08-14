@@ -138,22 +138,27 @@ function MyEventDetail() {
         >
           <ArrowLeft className="h-5 w-5" />
         </Link>
-        <p className="text-[11px] font-semibold uppercase tracking-widest opacity-85">
-          {event.discipline}
-        </p>
-        <h1 className="mt-1 font-display text-2xl font-bold leading-tight">{event.name}</h1>
-        <p className="mt-2 text-xs opacity-90">
-          {new Date(event.event_date).toLocaleString("en-ZA", {
-            weekday: "long",
-            day: "numeric",
-            month: "short",
-            hour: "2-digit",
-            minute: "2-digit",
-            timeZone: "Africa/Johannesburg",
-          })}
-          {" · "}
-          {event.location}
-        </p>
+        <div className="flex items-start justify-between gap-4">
+          <div className="min-w-0">
+            <p className="text-[11px] font-semibold uppercase tracking-widest opacity-85">
+              {event.discipline}
+            </p>
+            <h1 className="mt-1 font-display text-2xl font-bold leading-tight">{event.name}</h1>
+            <p className="mt-2 text-xs opacity-90">
+              {new Date(event.event_date).toLocaleString("en-ZA", {
+                weekday: "long",
+                day: "numeric",
+                month: "short",
+                hour: "2-digit",
+                minute: "2-digit",
+                timeZone: "Africa/Johannesburg",
+              })}
+              {" · "}
+              {event.location}
+            </p>
+          </div>
+          <EventLogo src={event.logo_url} name={event.name} size="lg" onBrand />
+        </div>
       </div>
 
       <nav className="sticky top-0 z-10 flex gap-1 overflow-x-auto border-b border-border bg-card/95 px-2 py-2 backdrop-blur">
