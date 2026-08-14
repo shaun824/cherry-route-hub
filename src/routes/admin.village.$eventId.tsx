@@ -131,6 +131,16 @@ function VillageEditor() {
     patch({ zones: zones.map((z) => (z.id === id ? { ...z, ...next } : z)) });
   }
 
+  function duplicateZone(id: string) {
+    const z = zones.find((o) => o.id === id);
+    if (!z) return;
+    const copy = translateZone(z, zoneSizeMetres(z).w + 2, 0);
+    copy.id = crypto.randomUUID();
+    copy.name = nextZoneName(z.name, zones.map((o) => o.name));
+    patch({ zones: [...zones, copy] });
+    setSelectedZone(copy.id);
+  }
+
   function addDrawnZone(points: ZonePoint[]) {
     const zone: VillageZone = {
       id: crypto.randomUUID(),
