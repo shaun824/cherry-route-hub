@@ -1,7 +1,8 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { ShieldCheck, ShieldOff } from "lucide-react";
+import { ShieldCheck, ShieldOff, Eye } from "lucide-react";
+
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin/riders")({
@@ -119,7 +120,15 @@ function RidersAdmin() {
                     )}
                   </td>
                   <td className="px-4 py-3 text-right">
+                    <Link
+                      to="/admin/rider/$userId"
+                      params={{ userId: p.id }}
+                      className="mr-2 inline-flex items-center gap-1 rounded-lg border border-border bg-background px-2 py-1 text-xs font-semibold text-ink-soft hover:text-cherry"
+                    >
+                      <Eye className="h-3 w-3" /> View profile
+                    </Link>
                     {isAdmin ? (
+
                       <button
                         onClick={() => demote.mutate(p.id)}
                         disabled={demote.isPending}

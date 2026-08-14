@@ -1,6 +1,21 @@
 import { useEffect, useRef } from "react";
 import { useRouterState } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
+import { checkIsAdmin } from "@/lib/is-admin";
+
+/** Staff/admin traffic is never recorded — reports must show riders only. */
+let adminCheck: Promise<boolean> | null = null;
+let adminForUser: string | null = null;
+
+async function isStaff(userId: string | null): Promise<boolean> {
+  if (!userId) return false;
+  if (adminForUser !== userId) {
+    adminForUser = userId;
+    adminCheck = checkIsAdmin(supabase);
+  }
+  return (await adminCheck) ?? false;
+}
+
 
 const SESSION_KEY = "rce_analytics_session";
 
@@ -40,7 +55,10 @@ export async function track({ eventName, path, durationMs, props }: TrackInput) 
   if (typeof window === "undefined") return;
   try {
     const { data } = await supabase.auth.getSession();
+    const uid = data.session?.user.id ?? null;
+    if (await isStaff(uid)) return;
     const pathname = path ?? window.location.pathname;
+
     await supabase.from("analytics_events").insert({
       session_id: getSessionId(),
       user_id: data.session?.user.id ?? null,
