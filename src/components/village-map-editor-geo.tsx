@@ -345,6 +345,33 @@ export default function VillageMapEditorGeo({
         </button>
       </div>
 
+      {locked ? (
+        <div className="absolute inset-x-3 bottom-14 z-[500] flex justify-center">
+          <div className="flex max-w-full flex-wrap items-center justify-center gap-2 rounded-xl bg-ink/90 px-3 py-2 text-[11px] font-bold text-white shadow-lg backdrop-blur">
+            <span>
+              {placing ? "Add point mode" : "Draw area mode"} — area editing is locked.
+            </span>
+            <span className="font-semibold opacity-80">
+              {placing
+                ? "Click the map to drop a point, then exit to edit areas."
+                : "Finish or cancel the outline to edit areas again."}
+            </span>
+            <button
+              type="button"
+              onClick={() => {
+                if (placing) onCancelPlace?.();
+                else {
+                  setDraft([]);
+                  onCancelDraw();
+                }
+              }}
+              className="rounded-lg bg-white/15 px-2 py-1 ring-1 ring-white/30"
+            >
+              Exit {placing ? "add point" : "draw"} mode
+            </button>
+          </div>
+        </div>
+      ) : null}
 
       {drawing ? (
         <div className="pointer-events-none absolute inset-x-0 top-3 z-[500] flex justify-center px-3">
