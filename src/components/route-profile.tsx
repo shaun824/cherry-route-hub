@@ -5,10 +5,13 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { Mountain, TrendingUp } from "lucide-react";
 import {
+  gainFromSeries,
   haversineMeters,
   parseKml,
+  smoothElevations,
   type LatLngAlt,
 } from "@/lib/geo";
+
 import { getRouteElevation } from "@/lib/elevation.functions";
 import type { EventRoute } from "@/lib/mock-data";
 
@@ -34,13 +37,14 @@ function forDisplay(series: Point[], max = 300): Point[] {
 }
 
 function totalGain(series: Point[]): number {
-  let gain = 0;
-  for (let i = 1; i < series.length; i++) {
-    const d = series[i].ele - series[i - 1].ele;
-    if (d > 1.5) gain += d;
-  }
-  return Math.round(gain);
+  return gainFromSeries(
+    smoothElevations(
+      series.map((p) => p.ele),
+      series.map((p) => p.km * 1000),
+    ),
+  );
 }
+
 
 export function RouteProfile({ route, color }: { route: EventRoute; color?: string }) {
   const kmls = route.kmlUrls ?? [];
