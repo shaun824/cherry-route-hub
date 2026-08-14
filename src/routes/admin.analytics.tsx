@@ -58,9 +58,28 @@ function AdminAnalytics() {
     staleTime: 60_000,
   });
 
-  const rows = data ?? [];
+  const adminsQ = useQuery({
+    queryKey: ["analytics", "admin-ids"],
+    queryFn: async (): Promise<string[]> => {
+      const { data, error } = await supabase.from("user_roles").select("user_id").eq("role", "admin");
+      if (error) throw error;
+      return (data ?? []).map((r) => r.user_id as string);
+    },
+    staleTime: 300_000,
+  });
+
+  // Staff traffic is excluded everywhere — including any historic rows
+  // recorded before admin tracking was switched off.
+  const rows = useMemo(() => {
+    const adminIds = new Set(adminsQ.data ?? []);
+    const all = data ?? [];
+    const staffSessions = new Set(
+      all.filter((r) => r.user_id && adminIds.has(r.user_id)).map((r) => r.session_id),
+    );
+    return all.filter((r) => !staffSessions.has(r.session_id));
+  }, [data, adminsQ.data]);
   const views = rows.filter((r) => r.event_name === "pageview");
-  const exits = rows.filter((r) => r.event_name === "page_exit" && (r.duration_ms ?? 0) > 0);
+
 
   const sessions = new Set(views.map((r) => r.session_id));
   const signedIn = new Set(views.filter((r) => r.user_id).map((r) => r.user_id));
