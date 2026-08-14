@@ -1,5 +1,6 @@
 import { entryNinjaRegistrationUrl } from "@/lib/entry-ninja-link";
 import { WhatsappButton } from "@/components/whatsapp-button";
+import { isBotMiss } from "@/lib/bot-handoff";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { askEventBot } from "@/lib/event-bot.functions";
@@ -188,7 +189,7 @@ function MyEventDetail() {
             <section>
               <SectionTitle>Ask the assistant</SectionTitle>
               <div className="mt-2">
-                <AskAdminPanel eventId={event.id} userId={user?.id ?? null} compact />
+                <AskAdminPanel eventId={event.id} userId={user?.id ?? null} eventName={event.name} compact />
               </div>
             </section>
             <InfoPanel eventId={event.id} description={event.description} distanceKm={event.distance_km} event={event} isLive={event.status === "live"} eventName={event.name} />
@@ -211,7 +212,7 @@ function MyEventDetail() {
 
         {tab === "packing" && <PackingPanel eventId={event.id} userId={user?.id ?? null} />}
         {tab === "chat" && <ChatPanel eventId={event.id} userId={user?.id ?? null} />}
-        {tab === "ask" && <AskAdminPanel eventId={event.id} userId={user?.id ?? null} />}
+        {tab === "ask" && <AskAdminPanel eventId={event.id} userId={user?.id ?? null} eventName={event.name} />}
         {tab === "sponsors" && <EventSponsorsPanel eventId={event.id} eventName={event.name} />}
 
       </div>
@@ -1077,7 +1078,17 @@ function ChatPanel({ eventId, userId }: { eventId: string; userId: string | null
   );
 }
 
-function AskAdminPanel({ eventId, userId, compact = false }: { eventId: string; userId: string | null; compact?: boolean }) {
+function AskAdminPanel({
+  eventId,
+  userId,
+  eventName,
+  compact = false,
+}: {
+  eventId: string;
+  userId: string | null;
+  eventName?: string;
+  compact?: boolean;
+}) {
   const qc = useQueryClient();
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
@@ -1168,15 +1179,25 @@ function AskAdminPanel({ eventId, userId, compact = false }: { eventId: string; 
     }
   }
 
+  // Offer the WhatsApp handoff once the assistant has admitted it can't answer
+  // and no admin has replied since.
+  const msgs = (messagesQ.data ?? []) as any[];
+  const lastMiss = [...msgs].reverse().find((m) => m.is_bot || m.is_admin_msg);
+  const stuck = Boolean(lastMiss?.is_bot && isBotMiss(lastMiss.body));
+  const lastQuestion = [...msgs].reverse().find((m) => !m.is_bot && !m.is_admin_msg)?.body as
+    | string
+    | undefined;
+  const waContext = [eventName, lastQuestion ? `— my question: "${lastQuestion.slice(0, 160)}"` : ""]
+    .filter(Boolean)
+    .join(" ")
+    .trim();
+
   return (
     <div className={`flex ${compact ? "max-h-[46vh] min-h-[220px]" : "h-[60vh]"} flex-col rounded-2xl bg-card ring-1 ring-border`}>
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border p-3 text-xs text-ink-soft">
-        <span className="min-w-0 flex-1">
-          {compact
-            ? "Got a question about this event? Ask our assistant bot 🍒 — it answers from the event details & website, and loops in a Red Cherry admin if it isn't sure."
-            : "Ask anything about this event — our assistant bot 🍒 answers instantly from the event details & website, and loops in a Red Cherry admin when it isn't sure."}
-        </span>
-        <WhatsappButton size="sm" />
+      <div className="border-b border-border p-3 text-xs text-ink-soft">
+        {compact
+          ? "Got a question about this event? Ask our assistant bot 🍒 — it answers from the event details & website, and loops in a Red Cherry admin if it isn't sure."
+          : "Ask anything about this event — our assistant bot 🍒 answers instantly from the event details & website, and loops in a Red Cherry admin when it isn't sure."}
       </div>
 
       <div className="flex-1 overflow-y-auto p-3">
@@ -1216,6 +1237,16 @@ function AskAdminPanel({ eventId, userId, compact = false }: { eventId: string; 
                 <p className="italic opacity-70">Thinking…</p>
               </li>
             )}
+            {!busy && stuck ? (
+              <li className="rounded-2xl border border-dashed border-[#25D366]/50 bg-[#25D366]/10 p-3">
+                <p className="text-xs font-semibold text-ink">Still stuck?</p>
+                <p className="mt-0.5 text-[11px] text-ink-soft">
+                  An admin will reply here, but you can also chat to us directly on WhatsApp for a
+                  faster answer.
+                </p>
+                <WhatsappButton className="mt-2" size="sm" context={waContext} />
+              </li>
+            ) : null}
           </ul>
         )}
       </div>
