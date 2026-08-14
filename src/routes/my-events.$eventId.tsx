@@ -750,12 +750,39 @@ function InfoPanel({
   );
 }
 
-function PackingPanel({ eventId, userId }: { eventId: string; userId: string | null }) {
+function PackingPanel({
+  eventId,
+  userId,
+  event,
+}: {
+  eventId: string;
+  userId: string | null;
+  event: { days?: unknown; discipline?: string | null; name?: string | null };
+}) {
   const q = useQuery({ queryKey: ["event-info", eventId], queryFn: () => fetchEventInfo(eventId) });
   const configured = q.data?.packing_list ?? [];
-  // Fall back to a sensible multi-day cycling default when admin hasn't set one.
-  const items: PackingItem[] = configured.length > 0 ? configured : DEFAULT_PACKING_LIST;
+
+  // Size the list to the itinerary: ride days come from days that have routes,
+  // nights from the number of days on the programme.
+  const { rideDays, nights } = useMemo(() => {
+    const days: EventDay[] = Array.isArray(event.days) ? (event.days as EventDay[]) : [];
+    const withRoutes = days.filter((d) => (d.routes ?? []).length > 0).length;
+    return {
+      rideDays: withRoutes > 0 ? withRoutes : Math.max(1, days.length),
+      nights: Math.max(0, days.length - 1),
+    };
+  }, [event.days]);
+
+  const items: PackingItem[] = useMemo(() => {
+    if (configured.length > 0) return tubelessSanitise(configured);
+    return buildPackingList({
+      rideDays,
+      nights,
+      sport: getEventSport(event.discipline, event.name),
+    });
+  }, [configured, rideDays, nights, event.discipline, event.name]);
   const usingDefault = configured.length === 0;
+
 
   const stateQ = useQuery({
     queryKey: ["packing-state", eventId, userId],
