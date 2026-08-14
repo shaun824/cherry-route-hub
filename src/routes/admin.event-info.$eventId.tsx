@@ -9,6 +9,9 @@ import {
   saveEventInfo,
   type EventInfoBlock,
 } from "@/lib/event-info";
+import { useServerFn } from "@tanstack/react-start";
+import { resolveMapLink } from "@/lib/map-link.functions";
+import { buildMapEmbedSrc, isShortMapLink } from "@/lib/map-embed";
 
 export const Route = createFileRoute("/admin/event-info/$eventId")({
   loader: async ({ params }) => {
@@ -29,6 +32,44 @@ function EventInfoEditor() {
   const [info, setInfo] = useState<EventInfoBlock>(() => emptyEventInfo(event.id));
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [mapMsg, setMapMsg] = useState<string | null>(null);
+  const [resolvingMap, setResolvingMap] = useState(false);
+  const resolveLink = useServerFn(resolveMapLink);
+
+  async function handleMapLink(value: string) {
+    const url = value.trim();
+    setMapMsg(null);
+    if (!url) return;
+    if (!isShortMapLink(url) && buildMapEmbedSrc({ mapUrl: url })) {
+      setMapMsg("Map link looks good.");
+      return;
+    }
+    setResolvingMap(true);
+    try {
+      const res = await resolveLink({ data: { url } });
+      if (!res.ok) {
+        setMapMsg(res.error);
+        return;
+      }
+      setInfo((prev) => ({
+        ...prev,
+        map_embed_url: res.url,
+        venue_lat: typeof res.lat === "number" ? res.lat : prev.venue_lat,
+        venue_lng: typeof res.lng === "number" ? res.lng : prev.venue_lng,
+        venue_address: prev.venue_address || res.place || null,
+      }));
+      setSaved(false);
+      setMapMsg(
+        typeof res.lat === "number"
+          ? `Link expanded — pin set at ${res.lat.toFixed(5)}, ${res.lng!.toFixed(5)}. Remember to save.`
+          : "Link expanded, but no pin found. Add the venue address or coordinates below.",
+      );
+    } catch {
+      setMapMsg("Could not open that link. Try the full Google Maps URL from a browser.");
+    } finally {
+      setResolvingMap(false);
+    }
+  }
 
   useEffect(() => {
     if (q.data) setInfo(q.data);
@@ -78,11 +119,36 @@ function EventInfoEditor() {
           value={info.venue_address ?? ""}
           onChange={(v) => patch("venue_address", v || null)}
         />
-        <Field
-          label="Google Maps embed URL (optional)"
-          value={info.map_embed_url ?? ""}
-          onChange={(v) => patch("map_embed_url", v || null)}
-        />
+        <div>
+          <Field
+            label="Google Maps link (paste share link or embed URL)"
+            value={info.map_embed_url ?? ""}
+            onChange={(v) => patch("map_embed_url", v || null)}
+            onBlur={(v) => void handleMapLink(v)}
+          />
+          <p className="mt-1 text-[11px] text-ink-soft">
+            {resolvingMap
+              ? "Checking link…"
+              : (mapMsg ?? "Short maps.app.goo.gl links are expanded automatically when you tab out of the field.")}
+          </p>
+          {(() => {
+            const src = buildMapEmbedSrc({
+              mapUrl: info.map_embed_url,
+              lat: info.venue_lat,
+              lng: info.venue_lng,
+              address: info.venue_address,
+            });
+            if (!src) return null;
+            return (
+              <iframe
+                title="Venue map preview"
+                src={src}
+                className="mt-2 h-40 w-full rounded-xl ring-1 ring-border"
+                loading="lazy"
+              />
+            );
+          })()}
+        </div>
         <TextArea
           label="Parking / arrival notes"
           value={info.parking_notes ?? ""}
