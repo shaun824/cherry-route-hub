@@ -93,6 +93,8 @@ export default function VillageMapEditorGeo({
   onCancelDraw,
   onZoneChange,
   onSelectZone,
+  onRenameZone,
+  onDuplicateZone,
 }: {
   centre: { lat: number; lng: number };
   centreToken: number;
@@ -110,10 +112,13 @@ export default function VillageMapEditorGeo({
   onCancelDraw: () => void;
   onZoneChange: (id: string, points: ZonePoint[]) => void;
   onSelectZone: (id: string | null) => void;
+  onRenameZone?: (id: string, name: string) => void;
+  onDuplicateZone?: (id: string) => void;
 }) {
   const [draft, setDraft] = useState<ZonePoint[]>([]);
   const [cursor, setCursor] = useState<ZonePoint | null>(null);
   const [showLabels, setShowLabels] = useState(true);
+  const activeZone = zones.find((z) => z.id === selectedZone) ?? null;
 
   useEffect(() => {
     if (!drawing) {
@@ -299,12 +304,31 @@ export default function VillageMapEditorGeo({
             </button>
           </div>
         </div>
-      ) : selectedZone ? (
+      ) : activeZone ? (
         <div className="pointer-events-none absolute inset-x-0 top-3 z-[500] flex justify-center px-3">
-          <span className="pointer-events-none rounded-xl bg-card/95 px-3 py-1.5 text-[11px] font-semibold text-ink-soft shadow ring-1 ring-border">
-            Drag the ✥ to move the area, the white dots to reshape it, double-click a dot to remove it ·{" "}
-            {formatLength(zonePerimeterM(zones.find((z) => z.id === selectedZone) ?? { id: "", name: "", points: [] }))} perimeter
-          </span>
+          <div className="pointer-events-auto flex max-w-full flex-wrap items-center gap-2 rounded-xl bg-card/95 px-3 py-2 shadow-lg ring-1 ring-border backdrop-blur">
+            <input
+              value={activeZone.name}
+              onChange={(e) => onRenameZone?.(activeZone.id, e.target.value)}
+              placeholder="Area name"
+              className="w-40 rounded-lg border border-border bg-background px-2 py-1 text-xs font-semibold"
+            />
+            <button
+              onClick={() => onDuplicateZone?.(activeZone.id)}
+              className="rounded-lg cherry-gradient px-2 py-1 text-[11px] font-bold text-white"
+            >
+              Copy area
+            </button>
+            <button
+              onClick={() => onSelectZone(null)}
+              className="rounded-lg bg-muted px-2 py-1 text-[11px] font-bold"
+            >
+              Done
+            </button>
+            <span className="text-[11px] font-semibold text-ink-soft">
+              Drag ✥ to move · white dots reshape · {formatLength(zonePerimeterM(activeZone))} perimeter
+            </span>
+          </div>
         </div>
       ) : null}
     </div>
