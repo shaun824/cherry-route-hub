@@ -21,6 +21,7 @@ import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as MyEventsIndexRouteImport } from './routes/my-events.index'
 import { Route as EventsIndexRouteImport } from './routes/events.index'
+import { Route as CrewIndexRouteImport } from './routes/crew.index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as SpectateEventIdRouteImport } from './routes/spectate.$eventId'
 import { Route as MyEventsEventIdRouteImport } from './routes/my-events.$eventId'
@@ -123,6 +124,11 @@ const MyEventsIndexRoute = MyEventsIndexRouteImport.update({
 const EventsIndexRoute = EventsIndexRouteImport.update({
   id: '/events/',
   path: '/events/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CrewIndexRoute = CrewIndexRouteImport.update({
+  id: '/crew/',
+  path: '/crew/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
@@ -382,6 +388,7 @@ export interface FileRoutesByFullPath {
   '/my-events/$eventId': typeof MyEventsEventIdRoute
   '/spectate/$eventId': typeof SpectateEventIdRoute
   '/admin/': typeof AdminIndexRoute
+  '/crew/': typeof CrewIndexRoute
   '/events/': typeof EventsIndexRoute
   '/my-events/': typeof MyEventsIndexRoute
   '/admin/event-info/$eventId': typeof AdminEventInfoEventIdRoute
@@ -436,6 +443,7 @@ export interface FileRoutesByTo {
   '/my-events/$eventId': typeof MyEventsEventIdRoute
   '/spectate/$eventId': typeof SpectateEventIdRoute
   '/admin': typeof AdminIndexRoute
+  '/crew': typeof CrewIndexRoute
   '/events': typeof EventsIndexRoute
   '/my-events': typeof MyEventsIndexRoute
   '/admin/event-info/$eventId': typeof AdminEventInfoEventIdRoute
@@ -494,6 +502,7 @@ export interface FileRoutesById {
   '/my-events/$eventId': typeof MyEventsEventIdRoute
   '/spectate/$eventId': typeof SpectateEventIdRoute
   '/admin/': typeof AdminIndexRoute
+  '/crew/': typeof CrewIndexRoute
   '/events/': typeof EventsIndexRoute
   '/my-events/': typeof MyEventsIndexRoute
   '/admin/event-info/$eventId': typeof AdminEventInfoEventIdRoute
@@ -553,6 +562,7 @@ export interface FileRouteTypes {
     | '/my-events/$eventId'
     | '/spectate/$eventId'
     | '/admin/'
+    | '/crew/'
     | '/events/'
     | '/my-events/'
     | '/admin/event-info/$eventId'
@@ -607,6 +617,7 @@ export interface FileRouteTypes {
     | '/my-events/$eventId'
     | '/spectate/$eventId'
     | '/admin'
+    | '/crew'
     | '/events'
     | '/my-events'
     | '/admin/event-info/$eventId'
@@ -664,6 +675,7 @@ export interface FileRouteTypes {
     | '/my-events/$eventId'
     | '/spectate/$eventId'
     | '/admin/'
+    | '/crew/'
     | '/events/'
     | '/my-events/'
     | '/admin/event-info/$eventId'
@@ -703,6 +715,7 @@ export interface RootRouteChildren {
   CrewLoginRoute: typeof CrewLoginRoute
   CrewRoomingRoute: typeof CrewRoomingRoute
   EventsEventIdRoute: typeof EventsEventIdRouteWithChildren
+  CrewIndexRoute: typeof CrewIndexRoute
   EventsIndexRoute: typeof EventsIndexRoute
   MyEventsEventIdReportRoute: typeof MyEventsEventIdReportRoute
   ApiPublicHooksContentAuditRoute: typeof ApiPublicHooksContentAuditRoute
@@ -803,6 +816,13 @@ declare module '@tanstack/react-router' {
       path: '/events'
       fullPath: '/events/'
       preLoaderRoute: typeof EventsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/crew/': {
+      id: '/crew/'
+      path: '/crew'
+      fullPath: '/crew/'
+      preLoaderRoute: typeof CrewIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/': {
@@ -1217,6 +1237,7 @@ const rootRouteChildren: RootRouteChildren = {
   CrewLoginRoute: CrewLoginRoute,
   CrewRoomingRoute: CrewRoomingRoute,
   EventsEventIdRoute: EventsEventIdRouteWithChildren,
+  CrewIndexRoute: CrewIndexRoute,
   EventsIndexRoute: EventsIndexRoute,
   MyEventsEventIdReportRoute: MyEventsEventIdReportRoute,
   ApiPublicHooksContentAuditRoute: ApiPublicHooksContentAuditRoute,
