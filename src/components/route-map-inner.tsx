@@ -267,11 +267,14 @@ export default function RouteMapInner({
           zoom={bounds ? undefined : 9}
           style={{ height, width: "100%" }}
           scrollWheelZoom
+          maxZoom={24}
           preferCanvas
         >
           <TileLayer
             attribution='&copy; <a href="https://openstreetmap.org">OpenStreetMap</a>'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            maxZoom={24}
+            maxNativeZoom={19}
           />
           <FitToBounds bounds={bounds} />
           {visible.map((l) =>

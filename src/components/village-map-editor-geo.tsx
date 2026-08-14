@@ -141,7 +141,7 @@ export default function VillageMapEditorGeo({
         <MapContainer
           center={[centre.lat, centre.lng]}
           zoom={17}
-          maxZoom={23}
+          maxZoom={24}
           scrollWheelZoom
           zoomSnap={0.25}
           zoomDelta={0.5}
@@ -151,7 +151,7 @@ export default function VillageMapEditorGeo({
           <TileLayer
             attribution="Tiles &copy; Esri"
             url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
-            maxZoom={23}
+            maxZoom={24}
             maxNativeZoom={18}
           />
           <Centre lat={centre.lat} lng={centre.lng} token={centreToken} />
