@@ -30,6 +30,7 @@ import {
 
 import { BrandMark, SectionTitle, TypeBadge } from "@/components/ui-bits";
 import { SponsorScroller } from "@/components/sponsor-scroller";
+import { InstallPrompt, PushOptIn } from "@/components/push-optin";
 import { formatDate, relativeTime, type Event } from "@/lib/mock-data";
 import { getEventSport } from "@/lib/event-sport";
 import { useAdminStore } from "@/lib/store";
