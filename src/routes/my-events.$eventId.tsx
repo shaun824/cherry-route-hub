@@ -64,6 +64,7 @@ import { TypeBadge } from "@/components/ui-bits";
 
 import { TrackerPanel } from "@/components/tracker-panel";
 import { LockedSection } from "@/components/locked-section";
+import { PaymentStatusCard } from "@/components/payment-status-card";
 import { brandHeader } from "@/lib/event-brand";
 import { EventPhotosPanel } from "@/components/event-photos-panel";
 import { FeedPostBody } from "@/components/feed-post-body";
@@ -1676,6 +1677,8 @@ function YourEntryCard({ eventId, entryUrl = null }: { eventId: string; entryUrl
           ))}
         </div>
       ) : null}
+
+      <PaymentStatusCard info={row} entryUrl={entryUrl} />
 
       {(row.jacket_size || (showTshirt && row.tshirt_size)) ? (
         <div className="mt-3 grid grid-cols-2 gap-2">
