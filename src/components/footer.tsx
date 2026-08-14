@@ -2,7 +2,7 @@ import { Mail } from "lucide-react";
 import rceLogo from "@/assets/rce-logo.png.asset.json";
 import { WhatsappButton } from "@/components/whatsapp-button";
 
-const SUPPORT_EMAIL = "support@redcherryevents.co.za";
+const SUPPORT_EMAIL = "team@redcherryevents.co.za";
 
 export function Footer() {
   return (
