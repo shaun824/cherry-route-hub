@@ -76,7 +76,8 @@ function BotLogPage() {
           pairs.push({
             id: m.id,
             threadId,
-            question: m.body,
+            eventId: t?.event_id ?? null,
+
             answer: reply.body,
             askedAt: m.created_at,
             answeredAt: reply.created_at,
