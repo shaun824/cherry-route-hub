@@ -132,7 +132,15 @@ export default function VillageMapEditorGeo({
   const [draft, setDraft] = useState<ZonePoint[]>([]);
   const [cursor, setCursor] = useState<ZonePoint | null>(null);
   const [showLabels, setShowLabels] = useState(true);
+  const [fitToken, setFitToken] = useState(0);
   const activeZone = zones.find((z) => z.id === selectedZone) ?? null;
+
+  const contentPoints: ZonePoint[] = [
+    ...zones.flatMap((z) => z.points),
+    ...hotspots
+      .filter((s) => Number.isFinite(s.lat) && Number.isFinite(s.lng))
+      .map((s) => ({ lat: s.lat as number, lng: s.lng as number })),
+  ];
 
   useEffect(() => {
     if (!drawing) {
@@ -144,6 +152,7 @@ export default function VillageMapEditorGeo({
   const draftPreview = cursor && draft.length > 0 ? [...draft, cursor] : draft;
   const liveEdge =
     cursor && draft.length > 0 ? distanceM(draft[draft.length - 1], cursor) : 0;
+
 
   return (
     <div className="relative">
