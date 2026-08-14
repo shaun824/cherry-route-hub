@@ -28,6 +28,7 @@ const nav: { to: string; label: string; icon: typeof LayoutDashboard; exact?: bo
   { to: "/admin/rooming", label: "Rooming", icon: BedDouble },
   { to: "/admin/messages", label: "Messages", icon: MessagesSquare },
   { to: "/admin/knowledge", label: "Bot knowledge", icon: Brain },
+  { to: "/admin/bot-log", label: "Bot Q&A log", icon: Bot },
   { to: "/admin/notifications", label: "Notifications", icon: BellRing },
   { to: "/admin/feed", label: "News feed", icon: Newspaper },
   { to: "/admin/promos", label: "Promos", icon: Tag },
