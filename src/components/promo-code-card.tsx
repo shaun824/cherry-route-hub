@@ -1,41 +1,56 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Copy, Check, ExternalLink, X } from "lucide-react";
 
 import type { EventPromo } from "@/lib/event-promos";
 
 /**
- * Promo module with the same behaviour as the Supplier Promos page:
- * tapping the offer copies the code, shows a "use this code" pop-up,
- * then opens the partner site. Offers without a code show redeem info.
+ * Promo module. Tapping anywhere on the offer opens a reminder pop-up showing
+ * the discount code (auto-copied), and the rider taps "Continue" to open the
+ * partner site — the link is a real user gesture so pop-up blockers never eat it.
+ * Offers without a code show the redeem instructions instead.
  */
 export function PromoCodeCard({ promo }: { promo: EventPromo }) {
   const [copied, setCopied] = useState(false);
-  const [pending, setPending] = useState(false);
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => {
-    if (!pending) return;
-    timer.current = setTimeout(() => {
-      window.open(promo.url, "_blank", "noopener,noreferrer");
-      setPending(false);
-    }, 3000);
-    return () => {
-      if (timer.current) clearTimeout(timer.current);
-    };
-  }, [pending, promo.url]);
+  const [open, setOpen] = useState(false);
 
   function copy() {
     if (!promo.code) return;
-    navigator.clipboard?.writeText(promo.code);
+    try {
+      navigator.clipboard?.writeText(promo.code);
+    } catch {
+      /* clipboard blocked — the code is still shown on screen */
+    }
     setCopied(true);
-    setTimeout(() => setCopied(false), 1600);
   }
+
+  useEffect(() => {
+    if (!copied) return;
+    const t = setTimeout(() => setCopied(false), 1800);
+    return () => clearTimeout(t);
+  }, [copied]);
+
+  // Opening the reminder always copies, so the code is ready to paste.
+  function openReminder() {
+    copy();
+    setOpen(true);
+  }
+
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open]);
 
   return (
     <>
       <div className="overflow-hidden rounded-2xl bg-card ring-1 ring-border">
-        <div
-          className="px-4 py-4 text-white"
+        <button
+          type="button"
+          onClick={openReminder}
+          className="block w-full px-4 py-4 text-left text-white"
           style={{ background: `linear-gradient(135deg, ${promo.accent}, oklch(0.2 0.02 260))` }}
         >
           <div className="flex items-start gap-3">
@@ -57,7 +72,8 @@ export function PromoCodeCard({ promo }: { promo: EventPromo }) {
               {promo.blurb ? <p className="mt-2 text-xs opacity-85">{promo.blurb}</p> : null}
             </div>
           </div>
-        </div>
+        </button>
+
         <div className="flex items-center justify-between gap-3 px-4 py-3">
           <div className="min-w-0">
             <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
@@ -86,41 +102,93 @@ export function PromoCodeCard({ promo }: { promo: EventPromo }) {
               )}
             </button>
           ) : null}
-          <a
-            href={promo.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={(e) => {
-              if (!promo.code) return;
-              e.preventDefault();
-              copy();
-              setPending(true);
-            }}
-            className="inline-flex shrink-0 items-center gap-1 rounded-md bg-accent px-2 py-1 text-xs font-black uppercase text-cherry-deep hover:underline"
+          <button
+            type="button"
+            onClick={openReminder}
+            className="inline-flex shrink-0 items-center gap-1 rounded-md bg-accent px-2 py-1 text-xs font-black uppercase text-cherry-deep"
           >
             {promo.discount} <ExternalLink className="h-3 w-3" />
-          </a>
+          </button>
         </div>
       </div>
 
-      {pending && promo.code ? (
-        <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 px-6">
-          <div className="relative w-full max-w-sm rounded-2xl bg-card p-6 text-center ring-1 ring-border">
+      {open ? (
+        <div
+          className="fixed inset-0 z-50 grid place-items-center bg-black/60 px-6"
+          role="dialog"
+          aria-modal="true"
+          onClick={() => setOpen(false)}
+        >
+          <div
+            className="relative w-full max-w-sm rounded-2xl bg-card p-6 text-center ring-1 ring-border"
+            onClick={(e) => e.stopPropagation()}
+          >
             <button
               type="button"
-              onClick={() => setPending(false)}
+              onClick={() => setOpen(false)}
               aria-label="Close"
               className="absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-full bg-muted text-muted-foreground"
             >
               <X className="h-4 w-4" />
             </button>
-            <p className="text-sm text-muted-foreground">
-              Use this code on {promo.brand}&apos;s website
-            </p>
-            <p className="mt-3 font-mono text-2xl font-black text-ink">{promo.code}</p>
-            <p className="mt-3 text-xs text-muted-foreground">
-              Code copied — taking you there in a moment…
-            </p>
+
+            {promo.logoUrl ? (
+              <span className="mx-auto mb-3 grid h-14 w-14 place-items-center rounded-xl bg-white p-1.5 ring-1 ring-border">
+                <img
+                  src={promo.logoUrl}
+                  alt={`${promo.brand} logo`}
+                  className="max-h-11 max-w-11 object-contain"
+                />
+              </span>
+            ) : null}
+
+            {promo.code ? (
+              <>
+                <p className="text-sm text-muted-foreground">
+                  Remember to use this code at {promo.brand}
+                </p>
+                <p className="mt-3 select-all font-mono text-3xl font-black tracking-wide text-ink">
+                  {promo.code}
+                </p>
+                <button
+                  type="button"
+                  onClick={copy}
+                  className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-muted px-3 py-2 text-xs font-bold text-ink"
+                >
+                  {copied ? (
+                    <>
+                      <Check className="h-3.5 w-3.5" /> Code copied
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="h-3.5 w-3.5" /> Copy code
+                    </>
+                  )}
+                </button>
+              </>
+            ) : (
+              <>
+                <p className="font-display text-lg font-bold text-ink">{promo.title}</p>
+                <p className="mt-2 text-sm text-muted-foreground">{promo.redeem}</p>
+              </>
+            )}
+
+            <a
+              href={promo.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => setOpen(false)}
+              className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-cherry px-4 py-3 text-sm font-bold text-white"
+            >
+              Continue to {promo.brand} <ExternalLink className="h-4 w-4" />
+            </a>
+            <button
+              type="button"
+              onClick={() => setOpen(false)}
+              className="mt-2 w-full rounded-xl px-4 py-2 text-xs font-semibold text-muted-foreground"
+            >
+              Not now
+            </button>
           </div>
         </div>
       ) : null}
