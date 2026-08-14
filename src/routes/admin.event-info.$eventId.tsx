@@ -264,11 +264,13 @@ function Field({
   label,
   value,
   onChange,
+  onBlur,
   type = "text",
 }: {
   label: string;
   value: string;
   onChange: (v: string) => void;
+  onBlur?: (v: string) => void;
   type?: string;
 }) {
   return (
@@ -278,6 +280,7 @@ function Field({
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
+        onBlur={(e) => onBlur?.(e.target.value)}
         className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
       />
     </label>
