@@ -33,6 +33,7 @@ import { Route as AdminRidersRouteImport } from './routes/admin.riders'
 import { Route as AdminPromosRouteImport } from './routes/admin.promos'
 import { Route as AdminMessagesRouteImport } from './routes/admin.messages'
 import { Route as AdminMerchandiseRouteImport } from './routes/admin.merchandise'
+import { Route as AdminKnowledgeRouteImport } from './routes/admin.knowledge'
 import { Route as AdminFeedRouteImport } from './routes/admin.feed'
 import { Route as AdminEventsRouteImport } from './routes/admin.events'
 import { Route as AdminEntryNinjaRouteImport } from './routes/admin.entry-ninja'
@@ -45,7 +46,9 @@ import { Route as EventsEventIdMapRouteImport } from './routes/events.$eventId.m
 import { Route as EventsEventIdEnterRouteImport } from './routes/events.$eventId.enter'
 import { Route as AdminVillageEventIdRouteImport } from './routes/admin.village.$eventId'
 import { Route as AdminEventInfoEventIdRouteImport } from './routes/admin.event-info.$eventId'
+import { Route as ApiPublicHooksWhatsappRouteImport } from './routes/api/public/hooks/whatsapp'
 import { Route as ApiPublicHooksNewsSyncRouteImport } from './routes/api/public/hooks/news-sync'
+import { Route as ApiPublicHooksFaqSuggestRouteImport } from './routes/api/public/hooks/faq-suggest'
 import { Route as ApiPublicHooksEventBotRefreshRouteImport } from './routes/api/public/hooks/event-bot-refresh'
 import { Route as ApiPublicHooksEntryNinjaSyncRouteImport } from './routes/api/public/hooks/entry-ninja-sync'
 
@@ -169,6 +172,11 @@ const AdminMerchandiseRoute = AdminMerchandiseRouteImport.update({
   path: '/merchandise',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminKnowledgeRoute = AdminKnowledgeRouteImport.update({
+  id: '/knowledge',
+  path: '/knowledge',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminFeedRoute = AdminFeedRouteImport.update({
   id: '/feed',
   path: '/feed',
@@ -229,11 +237,22 @@ const AdminEventInfoEventIdRoute = AdminEventInfoEventIdRouteImport.update({
   path: '/event-info/$eventId',
   getParentRoute: () => AdminRoute,
 } as any)
+const ApiPublicHooksWhatsappRoute = ApiPublicHooksWhatsappRouteImport.update({
+  id: '/api/public/hooks/whatsapp',
+  path: '/api/public/hooks/whatsapp',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicHooksNewsSyncRoute = ApiPublicHooksNewsSyncRouteImport.update({
   id: '/api/public/hooks/news-sync',
   path: '/api/public/hooks/news-sync',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicHooksFaqSuggestRoute =
+  ApiPublicHooksFaqSuggestRouteImport.update({
+    id: '/api/public/hooks/faq-suggest',
+    path: '/api/public/hooks/faq-suggest',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksEventBotRefreshRoute =
   ApiPublicHooksEventBotRefreshRouteImport.update({
     id: '/api/public/hooks/event-bot-refresh',
@@ -262,6 +281,7 @@ export interface FileRoutesByFullPath {
   '/admin/entry-ninja': typeof AdminEntryNinjaRoute
   '/admin/events': typeof AdminEventsRoute
   '/admin/feed': typeof AdminFeedRoute
+  '/admin/knowledge': typeof AdminKnowledgeRoute
   '/admin/merchandise': typeof AdminMerchandiseRoute
   '/admin/messages': typeof AdminMessagesRoute
   '/admin/promos': typeof AdminPromosRoute
@@ -286,7 +306,9 @@ export interface FileRoutesByFullPath {
   '/events/$eventId/': typeof EventsEventIdIndexRoute
   '/api/public/hooks/entry-ninja-sync': typeof ApiPublicHooksEntryNinjaSyncRoute
   '/api/public/hooks/event-bot-refresh': typeof ApiPublicHooksEventBotRefreshRoute
+  '/api/public/hooks/faq-suggest': typeof ApiPublicHooksFaqSuggestRoute
   '/api/public/hooks/news-sync': typeof ApiPublicHooksNewsSyncRoute
+  '/api/public/hooks/whatsapp': typeof ApiPublicHooksWhatsappRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -301,6 +323,7 @@ export interface FileRoutesByTo {
   '/admin/entry-ninja': typeof AdminEntryNinjaRoute
   '/admin/events': typeof AdminEventsRoute
   '/admin/feed': typeof AdminFeedRoute
+  '/admin/knowledge': typeof AdminKnowledgeRoute
   '/admin/merchandise': typeof AdminMerchandiseRoute
   '/admin/messages': typeof AdminMessagesRoute
   '/admin/promos': typeof AdminPromosRoute
@@ -324,7 +347,9 @@ export interface FileRoutesByTo {
   '/events/$eventId': typeof EventsEventIdIndexRoute
   '/api/public/hooks/entry-ninja-sync': typeof ApiPublicHooksEntryNinjaSyncRoute
   '/api/public/hooks/event-bot-refresh': typeof ApiPublicHooksEventBotRefreshRoute
+  '/api/public/hooks/faq-suggest': typeof ApiPublicHooksFaqSuggestRoute
   '/api/public/hooks/news-sync': typeof ApiPublicHooksNewsSyncRoute
+  '/api/public/hooks/whatsapp': typeof ApiPublicHooksWhatsappRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -342,6 +367,7 @@ export interface FileRoutesById {
   '/admin/entry-ninja': typeof AdminEntryNinjaRoute
   '/admin/events': typeof AdminEventsRoute
   '/admin/feed': typeof AdminFeedRoute
+  '/admin/knowledge': typeof AdminKnowledgeRoute
   '/admin/merchandise': typeof AdminMerchandiseRoute
   '/admin/messages': typeof AdminMessagesRoute
   '/admin/promos': typeof AdminPromosRoute
@@ -366,7 +392,9 @@ export interface FileRoutesById {
   '/events/$eventId/': typeof EventsEventIdIndexRoute
   '/api/public/hooks/entry-ninja-sync': typeof ApiPublicHooksEntryNinjaSyncRoute
   '/api/public/hooks/event-bot-refresh': typeof ApiPublicHooksEventBotRefreshRoute
+  '/api/public/hooks/faq-suggest': typeof ApiPublicHooksFaqSuggestRoute
   '/api/public/hooks/news-sync': typeof ApiPublicHooksNewsSyncRoute
+  '/api/public/hooks/whatsapp': typeof ApiPublicHooksWhatsappRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -385,6 +413,7 @@ export interface FileRouteTypes {
     | '/admin/entry-ninja'
     | '/admin/events'
     | '/admin/feed'
+    | '/admin/knowledge'
     | '/admin/merchandise'
     | '/admin/messages'
     | '/admin/promos'
@@ -409,7 +438,9 @@ export interface FileRouteTypes {
     | '/events/$eventId/'
     | '/api/public/hooks/entry-ninja-sync'
     | '/api/public/hooks/event-bot-refresh'
+    | '/api/public/hooks/faq-suggest'
     | '/api/public/hooks/news-sync'
+    | '/api/public/hooks/whatsapp'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -424,6 +455,7 @@ export interface FileRouteTypes {
     | '/admin/entry-ninja'
     | '/admin/events'
     | '/admin/feed'
+    | '/admin/knowledge'
     | '/admin/merchandise'
     | '/admin/messages'
     | '/admin/promos'
@@ -447,7 +479,9 @@ export interface FileRouteTypes {
     | '/events/$eventId'
     | '/api/public/hooks/entry-ninja-sync'
     | '/api/public/hooks/event-bot-refresh'
+    | '/api/public/hooks/faq-suggest'
     | '/api/public/hooks/news-sync'
+    | '/api/public/hooks/whatsapp'
   id:
     | '__root__'
     | '/'
@@ -464,6 +498,7 @@ export interface FileRouteTypes {
     | '/admin/entry-ninja'
     | '/admin/events'
     | '/admin/feed'
+    | '/admin/knowledge'
     | '/admin/merchandise'
     | '/admin/messages'
     | '/admin/promos'
@@ -488,7 +523,9 @@ export interface FileRouteTypes {
     | '/events/$eventId/'
     | '/api/public/hooks/entry-ninja-sync'
     | '/api/public/hooks/event-bot-refresh'
+    | '/api/public/hooks/faq-suggest'
     | '/api/public/hooks/news-sync'
+    | '/api/public/hooks/whatsapp'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -507,7 +544,9 @@ export interface RootRouteChildren {
   MyEventsEventIdReportRoute: typeof MyEventsEventIdReportRoute
   ApiPublicHooksEntryNinjaSyncRoute: typeof ApiPublicHooksEntryNinjaSyncRoute
   ApiPublicHooksEventBotRefreshRoute: typeof ApiPublicHooksEventBotRefreshRoute
+  ApiPublicHooksFaqSuggestRoute: typeof ApiPublicHooksFaqSuggestRoute
   ApiPublicHooksNewsSyncRoute: typeof ApiPublicHooksNewsSyncRoute
+  ApiPublicHooksWhatsappRoute: typeof ApiPublicHooksWhatsappRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -680,6 +719,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminMerchandiseRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/knowledge': {
+      id: '/admin/knowledge'
+      path: '/knowledge'
+      fullPath: '/admin/knowledge'
+      preLoaderRoute: typeof AdminKnowledgeRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/feed': {
       id: '/admin/feed'
       path: '/feed'
@@ -764,11 +810,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminEventInfoEventIdRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/api/public/hooks/whatsapp': {
+      id: '/api/public/hooks/whatsapp'
+      path: '/api/public/hooks/whatsapp'
+      fullPath: '/api/public/hooks/whatsapp'
+      preLoaderRoute: typeof ApiPublicHooksWhatsappRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/news-sync': {
       id: '/api/public/hooks/news-sync'
       path: '/api/public/hooks/news-sync'
       fullPath: '/api/public/hooks/news-sync'
       preLoaderRoute: typeof ApiPublicHooksNewsSyncRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/faq-suggest': {
+      id: '/api/public/hooks/faq-suggest'
+      path: '/api/public/hooks/faq-suggest'
+      fullPath: '/api/public/hooks/faq-suggest'
+      preLoaderRoute: typeof ApiPublicHooksFaqSuggestRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/hooks/event-bot-refresh': {
@@ -793,6 +853,7 @@ interface AdminRouteChildren {
   AdminEntryNinjaRoute: typeof AdminEntryNinjaRoute
   AdminEventsRoute: typeof AdminEventsRoute
   AdminFeedRoute: typeof AdminFeedRoute
+  AdminKnowledgeRoute: typeof AdminKnowledgeRoute
   AdminMerchandiseRoute: typeof AdminMerchandiseRoute
   AdminMessagesRoute: typeof AdminMessagesRoute
   AdminPromosRoute: typeof AdminPromosRoute
@@ -813,6 +874,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminEntryNinjaRoute: AdminEntryNinjaRoute,
   AdminEventsRoute: AdminEventsRoute,
   AdminFeedRoute: AdminFeedRoute,
+  AdminKnowledgeRoute: AdminKnowledgeRoute,
   AdminMerchandiseRoute: AdminMerchandiseRoute,
   AdminMessagesRoute: AdminMessagesRoute,
   AdminPromosRoute: AdminPromosRoute,
@@ -888,7 +950,9 @@ const rootRouteChildren: RootRouteChildren = {
   MyEventsEventIdReportRoute: MyEventsEventIdReportRoute,
   ApiPublicHooksEntryNinjaSyncRoute: ApiPublicHooksEntryNinjaSyncRoute,
   ApiPublicHooksEventBotRefreshRoute: ApiPublicHooksEventBotRefreshRoute,
+  ApiPublicHooksFaqSuggestRoute: ApiPublicHooksFaqSuggestRoute,
   ApiPublicHooksNewsSyncRoute: ApiPublicHooksNewsSyncRoute,
+  ApiPublicHooksWhatsappRoute: ApiPublicHooksWhatsappRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

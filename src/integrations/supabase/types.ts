@@ -54,28 +54,37 @@ export type Database = {
       }
       admin_qa_threads: {
         Row: {
+          channel: string
           created_at: string
           event_id: string
           id: string
           last_message_at: string | null
-          rider_user_id: string
+          rider_user_id: string | null
           updated_at: string
+          wa_name: string | null
+          wa_phone: string | null
         }
         Insert: {
+          channel?: string
           created_at?: string
           event_id: string
           id?: string
           last_message_at?: string | null
-          rider_user_id: string
+          rider_user_id?: string | null
           updated_at?: string
+          wa_name?: string | null
+          wa_phone?: string | null
         }
         Update: {
+          channel?: string
           created_at?: string
           event_id?: string
           id?: string
           last_message_at?: string | null
-          rider_user_id?: string
+          rider_user_id?: string | null
           updated_at?: string
+          wa_name?: string | null
+          wa_phone?: string | null
         }
         Relationships: [
           {
@@ -368,6 +377,72 @@ export type Database = {
             columns: ["event_id"]
             isOneToOne: false
             referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_faq_learned: {
+        Row: {
+          answer: string
+          approved_at: string | null
+          approved_by: string | null
+          created_at: string
+          created_by: string | null
+          event_id: string | null
+          expires_on: string | null
+          id: string
+          question: string
+          source_message_id: string | null
+          source_thread_id: string | null
+          status: string
+          times_used: number
+          updated_at: string
+        }
+        Insert: {
+          answer: string
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          event_id?: string | null
+          expires_on?: string | null
+          id?: string
+          question: string
+          source_message_id?: string | null
+          source_thread_id?: string | null
+          status?: string
+          times_used?: number
+          updated_at?: string
+        }
+        Update: {
+          answer?: string
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          event_id?: string | null
+          expires_on?: string | null
+          id?: string
+          question?: string
+          source_message_id?: string | null
+          source_thread_id?: string | null
+          status?: string
+          times_used?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_faq_learned_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_faq_learned_source_thread_id_fkey"
+            columns: ["source_thread_id"]
+            isOneToOne: false
+            referencedRelation: "admin_qa_threads"
             referencedColumns: ["id"]
           },
         ]
