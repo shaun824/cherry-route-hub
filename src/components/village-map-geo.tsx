@@ -262,14 +262,14 @@ export default function VillageMapGeo({
             <TileLayer
               attribution="Tiles &copy; Esri"
               url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
-              maxZoom={21}
-              maxNativeZoom={19}
+              maxZoom={22}
+              maxNativeZoom={18}
             />
           ) : (
             <TileLayer
               attribution="&copy; OpenStreetMap"
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              maxZoom={21}
+              maxZoom={22}
               maxNativeZoom={19}
             />
           )}

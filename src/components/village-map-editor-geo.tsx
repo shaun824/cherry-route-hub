@@ -148,8 +148,8 @@ export default function VillageMapEditorGeo({
           <TileLayer
             attribution="Tiles &copy; Esri"
             url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
-            maxZoom={21}
-            maxNativeZoom={19}
+            maxZoom={22}
+            maxNativeZoom={18}
           />
           <Centre lat={centre.lat} lng={centre.lng} token={centreToken} />
           {placing ? <ClickCatcher onClick={onPlace} /> : null}
