@@ -4,69 +4,165 @@ import type { Json } from "@/integrations/supabase/types";
 
 export type PackingItem = { key: string; label: string; essential?: boolean; category?: string };
 
-// Default packing list for multi-day cycling stage races (Tour de Addo style).
-// Used when an event has no custom packing list configured.
-export const DEFAULT_PACKING_LIST: PackingItem[] = [
-  // Riding clothes
-  { key: "rc-shoes", label: "Shoes", category: "Riding clothes", essential: true },
-  { key: "rc-socks", label: "Socks (fresh pair per day x4)", category: "Riding clothes" },
-  { key: "rc-bibs", label: "Bib shorts (x2, wash twice)", category: "Riding clothes", essential: true },
-  { key: "rc-shorts", label: "Ride shorts", category: "Riding clothes" },
-  { key: "rc-jersey", label: "Jersey", category: "Riding clothes" },
-  { key: "rc-armwarmers", label: "Arm warmers", category: "Riding clothes" },
-  { key: "rc-gloves", label: "Gloves", category: "Riding clothes" },
-  { key: "rc-buffs", label: "2x buffs", category: "Riding clothes" },
-  { key: "rc-sunnies", label: "Sunglasses", category: "Riding clothes" },
-  { key: "rc-rainjkt", label: "Rain jacket", category: "Riding clothes" },
-  { key: "rc-warmjkt", label: "Warm jacket", category: "Riding clothes" },
-  { key: "rc-helmet", label: "Helmet", category: "Riding clothes", essential: true },
-  // Jersey pockets
-  { key: "jp-phone", label: "Cellphone", category: "In jersey pockets", essential: true },
-  { key: "jp-tools", label: "Tools and spares", category: "In jersey pockets" },
-  { key: "jp-padkos", label: "Padkos", category: "In jersey pockets" },
-  { key: "jp-lipice", label: "Lip ice SPF50", category: "In jersey pockets" },
-  // Fixed to / carried on bike
-  { key: "bk-tube", label: "Spare tube", category: "Fixed to / carried on bike", essential: true },
-  { key: "bk-gaffer", label: "Gaffer tape", category: "Fixed to / carried on bike" },
-  { key: "bk-bottles", label: "2x 900ml bottles", category: "Fixed to / carried on bike", essential: true },
-  { key: "bk-bombs", label: "3x CO₂ bombs", category: "Fixed to / carried on bike" },
-  { key: "bk-lube", label: "2x chain lube", category: "Fixed to / carried on bike" },
-  { key: "bk-levers", label: "Tyre levers", category: "Fixed to / carried on bike" },
-  { key: "bk-cloth", label: "Cloth", category: "Fixed to / carried on bike" },
-  // Overnight bag
-  { key: "ob-clothes", label: "Spare clothing", category: "Overnight bag" },
-  { key: "ob-sleepingbag", label: "Sleeping bag for extra warmth", category: "Overnight bag" },
-  { key: "ob-hotwater", label: "Hot water bottle", category: "Overnight bag" },
-  { key: "ob-towel", label: "Towel", category: "Overnight bag" },
-  { key: "ob-toiletries", label: "Toiletries (body wash, toothbrush & paste, mosquito repellent, earplugs, SPF50)", category: "Overnight bag" },
-  { key: "ob-cords", label: "Lightning and mini-USB cords", category: "Overnight bag" },
-  { key: "ob-headlight", label: "Headlight", category: "Overnight bag" },
-  { key: "ob-adaptor", label: "2-pin and USB adaptor", category: "Overnight bag" },
-  { key: "ob-plakkies", label: "Plakkies", category: "Overnight bag" },
-  // Tools & spares
-  { key: "ts-hangar", label: "Derailleur hangar (NB!)", category: "Tools and spares", essential: true },
-  { key: "ts-multi", label: "Multi-tool and chain breaker", category: "Tools and spares" },
-  { key: "ts-chainlinks", label: "Chain links", category: "Tools and spares" },
-  { key: "ts-plugs", label: "Tyre plugs", category: "Tools and spares" },
-  { key: "ts-cableties", label: "Cable ties", category: "Tools and spares" },
-  { key: "ts-valve", label: "Valve stem remover", category: "Tools and spares" },
-  { key: "ts-sidewall", label: "Side-wall boot", category: "Tools and spares" },
-  { key: "ts-lube2", label: "Lube", category: "Tools and spares" },
-  { key: "ts-bombs2", label: "CO₂ bombs and bomb valve", category: "Tools and spares" },
-  { key: "ts-brakepads", label: "2x brake pads", category: "Tools and spares" },
+export type PackingContext = {
+  /** Number of days the rider is actually riding/racing. */
+  rideDays: number;
+  /** Number of nights away (0 = day event, no overnight bag). */
+  nights: number;
+  /** Motorbike vs pedal-bike kit. */
+  sport?: "mtb" | "moto";
+};
+
+const times = (n: number) => `x${Math.max(1, n)}`;
+
+/**
+ * Build a packing list sized to the event itinerary.
+ * All riders run tubeless, so no tubes are ever listed — a spare foldable tyre,
+ * sealant and plugs are carried instead.
+ */
+export function buildPackingList(ctx: PackingContext): PackingItem[] {
+  const rideDays = Math.max(1, Math.round(ctx.rideDays || 1));
+  const nights = Math.max(0, Math.round(ctx.nights || 0));
+  const moto = ctx.sport === "moto";
+  const kitSets = Math.min(rideDays, Math.max(2, Math.ceil(rideDays / 2)));
+  const items: PackingItem[] = [];
+
+  // Riding clothes — scaled to ride days
+  const rideCat = moto ? "Riding gear" : "Riding clothes";
+  items.push(
+    { key: "rc-helmet", label: moto ? "Helmet (with goggles)" : "Helmet", category: rideCat, essential: true },
+    { key: "rc-shoes", label: moto ? "Riding boots" : "Riding shoes", category: rideCat, essential: true },
+    { key: "rc-socks", label: `Socks — fresh pair per day (${times(rideDays)})`, category: rideCat },
+  );
+  if (moto) {
+    items.push(
+      { key: "rc-jersey", label: `Riding jerseys (${times(kitSets)})`, category: rideCat },
+      { key: "rc-pants", label: "Riding pants", category: rideCat, essential: true },
+      { key: "rc-armour", label: "Body armour / knee & elbow guards", category: rideCat, essential: true },
+      { key: "rc-gloves", label: `Gloves (${times(Math.min(2, rideDays))})`, category: rideCat },
+      { key: "rc-neckbrace", label: "Neck brace", category: rideCat },
+    );
+  } else {
+    items.push(
+      { key: "rc-bibs", label: `Bib shorts (${times(kitSets)}${rideDays > kitSets ? ", wash between days" : ""})`, category: rideCat, essential: true },
+      { key: "rc-jersey", label: `Jerseys (${times(kitSets)})`, category: rideCat },
+      { key: "rc-gloves", label: "Gloves", category: rideCat },
+      { key: "rc-armwarmers", label: "Arm warmers", category: rideCat },
+      { key: "rc-buffs", label: `Buffs (${times(Math.min(2, rideDays))})`, category: rideCat },
+    );
+  }
+  items.push(
+    { key: "rc-sunnies", label: moto ? "Goggles + spare lens" : "Sunglasses", category: rideCat },
+    { key: "rc-rainjkt", label: "Rain jacket", category: rideCat },
+    { key: "rc-warmjkt", label: "Warm jacket", category: rideCat },
+  );
+
+  // Carried on the rider
+  const pocketCat = moto ? "On you / in the bum bag" : "In jersey pockets";
+  items.push(
+    { key: "jp-phone", label: "Cellphone (fully charged)", category: pocketCat, essential: true },
+    { key: "jp-tools", label: "Tools and spares", category: pocketCat },
+    { key: "jp-padkos", label: `Padkos / snacks for the day (${times(rideDays)} days)`, category: pocketCat },
+    { key: "jp-lipice", label: "Lip ice SPF50", category: pocketCat },
+  );
+
+  // On the bike — tubeless setup, spare tyre instead of tubes
+  const bikeCat = "Fixed to / carried on the bike";
+  items.push(
+    {
+      key: "bk-sparetyre",
+      label: "Spare foldable tyre (everyone runs tubeless — bring a tyre, not a tube)",
+      category: bikeCat,
+      essential: true,
+    },
+    { key: "bk-sealant", label: "Tubeless sealant (100ml) + spare tubeless valve", category: bikeCat, essential: true },
+    { key: "bk-plugs", label: "Tyre plugs and plug tool", category: bikeCat, essential: true },
+    { key: "bk-levers", label: "Tyre levers", category: bikeCat },
+    { key: "bk-bombs", label: `CO₂ bombs (${times(Math.max(2, rideDays))}) and bomb valve${moto ? "" : " / mini pump"}`, category: bikeCat },
+    { key: "bk-gaffer", label: "Gaffer tape", category: bikeCat },
+    { key: "bk-bottles", label: moto ? "Hydration pack (2L)" : "2x 900ml bottles", category: bikeCat, essential: true },
+    { key: "bk-lube", label: `Chain lube (${times(Math.max(1, Math.ceil(rideDays / 2)))})`, category: bikeCat },
+    { key: "bk-cloth", label: "Cloth", category: bikeCat },
+  );
+
+  // Overnight bag — only when there are nights away
+  if (nights > 0) {
+    const obCat = "Overnight bag";
+    items.push(
+      { key: "ob-clothes", label: `Casual clothes for ${nights} night${nights > 1 ? "s" : ""} (${times(nights + 1)} sets)`, category: obCat, essential: true },
+      { key: "ob-sleepingbag", label: "Sleeping bag for extra warmth", category: obCat },
+      { key: "ob-hotwater", label: "Hot water bottle", category: obCat },
+      { key: "ob-towel", label: "Towel", category: obCat },
+      {
+        key: "ob-toiletries",
+        label: "Toiletries (body wash, toothbrush & paste, mosquito repellent, earplugs, SPF50)",
+        category: obCat,
+      },
+      { key: "ob-cords", label: "Charging cords and power bank", category: obCat },
+      { key: "ob-headlight", label: "Headlamp", category: obCat },
+      { key: "ob-adaptor", label: "2-pin and USB adaptor", category: obCat },
+      { key: "ob-plakkies", label: "Plakkies / camp shoes", category: obCat },
+      { key: "ob-meds", label: `Chronic medication (${nights + 1} days' worth)`, category: obCat },
+    );
+  }
+
+  // Tools and spares
+  const tsCat = "Tools and spares";
+  items.push(
+    moto
+      ? { key: "ts-levers", label: "Spare clutch and brake levers", category: tsCat, essential: true }
+      : { key: "ts-hangar", label: "Derailleur hanger (NB!)", category: tsCat, essential: true },
+    { key: "ts-multi", label: moto ? "Multi-tool and spanner set" : "Multi-tool and chain breaker", category: tsCat },
+    { key: "ts-chainlinks", label: "Chain links", category: tsCat },
+    { key: "ts-sidewall", label: "Side-wall boot (tyre casing repair)", category: tsCat },
+    { key: "ts-cableties", label: "Cable ties", category: tsCat },
+    { key: "ts-valve", label: "Valve stem remover", category: tsCat },
+    { key: "ts-lube2", label: "Lube", category: tsCat },
+    { key: "ts-brakepads", label: `Brake pads (${times(rideDays > 2 ? 2 : 1)} set${rideDays > 2 ? "s" : ""})`, category: tsCat },
+  );
+
   // First aid
-  { key: "fa-bandages", label: "Bandages and closures", category: "First aid kit" },
-  { key: "fa-plasters", label: "Plasters (incl. heel plasters)", category: "First aid kit" },
-  { key: "fa-opsite", label: "\"Opsite\" waterproof dressings (NB!)", category: "First aid kit", essential: true },
-  { key: "fa-blanket", label: "Emergency survival blanket", category: "First aid kit" },
-  { key: "fa-bactroban", label: "Bactroban", category: "First aid kit" },
-  { key: "fa-bettadine", label: "Bettadine", category: "First aid kit" },
-  { key: "fa-panado", label: "Panado", category: "First aid kit" },
-  { key: "fa-voltaren", label: "Voltaren", category: "First aid kit" },
-  { key: "fa-antihist", label: "Antihistamine", category: "First aid kit" },
-  { key: "fa-smecta", label: "Smecta", category: "First aid kit" },
-  { key: "fa-buscopan", label: "Buscopan", category: "First aid kit" },
-];
+  const faCat = "First aid kit";
+  items.push(
+    { key: "fa-bandages", label: "Bandages and closures", category: faCat },
+    { key: "fa-plasters", label: "Plasters (incl. heel plasters)", category: faCat },
+    { key: "fa-opsite", label: '"Opsite" waterproof dressings (NB!)', category: faCat, essential: true },
+    { key: "fa-blanket", label: "Emergency survival blanket", category: faCat },
+    { key: "fa-bactroban", label: "Bactroban", category: faCat },
+    { key: "fa-bettadine", label: "Bettadine", category: faCat },
+    { key: "fa-panado", label: "Panado", category: faCat },
+    { key: "fa-voltaren", label: "Voltaren", category: faCat },
+    { key: "fa-antihist", label: "Antihistamine", category: faCat },
+    { key: "fa-smecta", label: "Smecta", category: faCat },
+    { key: "fa-buscopan", label: "Buscopan", category: faCat },
+  );
+
+  return items;
+}
+
+/**
+ * Strip tubes out of any admin-configured list and make sure a spare tyre is
+ * present instead — all riders run tubeless.
+ */
+export function tubelessSanitise(items: PackingItem[]): PackingItem[] {
+  const cleaned = items.filter((i) => !/\btubes?\b/i.test(i.label));
+  if (cleaned.length === items.length) return items;
+  const hasTyre = cleaned.some((i) => /spare (foldable )?tyre/i.test(i.label));
+  if (hasTyre) return cleaned;
+  return [
+    ...cleaned,
+    {
+      key: "bk-sparetyre",
+      label: "Spare foldable tyre (everyone runs tubeless — bring a tyre, not a tube)",
+      category: "Fixed to / carried on the bike",
+      essential: true,
+    },
+  ];
+}
+
+/** Fallback list (3-day stage race) for contexts without itinerary data. */
+export const DEFAULT_PACKING_LIST: PackingItem[] = buildPackingList({ rideDays: 3, nights: 3 });
+
 export type FaqItem = { q: string; a: string };
 export type EmergencyContact = { label: string; phone: string };
 

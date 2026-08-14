@@ -40,7 +40,8 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/lib/auth";
 import { VillageMapView } from "@/components/village-map-view";
-import { DEFAULT_PACKING_LIST, fetchEventInfo, type EventInfoBlock, type PackingItem } from "@/lib/event-info";
+import { buildPackingList, fetchEventInfo, tubelessSanitise, type EventInfoBlock, type PackingItem } from "@/lib/event-info";
+import { getEventSport } from "@/lib/event-sport";
 import { RouteMap } from "@/components/route-map";
 import { RouteFileStats } from "@/components/route-file-stats";
 import { RouteProfile } from "@/components/route-profile";
@@ -210,7 +211,7 @@ function MyEventDetail() {
           </section>
         )}
 
-        {tab === "packing" && <PackingPanel eventId={event.id} userId={user?.id ?? null} />}
+        {tab === "packing" && <PackingPanel eventId={event.id} userId={user?.id ?? null} event={event} />}
         {tab === "chat" && <ChatPanel eventId={event.id} userId={user?.id ?? null} />}
         {tab === "ask" && <AskAdminPanel eventId={event.id} userId={user?.id ?? null} eventName={event.name} />}
         {tab === "sponsors" && <EventSponsorsPanel eventId={event.id} eventName={event.name} />}
@@ -750,12 +751,39 @@ function InfoPanel({
   );
 }
 
-function PackingPanel({ eventId, userId }: { eventId: string; userId: string | null }) {
+function PackingPanel({
+  eventId,
+  userId,
+  event,
+}: {
+  eventId: string;
+  userId: string | null;
+  event: { days?: unknown; discipline?: string | null; name?: string | null };
+}) {
   const q = useQuery({ queryKey: ["event-info", eventId], queryFn: () => fetchEventInfo(eventId) });
   const configured = q.data?.packing_list ?? [];
-  // Fall back to a sensible multi-day cycling default when admin hasn't set one.
-  const items: PackingItem[] = configured.length > 0 ? configured : DEFAULT_PACKING_LIST;
+
+  // Size the list to the itinerary: ride days come from days that have routes,
+  // nights from the number of days on the programme.
+  const { rideDays, nights } = useMemo(() => {
+    const days: EventDay[] = Array.isArray(event.days) ? (event.days as EventDay[]) : [];
+    const withRoutes = days.filter((d) => (d.routes ?? []).length > 0).length;
+    return {
+      rideDays: withRoutes > 0 ? withRoutes : Math.max(1, days.length),
+      nights: Math.max(0, days.length - 1),
+    };
+  }, [event.days]);
+
+  const items: PackingItem[] = useMemo(() => {
+    if (configured.length > 0) return tubelessSanitise(configured);
+    return buildPackingList({
+      rideDays,
+      nights,
+      sport: getEventSport(event.discipline, event.name),
+    });
+  }, [configured, rideDays, nights, event.discipline, event.name]);
   const usingDefault = configured.length === 0;
+
 
   const stateQ = useQuery({
     queryKey: ["packing-state", eventId, userId],
@@ -823,9 +851,12 @@ function PackingPanel({ eventId, userId }: { eventId: string; userId: string | n
         </div>
         {usingDefault ? (
           <p className="mt-2 text-[11px] text-ink-soft">
-            Starter packing list for multi-day rides. Tick things off as you pack.
+            Sized for this event: {rideDays} riding day{rideDays > 1 ? "s" : ""}
+            {nights > 0 ? ` and ${nights} night${nights > 1 ? "s" : ""} away` : " (no overnight stay)"}. Everyone
+            runs tubeless — bring a spare tyre, sealant and plugs instead of tubes.
           </p>
         ) : null}
+
       </div>
 
       {groups.map(([cat, list]) => (
