@@ -1,10 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Bot, Download, MessageCircle, Search } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
+import { Bot, Check, Download, MessageCircle, Pencil, Search } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { isBotMiss } from "@/lib/bot-handoff";
+import { upsertLearnedFaq } from "@/lib/faq-learned.functions";
 
 export const Route = createFileRoute("/admin/bot-log")({
   component: BotLogPage,
@@ -22,6 +24,7 @@ type Msg = {
 type Pair = {
   id: string;
   threadId: string;
+  eventId: string | null;
   question: string;
   answer: string;
   askedAt: string;
@@ -31,6 +34,7 @@ type Pair = {
   event: string;
   channel: string;
 };
+
 
 function BotLogPage() {
   const [q, setQ] = useState("");
