@@ -22,6 +22,7 @@ import { getSpectatorRoster, type SpectatorEntrant } from "@/lib/spectator.funct
 import { LockedSection } from "@/components/locked-section";
 import { useSession } from "@/lib/auth";
 import { brandHeader } from "@/lib/event-brand";
+import { buildMapEmbedSrc, buildMapLink } from "@/lib/map-embed";
 
 export const Route = createFileRoute("/spectate/$eventId")({
   head: ({ params }) => ({
@@ -237,16 +238,20 @@ function SpectatorEventPage() {
             <h2 className="font-display text-[13px] font-bold uppercase tracking-wider text-ink-soft">
               Venue
             </h2>
-            {event.mapQuery || event.location ? (
+            {event.mapQuery || event.location ? (() => {
+              const mapLink = buildMapLink({ mapUrl: event.mapQuery, address: event.location });
+              const embedSrc = buildMapEmbedSrc({ mapUrl: event.mapQuery, address: event.location });
+              if (!mapLink || !embedSrc) return <p className="mt-3 text-xs text-ink-soft">No venue set yet.</p>;
+              return (
               <a
-                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.mapQuery || event.location)}`}
+                href={mapLink}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="mt-3 block overflow-hidden rounded-2xl ring-1 ring-border"
               >
                 <iframe
                   title="Event venue map"
-                  src={`https://www.google.com/maps?q=${encodeURIComponent(event.mapQuery || event.location)}&output=embed`}
+                  src={embedSrc}
                   className="pointer-events-none h-44 w-full"
                   loading="lazy"
                   referrerPolicy="no-referrer-when-downgrade"
@@ -256,7 +261,8 @@ function SpectatorEventPage() {
                   <span className="font-semibold text-cherry">Navigate ↗</span>
                 </div>
               </a>
-            ) : (
+              );
+            })() : (
               <p className="mt-3 text-xs text-ink-soft">No venue set yet.</p>
             )}
           </section>

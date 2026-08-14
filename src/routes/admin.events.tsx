@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useRef, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import {
   Plus,
   Pencil,
@@ -16,6 +17,8 @@ import {
 import { useAdminStore, newId } from "@/lib/store";
 import type { Batch, BatchPrice, CustomMarker, EntryCategory, Event, EventDay, EventRoute, RouteTier, ScheduleItem } from "@/lib/mock-data";
 import { supabase } from "@/integrations/supabase/client";
+import { coordsFromMapInput, isShortMapLink } from "@/lib/map-embed";
+import { resolveMapLink } from "@/lib/map-link.functions";
 
 async function uploadEventImage(file: File): Promise<string> {
   const ext = file.name.split(".").pop()?.toLowerCase() ?? "png";
@@ -615,10 +618,43 @@ function EventEditor({
   onCancel: () => void;
 }) {
   const [form, setForm] = useState<Event>({ ...value, lifecycle: value.lifecycle ?? "published" });
+  const [mapMessage, setMapMessage] = useState<string | null>(null);
+  const [resolvingMap, setResolvingMap] = useState(false);
+  const resolveLink = useServerFn(resolveMapLink);
   const dateLocal = new Date(form.date).toISOString().slice(0, 16);
 
   function update<K extends keyof Event>(k: K, v: Event[K]) {
     setForm((f) => ({ ...f, [k]: v }));
+  }
+
+  async function normalizeMapInput(raw: string) {
+    const value = raw.trim();
+    if (!value) return;
+    const point = coordsFromMapInput(value);
+    if (point) {
+      update("mapQuery", `${point.lat},${point.lng}`);
+      setMapMessage(`Pin set at ${point.lat.toFixed(6)}, ${point.lng.toFixed(6)}.`);
+      return;
+    }
+    if (!isShortMapLink(value)) {
+      setMapMessage("Venue saved as an address or full Google Maps link.");
+      return;
+    }
+    setResolvingMap(true);
+    setMapMessage("Checking Google Maps link…");
+    try {
+      const result = await resolveLink({ data: { url: value } });
+      if (result.ok && typeof result.lat === "number" && typeof result.lng === "number") {
+        update("mapQuery", `${result.lat},${result.lng}`);
+        setMapMessage(`Pin set at ${result.lat.toFixed(6)}, ${result.lng.toFixed(6)}.`);
+      } else {
+        setMapMessage(result.ok ? "Google did not return a location for that link." : result.error);
+      }
+    } catch {
+      setMapMessage("Could not open that Google Maps link. Paste coordinates instead.");
+    } finally {
+      setResolvingMap(false);
+    }
   }
 
   const addScheduleItem = (dayId?: string) =>
@@ -861,12 +897,20 @@ function EventEditor({
             <input
               className={inputCls}
               value={form.mapQuery}
-              onChange={(e) => update("mapQuery", e.target.value)}
-              placeholder="e.g. Coetzenburg Stadium, Stellenbosch — or paste lat,lng"
+              onChange={(e) => {
+                update("mapQuery", e.target.value);
+                setMapMessage(null);
+              }}
+              onBlur={(e) => void normalizeMapInput(e.target.value)}
+              placeholder={'Address, Google Maps link, or 33°23\'05.4"S 25°54\'38.3"E'}
             />
             <div className="mt-2 flex flex-wrap gap-2">
               <a
-                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(form.mapQuery || form.location || "")}`}
+                href={(() => {
+                  const point = coordsFromMapInput(form.mapQuery);
+                  const query = point ? `${point.lat},${point.lng}` : form.mapQuery || form.location || "";
+                  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
+                })()}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="rounded-md border border-border bg-background px-2.5 py-1.5 text-[11px] font-semibold hover:bg-surface"
@@ -875,36 +919,21 @@ function EventEditor({
               </a>
               <button
                 type="button"
-                onClick={() => {
+                disabled={resolvingMap}
+                onClick={async () => {
                   const url = window.prompt(
-                    "Paste the Google Maps share link for the venue (open Google Maps → find the place → Share → Copy link)",
+                    'Paste a Google Maps share link or coordinates such as 33°23\'05.4"S 25°54\'38.3"E',
                   );
                   if (!url) return;
-                  const patterns = [
-                    /@(-?\d+\.\d+),(-?\d+\.\d+)/,
-                    /!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/,
-                    /q=(-?\d+\.\d+),\s*(-?\d+\.\d+)/,
-                    /ll=(-?\d+\.\d+),\s*(-?\d+\.\d+)/,
-                    /destination=(-?\d+\.\d+),\s*(-?\d+\.\d+)/,
-                  ];
-                  for (const rx of patterns) {
-                    const m = url.match(rx);
-                    if (m) {
-                      update("mapQuery", `${m[1]},${m[2]}`);
-                      return;
-                    }
-                  }
-                  alert(
-                    "Could not read coordinates from that link. Open the venue in Google Maps, right-click the exact spot, then click the numeric coordinates at the top of the menu to copy them, and paste those here.",
-                  );
+                  await normalizeMapInput(url);
                 }}
-                className="rounded-md border border-border bg-background px-2.5 py-1.5 text-[11px] font-semibold hover:bg-surface"
+                className="rounded-md border border-border bg-background px-2.5 py-1.5 text-[11px] font-semibold hover:bg-surface disabled:opacity-60"
               >
-                Paste share link → pin exact spot
+                {resolvingMap ? "Checking link…" : "Paste link or coordinates → pin exact spot"}
               </button>
             </div>
             <span className="mt-1 block text-[11px] text-ink-soft">
-              This drives the embedded map and the "Navigate" button on the event page. Paste a share link to pin the exact venue by coordinates.
+              {mapMessage ?? 'This drives the map and Navigate button. Both Google short links and DMS coordinates are accepted.'}
             </span>
           </Field>
 
