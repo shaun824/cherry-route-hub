@@ -9,7 +9,8 @@ import { InstallAppPrompt } from "@/components/install-app-prompt";
 
 const tabs = [
   { to: "/", label: "Home", icon: Home, match: (p: string) => p === "/" },
-  { to: "/my-events", label: "My Events", icon: Ticket, match: (p: string) => p.startsWith("/my-events") || p.startsWith("/events") },
+  // Short label keeps the 4-up bottom bar readable; fullLabel is used on desktop + screen readers.
+  { to: "/my-events", label: "Adventure", fullLabel: "Adventure Awaits", icon: Ticket, match: (p: string) => p.startsWith("/my-events") || p.startsWith("/events") },
   { to: "/spectate", label: "Spectate", icon: Binoculars, match: (p: string) => p.startsWith("/spectate") },
   { to: "/profile", label: "Profile", icon: User, match: (p: string) => p.startsWith("/profile") },
 ] as const;
