@@ -104,7 +104,22 @@ function CrewDashboard() {
   const placed = useMemo(() => rooming.filter((r) => r.village_zone_id).length, [rooming]);
 
   const event = detailQ.data;
-  const today = useMemo(() => todaySchedule(event), [event]);
+  const dayGroups = useMemo(
+    () =>
+      groupScheduleByDay(
+        (Array.isArray(event?.schedule) ? event?.schedule : []) as ScheduleItem[],
+        (Array.isArray(event?.days) ? event?.days : []) as EventDay[],
+      ),
+    [event],
+  );
+  const [dayId, setDayId] = useState("");
+  useEffect(() => {
+    setDayId(pickCurrentDay(dayGroups));
+  }, [dayGroups]);
+  const activeDay = dayGroups.find((d) => d.id === dayId) ?? dayGroups[0];
+  const crewTasks = useMemo(() => buildCrewTimeline(activeDay), [activeDay]);
+  const [view, setView] = useState<"crew" | "riders">("crew");
+
 
   if (loading) return <div className="p-6 text-sm text-ink-soft">Checking your crew access…</div>;
   if (!user) return <Navigate to="/crew/login" />;
