@@ -77,6 +77,7 @@ function BotLogPage() {
             id: m.id,
             threadId,
             eventId: t?.event_id ?? null,
+            question: m.body,
 
             answer: reply.body,
             askedAt: m.created_at,
