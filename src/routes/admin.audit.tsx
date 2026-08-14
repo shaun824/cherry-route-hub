@@ -35,10 +35,10 @@ function AuditPage() {
   const run = useServerFn(runContentAuditNow);
   const qc = useQueryClient();
 
-  const q = useQuery({ queryKey: ["content-audits"], queryFn: () => list({ data: {} }) });
+  const q = useQuery({ queryKey: ["content-audits"], queryFn: () => list() });
 
   const m = useMutation({
-    mutationFn: () => run({ data: {} }),
+    mutationFn: () => run(),
     onSuccess: (res: any) => {
       toast.success(res.summary);
       qc.invalidateQueries({ queryKey: ["content-audits"] });
