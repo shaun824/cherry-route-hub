@@ -210,6 +210,12 @@ function Home() {
         )}
       </div>
 
+      <div className="mt-4 space-y-3 px-5">
+        <PushOptIn />
+        <InstallPrompt />
+      </div>
+
+
       {/* Spotlight on the next event — FOMO for guests, a deep link for entrants */}
       {spotlight ? (
         <div className="mt-4 px-5">
