@@ -217,3 +217,21 @@
   padding: 3px 6px;
 }
 .leaflet-tooltip.rce-zone-label::before { display: none; }
+.leaflet-tooltip.rce-zone-label-active {
+  background: #c8102e;
+  box-shadow: 0 0 0 2px #fff, 0 4px 10px rgba(0, 0, 0, 0.35);
+}
+.rce-zone-halo {
+  animation: rce-zone-pulse 1.6s ease-in-out infinite;
+}
+.rce-zone-selected {
+  animation: rce-zone-dash 1.2s linear infinite;
+}
+@keyframes rce-zone-pulse {
+  0%, 100% { opacity: 0.85; }
+  50% { opacity: 0.35; }
+}
+@keyframes rce-zone-dash {
+  to { stroke-dashoffset: -32; }
+}
+
