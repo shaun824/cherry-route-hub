@@ -182,10 +182,6 @@ export default function VillageMapEditorGeo({
                 >
                   <Tooltip direction="center" permanent className="rce-zone-label">
                     <span style={{ fontWeight: 800 }}>{z.name}</span>
-                    <br />
-                    {formatArea(zoneAreaM2(z))}
-                    <br />
-                    {Math.round(size.w)} × {Math.round(size.h)} m
                   </Tooltip>
                 </Polygon>
 
