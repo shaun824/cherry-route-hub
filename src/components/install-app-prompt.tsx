@@ -4,7 +4,9 @@ import { Download, Share, PlusSquare, X } from "lucide-react";
 import { useSession } from "@/lib/auth";
 import { isStandalone } from "@/lib/push-client";
 
-const DISMISS_KEY = "rce.install-prompt-dismissed";
+const DISMISS_KEY = "rce.install-prompt-dismissed-at";
+/** Re-invite riders to install once a day, never once they've installed. */
+const SNOOZE_MS = 24 * 60 * 60 * 1000;
 
 type BipEvent = Event & {
   prompt: () => Promise<void>;
@@ -40,7 +42,8 @@ export function InstallAppPrompt() {
     setMobile(isMobile());
     setIos(isIos());
     setInstalled(isStandalone());
-    setDismissed(window.localStorage.getItem(DISMISS_KEY) === "1");
+    const at = Number(window.localStorage.getItem(DISMISS_KEY) ?? 0);
+    setDismissed(Number.isFinite(at) && Date.now() - at < SNOOZE_MS);
     setReady(true);
 
     const onPrompt = (e: Event) => {
@@ -59,7 +62,7 @@ export function InstallAppPrompt() {
   function dismiss() {
     setDismissed(true);
     setShowIosSheet(false);
-    window.localStorage.setItem(DISMISS_KEY, "1");
+    window.localStorage.setItem(DISMISS_KEY, String(Date.now()));
   }
 
   async function install() {
@@ -81,30 +84,43 @@ export function InstallAppPrompt() {
         className="fixed inset-x-0 z-30 mx-auto w-full max-w-md px-3 md:hidden"
         style={{ bottom: "calc(env(safe-area-inset-bottom) + 68px)" }}
       >
-        <div className="flex items-center gap-2 rounded-2xl bg-ink px-3 py-2.5 text-white shadow-lg ring-1 ring-black/20">
-          <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white/15">
-            <Download className="h-4 w-4" />
-          </span>
-          <div className="min-w-0 flex-1 leading-tight">
-            <p className="text-[13px] font-bold">Get the Rider Hub app</p>
-            <p className="text-[11px] opacity-75">
-              {ios ? "Add it to your home screen in 3 taps" : "Install for alerts & faster access"}
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={install}
-            className="shrink-0 rounded-full bg-cherry px-3 py-1.5 text-xs font-bold text-white"
-          >
-            {ios ? "How to" : "Install"}
-          </button>
+        <div className="relative rounded-3xl bg-ink p-4 text-white shadow-2xl ring-1 ring-black/20">
           <button
             type="button"
             aria-label="Dismiss"
             onClick={dismiss}
-            className="grid h-7 w-7 shrink-0 place-items-center rounded-full text-white/70 hover:text-white"
+            className="absolute right-2.5 top-2.5 grid h-8 w-8 place-items-center rounded-full text-white/60 hover:text-white"
           >
-            <X className="h-3.5 w-3.5" />
+            <X className="h-4 w-4" />
+          </button>
+
+          <div className="flex items-center gap-3 pr-8">
+            <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-cherry">
+              <Download className="h-6 w-6" />
+            </span>
+            <div className="min-w-0 leading-tight">
+              <p className="font-display text-base font-bold">Get the Rider Hub app</p>
+              <p className="mt-0.5 text-xs opacity-75">
+                {ios
+                  ? "Add it to your home screen in 3 quick taps"
+                  : "Race-day alerts, routes and your entry — one tap away"}
+              </p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={install}
+            className="mt-3.5 w-full rounded-2xl bg-cherry py-3 text-sm font-bold text-white"
+          >
+            {ios ? "Show me how" : "Install the app"}
+          </button>
+          <button
+            type="button"
+            onClick={dismiss}
+            className="mt-1.5 w-full py-1 text-[11px] font-semibold text-white/55 hover:text-white/80"
+          >
+            Not now
           </button>
         </div>
       </div>
