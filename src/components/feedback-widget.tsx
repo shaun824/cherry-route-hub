@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { WhatsappButton } from "@/components/whatsapp-button";
 import { useRouterState } from "@tanstack/react-router";
 import { MessageSquareWarning, X, Check, Loader2 } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
@@ -154,6 +155,10 @@ export function FeedbackWidget() {
                 <p className="text-center text-[11px] text-ink-soft">
                   Sent from {pathname}
                 </p>
+                <div className="flex flex-col items-center gap-1 border-t border-border pt-3">
+                  <p className="text-[11px] text-ink-soft">Need an answer right now?</p>
+                  <WhatsappButton context="the Rider Hub app" />
+                </div>
               </form>
             )}
           </div>
