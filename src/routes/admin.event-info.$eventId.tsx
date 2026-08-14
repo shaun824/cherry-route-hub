@@ -11,7 +11,7 @@ import {
 } from "@/lib/event-info";
 import { useServerFn } from "@tanstack/react-start";
 import { resolveMapLink } from "@/lib/map-link.functions";
-import { buildMapEmbedSrc, isShortMapLink } from "@/lib/map-embed";
+import { buildMapEmbedSrc, coordsFromMapInput, isShortMapLink } from "@/lib/map-embed";
 
 export const Route = createFileRoute("/admin/event-info/$eventId")({
   loader: async ({ params }) => {
@@ -40,6 +40,19 @@ function EventInfoEditor() {
     const url = value.trim();
     setMapMsg(null);
     if (!url) return;
+    const pastedPoint = coordsFromMapInput(url);
+    if (pastedPoint) {
+      const normalizedUrl = `https://www.google.com/maps/search/?api=1&query=${pastedPoint.lat},${pastedPoint.lng}`;
+      setInfo((prev) => ({
+        ...prev,
+        map_embed_url: normalizedUrl,
+        venue_lat: pastedPoint.lat,
+        venue_lng: pastedPoint.lng,
+      }));
+      setSaved(false);
+      setMapMsg(`Pin set at ${pastedPoint.lat.toFixed(5)}, ${pastedPoint.lng.toFixed(5)}. Remember to save.`);
+      return;
+    }
     if (!isShortMapLink(url) && buildMapEmbedSrc({ mapUrl: url })) {
       setMapMsg("Map link looks good.");
       return;
@@ -121,7 +134,7 @@ function EventInfoEditor() {
         />
         <div>
           <Field
-            label="Google Maps link (paste share link or embed URL)"
+            label="Google Maps link or coordinates"
             value={info.map_embed_url ?? ""}
             onChange={(v) => patch("map_embed_url", v || null)}
             onBlur={(v) => void handleMapLink(v)}
@@ -129,7 +142,7 @@ function EventInfoEditor() {
           <p className="mt-1 text-[11px] text-ink-soft">
             {resolvingMap
               ? "Checking link…"
-              : (mapMsg ?? "Short maps.app.goo.gl links are expanded automatically when you tab out of the field.")}
+              : (mapMsg ?? "Paste a share link or coordinates such as 33°23'05.4\"S 25°54'38.3\"E, then tab out.")}
           </p>
           {(() => {
             const src = buildMapEmbedSrc({

@@ -1,5 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
-import { coordsFromMapUrl, placeFromMapUrl } from "@/lib/map-embed";
+import { coordsFromMapInput, coordsFromMapUrl, placeFromMapUrl } from "@/lib/map-embed";
 
 /**
  * Expands a shortened Google Maps link (maps.app.goo.gl / goo.gl/maps) into a
@@ -13,6 +13,17 @@ export const resolveMapLink = createServerFn({ method: "POST" })
     return { url };
   })
   .handler(async ({ data }) => {
+    const pastedPoint = coordsFromMapInput(data.url);
+    if (pastedPoint) {
+      return {
+        ok: true as const,
+        url: `https://www.google.com/maps/search/?api=1&query=${pastedPoint.lat},${pastedPoint.lng}`,
+        lat: pastedPoint.lat,
+        lng: pastedPoint.lng,
+        place: null,
+      };
+    }
+
     const start = /^https?:\/\//i.test(data.url) ? data.url : `https://${data.url}`;
 
     let host: string;
