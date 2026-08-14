@@ -187,3 +187,102 @@ export function overlappingZoneIds(zones: VillageZone[]): Set<string> {
   }
   return hit;
 }
+
+// ---- duplication helpers (build uniform, repeatable layouts) ----
+
+/** Shifts a zone by an east/north offset in metres, keeping its exact shape and size. */
+export function translateZone(z: VillageZone, eastM: number, northM: number): VillageZone {
+  const ref = z.points[0];
+  if (!ref) return z;
+  return {
+    ...z,
+    points: z.points.map((p) => {
+      const { e, n } = toMetres(ref, p);
+      return fromMetres(ref, e + eastM, n + northM);
+    }),
+  };
+}
+
+/** Rotates a zone about its centroid (degrees, clockwise). */
+export function rotateZone(z: VillageZone, degrees: number): VillageZone {
+  const c = zoneCentroid(z);
+  if (!c) return z;
+  const rad = (-degrees * Math.PI) / 180;
+  const cos = Math.cos(rad);
+  const sin = Math.sin(rad);
+  return {
+    ...z,
+    points: z.points.map((p) => {
+      const { e, n } = toMetres(c, p);
+      return fromMetres(c, e * cos - n * sin, e * sin + n * cos);
+    }),
+  };
+}
+
+/** Suggests the next name in a series: "Tent 4" -> "Tent 5", "Gazebo" -> "Gazebo 2". */
+export function nextZoneName(name: string, taken: string[]): string {
+  const m = name.match(/^(.*?)(\d+)\s*$/);
+  const base = m ? m[1] : `${name} `;
+  let n = m ? Number(m[2]) + 1 : 2;
+  const used = new Set(taken.map((t) => t.trim().toLowerCase()));
+  let candidate = `${base}${n}`.trim();
+  while (used.has(candidate.toLowerCase())) {
+    n += 1;
+    candidate = `${base}${n}`.trim();
+  }
+  return candidate;
+}
+
+export type DuplicateDirection = "east" | "west" | "north" | "south";
+
+/**
+ * Copies a zone `count` times in a straight line, keeping identical size and a
+ * fixed gap (metres) between footprints — the way a row of tents is pegged out.
+ */
+export function duplicateZoneLine(
+  z: VillageZone,
+  count: number,
+  gapM: number,
+  direction: DuplicateDirection,
+  taken: string[],
+): VillageZone[] {
+  const size = zoneSizeM(z);
+  const stepE = direction === "east" ? size.w + gapM : direction === "west" ? -(size.w + gapM) : 0;
+  const stepN = direction === "north" ? size.h + gapM : direction === "south" ? -(size.h + gapM) : 0;
+  const names = [...taken];
+  const out: VillageZone[] = [];
+  let lastName = z.name;
+  for (let i = 1; i <= count; i++) {
+    const name = nextZoneName(lastName, names);
+    names.push(name);
+    lastName = name;
+    out.push({ ...translateZone(z, stepE * i, stepN * i), id: crypto.randomUUID(), name });
+  }
+  return out;
+}
+
+/** Grid of identical copies: `cols` across (east) × `rows` down (south), excluding the original. */
+export function duplicateZoneGrid(
+  z: VillageZone,
+  cols: number,
+  rows: number,
+  gapM: number,
+  taken: string[],
+): VillageZone[] {
+  const size = zoneSizeM(z);
+  const dx = size.w + gapM;
+  const dy = size.h + gapM;
+  const names = [...taken];
+  const out: VillageZone[] = [];
+  let lastName = z.name;
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      if (r === 0 && c === 0) continue;
+      const name = nextZoneName(lastName, names);
+      names.push(name);
+      lastName = name;
+      out.push({ ...translateZone(z, dx * c, -dy * r), id: crypto.randomUUID(), name });
+    }
+  }
+  return out;
+}

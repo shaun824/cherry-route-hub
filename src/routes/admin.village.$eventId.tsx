@@ -35,6 +35,7 @@ import {
   type VillageZone,
   type ZonePoint,
 } from "@/lib/village-zones";
+import ZoneDuplicator from "@/components/zone-duplicator";
 
 const VillageMapEditorGeo = lazy(() => import("@/components/village-map-editor-geo"));
 
@@ -730,6 +731,16 @@ function VillageEditor() {
                   {formatArea(zoneAreaM2(z))} · {z.points.length} corners · {formatLength(zonePerimeterM(z))} perimeter
                   {clash ? " · overlaps another area" : ""}
                 </p>
+                <ZoneDuplicator
+                  zone={z}
+                  zones={zones}
+                  onAdd={(copies) => {
+                    patch({ zones: [...zones, ...copies] });
+                    setSelectedZone(copies[0]?.id ?? z.id);
+                  }}
+                  onUpdate={(next) => updateZone(z.id, next)}
+                />
+
               </div>
             );
           })}
