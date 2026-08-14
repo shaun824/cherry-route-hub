@@ -198,16 +198,30 @@ export default function VillageMapEditorGeo({
             const c = zoneCentroid(z);
             return (
               <Fragment key={z.id}>
+                {active ? (
+                  <Polygon
+                    positions={z.points.map((p) => [p.lat, p.lng]) as [number, number][]}
+                    interactive={false}
+                    pathOptions={{
+                      color: "#ffffff",
+                      weight: 10,
+                      opacity: 0.85,
+                      fill: false,
+                      className: "rce-zone-halo",
+                    }}
+                  />
+                ) : null}
                 <Polygon
                   positions={z.points.map((p) => [p.lat, p.lng]) as [number, number][]}
                   interactive={!placing && !drawing}
                   bubblingMouseEvents={false}
                   pathOptions={{
-                    color: clash ? "#dc2626" : zoneColor(z),
-                    weight: active ? 4 : 2,
-                    dashArray: clash ? "6 4" : undefined,
+                    color: clash ? "#dc2626" : active ? "#111827" : zoneColor(z),
+                    weight: active ? 5 : 2,
+                    dashArray: clash ? "6 4" : active ? "10 6" : undefined,
                     fillColor: zoneColor(z),
-                    fillOpacity: active ? 0.3 : 0.18,
+                    fillOpacity: active ? 0.45 : 0.18,
+                    className: active ? "rce-zone-selected" : undefined,
                   }}
                   eventHandlers={{
                     click: (e) => {
@@ -217,17 +231,19 @@ export default function VillageMapEditorGeo({
                     },
                   }}
                 >
-                  {showLabels ? (
+                  {showLabels || active ? (
                     <Tooltip
                       direction="center"
                       permanent
                       interactive={false}
-                      className="rce-zone-label"
+                      className={active ? "rce-zone-label rce-zone-label-active" : "rce-zone-label"}
                     >
                       <span style={{ fontWeight: 800 }}>{z.name}</span>
+                      {active ? <span style={{ display: "block", fontSize: 10, opacity: 0.9 }}>Selected — editable</span> : null}
                     </Tooltip>
                   ) : null}
                 </Polygon>
+
 
 
                 {active && c ? (
