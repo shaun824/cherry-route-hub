@@ -119,7 +119,15 @@ function RidersAdmin() {
                     )}
                   </td>
                   <td className="px-4 py-3 text-right">
+                    <Link
+                      to="/admin/rider/$userId"
+                      params={{ userId: p.id }}
+                      className="mr-2 inline-flex items-center gap-1 rounded-lg border border-border bg-background px-2 py-1 text-xs font-semibold text-ink-soft hover:text-cherry"
+                    >
+                      <Eye className="h-3 w-3" /> View profile
+                    </Link>
                     {isAdmin ? (
+
                       <button
                         onClick={() => demote.mutate(p.id)}
                         disabled={demote.isPending}
