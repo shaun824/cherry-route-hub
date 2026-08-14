@@ -26,6 +26,7 @@ import { Route as SpectateEventIdRouteImport } from './routes/spectate.$eventId'
 import { Route as MyEventsEventIdRouteImport } from './routes/my-events.$eventId'
 import { Route as EventsEventIdRouteImport } from './routes/events.$eventId'
 import { Route as CrewRoomingRouteImport } from './routes/crew.rooming'
+import { Route as CrewLoginRouteImport } from './routes/crew.login'
 import { Route as AdminSponsorsRouteImport } from './routes/admin.sponsors'
 import { Route as AdminSettingsRouteImport } from './routes/admin.settings'
 import { Route as AdminRosterRouteImport } from './routes/admin.roster'
@@ -147,6 +148,11 @@ const EventsEventIdRoute = EventsEventIdRouteImport.update({
 const CrewRoomingRoute = CrewRoomingRouteImport.update({
   id: '/crew/rooming',
   path: '/crew/rooming',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CrewLoginRoute = CrewLoginRouteImport.update({
+  id: '/crew/login',
+  path: '/crew/login',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminSponsorsRoute = AdminSponsorsRouteImport.update({
@@ -370,6 +376,7 @@ export interface FileRoutesByFullPath {
   '/admin/roster': typeof AdminRosterRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/sponsors': typeof AdminSponsorsRoute
+  '/crew/login': typeof CrewLoginRoute
   '/crew/rooming': typeof CrewRoomingRoute
   '/events/$eventId': typeof EventsEventIdRouteWithChildren
   '/my-events/$eventId': typeof MyEventsEventIdRoute
@@ -424,6 +431,7 @@ export interface FileRoutesByTo {
   '/admin/roster': typeof AdminRosterRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/sponsors': typeof AdminSponsorsRoute
+  '/crew/login': typeof CrewLoginRoute
   '/crew/rooming': typeof CrewRoomingRoute
   '/my-events/$eventId': typeof MyEventsEventIdRoute
   '/spectate/$eventId': typeof SpectateEventIdRoute
@@ -480,6 +488,7 @@ export interface FileRoutesById {
   '/admin/roster': typeof AdminRosterRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/sponsors': typeof AdminSponsorsRoute
+  '/crew/login': typeof CrewLoginRoute
   '/crew/rooming': typeof CrewRoomingRoute
   '/events/$eventId': typeof EventsEventIdRouteWithChildren
   '/my-events/$eventId': typeof MyEventsEventIdRoute
@@ -538,6 +547,7 @@ export interface FileRouteTypes {
     | '/admin/roster'
     | '/admin/settings'
     | '/admin/sponsors'
+    | '/crew/login'
     | '/crew/rooming'
     | '/events/$eventId'
     | '/my-events/$eventId'
@@ -592,6 +602,7 @@ export interface FileRouteTypes {
     | '/admin/roster'
     | '/admin/settings'
     | '/admin/sponsors'
+    | '/crew/login'
     | '/crew/rooming'
     | '/my-events/$eventId'
     | '/spectate/$eventId'
@@ -647,6 +658,7 @@ export interface FileRouteTypes {
     | '/admin/roster'
     | '/admin/settings'
     | '/admin/sponsors'
+    | '/crew/login'
     | '/crew/rooming'
     | '/events/$eventId'
     | '/my-events/$eventId'
@@ -688,6 +700,7 @@ export interface RootRouteChildren {
   PromosRoute: typeof PromosRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   SpectateRoute: typeof SpectateRouteWithChildren
+  CrewLoginRoute: typeof CrewLoginRoute
   CrewRoomingRoute: typeof CrewRoomingRoute
   EventsEventIdRoute: typeof EventsEventIdRouteWithChildren
   EventsIndexRoute: typeof EventsIndexRoute
@@ -825,6 +838,13 @@ declare module '@tanstack/react-router' {
       path: '/crew/rooming'
       fullPath: '/crew/rooming'
       preLoaderRoute: typeof CrewRoomingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/crew/login': {
+      id: '/crew/login'
+      path: '/crew/login'
+      fullPath: '/crew/login'
+      preLoaderRoute: typeof CrewLoginRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/sponsors': {
@@ -1194,6 +1214,7 @@ const rootRouteChildren: RootRouteChildren = {
   PromosRoute: PromosRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   SpectateRoute: SpectateRouteWithChildren,
+  CrewLoginRoute: CrewLoginRoute,
   CrewRoomingRoute: CrewRoomingRoute,
   EventsEventIdRoute: EventsEventIdRouteWithChildren,
   EventsIndexRoute: EventsIndexRoute,
