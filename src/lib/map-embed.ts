@@ -135,6 +135,10 @@ export function buildMapLink(opts: {
   if (raw && /^(https?:\/\/)?(maps\.app\.goo\.gl|goo\.gl\/maps|(www\.)?google\.[a-z.]+\/maps)/i.test(raw)) {
     return clean(raw);
   }
+  const pastedPoint = coordsFromMapInput(raw);
+  if (pastedPoint) {
+    return `https://www.google.com/maps/search/?api=1&query=${pastedPoint.lat},${pastedPoint.lng}`;
+  }
   if (typeof opts.lat === "number" && typeof opts.lng === "number") {
     return `https://www.google.com/maps/search/?api=1&query=${opts.lat},${opts.lng}`;
   }
