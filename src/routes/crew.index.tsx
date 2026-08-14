@@ -330,19 +330,3 @@ function Tile({
     </Link>
   );
 }
-
-/** Today's items from the event schedule, falling back to the whole running order. */
-function todaySchedule(event: { schedule?: unknown; days?: unknown } | null | undefined): {
-  title: string;
-  items: ScheduleItem[];
-} {
-  const schedule = Array.isArray(event?.schedule) ? (event?.schedule as ScheduleItem[]) : [];
-  const days = Array.isArray(event?.days) ? (event?.days as EventDay[]) : [];
-  const iso = new Date().toISOString().slice(0, 10);
-  const day = days.find((d) => (d.date ?? "").slice(0, 10) === iso);
-  if (day) {
-    const items = schedule.filter((s) => s.dayId === day.id);
-    if (items.length) return { title: `Today · ${day.label ?? "Running order"}`, items };
-  }
-  return { title: "Running order", items: schedule };
-}
