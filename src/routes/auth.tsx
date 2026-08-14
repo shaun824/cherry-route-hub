@@ -6,6 +6,8 @@ import { useServerFn } from "@tanstack/react-start";
 import { lovable } from "@/integrations/lovable/index";
 import { supabase } from "@/integrations/supabase/client";
 import { lookupEntryEmail } from "@/lib/id-lookup.functions";
+import { checkAccountExists } from "@/lib/account-check.functions";
+
 import { useSession } from "@/lib/auth";
 import { BrandMark } from "@/components/ui-bits";
 
