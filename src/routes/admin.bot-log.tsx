@@ -1,10 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Bot, Download, MessageCircle, Search } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
+import { Bot, Check, Download, MessageCircle, Pencil, Search } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { isBotMiss } from "@/lib/bot-handoff";
+import { upsertLearnedFaq } from "@/lib/faq-learned.functions";
 
 export const Route = createFileRoute("/admin/bot-log")({
   component: BotLogPage,
@@ -22,6 +24,7 @@ type Msg = {
 type Pair = {
   id: string;
   threadId: string;
+  eventId: string | null;
   question: string;
   answer: string;
   askedAt: string;
@@ -31,6 +34,7 @@ type Pair = {
   event: string;
   channel: string;
 };
+
 
 function BotLogPage() {
   const [q, setQ] = useState("");
@@ -48,8 +52,9 @@ function BotLogPage() {
         supabase
           .from("admin_qa_threads")
           .select(
-            "id, channel, wa_name, wa_phone, event:events(name), rider:profiles!admin_qa_threads_rider_user_id_fkey(full_name, email)",
+            "id, channel, wa_name, wa_phone, event_id, event:events(name), rider:profiles!admin_qa_threads_rider_user_id_fkey(full_name, email)",
           ),
+
       ]);
 
       const meta = new Map<string, any>((threads ?? []).map((t: any) => [t.id, t]));
@@ -71,7 +76,9 @@ function BotLogPage() {
           pairs.push({
             id: m.id,
             threadId,
+            eventId: t?.event_id ?? null,
             question: m.body,
+
             answer: reply.body,
             askedAt: m.created_at,
             answeredAt: reply.created_at,
@@ -206,16 +213,108 @@ function BotLogPage() {
                 <Bot className="mt-0.5 h-4 w-4 shrink-0 text-cherry" />
                 <p className="whitespace-pre-wrap text-sm text-ink-soft">{p.answer}</p>
               </div>
-              <Link
-                to="/admin/messages"
-                className="mt-2 inline-block text-xs font-semibold text-cherry underline"
-              >
-                Open thread
-              </Link>
+              <div className="mt-2 flex flex-wrap items-center gap-3">
+                <Link
+                  to="/admin/messages"
+                  search={{ thread: p.threadId }}
+                  className="text-xs font-semibold text-cherry underline"
+                >
+                  Open thread
+                </Link>
+                <TeachAnswer pair={p} />
+              </div>
             </li>
           ))}
         </ul>
       )}
+    </div>
+  );
+}
+
+/** Lets an admin write the answer the bot should have given and save it as an approved FAQ. */
+function TeachAnswer({ pair }: { pair: Pair }) {
+  const save = useServerFn(upsertLearnedFaq);
+  const [open, setOpen] = useState(false);
+  const [question, setQuestion] = useState(pair.question);
+  const [answer, setAnswer] = useState(pair.missed ? "" : pair.answer);
+  const [state, setState] = useState<"idle" | "saving" | "saved" | "error">("idle");
+
+  if (!open) {
+    return (
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="inline-flex items-center gap-1 text-xs font-semibold text-ink-soft hover:text-cherry"
+      >
+        <Pencil className="h-3 w-3" /> Teach the bot the right answer
+      </button>
+    );
+  }
+
+  return (
+    <div className="w-full space-y-2 rounded-xl bg-secondary/40 p-3">
+      <label className="block text-[11px] font-bold uppercase tracking-wider text-ink-soft">
+        Question
+        <textarea
+          value={question}
+          onChange={(e) => setQuestion(e.target.value)}
+          rows={2}
+          className="mt-1 w-full rounded-lg bg-background p-2 text-sm font-normal normal-case tracking-normal text-ink ring-1 ring-border focus:outline-none focus:ring-cherry"
+        />
+      </label>
+      <label className="block text-[11px] font-bold uppercase tracking-wider text-ink-soft">
+        Correct answer
+        <textarea
+          value={answer}
+          onChange={(e) => setAnswer(e.target.value)}
+          rows={4}
+          placeholder="What the bot should say next time…"
+          className="mt-1 w-full rounded-lg bg-background p-2 text-sm font-normal normal-case tracking-normal text-ink ring-1 ring-border focus:outline-none focus:ring-cherry"
+        />
+      </label>
+      <div className="flex items-center gap-2">
+        <button
+          type="button"
+          disabled={state === "saving" || question.trim().length < 3 || !answer.trim()}
+          onClick={async () => {
+            setState("saving");
+            try {
+              await save({
+                data: {
+                  eventId: pair.eventId,
+                  question: question.trim().slice(0, 500),
+                  answer: answer.trim().slice(0, 4000),
+                  status: "approved",
+                  expiresOn: null,
+                  sourceThreadId: pair.threadId,
+                },
+              });
+              setState("saved");
+            } catch (e) {
+              console.error("teach bot failed", e);
+              setState("error");
+            }
+          }}
+          className="rounded-full cherry-gradient px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-60"
+        >
+          {state === "saving" ? "Saving…" : "Save for the bot"}
+        </button>
+        <button
+          type="button"
+          onClick={() => setOpen(false)}
+          className="text-xs font-semibold text-ink-soft"
+        >
+          Cancel
+        </button>
+        {state === "saved" ? (
+          <span className="inline-flex items-center gap-1 text-xs font-semibold text-green-600">
+            <Check className="h-3 w-3" /> Saved — the bot will use this
+          </span>
+        ) : null}
+        {state === "error" ? (
+          <span className="text-xs font-semibold text-cherry">Couldn&apos;t save that.</span>
+        ) : null}
+      </div>
     </div>
   );
 }
