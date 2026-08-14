@@ -653,6 +653,7 @@ export type Database = {
           event_id: string
           full_name: string
           id: string
+          location_hint: string | null
           notes: string | null
           room_type: string | null
           tent_number: string | null
@@ -666,6 +667,7 @@ export type Database = {
           event_id: string
           full_name: string
           id?: string
+          location_hint?: string | null
           notes?: string | null
           room_type?: string | null
           tent_number?: string | null
@@ -679,6 +681,7 @@ export type Database = {
           event_id?: string
           full_name?: string
           id?: string
+          location_hint?: string | null
           notes?: string | null
           room_type?: string | null
           tent_number?: string | null
@@ -719,6 +722,7 @@ export type Database = {
           notes: string | null
           sort_order: number
           updated_at: string
+          village_spot_id: string | null
         }
         Insert: {
           address?: string | null
@@ -729,6 +733,7 @@ export type Database = {
           notes?: string | null
           sort_order?: number
           updated_at?: string
+          village_spot_id?: string | null
         }
         Update: {
           address?: string | null
@@ -739,6 +744,7 @@ export type Database = {
           notes?: string | null
           sort_order?: number
           updated_at?: string
+          village_spot_id?: string | null
         }
         Relationships: [
           {
@@ -1374,7 +1380,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      app_role: "admin" | "rider"
+      app_role: "admin" | "rider" | "crew"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1502,7 +1508,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "rider"],
+      app_role: ["admin", "rider", "crew"],
     },
   },
 } as const

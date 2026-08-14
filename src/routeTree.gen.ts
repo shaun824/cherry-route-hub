@@ -16,6 +16,7 @@ import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as MyEventsRouteImport } from './routes/my-events'
 import { Route as GalleryRouteImport } from './routes/gallery'
 import { Route as FeedRouteImport } from './routes/feed'
+import { Route as CrewRouteImport } from './routes/crew'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
@@ -95,6 +96,11 @@ const GalleryRoute = GalleryRouteImport.update({
 const FeedRoute = FeedRouteImport.update({
   id: '/feed',
   path: '/feed',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CrewRoute = CrewRouteImport.update({
+  id: '/crew',
+  path: '/crew',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -334,6 +340,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
   '/auth': typeof AuthRoute
+  '/crew': typeof CrewRoute
   '/feed': typeof FeedRoute
   '/gallery': typeof GalleryRoute
   '/my-events': typeof MyEventsRouteWithChildren
@@ -387,6 +394,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/crew': typeof CrewRoute
   '/feed': typeof FeedRoute
   '/gallery': typeof GalleryRoute
   '/profile': typeof ProfileRoute
@@ -440,6 +448,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
   '/auth': typeof AuthRoute
+  '/crew': typeof CrewRoute
   '/feed': typeof FeedRoute
   '/gallery': typeof GalleryRoute
   '/my-events': typeof MyEventsRouteWithChildren
@@ -496,6 +505,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/auth'
+    | '/crew'
     | '/feed'
     | '/gallery'
     | '/my-events'
@@ -549,6 +559,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/crew'
     | '/feed'
     | '/gallery'
     | '/profile'
@@ -601,6 +612,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/auth'
+    | '/crew'
     | '/feed'
     | '/gallery'
     | '/my-events'
@@ -656,6 +668,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRouteWithChildren
   AuthRoute: typeof AuthRoute
+  CrewRoute: typeof CrewRoute
   FeedRoute: typeof FeedRoute
   GalleryRoute: typeof GalleryRoute
   MyEventsRoute: typeof MyEventsRouteWithChildren
@@ -728,6 +741,13 @@ declare module '@tanstack/react-router' {
       path: '/feed'
       fullPath: '/feed'
       preLoaderRoute: typeof FeedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/crew': {
+      id: '/crew'
+      path: '/crew'
+      fullPath: '/crew'
+      preLoaderRoute: typeof CrewRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -1146,6 +1166,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRouteWithChildren,
   AuthRoute: AuthRoute,
+  CrewRoute: CrewRoute,
   FeedRoute: FeedRoute,
   GalleryRoute: GalleryRoute,
   MyEventsRoute: MyEventsRouteWithChildren,

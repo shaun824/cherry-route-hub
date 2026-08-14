@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { ShieldCheck, ShieldOff, Eye } from "lucide-react";
+import { ShieldCheck, ShieldOff, Eye, HardHat } from "lucide-react";
 
 import { toast } from "sonner";
 
@@ -18,7 +18,7 @@ type Profile = {
   created_at: string;
 };
 
-type RoleRow = { user_id: string; role: "admin" | "moderator" | "user" };
+type RoleRow = { user_id: string; role: string };
 
 function RidersAdmin() {
   const qc = useQueryClient();
@@ -74,6 +74,31 @@ function RidersAdmin() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const setRole = useMutation({
+    mutationFn: async ({ userId, grant }: { userId: string; grant: boolean }) => {
+      if (grant) {
+        const { error } = await supabase.from("user_roles").insert({ user_id: userId, role: "crew" });
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from("user_roles")
+          .delete()
+          .eq("user_id", userId)
+          .eq("role", "crew");
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      toast.success("Crew access updated");
+      qc.invalidateQueries({ queryKey: ["admin", "user_roles"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const crewIds = new Set(
+    (rolesQ.data ?? []).filter((r) => r.role === "crew").map((r) => r.user_id),
+  );
+
   const adminIds = new Set(
     (rolesQ.data ?? []).filter((r) => r.role === "admin").map((r) => r.user_id),
   );
@@ -83,7 +108,7 @@ function RidersAdmin() {
       <div>
         <h1 className="font-display text-2xl font-bold">Riders & roles</h1>
         <p className="text-sm text-ink-soft">
-          Everyone who signs in appears here. Grant admin access to trusted staff.
+          Everyone who signs in appears here. Grant admin access to trusted staff, or crew access so on-site staff can look up rooming lists.
         </p>
       </div>
 
@@ -105,6 +130,7 @@ function RidersAdmin() {
               <tr><td colSpan={5} className="px-4 py-6 text-center text-ink-soft">No riders yet.</td></tr>
             ) : (profilesQ.data ?? []).map((p) => {
               const isAdmin = adminIds.has(p.id);
+              const isCrew = crewIds.has(p.id);
               return (
                 <tr key={p.id} className="border-t border-border">
                   <td className="px-4 py-3 font-semibold text-ink">{p.full_name ?? "—"}</td>
@@ -114,6 +140,10 @@ function RidersAdmin() {
                     {isAdmin ? (
                       <span className="inline-flex items-center gap-1 rounded-full bg-cherry/10 px-2 py-0.5 text-[11px] font-semibold text-cherry-deep">
                         <ShieldCheck className="h-3 w-3" /> Admin
+                      </span>
+                    ) : isCrew ? (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-ink/10 px-2 py-0.5 text-[11px] font-semibold text-ink">
+                        <HardHat className="h-3 w-3" /> Crew
                       </span>
                     ) : (
                       <span className="text-[11px] text-ink-soft">Rider</span>
@@ -127,6 +157,13 @@ function RidersAdmin() {
                     >
                       <Eye className="h-3 w-3" /> View profile
                     </Link>
+                    <button
+                      onClick={() => setRole.mutate({ userId: p.id, grant: !isCrew })}
+                      disabled={setRole.isPending}
+                      className="mr-2 inline-flex items-center gap-1 rounded-lg border border-border bg-background px-2 py-1 text-xs font-semibold text-ink-soft"
+                    >
+                      <HardHat className="h-3 w-3" /> {isCrew ? "Remove crew" : "Make crew"}
+                    </button>
                     {isAdmin ? (
 
                       <button

@@ -9,6 +9,8 @@ export type Venue = {
   address: string | null;
   notes: string | null;
   sort_order: number;
+  /** id of the village-map point where this venue sits, so crew can find it */
+  village_spot_id: string | null;
 };
 
 export type RoomingRow = {
@@ -21,13 +23,14 @@ export type RoomingRow = {
   tent_number: string | null;
   room_type: string | null;
   notes: string | null;
+  location_hint: string | null;
   venue?: { id: string; name: string; address: string | null } | null;
 };
 
 export async function fetchVenues(eventId: string): Promise<Venue[]> {
   const { data, error } = await supabase
     .from("event_venues")
-    .select("id, event_id, name, address, notes, sort_order")
+    .select("id, event_id, name, address, notes, sort_order, village_spot_id")
     .eq("event_id", eventId)
     .order("sort_order", { ascending: true })
     .order("name", { ascending: true });
@@ -42,7 +45,7 @@ export async function fetchRooming(eventId: string): Promise<RoomingRow[]> {
   const { data, error } = await supabase
     .from("event_rooming")
     .select(
-      "id, event_id, venue_id, entrant_id, full_name, email, tent_number, room_type, notes, venue:event_venues(id, name, address)",
+      "id, event_id, venue_id, entrant_id, full_name, email, tent_number, room_type, notes, location_hint, venue:event_venues(id, name, address)",
     )
     .eq("event_id", eventId)
     .order("tent_number", { ascending: true });

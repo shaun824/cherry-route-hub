@@ -2,8 +2,8 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { PageHeader } from "@/components/ui-bits";
 import { supabase } from "@/integrations/supabase/client";
-import { useSession, signOut } from "@/lib/auth";
-import { LogOut, Save, User as UserIcon, ShieldAlert } from "lucide-react";
+import { useSession, signOut, useIsCrew } from "@/lib/auth";
+import { LogOut, Save, User as UserIcon, ShieldAlert, HardHat } from "lucide-react";
 import { NotificationSettings } from "@/components/notification-settings";
 
 export const Route = createFileRoute("/profile")({
@@ -150,6 +150,8 @@ function Profile() {
         </div>
       </div>
 
+      <CrewShortcut />
+
       <form onSubmit={handleSave} className="mx-5 mt-4 space-y-4 rounded-2xl bg-card p-4 ring-1 ring-border">
         <Field label="Full name">
           <input
@@ -268,5 +270,25 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
       <span className="mb-1 block text-[11px] font-bold uppercase tracking-wider text-ink-soft">{label}</span>
       {children}
     </label>
+  );
+}
+
+/** Crew-only shortcut to the on-site rooming finder. */
+function CrewShortcut() {
+  const { isCrew } = useIsCrew();
+  if (!isCrew) return null;
+  return (
+    <Link
+      to="/crew"
+      className="mx-5 mt-4 flex items-center gap-3 rounded-2xl bg-ink p-4 text-white"
+    >
+      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-white/15">
+        <HardHat className="h-5 w-5" />
+      </span>
+      <span className="min-w-0">
+        <span className="block font-display text-sm font-bold">Crew tools</span>
+        <span className="block text-[11px] opacity-80">Find any rider's tent, room mates and location</span>
+      </span>
+    </Link>
   );
 }
