@@ -55,7 +55,10 @@ export async function track({ eventName, path, durationMs, props }: TrackInput) 
   if (typeof window === "undefined") return;
   try {
     const { data } = await supabase.auth.getSession();
+    const uid = data.session?.user.id ?? null;
+    if (await isStaff(uid)) return;
     const pathname = path ?? window.location.pathname;
+
     await supabase.from("analytics_events").insert({
       session_id: getSessionId(),
       user_id: data.session?.user.id ?? null,
