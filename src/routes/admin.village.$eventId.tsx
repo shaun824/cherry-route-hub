@@ -35,6 +35,7 @@ import {
   type VillageZone,
   type ZonePoint,
 } from "@/lib/village-zones";
+import ZoneDuplicator from "@/components/zone-duplicator";
 
 const VillageMapEditorGeo = lazy(() => import("@/components/village-map-editor-geo"));
 
