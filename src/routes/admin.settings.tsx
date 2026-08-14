@@ -119,6 +119,7 @@ function AdminSettings() {
           initial={settings.waivers}
           onSaved={(w) => setSettings({ waivers: w })}
         />
+        <SupportCard />
         <FeaturesCard
           value={settings.features}
           onSaved={(f) => setSettings({ features: f })}
@@ -753,6 +754,90 @@ function SaveBar({
 }
 
 /* ---------- Features Card ---------- */
+
+function SupportCard() {
+  const qc = useQueryClient();
+  const q = useQuery({
+    queryKey: ["support-settings"],
+    queryFn: fetchSupportSettings,
+  });
+  const [draft, setDraft] = useState<SupportSettings>(DEFAULT_SUPPORT);
+  const [saving, setSaving] = useState(false);
+  useEffect(() => {
+    if (q.data) setDraft(q.data);
+  }, [q.data]);
+  const dirty = JSON.stringify(draft) !== JSON.stringify(q.data ?? DEFAULT_SUPPORT);
+
+  async function commit() {
+    setSaving(true);
+    const ok = await saveSupportSettings({
+      ...draft,
+      whatsappNumber: normalizeWaNumber(draft.whatsappNumber),
+    });
+    setSaving(false);
+    if (ok) qc.invalidateQueries({ queryKey: ["support-settings"] });
+  }
+
+  const normalized = normalizeWaNumber(draft.whatsappNumber);
+
+  return (
+    <section className="rounded-2xl bg-card p-5 ring-1 ring-border">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h2 className="font-display text-lg font-bold text-ink">WhatsApp support</h2>
+          <p className="text-xs text-ink-soft">
+            Shows a “Chat on WhatsApp” button in the app footer and on event chat panels.
+          </p>
+        </div>
+        <button
+          onClick={() => void commit()}
+          disabled={!dirty || saving}
+          className="inline-flex items-center gap-1.5 rounded-lg bg-cherry px-3 py-2 text-xs font-bold text-white shadow-sm disabled:opacity-40"
+        >
+          <Save className="h-3.5 w-3.5" />
+          {saving ? "Saving…" : "Save changes"}
+        </button>
+      </div>
+
+      <label className="mt-4 flex items-center justify-between gap-3 rounded-xl border border-border bg-background p-3">
+        <div>
+          <p className="text-sm font-semibold text-ink">Show WhatsApp button</p>
+          <p className="text-xs text-ink-soft">Riders open a chat with your business number.</p>
+        </div>
+        <input
+          type="checkbox"
+          checked={draft.whatsappEnabled}
+          onChange={(e) => setDraft({ ...draft, whatsappEnabled: e.target.checked })}
+          className="h-5 w-9 shrink-0"
+        />
+      </label>
+
+      <div className="mt-3 grid gap-3 sm:grid-cols-2">
+        <label className="block">
+          <span className="text-xs font-semibold text-ink-soft">WhatsApp number</span>
+          <input
+            value={draft.whatsappNumber}
+            onChange={(e) => setDraft({ ...draft, whatsappNumber: e.target.value })}
+            placeholder="082 123 4567"
+            className="mt-1 w-full rounded-lg bg-background px-3 py-2 text-sm ring-1 ring-border focus:outline-none focus:ring-cherry"
+          />
+          <span className="mt-1 block text-[10px] text-ink-soft">
+            {normalized ? `Sends to wa.me/${normalized}` : "SA numbers are converted to 27… automatically."}
+          </span>
+        </label>
+        <label className="block">
+          <span className="text-xs font-semibold text-ink-soft">Button label</span>
+          <input
+            value={draft.whatsappLabel}
+            onChange={(e) => setDraft({ ...draft, whatsappLabel: e.target.value })}
+            placeholder="Chat on WhatsApp"
+            className="mt-1 w-full rounded-lg bg-background px-3 py-2 text-sm ring-1 ring-border focus:outline-none focus:ring-cherry"
+          />
+        </label>
+      </div>
+    </section>
+  );
+}
 
 function FeaturesCard({ value, onSaved }: { value: Features; onSaved: (f: Features) => void }) {
   const [draft, setDraft] = useState<Features>(value);
