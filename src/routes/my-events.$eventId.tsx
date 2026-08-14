@@ -36,6 +36,8 @@ import {
   Download,
   Mountain,
   Route as RouteIcon,
+  Lock as LockIcon,
+
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/lib/auth";
@@ -448,9 +450,18 @@ function RoutesPanel({
 }) {
   const { user, loading } = useSession();
   const locked = !loading && !user;
+  // Route files are for entered riders only.
+  const entryQ = useQuery({
+    queryKey: ["my-event", eventId],
+    queryFn: () => fetchMyEventById(eventId),
+    enabled: !!user,
+  });
+  const isEntrant = !!entryQ.data;
+  const downloadsLocked = locked || (!!user && !entryQ.isLoading && !isEntrant);
   const days: EventDay[] = Array.isArray(event.days) ? (event.days as EventDay[]) : [];
   const allRoutes = days.flatMap((d) => d.routes ?? []);
   const hasMap = allRoutes.some((r) => (r.kmlUrls ?? []).length > 0);
+
 
   if (allRoutes.length === 0) {
     return <EmptyBlock>Routes for this event will be published here soon.</EmptyBlock>;
@@ -508,31 +519,39 @@ function RoutesPanel({
                       <p className="mt-2 text-xs leading-relaxed text-ink-soft">{r.description}</p>
                     ) : null}
                     {kmls.length > 0 || r.gpxUrl ? (
-                      <LockedSection locked={locked} message="Sign in to download route files">
-                        <div className="mt-3 flex flex-wrap gap-2">
-                          {kmls.map((u, i) => (
-                            <DownloadLink
-                              key={u}
-                              url={u}
-                              label={fileNameFromUrl(
-                                u,
-                                `${r.name || "route"}${kmls.length > 1 ? `-${i + 1}` : ""}.kml`,
-                              )}
-                            />
-                          ))}
-                          {r.gpxUrl ? (
-                            <DownloadLink
-                              url={r.gpxUrl}
-                              label={fileNameFromUrl(r.gpxUrl, `${r.name || "route"}.gpx`)}
-                            />
-                          ) : null}
-                        </div>
-                      </LockedSection>
+                      downloadsLocked && !locked ? (
+                        <p className="mt-3 flex items-center gap-1.5 rounded-xl bg-muted/60 px-3 py-2 text-[11px] font-medium text-ink-soft">
+                          <LockIcon className="h-3.5 w-3.5 text-cherry" />
+                          Route files are available to entered riders only.
+                        </p>
+                      ) : (
+                        <LockedSection locked={locked} message="Sign in to download route files">
+                          <div className="mt-3 flex flex-wrap gap-2">
+                            {kmls.map((u, i) => (
+                              <DownloadLink
+                                key={u}
+                                url={u}
+                                label={fileNameFromUrl(
+                                  u,
+                                  `${r.name || "route"}${kmls.length > 1 ? `-${i + 1}` : ""}.kml`,
+                                )}
+                              />
+                            ))}
+                            {r.gpxUrl ? (
+                              <DownloadLink
+                                url={r.gpxUrl}
+                                label={fileNameFromUrl(r.gpxUrl, `${r.name || "route"}.gpx`)}
+                              />
+                            ) : null}
+                          </div>
+                        </LockedSection>
+                      )
                     ) : (
                       <p className="mt-3 text-[11px] text-muted-foreground">
                         No route file uploaded yet.
                       </p>
                     )}
+
                   </li>
                 );
               })}
