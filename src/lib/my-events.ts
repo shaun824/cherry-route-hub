@@ -19,6 +19,9 @@ export type MyEventRow = {
   tshirt_size: string | null;
   extras: ExtraItem[];
   notes: string | null;
+  paid: boolean | null;
+  amount_due_cents: number | null;
+  amount_paid_cents: number | null;
   event: {
     id: string;
     name: string;
@@ -75,7 +78,7 @@ export async function fetchMyEvents(): Promise<MyEventRow[]> {
   const { data, error } = await supabase
     .from("event_entrants")
     .select(
-      "id, event_id, category, batch, bib_number, registration_ref, jacket_size, tshirt_size, extras, notes, event:events(id, name, discipline, event_date, location, distance_km, status, hero_color, description, social_links, title_sponsor_name, title_sponsor_logo_url, title_sponsor_url)",
+      "id, event_id, category, batch, bib_number, registration_ref, jacket_size, tshirt_size, extras, notes, paid, amount_due_cents, amount_paid_cents, event:events(id, name, discipline, event_date, location, distance_km, status, hero_color, description, social_links, title_sponsor_name, title_sponsor_logo_url, title_sponsor_url)",
     )
     .in("entrant_id", entrantIds)
     .order("created_at", { ascending: false });
@@ -96,6 +99,9 @@ export async function fetchMyEvents(): Promise<MyEventRow[]> {
       tshirt_size: (r as { tshirt_size: string | null }).tshirt_size ?? null,
       extras: normalizeExtras((r as { extras: unknown }).extras),
       notes: (r as { notes: string | null }).notes ?? null,
+      paid: (r as { paid: boolean | null }).paid ?? null,
+      amount_due_cents: (r as { amount_due_cents: number | null }).amount_due_cents ?? null,
+      amount_paid_cents: (r as { amount_paid_cents: number | null }).amount_paid_cents ?? null,
       event: r.event as MyEventRow["event"],
     }));
 

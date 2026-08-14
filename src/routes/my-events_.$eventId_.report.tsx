@@ -9,6 +9,7 @@ import { ArrowLeft, Download, Printer } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchMyEventById, type MyEventRow } from "@/lib/my-events";
 import { flattenExtras } from "@/lib/extras-display";
+import { paymentStatus } from "@/lib/payment-status";
 import { eventHasTshirt } from "@/lib/apparel";
 import { fetchMyRooming } from "@/lib/rooming";
 
@@ -64,6 +65,7 @@ function ReportPage() {
       ["Accommodation venue", rooming?.venue?.name ?? ""],
       ["Tent / room number", rooming?.tent_number ?? ""],
       ["Room type", rooming?.room_type ?? ""],
+      ["Payment status", paymentStatus(row)?.label ?? ""],
       ["Notes", row?.notes ?? ""],
       ["Entry Ninja reference", row?.registration_ref ?? ""],
       ...flattenExtras(row?.extras).map((x) => [
@@ -147,6 +149,7 @@ function ReportPage() {
               <Row label="Bib number" value={row.bib_number ? `#${row.bib_number}` : null} />
               <Row label="Jacket size" value={row.jacket_size} />
               {showTshirt ? <Row label="T-shirt size" value={row.tshirt_size} /> : null}
+              <Row label="Payment status" value={paymentStatus(row)?.label ?? null} />
               <Row label="Notes" value={row.notes} />
 
               <div className="mt-5">

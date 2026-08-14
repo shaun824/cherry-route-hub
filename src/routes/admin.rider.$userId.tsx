@@ -2,6 +2,8 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Mail, Phone, Shirt, Tent, Activity } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { paymentStatus } from "@/lib/payment-status";
+
 
 export const Route = createFileRoute("/admin/rider/$userId")({
   component: RiderProfile,
@@ -30,6 +32,9 @@ type Entry = {
   jacket_size: string | null;
   tshirt_size: string | null;
   extras: unknown;
+  paid: boolean | null;
+  amount_due_cents: number | null;
+  amount_paid_cents: number | null;
   event: { id: string; name: string; event_date: string | null } | null;
 };
 
@@ -80,7 +85,7 @@ function RiderProfile() {
         const { data: e } = await supabase
           .from("event_entrants")
           .select(
-            "id,event_id,category,batch,bib_number,registration_ref,jacket_size,tshirt_size,extras,event:events(id,name,event_date)",
+            "id,event_id,category,batch,bib_number,registration_ref,jacket_size,tshirt_size,extras,paid,amount_due_cents,amount_paid_cents,event:events(id,name,event_date)",
           )
           .in("entrant_id", entrantIds);
         entries = (e ?? []) as unknown as Entry[];
@@ -167,6 +172,23 @@ function RiderProfile() {
                         Jacket {e.jacket_size ?? "—"} · Tee {e.tshirt_size ?? "—"} · Entry Ninja ref{" "}
                         {e.registration_ref ?? "—"}
                       </p>
+                      {(() => {
+                        const ps = paymentStatus(e);
+                        if (!ps) return null;
+                        return (
+                          <p
+                            className={`mt-1 inline-block rounded px-2 py-0.5 text-[11px] font-bold ${
+                              ps.state === "paid"
+                                ? "bg-emerald-50 text-emerald-800"
+                                : ps.state === "outstanding"
+                                  ? "bg-amber-50 text-amber-900"
+                                  : "bg-secondary text-ink-soft"
+                            }`}
+                          >
+                            {ps.label}
+                          </p>
+                        );
+                      })()}
                       {room ? (
                         <p className="mt-1 inline-flex items-center gap-1.5 text-xs font-semibold text-ink">
                           <Tent className="h-3.5 w-3.5" /> {room.room_type ?? "Tent"}{" "}

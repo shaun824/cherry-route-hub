@@ -56,7 +56,27 @@ const rosterRowSchema = z.object({
   tshirt_size: z.string().trim().max(20).optional().default(""),
   extras: z.string().max(2000).optional().default(""),
   notes: z.string().max(1000).optional().default(""),
+  // Payment confirmation from Entry Ninja ("Yes"/"Paid"/"true" etc, plus amounts in rands).
+  paid: z.string().trim().max(20).optional().default(""),
+  amount_due: z.string().trim().max(20).optional().default(""),
+  amount_paid: z.string().trim().max(20).optional().default(""),
 });
+
+export function parsePaidFlag(raw: string | undefined | null): boolean | null {
+  const v = (raw ?? "").trim().toLowerCase();
+  if (!v) return null;
+  if (["yes", "y", "true", "1", "paid", "complete", "completed"].includes(v)) return true;
+  if (["no", "n", "false", "0", "unpaid", "outstanding", "pending"].includes(v)) return false;
+  return null;
+}
+
+export function parseMoneyCents(raw: string | undefined | null): number | null {
+  const v = (raw ?? "").replace(/[^0-9.,-]/g, "").replace(/,/g, "");
+  if (!v) return null;
+  const n = Number(v);
+  if (!Number.isFinite(n) || n < 0) return null;
+  return Math.round(n * 100);
+}
 
 const importSchema = z.object({
   rows: z.array(rosterRowSchema).min(1).max(5000),
@@ -210,6 +230,9 @@ export const importRoster = createServerFn({ method: "POST" })
               tshirt_size: r.tshirt_size || null,
               extras: parsedExtras,
               notes: r.notes || null,
+              paid: parsePaidFlag(r.paid),
+              amount_due_cents: parseMoneyCents(r.amount_due),
+              amount_paid_cents: parseMoneyCents(r.amount_paid),
             },
             { onConflict: "event_id,entrant_id" },
           );
