@@ -47,6 +47,8 @@ import { Route as EventsEventIdMapRouteImport } from './routes/events.$eventId.m
 import { Route as EventsEventIdEnterRouteImport } from './routes/events.$eventId.enter'
 import { Route as AdminVillageEventIdRouteImport } from './routes/admin.village.$eventId'
 import { Route as AdminEventInfoEventIdRouteImport } from './routes/admin.event-info.$eventId'
+import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
+import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
 import { Route as ApiPublicHooksWhatsappRouteImport } from './routes/api/public/hooks/whatsapp'
 import { Route as ApiPublicHooksNotificationCronRouteImport } from './routes/api/public/hooks/notification-cron'
 import { Route as ApiPublicHooksNotificationClickRouteImport } from './routes/api/public/hooks/notification-click'
@@ -245,6 +247,16 @@ const AdminEventInfoEventIdRoute = AdminEventInfoEventIdRouteImport.update({
   path: '/event-info/$eventId',
   getParentRoute: () => AdminRoute,
 } as any)
+const LovableEmailAuthWebhookRoute = LovableEmailAuthWebhookRouteImport.update({
+  id: '/lovable/email/auth/webhook',
+  path: '/lovable/email/auth/webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LovableEmailAuthPreviewRoute = LovableEmailAuthPreviewRouteImport.update({
+  id: '/lovable/email/auth/preview',
+  path: '/lovable/email/auth/preview',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicHooksWhatsappRoute = ApiPublicHooksWhatsappRouteImport.update({
   id: '/api/public/hooks/whatsapp',
   path: '/api/public/hooks/whatsapp',
@@ -332,6 +344,8 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/notification-click': typeof ApiPublicHooksNotificationClickRoute
   '/api/public/hooks/notification-cron': typeof ApiPublicHooksNotificationCronRoute
   '/api/public/hooks/whatsapp': typeof ApiPublicHooksWhatsappRoute
+  '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
+  '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -376,6 +390,8 @@ export interface FileRoutesByTo {
   '/api/public/hooks/notification-click': typeof ApiPublicHooksNotificationClickRoute
   '/api/public/hooks/notification-cron': typeof ApiPublicHooksNotificationCronRoute
   '/api/public/hooks/whatsapp': typeof ApiPublicHooksWhatsappRoute
+  '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
+  '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -424,6 +440,8 @@ export interface FileRoutesById {
   '/api/public/hooks/notification-click': typeof ApiPublicHooksNotificationClickRoute
   '/api/public/hooks/notification-cron': typeof ApiPublicHooksNotificationCronRoute
   '/api/public/hooks/whatsapp': typeof ApiPublicHooksWhatsappRoute
+  '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
+  '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -473,6 +491,8 @@ export interface FileRouteTypes {
     | '/api/public/hooks/notification-click'
     | '/api/public/hooks/notification-cron'
     | '/api/public/hooks/whatsapp'
+    | '/lovable/email/auth/preview'
+    | '/lovable/email/auth/webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -517,6 +537,8 @@ export interface FileRouteTypes {
     | '/api/public/hooks/notification-click'
     | '/api/public/hooks/notification-cron'
     | '/api/public/hooks/whatsapp'
+    | '/lovable/email/auth/preview'
+    | '/lovable/email/auth/webhook'
   id:
     | '__root__'
     | '/'
@@ -564,6 +586,8 @@ export interface FileRouteTypes {
     | '/api/public/hooks/notification-click'
     | '/api/public/hooks/notification-cron'
     | '/api/public/hooks/whatsapp'
+    | '/lovable/email/auth/preview'
+    | '/lovable/email/auth/webhook'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -587,6 +611,8 @@ export interface RootRouteChildren {
   ApiPublicHooksNotificationClickRoute: typeof ApiPublicHooksNotificationClickRoute
   ApiPublicHooksNotificationCronRoute: typeof ApiPublicHooksNotificationCronRoute
   ApiPublicHooksWhatsappRoute: typeof ApiPublicHooksWhatsappRoute
+  LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
+  LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -857,6 +883,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminEventInfoEventIdRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/lovable/email/auth/webhook': {
+      id: '/lovable/email/auth/webhook'
+      path: '/lovable/email/auth/webhook'
+      fullPath: '/lovable/email/auth/webhook'
+      preLoaderRoute: typeof LovableEmailAuthWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lovable/email/auth/preview': {
+      id: '/lovable/email/auth/preview'
+      path: '/lovable/email/auth/preview'
+      fullPath: '/lovable/email/auth/preview'
+      preLoaderRoute: typeof LovableEmailAuthPreviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/whatsapp': {
       id: '/api/public/hooks/whatsapp'
       path: '/api/public/hooks/whatsapp'
@@ -1018,6 +1058,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksNotificationClickRoute: ApiPublicHooksNotificationClickRoute,
   ApiPublicHooksNotificationCronRoute: ApiPublicHooksNotificationCronRoute,
   ApiPublicHooksWhatsappRoute: ApiPublicHooksWhatsappRoute,
+  LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
+  LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
