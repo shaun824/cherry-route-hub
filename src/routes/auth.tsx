@@ -36,6 +36,10 @@ function AuthPage() {
   const [mode, setMode] = useState<Mode>("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [noAccount, setNoAccount] = useState(false);
+  const [hasEntries, setHasEntries] = useState(false);
+  const checkAccount = useServerFn(checkAccountExists);
+
 
   const target = next && next.startsWith("/") ? next : "/";
 
