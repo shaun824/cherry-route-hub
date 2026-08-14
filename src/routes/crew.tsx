@@ -13,7 +13,6 @@ import {
   type CrewRoomingRow,
 } from "@/lib/crew";
 import { VillageMapView } from "@/components/village-map-view";
-import { AppShell } from "@/components/app-shell";
 
 export const Route = createFileRoute("/crew")({
   head: () => ({
@@ -90,17 +89,12 @@ function CrewPage() {
   }
 
   if (loading) {
-    return (
-      <AppShell>
-        <div className="p-6 text-sm text-ink-soft">Checking your crew access…</div>
-      </AppShell>
-    );
+    return <div className="p-6 text-sm text-ink-soft">Checking your crew access…</div>;
   }
   if (!user) return <Navigate to="/auth" search={{ next: "/crew" }} />;
   if (!isCrew) {
     return (
-      <AppShell>
-        <div className="space-y-3 p-6 text-center">
+      <div className="space-y-3 p-6 text-center">
           <h1 className="font-display text-xl font-bold text-ink">Crew access only</h1>
           <p className="text-sm text-ink-soft">
             This area is for Red Cherry event crew. Ask an admin to add crew access to your account.
@@ -108,14 +102,12 @@ function CrewPage() {
           <Link to="/" className="inline-flex rounded-full bg-cherry px-4 py-2 text-xs font-bold text-white">
             Back to the app
           </Link>
-        </div>
-      </AppShell>
+      </div>
     );
   }
 
   return (
-    <AppShell>
-      <div className="space-y-4 px-4 pb-8 pt-5">
+    <div className="space-y-4 px-4 pb-8 pt-5">
         <header>
           <p className="text-[11px] font-bold uppercase tracking-widest text-cherry">Crew</p>
           <h1 className="font-display text-2xl font-bold text-ink">Who's in which room</h1>
@@ -274,7 +266,6 @@ function CrewPage() {
           </h2>
           {eventId ? <VillageMapView eventId={eventId} focusSpotId={focusSpot} /> : null}
         </section>
-      </div>
-    </AppShell>
+    </div>
   );
 }
