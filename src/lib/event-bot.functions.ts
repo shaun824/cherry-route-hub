@@ -152,7 +152,24 @@ export const askEventBot = createServerFn({ method: "POST" })
     const { getEventKnowledge } = await import("@/lib/event-bot-crawl.server");
     const scraped = await getEventKnowledge(adminForKb, event as any);
 
+    // Admin-approved answers learned from real rider conversations.
+    const today = new Date().toISOString().slice(0, 10);
+    const { data: learned } = await adminForKb
+      .from("event_faq_learned")
+      .select("id, question, answer, expires_on, event_id")
+      .eq("status", "approved")
+      .or(`event_id.eq.${data.eventId},event_id.is.null`)
+      .limit(100);
+    const approved = (learned ?? []).filter(
+      (f: any) => !f.expires_on || String(f.expires_on) >= today,
+    );
+    const approvedText = approved
+      .map((f: any) => `Q: ${f.question}\nA: ${f.answer}`)
+      .join("\n\n");
+
     const context_text = [
+      approvedText ? "APPROVED ANSWERS (highest priority — verified by Red Cherry admins):" : "",
+      approvedText,
       "STRUCTURED EVENT DATA (authoritative):",
       structured,
       scraped ? "\n\nWEBSITE PAGES:" : "",
@@ -160,6 +177,7 @@ export const askEventBot = createServerFn({ method: "POST" })
     ]
       .filter(Boolean)
       .join("\n\n---\n\n");
+
 
 
     const apiKey = process.env.LOVABLE_API_KEY;

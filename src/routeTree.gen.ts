@@ -47,6 +47,7 @@ import { Route as AdminVillageEventIdRouteImport } from './routes/admin.village.
 import { Route as AdminEventInfoEventIdRouteImport } from './routes/admin.event-info.$eventId'
 import { Route as ApiPublicHooksWhatsappRouteImport } from './routes/api/public/hooks/whatsapp'
 import { Route as ApiPublicHooksNewsSyncRouteImport } from './routes/api/public/hooks/news-sync'
+import { Route as ApiPublicHooksFaqSuggestRouteImport } from './routes/api/public/hooks/faq-suggest'
 import { Route as ApiPublicHooksEventBotRefreshRouteImport } from './routes/api/public/hooks/event-bot-refresh'
 import { Route as ApiPublicHooksEntryNinjaSyncRouteImport } from './routes/api/public/hooks/entry-ninja-sync'
 
@@ -240,6 +241,12 @@ const ApiPublicHooksNewsSyncRoute = ApiPublicHooksNewsSyncRouteImport.update({
   path: '/api/public/hooks/news-sync',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicHooksFaqSuggestRoute =
+  ApiPublicHooksFaqSuggestRouteImport.update({
+    id: '/api/public/hooks/faq-suggest',
+    path: '/api/public/hooks/faq-suggest',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksEventBotRefreshRoute =
   ApiPublicHooksEventBotRefreshRouteImport.update({
     id: '/api/public/hooks/event-bot-refresh',
@@ -292,6 +299,7 @@ export interface FileRoutesByFullPath {
   '/events/$eventId/': typeof EventsEventIdIndexRoute
   '/api/public/hooks/entry-ninja-sync': typeof ApiPublicHooksEntryNinjaSyncRoute
   '/api/public/hooks/event-bot-refresh': typeof ApiPublicHooksEventBotRefreshRoute
+  '/api/public/hooks/faq-suggest': typeof ApiPublicHooksFaqSuggestRoute
   '/api/public/hooks/news-sync': typeof ApiPublicHooksNewsSyncRoute
   '/api/public/hooks/whatsapp': typeof ApiPublicHooksWhatsappRoute
 }
@@ -331,6 +339,7 @@ export interface FileRoutesByTo {
   '/events/$eventId': typeof EventsEventIdIndexRoute
   '/api/public/hooks/entry-ninja-sync': typeof ApiPublicHooksEntryNinjaSyncRoute
   '/api/public/hooks/event-bot-refresh': typeof ApiPublicHooksEventBotRefreshRoute
+  '/api/public/hooks/faq-suggest': typeof ApiPublicHooksFaqSuggestRoute
   '/api/public/hooks/news-sync': typeof ApiPublicHooksNewsSyncRoute
   '/api/public/hooks/whatsapp': typeof ApiPublicHooksWhatsappRoute
 }
@@ -374,6 +383,7 @@ export interface FileRoutesById {
   '/events/$eventId/': typeof EventsEventIdIndexRoute
   '/api/public/hooks/entry-ninja-sync': typeof ApiPublicHooksEntryNinjaSyncRoute
   '/api/public/hooks/event-bot-refresh': typeof ApiPublicHooksEventBotRefreshRoute
+  '/api/public/hooks/faq-suggest': typeof ApiPublicHooksFaqSuggestRoute
   '/api/public/hooks/news-sync': typeof ApiPublicHooksNewsSyncRoute
   '/api/public/hooks/whatsapp': typeof ApiPublicHooksWhatsappRoute
 }
@@ -418,6 +428,7 @@ export interface FileRouteTypes {
     | '/events/$eventId/'
     | '/api/public/hooks/entry-ninja-sync'
     | '/api/public/hooks/event-bot-refresh'
+    | '/api/public/hooks/faq-suggest'
     | '/api/public/hooks/news-sync'
     | '/api/public/hooks/whatsapp'
   fileRoutesByTo: FileRoutesByTo
@@ -457,6 +468,7 @@ export interface FileRouteTypes {
     | '/events/$eventId'
     | '/api/public/hooks/entry-ninja-sync'
     | '/api/public/hooks/event-bot-refresh'
+    | '/api/public/hooks/faq-suggest'
     | '/api/public/hooks/news-sync'
     | '/api/public/hooks/whatsapp'
   id:
@@ -499,6 +511,7 @@ export interface FileRouteTypes {
     | '/events/$eventId/'
     | '/api/public/hooks/entry-ninja-sync'
     | '/api/public/hooks/event-bot-refresh'
+    | '/api/public/hooks/faq-suggest'
     | '/api/public/hooks/news-sync'
     | '/api/public/hooks/whatsapp'
   fileRoutesById: FileRoutesById
@@ -519,6 +532,7 @@ export interface RootRouteChildren {
   MyEventsEventIdReportRoute: typeof MyEventsEventIdReportRoute
   ApiPublicHooksEntryNinjaSyncRoute: typeof ApiPublicHooksEntryNinjaSyncRoute
   ApiPublicHooksEventBotRefreshRoute: typeof ApiPublicHooksEventBotRefreshRoute
+  ApiPublicHooksFaqSuggestRoute: typeof ApiPublicHooksFaqSuggestRoute
   ApiPublicHooksNewsSyncRoute: typeof ApiPublicHooksNewsSyncRoute
   ApiPublicHooksWhatsappRoute: typeof ApiPublicHooksWhatsappRoute
 }
@@ -791,6 +805,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksNewsSyncRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/faq-suggest': {
+      id: '/api/public/hooks/faq-suggest'
+      path: '/api/public/hooks/faq-suggest'
+      fullPath: '/api/public/hooks/faq-suggest'
+      preLoaderRoute: typeof ApiPublicHooksFaqSuggestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/event-bot-refresh': {
       id: '/api/public/hooks/event-bot-refresh'
       path: '/api/public/hooks/event-bot-refresh'
@@ -908,6 +929,7 @@ const rootRouteChildren: RootRouteChildren = {
   MyEventsEventIdReportRoute: MyEventsEventIdReportRoute,
   ApiPublicHooksEntryNinjaSyncRoute: ApiPublicHooksEntryNinjaSyncRoute,
   ApiPublicHooksEventBotRefreshRoute: ApiPublicHooksEventBotRefreshRoute,
+  ApiPublicHooksFaqSuggestRoute: ApiPublicHooksFaqSuggestRoute,
   ApiPublicHooksNewsSyncRoute: ApiPublicHooksNewsSyncRoute,
   ApiPublicHooksWhatsappRoute: ApiPublicHooksWhatsappRoute,
 }
