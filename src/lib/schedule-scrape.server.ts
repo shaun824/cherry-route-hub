@@ -186,7 +186,10 @@ export async function syncEventSchedule(
       .select("auto_apply")
       .eq("event_id", event.id)
       .maybeSingle();
-    const autoApply = existing?.auto_apply ?? true;
+    // Default: only auto-apply when the event has no hand-built schedule yet.
+    // Existing schedules are staged for admin review instead of being overwritten.
+    const hasSchedule = Array.isArray(event.schedule) && event.schedule.length > 0;
+    const autoApply = existing?.auto_apply ?? !hasSchedule;
 
     let applied = false;
     if (items.length && (opts.forceApply || autoApply)) {
