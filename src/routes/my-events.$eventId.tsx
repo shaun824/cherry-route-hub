@@ -1720,20 +1720,23 @@ function YourEntryCard({ eventId, entryUrl = null }: { eventId: string; entryUrl
         </div>
       ) : null}
 
-      {row.registration_ref ? (
-        <a
-          href={entryNinjaRegistrationUrl(row.registration_ref) ?? "#"}
-          target="_blank"
-          rel="noreferrer"
-          className="mt-3 inline-flex w-full items-center justify-center gap-1.5 rounded-xl bg-cherry px-3 py-2.5 text-xs font-bold text-white"
-        >
-          <ExternalLink className="h-3.5 w-3.5" /> Add or edit merchandise on Entry Ninja
-        </a>
-      ) : (
-        <p className="mt-3 text-[11px] text-ink-soft">
-          To add or change merchandise, sign in to your Entry Ninja account at entries.redcherryevents.co.za.
-        </p>
-      )}
+      {/* Always offer the Entry Ninja hand-off: direct registration link when we
+          have the ref, otherwise the event's own Entry Ninja page. */}
+      <a
+        href={
+          entryNinjaRegistrationUrl(row.registration_ref) ??
+          entryUrl ??
+          "https://entries.redcherryevents.co.za/"
+        }
+        target="_blank"
+        rel="noreferrer"
+        className="mt-3 inline-flex w-full items-center justify-center gap-1.5 rounded-xl bg-cherry px-3 py-2.5 text-xs font-bold text-white"
+      >
+        <ExternalLink className="h-3.5 w-3.5" /> Add or edit my entry on Entry Ninja
+      </a>
+      <p className="mt-1.5 text-[11px] text-ink-soft">
+        Sizes, merchandise and rider details are managed on Entry Ninja — changes sync back here.
+      </p>
 
       {row.notes ? (
         <p className="mt-3 rounded-lg bg-secondary/60 p-2 text-xs text-ink-soft">
