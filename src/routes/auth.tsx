@@ -151,13 +151,16 @@ function AuthPage() {
           <span className="h-px flex-1 bg-border" />
         </div>
 
-        <form onSubmit={handleEmail} className="space-y-3">
+        <form onSubmit={handleEmail} className="space-y-3" method="post" action="#">
           <label className="block">
             <span className="text-[11px] font-bold uppercase tracking-wider text-ink-soft">Email</span>
             <input
               required
+              id="email"
+              name="email"
               type="email"
-              autoComplete="email"
+              /* username + email so Chrome / Google Password Manager offers saved logins */
+              autoComplete="username email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
@@ -169,6 +172,8 @@ function AuthPage() {
               <span className="text-[11px] font-bold uppercase tracking-wider text-ink-soft">Password</span>
               <input
                 required
+                id={mode === "signup" ? "new-password" : "current-password"}
+                name="password"
                 type="password"
                 minLength={6}
                 autoComplete={mode === "signup" ? "new-password" : "current-password"}
@@ -179,6 +184,7 @@ function AuthPage() {
               />
             </label>
           ) : null}
+
 
           <button
             type="submit"
