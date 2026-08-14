@@ -6,6 +6,8 @@ import { useServerFn } from "@tanstack/react-start";
 import { lovable } from "@/integrations/lovable/index";
 import { supabase } from "@/integrations/supabase/client";
 import { lookupEntryEmail } from "@/lib/id-lookup.functions";
+import { checkAccountExists } from "@/lib/account-check.functions";
+
 import { useSession } from "@/lib/auth";
 import { BrandMark } from "@/components/ui-bits";
 
@@ -36,6 +38,10 @@ function AuthPage() {
   const [mode, setMode] = useState<Mode>("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [noAccount, setNoAccount] = useState(false);
+  const [hasEntries, setHasEntries] = useState(false);
+  const checkAccount = useServerFn(checkAccountExists);
+
 
   const target = next && next.startsWith("/") ? next : "/";
 
@@ -64,6 +70,7 @@ function AuthPage() {
     setBusy(true);
     setError(null);
     setNotice(null);
+    setNoAccount(false);
     try {
       if (mode === "reset") {
         const { error: err } = await supabase.auth.resetPasswordForEmail(email.trim(), {
@@ -86,7 +93,23 @@ function AuthPage() {
           email: email.trim(),
           password,
         });
-        if (err) throw err;
+        if (err) {
+          // Entry Ninja logins don't exist here — tell them to create an account
+          // rather than leaving them stuck on "invalid credentials".
+          if (/invalid login credentials/i.test(err.message)) {
+            try {
+              const res = await checkAccount({ data: { email: email.trim() } });
+              if (!res.hasAccount) {
+                setNoAccount(true);
+                setHasEntries(res.hasEntries);
+                return;
+              }
+            } catch {
+              /* fall through to the normal error */
+            }
+          }
+          throw err;
+        }
       }
     } catch (err) {
       setError((err as Error).message || "Something went wrong.");
@@ -94,6 +117,7 @@ function AuthPage() {
       setBusy(false);
     }
   }
+
 
   return (
     <div className="grid min-h-screen place-items-center bg-secondary/40 px-6 py-10">
@@ -171,7 +195,31 @@ function AuthPage() {
           </button>
         </form>
 
+        {noAccount ? (
+          <div className="mt-3 rounded-xl bg-accent p-3 text-[12px] leading-snug text-cherry-deep ring-1 ring-border">
+            <p className="font-bold">You don't have a Rider Hub account yet.</p>
+            <p className="mt-1">
+              Your Entry Ninja email and password only work on Entry Ninja. Create a Rider Hub
+              account with this email — {hasEntries
+                ? "we can already see entries under it, so your events will link up automatically."
+                : "then link your entries using your ID number if your events don't appear."}
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                setMode("signup");
+                setNoAccount(false);
+                setError(null);
+              }}
+              className="mt-2 w-full rounded-lg cherry-gradient py-2 text-xs font-bold text-white"
+            >
+              Create an account with {email.trim() || "this email"}
+            </button>
+          </div>
+        ) : null}
+
         {error ? <p className="mt-3 text-center text-xs font-semibold text-cherry">{error}</p> : null}
+
         {notice ? (
           <p className="mt-3 rounded-lg bg-accent px-3 py-2 text-center text-xs font-semibold text-cherry-deep">
             {notice}
