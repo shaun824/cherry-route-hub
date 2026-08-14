@@ -195,7 +195,31 @@ function AuthPage() {
           </button>
         </form>
 
+        {noAccount ? (
+          <div className="mt-3 rounded-xl bg-accent p-3 text-[12px] leading-snug text-cherry-deep ring-1 ring-border">
+            <p className="font-bold">You don't have a Rider Hub account yet.</p>
+            <p className="mt-1">
+              Your Entry Ninja email and password only work on Entry Ninja. Create a Rider Hub
+              account with this email — {hasEntries
+                ? "we can already see entries under it, so your events will link up automatically."
+                : "then link your entries using your ID number if your events don't appear."}
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                setMode("signup");
+                setNoAccount(false);
+                setError(null);
+              }}
+              className="mt-2 w-full rounded-lg cherry-gradient py-2 text-xs font-bold text-white"
+            >
+              Create an account with {email.trim() || "this email"}
+            </button>
+          </div>
+        ) : null}
+
         {error ? <p className="mt-3 text-center text-xs font-semibold text-cherry">{error}</p> : null}
+
         {notice ? (
           <p className="mt-3 rounded-lg bg-accent px-3 py-2 text-center text-xs font-semibold text-cherry-deep">
             {notice}
