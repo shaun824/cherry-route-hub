@@ -1,4 +1,4 @@
-import { Suspense, lazy, useMemo, useRef, useState } from "react";
+import { Suspense, lazy, useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ClientOnly } from "@tanstack/react-router";
 import { Minus, Plus, X } from "lucide-react";
@@ -64,7 +64,7 @@ function Pin({
   );
 }
 
-export function VillageMapView({ eventId }: { eventId: string }) {
+export function VillageMapView({ eventId, focusSpotId }: { eventId: string; focusSpotId?: string | null }) {
   const q = useQuery({ queryKey: ["village-map", eventId], queryFn: () => fetchVillageMap(eventId) });
   const [hovered, setHovered] = useState<string | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
@@ -72,6 +72,14 @@ export function VillageMapView({ eventId }: { eventId: string }) {
   const [scale, setScale] = useState(1);
   const [mode, setMode] = useState<"live" | "plan">("live");
   const wrapRef = useRef<HTMLDivElement>(null);
+
+  // Crew "find this room" deep-focus: highlight the requested point when it changes.
+  useEffect(() => {
+    if (focusSpotId) {
+      setSelected(focusSpotId);
+      setFilter(null);
+    }
+  }, [focusSpotId]);
 
   const map = q.data;
   const spots = useMemo(
