@@ -10,7 +10,7 @@ import "leaflet.markercluster/dist/MarkerCluster.css";
 import "leaflet.markercluster/dist/MarkerCluster.Default.css";
 import { spotColor, spotIcon, categoryMeta, type VillageGeo, type VillageHotspot } from "@/lib/village-map";
 import { villageIconSvg } from "@/lib/village-icons";
-import { zoneColor, type VillageZone } from "@/lib/village-zones";
+import { zoneCentroid, zoneColor, type VillageZone } from "@/lib/village-zones";
 
 const M_PER_DEG_LAT = 111320;
 
@@ -150,6 +150,17 @@ function ClusteredHotspots({
 }
 
 
+/** Flies to a drawn area when a rider asks "where is my tent?". */
+function FlyToZone({ zone }: { zone: VillageZone | null }) {
+  const map = useMap();
+  useEffect(() => {
+    if (!zone) return;
+    const c = zoneCentroid(zone);
+    if (c) map.flyTo([c.lat, c.lng], Math.max(map.getZoom(), 19), { duration: 0.8 });
+  }, [map, zone]);
+  return null;
+}
+
 export default function VillageMapGeo({
   imageUrl,
   geo,
@@ -157,6 +168,7 @@ export default function VillageMapGeo({
   zones = [],
   selected,
   onSelect,
+  highlightZoneId = null,
 }: {
   imageUrl?: string | null;
   geo: VillageGeo;
@@ -164,6 +176,7 @@ export default function VillageMapGeo({
   zones?: VillageZone[];
   selected: string | null;
   onSelect: (id: string | null) => void;
+  highlightZoneId?: string | null;
 }) {
   const [ratio, setRatio] = useState(0.76); // height / width, refined once the image loads
   const [me, setMe] = useState<[number, number] | null>(null);
@@ -274,13 +287,25 @@ export default function VillageMapGeo({
             </>
           ) : null}
 
-          {zones.map((z) => (
-            <Polygon
-              key={z.id}
-              positions={z.points.map((p) => [p.lat, p.lng]) as [number, number][]}
-              pathOptions={{ color: zoneColor(z), weight: 2, fillColor: zoneColor(z), fillOpacity: 0.18 }}
-            />
-          ))}
+          {zones.map((z) => {
+            const hot = highlightZoneId === z.id;
+            return (
+              <Polygon
+                key={z.id}
+                positions={z.points.map((p) => [p.lat, p.lng]) as [number, number][]}
+                pathOptions={{
+                  color: hot ? "#c8102e" : zoneColor(z),
+                  weight: hot ? 4 : 2,
+                  fillColor: hot ? "#c8102e" : zoneColor(z),
+                  fillOpacity: hot ? 0.45 : 0.18,
+                }}
+              >
+                {z.name ? <Popup>{z.name}</Popup> : null}
+              </Polygon>
+            );
+          })}
+
+          <FlyToZone zone={zones.find((z) => z.id === highlightZoneId) ?? null} />
 
 
           <FitBounds bounds={bounds} />

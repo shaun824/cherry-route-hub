@@ -64,7 +64,15 @@ function Pin({
   );
 }
 
-export function VillageMapView({ eventId, focusSpotId }: { eventId: string; focusSpotId?: string | null }) {
+export function VillageMapView({
+  eventId,
+  focusSpotId,
+  focusZoneId,
+}: {
+  eventId: string;
+  focusSpotId?: string | null;
+  focusZoneId?: string | null;
+}) {
   const q = useQuery({ queryKey: ["village-map", eventId], queryFn: () => fetchVillageMap(eventId) });
   const [hovered, setHovered] = useState<string | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
@@ -94,6 +102,7 @@ export function VillageMapView({ eventId, focusSpotId }: { eventId: string; focu
   const pinnedCount = (map?.hotspots ?? []).filter(isPinnedSpot).length;
   const geoReady =
     hasVenueCentre(map?.geo) && ((hasImage && isPlacedGeo(map?.geo)) || pinnedCount > 0);
+  const focusZone = (map?.zones ?? []).find((z) => z.id === focusZoneId) ?? null;
   const detail = (map?.hotspots ?? []).find((s) => s.id === (selected ?? hovered)) ?? null;
 
   if (q.isLoading) {
@@ -112,6 +121,12 @@ export function VillageMapView({ eventId, focusSpotId }: { eventId: string; focu
 
   return (
     <div className="space-y-3">
+      {focusZone ? (
+        <p className="rounded-xl bg-accent px-3 py-2 text-xs font-semibold text-cherry-deep">
+          Highlighted in red: {focusZone.name || "your spot"}.
+        </p>
+      ) : null}
+
       {map.intro ? <p className="text-sm leading-relaxed text-ink-soft">{map.intro}</p> : null}
 
       {geoReady && hasImage ? (
@@ -168,6 +183,7 @@ export function VillageMapView({ eventId, focusSpotId }: { eventId: string; focu
               zones={map.zones ?? []}
               selected={selected}
               onSelect={setSelected}
+              highlightZoneId={focusZoneId ?? null}
             />
           </Suspense>
         </ClientOnly>

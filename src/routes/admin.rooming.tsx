@@ -1,55 +1,26 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import Papa from "papaparse";
-import { BedDouble, FileUp, MapPin, Plus, Save, Trash2 } from "lucide-react";
+import { BedDouble, FileUp, Link2, MapPin, Plus, RefreshCw, Save, Sparkles, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { fetchRooming, fetchVenues, type Venue } from "@/lib/rooming";
+import { fetchRooming, fetchVenues, type RoomingRow, type Venue } from "@/lib/rooming";
 import { fetchVillageMap } from "@/lib/village-map";
+import type { VillageZone } from "@/lib/village-zones";
+import {
+  labelsMatch,
+  parseRoomingCsv,
+  parseRoomingWorkbook,
+  type ParsedRoomingRow,
+} from "@/lib/rooming-import";
+import { syncRoomingSheet } from "@/lib/rooming-sheet.functions";
 
 export const Route = createFileRoute("/admin/rooming")({
   component: RoomingAdminPage,
 });
 
-const SAMPLE = `full_name,email,tent_number,room_type,notes,location_hint
-Jane Doe,jane@example.com,T14,Twin tent,Shares with John Doe,Row C behind the bar
+const SAMPLE = `full_name,email,tent_number,room_type,notes,location_hint,area
+Jane Doe,jane@example.com,T14,Twin tent,Shares with John Doe,Row C behind the bar,Tent 14
 `;
-
-function pick(row: Record<string, string>, keys: string[]): string {
-  for (const k of keys) {
-    const hit = Object.keys(row).find((h) => h.trim().toLowerCase() === k.toLowerCase());
-    if (hit && row[hit] != null && String(row[hit]).trim() !== "") return String(row[hit]).trim();
-  }
-  return "";
-}
-
-type ParsedRow = {
-  full_name: string;
-  email: string;
-  tent_number: string;
-  room_type: string;
-  notes: string;
-  location_hint: string;
-};
-
-function parseCsv(text: string): ParsedRow[] {
-  const res = Papa.parse<Record<string, string>>(text.trim(), {
-    header: true,
-    skipEmptyLines: true,
-  });
-  return (res.data ?? [])
-    .map((r) => ({
-      full_name:
-        pick(r, ["full_name", "name", "Full Name", "Rider"]) ||
-        [pick(r, ["First Name"]), pick(r, ["Last Name"])].filter(Boolean).join(" "),
-      email: pick(r, ["email", "Email"]),
-      tent_number: pick(r, ["tent_number", "tent", "Tent Number", "Tent", "room", "Room", "room_number", "Room Number"]),
-      room_type: pick(r, ["room_type", "Room Type", "Tent Type", "type"]),
-      notes: pick(r, ["notes", "Notes", "Comment"]),
-      location_hint: pick(r, ["location_hint", "location", "Location", "Where", "Block", "Area"]),
-    }))
-    .filter((r) => r.full_name || r.email || r.tent_number);
-}
 
 function RoomingAdminPage() {
   const qc = useQueryClient();
@@ -88,15 +59,21 @@ function RoomingAdminPage() {
 
   const venues = venuesQ.data ?? [];
   const rows = roomingQ.data ?? [];
+  const zones = villageQ.data?.zones ?? [];
 
   const byVenue = useMemo(() => {
-    const map = new Map<string, typeof rows>();
+    const map = new Map<string, RoomingRow[]>();
     for (const r of rows) {
       const key = r.venue_id ?? "unassigned";
       map.set(key, [...(map.get(key) ?? []), r]);
     }
     return map;
   }, [rows]);
+
+  function refreshRooming() {
+    void qc.invalidateQueries({ queryKey: ["admin-rooming", eventId] });
+    void qc.invalidateQueries({ queryKey: ["admin-venues", eventId] });
+  }
 
   async function addVenue(name: string, address: string) {
     if (!eventId || !name.trim()) return;
@@ -131,11 +108,10 @@ function RoomingAdminPage() {
     setBusy(true);
     await supabase.from("event_venues").delete().eq("id", id);
     setBusy(false);
-    void qc.invalidateQueries({ queryKey: ["admin-venues", eventId] });
-    void qc.invalidateQueries({ queryKey: ["admin-rooming", eventId] });
+    refreshRooming();
   }
 
-  async function importRows(venueId: string, parsed: ParsedRow[], replace: boolean) {
+  async function importRows(venueId: string, parsed: ParsedRoomingRow[], replace: boolean) {
     if (!eventId || parsed.length === 0) return;
     setBusy(true);
     setMsg(null);
@@ -164,6 +140,10 @@ function RoomingAdminPage() {
       room_type: p.room_type || null,
       notes: p.notes || null,
       location_hint: p.location_hint || null,
+      village_zone_id:
+        zones.find((z) => labelsMatch(z.name, p.area))?.id ??
+        zones.find((z) => labelsMatch(z.name, p.tent_number))?.id ??
+        null,
     }));
 
     const { error } = await supabase.from("event_rooming").insert(payload);
@@ -171,14 +151,75 @@ function RoomingAdminPage() {
     if (error) setMsg(error.message);
     else {
       const matched = payload.filter((p) => p.entrant_id).length;
-      setMsg(`Imported ${payload.length} allocations · ${matched} matched to riders by email.`);
-      void qc.invalidateQueries({ queryKey: ["admin-rooming", eventId] });
+      const placed = payload.filter((p) => p.village_zone_id).length;
+      setMsg(
+        `Imported ${payload.length} allocations · ${matched} matched to riders · ${placed} placed on the village map.`,
+      );
+      refreshRooming();
     }
+  }
+
+  async function setRowZone(id: string, zoneId: string | null) {
+    await supabase.from("event_rooming").update({ village_zone_id: zoneId }).eq("id", id);
+    refreshRooming();
+  }
+
+  /** Places everyone whose tent number matches a drawn area name. */
+  async function autoPlace(venueId: string) {
+    const venueRows = byVenue.get(venueId) ?? [];
+    const updates = venueRows
+      .map((r) => {
+        const zone = zones.find((z) => labelsMatch(z.name, r.tent_number));
+        return zone && zone.id !== r.village_zone_id ? { id: r.id, zone: zone.id } : null;
+      })
+      .filter(Boolean) as { id: string; zone: string }[];
+    if (updates.length === 0) {
+      setMsg("No tent numbers matched a drawn area name on the village map.");
+      return;
+    }
+    setBusy(true);
+    for (const u of updates) {
+      await supabase.from("event_rooming").update({ village_zone_id: u.zone }).eq("id", u.id);
+    }
+    setBusy(false);
+    setMsg(`Placed ${updates.length} people on the village map.`);
+    refreshRooming();
+  }
+
+  async function saveSheet(venueId: string, url: string, range: string) {
+    setBusy(true);
+    const { error } = await supabase
+      .from("event_venues")
+      .update({
+        rooming_sheet_url: url.trim() || null,
+        rooming_sheet_range: range.trim() || null,
+      })
+      .eq("id", venueId);
+    setBusy(false);
+    setMsg(error ? error.message : "Google Sheet link saved.");
+    void qc.invalidateQueries({ queryKey: ["admin-venues", eventId] });
+  }
+
+  async function syncSheet(venueId: string) {
+    setBusy(true);
+    setMsg(null);
+    try {
+      const res = await syncRoomingSheet({ data: { venueId } });
+      setMsg(
+        res.ok
+          ? `Synced ${res.venue}: ${res.imported} allocations · ${res.matched} matched · ${res.placed} placed on the map.`
+          : `Sync failed: ${res.error}`,
+      );
+    } catch (e) {
+      setMsg(e instanceof Error ? e.message : "Sync failed");
+    }
+    setBusy(false);
+    refreshRooming();
   }
 
   async function deleteRow(id: string) {
     await supabase.from("event_rooming").delete().eq("id", id);
-    void qc.invalidateQueries({ queryKey: ["admin-rooming", eventId] });
+    refreshRooming();
   }
 
   return (
@@ -186,8 +227,8 @@ function RoomingAdminPage() {
       <header>
         <h1 className="font-display text-xl font-bold text-ink">Accommodation & rooming lists</h1>
         <p className="text-sm text-ink-soft">
-          Add each venue for an event, then upload that venue's rooming list. Riders see their own tent
-          or room number on their event report.
+          Add each venue, upload or link its rooming list, then place people on the village map so
+          riders and crew can walk straight to the right tent.
         </p>
       </header>
 
@@ -231,10 +272,15 @@ function RoomingAdminPage() {
               <VenueRooming
                 key={v.id}
                 venue={v}
+                zones={zones}
                 rows={byVenue.get(v.id) ?? []}
                 busy={busy}
                 onImport={(parsed, replace) => void importRows(v.id, parsed, replace)}
                 onDeleteRow={(id) => void deleteRow(id)}
+                onSetZone={(id, zoneId) => void setRowZone(id, zoneId)}
+                onAutoPlace={() => void autoPlace(v.id)}
+                onSaveSheet={(url, range) => void saveSheet(v.id, url, range)}
+                onSyncSheet={() => void syncSheet(v.id)}
               />
             ))
           )}
@@ -354,59 +400,164 @@ function VenueManager({
   );
 }
 
+function SheetLink({
+  venue,
+  busy,
+  onSave,
+  onSync,
+}: {
+  venue: Venue;
+  busy: boolean;
+  onSave: (url: string, range: string) => void;
+  onSync: () => void;
+}) {
+  const [url, setUrl] = useState(venue.rooming_sheet_url ?? "");
+  const [range, setRange] = useState(venue.rooming_sheet_range ?? "");
+
+  return (
+    <div className="mt-3 rounded-xl bg-secondary/60 p-3">
+      <p className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest text-ink-soft">
+        <Link2 className="h-3.5 w-3.5" /> Live Google Sheet
+      </p>
+      <div className="mt-2 grid gap-2 md:grid-cols-[2fr_1fr_auto_auto]">
+        <input
+          value={url}
+          onChange={(e) => setUrl(e.target.value)}
+          placeholder="https://docs.google.com/spreadsheets/d/…"
+          className="rounded-lg border border-border bg-background px-2 py-1.5 text-xs"
+        />
+        <input
+          value={range}
+          onChange={(e) => setRange(e.target.value)}
+          placeholder="Sheet1!A1:Z2000 (optional)"
+          className="rounded-lg border border-border bg-background px-2 py-1.5 text-xs"
+        />
+        <button
+          type="button"
+          disabled={busy}
+          onClick={() => onSave(url, range)}
+          className="rounded-lg bg-ink px-2.5 py-1.5 text-xs font-bold text-white"
+        >
+          Save link
+        </button>
+        <button
+          type="button"
+          disabled={busy || !venue.rooming_sheet_url}
+          onClick={onSync}
+          className="inline-flex items-center gap-1 rounded-lg bg-cherry px-2.5 py-1.5 text-xs font-bold text-white disabled:opacity-50"
+        >
+          <RefreshCw className="h-3.5 w-3.5" /> Sync now
+        </button>
+      </div>
+      <p className="mt-1.5 text-[11px] text-ink-soft">
+        The sheet is re-read automatically every hour and replaces this venue's list — headings:
+        full_name, email, tent_number, room_type, notes, location_hint, area.
+        {venue.rooming_sheet_synced_at
+          ? ` Last sync ${new Date(venue.rooming_sheet_synced_at).toLocaleString("en-ZA")}${
+              venue.rooming_sheet_rows != null ? ` · ${venue.rooming_sheet_rows} rows` : ""
+            }.`
+          : ""}
+      </p>
+      {venue.rooming_sheet_error ? (
+        <p className="mt-1 text-[11px] font-semibold text-cherry">{venue.rooming_sheet_error}</p>
+      ) : null}
+    </div>
+  );
+}
+
 function VenueRooming({
   venue,
+  zones,
   rows,
   busy,
   onImport,
   onDeleteRow,
+  onSetZone,
+  onAutoPlace,
+  onSaveSheet,
+  onSyncSheet,
 }: {
   venue: Venue;
-  rows: { id: string; full_name: string; email: string | null; tent_number: string | null; room_type: string | null; notes: string | null; entrant_id: string | null }[];
+  zones: VillageZone[];
+  rows: RoomingRow[];
   busy: boolean;
-  onImport: (parsed: ParsedRow[], replace: boolean) => void;
+  onImport: (parsed: ParsedRoomingRow[], replace: boolean) => void;
   onDeleteRow: (id: string) => void;
+  onSetZone: (id: string, zoneId: string | null) => void;
+  onAutoPlace: () => void;
+  onSaveSheet: (url: string, range: string) => void;
+  onSyncSheet: () => void;
 }) {
   const [text, setText] = useState("");
+  const [sheetRows, setSheetRows] = useState<ParsedRoomingRow[] | null>(null);
   const [replace, setReplace] = useState(true);
-  const parsed = useMemo(() => (text.trim() ? parseCsv(text) : []), [text]);
+  const parsed = useMemo(
+    () => sheetRows ?? (text.trim() ? parseRoomingCsv(text) : []),
+    [text, sheetRows],
+  );
+  const placed = rows.filter((r) => r.village_zone_id).length;
 
   return (
     <section className="rounded-2xl bg-card p-4 ring-1 ring-border">
-      <h2 className="flex items-center gap-2 font-display text-base font-bold text-ink">
+      <h2 className="flex flex-wrap items-center gap-2 font-display text-base font-bold text-ink">
         <BedDouble className="h-4 w-4 text-cherry" /> {venue.name}
-        <span className="text-xs font-semibold text-ink-soft">· {rows.length} allocated</span>
+        <span className="text-xs font-semibold text-ink-soft">
+          · {rows.length} allocated · {placed} on the map
+        </span>
       </h2>
+
+      <SheetLink venue={venue} busy={busy} onSave={onSaveSheet} onSync={onSyncSheet} />
 
       <div className="mt-3 space-y-2">
         <div className="flex flex-wrap items-center gap-2">
           <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-border bg-background px-2.5 py-1.5 text-xs font-bold text-ink">
-            <FileUp className="h-3.5 w-3.5" /> Upload CSV
+            <FileUp className="h-3.5 w-3.5" /> Upload CSV or Excel
             <input
               type="file"
-              accept=".csv,text/csv"
+              accept=".csv,text/csv,.xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
               className="hidden"
               onChange={async (e) => {
                 const file = e.target.files?.[0];
                 if (!file) return;
-                setText(await file.text());
+                if (/\.xlsx?$/i.test(file.name)) {
+                  setSheetRows(await parseRoomingWorkbook(file));
+                  setText("");
+                } else {
+                  setSheetRows(null);
+                  setText(await file.text());
+                }
                 e.target.value = "";
               }}
             />
           </label>
+          <button
+            type="button"
+            disabled={busy || zones.length === 0}
+            onClick={onAutoPlace}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-2.5 py-1.5 text-xs font-bold text-ink disabled:opacity-50"
+            title="Match tent numbers to drawn village-map areas"
+          >
+            <Sparkles className="h-3.5 w-3.5" /> Auto-place on map
+          </button>
           <label className="inline-flex items-center gap-1.5 text-xs text-ink-soft">
             <input type="checkbox" checked={replace} onChange={(e) => setReplace(e.target.checked)} />
             Replace this venue's existing list
           </label>
         </div>
 
-        <textarea
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          rows={5}
-          placeholder={SAMPLE}
-          className="w-full rounded-lg border border-border bg-background px-3 py-2 font-mono text-[11px]"
-        />
+        {sheetRows ? (
+          <p className="rounded-lg bg-secondary px-3 py-2 text-xs font-semibold text-ink">
+            Excel file loaded — {sheetRows.length} rows ready to import.
+          </p>
+        ) : (
+          <textarea
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            rows={5}
+            placeholder={SAMPLE}
+            className="w-full rounded-lg border border-border bg-background px-3 py-2 font-mono text-[11px]"
+          />
+        )}
         <div className="flex items-center gap-2">
           <button
             type="button"
@@ -414,13 +565,14 @@ function VenueRooming({
             onClick={() => {
               onImport(parsed, replace);
               setText("");
+              setSheetRows(null);
             }}
             className="rounded-lg bg-cherry px-3 py-1.5 text-xs font-bold text-white disabled:opacity-50"
           >
             Import {parsed.length || ""} rows
           </button>
           <span className="text-[11px] text-ink-soft">
-            Columns: full_name, email, tent_number, room_type, notes
+            Columns: full_name, email, tent_number, room_type, notes, location_hint, area
           </span>
         </div>
       </div>
@@ -434,6 +586,7 @@ function VenueRooming({
                 <th>Email</th>
                 <th>Tent / room</th>
                 <th>Type</th>
+                <th>Map area</th>
                 <th>Linked</th>
                 <th />
               </tr>
@@ -445,6 +598,20 @@ function VenueRooming({
                   <td className="text-ink-soft">{r.email ?? "—"}</td>
                   <td className="font-bold text-ink">{r.tent_number ?? "—"}</td>
                   <td className="text-ink-soft">{r.room_type ?? "—"}</td>
+                  <td>
+                    <select
+                      value={r.village_zone_id ?? ""}
+                      onChange={(e) => onSetZone(r.id, e.target.value || null)}
+                      className="max-w-[150px] rounded border border-border bg-background px-1.5 py-1 text-[11px]"
+                    >
+                      <option value="">Not placed</option>
+                      {zones.map((z) => (
+                        <option key={z.id} value={z.id}>
+                          {z.name || "Area"}
+                        </option>
+                      ))}
+                    </select>
+                  </td>
                   <td className={r.entrant_id ? "text-emerald-600" : "text-ink-soft"}>
                     {r.entrant_id ? "Matched" : "Unmatched"}
                   </td>
