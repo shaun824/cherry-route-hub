@@ -67,10 +67,13 @@ function RotateOverlay({ rotation }: { rotation: number }) {
 function FitBounds({ bounds }: { bounds: L.LatLngBoundsExpression }) {
   const map = useMap();
   useEffect(() => {
-    map.fitBounds(bounds, { padding: [20, 20] });
+    // Cap at the highest zoom the satellite imagery actually covers, otherwise
+    // the map opens on upscaled/blank tiles.
+    map.fitBounds(bounds, { padding: [20, 20], maxZoom: 19 });
   }, [map, bounds]);
   return null;
 }
+
 
 function Recenter({ position, token }: { position: [number, number] | null; token: number }) {
   const map = useMap();
@@ -204,9 +207,17 @@ export default function VillageMapGeo({
   const heightM = (geo.widthM || 300) * ratio;
   const bounds = useMemo<L.LatLngBoundsExpression>(() => {
     if (!showOverlay) {
-      const pts = hotspots
-        .filter((s) => Number.isFinite(s.lat) && Number.isFinite(s.lng))
-        .map((s) => [s.lat as number, s.lng as number] as [number, number]);
+      // No scaled plan image: frame whatever geography we do have — drawn zones
+      // (tent blocks) first, then any pinned hotspots.
+      const pts: [number, number][] = [];
+      for (const z of zones) {
+        for (const p of z.points ?? []) {
+          if (Number.isFinite(p.lat) && Number.isFinite(p.lng)) pts.push([p.lat, p.lng]);
+        }
+      }
+      for (const s of hotspots) {
+        if (Number.isFinite(s.lat) && Number.isFinite(s.lng)) pts.push([s.lat as number, s.lng as number]);
+      }
       if (pts.length > 0) return L.latLngBounds(pts).pad(0.25);
       const flat: VillageGeo = { ...geo, rotation: 0, widthM: 300 };
       return [offsetLatLng(flat, -150, -150), offsetLatLng(flat, 150, 150)];
@@ -215,7 +226,8 @@ export default function VillageMapGeo({
     const sw = offsetLatLng(flat, -geo.widthM / 2, -heightM / 2);
     const ne = offsetLatLng(flat, geo.widthM / 2, heightM / 2);
     return [sw, ne];
-  }, [geo, heightM, showOverlay, hotspots]);
+  }, [geo, heightM, showOverlay, hotspots, zones]);
+
 
 
 
@@ -252,6 +264,7 @@ export default function VillageMapGeo({
         <MapContainer
           center={[geo.lat, geo.lng]}
           zoom={17}
+          maxZoom={20}
           scrollWheelZoom
           zoomSnap={0.25}
           zoomDelta={0.5}
@@ -262,14 +275,14 @@ export default function VillageMapGeo({
             <TileLayer
               attribution="Tiles &copy; Esri"
               url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
-              maxZoom={22}
+              maxZoom={20}
               maxNativeZoom={18}
             />
           ) : (
             <TileLayer
               attribution="&copy; OpenStreetMap"
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              maxZoom={22}
+              maxZoom={20}
               maxNativeZoom={19}
             />
           )}
