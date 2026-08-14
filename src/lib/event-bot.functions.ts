@@ -188,7 +188,8 @@ export const askEventBot = createServerFn({ method: "POST" })
 Answer rider questions using the CONTEXT provided (structured event data + scraped official website pages). Be helpful, concise, specific, and friendly. Use 2–5 sentences or a short bulleted list when appropriate.
 
 Rules:
-- Prefer STRUCTURED EVENT DATA when it directly answers the question (dates, schedule, routes, venue, rules, FAQs, emergency contacts, packing).
+- If an APPROVED ANSWER matches the question, use it — it was verified by a Red Cherry admin and beats every other source.
+- Otherwise prefer STRUCTURED EVENT DATA when it directly answers the question (dates, schedule, routes, venue, rules, FAQs, emergency contacts, packing).
 - Otherwise pull the answer from the WEBSITE PAGES. Synthesise across pages if needed — an answer that requires combining two sources is fine.
 - If the exact detail isn't stated but can be reasonably inferred from the sources (e.g. "the event starts 7 March 2026" from a schedule page), give the answer and note briefly where it comes from.
 - Do NOT invent prices, times, dates, cut-offs or policies that are not in the context.
