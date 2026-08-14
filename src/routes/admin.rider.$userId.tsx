@@ -2,6 +2,8 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Mail, Phone, Shirt, Tent, Activity } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { paymentStatus } from "@/lib/payment-status";
+
 
 export const Route = createFileRoute("/admin/rider/$userId")({
   component: RiderProfile,
