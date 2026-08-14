@@ -38,6 +38,7 @@ import { Route as AdminKnowledgeRouteImport } from './routes/admin.knowledge'
 import { Route as AdminFeedRouteImport } from './routes/admin.feed'
 import { Route as AdminEventsRouteImport } from './routes/admin.events'
 import { Route as AdminEntryNinjaRouteImport } from './routes/admin.entry-ninja'
+import { Route as AdminAuditRouteImport } from './routes/admin.audit'
 import { Route as AdminAnalyticsRouteImport } from './routes/admin.analytics'
 import { Route as EventsEventIdIndexRouteImport } from './routes/events.$eventId.index'
 import { Route as AdminVillageIndexRouteImport } from './routes/admin.village.index'
@@ -56,6 +57,7 @@ import { Route as ApiPublicHooksNewsSyncRouteImport } from './routes/api/public/
 import { Route as ApiPublicHooksFaqSuggestRouteImport } from './routes/api/public/hooks/faq-suggest'
 import { Route as ApiPublicHooksEventBotRefreshRouteImport } from './routes/api/public/hooks/event-bot-refresh'
 import { Route as ApiPublicHooksEntryNinjaSyncRouteImport } from './routes/api/public/hooks/entry-ninja-sync'
+import { Route as ApiPublicHooksContentAuditRouteImport } from './routes/api/public/hooks/content-audit'
 
 const SpectateRoute = SpectateRouteImport.update({
   id: '/spectate',
@@ -202,6 +204,11 @@ const AdminEntryNinjaRoute = AdminEntryNinjaRouteImport.update({
   path: '/entry-ninja',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminAuditRoute = AdminAuditRouteImport.update({
+  id: '/audit',
+  path: '/audit',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminAnalyticsRoute = AdminAnalyticsRouteImport.update({
   id: '/analytics',
   path: '/analytics',
@@ -297,6 +304,12 @@ const ApiPublicHooksEntryNinjaSyncRoute =
     path: '/api/public/hooks/entry-ninja-sync',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksContentAuditRoute =
+  ApiPublicHooksContentAuditRouteImport.update({
+    id: '/api/public/hooks/content-audit',
+    path: '/api/public/hooks/content-audit',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -310,6 +323,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/spectate': typeof SpectateRouteWithChildren
   '/admin/analytics': typeof AdminAnalyticsRoute
+  '/admin/audit': typeof AdminAuditRoute
   '/admin/entry-ninja': typeof AdminEntryNinjaRoute
   '/admin/events': typeof AdminEventsRoute
   '/admin/feed': typeof AdminFeedRoute
@@ -337,6 +351,7 @@ export interface FileRoutesByFullPath {
   '/admin/event-info/': typeof AdminEventInfoIndexRoute
   '/admin/village/': typeof AdminVillageIndexRoute
   '/events/$eventId/': typeof EventsEventIdIndexRoute
+  '/api/public/hooks/content-audit': typeof ApiPublicHooksContentAuditRoute
   '/api/public/hooks/entry-ninja-sync': typeof ApiPublicHooksEntryNinjaSyncRoute
   '/api/public/hooks/event-bot-refresh': typeof ApiPublicHooksEventBotRefreshRoute
   '/api/public/hooks/faq-suggest': typeof ApiPublicHooksFaqSuggestRoute
@@ -357,6 +372,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/spectate': typeof SpectateRouteWithChildren
   '/admin/analytics': typeof AdminAnalyticsRoute
+  '/admin/audit': typeof AdminAuditRoute
   '/admin/entry-ninja': typeof AdminEntryNinjaRoute
   '/admin/events': typeof AdminEventsRoute
   '/admin/feed': typeof AdminFeedRoute
@@ -383,6 +399,7 @@ export interface FileRoutesByTo {
   '/admin/event-info': typeof AdminEventInfoIndexRoute
   '/admin/village': typeof AdminVillageIndexRoute
   '/events/$eventId': typeof EventsEventIdIndexRoute
+  '/api/public/hooks/content-audit': typeof ApiPublicHooksContentAuditRoute
   '/api/public/hooks/entry-ninja-sync': typeof ApiPublicHooksEntryNinjaSyncRoute
   '/api/public/hooks/event-bot-refresh': typeof ApiPublicHooksEventBotRefreshRoute
   '/api/public/hooks/faq-suggest': typeof ApiPublicHooksFaqSuggestRoute
@@ -406,6 +423,7 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/spectate': typeof SpectateRouteWithChildren
   '/admin/analytics': typeof AdminAnalyticsRoute
+  '/admin/audit': typeof AdminAuditRoute
   '/admin/entry-ninja': typeof AdminEntryNinjaRoute
   '/admin/events': typeof AdminEventsRoute
   '/admin/feed': typeof AdminFeedRoute
@@ -433,6 +451,7 @@ export interface FileRoutesById {
   '/admin/event-info/': typeof AdminEventInfoIndexRoute
   '/admin/village/': typeof AdminVillageIndexRoute
   '/events/$eventId/': typeof EventsEventIdIndexRoute
+  '/api/public/hooks/content-audit': typeof ApiPublicHooksContentAuditRoute
   '/api/public/hooks/entry-ninja-sync': typeof ApiPublicHooksEntryNinjaSyncRoute
   '/api/public/hooks/event-bot-refresh': typeof ApiPublicHooksEventBotRefreshRoute
   '/api/public/hooks/faq-suggest': typeof ApiPublicHooksFaqSuggestRoute
@@ -457,6 +476,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/spectate'
     | '/admin/analytics'
+    | '/admin/audit'
     | '/admin/entry-ninja'
     | '/admin/events'
     | '/admin/feed'
@@ -484,6 +504,7 @@ export interface FileRouteTypes {
     | '/admin/event-info/'
     | '/admin/village/'
     | '/events/$eventId/'
+    | '/api/public/hooks/content-audit'
     | '/api/public/hooks/entry-ninja-sync'
     | '/api/public/hooks/event-bot-refresh'
     | '/api/public/hooks/faq-suggest'
@@ -504,6 +525,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/spectate'
     | '/admin/analytics'
+    | '/admin/audit'
     | '/admin/entry-ninja'
     | '/admin/events'
     | '/admin/feed'
@@ -530,6 +552,7 @@ export interface FileRouteTypes {
     | '/admin/event-info'
     | '/admin/village'
     | '/events/$eventId'
+    | '/api/public/hooks/content-audit'
     | '/api/public/hooks/entry-ninja-sync'
     | '/api/public/hooks/event-bot-refresh'
     | '/api/public/hooks/faq-suggest'
@@ -552,6 +575,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/spectate'
     | '/admin/analytics'
+    | '/admin/audit'
     | '/admin/entry-ninja'
     | '/admin/events'
     | '/admin/feed'
@@ -579,6 +603,7 @@ export interface FileRouteTypes {
     | '/admin/event-info/'
     | '/admin/village/'
     | '/events/$eventId/'
+    | '/api/public/hooks/content-audit'
     | '/api/public/hooks/entry-ninja-sync'
     | '/api/public/hooks/event-bot-refresh'
     | '/api/public/hooks/faq-suggest'
@@ -604,6 +629,7 @@ export interface RootRouteChildren {
   EventsEventIdRoute: typeof EventsEventIdRouteWithChildren
   EventsIndexRoute: typeof EventsIndexRoute
   MyEventsEventIdReportRoute: typeof MyEventsEventIdReportRoute
+  ApiPublicHooksContentAuditRoute: typeof ApiPublicHooksContentAuditRoute
   ApiPublicHooksEntryNinjaSyncRoute: typeof ApiPublicHooksEntryNinjaSyncRoute
   ApiPublicHooksEventBotRefreshRoute: typeof ApiPublicHooksEventBotRefreshRoute
   ApiPublicHooksFaqSuggestRoute: typeof ApiPublicHooksFaqSuggestRoute
@@ -820,6 +846,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminEntryNinjaRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/audit': {
+      id: '/admin/audit'
+      path: '/audit'
+      fullPath: '/admin/audit'
+      preLoaderRoute: typeof AdminAuditRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/analytics': {
       id: '/admin/analytics'
       path: '/analytics'
@@ -946,11 +979,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksEntryNinjaSyncRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/content-audit': {
+      id: '/api/public/hooks/content-audit'
+      path: '/api/public/hooks/content-audit'
+      fullPath: '/api/public/hooks/content-audit'
+      preLoaderRoute: typeof ApiPublicHooksContentAuditRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 interface AdminRouteChildren {
   AdminAnalyticsRoute: typeof AdminAnalyticsRoute
+  AdminAuditRoute: typeof AdminAuditRoute
   AdminEntryNinjaRoute: typeof AdminEntryNinjaRoute
   AdminEventsRoute: typeof AdminEventsRoute
   AdminFeedRoute: typeof AdminFeedRoute
@@ -973,6 +1014,7 @@ interface AdminRouteChildren {
 
 const AdminRouteChildren: AdminRouteChildren = {
   AdminAnalyticsRoute: AdminAnalyticsRoute,
+  AdminAuditRoute: AdminAuditRoute,
   AdminEntryNinjaRoute: AdminEntryNinjaRoute,
   AdminEventsRoute: AdminEventsRoute,
   AdminFeedRoute: AdminFeedRoute,
@@ -1051,6 +1093,7 @@ const rootRouteChildren: RootRouteChildren = {
   EventsEventIdRoute: EventsEventIdRouteWithChildren,
   EventsIndexRoute: EventsIndexRoute,
   MyEventsEventIdReportRoute: MyEventsEventIdReportRoute,
+  ApiPublicHooksContentAuditRoute: ApiPublicHooksContentAuditRoute,
   ApiPublicHooksEntryNinjaSyncRoute: ApiPublicHooksEntryNinjaSyncRoute,
   ApiPublicHooksEventBotRefreshRoute: ApiPublicHooksEventBotRefreshRoute,
   ApiPublicHooksFaqSuggestRoute: ApiPublicHooksFaqSuggestRoute,

@@ -144,6 +144,42 @@ export type Database = {
         }
         Relationships: []
       }
+      content_audit_runs: {
+        Row: {
+          created_at: string
+          error: string | null
+          events_checked: number
+          id: string
+          issue_count: number
+          issues: Json
+          run_at: string
+          status: string
+          summary: string | null
+        }
+        Insert: {
+          created_at?: string
+          error?: string | null
+          events_checked?: number
+          id?: string
+          issue_count?: number
+          issues?: Json
+          run_at?: string
+          status?: string
+          summary?: string | null
+        }
+        Update: {
+          created_at?: string
+          error?: string | null
+          events_checked?: number
+          id?: string
+          issue_count?: number
+          issues?: Json
+          run_at?: string
+          status?: string
+          summary?: string | null
+        }
+        Relationships: []
+      }
       entrants: {
         Row: {
           created_at: string
