@@ -204,9 +204,17 @@ export default function VillageMapGeo({
   const heightM = (geo.widthM || 300) * ratio;
   const bounds = useMemo<L.LatLngBoundsExpression>(() => {
     if (!showOverlay) {
-      const pts = hotspots
-        .filter((s) => Number.isFinite(s.lat) && Number.isFinite(s.lng))
-        .map((s) => [s.lat as number, s.lng as number] as [number, number]);
+      // No scaled plan image: frame whatever geography we do have — drawn zones
+      // (tent blocks) first, then any pinned hotspots.
+      const pts: [number, number][] = [];
+      for (const z of zones) {
+        for (const p of z.points ?? []) {
+          if (Number.isFinite(p.lat) && Number.isFinite(p.lng)) pts.push([p.lat, p.lng]);
+        }
+      }
+      for (const s of hotspots) {
+        if (Number.isFinite(s.lat) && Number.isFinite(s.lng)) pts.push([s.lat as number, s.lng as number]);
+      }
       if (pts.length > 0) return L.latLngBounds(pts).pad(0.25);
       const flat: VillageGeo = { ...geo, rotation: 0, widthM: 300 };
       return [offsetLatLng(flat, -150, -150), offsetLatLng(flat, 150, 150)];
@@ -215,7 +223,8 @@ export default function VillageMapGeo({
     const sw = offsetLatLng(flat, -geo.widthM / 2, -heightM / 2);
     const ne = offsetLatLng(flat, geo.widthM / 2, heightM / 2);
     return [sw, ne];
-  }, [geo, heightM, showOverlay, hotspots]);
+  }, [geo, heightM, showOverlay, hotspots, zones]);
+
 
 
 
