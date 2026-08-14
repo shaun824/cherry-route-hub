@@ -1,5 +1,6 @@
 import { Mail } from "lucide-react";
 import rceLogo from "@/assets/rce-logo.png.asset.json";
+import { WhatsappButton } from "@/components/whatsapp-button";
 
 const SUPPORT_EMAIL = "support@redcherryevents.co.za";
 
@@ -16,14 +17,18 @@ export function Footer() {
         <p className="text-[11px] leading-snug text-ink-soft">
           Red Cherry Events · Rider Hub
         </p>
-        <a
-          href={`mailto:${SUPPORT_EMAIL}?subject=Red Cherry Events support`}
-          className="inline-flex items-center gap-1.5 rounded-full bg-ink px-3 py-1.5 text-[12px] font-semibold text-white"
-        >
-          <Mail className="h-3.5 w-3.5" />
-          Contact support
-        </a>
+        <div className="flex flex-wrap items-center justify-center gap-2">
+          <a
+            href={`mailto:${SUPPORT_EMAIL}?subject=Red Cherry Events support`}
+            className="inline-flex items-center gap-1.5 rounded-full bg-ink px-3 py-1.5 text-[12px] font-semibold text-white"
+          >
+            <Mail className="h-3.5 w-3.5" />
+            Contact support
+          </a>
+          <WhatsappButton />
+        </div>
         <p className="text-[10px] text-ink-soft/70">{SUPPORT_EMAIL}</p>
+
       </div>
     </footer>
   );
