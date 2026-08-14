@@ -112,6 +112,8 @@ export default function VillageMapEditorGeo({
   onCancelDraw: () => void;
   onZoneChange: (id: string, points: ZonePoint[]) => void;
   onSelectZone: (id: string | null) => void;
+  onRenameZone?: (id: string, name: string) => void;
+  onDuplicateZone?: (id: string) => void;
 }) {
   const [draft, setDraft] = useState<ZonePoint[]>([]);
   const [cursor, setCursor] = useState<ZonePoint | null>(null);
