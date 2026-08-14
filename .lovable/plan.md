@@ -69,9 +69,6 @@ Why approval matters:
 - Answers go stale (dates, prices, cut-offs) — approved entries get an optional expiry and an event scope so a Tour de Addo answer never leaks into Weekend Warrior.
 - Personal answers stay private: entries that reference a specific rider, tent, or registration are excluded from the shared knowledge base.
 
-## Suggested start
-
-
 ## Technical notes
 
 - Webhook: `src/routes/api/public/hooks/whatsapp.ts` with GET (verify handshake) and POST (HMAC-SHA256 signature check against the raw body, Zod-validated payload).
@@ -79,7 +76,9 @@ Why approval matters:
 - Outbound: server function calling `graph.facebook.com/v21.0/{phone_number_id}/messages`, invoked from the existing admin reply handler when the thread channel is WhatsApp.
 - Secrets: `WHATSAPP_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_VERIFY_TOKEN`, `WHATSAPP_APP_SECRET`.
 - Realtime already refreshes the admin inbox, so inbound WhatsApp messages appear without a reload.
+- Learned FAQs: new `event_faq_learned` table (RLS: admins manage, bot reads server-side); drafting job at `src/routes/api/public/hooks/faq-suggest.ts` on a nightly pg_cron schedule; `askEventBot` prepends approved entries to its context block.
 
 ## Suggested start
 
-Approve Phase 1 alone if you want something live today; approve Phases 1 + 2 if you can get the Cloud API number set up.
+Phase 1 alone gets a WhatsApp button live today. Phase 4 is independent of WhatsApp — it improves the existing in-app bot immediately and gets better once WhatsApp traffic flows in, so it's a good second step even if the Cloud API number takes time.
+
