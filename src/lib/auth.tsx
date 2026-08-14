@@ -39,6 +39,22 @@ export function useIsAdmin() {
   };
 }
 
+/** Crew (event staff) access — admins count as crew too. */
+export function useIsCrew() {
+  const { user, loading } = useSession();
+  const q = useQuery({
+    queryKey: ["is-crew", user?.id ?? "anon"],
+    queryFn: async () => {
+      if (!user) return false;
+      const { checkIsCrew } = await import("./crew");
+      return await checkIsCrew(supabase as never);
+    },
+    enabled: !loading,
+    staleTime: 60_000,
+  });
+  return { isCrew: Boolean(q.data), loading: loading || q.isLoading, user };
+}
+
 export async function signOut() {
   await supabase.auth.signOut();
 }
