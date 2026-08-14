@@ -27,7 +27,7 @@ function MyEventsIndex() {
 function SignedOutState() {
   return (
     <div>
-      <PageHeader title="My Events" subtitle="Sign in to see your events" />
+      <PageHeader title="Adventure Awaits" subtitle="Sign in to see your events" />
       <div className="mx-5 mt-4 rounded-2xl bg-card p-6 text-center ring-1 ring-border">
         <LogIn className="mx-auto h-8 w-8 text-cherry" />
         <p className="mt-3 font-display text-lg font-bold text-ink">Sign in to continue</p>
@@ -78,7 +78,7 @@ function SignedInState() {
   const rows = eventsQuery.data ?? [];
   return (
     <div>
-      <PageHeader title="My Events" subtitle={`${rows.length} event${rows.length === 1 ? "" : "s"} on file`} />
+      <PageHeader title="Adventure Awaits" subtitle={`${rows.length} event${rows.length === 1 ? "" : "s"} on file`} />
       {rows.length === 0 ? (
         <div className="mx-5 mt-4 rounded-2xl border border-dashed border-border p-8 text-center">
           <CalendarDays className="mx-auto h-6 w-6 text-muted-foreground" />
@@ -180,7 +180,7 @@ function LinkEntrantForm({ onLinked }: { onLinked: () => void }) {
 
   return (
     <div>
-      <PageHeader title="My Events" subtitle="Link your entry to see your events" />
+      <PageHeader title="Adventure Awaits" subtitle="Link your entry to see your events" />
       <form onSubmit={submit} className="mx-5 mt-4 space-y-3 rounded-2xl bg-card p-5 ring-1 ring-border">
         <div className="flex items-center gap-2">
           <KeyRound className="h-5 w-5 text-cherry" />
