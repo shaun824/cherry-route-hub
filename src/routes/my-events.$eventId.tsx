@@ -521,7 +521,7 @@ function RoutesPanel({
                     {kmls.length > 0 || r.gpxUrl ? (
                       downloadsLocked && !locked ? (
                         <p className="mt-3 flex items-center gap-1.5 rounded-xl bg-muted/60 px-3 py-2 text-[11px] font-medium text-ink-soft">
-                          <Lock className="h-3.5 w-3.5 text-cherry" />
+                          <LockIcon className="h-3.5 w-3.5 text-cherry" />
                           Route files are available to entered riders only.
                         </p>
                       ) : (
