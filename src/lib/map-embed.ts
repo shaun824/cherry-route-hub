@@ -146,3 +146,25 @@ export function buildMapLink(opts: {
   if (address) return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
   return null;
 }
+
+/**
+ * Best-effort coordinates for a venue from any of the stored fields.
+ * Used to render a real map tile view instead of Google's keyless embed.
+ */
+export function resolveVenuePoint(opts: {
+  mapUrl?: string | null;
+  lat?: number | null;
+  lng?: number | null;
+}): MapPoint | null {
+  const raw = (opts.mapUrl ?? "").trim();
+  if (raw) {
+    const fromUrl = coordsFromMapUrl(raw) ?? coordsFromMapInput(raw);
+    if (fromUrl) return fromUrl;
+    const embedMatch = raw.match(/[?&](?:q|ll|center)=(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/);
+    if (embedMatch) return { lat: Number(embedMatch[1]), lng: Number(embedMatch[2]) };
+  }
+  if (typeof opts.lat === "number" && typeof opts.lng === "number") {
+    return { lat: opts.lat, lng: opts.lng };
+  }
+  return null;
+}
