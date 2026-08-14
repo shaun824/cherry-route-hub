@@ -5,10 +5,13 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { Mountain, TrendingUp } from "lucide-react";
 import {
+  gainFromSeries,
   haversineMeters,
   parseKml,
+  smoothElevations,
   type LatLngAlt,
 } from "@/lib/geo";
+
 import { getRouteElevation } from "@/lib/elevation.functions";
 import type { EventRoute } from "@/lib/mock-data";
 
