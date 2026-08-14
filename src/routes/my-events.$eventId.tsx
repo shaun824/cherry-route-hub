@@ -690,7 +690,15 @@ function InfoPanel({
       </section>
 
 
+      <section className="flex flex-wrap items-center justify-between gap-2 rounded-2xl bg-card p-3 ring-1 ring-border">
+        <p className="min-w-0 flex-1 text-xs text-ink-soft">
+          Can&apos;t find what you need? Message the Red Cherry team directly.
+        </p>
+        <WhatsappButton size="sm" context={eventName} />
+      </section>
+
       <FollowSection links={(event.social_links as SocialLinks | null) ?? undefined} />
+
 
       <SponsorsBlock eventName={eventName} />
 
