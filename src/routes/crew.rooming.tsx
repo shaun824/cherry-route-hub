@@ -93,7 +93,7 @@ function CrewPage() {
   if (loading) {
     return <div className="p-6 text-sm text-ink-soft">Checking your crew access…</div>;
   }
-  if (!user) return <Navigate to="/auth" search={{ next: "/crew/rooming" }} />;
+  if (!user) return <Navigate to="/crew/login" />;
   if (!isCrew) {
     return (
       <div className="space-y-3 p-6 text-center">
@@ -111,7 +111,9 @@ function CrewPage() {
   return (
     <div className="space-y-4 px-4 pb-8 pt-5">
         <header>
-          <p className="text-[11px] font-bold uppercase tracking-widest text-cherry">Crew</p>
+          <Link to="/crew" className="text-[11px] font-bold uppercase tracking-widest text-cherry">
+            ← Crew dashboard
+          </Link>
           <h1 className="font-display text-2xl font-bold text-ink">Who's in which room</h1>
           <p className="mt-1 text-sm text-ink-soft">
             Search a rider by name to see their tent or room, who they share with, and exactly where to send them.
