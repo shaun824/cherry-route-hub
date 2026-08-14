@@ -93,6 +93,8 @@ export default function VillageMapEditorGeo({
   onCancelDraw,
   onZoneChange,
   onSelectZone,
+  onRenameZone,
+  onDuplicateZone,
 }: {
   centre: { lat: number; lng: number };
   centreToken: number;
