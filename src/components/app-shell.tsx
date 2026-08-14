@@ -9,7 +9,8 @@ import { InstallAppPrompt } from "@/components/install-app-prompt";
 
 const tabs = [
   { to: "/", label: "Home", icon: Home, match: (p: string) => p === "/" },
-  { to: "/my-events", label: "My Events", icon: Ticket, match: (p: string) => p.startsWith("/my-events") || p.startsWith("/events") },
+  // Short label keeps the 4-up bottom bar readable; fullLabel is used on desktop + screen readers.
+  { to: "/my-events", label: "Adventure", fullLabel: "Adventure Awaits", icon: Ticket, match: (p: string) => p.startsWith("/my-events") || p.startsWith("/events") },
   { to: "/spectate", label: "Spectate", icon: Binoculars, match: (p: string) => p.startsWith("/spectate") },
   { to: "/profile", label: "Profile", icon: User, match: (p: string) => p.startsWith("/profile") },
 ] as const;
@@ -64,7 +65,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                     }
                   >
                     <Icon className="h-4.5 w-4.5" strokeWidth={active ? 2.4 : 2} />
-                    {t.label}
+                    {"fullLabel" in t ? t.fullLabel : t.label}
                   </Link>
                 </li>
               );
@@ -143,6 +144,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 <Link
                   to={t.to}
                   preload="intent"
+                  aria-label={"fullLabel" in t ? t.fullLabel : t.label}
                   className="flex select-none flex-col items-center gap-1 py-3 text-[11px] font-medium"
                 >
                   <span

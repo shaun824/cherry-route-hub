@@ -465,7 +465,7 @@ function FindMyEmail() {
               <div className="rounded-lg bg-accent px-3 py-2 text-[11px] text-cherry-deep">
                 <p className="font-bold">We found your entry, but no email on file.</p>
                 <p className="mt-1">
-                  Create an account above with any email you use, then go to My Events and link your
+                  Create an account above with any email you use, then go to Adventure Awaits and link your
                   entry with this ID number — we'll save that email to your entry.
                 </p>
               </div>
