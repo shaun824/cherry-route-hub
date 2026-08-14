@@ -409,7 +409,7 @@ export default function VillageMapEditorGeo({
             </button>
           </div>
         </div>
-      ) : activeZone ? (
+      ) : activeZone && !locked ? (
         <div className="pointer-events-none absolute inset-x-0 top-3 z-[500] flex justify-center px-3">
           <div className="pointer-events-auto flex max-w-full flex-wrap items-center gap-2 rounded-xl bg-card/95 px-3 py-2 shadow-lg ring-1 ring-border backdrop-blur">
             <input
