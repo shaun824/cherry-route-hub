@@ -706,13 +706,15 @@ function InfoPanel({
                 className="block"
                 aria-label="Open venue in Google Maps"
               >
-                <iframe
-                  title="Venue map"
-                  src={embedSrc ?? ""}
-                  className="pointer-events-none h-44 w-full"
-                  loading="lazy"
-                  referrerPolicy="no-referrer-when-downgrade"
-                />
+                {embedSrc ? (
+                  <iframe
+                    title="Venue map"
+                    src={embedSrc}
+                    className="pointer-events-none h-44 w-full"
+                    loading="lazy"
+                    referrerPolicy="no-referrer-when-downgrade"
+                  />
+                ) : null}
               </a>
               <div className="p-3">
                 <p className="flex items-start gap-2 text-sm font-semibold text-ink">
