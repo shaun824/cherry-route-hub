@@ -149,31 +149,24 @@ export const ELEV_GAIN_THRESHOLD_M = 5;
  * smoothing over ~100m of route removes the noise but keeps real hills.
  */
 export function smoothElevations(elevations: number[], cumulativeM: number[]): number[] {
+  const n = elevations.length;
+  if (n === 0) return [];
+  // Prefix sums keep this O(n) without fiddly sliding-window bookkeeping.
+  const prefix = new Array<number>(n + 1).fill(0);
+  for (let i = 0; i < n; i++) prefix[i + 1] = prefix[i] + elevations[i];
+
   const out: number[] = [];
   let lo = 0;
   let hi = 0;
-  let sum = 0;
-  for (let i = 0; i < elevations.length; i++) {
-    while (cumulativeM[i] - cumulativeM[lo] > ELEV_SMOOTH_WINDOW_M) {
-      sum -= elevations[lo];
-      lo++;
-    }
-    if (hi < lo) {
-      hi = lo;
-      sum = elevations[lo];
-    }
-    if (i === 0) {
-      sum = elevations[0];
-      hi = 0;
-    }
-    while (hi + 1 < elevations.length && cumulativeM[hi + 1] - cumulativeM[i] <= ELEV_SMOOTH_WINDOW_M) {
-      hi++;
-      sum += elevations[hi];
-    }
-    out.push(sum / (hi - lo + 1));
+  for (let i = 0; i < n; i++) {
+    while (cumulativeM[i] - cumulativeM[lo] > ELEV_SMOOTH_WINDOW_M) lo++;
+    if (hi < i) hi = i;
+    while (hi + 1 < n && cumulativeM[hi + 1] - cumulativeM[i] <= ELEV_SMOOTH_WINDOW_M) hi++;
+    out.push((prefix[hi + 1] - prefix[lo]) / (hi - lo + 1));
   }
   return out;
 }
+
 
 /** Total climb (m) from an already-smoothed elevation series. */
 export function gainFromSeries(elevations: number[]): number {
