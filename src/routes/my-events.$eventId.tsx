@@ -1,4 +1,5 @@
 import { entryNinjaRegistrationUrl } from "@/lib/entry-ninja-link";
+import { WhatsappButton } from "@/components/whatsapp-button";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { askEventBot } from "@/lib/event-bot.functions";
@@ -1175,7 +1176,7 @@ function AskAdminPanel({ eventId, userId, compact = false }: { eventId: string; 
             ? "Got a question about this event? Ask our assistant bot 🍒 — it answers from the event details & website, and loops in a Red Cherry admin if it isn't sure."
             : "Ask anything about this event — our assistant bot 🍒 answers instantly from the event details & website, and loops in a Red Cherry admin when it isn't sure."}
         </span>
-        <WhatsappButton size="sm" context={eventName ?? "an event"} />
+        <WhatsappButton size="sm" />
       </div>
 
       <div className="flex-1 overflow-y-auto p-3">
