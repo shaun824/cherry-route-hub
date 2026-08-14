@@ -11,7 +11,8 @@ import {
 } from "@/lib/event-info";
 import { useServerFn } from "@tanstack/react-start";
 import { resolveMapLink } from "@/lib/map-link.functions";
-import { buildMapEmbedSrc, coordsFromMapInput, isShortMapLink } from "@/lib/map-embed";
+import { buildMapEmbedSrc, coordsFromMapInput, isShortMapLink, resolveVenuePoint } from "@/lib/map-embed";
+import { VenueMiniMap } from "@/components/venue-mini-map";
 
 export const Route = createFileRoute("/admin/event-info/$eventId")({
   loader: async ({ params }) => {
@@ -145,6 +146,18 @@ function EventInfoEditor() {
               : (mapMsg ?? "Paste a share link or coordinates such as 33°23'05.4\"S 25°54'38.3\"E, then tab out.")}
           </p>
           {(() => {
+            const point = resolveVenuePoint({
+              mapUrl: info.map_embed_url,
+              lat: info.venue_lat,
+              lng: info.venue_lng,
+            });
+            if (point) {
+              return (
+                <div className="mt-2 overflow-hidden rounded-xl ring-1 ring-border">
+                  <VenueMiniMap lat={point.lat} lng={point.lng} height="160px" />
+                </div>
+              );
+            }
             const src = buildMapEmbedSrc({
               mapUrl: info.map_embed_url,
               lat: info.venue_lat,

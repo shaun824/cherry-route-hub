@@ -64,7 +64,8 @@ import { TypeBadge } from "@/components/ui-bits";
 
 import { TrackerPanel } from "@/components/tracker-panel";
 import { LockedSection } from "@/components/locked-section";
-import { buildMapEmbedSrc, buildMapLink } from "@/lib/map-embed";
+import { buildMapEmbedSrc, buildMapLink, resolveVenuePoint } from "@/lib/map-embed";
+import { VenueMiniMap } from "@/components/venue-mini-map";
 import { PaymentStatusCard } from "@/components/payment-status-card";
 import { brandHeader } from "@/lib/event-brand";
 import { EventLogo } from "@/components/event-logo";
@@ -712,6 +713,11 @@ function InfoPanel({
             lng: info?.venue_lng,
             address: venue,
           });
+          const venuePoint = resolveVenuePoint({
+            mapUrl: info?.map_embed_url,
+            lat: info?.venue_lat,
+            lng: info?.venue_lng,
+          });
           if (!venue && !embedSrc) return <EmptyBlock>Venue details will appear here.</EmptyBlock>;
           const mapLink =
             buildMapLink({
@@ -729,7 +735,11 @@ function InfoPanel({
                 className="block"
                 aria-label="Open venue in Google Maps"
               >
-                {embedSrc ? (
+                {venuePoint ? (
+                  <div className="pointer-events-none h-44 w-full">
+                    <VenueMiniMap lat={venuePoint.lat} lng={venuePoint.lng} height="176px" />
+                  </div>
+                ) : embedSrc ? (
                   <iframe
                     title="Venue map"
                     src={embedSrc}

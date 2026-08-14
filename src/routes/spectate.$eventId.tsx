@@ -22,7 +22,8 @@ import { getSpectatorRoster, type SpectatorEntrant } from "@/lib/spectator.funct
 import { LockedSection } from "@/components/locked-section";
 import { useSession } from "@/lib/auth";
 import { brandHeader } from "@/lib/event-brand";
-import { buildMapEmbedSrc, buildMapLink } from "@/lib/map-embed";
+import { buildMapEmbedSrc, buildMapLink, resolveVenuePoint } from "@/lib/map-embed";
+import { VenueMiniMap } from "@/components/venue-mini-map";
 
 export const Route = createFileRoute("/spectate/$eventId")({
   head: ({ params }) => ({
@@ -241,7 +242,8 @@ function SpectatorEventPage() {
             {event.mapQuery || event.location ? (() => {
               const mapLink = buildMapLink({ mapUrl: event.mapQuery, address: event.location });
               const embedSrc = buildMapEmbedSrc({ mapUrl: event.mapQuery, address: event.location });
-              if (!mapLink || !embedSrc) return <p className="mt-3 text-xs text-ink-soft">No venue set yet.</p>;
+              const venuePoint = resolveVenuePoint({ mapUrl: event.mapQuery });
+              if (!mapLink || (!embedSrc && !venuePoint)) return <p className="mt-3 text-xs text-ink-soft">No venue set yet.</p>;
               return (
               <a
                 href={mapLink}
@@ -249,13 +251,19 @@ function SpectatorEventPage() {
                 rel="noopener noreferrer"
                 className="mt-3 block overflow-hidden rounded-2xl ring-1 ring-border"
               >
-                <iframe
-                  title="Event venue map"
-                  src={embedSrc}
-                  className="pointer-events-none h-44 w-full"
-                  loading="lazy"
-                  referrerPolicy="no-referrer-when-downgrade"
-                />
+                {venuePoint ? (
+                  <div className="pointer-events-none h-44 w-full">
+                    <VenueMiniMap lat={venuePoint.lat} lng={venuePoint.lng} height="176px" />
+                  </div>
+                ) : (
+                  <iframe
+                    title="Event venue map"
+                    src={embedSrc!}
+                    className="pointer-events-none h-44 w-full"
+                    loading="lazy"
+                    referrerPolicy="no-referrer-when-downgrade"
+                  />
+                )}
                 <div className="flex items-center justify-between bg-card px-3 py-2 text-xs">
                   <span className="font-semibold text-ink">{event.mapQuery || event.location}</span>
                   <span className="font-semibold text-cherry">Navigate ↗</span>
