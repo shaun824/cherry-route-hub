@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { BOT_MISS_REPLY } from "@/lib/bot-handoff";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
@@ -237,9 +238,7 @@ Rules:
     }
 
     const needsAdmin = botAnswer.trim().toUpperCase() === BOT_MISS_SENTINEL;
-    const botBody = needsAdmin
-      ? "I couldn't find a confident answer for that in the event details or website — I've flagged this for a Red Cherry admin to reply personally. 🍒"
-      : botAnswer;
+    const botBody = needsAdmin ? BOT_MISS_REPLY : botAnswer;
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error: botErr } = await supabaseAdmin.from("admin_qa_messages").insert({
