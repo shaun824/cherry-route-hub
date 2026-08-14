@@ -1,7 +1,7 @@
 // Client-only Leaflet editor: place and drag village points straight onto a
 // satellite map of the venue — no plan image required. Also supports drawing
 // measured areas (zones) so the field layout can be planned to the metre.
-import { Fragment, useEffect, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import { MapContainer, TileLayer, Marker, Polygon, Polyline, Tooltip, useMap, useMapEvents } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -76,6 +76,23 @@ function Centre({ lat, lng, token }: { lat: number; lng: number; token: number }
   return null;
 }
 
+// Frames all drawn areas / pins on first load so tiny tent clusters aren't a
+// 5px dot you can't tap.
+function FitToContent({ points, token }: { points: ZonePoint[]; token: number }) {
+  const map = useMap();
+  const fittedFor = useRef<number | null>(null);
+  useEffect(() => {
+    if (points.length === 0) return;
+    if (fittedFor.current === token) return;
+    fittedFor.current = token;
+    const bounds = L.latLngBounds(points.map((p) => [p.lat, p.lng] as [number, number]));
+    map.fitBounds(bounds.pad(0.4), { maxZoom: 21 });
+  }, [map, token, points]);
+  return null;
+}
+
+
+
 export default function VillageMapEditorGeo({
   centre,
   centreToken,
@@ -118,7 +135,15 @@ export default function VillageMapEditorGeo({
   const [draft, setDraft] = useState<ZonePoint[]>([]);
   const [cursor, setCursor] = useState<ZonePoint | null>(null);
   const [showLabels, setShowLabels] = useState(true);
+  const [fitToken, setFitToken] = useState(0);
   const activeZone = zones.find((z) => z.id === selectedZone) ?? null;
+
+  const contentPoints: ZonePoint[] = [
+    ...zones.flatMap((z) => z.points),
+    ...hotspots
+      .filter((s) => Number.isFinite(s.lat) && Number.isFinite(s.lng))
+      .map((s) => ({ lat: s.lat as number, lng: s.lng as number })),
+  ];
 
   useEffect(() => {
     if (!drawing) {
@@ -130,6 +155,7 @@ export default function VillageMapEditorGeo({
   const draftPreview = cursor && draft.length > 0 ? [...draft, cursor] : draft;
   const liveEdge =
     cursor && draft.length > 0 ? distanceM(draft[draft.length - 1], cursor) : 0;
+
 
   return (
     <div className="relative">
@@ -155,6 +181,8 @@ export default function VillageMapEditorGeo({
             maxNativeZoom={18}
           />
           <Centre lat={centre.lat} lng={centre.lng} token={centreToken} />
+          <FitToContent points={contentPoints} token={fitToken} />
+
           {placing ? <ClickCatcher onClick={onPlace} /> : null}
           {drawing ? (
             <>
@@ -274,13 +302,23 @@ export default function VillageMapEditorGeo({
         </MapContainer>
       </div>
 
-      <button
-        type="button"
-        onClick={() => setShowLabels((v) => !v)}
-        className="absolute bottom-3 right-3 z-[500] rounded-xl bg-card/95 px-3 py-1.5 text-[11px] font-bold text-ink shadow ring-1 ring-border backdrop-blur"
-      >
-        {showLabels ? "Hide names" : "Show names"}
-      </button>
+      <div className="absolute bottom-3 right-3 z-[500] flex gap-2">
+        <button
+          type="button"
+          onClick={() => setFitToken((t) => t + 1)}
+          className="rounded-xl bg-card/95 px-3 py-1.5 text-[11px] font-bold text-ink shadow ring-1 ring-border backdrop-blur"
+        >
+          Zoom to areas
+        </button>
+        <button
+          type="button"
+          onClick={() => setShowLabels((v) => !v)}
+          className="rounded-xl bg-card/95 px-3 py-1.5 text-[11px] font-bold text-ink shadow ring-1 ring-border backdrop-blur"
+        >
+          {showLabels ? "Hide names" : "Show names"}
+        </button>
+      </div>
+
 
       {drawing ? (
         <div className="pointer-events-none absolute inset-x-0 top-3 z-[500] flex justify-center px-3">
