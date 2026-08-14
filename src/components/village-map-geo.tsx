@@ -67,10 +67,13 @@ function RotateOverlay({ rotation }: { rotation: number }) {
 function FitBounds({ bounds }: { bounds: L.LatLngBoundsExpression }) {
   const map = useMap();
   useEffect(() => {
-    map.fitBounds(bounds, { padding: [20, 20] });
+    // Cap at the highest zoom the satellite imagery actually covers, otherwise
+    // the map opens on upscaled/blank tiles.
+    map.fitBounds(bounds, { padding: [20, 20], maxZoom: 19 });
   }, [map, bounds]);
   return null;
 }
+
 
 function Recenter({ position, token }: { position: [number, number] | null; token: number }) {
   const map = useMap();
