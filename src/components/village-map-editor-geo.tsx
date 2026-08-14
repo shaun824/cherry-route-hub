@@ -113,6 +113,7 @@ export default function VillageMapEditorGeo({
 }) {
   const [draft, setDraft] = useState<ZonePoint[]>([]);
   const [cursor, setCursor] = useState<ZonePoint | null>(null);
+  const [showLabels, setShowLabels] = useState(true);
 
   useEffect(() => {
     if (!drawing) {
@@ -175,9 +176,11 @@ export default function VillageMapEditorGeo({
                   }}
                   eventHandlers={{ click: () => onSelectZone(active ? null : z.id) }}
                 >
-                  <Tooltip direction="center" permanent className="rce-zone-label">
-                    <span style={{ fontWeight: 800 }}>{z.name}</span>
-                  </Tooltip>
+                  {showLabels ? (
+                    <Tooltip direction="center" permanent className="rce-zone-label">
+                      <span style={{ fontWeight: 800 }}>{z.name}</span>
+                    </Tooltip>
+                  ) : null}
                 </Polygon>
 
                 {active && c ? (
