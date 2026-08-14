@@ -32,6 +32,9 @@ import {
   zoneColor,
   zonePerimeterM,
   zoneSizeM,
+  nextZoneName,
+  translateZone,
+  zoneSizeM as zoneSizeMetres,
   type VillageZone,
   type ZonePoint,
 } from "@/lib/village-zones";
