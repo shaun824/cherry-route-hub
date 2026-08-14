@@ -179,9 +179,14 @@ export default function VillageMapEditorGeo({
           zoom={17}
           maxZoom={24}
           scrollWheelZoom
-          zoomSnap={0.25}
-          zoomDelta={0.5}
-          wheelPxPerZoomLevel={140}
+          zoomSnap={0}
+          zoomDelta={0.35}
+          wheelPxPerZoomLevel={220}
+          zoomAnimation
+          markerZoomAnimation
+          bounceAtZoomLimits={false}
+          touchZoom
+          doubleClickZoom
           className="h-[65vh] min-h-[360px] w-full"
         >
           <TileLayer
