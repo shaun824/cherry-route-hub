@@ -6,7 +6,7 @@ import type { EventPromo } from "@/lib/event-promos";
 /**
  * Promo module with the same behaviour as the Supplier Promos page:
  * tapping the offer copies the code, shows a "use this code" pop-up,
- * then opens the partner site.
+ * then opens the partner site. Offers without a code show redeem info.
  */
 export function PromoCodeCard({ promo }: { promo: EventPromo }) {
   const [copied, setCopied] = useState(false);
@@ -25,6 +25,7 @@ export function PromoCodeCard({ promo }: { promo: EventPromo }) {
   }, [pending, promo.url]);
 
   function copy() {
+    if (!promo.code) return;
     navigator.clipboard?.writeText(promo.code);
     setCopied(true);
     setTimeout(() => setCopied(false), 1600);
@@ -60,30 +61,37 @@ export function PromoCodeCard({ promo }: { promo: EventPromo }) {
         <div className="flex items-center justify-between gap-3 px-4 py-3">
           <div className="min-w-0">
             <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Discount code
+              {promo.code ? "Discount code" : "How to redeem"}
             </p>
-            <p className="mt-0.5 truncate font-mono text-base font-bold text-ink">{promo.code}</p>
-          </div>
-          <button
-            type="button"
-            onClick={copy}
-            className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-ink px-3 py-2 text-xs font-bold text-white"
-          >
-            {copied ? (
-              <>
-                <Check className="h-3.5 w-3.5" /> Copied
-              </>
+            {promo.code ? (
+              <p className="mt-0.5 truncate font-mono text-base font-bold text-ink">{promo.code}</p>
             ) : (
-              <>
-                <Copy className="h-3.5 w-3.5" /> Copy
-              </>
+              <p className="mt-0.5 text-xs font-semibold text-ink">{promo.redeem}</p>
             )}
-          </button>
+          </div>
+          {promo.code ? (
+            <button
+              type="button"
+              onClick={copy}
+              className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-ink px-3 py-2 text-xs font-bold text-white"
+            >
+              {copied ? (
+                <>
+                  <Check className="h-3.5 w-3.5" /> Copied
+                </>
+              ) : (
+                <>
+                  <Copy className="h-3.5 w-3.5" /> Copy
+                </>
+              )}
+            </button>
+          ) : null}
           <a
             href={promo.url}
             target="_blank"
             rel="noopener noreferrer"
             onClick={(e) => {
+              if (!promo.code) return;
               e.preventDefault();
               copy();
               setPending(true);
@@ -95,7 +103,7 @@ export function PromoCodeCard({ promo }: { promo: EventPromo }) {
         </div>
       </div>
 
-      {pending ? (
+      {pending && promo.code ? (
         <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 px-6">
           <div className="relative w-full max-w-sm rounded-2xl bg-card p-6 text-center ring-1 ring-border">
             <button
