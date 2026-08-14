@@ -80,14 +80,17 @@ function Centre({ lat, lng, token }: { lat: number; lng: number; token: number }
 // 5px dot you can't tap.
 function FitToContent({ points, token }: { points: ZonePoint[]; token: number }) {
   const map = useMap();
+  const fittedFor = useRef<number | null>(null);
   useEffect(() => {
     if (points.length === 0) return;
+    if (fittedFor.current === token) return;
+    fittedFor.current = token;
     const bounds = L.latLngBounds(points.map((p) => [p.lat, p.lng] as [number, number]));
     map.fitBounds(bounds.pad(0.4), { maxZoom: 21 });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [map, token]);
+  }, [map, token, points]);
   return null;
 }
+
 
 
 export default function VillageMapEditorGeo({
