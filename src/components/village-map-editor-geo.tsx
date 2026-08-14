@@ -118,6 +118,7 @@ export default function VillageMapEditorGeo({
   const [draft, setDraft] = useState<ZonePoint[]>([]);
   const [cursor, setCursor] = useState<ZonePoint | null>(null);
   const [showLabels, setShowLabels] = useState(true);
+  const activeZone = zones.find((z) => z.id === selectedZone) ?? null;
 
   useEffect(() => {
     if (!drawing) {
