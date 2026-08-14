@@ -264,6 +264,7 @@ export default function VillageMapGeo({
         <MapContainer
           center={[geo.lat, geo.lng]}
           zoom={17}
+          maxZoom={20}
           scrollWheelZoom
           zoomSnap={0.25}
           zoomDelta={0.5}
@@ -274,14 +275,14 @@ export default function VillageMapGeo({
             <TileLayer
               attribution="Tiles &copy; Esri"
               url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
-              maxZoom={22}
+              maxZoom={20}
               maxNativeZoom={18}
             />
           ) : (
             <TileLayer
               attribution="&copy; OpenStreetMap"
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              maxZoom={22}
+              maxZoom={20}
               maxNativeZoom={19}
             />
           )}
