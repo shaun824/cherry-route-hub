@@ -175,6 +175,8 @@ export async function syncEnEvent(
           jacket_size: jacket,
           tshirt_size: tshirt,
           extras,
+          paid: typeof entry.paid === "boolean" ? entry.paid : null,
+          payment_synced_at: new Date().toISOString(),
           notes: entry.paid === false ? "Payment outstanding on Entry Ninja" : null,
         },
         { onConflict: "event_id,entrant_id" },
