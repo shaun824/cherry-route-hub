@@ -83,7 +83,7 @@ export async function fetchMyEvents(): Promise<MyEventRow[]> {
     console.warn("[my-events]", error);
     return [];
   }
-  return (data ?? [])
+  const rows = (data ?? [])
     .filter((r) => r.event)
     .map((r) => ({
       event_entrant_id: r.id,
@@ -98,6 +98,13 @@ export async function fetchMyEvents(): Promise<MyEventRow[]> {
       notes: (r as { notes: string | null }).notes ?? null,
       event: r.event as MyEventRow["event"],
     }));
+
+  // Chronological: soonest event first, then anything without a date.
+  return rows.sort((a, b) => {
+    const ta = a.event?.event_date ? new Date(a.event.event_date).getTime() : Number.POSITIVE_INFINITY;
+    const tb = b.event?.event_date ? new Date(b.event.event_date).getTime() : Number.POSITIVE_INFINITY;
+    return ta - tb;
+  });
 }
 
 export async function fetchMyEventById(eventId: string): Promise<MyEventRow | null> {
