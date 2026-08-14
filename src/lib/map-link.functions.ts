@@ -26,18 +26,28 @@ export const resolveMapLink = createServerFn({ method: "POST" })
       return { ok: false as const, error: "Please paste a Google Maps link." };
     }
 
+    // Google serves a JavaScript interstitial (no redirect) to desktop-browser
+    // user agents, so try simple clients first — those still get a plain 302 to
+    // the full maps.google.com URL that carries the coordinates.
+    const agents = [
+      "curl/8.4.0",
+      "facebookexternalhit/1.1",
+      "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1",
+    ];
+
     let finalUrl = start;
-    try {
-      const res = await fetch(start, {
-        redirect: "follow",
-        headers: {
-          // Google serves the coordinate-bearing URL to normal browsers.
-          "User-Agent":
-            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125 Safari/537.36",
-        },
-      });
-      finalUrl = res.url || start;
-      if (!coordsFromMapUrl(finalUrl)) {
+    for (const ua of agents) {
+      try {
+        const res = await fetch(start, {
+          redirect: "follow",
+          headers: { "User-Agent": ua, Accept: "text/html,*/*" },
+        });
+        const candidate = res.url || start;
+        if (coordsFromMapUrl(candidate)) {
+          finalUrl = candidate;
+          break;
+        }
+        finalUrl = candidate;
         const html = await res.text();
         const m =
           html.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/) ||
@@ -52,10 +62,11 @@ export const resolveMapLink = createServerFn({ method: "POST" })
             place: placeFromMapUrl(finalUrl),
           };
         }
+      } catch (e) {
+        console.warn("[map-link:resolve]", ua, e);
       }
-    } catch (e) {
-      console.warn("[map-link:resolve]", e);
     }
+
 
     const point = coordsFromMapUrl(finalUrl);
     return {
