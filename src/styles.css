@@ -235,3 +235,13 @@
   to { stroke-dashoffset: -32; }
 }
 
+
+/* Village map: fat invisible hitboxes + non-blocking labels */
+.rce-zone-hit {
+  pointer-events: stroke;
+  cursor: pointer;
+}
+.leaflet-tooltip.rce-zone-label,
+.leaflet-tooltip.rce-zone-label-active {
+  pointer-events: none !important;
+}
