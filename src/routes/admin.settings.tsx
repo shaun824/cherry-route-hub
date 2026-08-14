@@ -1,5 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  DEFAULT_SUPPORT,
+  fetchSupportSettings,
+  normalizeWaNumber,
+  saveSupportSettings,
+  type SupportSettings,
+} from "@/lib/whatsapp";
 import {
   Bell,
   Calendar,
