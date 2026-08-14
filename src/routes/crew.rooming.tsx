@@ -14,7 +14,7 @@ import {
 } from "@/lib/crew";
 import { VillageMapView } from "@/components/village-map-view";
 
-export const Route = createFileRoute("/crew")({
+export const Route = createFileRoute("/crew/rooming")({
   head: () => ({
     meta: [
       { title: "Crew rooming finder · Red Cherry Events" },
@@ -93,7 +93,7 @@ function CrewPage() {
   if (loading) {
     return <div className="p-6 text-sm text-ink-soft">Checking your crew access…</div>;
   }
-  if (!user) return <Navigate to="/auth" search={{ next: "/crew" }} />;
+  if (!user) return <Navigate to="/auth" search={{ next: "/crew/rooming" }} />;
   if (!isCrew) {
     return (
       <div className="space-y-3 p-6 text-center">
