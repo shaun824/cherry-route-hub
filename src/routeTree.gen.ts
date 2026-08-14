@@ -16,7 +16,6 @@ import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as MyEventsRouteImport } from './routes/my-events'
 import { Route as GalleryRouteImport } from './routes/gallery'
 import { Route as FeedRouteImport } from './routes/feed'
-import { Route as CrewRouteImport } from './routes/crew'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
@@ -26,6 +25,7 @@ import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as SpectateEventIdRouteImport } from './routes/spectate.$eventId'
 import { Route as MyEventsEventIdRouteImport } from './routes/my-events.$eventId'
 import { Route as EventsEventIdRouteImport } from './routes/events.$eventId'
+import { Route as CrewRoomingRouteImport } from './routes/crew.rooming'
 import { Route as AdminSponsorsRouteImport } from './routes/admin.sponsors'
 import { Route as AdminSettingsRouteImport } from './routes/admin.settings'
 import { Route as AdminRosterRouteImport } from './routes/admin.roster'
@@ -99,11 +99,6 @@ const FeedRoute = FeedRouteImport.update({
   path: '/feed',
   getParentRoute: () => rootRouteImport,
 } as any)
-const CrewRoute = CrewRouteImport.update({
-  id: '/crew',
-  path: '/crew',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
@@ -147,6 +142,11 @@ const MyEventsEventIdRoute = MyEventsEventIdRouteImport.update({
 const EventsEventIdRoute = EventsEventIdRouteImport.update({
   id: '/events/$eventId',
   path: '/events/$eventId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CrewRoomingRoute = CrewRoomingRouteImport.update({
+  id: '/crew/rooming',
+  path: '/crew/rooming',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminSponsorsRoute = AdminSponsorsRouteImport.update({
@@ -347,7 +347,6 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
   '/auth': typeof AuthRoute
-  '/crew': typeof CrewRoute
   '/feed': typeof FeedRoute
   '/gallery': typeof GalleryRoute
   '/my-events': typeof MyEventsRouteWithChildren
@@ -371,6 +370,7 @@ export interface FileRoutesByFullPath {
   '/admin/roster': typeof AdminRosterRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/sponsors': typeof AdminSponsorsRoute
+  '/crew/rooming': typeof CrewRoomingRoute
   '/events/$eventId': typeof EventsEventIdRouteWithChildren
   '/my-events/$eventId': typeof MyEventsEventIdRoute
   '/spectate/$eventId': typeof SpectateEventIdRoute
@@ -402,7 +402,6 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
-  '/crew': typeof CrewRoute
   '/feed': typeof FeedRoute
   '/gallery': typeof GalleryRoute
   '/profile': typeof ProfileRoute
@@ -425,6 +424,7 @@ export interface FileRoutesByTo {
   '/admin/roster': typeof AdminRosterRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/sponsors': typeof AdminSponsorsRoute
+  '/crew/rooming': typeof CrewRoomingRoute
   '/my-events/$eventId': typeof MyEventsEventIdRoute
   '/spectate/$eventId': typeof SpectateEventIdRoute
   '/admin': typeof AdminIndexRoute
@@ -457,7 +457,6 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
   '/auth': typeof AuthRoute
-  '/crew': typeof CrewRoute
   '/feed': typeof FeedRoute
   '/gallery': typeof GalleryRoute
   '/my-events': typeof MyEventsRouteWithChildren
@@ -481,6 +480,7 @@ export interface FileRoutesById {
   '/admin/roster': typeof AdminRosterRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/sponsors': typeof AdminSponsorsRoute
+  '/crew/rooming': typeof CrewRoomingRoute
   '/events/$eventId': typeof EventsEventIdRouteWithChildren
   '/my-events/$eventId': typeof MyEventsEventIdRoute
   '/spectate/$eventId': typeof SpectateEventIdRoute
@@ -515,7 +515,6 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/auth'
-    | '/crew'
     | '/feed'
     | '/gallery'
     | '/my-events'
@@ -539,6 +538,7 @@ export interface FileRouteTypes {
     | '/admin/roster'
     | '/admin/settings'
     | '/admin/sponsors'
+    | '/crew/rooming'
     | '/events/$eventId'
     | '/my-events/$eventId'
     | '/spectate/$eventId'
@@ -570,7 +570,6 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
-    | '/crew'
     | '/feed'
     | '/gallery'
     | '/profile'
@@ -593,6 +592,7 @@ export interface FileRouteTypes {
     | '/admin/roster'
     | '/admin/settings'
     | '/admin/sponsors'
+    | '/crew/rooming'
     | '/my-events/$eventId'
     | '/spectate/$eventId'
     | '/admin'
@@ -624,7 +624,6 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/auth'
-    | '/crew'
     | '/feed'
     | '/gallery'
     | '/my-events'
@@ -648,6 +647,7 @@ export interface FileRouteTypes {
     | '/admin/roster'
     | '/admin/settings'
     | '/admin/sponsors'
+    | '/crew/rooming'
     | '/events/$eventId'
     | '/my-events/$eventId'
     | '/spectate/$eventId'
@@ -681,7 +681,6 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRouteWithChildren
   AuthRoute: typeof AuthRoute
-  CrewRoute: typeof CrewRoute
   FeedRoute: typeof FeedRoute
   GalleryRoute: typeof GalleryRoute
   MyEventsRoute: typeof MyEventsRouteWithChildren
@@ -689,6 +688,7 @@ export interface RootRouteChildren {
   PromosRoute: typeof PromosRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   SpectateRoute: typeof SpectateRouteWithChildren
+  CrewRoomingRoute: typeof CrewRoomingRoute
   EventsEventIdRoute: typeof EventsEventIdRouteWithChildren
   EventsIndexRoute: typeof EventsIndexRoute
   MyEventsEventIdReportRoute: typeof MyEventsEventIdReportRoute
@@ -757,13 +757,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FeedRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/crew': {
-      id: '/crew'
-      path: '/crew'
-      fullPath: '/crew'
-      preLoaderRoute: typeof CrewRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/auth': {
       id: '/auth'
       path: '/auth'
@@ -825,6 +818,13 @@ declare module '@tanstack/react-router' {
       path: '/events/$eventId'
       fullPath: '/events/$eventId'
       preLoaderRoute: typeof EventsEventIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/crew/rooming': {
+      id: '/crew/rooming'
+      path: '/crew/rooming'
+      fullPath: '/crew/rooming'
+      preLoaderRoute: typeof CrewRoomingRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/sponsors': {
@@ -1187,7 +1187,6 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRouteWithChildren,
   AuthRoute: AuthRoute,
-  CrewRoute: CrewRoute,
   FeedRoute: FeedRoute,
   GalleryRoute: GalleryRoute,
   MyEventsRoute: MyEventsRouteWithChildren,
@@ -1195,6 +1194,7 @@ const rootRouteChildren: RootRouteChildren = {
   PromosRoute: PromosRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   SpectateRoute: SpectateRouteWithChildren,
+  CrewRoomingRoute: CrewRoomingRoute,
   EventsEventIdRoute: EventsEventIdRouteWithChildren,
   EventsIndexRoute: EventsIndexRoute,
   MyEventsEventIdReportRoute: MyEventsEventIdReportRoute,
