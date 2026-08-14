@@ -49,7 +49,7 @@ import { RouteProfile } from "@/components/route-profile";
 import { fetchMyRooming } from "@/lib/rooming";
 import { SponsorScroller } from "@/components/sponsor-scroller";
 import { eventPromosFor } from "@/lib/event-promos";
-import { PromoCodeCard } from "@/components/promo-code-card";
+import { PromoCarousel } from "@/components/promo-carousel";
 import { curatedSponsorsFor } from "@/lib/event-sponsor-overrides";
 import { eventHasTshirt } from "@/lib/apparel";
 import { useAdminStore } from "@/lib/store";
