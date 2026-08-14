@@ -5,13 +5,14 @@ import Papa from "papaparse";
 import { BedDouble, FileUp, MapPin, Plus, Save, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchRooming, fetchVenues, type Venue } from "@/lib/rooming";
+import { fetchVillageMap } from "@/lib/village-map";
 
 export const Route = createFileRoute("/admin/rooming")({
   component: RoomingAdminPage,
 });
 
-const SAMPLE = `full_name,email,tent_number,room_type,notes
-Jane Doe,jane@example.com,T14,Twin tent,Shares with John Doe
+const SAMPLE = `full_name,email,tent_number,room_type,notes,location_hint
+Jane Doe,jane@example.com,T14,Twin tent,Shares with John Doe,Row C behind the bar
 `;
 
 function pick(row: Record<string, string>, keys: string[]): string {
@@ -28,6 +29,7 @@ type ParsedRow = {
   tent_number: string;
   room_type: string;
   notes: string;
+  location_hint: string;
 };
 
 function parseCsv(text: string): ParsedRow[] {
@@ -44,6 +46,7 @@ function parseCsv(text: string): ParsedRow[] {
       tent_number: pick(r, ["tent_number", "tent", "Tent Number", "Tent", "room", "Room", "room_number", "Room Number"]),
       room_type: pick(r, ["room_type", "Room Type", "Tent Type", "type"]),
       notes: pick(r, ["notes", "Notes", "Comment"]),
+      location_hint: pick(r, ["location_hint", "location", "Location", "Where", "Block", "Area"]),
     }))
     .filter((r) => r.full_name || r.email || r.tent_number);
 }
@@ -68,6 +71,12 @@ function RoomingAdminPage() {
   const venuesQ = useQuery({
     queryKey: ["admin-venues", eventId],
     queryFn: () => fetchVenues(eventId),
+    enabled: !!eventId,
+  });
+
+  const villageQ = useQuery({
+    queryKey: ["admin-village-spots", eventId],
+    queryFn: () => fetchVillageMap(eventId),
     enabled: !!eventId,
   });
 
@@ -110,7 +119,7 @@ function RoomingAdminPage() {
     setBusy(true);
     const { error } = await supabase
       .from("event_venues")
-      .update({ name: v.name, address: v.address, notes: v.notes })
+      .update({ name: v.name, address: v.address, notes: v.notes, village_spot_id: v.village_spot_id })
       .eq("id", v.id);
     setBusy(false);
     setMsg(error ? error.message : "Venue saved.");
@@ -154,6 +163,7 @@ function RoomingAdminPage() {
       tent_number: p.tent_number || null,
       room_type: p.room_type || null,
       notes: p.notes || null,
+      location_hint: p.location_hint || null,
     }));
 
     const { error } = await supabase.from("event_rooming").insert(payload);
@@ -204,6 +214,7 @@ function RoomingAdminPage() {
       {eventId ? (
         <>
           <VenueManager
+            spots={villageQ.data?.hotspots ?? []}
             venues={venues}
             busy={busy}
             onAdd={addVenue}
@@ -234,12 +245,14 @@ function RoomingAdminPage() {
 }
 
 function VenueManager({
+  spots,
   venues,
   busy,
   onAdd,
   onSave,
   onDelete,
 }: {
+  spots: { id: string; title: string }[];
   venues: Venue[];
   busy: boolean;
   onAdd: (name: string, address: string) => void | Promise<void>;
@@ -260,7 +273,7 @@ function VenueManager({
         {venues.map((v) => {
           const cur = edits[v.id] ?? v;
           return (
-            <div key={v.id} className="grid gap-2 rounded-xl bg-secondary/60 p-3 md:grid-cols-[1fr_1.5fr_auto]">
+            <div key={v.id} className="grid gap-2 rounded-xl bg-secondary/60 p-3 md:grid-cols-[1fr_1.5fr_1fr_auto]">
               <input
                 value={cur.name}
                 onChange={(e) => setEdits((s) => ({ ...s, [v.id]: { ...cur, name: e.target.value } }))}
@@ -273,6 +286,21 @@ function VenueManager({
                 className="rounded-lg border border-border bg-background px-2 py-1.5 text-sm"
                 placeholder="Address (optional)"
               />
+              <select
+                value={cur.village_spot_id ?? ""}
+                onChange={(e) =>
+                  setEdits((s) => ({ ...s, [v.id]: { ...cur, village_spot_id: e.target.value || null } }))
+                }
+                className="rounded-lg border border-border bg-background px-2 py-1.5 text-sm"
+                title="Village map point crew use to find this venue"
+              >
+                <option value="">Village point…</option>
+                {spots.map((sp) => (
+                  <option key={sp.id} value={sp.id}>
+                    {sp.title}
+                  </option>
+                ))}
+              </select>
               <div className="flex gap-2">
                 <button
                   type="button"
