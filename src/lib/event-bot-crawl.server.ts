@@ -207,7 +207,7 @@ async function fetchSitemapUrls(seedUrls: string[]): Promise<string[]> {
   return Array.from(out);
 }
 
-async function crawlSite(seedUrls: string[], maxPages = 40): Promise<{ url: string; text: string }[]> {
+export async function crawlSite(seedUrls: string[], maxPages = 40): Promise<{ url: string; text: string }[]> {
   const visited = new Set<string>();
   const results: { url: string; text: string }[] = [];
   const queue: string[] = [];

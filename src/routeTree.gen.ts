@@ -30,6 +30,7 @@ import { Route as CrewRoomingRouteImport } from './routes/crew.rooming'
 import { Route as CrewLoginRouteImport } from './routes/crew.login'
 import { Route as AdminSponsorsRouteImport } from './routes/admin.sponsors'
 import { Route as AdminSettingsRouteImport } from './routes/admin.settings'
+import { Route as AdminScheduleSyncRouteImport } from './routes/admin.schedule-sync'
 import { Route as AdminRosterRouteImport } from './routes/admin.roster'
 import { Route as AdminRoomingRouteImport } from './routes/admin.rooming'
 import { Route as AdminRidersRouteImport } from './routes/admin.riders'
@@ -57,6 +58,7 @@ import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/l
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
 import { Route as ApiPublicHooksWhatsappRouteImport } from './routes/api/public/hooks/whatsapp'
+import { Route as ApiPublicHooksScheduleSyncRouteImport } from './routes/api/public/hooks/schedule-sync'
 import { Route as ApiPublicHooksRoomingSheetSyncRouteImport } from './routes/api/public/hooks/rooming-sheet-sync'
 import { Route as ApiPublicHooksNotificationCronRouteImport } from './routes/api/public/hooks/notification-cron'
 import { Route as ApiPublicHooksNotificationClickRouteImport } from './routes/api/public/hooks/notification-click'
@@ -169,6 +171,11 @@ const AdminSponsorsRoute = AdminSponsorsRouteImport.update({
 const AdminSettingsRoute = AdminSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminScheduleSyncRoute = AdminScheduleSyncRouteImport.update({
+  id: '/schedule-sync',
+  path: '/schedule-sync',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminRosterRoute = AdminRosterRouteImport.update({
@@ -307,6 +314,12 @@ const ApiPublicHooksWhatsappRoute = ApiPublicHooksWhatsappRouteImport.update({
   path: '/api/public/hooks/whatsapp',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicHooksScheduleSyncRoute =
+  ApiPublicHooksScheduleSyncRouteImport.update({
+    id: '/api/public/hooks/schedule-sync',
+    path: '/api/public/hooks/schedule-sync',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksRoomingSheetSyncRoute =
   ApiPublicHooksRoomingSheetSyncRouteImport.update({
     id: '/api/public/hooks/rooming-sheet-sync',
@@ -380,6 +393,7 @@ export interface FileRoutesByFullPath {
   '/admin/riders': typeof AdminRidersRoute
   '/admin/rooming': typeof AdminRoomingRoute
   '/admin/roster': typeof AdminRosterRoute
+  '/admin/schedule-sync': typeof AdminScheduleSyncRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/sponsors': typeof AdminSponsorsRoute
   '/crew/login': typeof CrewLoginRoute
@@ -408,6 +422,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/notification-click': typeof ApiPublicHooksNotificationClickRoute
   '/api/public/hooks/notification-cron': typeof ApiPublicHooksNotificationCronRoute
   '/api/public/hooks/rooming-sheet-sync': typeof ApiPublicHooksRoomingSheetSyncRoute
+  '/api/public/hooks/schedule-sync': typeof ApiPublicHooksScheduleSyncRoute
   '/api/public/hooks/whatsapp': typeof ApiPublicHooksWhatsappRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -436,6 +451,7 @@ export interface FileRoutesByTo {
   '/admin/riders': typeof AdminRidersRoute
   '/admin/rooming': typeof AdminRoomingRoute
   '/admin/roster': typeof AdminRosterRoute
+  '/admin/schedule-sync': typeof AdminScheduleSyncRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/sponsors': typeof AdminSponsorsRoute
   '/crew/login': typeof CrewLoginRoute
@@ -463,6 +479,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/notification-click': typeof ApiPublicHooksNotificationClickRoute
   '/api/public/hooks/notification-cron': typeof ApiPublicHooksNotificationCronRoute
   '/api/public/hooks/rooming-sheet-sync': typeof ApiPublicHooksRoomingSheetSyncRoute
+  '/api/public/hooks/schedule-sync': typeof ApiPublicHooksScheduleSyncRoute
   '/api/public/hooks/whatsapp': typeof ApiPublicHooksWhatsappRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -494,6 +511,7 @@ export interface FileRoutesById {
   '/admin/riders': typeof AdminRidersRoute
   '/admin/rooming': typeof AdminRoomingRoute
   '/admin/roster': typeof AdminRosterRoute
+  '/admin/schedule-sync': typeof AdminScheduleSyncRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/sponsors': typeof AdminSponsorsRoute
   '/crew/login': typeof CrewLoginRoute
@@ -522,6 +540,7 @@ export interface FileRoutesById {
   '/api/public/hooks/notification-click': typeof ApiPublicHooksNotificationClickRoute
   '/api/public/hooks/notification-cron': typeof ApiPublicHooksNotificationCronRoute
   '/api/public/hooks/rooming-sheet-sync': typeof ApiPublicHooksRoomingSheetSyncRoute
+  '/api/public/hooks/schedule-sync': typeof ApiPublicHooksScheduleSyncRoute
   '/api/public/hooks/whatsapp': typeof ApiPublicHooksWhatsappRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -554,6 +573,7 @@ export interface FileRouteTypes {
     | '/admin/riders'
     | '/admin/rooming'
     | '/admin/roster'
+    | '/admin/schedule-sync'
     | '/admin/settings'
     | '/admin/sponsors'
     | '/crew/login'
@@ -582,6 +602,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/notification-click'
     | '/api/public/hooks/notification-cron'
     | '/api/public/hooks/rooming-sheet-sync'
+    | '/api/public/hooks/schedule-sync'
     | '/api/public/hooks/whatsapp'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -610,6 +631,7 @@ export interface FileRouteTypes {
     | '/admin/riders'
     | '/admin/rooming'
     | '/admin/roster'
+    | '/admin/schedule-sync'
     | '/admin/settings'
     | '/admin/sponsors'
     | '/crew/login'
@@ -637,6 +659,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/notification-click'
     | '/api/public/hooks/notification-cron'
     | '/api/public/hooks/rooming-sheet-sync'
+    | '/api/public/hooks/schedule-sync'
     | '/api/public/hooks/whatsapp'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -667,6 +690,7 @@ export interface FileRouteTypes {
     | '/admin/riders'
     | '/admin/rooming'
     | '/admin/roster'
+    | '/admin/schedule-sync'
     | '/admin/settings'
     | '/admin/sponsors'
     | '/crew/login'
@@ -695,6 +719,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/notification-click'
     | '/api/public/hooks/notification-cron'
     | '/api/public/hooks/rooming-sheet-sync'
+    | '/api/public/hooks/schedule-sync'
     | '/api/public/hooks/whatsapp'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -726,6 +751,7 @@ export interface RootRouteChildren {
   ApiPublicHooksNotificationClickRoute: typeof ApiPublicHooksNotificationClickRoute
   ApiPublicHooksNotificationCronRoute: typeof ApiPublicHooksNotificationCronRoute
   ApiPublicHooksRoomingSheetSyncRoute: typeof ApiPublicHooksRoomingSheetSyncRoute
+  ApiPublicHooksScheduleSyncRoute: typeof ApiPublicHooksScheduleSyncRoute
   ApiPublicHooksWhatsappRoute: typeof ApiPublicHooksWhatsappRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
   LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
@@ -879,6 +905,13 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/admin/settings'
       preLoaderRoute: typeof AdminSettingsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/schedule-sync': {
+      id: '/admin/schedule-sync'
+      path: '/schedule-sync'
+      fullPath: '/admin/schedule-sync'
+      preLoaderRoute: typeof AdminScheduleSyncRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/roster': {
@@ -1070,6 +1103,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksWhatsappRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/schedule-sync': {
+      id: '/api/public/hooks/schedule-sync'
+      path: '/api/public/hooks/schedule-sync'
+      fullPath: '/api/public/hooks/schedule-sync'
+      preLoaderRoute: typeof ApiPublicHooksScheduleSyncRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/rooming-sheet-sync': {
       id: '/api/public/hooks/rooming-sheet-sync'
       path: '/api/public/hooks/rooming-sheet-sync'
@@ -1144,6 +1184,7 @@ interface AdminRouteChildren {
   AdminRidersRoute: typeof AdminRidersRoute
   AdminRoomingRoute: typeof AdminRoomingRoute
   AdminRosterRoute: typeof AdminRosterRoute
+  AdminScheduleSyncRoute: typeof AdminScheduleSyncRoute
   AdminSettingsRoute: typeof AdminSettingsRoute
   AdminSponsorsRoute: typeof AdminSponsorsRoute
   AdminIndexRoute: typeof AdminIndexRoute
@@ -1169,6 +1210,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminRidersRoute: AdminRidersRoute,
   AdminRoomingRoute: AdminRoomingRoute,
   AdminRosterRoute: AdminRosterRoute,
+  AdminScheduleSyncRoute: AdminScheduleSyncRoute,
   AdminSettingsRoute: AdminSettingsRoute,
   AdminSponsorsRoute: AdminSponsorsRoute,
   AdminIndexRoute: AdminIndexRoute,
@@ -1248,6 +1290,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksNotificationClickRoute: ApiPublicHooksNotificationClickRoute,
   ApiPublicHooksNotificationCronRoute: ApiPublicHooksNotificationCronRoute,
   ApiPublicHooksRoomingSheetSyncRoute: ApiPublicHooksRoomingSheetSyncRoute,
+  ApiPublicHooksScheduleSyncRoute: ApiPublicHooksScheduleSyncRoute,
   ApiPublicHooksWhatsappRoute: ApiPublicHooksWhatsappRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
   LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
