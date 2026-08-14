@@ -128,6 +128,7 @@ export default function VillageMapEditorGeo({
   onSelect: (id: string) => void;
   onDrawn: (points: ZonePoint[]) => void;
   onCancelDraw: () => void;
+  onCancelPlace?: () => void;
   onZoneChange: (id: string, points: ZonePoint[]) => void;
   onSelectZone: (id: string | null) => void;
   onRenameZone?: (id: string, name: string) => void;
