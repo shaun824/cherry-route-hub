@@ -139,29 +139,76 @@ export function polylineKm(coords: LatLngAlt[]): number {
   return m / 1000;
 }
 
-/**
- * Total climb in metres, computed from altitude values in the coords. Applies a
- * small threshold (1.5m) to filter GPS noise. Returns null if no altitude data.
- */
-export function polylineElevationGainM(coords: LatLngAlt[]): number | null {
-  // Some exports carry a literal 0 altitude for every point — treat that as
-  // "no elevation data" so callers fall back to a terrain lookup.
-  const hasAlt = coords.some((c) => typeof c[2] === "number" && Number.isFinite(c[2]) && c[2] !== 0);
-  if (!hasAlt) return null;
+/** Smoothing window (metres, each side) and climb threshold used everywhere. */
+export const ELEV_SMOOTH_WINDOW_M = 100;
+export const ELEV_GAIN_THRESHOLD_M = 5;
 
-  let gain = 0;
-  let last: number | null = null;
-  for (const c of coords) {
-    const alt = c[2];
-    if (typeof alt !== "number" || !Number.isFinite(alt)) continue;
-    if (last !== null) {
-      const d = alt - last;
-      if (d > 1.5) gain += d;
+/**
+ * Distance-weighted moving average of an elevation series. GPS/DEM altitudes in
+ * KML files jitter by a few metres per point, which inflates raw climb totals —
+ * smoothing over ~100m of route removes the noise but keeps real hills.
+ */
+export function smoothElevations(elevations: number[], cumulativeM: number[]): number[] {
+  const out: number[] = [];
+  let lo = 0;
+  let hi = 0;
+  let sum = 0;
+  for (let i = 0; i < elevations.length; i++) {
+    while (cumulativeM[i] - cumulativeM[lo] > ELEV_SMOOTH_WINDOW_M) {
+      sum -= elevations[lo];
+      lo++;
     }
-    last = alt;
+    if (hi < lo) {
+      hi = lo;
+      sum = elevations[lo];
+    }
+    if (i === 0) {
+      sum = elevations[0];
+      hi = 0;
+    }
+    while (hi + 1 < elevations.length && cumulativeM[hi + 1] - cumulativeM[i] <= ELEV_SMOOTH_WINDOW_M) {
+      hi++;
+      sum += elevations[hi];
+    }
+    out.push(sum / (hi - lo + 1));
+  }
+  return out;
+}
+
+/** Total climb (m) from an already-smoothed elevation series. */
+export function gainFromSeries(elevations: number[]): number {
+  let gain = 0;
+  let last = elevations[0];
+  for (let i = 1; i < elevations.length; i++) {
+    const d = elevations[i] - last;
+    if (d > ELEV_GAIN_THRESHOLD_M) {
+      gain += d;
+      last = elevations[i];
+    } else if (d < -ELEV_GAIN_THRESHOLD_M) {
+      last = elevations[i];
+    }
   }
   return Math.round(gain);
 }
+
+/**
+ * Total climb in metres computed from the altitudes in the route file itself,
+ * smoothed over distance so the number matches the elevation profile chart.
+ * Returns null if the file carries no altitude data.
+ */
+export function polylineElevationGainM(coords: LatLngAlt[]): number | null {
+  const usable = coords.filter((c) => typeof c[2] === "number" && Number.isFinite(c[2]));
+  const hasAlt = usable.some((c) => c[2] !== 0);
+  if (!hasAlt || usable.length < 2) return null;
+
+  const cumulative: number[] = [0];
+  for (let i = 1; i < usable.length; i++) {
+    cumulative.push(cumulative[i - 1] + haversineMeters(usable[i - 1], usable[i]));
+  }
+  const smoothed = smoothElevations(usable.map((c) => c[2] as number), cumulative);
+  return gainFromSeries(smoothed);
+}
+
 
 /** Bounds as [[south, west], [north, east]] for Leaflet fitBounds. */
 export function boundsFromCoords(coords: LatLngAlt[]): [[number, number], [number, number]] | null {
