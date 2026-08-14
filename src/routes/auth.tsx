@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { Info, HelpCircle } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
@@ -7,6 +7,7 @@ import { lovable } from "@/integrations/lovable/index";
 import { supabase } from "@/integrations/supabase/client";
 import { lookupEntryEmail } from "@/lib/id-lookup.functions";
 import { checkAccountExists } from "@/lib/account-check.functions";
+import { linkMyEntry } from "@/lib/roster.functions";
 
 import { useSession } from "@/lib/auth";
 import { BrandMark } from "@/components/ui-bits";
@@ -14,12 +15,19 @@ import { BrandMark } from "@/components/ui-bits";
 
 const searchSchema = z.object({ next: z.string().optional() });
 
+/** Where we stash the ID number until a session exists (email confirmation flow). */
+const PENDING_ID_KEY = "rce:pending-id-link";
+
 export const Route = createFileRoute("/auth")({
   validateSearch: searchSchema,
   head: () => ({
     meta: [
-      { title: "Sign in · Red Cherry Events" },
-      { name: "description", content: "Sign in to Red Cherry Events with Google or your Entry Ninja email address." },
+      { title: "Create your Rider Hub account · Red Cherry Events" },
+      {
+        name: "description",
+        content:
+          "Create a Red Cherry Events Rider Hub account with your ID number to link your Entry Ninja entries, or sign in if you already have one.",
+      },
       { name: "robots", content: "noindex,nofollow" },
     ],
   }),
@@ -35,24 +43,63 @@ function AuthPage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
-  const [mode, setMode] = useState<Mode>("signin");
+  const [mode, setMode] = useState<Mode>("signup");
+  const [fullName, setFullName] = useState("");
+  const [idNumber, setIdNumber] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [noAccount, setNoAccount] = useState(false);
   const [hasEntries, setHasEntries] = useState(false);
   const checkAccount = useServerFn(checkAccountExists);
+  const linkEntry = useServerFn(linkMyEntry);
+  const linkedRef = useRef(false);
 
 
   const target = next && next.startsWith("/") ? next : "/";
 
+  // Once a session exists, claim any entries matching the ID number they gave
+  // at sign-up, then continue into the app.
   useEffect(() => {
-    if (!loading && user) navigate({ to: target, replace: true });
-  }, [loading, user, target, navigate]);
+    if (loading || !user) return;
+    if (linkedRef.current) {
+      return;
+    }
+    linkedRef.current = true;
+    const pending = (() => {
+      try {
+        return localStorage.getItem(PENDING_ID_KEY);
+      } catch {
+        return null;
+      }
+    })();
+    const go = () => navigate({ to: target, replace: true });
+    if (!pending) {
+      go();
+      return;
+    }
+    void linkEntry({ data: { id_number: pending } })
+      .catch(() => null)
+      .finally(() => {
+        try {
+          localStorage.removeItem(PENDING_ID_KEY);
+        } catch {
+          /* ignore */
+        }
+        go();
+      });
+  }, [loading, user, target, navigate, linkEntry]);
 
   async function handleGoogle() {
     setBusy(true);
     setError(null);
     setNotice(null);
+    if (mode === "signup" && idNumber.trim().length >= 4) {
+      try {
+        localStorage.setItem(PENDING_ID_KEY, idNumber.trim());
+      } catch {
+        /* ignore */
+      }
+    }
     const result = await lovable.auth.signInWithOAuth("google", {
       redirect_uri: window.location.origin + "/auth",
     });
@@ -79,14 +126,24 @@ function AuthPage() {
         if (err) throw err;
         setNotice("Check your inbox for a password reset link.");
       } else if (mode === "signup") {
+        try {
+          localStorage.setItem(PENDING_ID_KEY, idNumber.trim());
+        } catch {
+          /* ignore */
+        }
         const { data, error: err } = await supabase.auth.signUp({
           email: email.trim(),
           password,
-          options: { emailRedirectTo: window.location.origin },
+          options: {
+            emailRedirectTo: window.location.origin,
+            data: { full_name: fullName.trim() },
+          },
         });
         if (err) throw err;
         if (!data.session) {
-          setNotice("Almost there — check your email to confirm your account, then sign in.");
+          setNotice(
+            "Almost there — check your email to confirm your account, then sign in and we'll link your entries.",
+          );
         }
       } else {
         const { error: err } = await supabase.auth.signInWithPassword({
@@ -118,6 +175,7 @@ function AuthPage() {
     }
   }
 
+  const isSignup = mode === "signup";
 
   return (
     <div className="grid min-h-screen place-items-center bg-secondary/40 px-6 py-10">
@@ -125,16 +183,20 @@ function AuthPage() {
         <div className="flex flex-col items-center text-center">
           <BrandMark size={56} />
           <p className="mt-3 text-[11px] font-bold uppercase tracking-[0.18em] text-ink-soft">Red Cherry Events</p>
-          <h1 className="font-display text-2xl font-bold">Sign in to the Rider Hub</h1>
+          <h1 className="font-display text-2xl font-bold">
+            {isSignup ? "Create your Rider Hub account" : mode === "reset" ? "Reset your password" : "Sign in"}
+          </h1>
         </div>
 
-        <div className="mt-4 flex gap-2 rounded-2xl bg-accent/60 p-3 text-left ring-1 ring-border">
-          <Info className="mt-0.5 h-4 w-4 shrink-0 text-cherry" />
-          <p className="text-[12px] leading-snug text-ink">
-            <span className="font-bold">Use the same details you entered with on Entry Ninja.</span>{" "}
-            Matching your Entry Ninja email is how we link you to your events.
-          </p>
-        </div>
+        {isSignup ? (
+          <div className="mt-4 flex gap-2 rounded-2xl bg-accent/60 p-3 text-left ring-1 ring-border">
+            <Info className="mt-0.5 h-4 w-4 shrink-0 text-cherry" />
+            <p className="text-[12px] leading-snug text-ink">
+              <span className="font-bold">New here? Create an account — it takes a minute.</span> Use your
+              ID number and the email you entered with on Entry Ninja so we can link your events.
+            </p>
+          </div>
+        ) : null}
 
         <button
           onClick={handleGoogle}
@@ -142,7 +204,7 @@ function AuthPage() {
           className="mt-4 flex w-full items-center justify-center gap-3 rounded-xl border border-border bg-white px-4 py-3 text-sm font-semibold text-ink shadow-sm transition hover:bg-secondary disabled:opacity-60"
         >
           <GoogleIcon />
-          Continue with Google
+          {isSignup ? "Sign up with Google" : "Continue with Google"}
         </button>
 
         <div className="my-4 flex items-center gap-3">
@@ -152,6 +214,47 @@ function AuthPage() {
         </div>
 
         <form onSubmit={handleEmail} className="space-y-3" method="post" action="#">
+          {isSignup ? (
+            <>
+              <label className="block">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-ink-soft">Full name</span>
+                <input
+                  required
+                  id="full-name"
+                  name="name"
+                  type="text"
+                  autoComplete="name"
+                  maxLength={120}
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  placeholder="Name and surname"
+                  className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                />
+              </label>
+              <label className="block">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-ink-soft">
+                  ID / passport number
+                </span>
+                <input
+                  required
+                  id="id-number"
+                  name="id-number"
+                  type="text"
+                  inputMode="numeric"
+                  minLength={4}
+                  maxLength={50}
+                  value={idNumber}
+                  onChange={(e) => setIdNumber(e.target.value)}
+                  placeholder="As entered on Entry Ninja"
+                  className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                />
+                <span className="mt-1 block text-[11px] leading-snug text-ink-soft">
+                  This is how we match you to your Entry Ninja entries.
+                </span>
+              </label>
+            </>
+          ) : null}
+
           <label className="block">
             <span className="text-[11px] font-bold uppercase tracking-wider text-ink-soft">Email</span>
             <input
@@ -172,11 +275,11 @@ function AuthPage() {
               <span className="text-[11px] font-bold uppercase tracking-wider text-ink-soft">Password</span>
               <input
                 required
-                id={mode === "signup" ? "new-password" : "current-password"}
+                id={isSignup ? "new-password" : "current-password"}
                 name="password"
                 type="password"
                 minLength={6}
-                autoComplete={mode === "signup" ? "new-password" : "current-password"}
+                autoComplete={isSignup ? "new-password" : "current-password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
@@ -193,7 +296,7 @@ function AuthPage() {
           >
             {busy
               ? "Please wait…"
-              : mode === "signup"
+              : isSignup
                 ? "Create account"
                 : mode === "reset"
                   ? "Send reset link"
@@ -208,7 +311,7 @@ function AuthPage() {
               Your Entry Ninja email and password only work on Entry Ninja. Create a Rider Hub
               account with this email — {hasEntries
                 ? "we can already see entries under it, so your events will link up automatically."
-                : "then link your entries using your ID number if your events don't appear."}
+                : "your ID number will link your entries."}
             </p>
             <button
               type="button"
@@ -232,22 +335,33 @@ function AuthPage() {
           </p>
         ) : null}
 
-        <div className="mt-4 flex items-center justify-between text-[11px] font-semibold text-ink-soft">
-          {mode === "signin" ? (
-            <>
-              <button type="button" className="underline" onClick={() => { setMode("signup"); setError(null); setNotice(null); }}>
-                Create an account
-              </button>
+        {isSignup ? (
+          <p className="mt-4 border-t border-border pt-3 text-center text-[11px] font-semibold text-ink-soft">
+            Already have an account?{" "}
+            <button
+              type="button"
+              className="font-bold text-cherry underline"
+              onClick={() => { setMode("signin"); setError(null); setNotice(null); }}
+            >
+              Sign in
+            </button>
+          </p>
+        ) : (
+          <div className="mt-4 flex items-center justify-between text-[11px] font-semibold text-ink-soft">
+            <button type="button" className="underline" onClick={() => { setMode("signup"); setError(null); setNotice(null); }}>
+              ← Create an account
+            </button>
+            {mode === "signin" ? (
               <button type="button" className="underline" onClick={() => { setMode("reset"); setError(null); setNotice(null); }}>
                 Forgot password?
               </button>
-            </>
-          ) : (
-            <button type="button" className="underline" onClick={() => { setMode("signin"); setError(null); setNotice(null); }}>
-              ← Back to sign in
-            </button>
-          )}
-        </div>
+            ) : (
+              <button type="button" className="underline" onClick={() => { setMode("signin"); setError(null); setNotice(null); }}>
+                Back to sign in
+              </button>
+            )}
+          </div>
+        )}
 
         <FindMyEmail />
 
@@ -261,6 +375,7 @@ function AuthPage() {
     </div>
   );
 }
+
 
 function FindMyEmail() {
   const lookup = useServerFn(lookupEntryEmail);
