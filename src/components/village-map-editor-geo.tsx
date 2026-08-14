@@ -254,6 +254,28 @@ export default function VillageMapEditorGeo({
                   ) : null}
                 </Polygon>
 
+                {/* invisible fat hitbox so small zones stay tappable */}
+                {!locked ? (
+                  <Polygon
+                    positions={z.points.map((p) => [p.lat, p.lng]) as [number, number][]}
+                    interactive
+                    bubblingMouseEvents={false}
+                    pathOptions={{
+                      color: "#000",
+                      weight: 26,
+                      opacity: 0,
+                      fillOpacity: 0,
+                      className: "rce-zone-hit",
+                    }}
+                    eventHandlers={{
+                      click: (e) => {
+                        L.DomEvent.stopPropagation(e as unknown as Event);
+                        onSelectZone(z.id);
+                      },
+                    }}
+                  />
+                ) : null}
+
 
 
                 {active && c ? (
