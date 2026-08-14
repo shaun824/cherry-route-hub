@@ -5,6 +5,7 @@ import { useSession } from "@/lib/auth";
 import { Footer } from "@/components/footer";
 import { BrandMark } from "@/components/ui-bits";
 import { FeedbackWidget } from "@/components/feedback-widget";
+import { InstallAppPrompt } from "@/components/install-app-prompt";
 
 const tabs = [
   { to: "/", label: "Home", icon: Home, match: (p: string) => p === "/" },
@@ -161,6 +162,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </ul>
       </nav>
 
+      <InstallAppPrompt />
       <FeedbackWidget />
     </div>
   );
