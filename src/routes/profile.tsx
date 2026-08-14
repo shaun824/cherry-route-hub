@@ -240,6 +240,11 @@ function Profile() {
         </div>
       </form>
 
+      <div className="mt-4">
+        <NotificationSettings />
+      </div>
+
+
       <style>{`
         .input {
           width: 100%;

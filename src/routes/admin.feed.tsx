@@ -3,6 +3,8 @@ import { useMemo, useState } from "react";
 import { Plus, Pencil, Trash2, X, Pin, PinOff, ArrowUp, ArrowDown, Clock } from "lucide-react";
 import { useAdminStore, newId } from "@/lib/store";
 import type { FeedPost } from "@/lib/mock-data";
+import { toast } from "sonner";
+import { sendNotification } from "@/lib/notifications.functions";
 
 export const Route = createFileRoute("/admin/feed")({
   component: AdminFeed,
@@ -235,6 +237,7 @@ function PostEditor({
   const [publishMode, setPublishMode] = useState<"now" | "schedule">(
     new Date(value.postedAt).getTime() > Date.now() ? "schedule" : "now",
   );
+  const [notify, setNotify] = useState(!value.title);
 
   function update<K extends keyof FeedPost>(k: K, v: FeedPost[K]) {
     setForm((f) => ({ ...f, [k]: v }));
@@ -248,6 +251,22 @@ function PostEditor({
       ...form,
       postedAt: publishMode === "now" ? new Date().toISOString() : form.postedAt,
     };
+    if (notify && publishMode === "now") {
+      void sendNotification({
+        data: {
+          title: final.title.slice(0, 80),
+          body: final.body.replace(/\s+/g, " ").slice(0, 300),
+          url: "/feed",
+          audience: "all",
+          urgent: false,
+          whatsapp: false,
+          kind: "news",
+          source: "feed",
+        },
+      })
+        .then((r) => toast.success(`Post alert sent to ${r.delivered} device${r.delivered === 1 ? "" : "s"}`))
+        .catch((e: any) => toast.error(e?.message ?? "Post saved, but the alert failed"));
+    }
     onSave(final);
   };
 
@@ -336,6 +355,23 @@ function PostEditor({
               <p className="text-[11px] text-ink-soft">Posts immediately with the current time.</p>
             )}
           </div>
+
+          {publishMode === "now" ? (
+            <label className="flex items-start gap-2 rounded-xl border border-border p-3 text-sm font-semibold">
+              <input
+                type="checkbox"
+                checked={notify}
+                onChange={(e) => setNotify(e.target.checked)}
+                className="mt-1 h-4 w-4 accent-[oklch(0.55_0.23_25)]"
+              />
+              <span>
+                Send a push notification
+                <span className="block text-[11px] font-normal text-ink-soft">
+                  Alerts every rider who opted in to news updates.
+                </span>
+              </span>
+            </label>
+          ) : null}
 
           <label className="flex items-center gap-2 text-sm font-semibold">
             <input

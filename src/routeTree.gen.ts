@@ -31,6 +31,7 @@ import { Route as AdminRosterRouteImport } from './routes/admin.roster'
 import { Route as AdminRoomingRouteImport } from './routes/admin.rooming'
 import { Route as AdminRidersRouteImport } from './routes/admin.riders'
 import { Route as AdminPromosRouteImport } from './routes/admin.promos'
+import { Route as AdminNotificationsRouteImport } from './routes/admin.notifications'
 import { Route as AdminMessagesRouteImport } from './routes/admin.messages'
 import { Route as AdminMerchandiseRouteImport } from './routes/admin.merchandise'
 import { Route as AdminKnowledgeRouteImport } from './routes/admin.knowledge'
@@ -47,6 +48,8 @@ import { Route as EventsEventIdEnterRouteImport } from './routes/events.$eventId
 import { Route as AdminVillageEventIdRouteImport } from './routes/admin.village.$eventId'
 import { Route as AdminEventInfoEventIdRouteImport } from './routes/admin.event-info.$eventId'
 import { Route as ApiPublicHooksWhatsappRouteImport } from './routes/api/public/hooks/whatsapp'
+import { Route as ApiPublicHooksNotificationCronRouteImport } from './routes/api/public/hooks/notification-cron'
+import { Route as ApiPublicHooksNotificationClickRouteImport } from './routes/api/public/hooks/notification-click'
 import { Route as ApiPublicHooksNewsSyncRouteImport } from './routes/api/public/hooks/news-sync'
 import { Route as ApiPublicHooksFaqSuggestRouteImport } from './routes/api/public/hooks/faq-suggest'
 import { Route as ApiPublicHooksEventBotRefreshRouteImport } from './routes/api/public/hooks/event-bot-refresh'
@@ -162,6 +165,11 @@ const AdminPromosRoute = AdminPromosRouteImport.update({
   path: '/promos',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminNotificationsRoute = AdminNotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminMessagesRoute = AdminMessagesRouteImport.update({
   id: '/messages',
   path: '/messages',
@@ -242,6 +250,18 @@ const ApiPublicHooksWhatsappRoute = ApiPublicHooksWhatsappRouteImport.update({
   path: '/api/public/hooks/whatsapp',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicHooksNotificationCronRoute =
+  ApiPublicHooksNotificationCronRouteImport.update({
+    id: '/api/public/hooks/notification-cron',
+    path: '/api/public/hooks/notification-cron',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicHooksNotificationClickRoute =
+  ApiPublicHooksNotificationClickRouteImport.update({
+    id: '/api/public/hooks/notification-click',
+    path: '/api/public/hooks/notification-click',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksNewsSyncRoute = ApiPublicHooksNewsSyncRouteImport.update({
   id: '/api/public/hooks/news-sync',
   path: '/api/public/hooks/news-sync',
@@ -284,6 +304,7 @@ export interface FileRoutesByFullPath {
   '/admin/knowledge': typeof AdminKnowledgeRoute
   '/admin/merchandise': typeof AdminMerchandiseRoute
   '/admin/messages': typeof AdminMessagesRoute
+  '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/promos': typeof AdminPromosRoute
   '/admin/riders': typeof AdminRidersRoute
   '/admin/rooming': typeof AdminRoomingRoute
@@ -308,6 +329,8 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/event-bot-refresh': typeof ApiPublicHooksEventBotRefreshRoute
   '/api/public/hooks/faq-suggest': typeof ApiPublicHooksFaqSuggestRoute
   '/api/public/hooks/news-sync': typeof ApiPublicHooksNewsSyncRoute
+  '/api/public/hooks/notification-click': typeof ApiPublicHooksNotificationClickRoute
+  '/api/public/hooks/notification-cron': typeof ApiPublicHooksNotificationCronRoute
   '/api/public/hooks/whatsapp': typeof ApiPublicHooksWhatsappRoute
 }
 export interface FileRoutesByTo {
@@ -326,6 +349,7 @@ export interface FileRoutesByTo {
   '/admin/knowledge': typeof AdminKnowledgeRoute
   '/admin/merchandise': typeof AdminMerchandiseRoute
   '/admin/messages': typeof AdminMessagesRoute
+  '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/promos': typeof AdminPromosRoute
   '/admin/riders': typeof AdminRidersRoute
   '/admin/rooming': typeof AdminRoomingRoute
@@ -349,6 +373,8 @@ export interface FileRoutesByTo {
   '/api/public/hooks/event-bot-refresh': typeof ApiPublicHooksEventBotRefreshRoute
   '/api/public/hooks/faq-suggest': typeof ApiPublicHooksFaqSuggestRoute
   '/api/public/hooks/news-sync': typeof ApiPublicHooksNewsSyncRoute
+  '/api/public/hooks/notification-click': typeof ApiPublicHooksNotificationClickRoute
+  '/api/public/hooks/notification-cron': typeof ApiPublicHooksNotificationCronRoute
   '/api/public/hooks/whatsapp': typeof ApiPublicHooksWhatsappRoute
 }
 export interface FileRoutesById {
@@ -370,6 +396,7 @@ export interface FileRoutesById {
   '/admin/knowledge': typeof AdminKnowledgeRoute
   '/admin/merchandise': typeof AdminMerchandiseRoute
   '/admin/messages': typeof AdminMessagesRoute
+  '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/promos': typeof AdminPromosRoute
   '/admin/riders': typeof AdminRidersRoute
   '/admin/rooming': typeof AdminRoomingRoute
@@ -394,6 +421,8 @@ export interface FileRoutesById {
   '/api/public/hooks/event-bot-refresh': typeof ApiPublicHooksEventBotRefreshRoute
   '/api/public/hooks/faq-suggest': typeof ApiPublicHooksFaqSuggestRoute
   '/api/public/hooks/news-sync': typeof ApiPublicHooksNewsSyncRoute
+  '/api/public/hooks/notification-click': typeof ApiPublicHooksNotificationClickRoute
+  '/api/public/hooks/notification-cron': typeof ApiPublicHooksNotificationCronRoute
   '/api/public/hooks/whatsapp': typeof ApiPublicHooksWhatsappRoute
 }
 export interface FileRouteTypes {
@@ -416,6 +445,7 @@ export interface FileRouteTypes {
     | '/admin/knowledge'
     | '/admin/merchandise'
     | '/admin/messages'
+    | '/admin/notifications'
     | '/admin/promos'
     | '/admin/riders'
     | '/admin/rooming'
@@ -440,6 +470,8 @@ export interface FileRouteTypes {
     | '/api/public/hooks/event-bot-refresh'
     | '/api/public/hooks/faq-suggest'
     | '/api/public/hooks/news-sync'
+    | '/api/public/hooks/notification-click'
+    | '/api/public/hooks/notification-cron'
     | '/api/public/hooks/whatsapp'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -458,6 +490,7 @@ export interface FileRouteTypes {
     | '/admin/knowledge'
     | '/admin/merchandise'
     | '/admin/messages'
+    | '/admin/notifications'
     | '/admin/promos'
     | '/admin/riders'
     | '/admin/rooming'
@@ -481,6 +514,8 @@ export interface FileRouteTypes {
     | '/api/public/hooks/event-bot-refresh'
     | '/api/public/hooks/faq-suggest'
     | '/api/public/hooks/news-sync'
+    | '/api/public/hooks/notification-click'
+    | '/api/public/hooks/notification-cron'
     | '/api/public/hooks/whatsapp'
   id:
     | '__root__'
@@ -501,6 +536,7 @@ export interface FileRouteTypes {
     | '/admin/knowledge'
     | '/admin/merchandise'
     | '/admin/messages'
+    | '/admin/notifications'
     | '/admin/promos'
     | '/admin/riders'
     | '/admin/rooming'
@@ -525,6 +561,8 @@ export interface FileRouteTypes {
     | '/api/public/hooks/event-bot-refresh'
     | '/api/public/hooks/faq-suggest'
     | '/api/public/hooks/news-sync'
+    | '/api/public/hooks/notification-click'
+    | '/api/public/hooks/notification-cron'
     | '/api/public/hooks/whatsapp'
   fileRoutesById: FileRoutesById
 }
@@ -546,6 +584,8 @@ export interface RootRouteChildren {
   ApiPublicHooksEventBotRefreshRoute: typeof ApiPublicHooksEventBotRefreshRoute
   ApiPublicHooksFaqSuggestRoute: typeof ApiPublicHooksFaqSuggestRoute
   ApiPublicHooksNewsSyncRoute: typeof ApiPublicHooksNewsSyncRoute
+  ApiPublicHooksNotificationClickRoute: typeof ApiPublicHooksNotificationClickRoute
+  ApiPublicHooksNotificationCronRoute: typeof ApiPublicHooksNotificationCronRoute
   ApiPublicHooksWhatsappRoute: typeof ApiPublicHooksWhatsappRoute
 }
 
@@ -705,6 +745,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminPromosRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/notifications': {
+      id: '/admin/notifications'
+      path: '/notifications'
+      fullPath: '/admin/notifications'
+      preLoaderRoute: typeof AdminNotificationsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/messages': {
       id: '/admin/messages'
       path: '/messages'
@@ -817,6 +864,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksWhatsappRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/notification-cron': {
+      id: '/api/public/hooks/notification-cron'
+      path: '/api/public/hooks/notification-cron'
+      fullPath: '/api/public/hooks/notification-cron'
+      preLoaderRoute: typeof ApiPublicHooksNotificationCronRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/notification-click': {
+      id: '/api/public/hooks/notification-click'
+      path: '/api/public/hooks/notification-click'
+      fullPath: '/api/public/hooks/notification-click'
+      preLoaderRoute: typeof ApiPublicHooksNotificationClickRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/news-sync': {
       id: '/api/public/hooks/news-sync'
       path: '/api/public/hooks/news-sync'
@@ -856,6 +917,7 @@ interface AdminRouteChildren {
   AdminKnowledgeRoute: typeof AdminKnowledgeRoute
   AdminMerchandiseRoute: typeof AdminMerchandiseRoute
   AdminMessagesRoute: typeof AdminMessagesRoute
+  AdminNotificationsRoute: typeof AdminNotificationsRoute
   AdminPromosRoute: typeof AdminPromosRoute
   AdminRidersRoute: typeof AdminRidersRoute
   AdminRoomingRoute: typeof AdminRoomingRoute
@@ -877,6 +939,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminKnowledgeRoute: AdminKnowledgeRoute,
   AdminMerchandiseRoute: AdminMerchandiseRoute,
   AdminMessagesRoute: AdminMessagesRoute,
+  AdminNotificationsRoute: AdminNotificationsRoute,
   AdminPromosRoute: AdminPromosRoute,
   AdminRidersRoute: AdminRidersRoute,
   AdminRoomingRoute: AdminRoomingRoute,
@@ -952,6 +1015,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksEventBotRefreshRoute: ApiPublicHooksEventBotRefreshRoute,
   ApiPublicHooksFaqSuggestRoute: ApiPublicHooksFaqSuggestRoute,
   ApiPublicHooksNewsSyncRoute: ApiPublicHooksNewsSyncRoute,
+  ApiPublicHooksNotificationClickRoute: ApiPublicHooksNotificationClickRoute,
+  ApiPublicHooksNotificationCronRoute: ApiPublicHooksNotificationCronRoute,
   ApiPublicHooksWhatsappRoute: ApiPublicHooksWhatsappRoute,
 }
 export const routeTree = rootRouteImport

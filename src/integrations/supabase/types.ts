@@ -943,6 +943,145 @@ export type Database = {
         }
         Relationships: []
       }
+      notification_deliveries: {
+        Row: {
+          channel: string
+          clicked_at: string | null
+          created_at: string
+          error: string | null
+          id: string
+          notification_id: string
+          status: string
+          subscription_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          channel?: string
+          clicked_at?: string | null
+          created_at?: string
+          error?: string | null
+          id?: string
+          notification_id: string
+          status?: string
+          subscription_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          channel?: string
+          clicked_at?: string | null
+          created_at?: string
+          error?: string | null
+          id?: string
+          notification_id?: string
+          status?: string
+          subscription_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_deliveries_notification_id_fkey"
+            columns: ["notification_id"]
+            isOneToOne: false
+            referencedRelation: "notifications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notification_preferences: {
+        Row: {
+          event_reminders: boolean
+          news: boolean
+          safety: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          event_reminders?: boolean
+          news?: boolean
+          safety?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          event_reminders?: boolean
+          news?: boolean
+          safety?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      notifications: {
+        Row: {
+          audience: string
+          batch: string | null
+          body: string
+          channels: string[]
+          clicked_count: number
+          created_by: string | null
+          dedupe_key: string | null
+          delivered_count: number
+          event_id: string | null
+          failed_count: number
+          id: string
+          image_url: string | null
+          recipients_count: number
+          sent_at: string
+          source: string
+          title: string
+          urgent: boolean
+          url: string | null
+        }
+        Insert: {
+          audience?: string
+          batch?: string | null
+          body: string
+          channels?: string[]
+          clicked_count?: number
+          created_by?: string | null
+          dedupe_key?: string | null
+          delivered_count?: number
+          event_id?: string | null
+          failed_count?: number
+          id?: string
+          image_url?: string | null
+          recipients_count?: number
+          sent_at?: string
+          source?: string
+          title: string
+          urgent?: boolean
+          url?: string | null
+        }
+        Update: {
+          audience?: string
+          batch?: string | null
+          body?: string
+          channels?: string[]
+          clicked_count?: number
+          created_by?: string | null
+          dedupe_key?: string | null
+          delivered_count?: number
+          event_id?: string | null
+          failed_count?: number
+          id?: string
+          image_url?: string | null
+          recipients_count?: number
+          sent_at?: string
+          source?: string
+          title?: string
+          urgent?: boolean
+          url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       packing_checklist_state: {
         Row: {
           checked: boolean
@@ -1059,6 +1198,42 @@ export type Database = {
           title?: string
           updated_at?: string
           url?: string | null
+        }
+        Relationships: []
+      }
+      push_subscriptions: {
+        Row: {
+          auth: string
+          created_at: string
+          endpoint: string
+          failure_count: number
+          id: string
+          last_seen_at: string
+          p256dh: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          auth: string
+          created_at?: string
+          endpoint: string
+          failure_count?: number
+          id?: string
+          last_seen_at?: string
+          p256dh: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          auth?: string
+          created_at?: string
+          endpoint?: string
+          failure_count?: number
+          id?: string
+          last_seen_at?: string
+          p256dh?: string
+          user_agent?: string | null
+          user_id?: string
         }
         Relationships: []
       }
