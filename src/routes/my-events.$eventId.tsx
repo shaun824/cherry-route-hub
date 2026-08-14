@@ -605,6 +605,16 @@ function InfoPanel({
         entryUrl={event.entry_ninja_url ?? event.website_url ?? null}
       />
 
+      {eventPromosFor(eventName).map((promo) => (
+        <section key={promo.id}>
+          <SectionTitle>Rider offer</SectionTitle>
+          <div className="mt-2">
+            <PromoCodeCard promo={promo} />
+          </div>
+        </section>
+      ))}
+
+
       {aboutText ? (
         <section>
           <SectionTitle>About</SectionTitle>
@@ -640,15 +650,6 @@ function InfoPanel({
           </div>
         </section>
       ) : null}
-
-      {eventPromosFor(eventName).map((promo) => (
-        <section key={promo.id}>
-          <SectionTitle>Rider offer</SectionTitle>
-          <div className="mt-2">
-            <PromoCodeCard promo={promo} />
-          </div>
-        </section>
-      ))}
 
 
       <section>

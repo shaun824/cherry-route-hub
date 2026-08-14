@@ -19,7 +19,7 @@ export const GREEN_MOTION_PROMO: EventPromo = {
   title: "15% off your car or van rental",
   blurb:
     "Getting to the event? Riders get 15% off Green Motion rentals — quote the code when you book.",
-  code: "REDCHERRY15",
+  code: "RCE15",
   discount: "15%",
   url: "https://www.greenmotion.com/",
   logoUrl: gm.url,
