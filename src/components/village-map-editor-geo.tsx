@@ -108,6 +108,7 @@ export default function VillageMapEditorGeo({
   onSelect,
   onDrawn,
   onCancelDraw,
+  onCancelPlace,
   onZoneChange,
   onSelectZone,
   onRenameZone,
