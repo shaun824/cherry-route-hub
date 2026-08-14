@@ -16,16 +16,18 @@ import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as MyEventsRouteImport } from './routes/my-events'
 import { Route as GalleryRouteImport } from './routes/gallery'
 import { Route as FeedRouteImport } from './routes/feed'
-import { Route as CrewRouteImport } from './routes/crew'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as MyEventsIndexRouteImport } from './routes/my-events.index'
 import { Route as EventsIndexRouteImport } from './routes/events.index'
+import { Route as CrewIndexRouteImport } from './routes/crew.index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as SpectateEventIdRouteImport } from './routes/spectate.$eventId'
 import { Route as MyEventsEventIdRouteImport } from './routes/my-events.$eventId'
 import { Route as EventsEventIdRouteImport } from './routes/events.$eventId'
+import { Route as CrewRoomingRouteImport } from './routes/crew.rooming'
+import { Route as CrewLoginRouteImport } from './routes/crew.login'
 import { Route as AdminSponsorsRouteImport } from './routes/admin.sponsors'
 import { Route as AdminSettingsRouteImport } from './routes/admin.settings'
 import { Route as AdminRosterRouteImport } from './routes/admin.roster'
@@ -99,11 +101,6 @@ const FeedRoute = FeedRouteImport.update({
   path: '/feed',
   getParentRoute: () => rootRouteImport,
 } as any)
-const CrewRoute = CrewRouteImport.update({
-  id: '/crew',
-  path: '/crew',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
@@ -129,6 +126,11 @@ const EventsIndexRoute = EventsIndexRouteImport.update({
   path: '/events/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CrewIndexRoute = CrewIndexRouteImport.update({
+  id: '/crew/',
+  path: '/crew/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -147,6 +149,16 @@ const MyEventsEventIdRoute = MyEventsEventIdRouteImport.update({
 const EventsEventIdRoute = EventsEventIdRouteImport.update({
   id: '/events/$eventId',
   path: '/events/$eventId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CrewRoomingRoute = CrewRoomingRouteImport.update({
+  id: '/crew/rooming',
+  path: '/crew/rooming',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CrewLoginRoute = CrewLoginRouteImport.update({
+  id: '/crew/login',
+  path: '/crew/login',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminSponsorsRoute = AdminSponsorsRouteImport.update({
@@ -347,7 +359,6 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
   '/auth': typeof AuthRoute
-  '/crew': typeof CrewRoute
   '/feed': typeof FeedRoute
   '/gallery': typeof GalleryRoute
   '/my-events': typeof MyEventsRouteWithChildren
@@ -371,10 +382,13 @@ export interface FileRoutesByFullPath {
   '/admin/roster': typeof AdminRosterRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/sponsors': typeof AdminSponsorsRoute
+  '/crew/login': typeof CrewLoginRoute
+  '/crew/rooming': typeof CrewRoomingRoute
   '/events/$eventId': typeof EventsEventIdRouteWithChildren
   '/my-events/$eventId': typeof MyEventsEventIdRoute
   '/spectate/$eventId': typeof SpectateEventIdRoute
   '/admin/': typeof AdminIndexRoute
+  '/crew/': typeof CrewIndexRoute
   '/events/': typeof EventsIndexRoute
   '/my-events/': typeof MyEventsIndexRoute
   '/admin/event-info/$eventId': typeof AdminEventInfoEventIdRoute
@@ -402,7 +416,6 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
-  '/crew': typeof CrewRoute
   '/feed': typeof FeedRoute
   '/gallery': typeof GalleryRoute
   '/profile': typeof ProfileRoute
@@ -425,9 +438,12 @@ export interface FileRoutesByTo {
   '/admin/roster': typeof AdminRosterRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/sponsors': typeof AdminSponsorsRoute
+  '/crew/login': typeof CrewLoginRoute
+  '/crew/rooming': typeof CrewRoomingRoute
   '/my-events/$eventId': typeof MyEventsEventIdRoute
   '/spectate/$eventId': typeof SpectateEventIdRoute
   '/admin': typeof AdminIndexRoute
+  '/crew': typeof CrewIndexRoute
   '/events': typeof EventsIndexRoute
   '/my-events': typeof MyEventsIndexRoute
   '/admin/event-info/$eventId': typeof AdminEventInfoEventIdRoute
@@ -457,7 +473,6 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
   '/auth': typeof AuthRoute
-  '/crew': typeof CrewRoute
   '/feed': typeof FeedRoute
   '/gallery': typeof GalleryRoute
   '/my-events': typeof MyEventsRouteWithChildren
@@ -481,10 +496,13 @@ export interface FileRoutesById {
   '/admin/roster': typeof AdminRosterRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/sponsors': typeof AdminSponsorsRoute
+  '/crew/login': typeof CrewLoginRoute
+  '/crew/rooming': typeof CrewRoomingRoute
   '/events/$eventId': typeof EventsEventIdRouteWithChildren
   '/my-events/$eventId': typeof MyEventsEventIdRoute
   '/spectate/$eventId': typeof SpectateEventIdRoute
   '/admin/': typeof AdminIndexRoute
+  '/crew/': typeof CrewIndexRoute
   '/events/': typeof EventsIndexRoute
   '/my-events/': typeof MyEventsIndexRoute
   '/admin/event-info/$eventId': typeof AdminEventInfoEventIdRoute
@@ -515,7 +533,6 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/auth'
-    | '/crew'
     | '/feed'
     | '/gallery'
     | '/my-events'
@@ -539,10 +556,13 @@ export interface FileRouteTypes {
     | '/admin/roster'
     | '/admin/settings'
     | '/admin/sponsors'
+    | '/crew/login'
+    | '/crew/rooming'
     | '/events/$eventId'
     | '/my-events/$eventId'
     | '/spectate/$eventId'
     | '/admin/'
+    | '/crew/'
     | '/events/'
     | '/my-events/'
     | '/admin/event-info/$eventId'
@@ -570,7 +590,6 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
-    | '/crew'
     | '/feed'
     | '/gallery'
     | '/profile'
@@ -593,9 +612,12 @@ export interface FileRouteTypes {
     | '/admin/roster'
     | '/admin/settings'
     | '/admin/sponsors'
+    | '/crew/login'
+    | '/crew/rooming'
     | '/my-events/$eventId'
     | '/spectate/$eventId'
     | '/admin'
+    | '/crew'
     | '/events'
     | '/my-events'
     | '/admin/event-info/$eventId'
@@ -624,7 +646,6 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/auth'
-    | '/crew'
     | '/feed'
     | '/gallery'
     | '/my-events'
@@ -648,10 +669,13 @@ export interface FileRouteTypes {
     | '/admin/roster'
     | '/admin/settings'
     | '/admin/sponsors'
+    | '/crew/login'
+    | '/crew/rooming'
     | '/events/$eventId'
     | '/my-events/$eventId'
     | '/spectate/$eventId'
     | '/admin/'
+    | '/crew/'
     | '/events/'
     | '/my-events/'
     | '/admin/event-info/$eventId'
@@ -681,7 +705,6 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRouteWithChildren
   AuthRoute: typeof AuthRoute
-  CrewRoute: typeof CrewRoute
   FeedRoute: typeof FeedRoute
   GalleryRoute: typeof GalleryRoute
   MyEventsRoute: typeof MyEventsRouteWithChildren
@@ -689,7 +712,10 @@ export interface RootRouteChildren {
   PromosRoute: typeof PromosRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   SpectateRoute: typeof SpectateRouteWithChildren
+  CrewLoginRoute: typeof CrewLoginRoute
+  CrewRoomingRoute: typeof CrewRoomingRoute
   EventsEventIdRoute: typeof EventsEventIdRouteWithChildren
+  CrewIndexRoute: typeof CrewIndexRoute
   EventsIndexRoute: typeof EventsIndexRoute
   MyEventsEventIdReportRoute: typeof MyEventsEventIdReportRoute
   ApiPublicHooksContentAuditRoute: typeof ApiPublicHooksContentAuditRoute
@@ -757,13 +783,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FeedRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/crew': {
-      id: '/crew'
-      path: '/crew'
-      fullPath: '/crew'
-      preLoaderRoute: typeof CrewRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/auth': {
       id: '/auth'
       path: '/auth'
@@ -799,6 +818,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EventsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/crew/': {
+      id: '/crew/'
+      path: '/crew'
+      fullPath: '/crew/'
+      preLoaderRoute: typeof CrewIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/': {
       id: '/admin/'
       path: '/'
@@ -825,6 +851,20 @@ declare module '@tanstack/react-router' {
       path: '/events/$eventId'
       fullPath: '/events/$eventId'
       preLoaderRoute: typeof EventsEventIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/crew/rooming': {
+      id: '/crew/rooming'
+      path: '/crew/rooming'
+      fullPath: '/crew/rooming'
+      preLoaderRoute: typeof CrewRoomingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/crew/login': {
+      id: '/crew/login'
+      path: '/crew/login'
+      fullPath: '/crew/login'
+      preLoaderRoute: typeof CrewLoginRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/sponsors': {
@@ -1187,7 +1227,6 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRouteWithChildren,
   AuthRoute: AuthRoute,
-  CrewRoute: CrewRoute,
   FeedRoute: FeedRoute,
   GalleryRoute: GalleryRoute,
   MyEventsRoute: MyEventsRouteWithChildren,
@@ -1195,7 +1234,10 @@ const rootRouteChildren: RootRouteChildren = {
   PromosRoute: PromosRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   SpectateRoute: SpectateRouteWithChildren,
+  CrewLoginRoute: CrewLoginRoute,
+  CrewRoomingRoute: CrewRoomingRoute,
   EventsEventIdRoute: EventsEventIdRouteWithChildren,
+  CrewIndexRoute: CrewIndexRoute,
   EventsIndexRoute: EventsIndexRoute,
   MyEventsEventIdReportRoute: MyEventsEventIdReportRoute,
   ApiPublicHooksContentAuditRoute: ApiPublicHooksContentAuditRoute,
