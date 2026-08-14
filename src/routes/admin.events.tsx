@@ -627,6 +627,36 @@ function EventEditor({
     setForm((f) => ({ ...f, [k]: v }));
   }
 
+  async function normalizeMapInput(raw: string) {
+    const value = raw.trim();
+    if (!value) return;
+    const point = coordsFromMapInput(value);
+    if (point) {
+      update("mapQuery", `${point.lat},${point.lng}`);
+      setMapMessage(`Pin set at ${point.lat.toFixed(6)}, ${point.lng.toFixed(6)}.`);
+      return;
+    }
+    if (!isShortMapLink(value)) {
+      setMapMessage("Venue saved as an address or full Google Maps link.");
+      return;
+    }
+    setResolvingMap(true);
+    setMapMessage("Checking Google Maps link…");
+    try {
+      const result = await resolveLink({ data: { url: value } });
+      if (result.ok && typeof result.lat === "number" && typeof result.lng === "number") {
+        update("mapQuery", `${result.lat},${result.lng}`);
+        setMapMessage(`Pin set at ${result.lat.toFixed(6)}, ${result.lng.toFixed(6)}.`);
+      } else {
+        setMapMessage(result.ok ? "Google did not return a location for that link." : result.error);
+      }
+    } catch {
+      setMapMessage("Could not open that Google Maps link. Paste coordinates instead.");
+    } finally {
+      setResolvingMap(false);
+    }
+  }
+
   const addScheduleItem = (dayId?: string) =>
     update("schedule", [
       ...form.schedule,
@@ -871,6 +901,7 @@ function EventEditor({
                 update("mapQuery", e.target.value);
                 setMapMessage(null);
               }}
+              onBlur={(e) => void normalizeMapInput(e.target.value)}
               placeholder={'Address, Google Maps link, or 33°23\'05.4"S 25°54\'38.3"E'}
             />
             <div className="mt-2 flex flex-wrap gap-2">
@@ -894,30 +925,7 @@ function EventEditor({
                     'Paste a Google Maps share link or coordinates such as 33°23\'05.4"S 25°54\'38.3"E',
                   );
                   if (!url) return;
-                  const point = coordsFromMapInput(url);
-                  if (point) {
-                    update("mapQuery", `${point.lat},${point.lng}`);
-                    setMapMessage(`Pin set at ${point.lat.toFixed(6)}, ${point.lng.toFixed(6)}.`);
-                    return;
-                  }
-                  setResolvingMap(true);
-                  setMapMessage("Checking Google Maps link…");
-                  try {
-                    const result = await resolveLink({ data: { url } });
-                    if (result.ok && typeof result.lat === "number" && typeof result.lng === "number") {
-                      update("mapQuery", `${result.lat},${result.lng}`);
-                      setMapMessage(`Pin set at ${result.lat.toFixed(6)}, ${result.lng.toFixed(6)}.`);
-                    } else if (result.ok && !isShortMapLink(url)) {
-                      update("mapQuery", result.url);
-                      setMapMessage("Google Maps link saved.");
-                    } else {
-                      setMapMessage(result.ok ? "Google did not return a location for that link." : result.error);
-                    }
-                  } catch {
-                    setMapMessage("Could not open that Google Maps link. Paste coordinates instead.");
-                  } finally {
-                    setResolvingMap(false);
-                  }
+                  await normalizeMapInput(url);
                 }}
                 className="rounded-md border border-border bg-background px-2.5 py-1.5 text-[11px] font-semibold hover:bg-surface disabled:opacity-60"
               >
