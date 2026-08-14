@@ -211,7 +211,7 @@ function MyEventDetail() {
           </section>
         )}
 
-        {tab === "packing" && <PackingPanel eventId={event.id} userId={user?.id ?? null} />}
+        {tab === "packing" && <PackingPanel eventId={event.id} userId={user?.id ?? null} event={event} />}
         {tab === "chat" && <ChatPanel eventId={event.id} userId={user?.id ?? null} />}
         {tab === "ask" && <AskAdminPanel eventId={event.id} userId={user?.id ?? null} eventName={event.name} />}
         {tab === "sponsors" && <EventSponsorsPanel eventId={event.id} eventName={event.name} />}
