@@ -494,6 +494,7 @@ function VillageEditor() {
               onSelect={setSelected}
               onDrawn={addDrawnZone}
               onCancelDraw={() => setDrawing(false)}
+              onCancelPlace={() => setPlacing(false)}
               onZoneChange={(id, points) => updateZone(id, { points })}
               onSelectZone={setSelectedZone}
               onRenameZone={(id, name) => updateZone(id, { name })}

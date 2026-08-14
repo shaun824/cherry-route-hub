@@ -108,6 +108,7 @@ export default function VillageMapEditorGeo({
   onSelect,
   onDrawn,
   onCancelDraw,
+  onCancelPlace,
   onZoneChange,
   onSelectZone,
   onRenameZone,
@@ -127,6 +128,7 @@ export default function VillageMapEditorGeo({
   onSelect: (id: string) => void;
   onDrawn: (points: ZonePoint[]) => void;
   onCancelDraw: () => void;
+  onCancelPlace?: () => void;
   onZoneChange: (id: string, points: ZonePoint[]) => void;
   onSelectZone: (id: string | null) => void;
   onRenameZone?: (id: string, name: string) => void;
@@ -151,6 +153,14 @@ export default function VillageMapEditorGeo({
       setCursor(null);
     }
   }, [drawing]);
+
+  const locked = placing || drawing;
+
+  // Editing areas is disabled in add-pin / draw modes — drop any selection.
+  useEffect(() => {
+    if (locked && selectedZone) onSelectZone(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [locked]);
 
   const draftPreview = cursor && draft.length > 0 ? [...draft, cursor] : draft;
   const liveEdge =
@@ -193,7 +203,7 @@ export default function VillageMapEditorGeo({
 
           {/* saved zones */}
           {zones.map((z) => {
-            const active = selectedZone === z.id;
+            const active = selectedZone === z.id && !locked;
             const clash = overlapping.has(z.id);
             const c = zoneCentroid(z);
             return (
@@ -335,6 +345,33 @@ export default function VillageMapEditorGeo({
         </button>
       </div>
 
+      {locked ? (
+        <div className="absolute inset-x-3 bottom-14 z-[500] flex justify-center">
+          <div className="flex max-w-full flex-wrap items-center justify-center gap-2 rounded-xl bg-ink/90 px-3 py-2 text-[11px] font-bold text-white shadow-lg backdrop-blur">
+            <span>
+              {placing ? "Add point mode" : "Draw area mode"} — area editing is locked.
+            </span>
+            <span className="font-semibold opacity-80">
+              {placing
+                ? "Click the map to drop a point, then exit to edit areas."
+                : "Finish or cancel the outline to edit areas again."}
+            </span>
+            <button
+              type="button"
+              onClick={() => {
+                if (placing) onCancelPlace?.();
+                else {
+                  setDraft([]);
+                  onCancelDraw();
+                }
+              }}
+              className="rounded-lg bg-white/15 px-2 py-1 ring-1 ring-white/30"
+            >
+              Exit {placing ? "add point" : "draw"} mode
+            </button>
+          </div>
+        </div>
+      ) : null}
 
       {drawing ? (
         <div className="pointer-events-none absolute inset-x-0 top-3 z-[500] flex justify-center px-3">
@@ -372,7 +409,7 @@ export default function VillageMapEditorGeo({
             </button>
           </div>
         </div>
-      ) : activeZone ? (
+      ) : activeZone && !locked ? (
         <div className="pointer-events-none absolute inset-x-0 top-3 z-[500] flex justify-center px-3">
           <div className="pointer-events-auto flex max-w-full flex-wrap items-center gap-2 rounded-xl bg-card/95 px-3 py-2 shadow-lg ring-1 ring-border backdrop-blur">
             <input
