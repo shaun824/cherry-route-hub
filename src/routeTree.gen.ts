@@ -45,6 +45,7 @@ import { Route as EventsEventIdMapRouteImport } from './routes/events.$eventId.m
 import { Route as EventsEventIdEnterRouteImport } from './routes/events.$eventId.enter'
 import { Route as AdminVillageEventIdRouteImport } from './routes/admin.village.$eventId'
 import { Route as AdminEventInfoEventIdRouteImport } from './routes/admin.event-info.$eventId'
+import { Route as ApiPublicHooksWhatsappRouteImport } from './routes/api/public/hooks/whatsapp'
 import { Route as ApiPublicHooksNewsSyncRouteImport } from './routes/api/public/hooks/news-sync'
 import { Route as ApiPublicHooksEventBotRefreshRouteImport } from './routes/api/public/hooks/event-bot-refresh'
 import { Route as ApiPublicHooksEntryNinjaSyncRouteImport } from './routes/api/public/hooks/entry-ninja-sync'
@@ -229,6 +230,11 @@ const AdminEventInfoEventIdRoute = AdminEventInfoEventIdRouteImport.update({
   path: '/event-info/$eventId',
   getParentRoute: () => AdminRoute,
 } as any)
+const ApiPublicHooksWhatsappRoute = ApiPublicHooksWhatsappRouteImport.update({
+  id: '/api/public/hooks/whatsapp',
+  path: '/api/public/hooks/whatsapp',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicHooksNewsSyncRoute = ApiPublicHooksNewsSyncRouteImport.update({
   id: '/api/public/hooks/news-sync',
   path: '/api/public/hooks/news-sync',
@@ -287,6 +293,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/entry-ninja-sync': typeof ApiPublicHooksEntryNinjaSyncRoute
   '/api/public/hooks/event-bot-refresh': typeof ApiPublicHooksEventBotRefreshRoute
   '/api/public/hooks/news-sync': typeof ApiPublicHooksNewsSyncRoute
+  '/api/public/hooks/whatsapp': typeof ApiPublicHooksWhatsappRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -325,6 +332,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/entry-ninja-sync': typeof ApiPublicHooksEntryNinjaSyncRoute
   '/api/public/hooks/event-bot-refresh': typeof ApiPublicHooksEventBotRefreshRoute
   '/api/public/hooks/news-sync': typeof ApiPublicHooksNewsSyncRoute
+  '/api/public/hooks/whatsapp': typeof ApiPublicHooksWhatsappRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -367,6 +375,7 @@ export interface FileRoutesById {
   '/api/public/hooks/entry-ninja-sync': typeof ApiPublicHooksEntryNinjaSyncRoute
   '/api/public/hooks/event-bot-refresh': typeof ApiPublicHooksEventBotRefreshRoute
   '/api/public/hooks/news-sync': typeof ApiPublicHooksNewsSyncRoute
+  '/api/public/hooks/whatsapp': typeof ApiPublicHooksWhatsappRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -410,6 +419,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/entry-ninja-sync'
     | '/api/public/hooks/event-bot-refresh'
     | '/api/public/hooks/news-sync'
+    | '/api/public/hooks/whatsapp'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -448,6 +458,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/entry-ninja-sync'
     | '/api/public/hooks/event-bot-refresh'
     | '/api/public/hooks/news-sync'
+    | '/api/public/hooks/whatsapp'
   id:
     | '__root__'
     | '/'
@@ -489,6 +500,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/entry-ninja-sync'
     | '/api/public/hooks/event-bot-refresh'
     | '/api/public/hooks/news-sync'
+    | '/api/public/hooks/whatsapp'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -508,6 +520,7 @@ export interface RootRouteChildren {
   ApiPublicHooksEntryNinjaSyncRoute: typeof ApiPublicHooksEntryNinjaSyncRoute
   ApiPublicHooksEventBotRefreshRoute: typeof ApiPublicHooksEventBotRefreshRoute
   ApiPublicHooksNewsSyncRoute: typeof ApiPublicHooksNewsSyncRoute
+  ApiPublicHooksWhatsappRoute: typeof ApiPublicHooksWhatsappRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -764,6 +777,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminEventInfoEventIdRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/api/public/hooks/whatsapp': {
+      id: '/api/public/hooks/whatsapp'
+      path: '/api/public/hooks/whatsapp'
+      fullPath: '/api/public/hooks/whatsapp'
+      preLoaderRoute: typeof ApiPublicHooksWhatsappRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/news-sync': {
       id: '/api/public/hooks/news-sync'
       path: '/api/public/hooks/news-sync'
@@ -889,6 +909,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksEntryNinjaSyncRoute: ApiPublicHooksEntryNinjaSyncRoute,
   ApiPublicHooksEventBotRefreshRoute: ApiPublicHooksEventBotRefreshRoute,
   ApiPublicHooksNewsSyncRoute: ApiPublicHooksNewsSyncRoute,
+  ApiPublicHooksWhatsappRoute: ApiPublicHooksWhatsappRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
