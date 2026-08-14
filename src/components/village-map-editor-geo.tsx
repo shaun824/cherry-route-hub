@@ -76,6 +76,20 @@ function Centre({ lat, lng, token }: { lat: number; lng: number; token: number }
   return null;
 }
 
+// Frames all drawn areas / pins on first load so tiny tent clusters aren't a
+// 5px dot you can't tap.
+function FitToContent({ points, token }: { points: ZonePoint[]; token: number }) {
+  const map = useMap();
+  useEffect(() => {
+    if (points.length === 0) return;
+    const bounds = L.latLngBounds(points.map((p) => [p.lat, p.lng] as [number, number]));
+    map.fitBounds(bounds.pad(0.4), { maxZoom: 21 });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [map, token]);
+  return null;
+}
+
+
 export default function VillageMapEditorGeo({
   centre,
   centreToken,
