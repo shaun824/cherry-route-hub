@@ -4,6 +4,7 @@ import { PageHeader } from "@/components/ui-bits";
 import { supabase } from "@/integrations/supabase/client";
 import { useSession, signOut } from "@/lib/auth";
 import { LogOut, Save, User as UserIcon, ShieldAlert } from "lucide-react";
+import { NotificationSettings } from "@/components/notification-settings";
 
 export const Route = createFileRoute("/profile")({
   head: () => ({
