@@ -67,6 +67,7 @@ import { LockedSection } from "@/components/locked-section";
 import { buildMapEmbedSrc, buildMapLink } from "@/lib/map-embed";
 import { PaymentStatusCard } from "@/components/payment-status-card";
 import { brandHeader } from "@/lib/event-brand";
+import { EventLogo } from "@/components/event-logo";
 import { EventPhotosPanel } from "@/components/event-photos-panel";
 import { FeedPostBody } from "@/components/feed-post-body";
 
@@ -77,7 +78,7 @@ export const Route = createFileRoute("/my-events/$eventId")({
   loader: async ({ params }) => {
     const { data, error } = await supabase
       .from("events")
-      .select("id, name, discipline, event_date, location, map_query, distance_km, description, hero_color, days, schedule, social_links, status, entry_ninja_url, website_url")
+      .select("id, name, discipline, event_date, location, map_query, distance_km, description, hero_color, logo_url, days, schedule, social_links, status, entry_ninja_url, website_url")
       .eq("id", params.eventId)
       .maybeSingle();
     if (error || !data) throw notFound();
