@@ -64,6 +64,7 @@ import { TypeBadge } from "@/components/ui-bits";
 
 import { TrackerPanel } from "@/components/tracker-panel";
 import { LockedSection } from "@/components/locked-section";
+import { buildMapEmbedSrc, buildMapLink } from "@/lib/map-embed";
 import { PaymentStatusCard } from "@/components/payment-status-card";
 import { brandHeader } from "@/lib/event-brand";
 import { EventPhotosPanel } from "@/components/event-photos-panel";
@@ -682,12 +683,24 @@ function InfoPanel({
             event.location ||
             "";
 
-          if (!venue) return <EmptyBlock>Venue details will appear here.</EmptyBlock>;
-          const q = encodeURIComponent(venue);
+          const embedSrc = buildMapEmbedSrc({
+            mapUrl: info?.map_embed_url,
+            lat: info?.venue_lat,
+            lng: info?.venue_lng,
+            address: venue,
+          });
+          if (!venue && !embedSrc) return <EmptyBlock>Venue details will appear here.</EmptyBlock>;
+          const mapLink =
+            buildMapLink({
+              mapUrl: info?.map_embed_url,
+              lat: info?.venue_lat,
+              lng: info?.venue_lng,
+              address: venue,
+            }) ?? "https://www.google.com/maps";
           return (
             <div className="mt-2 overflow-hidden rounded-xl bg-card ring-1 ring-border">
               <a
-                href={`https://www.google.com/maps/search/?api=1&query=${q}`}
+                href={mapLink}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="block"
@@ -695,7 +708,7 @@ function InfoPanel({
               >
                 <iframe
                   title="Venue map"
-                  src={`https://www.google.com/maps?q=${q}&output=embed`}
+                  src={embedSrc ?? ""}
                   className="pointer-events-none h-44 w-full"
                   loading="lazy"
                   referrerPolicy="no-referrer-when-downgrade"
@@ -710,7 +723,7 @@ function InfoPanel({
                   <p className="mt-2 text-xs text-ink-soft">{info.parking_notes}</p>
                 ) : null}
                 <a
-                  href={`https://www.google.com/maps/search/?api=1&query=${q}`}
+                  href={mapLink}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="mt-3 inline-block rounded-lg bg-ink px-3 py-1.5 text-xs font-semibold text-white"
