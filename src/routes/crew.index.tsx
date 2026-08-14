@@ -172,24 +172,86 @@ function CrewDashboard() {
 
       <section className="rounded-2xl bg-card p-4 shadow-sm ring-1 ring-border">
         <h2 className="flex items-center gap-1.5 font-display text-sm font-bold text-ink">
-          <CalendarDays className="h-4 w-4 text-cherry" /> {today.title}
+          <CalendarDays className="h-4 w-4 text-cherry" /> Crew plan
         </h2>
-        {today.items.length ? (
-          <ul className="mt-2 divide-y divide-border">
-            {today.items.map((it, i) => (
-              <li key={i} className="flex gap-3 py-2">
-                <span className="w-14 shrink-0 font-display text-sm font-bold text-cherry">{it.time}</span>
-                <span className="text-sm text-ink">
-                  {it.label}
-                  {it.details ? <span className="block text-[11px] text-ink-soft">{it.details}</span> : null}
-                </span>
-              </li>
+
+        {dayGroups.length > 1 ? (
+          <div className="-mx-1 mt-3 flex gap-1.5 overflow-x-auto px-1 pb-1">
+            {dayGroups.map((d) => (
+              <button
+                key={d.id}
+                type="button"
+                onClick={() => setDayId(d.id)}
+                className={`shrink-0 rounded-full px-3 py-1.5 text-[11px] font-bold transition ${
+                  d.id === activeDay?.id
+                    ? "bg-cherry text-white"
+                    : "bg-surface text-ink-soft ring-1 ring-border"
+                }`}
+              >
+                {d.label}
+              </button>
             ))}
-          </ul>
+          </div>
+        ) : null}
+
+        {activeDay ? (
+          <>
+            <div className="mt-3 grid grid-cols-2 gap-1 rounded-full bg-surface p-1 ring-1 ring-border">
+              {(["crew", "riders"] as const).map((v) => (
+                <button
+                  key={v}
+                  type="button"
+                  onClick={() => setView(v)}
+                  className={`rounded-full py-1.5 text-[11px] font-bold transition ${
+                    view === v ? "bg-card text-ink shadow-sm" : "text-ink-soft"
+                  }`}
+                >
+                  {v === "crew" ? "Crew timeline" : "Rider running order"}
+                </button>
+              ))}
+            </div>
+
+            {view === "riders" ? (
+              <ul className="mt-2 divide-y divide-border">
+                {activeDay.items.map((it, i) => (
+                  <li key={i} className="flex gap-3 py-2">
+                    <span className="w-14 shrink-0 font-display text-sm font-bold text-cherry">{it.time}</span>
+                    <span className="text-sm text-ink">
+                      {it.label}
+                      {it.details ? <span className="block text-[11px] text-ink-soft">{it.details}</span> : null}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <ol className="mt-2 divide-y divide-border">
+                {crewTasks.map((t, i) => (
+                  <li key={i} className="flex gap-3 py-2.5">
+                    <span className="w-14 shrink-0 font-display text-sm font-bold text-cherry">{t.time}</span>
+                    <span className="min-w-0 text-sm text-ink">
+                      <span className="font-semibold">{t.label}</span>
+                      <span className="ml-1.5 rounded-full bg-surface px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-ink-soft ring-1 ring-border">
+                        {t.role}
+                      </span>
+                      {t.detail ? <span className="block text-[11px] text-ink-soft">{t.detail}</span> : null}
+                      {t.anchor ? (
+                        <span className="block text-[11px] text-ink-soft">For: {t.anchor}</span>
+                      ) : null}
+                    </span>
+                  </li>
+                ))}
+              </ol>
+            )}
+            <p className="mt-2 text-[11px] text-ink-soft">
+              Crew times are worked back from the published running order and update automatically whenever the
+              schedule changes.
+            </p>
+          </>
         ) : (
           <p className="mt-2 text-sm text-ink-soft">No running order loaded for this event yet.</p>
         )}
       </section>
+
 
       <section className="grid gap-2 sm:grid-cols-2">
         <Tile
