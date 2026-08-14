@@ -79,6 +79,8 @@ function AdminAnalytics() {
     return all.filter((r) => !staffSessions.has(r.session_id));
   }, [data, adminsQ.data]);
   const views = rows.filter((r) => r.event_name === "pageview");
+  const exits = rows.filter((r) => r.event_name === "page_exit" && (r.duration_ms ?? 0) > 0);
+
 
 
   const sessions = new Set(views.map((r) => r.session_id));
