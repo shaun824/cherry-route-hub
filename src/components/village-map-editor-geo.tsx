@@ -9,14 +9,11 @@ import { spotColor, spotIcon, type VillageHotspot } from "@/lib/village-map";
 import { villageIconSvg } from "@/lib/village-icons";
 import {
   distanceM,
-  formatArea,
   formatLength,
   moveZone,
-  zoneAreaM2,
   zoneCentroid,
   zoneColor,
   zonePerimeterM,
-  zoneSizeM,
   type VillageZone,
   type ZonePoint,
 } from "@/lib/village-zones";
@@ -127,7 +124,6 @@ export default function VillageMapEditorGeo({
   const draftPreview = cursor && draft.length > 0 ? [...draft, cursor] : draft;
   const liveEdge =
     cursor && draft.length > 0 ? distanceM(draft[draft.length - 1], cursor) : 0;
-  const draftArea = draft.length > 2 ? zoneAreaM2({ id: "d", name: "", points: draft }) : 0;
 
   return (
     <div className="relative">
@@ -166,7 +162,6 @@ export default function VillageMapEditorGeo({
             const active = selectedZone === z.id;
             const clash = overlapping.has(z.id);
             const c = zoneCentroid(z);
-            const size = zoneSizeM(z);
             return (
               <Fragment key={z.id}>
                 <Polygon
@@ -263,9 +258,7 @@ export default function VillageMapEditorGeo({
             <span className="text-ink-soft">
               {draft.length === 0
                 ? "Click the map to start the outline"
-                : `${draft.length} point${draft.length === 1 ? "" : "s"} · edge ${formatLength(liveEdge)}${
-                    draftArea > 0 ? ` · ${formatArea(draftArea)}` : ""
-                  }`}
+                : `${draft.length} point${draft.length === 1 ? "" : "s"} · edge ${formatLength(liveEdge)}`}
             </span>
             <button
               onClick={() => setDraft((d) => d.slice(0, -1))}
