@@ -172,6 +172,8 @@ export default function VillageMapEditorGeo({
               <Fragment key={z.id}>
                 <Polygon
                   positions={z.points.map((p) => [p.lat, p.lng]) as [number, number][]}
+                  interactive={!placing && !drawing}
+                  bubblingMouseEvents={false}
                   pathOptions={{
                     color: clash ? "#dc2626" : zoneColor(z),
                     weight: active ? 4 : 2,
@@ -179,14 +181,26 @@ export default function VillageMapEditorGeo({
                     fillColor: zoneColor(z),
                     fillOpacity: active ? 0.3 : 0.18,
                   }}
-                  eventHandlers={{ click: () => onSelectZone(active ? null : z.id) }}
+                  eventHandlers={{
+                    click: (e) => {
+                      L.DomEvent.stopPropagation(e as unknown as Event);
+                      if (placing || drawing) return;
+                      onSelectZone(z.id);
+                    },
+                  }}
                 >
                   {showLabels ? (
-                    <Tooltip direction="center" permanent className="rce-zone-label">
+                    <Tooltip
+                      direction="center"
+                      permanent
+                      interactive={false}
+                      className="rce-zone-label"
+                    >
                       <span style={{ fontWeight: 800 }}>{z.name}</span>
                     </Tooltip>
                   ) : null}
                 </Polygon>
+
 
                 {active && c ? (
                   <>
