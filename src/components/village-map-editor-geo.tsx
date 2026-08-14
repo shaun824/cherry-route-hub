@@ -154,6 +154,14 @@ export default function VillageMapEditorGeo({
     }
   }, [drawing]);
 
+  const locked = placing || drawing;
+
+  // Editing areas is disabled in add-pin / draw modes — drop any selection.
+  useEffect(() => {
+    if (locked && selectedZone) onSelectZone(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [locked]);
+
   const draftPreview = cursor && draft.length > 0 ? [...draft, cursor] : draft;
   const liveEdge =
     cursor && draft.length > 0 ? distanceM(draft[draft.length - 1], cursor) : 0;
