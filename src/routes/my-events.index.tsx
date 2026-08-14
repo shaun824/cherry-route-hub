@@ -9,6 +9,7 @@ import { linkMyEntry, getMyEntrant } from "@/lib/roster.functions";
 import { useServerFn } from "@tanstack/react-start";
 import { UpcomingBySport } from "@/components/upcoming-by-sport";
 import { brandHeader } from "@/lib/event-brand";
+import { EventLogo } from "@/components/event-logo";
 
 export const Route = createFileRoute("/my-events/")({
   component: MyEventsIndex,
@@ -100,10 +101,15 @@ function SignedInState() {
                   style={brandHeader(r.event.hero_color).style}
                   className={`${brandHeader(r.event.hero_color).className} px-4 py-4 text-white`}
                 >
-                  <p className="text-[11px] font-semibold uppercase tracking-widest opacity-85">
-                    {r.event.discipline}
-                  </p>
-                  <p className="font-display text-lg font-bold leading-tight">{r.event.name}</p>
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-[11px] font-semibold uppercase tracking-widest opacity-85">
+                        {r.event.discipline}
+                      </p>
+                      <p className="font-display text-lg font-bold leading-tight">{r.event.name}</p>
+                    </div>
+                    <EventLogo src={r.event.logo_url} name={r.event.name} size="md" onBrand />
+                  </div>
                 </div>
                 <div className="flex items-center justify-between px-4 py-3">
                   <div className="min-w-0">
