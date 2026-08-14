@@ -448,9 +448,18 @@ function RoutesPanel({
 }) {
   const { user, loading } = useSession();
   const locked = !loading && !user;
+  // Route files are for entered riders only.
+  const entryQ = useQuery({
+    queryKey: ["my-event", eventId],
+    queryFn: () => fetchMyEventById(eventId),
+    enabled: !!user,
+  });
+  const isEntrant = !!entryQ.data;
+  const downloadsLocked = locked || (!!user && !entryQ.isLoading && !isEntrant);
   const days: EventDay[] = Array.isArray(event.days) ? (event.days as EventDay[]) : [];
   const allRoutes = days.flatMap((d) => d.routes ?? []);
   const hasMap = allRoutes.some((r) => (r.kmlUrls ?? []).length > 0);
+
 
   if (allRoutes.length === 0) {
     return <EmptyBlock>Routes for this event will be published here soon.</EmptyBlock>;
