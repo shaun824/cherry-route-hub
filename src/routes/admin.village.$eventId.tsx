@@ -483,6 +483,8 @@ function VillageEditor() {
               onCancelDraw={() => setDrawing(false)}
               onZoneChange={(id, points) => updateZone(id, { points })}
               onSelectZone={setSelectedZone}
+              onRenameZone={(id, name) => updateZone(id, { name })}
+              onDuplicateZone={duplicateZone}
             />
           </Suspense>
         </ClientOnly>
