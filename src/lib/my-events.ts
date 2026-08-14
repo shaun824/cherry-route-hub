@@ -31,6 +31,7 @@ export type MyEventRow = {
     distance_km: number;
     status: string;
     hero_color: string | null;
+    logo_url: string | null;
     description: string | null;
     social_links: Record<string, string> | null;
     title_sponsor_name: string | null;
@@ -78,7 +79,7 @@ export async function fetchMyEvents(): Promise<MyEventRow[]> {
   const { data, error } = await supabase
     .from("event_entrants")
     .select(
-      "id, event_id, category, batch, bib_number, registration_ref, jacket_size, tshirt_size, extras, notes, paid, amount_due_cents, amount_paid_cents, event:events(id, name, discipline, event_date, location, distance_km, status, hero_color, description, social_links, title_sponsor_name, title_sponsor_logo_url, title_sponsor_url)",
+      "id, event_id, category, batch, bib_number, registration_ref, jacket_size, tshirt_size, extras, notes, paid, amount_due_cents, amount_paid_cents, event:events(id, name, discipline, event_date, location, distance_km, status, hero_color, logo_url, description, social_links, title_sponsor_name, title_sponsor_logo_url, title_sponsor_url)",
     )
     .in("entrant_id", entrantIds)
     .order("created_at", { ascending: false });

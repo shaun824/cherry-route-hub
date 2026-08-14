@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Bike, ChevronDown, Motorbike } from "lucide-react";
 
 import { formatDate, type Event } from "@/lib/mock-data";
+import { EventLogo } from "@/components/event-logo";
 import { getEventSport } from "@/lib/event-sport";
 import { useAdminStore } from "@/lib/store";
 import { useHydratedStore } from "@/lib/use-hydrated-store";
@@ -110,13 +111,7 @@ function SportGroup({
                 className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-2xl bg-card p-3 ring-1 ring-border active:scale-[0.99] transition-transform"
               >
                 <div className="flex min-w-0 items-center gap-3">
-                  {e.logoUrl ? (
-                    <img
-                      src={e.logoUrl}
-                      alt=""
-                      className="h-11 w-11 shrink-0 rounded-xl bg-secondary object-contain p-1 ring-1 ring-border"
-                    />
-                  ) : (
+                  {e.logoUrl ? null : (
                     <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-accent text-cherry-deep">
                       <Icon className="h-5 w-5" />
                     </span>
@@ -129,7 +124,10 @@ function SportGroup({
                     <p className="mt-1 text-[11px] font-bold text-cherry">{daysAway(e.date)}</p>
                   </div>
                 </div>
-                <span className="text-xs font-semibold text-cherry">View →</span>
+                <div className="flex shrink-0 items-center gap-2">
+                  <span className="hidden text-xs font-semibold text-cherry sm:inline">View →</span>
+                  <EventLogo src={e.logoUrl} name={e.name} size="sm" />
+                </div>
               </Link>
             </li>
           ))}
