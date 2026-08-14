@@ -48,6 +48,8 @@ import { RouteProfile } from "@/components/route-profile";
 
 import { fetchMyRooming } from "@/lib/rooming";
 import { SponsorScroller } from "@/components/sponsor-scroller";
+import { eventPromosFor } from "@/lib/event-promos";
+import { PromoCodeCard } from "@/components/promo-code-card";
 import { curatedSponsorsFor } from "@/lib/event-sponsor-overrides";
 import { eventHasTshirt } from "@/lib/apparel";
 import { useAdminStore } from "@/lib/store";
@@ -638,6 +640,15 @@ function InfoPanel({
           </div>
         </section>
       ) : null}
+
+      {eventPromosFor(eventName).map((promo) => (
+        <section key={promo.id}>
+          <SectionTitle>Rider offer</SectionTitle>
+          <div className="mt-2">
+            <PromoCodeCard promo={promo} />
+          </div>
+        </section>
+      ))}
 
 
       <section>
