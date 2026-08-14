@@ -267,8 +267,17 @@ export default function RouteMapInner({
           zoom={bounds ? undefined : 9}
           style={{ height, width: "100%" }}
           scrollWheelZoom
+          zoomSnap={0}
+          zoomDelta={0.35}
+          wheelPxPerZoomLevel={220}
+          zoomAnimation
+          markerZoomAnimation
+          bounceAtZoomLimits={false}
+          touchZoom
+          doubleClickZoom
           maxZoom={24}
           preferCanvas
+
         >
           <TileLayer
             attribution='&copy; <a href="https://openstreetmap.org">OpenStreetMap</a>'
