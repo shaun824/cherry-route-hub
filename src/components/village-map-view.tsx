@@ -100,8 +100,12 @@ export function VillageMapView({
   }, [map]);
   const hasImage = !!map?.image_url;
   const pinnedCount = (map?.hotspots ?? []).filter(isPinnedSpot).length;
+  const zoneCount = (map?.zones ?? []).length;
+  // Drawn zones are already geographic, so a village with only zones (no image,
+  // no pins) is still a perfectly usable live map.
   const geoReady =
-    hasVenueCentre(map?.geo) && ((hasImage && isPlacedGeo(map?.geo)) || pinnedCount > 0);
+    hasVenueCentre(map?.geo) &&
+    ((hasImage && isPlacedGeo(map?.geo)) || pinnedCount > 0 || zoneCount > 0);
   const focusZone = (map?.zones ?? []).find((z) => z.id === focusZoneId) ?? null;
   const detail = (map?.hotspots ?? []).find((s) => s.id === (selected ?? hovered)) ?? null;
 
@@ -116,6 +120,7 @@ export function VillageMapView({
       </div>
     );
   }
+
 
   const showLive = geoReady && (mode === "live" || !hasImage);
 
