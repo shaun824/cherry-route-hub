@@ -9,13 +9,22 @@ import { sendWhatsAppReply } from "@/lib/whatsapp.functions";
 import { upsertLearnedFaq } from "@/lib/faq-learned.functions";
 
 export const Route = createFileRoute("/admin/messages")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    thread: typeof search.thread === "string" ? search.thread : undefined,
+  }),
   component: AdminMessagesPage,
 });
 
 function AdminMessagesPage() {
   const qc = useQueryClient();
   const { user } = useSession();
-  const [activeThread, setActiveThread] = useState<string | null>(null);
+  const { thread: threadParam } = Route.useSearch();
+  const [activeThread, setActiveThread] = useState<string | null>(threadParam ?? null);
+
+  useEffect(() => {
+    if (threadParam) setActiveThread(threadParam);
+  }, [threadParam]);
+
 
   const threadsQ = useQuery({
     queryKey: ["admin-qa-threads"],
