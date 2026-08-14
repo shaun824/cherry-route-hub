@@ -4,7 +4,9 @@ import { Download, Share, PlusSquare, X } from "lucide-react";
 import { useSession } from "@/lib/auth";
 import { isStandalone } from "@/lib/push-client";
 
-const DISMISS_KEY = "rce.install-prompt-dismissed";
+const DISMISS_KEY = "rce.install-prompt-dismissed-at";
+/** Re-invite riders to install once a day, never once they've installed. */
+const SNOOZE_MS = 24 * 60 * 60 * 1000;
 
 type BipEvent = Event & {
   prompt: () => Promise<void>;
@@ -40,7 +42,8 @@ export function InstallAppPrompt() {
     setMobile(isMobile());
     setIos(isIos());
     setInstalled(isStandalone());
-    setDismissed(window.localStorage.getItem(DISMISS_KEY) === "1");
+    const at = Number(window.localStorage.getItem(DISMISS_KEY) ?? 0);
+    setDismissed(Number.isFinite(at) && Date.now() - at < SNOOZE_MS);
     setReady(true);
 
     const onPrompt = (e: Event) => {
