@@ -33,6 +33,7 @@ import { Route as AdminRidersRouteImport } from './routes/admin.riders'
 import { Route as AdminPromosRouteImport } from './routes/admin.promos'
 import { Route as AdminMessagesRouteImport } from './routes/admin.messages'
 import { Route as AdminMerchandiseRouteImport } from './routes/admin.merchandise'
+import { Route as AdminKnowledgeRouteImport } from './routes/admin.knowledge'
 import { Route as AdminFeedRouteImport } from './routes/admin.feed'
 import { Route as AdminEventsRouteImport } from './routes/admin.events'
 import { Route as AdminEntryNinjaRouteImport } from './routes/admin.entry-ninja'
@@ -171,6 +172,11 @@ const AdminMerchandiseRoute = AdminMerchandiseRouteImport.update({
   path: '/merchandise',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminKnowledgeRoute = AdminKnowledgeRouteImport.update({
+  id: '/knowledge',
+  path: '/knowledge',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminFeedRoute = AdminFeedRouteImport.update({
   id: '/feed',
   path: '/feed',
@@ -275,6 +281,7 @@ export interface FileRoutesByFullPath {
   '/admin/entry-ninja': typeof AdminEntryNinjaRoute
   '/admin/events': typeof AdminEventsRoute
   '/admin/feed': typeof AdminFeedRoute
+  '/admin/knowledge': typeof AdminKnowledgeRoute
   '/admin/merchandise': typeof AdminMerchandiseRoute
   '/admin/messages': typeof AdminMessagesRoute
   '/admin/promos': typeof AdminPromosRoute
@@ -316,6 +323,7 @@ export interface FileRoutesByTo {
   '/admin/entry-ninja': typeof AdminEntryNinjaRoute
   '/admin/events': typeof AdminEventsRoute
   '/admin/feed': typeof AdminFeedRoute
+  '/admin/knowledge': typeof AdminKnowledgeRoute
   '/admin/merchandise': typeof AdminMerchandiseRoute
   '/admin/messages': typeof AdminMessagesRoute
   '/admin/promos': typeof AdminPromosRoute
@@ -359,6 +367,7 @@ export interface FileRoutesById {
   '/admin/entry-ninja': typeof AdminEntryNinjaRoute
   '/admin/events': typeof AdminEventsRoute
   '/admin/feed': typeof AdminFeedRoute
+  '/admin/knowledge': typeof AdminKnowledgeRoute
   '/admin/merchandise': typeof AdminMerchandiseRoute
   '/admin/messages': typeof AdminMessagesRoute
   '/admin/promos': typeof AdminPromosRoute
@@ -404,6 +413,7 @@ export interface FileRouteTypes {
     | '/admin/entry-ninja'
     | '/admin/events'
     | '/admin/feed'
+    | '/admin/knowledge'
     | '/admin/merchandise'
     | '/admin/messages'
     | '/admin/promos'
@@ -445,6 +455,7 @@ export interface FileRouteTypes {
     | '/admin/entry-ninja'
     | '/admin/events'
     | '/admin/feed'
+    | '/admin/knowledge'
     | '/admin/merchandise'
     | '/admin/messages'
     | '/admin/promos'
@@ -487,6 +498,7 @@ export interface FileRouteTypes {
     | '/admin/entry-ninja'
     | '/admin/events'
     | '/admin/feed'
+    | '/admin/knowledge'
     | '/admin/merchandise'
     | '/admin/messages'
     | '/admin/promos'
@@ -707,6 +719,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminMerchandiseRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/knowledge': {
+      id: '/admin/knowledge'
+      path: '/knowledge'
+      fullPath: '/admin/knowledge'
+      preLoaderRoute: typeof AdminKnowledgeRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/feed': {
       id: '/admin/feed'
       path: '/feed'
@@ -834,6 +853,7 @@ interface AdminRouteChildren {
   AdminEntryNinjaRoute: typeof AdminEntryNinjaRoute
   AdminEventsRoute: typeof AdminEventsRoute
   AdminFeedRoute: typeof AdminFeedRoute
+  AdminKnowledgeRoute: typeof AdminKnowledgeRoute
   AdminMerchandiseRoute: typeof AdminMerchandiseRoute
   AdminMessagesRoute: typeof AdminMessagesRoute
   AdminPromosRoute: typeof AdminPromosRoute
@@ -854,6 +874,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminEntryNinjaRoute: AdminEntryNinjaRoute,
   AdminEventsRoute: AdminEventsRoute,
   AdminFeedRoute: AdminFeedRoute,
+  AdminKnowledgeRoute: AdminKnowledgeRoute,
   AdminMerchandiseRoute: AdminMerchandiseRoute,
   AdminMessagesRoute: AdminMessagesRoute,
   AdminPromosRoute: AdminPromosRoute,

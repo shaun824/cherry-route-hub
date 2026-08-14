@@ -54,12 +54,12 @@ function AdminKnowledge() {
 
   const gapsQ = useQuery({
     queryKey: ["bot-gaps"],
-    queryFn: () => gaps({ data: {} }),
+    queryFn: () => gaps(),
     enabled: tab === "gaps",
   });
 
   const suggestM = useMutation({
-    mutationFn: () => runSuggest({ data: {} }),
+    mutationFn: () => runSuggest(),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["learned-faqs"] }),
   });
 
