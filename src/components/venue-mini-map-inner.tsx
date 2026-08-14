@@ -26,6 +26,7 @@ export default function VenueMiniMapInner({
     <MapContainer
       center={[lat, lng]}
       zoom={zoom}
+      maxZoom={24}
       scrollWheelZoom={false}
       dragging={false}
       doubleClickZoom={false}
@@ -33,7 +34,11 @@ export default function VenueMiniMapInner({
       attributionControl={false}
       style={{ height, width: "100%" }}
     >
-      <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+      <TileLayer
+        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        maxZoom={24}
+        maxNativeZoom={19}
+      />
       <Marker position={[lat, lng]} icon={pin} />
     </MapContainer>
   );
