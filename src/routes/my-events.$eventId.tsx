@@ -5,7 +5,7 @@ import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { askEventBot } from "@/lib/event-bot.functions";
 import { fetchEventSponsors } from "@/lib/event-sponsors.functions";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { EventWeatherCard } from "@/components/event-weather";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -113,12 +113,23 @@ export const Route = createFileRoute("/my-events/$eventId")({
   ),
 });
 
+/** Lets the accommodation card jump the page to the village tab, focused. */
+const VillageFocusContext = createContext<(f: { zoneId?: string | null; spotId?: string | null }) => void>(
+  () => {},
+);
+
 type Tab = "info" | "village" | "routes" | "news" | "photos" | "chat" | "ask" | "packing" | "sponsors";
 
 function MyEventDetail() {
   const { event } = Route.useLoaderData();
   const { user } = useSession();
   const [tab, setTab] = useState<Tab>("info");
+  const [villageFocus, setVillageFocus] = useState<{ zoneId?: string | null; spotId?: string | null }>({});
+  const focusVillage = useCallback((f: { zoneId?: string | null; spotId?: string | null }) => {
+    setVillageFocus(f);
+    setTab("village");
+    if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
+  }, []);
   const eventNews = useAdminStore((s) => s.feed).filter((p) => p.eventId === event.id);
   const hasFreshNews = eventNews.some(
     (p) => Date.now() - new Date(p.postedAt).getTime() < 7 * 24 * 60 * 60 * 1000,
@@ -127,6 +138,7 @@ function MyEventDetail() {
 
 
   return (
+    <VillageFocusContext.Provider value={focusVillage}>
     <div>
       <div
         style={brandHeader(event.hero_color).style}
@@ -211,7 +223,11 @@ function MyEventDetail() {
         {tab === "village" && (
           <section className="space-y-3">
             <SectionTitle>Race village</SectionTitle>
-            <VillageMapView eventId={event.id} />
+            <VillageMapView
+              eventId={event.id}
+              focusZoneId={villageFocus.zoneId ?? null}
+              focusSpotId={villageFocus.spotId ?? null}
+            />
           </section>
         )}
         {tab === "routes" && <RoutesPanel eventId={event.id} event={event} />}
@@ -230,6 +246,7 @@ function MyEventDetail() {
 
       </div>
     </div>
+    </VillageFocusContext.Provider>
   );
 }
 
@@ -1608,6 +1625,7 @@ function YourEntryCard({ eventId, entryUrl = null }: { eventId: string; entryUrl
     enabled: signedIn,
   });
   const rooming = roomingQ.data ?? null;
+  const focusVillage = useContext(VillageFocusContext);
 
   if (!signedIn) {
     if (sessionLoading) return <div className="h-32 animate-pulse rounded-2xl bg-secondary" />;
@@ -1735,7 +1753,24 @@ function YourEntryCard({ eventId, entryUrl = null }: { eventId: string; entryUrl
           {rooming.venue?.name ? (
             <p className="text-[11px] text-ink-soft">{rooming.venue.name}</p>
           ) : null}
+          {rooming.location_hint ? (
+            <p className="text-[11px] text-ink-soft">{rooming.location_hint}</p>
+          ) : null}
           {rooming.notes ? <p className="mt-1 text-[11px] text-ink-soft">{rooming.notes}</p> : null}
+          {rooming.village_zone_id || rooming.village_spot_id || rooming.venue?.village_spot_id ? (
+            <button
+              type="button"
+              onClick={() =>
+                focusVillage({
+                  zoneId: rooming.village_zone_id,
+                  spotId: rooming.village_spot_id ?? rooming.venue?.village_spot_id ?? null,
+                })
+              }
+              className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-cherry px-2.5 py-1.5 text-[11px] font-bold text-white"
+            >
+              <MapPin className="h-3.5 w-3.5" /> Show me on the village map
+            </button>
+          ) : null}
         </div>
       ) : null}
 

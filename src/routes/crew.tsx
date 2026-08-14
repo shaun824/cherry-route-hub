@@ -41,6 +41,7 @@ function CrewPage() {
   const [term, setTerm] = useState("");
   const [openId, setOpenId] = useState<string | null>(null);
   const [focusSpot, setFocusSpot] = useState<string | null>(null);
+  const [focusZone, setFocusZone] = useState<string | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
   const mapRef = useRef<HTMLDivElement>(null);
 
@@ -74,7 +75,8 @@ function CrewPage() {
   }, [rows]);
 
   function showOnMap(row: CrewRoomingRow) {
-    setFocusSpot(row.venue?.village_spot_id ?? null);
+    setFocusSpot(row.village_spot_id ?? row.venue?.village_spot_id ?? null);
+    setFocusZone(row.village_zone_id ?? null);
     mapRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
@@ -264,7 +266,7 @@ function CrewPage() {
           <h2 className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest text-ink-soft">
             <MapPin className="h-3.5 w-3.5" /> Village map
           </h2>
-          {eventId ? <VillageMapView eventId={eventId} focusSpotId={focusSpot} /> : null}
+          {eventId ? <VillageMapView eventId={eventId} focusSpotId={focusSpot} focusZoneId={focusZone} /> : null}
         </section>
     </div>
   );

@@ -55,6 +55,7 @@ import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/l
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
 import { Route as ApiPublicHooksWhatsappRouteImport } from './routes/api/public/hooks/whatsapp'
+import { Route as ApiPublicHooksRoomingSheetSyncRouteImport } from './routes/api/public/hooks/rooming-sheet-sync'
 import { Route as ApiPublicHooksNotificationCronRouteImport } from './routes/api/public/hooks/notification-cron'
 import { Route as ApiPublicHooksNotificationClickRouteImport } from './routes/api/public/hooks/notification-click'
 import { Route as ApiPublicHooksNewsSyncRouteImport } from './routes/api/public/hooks/news-sync'
@@ -294,6 +295,12 @@ const ApiPublicHooksWhatsappRoute = ApiPublicHooksWhatsappRouteImport.update({
   path: '/api/public/hooks/whatsapp',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicHooksRoomingSheetSyncRoute =
+  ApiPublicHooksRoomingSheetSyncRouteImport.update({
+    id: '/api/public/hooks/rooming-sheet-sync',
+    path: '/api/public/hooks/rooming-sheet-sync',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksNotificationCronRoute =
   ApiPublicHooksNotificationCronRouteImport.update({
     id: '/api/public/hooks/notification-cron',
@@ -386,6 +393,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/news-sync': typeof ApiPublicHooksNewsSyncRoute
   '/api/public/hooks/notification-click': typeof ApiPublicHooksNotificationClickRoute
   '/api/public/hooks/notification-cron': typeof ApiPublicHooksNotificationCronRoute
+  '/api/public/hooks/rooming-sheet-sync': typeof ApiPublicHooksRoomingSheetSyncRoute
   '/api/public/hooks/whatsapp': typeof ApiPublicHooksWhatsappRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -438,6 +446,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/news-sync': typeof ApiPublicHooksNewsSyncRoute
   '/api/public/hooks/notification-click': typeof ApiPublicHooksNotificationClickRoute
   '/api/public/hooks/notification-cron': typeof ApiPublicHooksNotificationCronRoute
+  '/api/public/hooks/rooming-sheet-sync': typeof ApiPublicHooksRoomingSheetSyncRoute
   '/api/public/hooks/whatsapp': typeof ApiPublicHooksWhatsappRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -494,6 +503,7 @@ export interface FileRoutesById {
   '/api/public/hooks/news-sync': typeof ApiPublicHooksNewsSyncRoute
   '/api/public/hooks/notification-click': typeof ApiPublicHooksNotificationClickRoute
   '/api/public/hooks/notification-cron': typeof ApiPublicHooksNotificationCronRoute
+  '/api/public/hooks/rooming-sheet-sync': typeof ApiPublicHooksRoomingSheetSyncRoute
   '/api/public/hooks/whatsapp': typeof ApiPublicHooksWhatsappRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -551,6 +561,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/news-sync'
     | '/api/public/hooks/notification-click'
     | '/api/public/hooks/notification-cron'
+    | '/api/public/hooks/rooming-sheet-sync'
     | '/api/public/hooks/whatsapp'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -603,6 +614,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/news-sync'
     | '/api/public/hooks/notification-click'
     | '/api/public/hooks/notification-cron'
+    | '/api/public/hooks/rooming-sheet-sync'
     | '/api/public/hooks/whatsapp'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -658,6 +670,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/news-sync'
     | '/api/public/hooks/notification-click'
     | '/api/public/hooks/notification-cron'
+    | '/api/public/hooks/rooming-sheet-sync'
     | '/api/public/hooks/whatsapp'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -686,6 +699,7 @@ export interface RootRouteChildren {
   ApiPublicHooksNewsSyncRoute: typeof ApiPublicHooksNewsSyncRoute
   ApiPublicHooksNotificationClickRoute: typeof ApiPublicHooksNotificationClickRoute
   ApiPublicHooksNotificationCronRoute: typeof ApiPublicHooksNotificationCronRoute
+  ApiPublicHooksRoomingSheetSyncRoute: typeof ApiPublicHooksRoomingSheetSyncRoute
   ApiPublicHooksWhatsappRoute: typeof ApiPublicHooksWhatsappRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
   LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
@@ -1016,6 +1030,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksWhatsappRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/rooming-sheet-sync': {
+      id: '/api/public/hooks/rooming-sheet-sync'
+      path: '/api/public/hooks/rooming-sheet-sync'
+      fullPath: '/api/public/hooks/rooming-sheet-sync'
+      preLoaderRoute: typeof ApiPublicHooksRoomingSheetSyncRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/notification-cron': {
       id: '/api/public/hooks/notification-cron'
       path: '/api/public/hooks/notification-cron'
@@ -1184,6 +1205,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksNewsSyncRoute: ApiPublicHooksNewsSyncRoute,
   ApiPublicHooksNotificationClickRoute: ApiPublicHooksNotificationClickRoute,
   ApiPublicHooksNotificationCronRoute: ApiPublicHooksNotificationCronRoute,
+  ApiPublicHooksRoomingSheetSyncRoute: ApiPublicHooksRoomingSheetSyncRoute,
   ApiPublicHooksWhatsappRoute: ApiPublicHooksWhatsappRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
   LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,

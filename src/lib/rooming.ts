@@ -11,6 +11,11 @@ export type Venue = {
   sort_order: number;
   /** id of the village-map point where this venue sits, so crew can find it */
   village_spot_id: string | null;
+  rooming_sheet_url: string | null;
+  rooming_sheet_range: string | null;
+  rooming_sheet_synced_at: string | null;
+  rooming_sheet_error: string | null;
+  rooming_sheet_rows: number | null;
 };
 
 export type RoomingRow = {
@@ -24,13 +29,16 @@ export type RoomingRow = {
   room_type: string | null;
   notes: string | null;
   location_hint: string | null;
-  venue?: { id: string; name: string; address: string | null } | null;
+  /** id of the drawn village-map area this person sits in */
+  village_zone_id: string | null;
+  village_spot_id: string | null;
+  venue?: { id: string; name: string; address: string | null; village_spot_id: string | null } | null;
 };
 
 export async function fetchVenues(eventId: string): Promise<Venue[]> {
   const { data, error } = await supabase
     .from("event_venues")
-    .select("id, event_id, name, address, notes, sort_order, village_spot_id")
+    .select("id, event_id, name, address, notes, sort_order, village_spot_id, rooming_sheet_url, rooming_sheet_range, rooming_sheet_synced_at, rooming_sheet_error, rooming_sheet_rows")
     .eq("event_id", eventId)
     .order("sort_order", { ascending: true })
     .order("name", { ascending: true });
@@ -45,7 +53,7 @@ export async function fetchRooming(eventId: string): Promise<RoomingRow[]> {
   const { data, error } = await supabase
     .from("event_rooming")
     .select(
-      "id, event_id, venue_id, entrant_id, full_name, email, tent_number, room_type, notes, location_hint, venue:event_venues(id, name, address)",
+      "id, event_id, venue_id, entrant_id, full_name, email, tent_number, room_type, notes, location_hint, village_zone_id, village_spot_id, venue:event_venues(id, name, address, village_spot_id)",
     )
     .eq("event_id", eventId)
     .order("tent_number", { ascending: true });

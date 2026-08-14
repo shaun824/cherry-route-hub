@@ -13,6 +13,8 @@ export type CrewRoomingRow = {
   room_type: string | null;
   notes: string | null;
   location_hint: string | null;
+  village_zone_id: string | null;
+  village_spot_id: string | null;
   venue?: { id: string; name: string; address: string | null; village_spot_id: string | null } | null;
 };
 
@@ -37,7 +39,7 @@ export async function fetchCrewRooming(eventId: string): Promise<CrewRoomingRow[
   const { data, error } = await supabase
     .from("event_rooming")
     .select(
-      "id, event_id, venue_id, full_name, email, tent_number, room_type, notes, location_hint, venue:event_venues(id, name, address, village_spot_id)",
+      "id, event_id, venue_id, full_name, email, tent_number, room_type, notes, location_hint, village_zone_id, village_spot_id, venue:event_venues(id, name, address, village_spot_id)",
     )
     .eq("event_id", eventId)
     .order("full_name", { ascending: true });
