@@ -65,7 +65,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                     }
                   >
                     <Icon className="h-4.5 w-4.5" strokeWidth={active ? 2.4 : 2} />
-                    {t.label}
+                    {"fullLabel" in t ? t.fullLabel : t.label}
                   </Link>
                 </li>
               );
@@ -144,6 +144,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 <Link
                   to={t.to}
                   preload="intent"
+                  aria-label={"fullLabel" in t ? t.fullLabel : t.label}
                   className="flex select-none flex-col items-center gap-1 py-3 text-[11px] font-medium"
                 >
                   <span
