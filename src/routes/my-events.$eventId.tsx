@@ -36,6 +36,8 @@ import {
   Download,
   Mountain,
   Route as RouteIcon,
+  Lock as LockIcon,
+
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/lib/auth";
