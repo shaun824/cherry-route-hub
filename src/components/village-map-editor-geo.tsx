@@ -178,6 +178,8 @@ export default function VillageMapEditorGeo({
             maxNativeZoom={18}
           />
           <Centre lat={centre.lat} lng={centre.lng} token={centreToken} />
+          <FitToContent points={contentPoints} token={fitToken} />
+
           {placing ? <ClickCatcher onClick={onPlace} /> : null}
           {drawing ? (
             <>
