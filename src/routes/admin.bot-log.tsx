@@ -318,10 +318,3 @@ function TeachAnswer({ pair }: { pair: Pair }) {
     </div>
   );
 }
-
-          ))}
-        </ul>
-      )}
-    </div>
-  );
-}
