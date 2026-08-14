@@ -203,7 +203,7 @@ export default function VillageMapEditorGeo({
 
           {/* saved zones */}
           {zones.map((z) => {
-            const active = selectedZone === z.id;
+            const active = selectedZone === z.id && !locked;
             const clash = overlapping.has(z.id);
             const c = zoneCentroid(z);
             return (
