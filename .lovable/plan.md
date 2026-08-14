@@ -41,6 +41,37 @@ Constraints to know upfront:
 
 When an admin replies in the app, send an approved template alert to the rider's WhatsApp so they come back to the app. Requires template approval.
 
+## Phase 4 — Feeding answers back into the bot's knowledge base
+
+Today the bot knows two things: the structured event data, and a crawl of the event website (refreshed daily into `event_bot_knowledge`). Real questions and real admin answers are the most valuable source you have and are currently thrown away — every WhatsApp and in-app thread should feed a curated FAQ layer.
+
+Recommended: an admin-approved learned-FAQ table, not automatic self-training. Auto-ingesting raw chat would let a wrong or one-off answer ("your tent is number 14") become a permanent fact for everyone.
+
+How it works:
+
+```text
+Rider question + admin answer (app or WhatsApp)
+  -> nightly job clusters unanswered/answered pairs
+  -> AI drafts a clean Q&A pair, tagged to an event or "global"
+  -> admin approves / edits / rejects in /admin/messages
+  -> approved pairs injected into the bot context, above website content
+```
+
+What gets built:
+- A `event_faq_learned` table: event (nullable for global), question, answer, source thread, status (suggested/approved/rejected), times used.
+- A "Suggest FAQ" action on any admin reply — one click turns that reply into a draft entry.
+- A nightly job that scans threads where the bot returned NEEDS_ADMIN and an admin then answered, and drafts entries automatically.
+- A review queue in the admin area with approve / edit / reject.
+- The bot prompt gains an "APPROVED ANSWERS (highest priority)" block ahead of structured data and website content, so approved answers win.
+- A gap report: the most frequent questions the bot could not answer, so you can see what your website is missing.
+
+Why approval matters:
+- Answers go stale (dates, prices, cut-offs) — approved entries get an optional expiry and an event scope so a Tour de Addo answer never leaks into Weekend Warrior.
+- Personal answers stay private: entries that reference a specific rider, tent, or registration are excluded from the shared knowledge base.
+
+## Suggested start
+
+
 ## Technical notes
 
 - Webhook: `src/routes/api/public/hooks/whatsapp.ts` with GET (verify handshake) and POST (HMAC-SHA256 signature check against the raw body, Zod-validated payload).
