@@ -34,6 +34,9 @@ import { brandHeader } from "@/lib/event-brand";
 import { buildMapEmbedSrc, buildMapLink, resolveVenuePoint } from "@/lib/map-embed";
 import { VenueMiniMap } from "@/components/venue-mini-map";
 import { fetchEventInfo } from "@/lib/event-info";
+import { groupRidersByClass } from "@/lib/rider-classes";
+import { eventPromosFor } from "@/lib/event-promos";
+import { PromoCodeCard } from "@/components/promo-code-card";
 
 
 export const Route = createFileRoute("/spectate/$eventId")({
@@ -56,7 +59,7 @@ export const Route = createFileRoute("/spectate/$eventId")({
 });
 
 type Tab = "info" | "riders" | "results";
-type GroupBy = "start" | "bib" | "category" | "name";
+type GroupBy = "class" | "start" | "bib" | "category" | "name";
 
 function riderResultUrl(template: string | null, bib: string | null) {
   if (!template || !bib) return null;
@@ -69,7 +72,7 @@ function SpectatorEventPage() {
   const event = useAdminStore((s) => s.events.find((e) => e.id === eventId));
   const [tab, setTab] = useState<Tab>("riders");
   const [categoryFilter, setCategoryFilter] = useState<string>("__all");
-  const [groupBy, setGroupBy] = useState<GroupBy>("start");
+  const [groupBy, setGroupBy] = useState<GroupBy>("class");
   const [search, setSearch] = useState("");
 
   const { user } = useSession();
@@ -529,6 +532,7 @@ function SpectatorEventPage() {
           </div>
           <div className="mt-2 flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
             {([
+              { id: "class", label: "Classes" },
               { id: "start", label: "Start times" },
               { id: "bib", label: "Race numbers" },
               { id: "category", label: "Groups" },
