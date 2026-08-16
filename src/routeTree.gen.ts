@@ -41,6 +41,7 @@ import { Route as AdminPromosRouteImport } from './routes/admin.promos'
 import { Route as AdminNotificationsRouteImport } from './routes/admin.notifications'
 import { Route as AdminMessagesRouteImport } from './routes/admin.messages'
 import { Route as AdminMerchandiseRouteImport } from './routes/admin.merchandise'
+import { Route as AdminLoyaltyRouteImport } from './routes/admin.loyalty'
 import { Route as AdminKnowledgeRouteImport } from './routes/admin.knowledge'
 import { Route as AdminFeedRouteImport } from './routes/admin.feed'
 import { Route as AdminEventsRouteImport } from './routes/admin.events'
@@ -233,6 +234,11 @@ const AdminMerchandiseRoute = AdminMerchandiseRouteImport.update({
   path: '/merchandise',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminLoyaltyRoute = AdminLoyaltyRouteImport.update({
+  id: '/loyalty',
+  path: '/loyalty',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminKnowledgeRoute = AdminKnowledgeRouteImport.update({
   id: '/knowledge',
   path: '/knowledge',
@@ -419,6 +425,7 @@ export interface FileRoutesByFullPath {
   '/admin/events': typeof AdminEventsRoute
   '/admin/feed': typeof AdminFeedRoute
   '/admin/knowledge': typeof AdminKnowledgeRoute
+  '/admin/loyalty': typeof AdminLoyaltyRoute
   '/admin/merchandise': typeof AdminMerchandiseRoute
   '/admin/messages': typeof AdminMessagesRoute
   '/admin/notifications': typeof AdminNotificationsRoute
@@ -481,6 +488,7 @@ export interface FileRoutesByTo {
   '/admin/events': typeof AdminEventsRoute
   '/admin/feed': typeof AdminFeedRoute
   '/admin/knowledge': typeof AdminKnowledgeRoute
+  '/admin/loyalty': typeof AdminLoyaltyRoute
   '/admin/merchandise': typeof AdminMerchandiseRoute
   '/admin/messages': typeof AdminMessagesRoute
   '/admin/notifications': typeof AdminNotificationsRoute
@@ -546,6 +554,7 @@ export interface FileRoutesById {
   '/admin/events': typeof AdminEventsRoute
   '/admin/feed': typeof AdminFeedRoute
   '/admin/knowledge': typeof AdminKnowledgeRoute
+  '/admin/loyalty': typeof AdminLoyaltyRoute
   '/admin/merchandise': typeof AdminMerchandiseRoute
   '/admin/messages': typeof AdminMessagesRoute
   '/admin/notifications': typeof AdminNotificationsRoute
@@ -613,6 +622,7 @@ export interface FileRouteTypes {
     | '/admin/events'
     | '/admin/feed'
     | '/admin/knowledge'
+    | '/admin/loyalty'
     | '/admin/merchandise'
     | '/admin/messages'
     | '/admin/notifications'
@@ -675,6 +685,7 @@ export interface FileRouteTypes {
     | '/admin/events'
     | '/admin/feed'
     | '/admin/knowledge'
+    | '/admin/loyalty'
     | '/admin/merchandise'
     | '/admin/messages'
     | '/admin/notifications'
@@ -739,6 +750,7 @@ export interface FileRouteTypes {
     | '/admin/events'
     | '/admin/feed'
     | '/admin/knowledge'
+    | '/admin/loyalty'
     | '/admin/merchandise'
     | '/admin/messages'
     | '/admin/notifications'
@@ -1045,6 +1057,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminMerchandiseRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/loyalty': {
+      id: '/admin/loyalty'
+      path: '/loyalty'
+      fullPath: '/admin/loyalty'
+      preLoaderRoute: typeof AdminLoyaltyRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/knowledge': {
       id: '/admin/knowledge'
       path: '/knowledge'
@@ -1274,6 +1293,7 @@ interface AdminRouteChildren {
   AdminEventsRoute: typeof AdminEventsRoute
   AdminFeedRoute: typeof AdminFeedRoute
   AdminKnowledgeRoute: typeof AdminKnowledgeRoute
+  AdminLoyaltyRoute: typeof AdminLoyaltyRoute
   AdminMerchandiseRoute: typeof AdminMerchandiseRoute
   AdminMessagesRoute: typeof AdminMessagesRoute
   AdminNotificationsRoute: typeof AdminNotificationsRoute
@@ -1302,6 +1322,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminEventsRoute: AdminEventsRoute,
   AdminFeedRoute: AdminFeedRoute,
   AdminKnowledgeRoute: AdminKnowledgeRoute,
+  AdminLoyaltyRoute: AdminLoyaltyRoute,
   AdminMerchandiseRoute: AdminMerchandiseRoute,
   AdminMessagesRoute: AdminMessagesRoute,
   AdminNotificationsRoute: AdminNotificationsRoute,
