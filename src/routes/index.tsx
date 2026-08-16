@@ -87,8 +87,6 @@ function Home() {
     .filter((e) => (e.lifecycle ?? "published") === "published")
     .filter((e) => new Date(e.date).getTime() >= Date.now() - 12 * 60 * 60 * 1000)
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-  const motoEvents = upcoming.filter((e) => getEventSport(e.discipline, e.name) === "moto").slice(0, 4);
-  const mtbEvents = upcoming.filter((e) => getEventSport(e.discipline, e.name) === "mtb").slice(0, 4);
 
   // Determine which sport(s) this signed-in rider has actually entered.
   // The query shares its cache with NextEventCard.
@@ -129,14 +127,25 @@ function Home() {
     user?.email?.split("@")[0] ||
     "Rider";
 
-  // Spotlight: the rider's own next event when linked, otherwise the next event
-  // on the calendar (used to build FOMO for people who haven't entered).
+  // Hero: the rider's own next event (signed-in only).
   const myNext = (myEventsQ.data ?? [])
     .filter((r) => new Date(r.event.event_date).getTime() >= Date.now() - 12 * 60 * 60 * 1000)
     .sort((a, b) => new Date(a.event.event_date).getTime() - new Date(b.event.event_date).getTime())[0];
-  const spotlightSource = myNext
-    ? allEvents.find((e) => e.id === myNext.event_id) ?? null
-    : upcoming[0] ?? null;
+  const heroEventId = user ? (myNext?.event_id ?? null) : null;
+  const myEventIds = new Set((myEventsQ.data ?? []).map((r) => r.event_id));
+
+  // An event is "happening now" from the day before until 12h after its date.
+  const liveNow =
+    upcoming.find((e) => {
+      const t = new Date(e.date).getTime();
+      return t - Date.now() <= 24 * 60 * 60 * 1000;
+    }) ?? null;
+
+  // Spotlight: never repeat the hero. Signed-in riders get the next event they
+  // haven't entered (discovery); guests get whatever is happening next.
+  const spotlightSource = user
+    ? (upcoming.find((e) => e.id !== heroEventId && !myEventIds.has(e.id)) ?? null)
+    : (liveNow ?? upcoming[0] ?? null);
   const spotlight = spotlightSource
     ? {
         id: spotlightSource.id,
@@ -146,12 +155,23 @@ function Home() {
         logoUrl: spotlightSource.logoUrl ?? null,
         heroColor: spotlightSource.heroColor ?? null,
         description: spotlightSource.description ?? "",
-        entered: Boolean(myNext),
+        entered: myEventIds.has(spotlightSource.id),
+        happeningNow: !!liveNow && liveNow.id === spotlightSource.id,
       }
     : null;
 
+  // Anything already featured above is hidden from the sport lists.
+  const hiddenIds = new Set([heroEventId, spotlight?.id].filter(Boolean) as string[]);
+  const motoEvents = upcoming
+    .filter((e) => !hiddenIds.has(e.id) && getEventSport(e.discipline, e.name) === "moto")
+    .slice(0, 4);
+  const mtbEvents = upcoming
+    .filter((e) => !hiddenIds.has(e.id) && getEventSport(e.discipline, e.name) === "mtb")
+    .slice(0, 4);
+
   const notifications = [pinned, ...feed.filter((p) => !p.pinned)].filter(Boolean).slice(0, 8);
   const hasUnread = notifications.length > 0;
+  const guestUpdates = feed.slice(0, 3);
 
 
   return (
@@ -201,45 +221,95 @@ function Home() {
 
       </div>
 
-      {/* Primary: next event or sign-in CTA */}
-      <div className="mt-4 px-5">
-        {loading ? (
+      {/* Primary: for signed-in riders their own next event; guests get the
+          event that matters right now, with no sign-in wall. */}
+      {loading ? (
+        <div className="mt-4 px-5">
           <div className="h-40 animate-pulse rounded-2xl bg-secondary" />
-        ) : user ? (
+        </div>
+      ) : user ? (
+        <div className="mt-4 px-5">
           <NextEventCard />
-        ) : (
-          <SignedOutCTA />
-        )}
-      </div>
+        </div>
+      ) : null}
+
+      {!loading && !user && spotlight ? (
+        <>
+          <SectionTitle title={spotlight.happeningNow ? "Happening now" : "Next up"} />
+          <div className="px-5">
+            <EventSpotlight
+              eventId={spotlight.id}
+              name={spotlight.name}
+              location={spotlight.location}
+              date={spotlight.date}
+              logoUrl={spotlight.logoUrl}
+              heroColor={spotlight.heroColor}
+              description={spotlight.description}
+              entered={false}
+              guest
+              happeningNow={spotlight.happeningNow}
+            />
+          </div>
+          {guestUpdates.length > 0 ? (
+            <>
+              <SectionTitle title="Latest updates" action="View all" actionTo="/feed" />
+              <ul className="space-y-2 px-5">
+                {guestUpdates.map((p) => (
+                  <li
+                    key={p.id}
+                    className="rounded-2xl bg-card p-3 shadow-sm ring-1 ring-border"
+                  >
+                    <div className="flex items-center gap-2">
+                      <TypeBadge type={p.type} />
+                      <span className="text-[11px] text-muted-foreground">
+                        {relativeTime(p.postedAt)}
+                      </span>
+                    </div>
+                    <p className="mt-1.5 font-display text-sm font-bold text-ink">{p.title}</p>
+                    <p className="mt-1 line-clamp-2 text-sm text-ink-soft">{p.body}</p>
+                  </li>
+                ))}
+              </ul>
+            </>
+          ) : null}
+          <div className="mt-4 px-5">
+            <SignedOutCTA />
+          </div>
+        </>
+      ) : null}
 
       <div className="mt-4 space-y-3 px-5">
         <PushOptIn />
         <InstallPrompt />
       </div>
 
-
-      {/* Spotlight on the next event — FOMO for guests, a deep link for entrants */}
-      {spotlight ? (
-        <div className="mt-4 px-5">
-          <EventSpotlight
-            eventId={spotlight.id}
-            name={spotlight.name}
-            location={spotlight.location}
-            date={spotlight.date}
-            logoUrl={spotlight.logoUrl}
-            heroColor={spotlight.heroColor}
-            description={spotlight.description}
-            entered={spotlight.entered}
-          />
-        </div>
+      {/* Spotlight on another event — discovery for riders already entered */}
+      {user && spotlight ? (
+        <>
+          <SectionTitle title="Next up" />
+          <div className="px-5">
+            <EventSpotlight
+              eventId={spotlight.id}
+              name={spotlight.name}
+              location={spotlight.location}
+              date={spotlight.date}
+              logoUrl={spotlight.logoUrl}
+              heroColor={spotlight.heroColor}
+              description={spotlight.description}
+              entered={spotlight.entered}
+            />
+          </div>
+        </>
       ) : null}
 
       {/* Quick links */}
       {quickLinks.length > 0 ? (
-        <div
-          className="mt-4 grid gap-2 px-4"
-          style={{ gridTemplateColumns: `repeat(${qlCols}, minmax(0, 1fr))` }}
-        >
+        <>
+          <SectionTitle title="Quick links" />
+          <div
+            className="grid gap-2 px-4"
+            style={{ gridTemplateColumns: `repeat(${qlCols}, minmax(0, 1fr))` }}
+          >
           {quickLinks.map((q) => {
             const Icon = QUICK_ICONS[q.icon] ?? Sparkles;
             return (
@@ -257,7 +327,8 @@ function Home() {
               </Link>
             );
           })}
-        </div>
+          </div>
+        </>
       ) : null}
 
       {/* Pinned general notice (slim, expandable) */}
@@ -356,6 +427,8 @@ function EventSpotlight({
   heroColor,
   description,
   entered,
+  guest = false,
+  happeningNow = false,
 }: {
   eventId: string;
   name: string;
@@ -365,59 +438,93 @@ function EventSpotlight({
   heroColor?: string | null;
   description?: string;
   entered: boolean;
+  guest?: boolean;
+  happeningNow?: boolean;
 }) {
   const blurb = (description ?? "").trim();
   const teaser = blurb.length > 170 ? `${blurb.slice(0, 170).trimEnd()}…` : blurb;
+  const eyebrow = happeningNow
+    ? "Happening now"
+    : entered
+      ? "You're entered · Your event"
+      : "Coming up · Don't miss out";
   return (
-    <Link
-      to="/my-events/$eventId"
-      params={{ eventId }}
-      className="block overflow-hidden rounded-2xl bg-card shadow-sm ring-1 ring-border active:scale-[0.99] transition-transform"
-    >
-      <div
-        {...brandHeader(heroColor)}
-        className={`${brandHeader(heroColor).className} px-4 py-3 text-white`}
+    <div className="overflow-hidden rounded-2xl bg-card shadow-sm ring-1 ring-border">
+      <Link
+        to="/my-events/$eventId"
+        params={{ eventId }}
+        className="block active:scale-[0.99] transition-transform"
       >
-        <p className="text-[11px] font-bold uppercase tracking-widest opacity-85">
-          {entered ? "You're entered · Your event" : "Coming up · Don't miss out"}
-        </p>
-        <p className="font-display text-lg font-bold leading-tight">{name}</p>
-      </div>
-      <div className="flex items-start gap-3 px-4 py-3">
-        {logoUrl ? (
-          <img
-            src={logoUrl}
-            alt=""
-            className="h-12 w-12 shrink-0 rounded-xl bg-secondary object-contain p-1 ring-1 ring-border"
-          />
-        ) : (
-          <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-accent text-cherry-deep">
-            <CalendarDays className="h-5 w-5" />
-          </span>
-        )}
-        <div className="min-w-0">
-          <p className="text-sm font-semibold text-ink">
-            {formatDate(date)} · <span className="text-cherry">{daysAway(date)}</span>
+        <div
+          {...brandHeader(heroColor)}
+          className={`${brandHeader(heroColor).className} px-4 py-3 text-white`}
+        >
+          <p className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest opacity-85">
+            {happeningNow ? (
+              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-white" />
+            ) : null}
+            {eyebrow}
           </p>
-          <p className="mt-0.5 flex items-center gap-1 truncate text-xs text-muted-foreground">
-            <MapPin className="h-3.5 w-3.5 shrink-0" /> {location}
-          </p>
-          <p className="mt-2 text-sm leading-relaxed text-ink-soft">
-            {entered
-              ? teaser ||
-                "Everything you need for race weekend — schedule, routes, venue, packing list and your entry details."
-              : teaser ||
-                "Riders are already locking in their spots. Read the route, venue and weekend plan before entries close."}
-          </p>
-          <span className="mt-2 inline-flex items-center gap-1 text-xs font-bold text-cherry">
-            {entered ? "Open your event hub" : "Read about this event"}
-            <ChevronRight className="h-3.5 w-3.5" />
-          </span>
+          <p className="font-display text-lg font-bold leading-tight">{name}</p>
         </div>
-      </div>
-    </Link>
+        <div className="flex items-start gap-3 px-4 py-3">
+          {logoUrl ? (
+            <img
+              src={logoUrl}
+              alt=""
+              className="h-12 w-12 shrink-0 rounded-xl bg-secondary object-contain p-1 ring-1 ring-border"
+            />
+          ) : (
+            <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-accent text-cherry-deep">
+              <CalendarDays className="h-5 w-5" />
+            </span>
+          )}
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-ink">
+              {formatDate(date)} · <span className="text-cherry">{daysAway(date)}</span>
+            </p>
+            <p className="mt-0.5 flex items-center gap-1 truncate text-xs text-muted-foreground">
+              <MapPin className="h-3.5 w-3.5 shrink-0" /> {location}
+            </p>
+            <p className="mt-2 text-sm leading-relaxed text-ink-soft">
+              {entered
+                ? teaser ||
+                  "Everything you need for race weekend — schedule, routes, venue, packing list and your entry details."
+                : teaser ||
+                  "Riders are already locking in their spots. Read the route, venue and weekend plan before entries close."}
+            </p>
+            <span className="mt-2 inline-flex items-center gap-1 text-xs font-bold text-cherry">
+              {entered ? "Open your event hub" : "Read about this event"}
+              <ChevronRight className="h-3.5 w-3.5" />
+            </span>
+          </div>
+        </div>
+      </Link>
+
+      {guest ? (
+        <div className="grid grid-cols-4 gap-1 border-t border-border px-2 py-2">
+          {[
+            { label: "Schedule", icon: Calendar },
+            { label: "Route", icon: Activity },
+            { label: "Venue", icon: MapPin },
+            { label: "Village", icon: Globe },
+          ].map((q) => (
+            <Link
+              key={q.label}
+              to="/my-events/$eventId"
+              params={{ eventId }}
+              className="flex flex-col items-center gap-1 rounded-xl px-1 py-2 text-[11px] font-semibold text-ink active:bg-secondary"
+            >
+              <q.icon className="h-4 w-4 text-cherry-deep" />
+              {q.label}
+            </Link>
+          ))}
+        </div>
+      ) : null}
+    </div>
   );
 }
+
 
 function SportSection({
   title,
@@ -446,7 +553,7 @@ function SportSection({
             type="button"
             onClick={toggle}
             aria-expanded={showExpanded}
-            className="flex items-center gap-2 font-display text-[15px] font-bold uppercase tracking-wider text-ink-soft active:opacity-70 transition"
+            className="flex items-center gap-2 font-display text-base font-bold tracking-tight text-ink active:opacity-70 transition"
           >
             <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-accent text-cherry-deep">
               <Icon className="h-3.5 w-3.5" />
@@ -459,7 +566,7 @@ function SportSection({
             />
           </button>
         ) : (
-          <h2 className="flex items-center gap-2 font-display text-[15px] font-bold uppercase tracking-wider text-ink-soft">
+          <h2 className="flex items-center gap-2 font-display text-base font-bold tracking-tight text-ink">
             <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-accent text-cherry-deep">
               <Icon className="h-3.5 w-3.5" />
             </span>
