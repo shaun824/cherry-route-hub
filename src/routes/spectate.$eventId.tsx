@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { withRegistrationDayLabels } from "@/lib/event-days";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import {
@@ -146,7 +147,9 @@ function SpectatorEventPage() {
 
   const spectatorSchedule = useMemo(() => {
     const items = event?.schedule ?? [];
-    const dayLabel = new Map((event?.days ?? []).map((d) => [d.id, d.label || d.date]));
+    const dayLabel = new Map(
+      withRegistrationDayLabels((event?.days ?? []) as any, items as any).map((d) => [d.id, d.label || d.date]),
+    );
     const keep =
       /(start|finish|prize|podium|award|briefing|registration|batch|expo|hand.?out|line.?up|ceremon)/i;
     return items

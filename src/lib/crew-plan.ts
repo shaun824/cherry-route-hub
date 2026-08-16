@@ -1,6 +1,8 @@
 // Crew planning helpers: group an event's running order into real days and
 // derive a crew timeline (call times, set-up windows, debrief) from it.
 import type { EventDay, ScheduleItem } from "@/lib/mock-data";
+import { withRegistrationDayLabels } from "@/lib/event-days";
+
 
 export type ScheduleDay = {
   id: string;
@@ -49,8 +51,9 @@ export function groupScheduleByDay(
   days: EventDay[] | null | undefined,
 ): ScheduleDay[] {
   const items = Array.isArray(schedule) ? schedule : [];
-  const dayList = Array.isArray(days) ? days : [];
+  const dayList = withRegistrationDayLabels(Array.isArray(days) ? days : [], items);
   if (!items.length) return [];
+
 
   const sortItems = (list: ScheduleItem[]) =>
     [...list].sort((a, b) => (parseTime(a.time) ?? 9999) - (parseTime(b.time) ?? 9999));

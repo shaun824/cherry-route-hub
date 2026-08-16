@@ -21,6 +21,7 @@ import {
   type LatLngAlt,
 } from "@/lib/geo";
 import { getRouteElevation } from "@/lib/elevation.functions";
+import { withRegistrationDayLabels } from "@/lib/event-days";
 
 // Fix Leaflet's default icon paths (Vite bundles differently than webpack).
 delete (L.Icon.Default.prototype as unknown as { _getIconUrl?: unknown })._getIconUrl;
@@ -111,7 +112,7 @@ export default function RouteMapInner({
   // Collect all routes across days that have either KMLs or custom markers.
   const routes = useMemo(() => {
     const out: { route: EventRoute; dayLabel: string }[] = [];
-    for (const day of event.days ?? []) {
+    for (const day of withRegistrationDayLabels(event.days ?? [], (event.schedule as any) ?? [])) {
       const dayLabel = day.label || new Date(day.date).toLocaleDateString("en-ZA", { weekday: "short", day: "numeric", month: "short" });
       for (const r of day.routes ?? []) {
         const hasKml = (r.kmlUrls ?? []).length > 0;

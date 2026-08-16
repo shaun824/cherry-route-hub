@@ -61,6 +61,8 @@ import { groupExtras } from "@/lib/extras-display";
 import { Printer, Shirt, Package, Siren, BedDouble, ExternalLink } from "lucide-react";
 import type { EventDay, EventRoute, FeedPost, ScheduleItem, SocialLinks } from "@/lib/mock-data";
 import { relativeTime } from "@/lib/mock-data";
+import { withRegistrationDayLabels } from "@/lib/event-days";
+
 import { TypeBadge } from "@/components/ui-bits";
 
 import { TrackerPanel } from "@/components/tracker-panel";
@@ -502,7 +504,7 @@ function RoutesPanel({
   event,
 }: {
   eventId: string;
-  event: { days?: unknown };
+  event: { days?: unknown; schedule?: unknown };
 }) {
   const { user, loading } = useSession();
   const locked = !loading && !user;
@@ -514,7 +516,10 @@ function RoutesPanel({
   });
   const isEntrant = !!entryQ.data;
   const downloadsLocked = locked || (!!user && !entryQ.isLoading && !isEntrant);
-  const days: EventDay[] = Array.isArray(event.days) ? (event.days as EventDay[]) : [];
+  const days: EventDay[] = withRegistrationDayLabels(
+    Array.isArray(event.days) ? (event.days as EventDay[]) : [],
+    Array.isArray(event.schedule) ? (event.schedule as ScheduleItem[]) : [],
+  );
   const allRoutes = days.flatMap((d) => d.routes ?? []);
   const hasMap = allRoutes.some((r) => (r.kmlUrls ?? []).length > 0);
 
@@ -644,9 +649,11 @@ function InfoPanel({
     daysToEvent !== null && daysToEvent <= 10 && daysToEvent >= -1 && Boolean(event.location);
   const q = useQuery({ queryKey: ["event-info", eventId], queryFn: () => fetchEventInfo(eventId) });
   const info = q.data;
-  const days: EventDay[] = Array.isArray(event.days) ? (event.days as EventDay[]) : [];
-  
   const schedule: ScheduleItem[] = Array.isArray(event.schedule) ? (event.schedule as ScheduleItem[]) : [];
+  const days: EventDay[] = withRegistrationDayLabels(
+    Array.isArray(event.days) ? (event.days as EventDay[]) : [],
+    schedule,
+  );
 
   const aboutText = description ?? "";
   const isLongAbout = aboutText.length > DESCRIPTION_PREVIEW_LENGTH;
@@ -1015,10 +1022,13 @@ function PackingPanel({
   );
 }
 
-function ScheduleView({ schedule, days }: { schedule: ScheduleItem[]; days: EventDay[] }) {
+function ScheduleView({ schedule, days: rawDays }: { schedule: ScheduleItem[]; days: EventDay[] }) {
+  // House rule: day one is registration day unless the itinerary says otherwise.
+  const days = useMemo(() => withRegistrationDayLabels(rawDays, schedule), [rawDays, schedule]);
   const grouped = useMemo(() => {
     // Group items by dayId, preserving order of days when known.
     const byDay = new Map<string, ScheduleItem[]>();
+
     for (const item of schedule) {
       const key = item.dayId ?? "__unscheduled__";
       const arr = byDay.get(key) ?? [];
