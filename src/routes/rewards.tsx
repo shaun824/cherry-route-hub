@@ -5,7 +5,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { Award, Copy, Gift, History, Sparkles, Ticket, TrendingUp } from "lucide-react";
 import { toast } from "sonner";
 import { getMyLoyalty, redeemReward } from "@/lib/loyalty.functions";
-import { formatPoints, tierFor, TIERS } from "@/lib/loyalty";
+import { formatPoints, tierForRolling, REWARD_KINDS, TIERS } from "@/lib/loyalty";
 
 export const Route = createFileRoute("/rewards")({
   head: () => ({
