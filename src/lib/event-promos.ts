@@ -39,7 +39,7 @@ const RUDY_PROMO: EventPromo = {
   blurb: "Visit the Rudy Project stand in the village and get R750 off your purchase.",
   redeem: "Show this offer at the Rudy Project stand",
   discount: "R750",
-  url: "https://www.rudyproject.co.za/",
+  url: "https://www.rudyprojectsa.co.za/",
   logoUrl: rudy.url,
   accent: "oklch(0.5 0.16 25)",
 };

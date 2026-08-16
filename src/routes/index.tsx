@@ -34,6 +34,7 @@ import { InstallPrompt, PushOptIn } from "@/components/push-optin";
 import { formatDate, relativeTime, type Event } from "@/lib/mock-data";
 import { getEventSport } from "@/lib/event-sport";
 import { useAdminStore } from "@/lib/store";
+import { PromoCodeCard } from "@/components/promo-code-card";
 import { useHydratedStore } from "@/lib/use-hydrated-store";
 import { useSession } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
@@ -309,23 +310,24 @@ function Home() {
 
 
 
-      {/* Promo teaser */}
+      {/* Promo teaser — same tappable card + reminder pop-up as everywhere else */}
       {promos[0] ? (
         <>
           <SectionTitle title="Supplier promos" action="View all" actionTo="/promos" />
           <div className="px-5 pb-2">
-            <div className="rounded-2xl bg-ink p-4 text-white">
-              <p className="text-[11px] font-semibold uppercase tracking-widest opacity-70">
-                {promos[0].brand}
-              </p>
-              <p className="mt-1 font-display text-lg font-bold">{promos[0].title}</p>
-              <div className="mt-3 flex items-center justify-between rounded-xl bg-white/10 px-3 py-2">
-                <span className="font-mono text-sm tracking-wider">{promos[0].code}</span>
-                <span className="rounded-md bg-cherry px-2 py-1 text-[11px] font-bold">
-                  {promos[0].discount} OFF
-                </span>
-              </div>
-            </div>
+            <PromoCodeCard
+              promo={{
+                id: promos[0].id,
+                brand: promos[0].brand,
+                title: promos[0].title,
+                code: promos[0].code || undefined,
+                redeem: promos[0].code ? undefined : "Show this offer to the supplier",
+                discount: promos[0].discount,
+                url: promos[0].url || "#",
+                logoUrl: promos[0].logoUrl ?? "",
+                accent: promos[0].accent,
+              }}
+            />
           </div>
         </>
       ) : null}
