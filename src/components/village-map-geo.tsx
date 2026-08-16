@@ -294,6 +294,14 @@ export default function VillageMapGeo({
     [hotspots, selected],
   );
 
+  // Real facility points only — legacy imports left numeric "tent" points behind,
+  // and those belong to the tent layer, not the icon layer.
+  const facilitySpots = useMemo(
+    () => hotspots.filter((s) => s.title?.trim() && !normalizedNumber(s.title)),
+    [hotspots],
+  );
+
+
   // Older village-map imports created a separate tent pin for every numbered
   // drawn area. Those pins landed near area corners and made the rider map look
   // like it was showing polygon handles. Use one label at each area's centre
