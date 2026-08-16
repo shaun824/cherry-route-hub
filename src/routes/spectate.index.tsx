@@ -1,11 +1,16 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { Binoculars, CalendarDays, ChevronRight, Lock, MapPin } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { PageHeader } from "@/components/ui-bits";
 import { useAdminStore } from "@/lib/store";
 import { useHydratedStore } from "@/lib/use-hydrated-store";
 import { formatDate, formatTime } from "@/lib/mock-data";
+import { getEventRiders, ROSTER_WINDOW_DAYS } from "@/lib/results.functions";
+import { useSession } from "@/lib/auth";
 import type { Event } from "@/lib/mock-data";
+
 
 export const Route = createFileRoute("/spectate/")({
   head: () => ({
