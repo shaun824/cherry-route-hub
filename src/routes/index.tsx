@@ -241,10 +241,14 @@ function Home() {
           <div className="h-40 animate-pulse rounded-2xl bg-secondary" />
         </div>
       ) : user ? (
-        <div className="mt-4 px-5">
-          <NextEventCard />
-        </div>
+        <>
+          <SectionTitle title="View details on your next event" />
+          <div className="px-5">
+            <NextEventCard />
+          </div>
+        </>
       ) : null}
+
 
       {!loading && !user && spotlight ? (
         <>
