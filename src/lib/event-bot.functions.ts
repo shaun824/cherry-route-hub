@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { BOT_MISS_REPLY } from "@/lib/bot-handoff";
 import { FOLLOWUP_PROMPT_RULE, splitFollowUps } from "@/lib/bot-followups";
+import { venueMapLinks } from "@/lib/map-embed";
 
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
@@ -59,6 +60,16 @@ function formatEventStructured(event: any, info: any | null): string {
 
   if (info) {
     if (info.venue_address) lines.push(`\nVenue: ${info.venue_address}`);
+    const maps = venueMapLinks({
+      mapUrl: info.venue_map_url ?? info.map_url ?? null,
+      lat: info.venue_lat != null ? Number(info.venue_lat) : null,
+      lng: info.venue_lng != null ? Number(info.venue_lng) : null,
+      address: info.venue_address ?? event.location ?? null,
+    });
+    if (maps) {
+      lines.push(`Venue on Google Maps: ${maps.pin}`);
+      lines.push(`Driving directions to the venue: ${maps.directions}`);
+    }
     if (info.parking_notes) lines.push(`Parking: ${info.parking_notes}`);
     if (info.route_description) lines.push(`Route notes: ${info.route_description}`);
     if (info.distance_km) lines.push(`Distance: ${info.distance_km} km`);
@@ -254,6 +265,7 @@ Rules:
 - Never contradict or deny something unless the context clearly says it isn't offered. If you're unsure whether something exists, say what the context DOES show and offer to check with the team, rather than telling the rider it doesn't exist.
 - Always try hard to answer first, combining anything relevant in the context, and give a partial answer with what you DO know rather than handing off. Never suggest WhatsApp or contacting the team in an answer you were able to give.
 - Only if the context genuinely has nothing relevant, reply with exactly this token and nothing else: ${BOT_MISS_SENTINEL} (the app then logs it for a Red Cherry admin and offers the rider our WhatsApp business chat — so never write your own "contact us" message).
+- Directions, parking and "where is it?" questions: always include the Google Maps links from the context as markdown links, e.g. [Open in Google Maps](…) and [Get directions](…). Add them whenever the venue, parking, arrival or travel comes up, even in passing.
 - Give the rider somewhere to read more: when your answer comes from a website page or an extra/add-on with a "More info" or SOURCE url, finish that point with a markdown link, e.g. [Read more on the event website](https://…). Use only urls that appear in the context — never invent or guess a link — and keep it to one or two links per answer.
 ${FOLLOWUP_PROMPT_RULE}
 - Never mention the sentinel, "CONTEXT", "sources", or that you scraped a website in your visible answer.`;

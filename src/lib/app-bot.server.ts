@@ -4,6 +4,7 @@
 // is signed in — their own records.
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { APP_HELP_TEXT } from "@/lib/app-help";
+import { venueMapLinks } from "@/lib/map-embed";
 
 type AnyClient = SupabaseClient<any, any, any>;
 
@@ -83,6 +84,16 @@ function detailEvent(e: any, info: any | null, merch: any[]): string {
 
   if (info) {
     if (info.venue_address) lines.push(`Venue: ${info.venue_address}`);
+    const maps = venueMapLinks({
+      mapUrl: (info as any).venue_map_url ?? (info as any).map_url ?? null,
+      lat: info.venue_lat != null ? Number(info.venue_lat) : null,
+      lng: info.venue_lng != null ? Number(info.venue_lng) : null,
+      address: info.venue_address ?? e.location ?? null,
+    });
+    if (maps) {
+      lines.push(`Venue on Google Maps: ${maps.pin}`);
+      lines.push(`Driving directions to the venue: ${maps.directions}`);
+    }
     if (info.parking_notes) lines.push(`Parking: ${info.parking_notes}`);
     if (info.route_description) lines.push(`Route: ${info.route_description}`);
     if (info.distance_km) lines.push(`Distance: ${info.distance_km} km`);
