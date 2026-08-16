@@ -79,7 +79,31 @@ function formatEventStructured(event: any, info: any | null): string {
   return lines.join("\n");
 }
 
+function formatMerchCatalogue(rows: any[]): string {
+  if (!rows.length) return "";
+  const lines: string[] = [
+    "EXTRAS / ADD-ONS AVAILABLE ON THE ENTRY FORM (live from Entry Ninja — authoritative for what riders can buy for THIS event):",
+  ];
+  for (const r of rows) {
+    const bits = [r.name];
+    if (r.price_from) bits.push(`from R${Number(r.price_from).toFixed(0)}`);
+    lines.push(`- ${bits.join(" — ")}`);
+    if (r.description) lines.push(`  ${r.description}`);
+    const opts = Array.isArray(r.options) ? r.options : [];
+    for (const o of opts) {
+      const label = o?.name ?? o?.label ?? String(o);
+      lines.push(`  · ${label}${o?.price ? ` (R${Number(o.price).toFixed(0)})` : ""}`);
+    }
+    if (r.source_url) lines.push(`  More info: ${r.source_url}`);
+  }
+  lines.push(
+    "If an add-on is listed above, it IS offered for this event — say so and describe the options. If a rider asks about an add-on that is NOT listed, say it isn't available on this event's entry form (it may be offered on other Red Cherry events or in a future year) rather than denying it exists.",
+  );
+  return lines.join("\n");
+}
+
 // ---------- main server fn ----------
+
 
 export const askEventBot = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
