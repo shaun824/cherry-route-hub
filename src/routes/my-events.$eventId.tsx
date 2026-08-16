@@ -509,9 +509,6 @@ function RoutesPanel({
       {hasMap ? (
         <section>
           <SectionTitle>Interactive map</SectionTitle>
-          <div className="mt-2 mb-3">
-            <OfflinePackCard event={event as never} />
-          </div>
           <div className="mt-2">
             <LockedSection locked={locked} message="Sign in to view the interactive route map">
               <RouteMap event={event as never} height="320px" />
