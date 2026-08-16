@@ -42,6 +42,7 @@ import { Route as AdminKnowledgeRouteImport } from './routes/admin.knowledge'
 import { Route as AdminFeedRouteImport } from './routes/admin.feed'
 import { Route as AdminEventsRouteImport } from './routes/admin.events'
 import { Route as AdminEntryNinjaRouteImport } from './routes/admin.entry-ninja'
+import { Route as AdminCrewRouteImport } from './routes/admin.crew'
 import { Route as AdminBotLogRouteImport } from './routes/admin.bot-log'
 import { Route as AdminAuditRouteImport } from './routes/admin.audit'
 import { Route as AdminAnalyticsRouteImport } from './routes/admin.analytics'
@@ -233,6 +234,11 @@ const AdminEntryNinjaRoute = AdminEntryNinjaRouteImport.update({
   path: '/entry-ninja',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminCrewRoute = AdminCrewRouteImport.update({
+  id: '/crew',
+  path: '/crew',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminBotLogRoute = AdminBotLogRouteImport.update({
   id: '/bot-log',
   path: '/bot-log',
@@ -382,6 +388,7 @@ export interface FileRoutesByFullPath {
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/audit': typeof AdminAuditRoute
   '/admin/bot-log': typeof AdminBotLogRoute
+  '/admin/crew': typeof AdminCrewRoute
   '/admin/entry-ninja': typeof AdminEntryNinjaRoute
   '/admin/events': typeof AdminEventsRoute
   '/admin/feed': typeof AdminFeedRoute
@@ -440,6 +447,7 @@ export interface FileRoutesByTo {
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/audit': typeof AdminAuditRoute
   '/admin/bot-log': typeof AdminBotLogRoute
+  '/admin/crew': typeof AdminCrewRoute
   '/admin/entry-ninja': typeof AdminEntryNinjaRoute
   '/admin/events': typeof AdminEventsRoute
   '/admin/feed': typeof AdminFeedRoute
@@ -500,6 +508,7 @@ export interface FileRoutesById {
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/audit': typeof AdminAuditRoute
   '/admin/bot-log': typeof AdminBotLogRoute
+  '/admin/crew': typeof AdminCrewRoute
   '/admin/entry-ninja': typeof AdminEntryNinjaRoute
   '/admin/events': typeof AdminEventsRoute
   '/admin/feed': typeof AdminFeedRoute
@@ -562,6 +571,7 @@ export interface FileRouteTypes {
     | '/admin/analytics'
     | '/admin/audit'
     | '/admin/bot-log'
+    | '/admin/crew'
     | '/admin/entry-ninja'
     | '/admin/events'
     | '/admin/feed'
@@ -620,6 +630,7 @@ export interface FileRouteTypes {
     | '/admin/analytics'
     | '/admin/audit'
     | '/admin/bot-log'
+    | '/admin/crew'
     | '/admin/entry-ninja'
     | '/admin/events'
     | '/admin/feed'
@@ -679,6 +690,7 @@ export interface FileRouteTypes {
     | '/admin/analytics'
     | '/admin/audit'
     | '/admin/bot-log'
+    | '/admin/crew'
     | '/admin/entry-ninja'
     | '/admin/events'
     | '/admin/feed'
@@ -991,6 +1003,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminEntryNinjaRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/crew': {
+      id: '/admin/crew'
+      path: '/crew'
+      fullPath: '/admin/crew'
+      preLoaderRoute: typeof AdminCrewRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/bot-log': {
       id: '/admin/bot-log'
       path: '/bot-log'
@@ -1173,6 +1192,7 @@ interface AdminRouteChildren {
   AdminAnalyticsRoute: typeof AdminAnalyticsRoute
   AdminAuditRoute: typeof AdminAuditRoute
   AdminBotLogRoute: typeof AdminBotLogRoute
+  AdminCrewRoute: typeof AdminCrewRoute
   AdminEntryNinjaRoute: typeof AdminEntryNinjaRoute
   AdminEventsRoute: typeof AdminEventsRoute
   AdminFeedRoute: typeof AdminFeedRoute
@@ -1199,6 +1219,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminAnalyticsRoute: AdminAnalyticsRoute,
   AdminAuditRoute: AdminAuditRoute,
   AdminBotLogRoute: AdminBotLogRoute,
+  AdminCrewRoute: AdminCrewRoute,
   AdminEntryNinjaRoute: AdminEntryNinjaRoute,
   AdminEventsRoute: AdminEventsRoute,
   AdminFeedRoute: AdminFeedRoute,
