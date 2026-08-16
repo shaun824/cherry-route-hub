@@ -6,6 +6,8 @@ import { MapContainer, TileLayer, ImageOverlay, useMap, CircleMarker, Polygon, P
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import type { VillageGeo, VillageHotspot } from "@/lib/village-map";
+import { spotColor, spotIcon } from "@/lib/village-map";
+import { villageIconSvg } from "@/lib/village-icons";
 import { zoneCentroid, zoneColor, type VillageZone } from "@/lib/village-zones";
 
 const M_PER_DEG_LAT = 111320;
