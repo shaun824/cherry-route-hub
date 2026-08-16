@@ -16,6 +16,7 @@ import { AppShell } from "../components/app-shell";
 import { FeedbackWidget } from "../components/feedback-widget";
 import { supabase } from "../integrations/supabase/client";
 import { usePageTracking } from "../lib/analytics";
+import { ensureOfflineWorker } from "../lib/offline-pack";
 
 
 function NotFoundComponent() {
@@ -130,6 +131,11 @@ function RootComponent() {
   });
 
   usePageTracking();
+
+  // Register the caching/push service worker so saved maps work with no signal.
+  useEffect(() => {
+    void ensureOfflineWorker();
+  }, []);
 
 
   useEffect(() => {

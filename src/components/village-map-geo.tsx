@@ -312,6 +312,7 @@ export default function VillageMapGeo({
         >
           {satellite ? (
             <TileLayer
+              crossOrigin="anonymous"
               attribution="Tiles &copy; Esri"
               url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
               maxZoom={24}
@@ -319,8 +320,9 @@ export default function VillageMapGeo({
             />
           ) : (
             <TileLayer
+              crossOrigin="anonymous"
               attribution="&copy; OpenStreetMap"
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              url="https://a.tile.openstreetmap.org/{z}/{x}/{y}.png"
               maxZoom={24}
               maxNativeZoom={19}
             />

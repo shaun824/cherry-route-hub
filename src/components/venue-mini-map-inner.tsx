@@ -35,7 +35,8 @@ export default function VenueMiniMapInner({
       style={{ height, width: "100%" }}
     >
       <TileLayer
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            crossOrigin="anonymous"
+        url="https://a.tile.openstreetmap.org/{z}/{x}/{y}.png"
         maxZoom={24}
         maxNativeZoom={19}
       />
