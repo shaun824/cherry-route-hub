@@ -50,7 +50,7 @@ export async function fetchCrewRooming(eventId: string): Promise<CrewRoomingRow[
   const { data, error } = await supabase
     .from("event_rooming")
     .select(
-      "id, event_id, venue_id, full_name, email, tent_number, room_type, notes, location_hint, village_zone_id, village_spot_id, venue:event_venues(id, name, address, village_spot_id)",
+      "id, event_id, venue_id, full_name, email, tent_number, room_type, notes, location_hint, village_zone_id, village_spot_id, village_tent_id, event_entrant_id, match_source, entry:event_entrants(id, bib_number, registration_ref, category, batch), venue:event_venues(id, name, address, village_spot_id)",
     )
     .eq("event_id", eventId)
     .order("full_name", { ascending: true });
@@ -60,6 +60,7 @@ export async function fetchCrewRooming(eventId: string): Promise<CrewRoomingRow[
   }
   return (data ?? []) as unknown as CrewRoomingRow[];
 }
+
 
 export function normaliseTent(v: string | null | undefined): string {
   return (v ?? "").trim().toUpperCase();
