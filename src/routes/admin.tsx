@@ -35,6 +35,7 @@ const nav: { to: string; label: string; icon: typeof LayoutDashboard; exact?: bo
   { to: "/admin/promos", label: "Promos", icon: Tag },
   { to: "/admin/sponsors", label: "Sponsors", icon: Handshake },
   { to: "/admin/riders", label: "Riders", icon: Users },
+  { to: "/admin/crew", label: "Crew logins", icon: KeyRound },
   { to: "/admin/schedule-sync", label: "Schedule sync", icon: CalendarClock },
   { to: "/admin/audit", label: "Content check", icon: ShieldCheck },
   { to: "/admin/settings", label: "Settings", icon: Settings },
