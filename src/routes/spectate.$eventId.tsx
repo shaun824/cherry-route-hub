@@ -374,6 +374,20 @@ function SpectatorEventPage() {
             })()}
           </section>
 
+          {/* Race village map */}
+          {villageQ.data ? (
+            <section>
+              <h2 className="font-display text-[13px] font-bold uppercase tracking-wider text-ink-soft">
+                Race village
+              </h2>
+              <div className="mt-3">
+                <VillageMapView eventId={eventId} />
+              </div>
+            </section>
+          ) : null}
+
+
+
           {/* Spectator essentials */}
           <FactCard icon={Car} title="Parking">
             {event.spectatorParking ??
