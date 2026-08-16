@@ -241,10 +241,14 @@ function Home() {
           <div className="h-40 animate-pulse rounded-2xl bg-secondary" />
         </div>
       ) : user ? (
-        <div className="mt-4 px-5">
-          <NextEventCard />
-        </div>
+        <>
+          <SectionTitle title="View details on your next event" />
+          <div className="px-5">
+            <NextEventCard />
+          </div>
+        </>
       ) : null}
+
 
       {!loading && !user && spotlight ? (
         <>
@@ -299,7 +303,14 @@ function Home() {
       {/* Spotlight on another event — discovery for riders already entered */}
       {user && spotlight ? (
         <>
-          <SectionTitle title="Next up" />
+          <SectionTitle
+            title={
+              spotlight.entered
+                ? "View details on your next event"
+                : "More events you might like"
+            }
+          />
+
           <div className="px-5">
             <EventSpotlight
               eventId={spotlight.id}
@@ -818,10 +829,9 @@ function NextEventCard() {
       {rest.length > 0 ? (
         <div>
           <p className="mb-2 font-display text-lg font-bold tracking-tight text-ink">
-            {getEventSport(rest[0].event.discipline, rest[0].event.name) === "moto"
-              ? "More motorbike events you might like"
-              : "More mountain bike events you might like"}
+            More events you are entered for
           </p>
+
 
           <div className="flex snap-x snap-mandatory gap-2 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {rest.map((r) => (
