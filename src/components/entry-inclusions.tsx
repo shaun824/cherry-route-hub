@@ -139,15 +139,70 @@ function InclusionRow({
   );
 }
 
+/** Catalogue items the rider hasn't bought yet — one tap to their Entry Ninja profile. */
+function AddMoreMerch({
+  catalog,
+  owned,
+  addUrl,
+}: {
+  catalog: CatalogRow[] | undefined;
+  owned: DisplayExtra[];
+  addUrl: string;
+}) {
+  const ownedKeys = owned.map((o) => merchKey(o.name));
+  const available = (catalog ?? []).filter(
+    (c) => c.name && !ownedKeys.some((k) => merchKeysMatch(k, merchKey(c.name))),
+  );
+
+  return (
+    <div className="border-t border-border bg-secondary/50 px-3 py-3">
+      <p className="font-display text-[13px] font-bold text-ink">Want to add more?</p>
+      <p className="mt-0.5 text-[11px] leading-snug text-ink-soft">
+        Merchandise and extras are added on your Entry Ninja registration — the link below opens
+        your entry so you can add them, and it syncs straight back here.
+      </p>
+
+      {available.length ? (
+        <ul className="mt-2 flex flex-wrap gap-1.5">
+          {available.slice(0, 8).map((c) => (
+            <li
+              key={c.name}
+              className="rounded-full bg-card px-2 py-1 text-[11px] font-semibold text-ink ring-1 ring-border"
+            >
+              {c.name}
+              {c.price_from ? (
+                <span className="text-ink-soft"> · from {ZAR(c.price_from)}</span>
+              ) : null}
+            </li>
+          ))}
+        </ul>
+      ) : null}
+
+      <a
+        href={addUrl}
+        target="_blank"
+        rel="noreferrer"
+        className="mt-2.5 inline-flex w-full items-center justify-center gap-1.5 rounded-xl bg-cherry px-3 py-2.5 text-xs font-bold text-white"
+      >
+        <ShoppingBag className="h-3.5 w-3.5" /> Add merchandise on Entry Ninja
+        <ExternalLink className="h-3 w-3" />
+      </a>
+    </div>
+  );
+}
+
 export function EntryInclusions({
   eventId,
   extras,
   sizes,
+  addUrl,
 }: {
   eventId: string;
   extras: ExtraItem[] | null | undefined;
   /** Apparel sizes already known from the entry (jacket / t-shirt). */
   sizes?: { label: string; value: string }[];
+  /** Direct link to the rider's Entry Ninja registration, where extras are added. */
+  addUrl?: string | null;
 }) {
   const catalogQ = useEventMerchInfo(eventId);
   const groups = groupExtras(extras);
@@ -156,7 +211,9 @@ export function EntryInclusions({
     .filter((s) => s.value)
     .map((s) => ({ name: s.label, option: s.value, qty: 1 }));
 
-  if (!groups.length && !sizeItems.length) return null;
+  if (!groups.length && !sizeItems.length && !addUrl) return null;
+
+  const owned: DisplayExtra[] = [...sizeItems, ...groups.flatMap((g) => g.items)];
 
   return (
     <div className="mt-3 overflow-hidden rounded-2xl ring-1 ring-border">
@@ -189,6 +246,11 @@ export function EntryInclusions({
           </ul>
         </div>
       ))}
+
+      {addUrl ? (
+        <AddMoreMerch catalog={catalogQ.data} owned={owned} addUrl={addUrl} />
+      ) : null}
     </div>
   );
 }
+
