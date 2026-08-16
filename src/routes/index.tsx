@@ -410,22 +410,23 @@ function Home() {
         <>
           <SectionTitle title="Supplier promos" action="View all" actionTo="/promos" />
           <div className="px-5 pb-2">
-            <PromoCodeCard
-              promo={{
-                id: promos[0].id,
-                brand: promos[0].brand,
-                title: promos[0].title,
-                code: promos[0].code || undefined,
-                redeem: promos[0].code ? undefined : "Show this offer to the supplier",
-                discount: promos[0].discount,
-                url: promos[0].url || "#",
-                logoUrl: promos[0].logoUrl ?? "",
-                accent: promos[0].accent,
-              }}
+            <PromoCarousel
+              promos={promos.map((p) => ({
+                id: p.id,
+                brand: p.brand,
+                title: p.title,
+                code: p.code || undefined,
+                redeem: p.code ? undefined : "Show this offer to the supplier",
+                discount: p.discount,
+                url: p.url || "#",
+                logoUrl: p.logoUrl ?? "",
+                accent: p.accent,
+              }))}
             />
           </div>
         </>
       ) : null}
+
 
       {/* Sponsor scroller hidden while sponsor assets are being refreshed. */}
       {/* <SponsorScroller /> */}
