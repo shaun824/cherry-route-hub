@@ -77,7 +77,14 @@ export async function buildRiderContext(
     entryIds = (entries ?? []).map((e: any) => e.id as string);
     for (const e of entries ?? []) {
       lines.push("\nRider's entry for this event (from Entry Ninja):");
-      if (e.registration_ref) lines.push(`- Registration ref: ${e.registration_ref}`);
+      if (e.registration_ref) {
+        lines.push(`- Registration ref: ${e.registration_ref}`);
+        const regUrl = entryNinjaRegistrationUrl(e.registration_ref);
+        if (regUrl)
+          lines.push(
+            `- To add merchandise or extras, or change sizes, the rider opens their own Entry Ninja registration: ${regUrl} (always give this exact link when they ask how to add merch, extras or upgrades)`,
+          );
+      }
       if (e.category) lines.push(`- Category: ${e.category}`);
       if (e.batch) lines.push(`- Batch / start group: ${e.batch}`);
       if (e.bib_number) lines.push(`- Race number: ${e.bib_number}`);
