@@ -141,6 +141,10 @@ export const redeemReward = createServerFn({ method: "POST" })
       .maybeSingle();
     if (!reward) return { ok: false as const, error: "That reward is no longer available." };
 
+    if (reward.stock !== null && Number(reward.stock) <= 0) {
+      return { ok: false as const, error: "That reward is sold out for now." };
+    }
+
     const { balance } = await balanceFor(supabase, entrantIds);
     if (balance < Number(reward.cost_points)) {
       return { ok: false as const, error: "Not enough points for this reward yet." };
@@ -151,6 +155,14 @@ export const redeemReward = createServerFn({ method: "POST" })
     const entrantId = entrantIds[0] as string;
     const code = generateCouponCode();
     const expires = new Date(Date.now() + Number(reward.valid_days ?? 180) * 86400000).toISOString();
+
+    if (reward.stock !== null) {
+      await supabaseAdmin
+        .from("loyalty_rewards")
+        .update({ stock: Math.max(0, Number(reward.stock) - 1) })
+        .eq("id", reward.id);
+    }
+
 
     const { data: coupon, error } = await supabaseAdmin
       .from("loyalty_coupons")
