@@ -95,14 +95,24 @@ export function VillageMapView({
   }, [focusSpotId]);
 
   const map = q.data;
+  // Legacy imports left numeric "tent number" points behind — those live on the
+  // tent layer, so keep them out of the facility icons and legend.
+  const facilities = useMemo(
+    () =>
+      (map?.hotspots ?? []).filter(
+        (s) => s.title?.trim() && !/^(?:tent\s*)?\d+$/i.test(s.title.trim()),
+      ),
+    [map],
+  );
   const spots = useMemo(
-    () => (map?.hotspots ?? []).filter((s) => !filter || s.category === filter),
-    [map, filter],
+    () => facilities.filter((s) => !filter || s.category === filter),
+    [facilities, filter],
   );
   const categories = useMemo(() => {
-    const seen = new Set((map?.hotspots ?? []).map((s) => s.category));
+    const seen = new Set(facilities.map((s) => s.category));
     return Array.from(seen);
-  }, [map]);
+  }, [facilities]);
+
   const hasImage = !!map?.image_url;
   const pinnedCount = (map?.hotspots ?? []).filter(isPinnedSpot).length;
   const zoneCount = (map?.zones ?? []).length;
