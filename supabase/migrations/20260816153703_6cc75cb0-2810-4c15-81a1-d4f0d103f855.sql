@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.guard_entry_payment_fields() FROM PUBLIC, anon, authenticated;
