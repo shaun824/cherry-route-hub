@@ -186,18 +186,6 @@ function tentIcon(label: string, active: boolean) {
   });
 }
 
-function areaNumberIcon(label: string, active: boolean) {
-  const bg = active ? "#c8102e" : "#1f2937";
-  return L.divIcon({
-    className: "rce-village-area-number",
-    html: `<span style="display:grid;min-width:22px;height:22px;place-items:center;border-radius:6px;background:${bg};color:#fff;font-size:10px;font-weight:800;border:${
-      active ? "2px solid #fff" : "1px solid rgba(255,255,255,.65)"
-    };box-shadow:0 1px 4px rgba(0,0,0,.35)">${escapeHtml(label)}</span>`,
-    iconSize: [22, 22],
-    iconAnchor: [11, 11],
-  });
-}
-
 function normalizedNumber(value: string) {
   const match = value.trim().match(/^(?:tent\s*)?(\d+)$/i);
   return match?.[1] ?? null;
@@ -288,32 +276,6 @@ export default function VillageMapGeo({
   );
 
 
-  // Numbered drawn areas get one label at their centre — but only when there is
-  // no manually dropped tent pin carrying the same number. Dropped pins are the
-  // authoritative placement, so they always win.
-  const tentNumbers = useMemo(() => {
-    const set = new Set<string>();
-    for (const t of tents) {
-      const n = normalizedNumber(t.label);
-      if (n) set.add(n);
-    }
-    return set;
-  }, [tents]);
-
-  const numberedAreas = useMemo(() => {
-    const seen = new Set<string>();
-    return zones.flatMap((zone) => {
-      const number = normalizedNumber(zone.name);
-      const centre = zoneCentroid(zone);
-      if (!number || !centre || seen.has(number) || tentNumbers.has(number)) return [];
-      seen.add(number);
-      return [{ zone, number, centre }];
-    });
-  }, [zones, tentNumbers]);
-
-
-
-
   function locate() {
     if (!("geolocation" in navigator)) {
       setGeoError("Location isn't available on this device.");
@@ -402,28 +364,11 @@ export default function VillageMapGeo({
                   fillColor: hot ? "#c8102e" : zoneColor(z),
                   fillOpacity: hot ? 0.45 : 0.18,
                 }}
-              >
-                {z.name ? <Popup>{z.name}</Popup> : null}
-              </Polygon>
+              />
             );
           })}
 
           <ZoomWatcher onZoom={setZoom} />
-
-          {numberedAreas.map(({ zone, number, centre }) => {
-            const active = highlightZoneId === zone.id;
-            if (!active && zoom < 19) return null;
-            return (
-              <Marker
-                key={`area-label-${zone.id}`}
-                position={[centre.lat, centre.lng]}
-                icon={areaNumberIcon(number, active)}
-                interactive={false}
-                keyboard={false}
-                zIndexOffset={active ? 850 : 200}
-              />
-            );
-          })}
 
           {/* Dropped tent pins are shown exactly where they were placed. Only
               exact duplicates of the same number are collapsed. */}
