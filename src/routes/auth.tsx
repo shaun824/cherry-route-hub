@@ -15,8 +15,39 @@ import { BrandMark } from "@/components/ui-bits";
 
 const searchSchema = z.object({ next: z.string().optional() });
 
-/** Where we stash the ID number until a session exists (email confirmation flow). */
+/**
+ * Where we stash the ID number until a session exists (email confirmation flow).
+ * sessionStorage only, and cleared the moment the entry is linked.
+ */
 const PENDING_ID_KEY = "rce:pending-id-link";
+const PENDING_NAME_KEY = "rce:pending-id-name";
+
+function readPending(key: string): string | null {
+  try {
+    return sessionStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+function writePending(key: string, value: string) {
+  try {
+    sessionStorage.setItem(key, value);
+  } catch {
+    /* ignore */
+  }
+}
+
+function clearPending() {
+  try {
+    sessionStorage.removeItem(PENDING_ID_KEY);
+    sessionStorage.removeItem(PENDING_NAME_KEY);
+    // Legacy: earlier builds stored this in localStorage.
+    localStorage.removeItem(PENDING_ID_KEY);
+  } catch {
+    /* ignore */
+  }
+}
 
 export const Route = createFileRoute("/auth")({
   validateSearch: searchSchema,
