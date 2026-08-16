@@ -516,7 +516,10 @@ function RoutesPanel({
   });
   const isEntrant = !!entryQ.data;
   const downloadsLocked = locked || (!!user && !entryQ.isLoading && !isEntrant);
-  const days: EventDay[] = Array.isArray(event.days) ? (event.days as EventDay[]) : [];
+  const days: EventDay[] = withRegistrationDayLabels(
+    Array.isArray(event.days) ? (event.days as EventDay[]) : [],
+    Array.isArray(event.schedule) ? (event.schedule as ScheduleItem[]) : [],
+  );
   const allRoutes = days.flatMap((d) => d.routes ?? []);
   const hasMap = allRoutes.some((r) => (r.kmlUrls ?? []).length > 0);
 
@@ -646,9 +649,11 @@ function InfoPanel({
     daysToEvent !== null && daysToEvent <= 10 && daysToEvent >= -1 && Boolean(event.location);
   const q = useQuery({ queryKey: ["event-info", eventId], queryFn: () => fetchEventInfo(eventId) });
   const info = q.data;
-  const days: EventDay[] = Array.isArray(event.days) ? (event.days as EventDay[]) : [];
-  
   const schedule: ScheduleItem[] = Array.isArray(event.schedule) ? (event.schedule as ScheduleItem[]) : [];
+  const days: EventDay[] = withRegistrationDayLabels(
+    Array.isArray(event.days) ? (event.days as EventDay[]) : [],
+    schedule,
+  );
 
   const aboutText = description ?? "";
   const isLongAbout = aboutText.length > DESCRIPTION_PREVIEW_LENGTH;
