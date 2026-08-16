@@ -33,6 +33,8 @@ import { useSession } from "@/lib/auth";
 import { brandHeader } from "@/lib/event-brand";
 import { buildMapEmbedSrc, buildMapLink, resolveVenuePoint } from "@/lib/map-embed";
 import { VenueMiniMap } from "@/components/venue-mini-map";
+import { fetchEventInfo } from "@/lib/event-info";
+
 
 export const Route = createFileRoute("/spectate/$eventId")({
   head: ({ params }) => ({
