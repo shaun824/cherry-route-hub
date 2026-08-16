@@ -1,5 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { BOT_MISS_REPLY } from "@/lib/bot-handoff";
+import { FOLLOWUP_PROMPT_RULE, splitFollowUps } from "@/lib/bot-followups";
+
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
