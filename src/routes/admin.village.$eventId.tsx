@@ -1,7 +1,7 @@
 import { createFileRoute, ClientOnly, Link, notFound } from "@tanstack/react-router";
 import { Suspense, lazy, useEffect, useMemo, useRef, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Loader2, MapPin, PencilRuler, Save, Sparkles, Square, Trash2, Upload, X } from "lucide-react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { ArrowLeft, Loader2, MapPin, PencilRuler, Save, Sparkles, Square, Tent, Trash2, Upload, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   VILLAGE_CATEGORIES,
@@ -39,6 +39,7 @@ import {
   type ZonePoint,
 } from "@/lib/village-zones";
 import ZoneDuplicator from "@/components/zone-duplicator";
+import { fetchVillageTents } from "@/lib/village-tents";
 
 const VillageMapEditorGeo = lazy(() => import("@/components/village-map-editor-geo"));
 
@@ -86,6 +87,47 @@ function VillageEditor() {
   const [centreToken, setCentreToken] = useState(0);
   const [drawing, setDrawing] = useState(false);
   const [selectedZone, setSelectedZone] = useState<string | null>(null);
+  const [tentMode, setTentMode] = useState(false);
+  const [selectedTent, setSelectedTent] = useState<string | null>(null);
+  const [nextTentLabel, setNextTentLabel] = useState("1");
+  const qc = useQueryClient();
+  const tentsQ = useQuery({
+    queryKey: ["village-tents", event.id],
+    queryFn: () => fetchVillageTents(event.id),
+  });
+  const tents = tentsQ.data ?? [];
+
+  function bumpLabel(label: string) {
+    const n = Number(label.match(/\d+$/)?.[0] ?? NaN);
+    if (!Number.isFinite(n)) return label;
+    return label.replace(/\d+$/, String(n + 1));
+  }
+
+  async function placeTent(lat: number, lng: number) {
+    const label = nextTentLabel.trim() || String(tents.length + 1);
+    const zone = zones.find((z) => pointInZone({ lat, lng }, z)) ?? null;
+    const { error } = await supabase
+      .from("event_village_tents")
+      .insert({ event_id: event.id, label, lat, lng, zone_id: zone?.id ?? null });
+    if (error) {
+      alert(error.message);
+      return;
+    }
+    setNextTentLabel(bumpLabel(label));
+    await qc.invalidateQueries({ queryKey: ["village-tents", event.id] });
+  }
+
+  async function moveTent(id: string, lat: number, lng: number) {
+    const zone = zones.find((z) => pointInZone({ lat, lng }, z)) ?? null;
+    await supabase.from("event_village_tents").update({ lat, lng, zone_id: zone?.id ?? null }).eq("id", id);
+    await qc.invalidateQueries({ queryKey: ["village-tents", event.id] });
+  }
+
+  async function deleteTent(id: string) {
+    await supabase.from("event_village_tents").delete().eq("id", id);
+    setSelectedTent(null);
+    await qc.invalidateQueries({ queryKey: ["village-tents", event.id] });
+  }
   const fileRef = useRef<HTMLInputElement>(null);
   const dragRef = useRef<string | null>(null);
   const imgWrapRef = useRef<HTMLDivElement>(null);
@@ -367,6 +409,37 @@ function VillageEditor() {
           <PencilRuler className="h-3.5 w-3.5" /> {drawing ? "Drawing area…" : "Draw area"}
         </button>
         <button
+          onClick={() => {
+            setTentMode((t) => !t);
+            setPlacing(false);
+            setDrawing(false);
+          }}
+          disabled={usingImage || !centre}
+          className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold disabled:opacity-50 ${
+            tentMode ? "bg-cherry text-white" : "bg-muted text-ink"
+          }`}
+        >
+          <Tent className="h-3.5 w-3.5" /> {tentMode ? "Click to drop tents…" : "Add tent pins"}
+        </button>
+        {tentMode ? (
+          <label className="inline-flex items-center gap-1.5 rounded-lg bg-secondary px-2 py-1 text-[11px] font-bold text-ink-soft">
+            Next tent
+            <input
+              value={nextTentLabel}
+              onChange={(e) => setNextTentLabel(e.target.value)}
+              className="w-20 rounded border border-border bg-background px-2 py-1 text-xs font-semibold text-ink"
+            />
+          </label>
+        ) : null}
+        {selectedTent ? (
+          <button
+            onClick={() => void deleteTent(selectedTent)}
+            className="inline-flex items-center gap-1.5 rounded-lg bg-muted px-3 py-1.5 text-xs font-bold text-ink"
+          >
+            <Trash2 className="h-3.5 w-3.5" /> Delete tent pin
+          </button>
+        ) : null}
+        <button
           onClick={addRectangle}
           disabled={usingImage || !centre}
           className="inline-flex items-center gap-1.5 rounded-lg bg-muted px-3 py-1.5 text-xs font-bold text-ink disabled:opacity-50"
@@ -499,6 +572,12 @@ function VillageEditor() {
               onSelectZone={setSelectedZone}
               onRenameZone={(id, name) => updateZone(id, { name })}
               onDuplicateZone={duplicateZone}
+              tents={tents.map((t) => ({ id: t.id, label: t.label, lat: t.lat, lng: t.lng }))}
+              tentMode={tentMode}
+              onPlaceTent={placeTent}
+              onMoveTent={moveTent}
+              onSelectTent={setSelectedTent}
+              selectedTent={selectedTent}
             />
           </Suspense>
         </ClientOnly>
