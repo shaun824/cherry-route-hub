@@ -11,9 +11,16 @@ import { linkMyEntry } from "@/lib/roster.functions";
 
 import { useSession } from "@/lib/auth";
 import { BrandMark } from "@/components/ui-bits";
+import { listKnownAccounts, rememberAccount, type KnownAccount } from "@/lib/known-accounts";
 
 
-const searchSchema = z.object({ next: z.string().optional() });
+
+const searchSchema = z.object({
+  next: z.string().optional(),
+  email: z.string().optional(),
+  add: z.boolean().optional(),
+});
+
 
 /**
  * Where we stash the ID number until a session exists (email confirmation flow).
@@ -69,24 +76,29 @@ type Mode = "signin" | "signup" | "reset";
 
 function AuthPage() {
   const { user, loading } = useSession();
-  const { next } = Route.useSearch();
+  const { next, email: emailParam, add } = Route.useSearch();
   const navigate = useNavigate();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
-  const [mode, setMode] = useState<Mode>("signup");
+  const [mode, setMode] = useState<Mode>(emailParam || add ? "signin" : "signup");
   const [fullName, setFullName] = useState("");
   const [idNumber, setIdNumber] = useState("");
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(emailParam ?? "");
   const [password, setPassword] = useState("");
   const [noAccount, setNoAccount] = useState(false);
   const [hasEntries, setHasEntries] = useState(false);
+  const [knownAccounts, setKnownAccounts] = useState<KnownAccount[]>([]);
   const checkAccount = useServerFn(checkAccountExists);
   const linkEntry = useServerFn(linkMyEntry);
   const linkedRef = useRef(false);
 
+  useEffect(() => {
+    setKnownAccounts(listKnownAccounts());
+  }, []);
 
   const target = next && next.startsWith("/") ? next : "/";
+
 
   // Once a session exists, claim any entries matching the ID number they gave
   // at sign-up, then continue into the app.
@@ -96,6 +108,11 @@ function AuthPage() {
       return;
     }
     linkedRef.current = true;
+    rememberAccount(
+      user.email,
+      (user.user_metadata?.full_name as string | undefined) ?? null,
+    );
+
     const pending = readPending(PENDING_ID_KEY);
     const pendingName = readPending(PENDING_NAME_KEY) ?? "";
     const go = () => navigate({ to: target, replace: true });
@@ -223,6 +240,47 @@ function AuthPage() {
             </p>
           </div>
         ) : null}
+
+        {!isSignup && knownAccounts.length > 0 ? (
+          <div className="mt-4 rounded-2xl bg-secondary/50 p-3 ring-1 ring-border">
+            <p className="text-[11px] font-bold uppercase tracking-wider text-ink-soft">
+              Accounts on this device
+            </p>
+            <div className="mt-2 space-y-1.5">
+              {knownAccounts.map((a) => (
+                <button
+                  key={a.email}
+                  type="button"
+                  onClick={() => {
+                    setEmail(a.email);
+                    setMode("signin");
+                    setError(null);
+                    setNotice(null);
+                  }}
+                  className={`flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm ring-1 transition ${
+                    email.trim().toLowerCase() === a.email.toLowerCase()
+                      ? "bg-card ring-cherry"
+                      : "bg-card ring-border hover:bg-secondary"
+                  }`}
+                >
+                  <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-accent text-[11px] font-bold text-cherry-deep">
+                    {(a.name || a.email).slice(0, 1).toUpperCase()}
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    {a.name ? (
+                      <span className="block truncate font-semibold text-ink">{a.name}</span>
+                    ) : null}
+                    <span className="block truncate text-[11px] text-ink-soft">{a.email}</span>
+                  </span>
+                </button>
+              ))}
+            </div>
+            <p className="mt-2 text-[11px] leading-snug text-ink-soft">
+              Tap an account to fill it in, then enter its password — or use Google below.
+            </p>
+          </div>
+        ) : null}
+
 
         <button
           onClick={handleGoogle}
