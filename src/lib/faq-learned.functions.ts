@@ -14,7 +14,10 @@ export const listLearnedFaqs = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     let q = context.supabase
       .from("event_faq_learned")
-      .select("id, event_id, question, answer, status, expires_on, times_used, created_at, source_thread_id")
+      .select(
+        "id, event_id, question, answer, status, expires_on, times_used, created_at, source_thread_id, follow_ups, source_kind",
+      )
+
       .order("created_at", { ascending: false })
       .limit(200);
     if (data.status !== "all") q = q.eq("status", data.status);

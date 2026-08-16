@@ -438,8 +438,10 @@ export type Database = {
           created_by: string | null
           event_id: string | null
           expires_on: string | null
+          follow_ups: string[]
           id: string
           question: string
+          source_kind: string
           source_message_id: string | null
           source_thread_id: string | null
           status: string
@@ -454,8 +456,10 @@ export type Database = {
           created_by?: string | null
           event_id?: string | null
           expires_on?: string | null
+          follow_ups?: string[]
           id?: string
           question: string
+          source_kind?: string
           source_message_id?: string | null
           source_thread_id?: string | null
           status?: string
@@ -470,8 +474,10 @@ export type Database = {
           created_by?: string | null
           event_id?: string | null
           expires_on?: string | null
+          follow_ups?: string[]
           id?: string
           question?: string
+          source_kind?: string
           source_message_id?: string | null
           source_thread_id?: string | null
           status?: string
