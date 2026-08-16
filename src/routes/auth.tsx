@@ -96,26 +96,18 @@ function AuthPage() {
       return;
     }
     linkedRef.current = true;
-    const pending = (() => {
-      try {
-        return localStorage.getItem(PENDING_ID_KEY);
-      } catch {
-        return null;
-      }
-    })();
+    const pending = readPending(PENDING_ID_KEY);
+    const pendingName = readPending(PENDING_NAME_KEY) ?? "";
     const go = () => navigate({ to: target, replace: true });
     if (!pending) {
+      clearPending();
       go();
       return;
     }
-    void linkEntry({ data: { id_number: pending } })
+    void linkEntry({ data: { id_number: pending, surname: pendingName } })
       .catch(() => null)
       .finally(() => {
-        try {
-          localStorage.removeItem(PENDING_ID_KEY);
-        } catch {
-          /* ignore */
-        }
+        clearPending();
         go();
       });
   }, [loading, user, target, navigate, linkEntry]);
