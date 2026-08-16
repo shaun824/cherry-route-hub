@@ -241,6 +241,47 @@ function AuthPage() {
           </div>
         ) : null}
 
+        {!isSignup && knownAccounts.length > 0 ? (
+          <div className="mt-4 rounded-2xl bg-secondary/50 p-3 ring-1 ring-border">
+            <p className="text-[11px] font-bold uppercase tracking-wider text-ink-soft">
+              Accounts on this device
+            </p>
+            <div className="mt-2 space-y-1.5">
+              {knownAccounts.map((a) => (
+                <button
+                  key={a.email}
+                  type="button"
+                  onClick={() => {
+                    setEmail(a.email);
+                    setMode("signin");
+                    setError(null);
+                    setNotice(null);
+                  }}
+                  className={`flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm ring-1 transition ${
+                    email.trim().toLowerCase() === a.email.toLowerCase()
+                      ? "bg-card ring-cherry"
+                      : "bg-card ring-border hover:bg-secondary"
+                  }`}
+                >
+                  <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-accent text-[11px] font-bold text-cherry-deep">
+                    {(a.name || a.email).slice(0, 1).toUpperCase()}
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    {a.name ? (
+                      <span className="block truncate font-semibold text-ink">{a.name}</span>
+                    ) : null}
+                    <span className="block truncate text-[11px] text-ink-soft">{a.email}</span>
+                  </span>
+                </button>
+              ))}
+            </div>
+            <p className="mt-2 text-[11px] leading-snug text-ink-soft">
+              Tap an account to fill it in, then enter its password — or use Google below.
+            </p>
+          </div>
+        ) : null}
+
+
         <button
           onClick={handleGoogle}
           disabled={busy}
