@@ -201,45 +201,95 @@ function Home() {
 
       </div>
 
-      {/* Primary: next event or sign-in CTA */}
-      <div className="mt-4 px-5">
-        {loading ? (
+      {/* Primary: for signed-in riders their own next event; guests get the
+          event that matters right now, with no sign-in wall. */}
+      {loading ? (
+        <div className="mt-4 px-5">
           <div className="h-40 animate-pulse rounded-2xl bg-secondary" />
-        ) : user ? (
+        </div>
+      ) : user ? (
+        <div className="mt-4 px-5">
           <NextEventCard />
-        ) : (
-          <SignedOutCTA />
-        )}
-      </div>
+        </div>
+      ) : null}
+
+      {!loading && !user && spotlight ? (
+        <>
+          <SectionTitle title={spotlight.happeningNow ? "Happening now" : "Next up"} />
+          <div className="px-5">
+            <EventSpotlight
+              eventId={spotlight.id}
+              name={spotlight.name}
+              location={spotlight.location}
+              date={spotlight.date}
+              logoUrl={spotlight.logoUrl}
+              heroColor={spotlight.heroColor}
+              description={spotlight.description}
+              entered={false}
+              guest
+              happeningNow={spotlight.happeningNow}
+            />
+          </div>
+          {guestUpdates.length > 0 ? (
+            <>
+              <SectionTitle title="Latest updates" action="View all" actionTo="/feed" />
+              <ul className="space-y-2 px-5">
+                {guestUpdates.map((p) => (
+                  <li
+                    key={p.id}
+                    className="rounded-2xl bg-card p-3 shadow-sm ring-1 ring-border"
+                  >
+                    <div className="flex items-center gap-2">
+                      <TypeBadge type={p.type} />
+                      <span className="text-[11px] text-muted-foreground">
+                        {relativeTime(p.postedAt)}
+                      </span>
+                    </div>
+                    <p className="mt-1.5 font-display text-sm font-bold text-ink">{p.title}</p>
+                    <p className="mt-1 line-clamp-2 text-sm text-ink-soft">{p.body}</p>
+                  </li>
+                ))}
+              </ul>
+            </>
+          ) : null}
+          <div className="mt-4 px-5">
+            <GuestSignInNudge />
+          </div>
+        </>
+      ) : null}
 
       <div className="mt-4 space-y-3 px-5">
         <PushOptIn />
         <InstallPrompt />
       </div>
 
-
-      {/* Spotlight on the next event — FOMO for guests, a deep link for entrants */}
-      {spotlight ? (
-        <div className="mt-4 px-5">
-          <EventSpotlight
-            eventId={spotlight.id}
-            name={spotlight.name}
-            location={spotlight.location}
-            date={spotlight.date}
-            logoUrl={spotlight.logoUrl}
-            heroColor={spotlight.heroColor}
-            description={spotlight.description}
-            entered={spotlight.entered}
-          />
-        </div>
+      {/* Spotlight on another event — discovery for riders already entered */}
+      {user && spotlight ? (
+        <>
+          <SectionTitle title="Next up" />
+          <div className="px-5">
+            <EventSpotlight
+              eventId={spotlight.id}
+              name={spotlight.name}
+              location={spotlight.location}
+              date={spotlight.date}
+              logoUrl={spotlight.logoUrl}
+              heroColor={spotlight.heroColor}
+              description={spotlight.description}
+              entered={spotlight.entered}
+            />
+          </div>
+        </>
       ) : null}
 
       {/* Quick links */}
       {quickLinks.length > 0 ? (
-        <div
-          className="mt-4 grid gap-2 px-4"
-          style={{ gridTemplateColumns: `repeat(${qlCols}, minmax(0, 1fr))` }}
-        >
+        <>
+          <SectionTitle title="Quick links" />
+          <div
+            className="grid gap-2 px-4"
+            style={{ gridTemplateColumns: `repeat(${qlCols}, minmax(0, 1fr))` }}
+          >
           {quickLinks.map((q) => {
             const Icon = QUICK_ICONS[q.icon] ?? Sparkles;
             return (
