@@ -56,6 +56,43 @@ function clearPending() {
   }
 }
 
+type PasswordCredentialCtor = new (d: {
+  id: string;
+  password: string;
+  name?: string;
+}) => Credential;
+
+function passwordCredentialCtor(): PasswordCredentialCtor | undefined {
+  return (window as unknown as { PasswordCredential?: PasswordCredentialCtor }).PasswordCredential;
+}
+
+/** Ask the browser / keychain to remember this login. */
+async function saveCredential(email: string, password: string) {
+  try {
+    const Ctor = passwordCredentialCtor();
+    if (Ctor && navigator.credentials?.store) {
+      await navigator.credentials.store(new Ctor({ id: email, password, name: email }));
+    }
+  } catch {
+    /* Safari falls back to its own save prompt */
+  }
+}
+
+/** Pull a saved login out of the keychain to pre-fill the email field. */
+async function readSavedEmail(): Promise<string | null> {
+  try {
+    if (!passwordCredentialCtor() || !navigator.credentials?.get) return null;
+    const cred = (await navigator.credentials.get({
+      password: true,
+      mediation: "optional",
+    } as CredentialRequestOptions)) as (Credential & { id?: string }) | null;
+    return cred?.id ?? null;
+  } catch {
+    return null;
+  }
+}
+
+
 export const Route = createFileRoute("/auth")({
   validateSearch: searchSchema,
   head: () => ({
@@ -94,8 +131,18 @@ function AuthPage() {
   const linkedRef = useRef(false);
 
   useEffect(() => {
-    setKnownAccounts(listKnownAccounts());
+    const known = listKnownAccounts();
+    setKnownAccounts(known);
+    // Pre-fill from the device keychain when we don't already have an email.
+    void readSavedEmail().then((saved) => {
+      if (!saved) return;
+      setEmail((cur) => (cur.trim() ? cur : saved));
+      setMode((m) => (m === "signup" && !emailParam ? "signin" : m));
+    });
+    if (!emailParam && known.length > 0) setMode("signin");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
 
   const target = next && next.startsWith("/") ? next : "/";
 
@@ -163,7 +210,13 @@ function AuthPage() {
     setError(null);
     setNotice(null);
     setNoAccount(false);
+    // Never let the button sit on "Please wait…" forever.
+    const watchdog = setTimeout(() => {
+      setBusy(false);
+      setError("That took too long. Check your connection and try again.");
+    }, 20000);
     try {
+
       if (mode === "reset") {
         const { error: err } = await supabase.auth.resetPasswordForEmail(email.trim(), {
           redirectTo: `${window.location.origin}/reset-password`,
@@ -197,7 +250,7 @@ function AuthPage() {
           );
         }
       } else {
-        const { error: err } = await supabase.auth.signInWithPassword({
+        const { data, error: err } = await supabase.auth.signInWithPassword({
           email: email.trim(),
           password,
         });
@@ -218,7 +271,17 @@ function AuthPage() {
           }
           throw err;
         }
+        // Offer the browser/keychain a save, then move on ourselves rather than
+        // waiting on the session listener.
+        const signedInEmail = data.user?.email ?? email.trim();
+        rememberAccount(
+          signedInEmail,
+          (data.user?.user_metadata?.["full_name"] as string | undefined) ?? null,
+        );
+        await saveCredential(signedInEmail, password);
+        navigate({ to: target, replace: true });
       }
+
     } catch (err) {
       setError((err as Error).message || "Something went wrong.");
     } finally {
