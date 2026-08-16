@@ -396,16 +396,16 @@ export default function VillageMapGeo({
             );
             return firstIdx === i;
           }).map((t) => {
-
             const hot = highlightTentId === t.id;
-            // Labels only once you're zoomed in — otherwise the numbers overlap
-            // into an unreadable block. Your own tent always stays labelled.
-            const labelled = hot || zoom >= 19;
+            // Clean-map rule (Weekend Warrior standard): tent numbers only appear
+            // once you're zoomed right in. Zoomed out we render nothing at all —
+            // no dots, no clutter. Your own tent always stays visible.
+            if (!hot && zoom < 19) return null;
             return (
               <Marker
                 key={t.id}
                 position={[t.lat, t.lng]}
-                icon={labelled ? tentIcon(t.label, hot) : tentDotIcon(hot)}
+                icon={tentIcon(t.label, hot)}
                 zIndexOffset={hot ? 900 : 300}
               >
                 <Popup>{hot ? `${t.label} — this is you` : t.label}</Popup>
