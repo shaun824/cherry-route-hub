@@ -46,7 +46,11 @@ function Promos() {
       <div className="px-5 py-5">
         <PromoCarousel promos={promos} />
       </div>
+      <p className="px-5 pb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+        All offers
+      </p>
       <ul className="space-y-3 px-5 pb-5">
+
         {promos.map((promo: EventPromo) => (
           <li key={promo.id}>
             <PromoCodeCard promo={promo} />
