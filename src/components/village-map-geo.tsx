@@ -379,7 +379,7 @@ export default function VillageMapGeo({
           {selectedSpot ? (
             <Marker
               position={hotspotLatLng(geo, selectedSpot, heightM)}
-              icon={pointLabelIcon(selectedSpot.name)}
+              icon={pointLabelIcon(selectedSpot.title)}
               zIndexOffset={1000}
               eventHandlers={{ click: () => onSelect(null) }}
             />
