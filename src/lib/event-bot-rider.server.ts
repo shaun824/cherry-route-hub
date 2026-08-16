@@ -3,6 +3,7 @@
 // their accommodation allocation (tent number + where it sits on the village
 // map). Everything is resolved from the signed-in user's own records only.
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { entryNinjaRegistrationUrl } from "@/lib/entry-ninja-link";
 
 type AnyClient = SupabaseClient<any, any, any>;
 
