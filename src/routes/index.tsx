@@ -403,6 +403,36 @@ function Home() {
         collapseHint="Not your sport? Tap to view bicycle events."
       />
 
+      {/* Latest news — pulled from the Red Cherry and PE Plett websites */}
+      {latestNews.length > 0 ? (
+        <>
+          <SectionTitle title="Latest news" action="View all" actionTo="/feed" />
+          <ul className="space-y-2 px-5 pb-2">
+            {latestNews.map((p) => (
+              <li key={p.id} className="rounded-2xl bg-card p-3 shadow-sm ring-1 ring-border">
+                <div className="flex items-center gap-2">
+                  <TypeBadge type={p.type} />
+                  <span className="text-[11px] text-muted-foreground">
+                    {p.author} · {relativeTime(p.postedAt)}
+                  </span>
+                </div>
+                <p className="mt-1.5 font-display text-sm font-bold text-ink">{p.title}</p>
+                <p className="mt-1 line-clamp-2 text-sm text-ink-soft">{p.body}</p>
+                {p.sourceUrl ? (
+                  <a
+                    href={p.sourceUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-2 inline-block text-xs font-semibold text-cherry"
+                  >
+                    Read the full article
+                  </a>
+                ) : null}
+              </li>
+            ))}
+          </ul>
+        </>
+      ) : null}
 
 
       {/* Promo teaser — same tappable card + reminder pop-up as everywhere else */}
