@@ -1,31 +1,51 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 import type { EventPromo } from "@/lib/event-promos";
+import { useShuffledPromos } from "@/lib/use-shuffled-promos";
 import { PromoCodeCard } from "@/components/promo-code-card";
 
 /** Rotates through rider offers, with a visible list of every brand on offer. */
-export function PromoCarousel({ promos }: { promos: EventPromo[] }) {
+export function PromoCarousel({ promos: incoming }: { promos: EventPromo[] }) {
+  const promos = useShuffledPromos(incoming);
   const [i, setI] = useState(0);
   const [paused, setPaused] = useState(false);
+  const resumeRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Fresh order on every visit — always start on the new lead offer.
+  useEffect(() => {
+    setI(0);
+  }, [promos]);
 
   useEffect(() => {
     if (paused || promos.length < 2) return;
-    const t = setInterval(() => setI((v) => (v + 1) % promos.length), 7000);
+    const t = setInterval(() => setI((v) => (v + 1) % promos.length), 5000);
     return () => clearInterval(t);
   }, [paused, promos.length]);
+
+  // Pause while someone is interacting, then get the rotation going again.
+  const nudgePause = () => {
+    setPaused(true);
+    if (resumeRef.current) clearTimeout(resumeRef.current);
+    resumeRef.current = setTimeout(() => setPaused(false), 12000);
+  };
+
+  useEffect(() => () => {
+    if (resumeRef.current) clearTimeout(resumeRef.current);
+  }, []);
 
   const idx = Math.min(i, promos.length - 1);
   const promo = promos[idx];
   if (!promo) return null;
 
   const go = (next: number) => {
-    setPaused(true);
+    nudgePause();
     setI((next + promos.length) % promos.length);
   };
 
   return (
-    <div onPointerDown={() => setPaused(true)}>
+    <div onPointerDown={nudgePause}>
+
       {promos.length > 1 ? (
         <div className="mb-3">
           <div className="mb-2 flex items-center justify-between gap-2">
