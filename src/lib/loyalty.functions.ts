@@ -248,7 +248,10 @@ export const saveLoyaltySettingsFn = createServerFn({ method: "POST" })
         randPerPoint: z.number().min(0).max(100),
         loyaltyBonusPerYear: z.number().int().min(0).max(10000),
         pointsPerRand: z.number().min(0).max(100).default(0.1),
-        heroMultiplier: z.number().min(1).max(10).default(2),
+        heroMultiplier: z.number().min(1).max(10).default(1),
+        tierWindowMonths: z.number().int().min(6).max(120).default(36),
+        tierHoldMonths: z.number().int().min(0).max(60).default(12),
+        expiryMonths: z.number().int().min(0).max(120).default(24),
         programName: z.string().trim().min(1).max(60),
       })
       .parse(d),
@@ -259,6 +262,7 @@ export const saveLoyaltySettingsFn = createServerFn({ method: "POST" })
     const { saveLoyaltySettings } = await import("./loyalty.server");
     return saveLoyaltySettings(supabase, data);
   });
+
 
 export const setEventPoints = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
