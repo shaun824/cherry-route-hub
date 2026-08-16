@@ -278,3 +278,116 @@ export const deleteResultSet = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
+export type RiderDetailPayload = {
+  status: "ok" | "signin" | "not_found";
+  event_name: string | null;
+  event_date: string | null;
+  rider: TrackedRider | null;
+  /** Result sets that have a row for this rider (multi-day / stage breakdown). */
+  sets: (ResultSet & { row: ResultRow | null })[];
+};
+
+/** Everything we know about one entrant, including their per-stage results. */
+export const getRiderDetail = createServerFn({ method: "GET" })
+  .inputValidator((input: unknown) =>
+    z.object({ eventId: z.string().uuid(), entrantId: z.string().uuid() }).parse(input),
+  )
+  .handler(async ({ data }): Promise<RiderDetailPayload> => {
+    const { getRequestHeader } = await import("@tanstack/react-start/server");
+    const { resolveOptionalUserId } = await import("@/lib/app-bot.server");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const userId = await resolveOptionalUserId(getRequestHeader("authorization") ?? null);
+    if (!userId)
+      return { status: "signin", event_name: null, event_date: null, rider: null, sets: [] };
+
+    const { data: ev } = await supabaseAdmin
+      .from("events")
+      .select("name, event_date")
+      .eq("id", data.eventId)
+      .maybeSingle();
+
+    const { data: row } = await supabaseAdmin
+      .from("event_entrants")
+      .select(
+        "id, category, batch, bib_number, started_at, finished_at, entrants:entrants!inner(full_name)",
+      )
+      .eq("event_id", data.eventId)
+      .eq("id", data.entrantId)
+      .maybeSingle();
+
+    if (!row)
+      return {
+        status: "not_found",
+        event_name: (ev?.name as string | null) ?? null,
+        event_date: (ev?.event_date as string | null) ?? null,
+        rider: null,
+        sets: [],
+      };
+
+    const rider: TrackedRider = {
+      id: String(row.id),
+      full_name: String((row as any).entrants?.full_name ?? ""),
+      bib_number: (row.bib_number as string | null) ?? null,
+      category: (row.category as string | null) ?? null,
+      batch: (row.batch as string | null) ?? null,
+      started_at: (row.started_at as string | null) ?? null,
+      finished_at: (row.finished_at as string | null) ?? null,
+    };
+
+    const { data: sets } = await supabaseAdmin
+      .from("event_result_sets")
+      .select("id, label, kind, sort_order, imported_at")
+      .eq("event_id", data.eventId)
+      .order("sort_order", { ascending: true });
+
+    const { data: rows } = await supabaseAdmin
+      .from("event_results")
+      .select(
+        "id, result_set_id, event_entrant_id, bib_number, full_name, category, batch, position, time_text, time_ms, gap_text, status, extras",
+      )
+      .eq("event_id", data.eventId)
+      .limit(5000);
+
+    const name = rider.full_name.trim().toLowerCase();
+    const mine = (rows ?? []).filter(
+      (r: any) =>
+        (r.event_entrant_id && String(r.event_entrant_id) === rider.id) ||
+        (rider.bib_number && r.bib_number && String(r.bib_number) === rider.bib_number) ||
+        (!!name && String(r.full_name ?? "").trim().toLowerCase() === name),
+    );
+
+    const toRow = (r: any): ResultRow => ({
+      id: String(r.id),
+      result_set_id: String(r.result_set_id),
+      bib_number: (r.bib_number as string | null) ?? null,
+      full_name: String(r.full_name ?? ""),
+      category: (r.category as string | null) ?? null,
+      batch: (r.batch as string | null) ?? null,
+      position: r.position == null ? null : Number(r.position),
+      time_text: (r.time_text as string | null) ?? null,
+      time_ms: r.time_ms == null ? null : Number(r.time_ms),
+      gap_text: (r.gap_text as string | null) ?? null,
+      status: (r.status as string | null) ?? null,
+      extras: (r.extras as Record<string, string>) ?? {},
+    });
+
+    return {
+      status: "ok",
+      event_name: (ev?.name as string | null) ?? null,
+      event_date: (ev?.event_date as string | null) ?? null,
+      rider,
+      sets: (sets ?? []).map((s: any) => {
+        const match = mine.find((r: any) => String(r.result_set_id) === String(s.id));
+        return {
+          id: String(s.id),
+          label: String(s.label),
+          kind: String(s.kind ?? "stage"),
+          sort_order: Number(s.sort_order ?? 0),
+          imported_at: (s.imported_at as string | null) ?? null,
+          row: match ? toRow(match) : null,
+        };
+      }),
+    };
+  });
