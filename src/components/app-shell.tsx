@@ -4,7 +4,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { useSession } from "@/lib/auth";
 import { Footer } from "@/components/footer";
 import { BrandMark } from "@/components/ui-bits";
-import { FeedbackWidget } from "@/components/feedback-widget";
+import { AssistantWidget } from "@/components/assistant-widget";
 import { InstallAppPrompt } from "@/components/install-app-prompt";
 
 const tabs = [
@@ -165,7 +165,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       </nav>
 
       <InstallAppPrompt />
-      <FeedbackWidget />
+      <AssistantWidget />
     </div>
   );
 }
