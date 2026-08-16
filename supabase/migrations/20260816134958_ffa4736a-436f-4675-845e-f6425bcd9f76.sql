@@ -1,0 +1,1 @@
+update public.event_info_blocks set venue_lat=-34.0660139, venue_lng=18.8895371, map_embed_url='https://maps.app.goo.gl/Rgp42mHbV2NmRr4R7' where event_id='2dc4fd8c-c1f0-45b3-b5cd-61a3644f7fa7';

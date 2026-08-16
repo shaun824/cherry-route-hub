@@ -33,6 +33,9 @@ import { useSession } from "@/lib/auth";
 import { brandHeader } from "@/lib/event-brand";
 import { buildMapEmbedSrc, buildMapLink, resolveVenuePoint } from "@/lib/map-embed";
 import { VenueMiniMap } from "@/components/venue-mini-map";
+import { VillageMapView } from "@/components/village-map-view";
+import { fetchVillageMap } from "@/lib/village-map";
+
 import { fetchEventInfo } from "@/lib/event-info";
 import { groupRidersByClass } from "@/lib/rider-classes";
 import { eventPromosFor } from "@/lib/event-promos";
@@ -118,6 +121,13 @@ function SpectatorEventPage() {
     staleTime: 300_000,
   });
   const info = infoQ.data ?? null;
+
+  const villageQ = useQuery({
+    queryKey: ["village-map", eventId],
+    queryFn: () => fetchVillageMap(eventId),
+    staleTime: 300_000,
+  });
+
 
   const spectatorSchedule = useMemo(() => {
     const items = event?.schedule ?? [];
@@ -373,6 +383,20 @@ function SpectatorEventPage() {
               );
             })()}
           </section>
+
+          {/* Race village map */}
+          {villageQ.data ? (
+            <section>
+              <h2 className="font-display text-[13px] font-bold uppercase tracking-wider text-ink-soft">
+                Race village
+              </h2>
+              <div className="mt-3">
+                <VillageMapView eventId={eventId} />
+              </div>
+            </section>
+          ) : null}
+
+
 
           {/* Spectator essentials */}
           <FactCard icon={Car} title="Parking">
