@@ -542,7 +542,7 @@ export default function VillageMapGeo({
           ) : null}
 
           <BearingSync bearing={bearing} />
-          <TwoFingerPanGate onOneFinger={() => setTwoFingerHint(true)} />
+          <TwoFingerPanGate onOneFinger={showTwoFingerHint} />
         </MapContainer>
 
         {twoFingerHint ? (
