@@ -148,22 +148,12 @@ function facilityIcon(spot: VillageHotspot, active: boolean) {
 
 
 
-/** Keeps a tapped point in view without hijacking the map: no zoom change, and
-    it only nudges the view when the marker (or its label) would sit off-screen. */
-function KeepPointInView({ position }: { position: [number, number] | null }) {
-  const map = useMap();
-  useEffect(() => {
-    if (!position) return;
-    const pt = map.latLngToContainerPoint(position);
-    const size = map.getSize();
-    const pad = 56;
-    const inside =
-      pt.x > pad && pt.y > pad && pt.x < size.x - pad && pt.y < size.y - pad;
-    if (inside) return;
-    map.panInside(position, { padding: [pad, pad], animate: true, duration: 0.35 });
-  }, [map, position]);
+/** Selecting a point must never move the map — the view stays exactly where the
+    user put it. Kept as a no-op component so callers stay unchanged. */
+function KeepPointInView(_props: { position: [number, number] | null }) {
   return null;
 }
+
 
 
 /** Tapping empty map clears the selected point, so the label disappears. */
@@ -496,7 +486,7 @@ export default function VillageMapGeo({
                 radius={7}
                 pathOptions={{ color: "#ffffff", weight: 3, fillColor: "#2563eb", fillOpacity: 1 }}
               >
-                <Popup>You are here</Popup>
+                <Popup autoPan={false} keepInView={false}>You are here</Popup>
               </CircleMarker>
             </>
           ) : null}
