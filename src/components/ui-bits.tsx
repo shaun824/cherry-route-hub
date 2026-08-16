@@ -84,7 +84,7 @@ export function SectionTitle({
 }) {
   return (
     <div className="flex items-center justify-between gap-3 px-5 pb-2 pt-6">
-      <h2 className="flex min-w-0 items-center gap-2 font-display text-base font-bold tracking-tight text-ink">
+      <h2 className="flex min-w-0 items-center gap-2 font-display text-lg font-bold tracking-tight text-ink">
         {icon ? (
           <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-accent text-cherry-deep">
             {icon}

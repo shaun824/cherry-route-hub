@@ -566,7 +566,7 @@ function SportSection({
             type="button"
             onClick={toggle}
             aria-expanded={showExpanded}
-            className="flex items-center gap-2 font-display text-base font-bold tracking-tight text-ink active:opacity-70 transition"
+            className="flex items-center gap-2 font-display text-lg font-bold tracking-tight text-ink active:opacity-70 transition"
           >
             <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-accent text-cherry-deep">
               <Icon className="h-3.5 w-3.5" />
@@ -579,7 +579,7 @@ function SportSection({
             />
           </button>
         ) : (
-          <h2 className="flex items-center gap-2 font-display text-base font-bold tracking-tight text-ink">
+          <h2 className="flex items-center gap-2 font-display text-lg font-bold tracking-tight text-ink">
             <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-accent text-cherry-deep">
               <Icon className="h-3.5 w-3.5" />
             </span>
@@ -817,9 +817,12 @@ function NextEventCard() {
       <NextEventHero row={next} />
       {rest.length > 0 ? (
         <div>
-          <p className="mb-2 text-[11px] font-bold uppercase tracking-widest text-ink-soft">
-            More adventures you might be interested in
+          <p className="mb-2 font-display text-lg font-bold tracking-tight text-ink">
+            {getEventSport(rest[0].event.discipline, rest[0].event.name) === "moto"
+              ? "More motorbike events you might like"
+              : "More mountain bike events you might like"}
           </p>
+
           <div className="flex snap-x snap-mandatory gap-2 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {rest.map((r) => (
               <Link
