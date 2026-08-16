@@ -2,6 +2,7 @@
 // rules ("tents 1-40 sit in Nyathi camp") so a whole block can be placed at once.
 import { supabase } from "@/integrations/supabase/client";
 import { labelsMatch, normaliseLabel } from "@/lib/rooming-import";
+import { withSnapshot } from "@/lib/offline-pack";
 
 export type VillageTent = {
   id: string;
@@ -24,6 +25,14 @@ export type TentRule = {
 
 export async function fetchVillageTents(eventId: string): Promise<VillageTent[]> {
   if (!eventId) return [];
+  return withSnapshot(
+    `village-tents:${eventId}`,
+    () => fetchVillageTentsLive(eventId),
+    (v) => v.length === 0,
+  );
+}
+
+async function fetchVillageTentsLive(eventId: string): Promise<VillageTent[]> {
   const { data, error } = await supabase
     .from("event_village_tents")
     .select("id, event_id, label, lat, lng, zone_id, capacity, notes")

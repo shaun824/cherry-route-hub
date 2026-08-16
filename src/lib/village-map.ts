@@ -1,5 +1,6 @@
 // Client-safe types + helpers for the interactive village map per event.
 import { supabase } from "@/integrations/supabase/client";
+import { withSnapshot } from "@/lib/offline-pack";
 import type { Json } from "@/integrations/supabase/types";
 import { guessVillageIcon } from "@/lib/village-icons";
 import type { VillageZone } from "@/lib/village-zones";
@@ -175,6 +176,14 @@ export function emptyVillageMap(eventId: string): VillageMap {
 }
 
 export async function fetchVillageMap(eventId: string): Promise<VillageMap | null> {
+  return withSnapshot(
+    `village-map:${eventId}`,
+    () => fetchVillageMapLive(eventId),
+    (v) => v === null,
+  );
+}
+
+async function fetchVillageMapLive(eventId: string): Promise<VillageMap | null> {
   const { data, error } = await supabase
     .from("event_village_maps")
     .select("event_id, image_url, intro, hotspots, geo, zones")
