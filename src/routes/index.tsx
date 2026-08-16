@@ -127,14 +127,25 @@ function Home() {
     user?.email?.split("@")[0] ||
     "Rider";
 
-  // Spotlight: the rider's own next event when linked, otherwise the next event
-  // on the calendar (used to build FOMO for people who haven't entered).
+  // Hero: the rider's own next event (signed-in only).
   const myNext = (myEventsQ.data ?? [])
     .filter((r) => new Date(r.event.event_date).getTime() >= Date.now() - 12 * 60 * 60 * 1000)
     .sort((a, b) => new Date(a.event.event_date).getTime() - new Date(b.event.event_date).getTime())[0];
-  const spotlightSource = myNext
-    ? allEvents.find((e) => e.id === myNext.event_id) ?? null
-    : upcoming[0] ?? null;
+  const heroEventId = user ? (myNext?.event_id ?? null) : null;
+  const myEventIds = new Set((myEventsQ.data ?? []).map((r) => r.event_id));
+
+  // An event is "happening now" from the day before until 12h after its date.
+  const liveNow =
+    upcoming.find((e) => {
+      const t = new Date(e.date).getTime();
+      return t - Date.now() <= 24 * 60 * 60 * 1000;
+    }) ?? null;
+
+  // Spotlight: never repeat the hero. Signed-in riders get the next event they
+  // haven't entered (discovery); guests get whatever is happening next.
+  const spotlightSource = user
+    ? (upcoming.find((e) => e.id !== heroEventId && !myEventIds.has(e.id)) ?? null)
+    : (liveNow ?? upcoming[0] ?? null);
   const spotlight = spotlightSource
     ? {
         id: spotlightSource.id,
@@ -144,12 +155,23 @@ function Home() {
         logoUrl: spotlightSource.logoUrl ?? null,
         heroColor: spotlightSource.heroColor ?? null,
         description: spotlightSource.description ?? "",
-        entered: Boolean(myNext),
+        entered: myEventIds.has(spotlightSource.id),
+        happeningNow: !!liveNow && liveNow.id === spotlightSource.id,
       }
     : null;
 
+  // Anything already featured above is hidden from the sport lists.
+  const hiddenIds = new Set([heroEventId, spotlight?.id].filter(Boolean) as string[]);
+  const motoEvents = upcoming
+    .filter((e) => !hiddenIds.has(e.id) && getEventSport(e.discipline, e.name) === "moto")
+    .slice(0, 4);
+  const mtbEvents = upcoming
+    .filter((e) => !hiddenIds.has(e.id) && getEventSport(e.discipline, e.name) === "mtb")
+    .slice(0, 4);
+
   const notifications = [pinned, ...feed.filter((p) => !p.pinned)].filter(Boolean).slice(0, 8);
   const hasUnread = notifications.length > 0;
+  const guestUpdates = feed.slice(0, 3);
 
 
   return (
