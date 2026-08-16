@@ -16,6 +16,7 @@ import {
   IdCard,
   Package,
   Shirt,
+  ShoppingBag,
   Tent,
   Ticket,
   Truck,
