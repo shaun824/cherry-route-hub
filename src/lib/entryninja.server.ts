@@ -150,3 +150,30 @@ export async function fetchEnEventDetail(enEventId: number): Promise<EnEventDeta
   const json = await enGet<{ data: EnEventDetail }>(`/api/events/${enEventId}`);
   return json.data;
 }
+
+/**
+ * Raw POST helper. Entry Ninja does not publish a discount-code endpoint for
+ * every organiser, so callers must handle a non-OK response gracefully.
+ */
+export async function enPost(
+  path: string,
+  body: unknown,
+): Promise<{ ok: boolean; status: number; json: any; text: string }> {
+  const res = await fetch(`${BASE}${path}`, {
+    method: "POST",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${apiKey()}`,
+    },
+    body: JSON.stringify(body),
+  });
+  const text = await res.text();
+  let json: any = null;
+  try {
+    json = text ? JSON.parse(text) : null;
+  } catch {
+    json = null;
+  }
+  return { ok: res.ok, status: res.status, json, text: text.slice(0, 300) };
+}

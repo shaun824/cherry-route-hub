@@ -308,3 +308,136 @@ export function generateCouponCode(prefix = "RC"): string {
   }
   return `${prefix}-${body}`;
 }
+
+/* ------------------------ price-based event valuing ----------------------- */
+
+/**
+ * Work out an entry price per Entry Ninja event from what riders were charged
+ * (event_entrants.amount_due_cents), then convert it into loyalty points.
+ */
+export async function applyPriceBasedValues(
+  supabase: Sb,
+): Promise<{ priced: number; updated: number; skipped: number }> {
+  const { pointsFromPrice } = await import("./loyalty");
+  const settings = await loadLoyaltySettings(supabase);
+
+  const { data: values } = await supabase
+    .from("loyalty_event_values")
+    .select("id, en_event_id, event_id, entry_price_cents, hero, points");
+  const rows = (values ?? []) as {
+    id: string;
+    en_event_id: number;
+    event_id: string | null;
+    entry_price_cents: number | null;
+    hero: boolean;
+    points: number;
+  }[];
+
+  // Median amount charged per local event, used when no price is captured yet.
+  const priceByEvent = new Map<string, number>();
+  const eventIds = rows.map((r) => r.event_id).filter(Boolean) as string[];
+  if (eventIds.length) {
+    const amounts = new Map<string, number[]>();
+    for (const batch of chunk(eventIds, 50)) {
+      const { data } = await supabase
+        .from("event_entrants")
+        .select("event_id, amount_due_cents")
+        .in("event_id", batch)
+        .not("amount_due_cents", "is", null);
+      for (const r of (data ?? []) as { event_id: string; amount_due_cents: number }[]) {
+        if (!r.amount_due_cents || r.amount_due_cents <= 0) continue;
+        const list = amounts.get(r.event_id) ?? [];
+        list.push(r.amount_due_cents);
+        amounts.set(r.event_id, list);
+      }
+    }
+    for (const [id, list] of amounts) {
+      list.sort((a, b) => a - b);
+      priceByEvent.set(id, list[Math.floor(list.length / 2)] as number);
+    }
+  }
+
+  let priced = 0;
+  let updated = 0;
+  let skipped = 0;
+
+  for (const r of rows) {
+    const derived = r.entry_price_cents ?? (r.event_id ? (priceByEvent.get(r.event_id) ?? null) : null);
+    if (!derived) {
+      skipped++;
+      continue;
+    }
+    priced++;
+    const points = pointsFromPrice(derived, r.hero, settings);
+    if (points === r.points && r.entry_price_cents === derived) continue;
+    const { error } = await supabase
+      .from("loyalty_event_values")
+      .update({
+        points,
+        entry_price_cents: derived,
+        price_source: r.entry_price_cents ? "manual" : "entry-ninja",
+      })
+      .eq("id", r.id);
+    if (!error) updated++;
+  }
+
+  return { priced, updated, skipped };
+}
+
+/* ---------------------- coupon push-back to Entry Ninja -------------------- */
+
+/**
+ * Try to register a redeemed coupon as a discount code on Entry Ninja. Their
+ * API doesn't expose discount codes for every organiser, so a rejection is
+ * recorded as "manual" rather than failing the rider's redemption.
+ */
+export async function pushCouponToEntryNinja(
+  supabase: Sb,
+  couponId: string,
+): Promise<{ status: string; message: string }> {
+  const { data: coupon } = await supabase
+    .from("loyalty_coupons")
+    .select("id, code, reward_name, points_spent, expires_at, en_event_id")
+    .eq("id", couponId)
+    .maybeSingle();
+  if (!coupon) return { status: "error", message: "Coupon not found." };
+
+  const settings = await loadLoyaltySettings(supabase);
+  const valueRand = Math.round(Number(coupon.points_spent) * settings.randPerPoint);
+
+  let status = "sent";
+  let message = `Code ${coupon.code} registered on Entry Ninja.`;
+  let ref: string | null = null;
+  let err: string | null = null;
+
+  try {
+    const { enPost } = await import("./entryninja.server");
+    const res = await enPost("/api/discount-codes", {
+      code: coupon.code,
+      description: `${settings.programName}: ${coupon.reward_name}`,
+      amount: valueRand,
+      type: "fixed",
+      usage_limit: 1,
+      expires_at: coupon.expires_at,
+      event_id: coupon.en_event_id ?? undefined,
+    });
+    if (res.ok) {
+      ref = String(res.json?.data?.id ?? res.json?.id ?? "");
+    } else {
+      status = "manual";
+      err = `Entry Ninja responded ${res.status}: ${res.text}`;
+      message = `Entry Ninja didn't accept the code automatically — load ${coupon.code} for R${valueRand} manually.`;
+    }
+  } catch (e) {
+    status = "manual";
+    err = (e as Error).message;
+    message = `Could not reach Entry Ninja — load ${coupon.code} for R${valueRand} manually.`;
+  }
+
+  await supabase
+    .from("loyalty_coupons")
+    .update({ en_status: status, en_ref: ref, en_error: err, en_pushed_at: new Date().toISOString() })
+    .eq("id", couponId);
+
+  return { status, message };
+}
