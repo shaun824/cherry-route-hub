@@ -5,6 +5,10 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { MapContainer, TileLayer, ImageOverlay, useMap, CircleMarker, Polygon, Popup, Marker } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+// Adds bearing support to Leaflet so riders can spin the village map to match
+// the direction they are facing (two-finger twist, or the on-map controls).
+import "leaflet-rotate";
+
 import type { VillageGeo, VillageHotspot } from "@/lib/village-map";
 import { spotColor, spotIcon } from "@/lib/village-map";
 import { villageIconSvg } from "@/lib/village-icons";
