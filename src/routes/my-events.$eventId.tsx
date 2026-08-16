@@ -1015,10 +1015,13 @@ function PackingPanel({
   );
 }
 
-function ScheduleView({ schedule, days }: { schedule: ScheduleItem[]; days: EventDay[] }) {
+function ScheduleView({ schedule, days: rawDays }: { schedule: ScheduleItem[]; days: EventDay[] }) {
+  // House rule: day one is registration day unless the itinerary says otherwise.
+  const days = useMemo(() => withRegistrationDayLabels(rawDays, schedule), [rawDays, schedule]);
   const grouped = useMemo(() => {
     // Group items by dayId, preserving order of days when known.
     const byDay = new Map<string, ScheduleItem[]>();
+
     for (const item of schedule) {
       const key = item.dayId ?? "__unscheduled__";
       const arr = byDay.get(key) ?? [];
