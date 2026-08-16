@@ -130,6 +130,12 @@ function RootComponent() {
   const isAdmin = useRouterState({
     select: (s) => s.location.pathname.startsWith("/admin") || s.location.pathname.startsWith("/auth"),
   });
+  const onAuthPages = useRouterState({
+    select: (s) =>
+      s.location.pathname.startsWith("/auth") ||
+      s.location.pathname.startsWith("/reset-password") ||
+      s.location.pathname.startsWith("/crew"),
+  });
 
   usePageTracking();
 
