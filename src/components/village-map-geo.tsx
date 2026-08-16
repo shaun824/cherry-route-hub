@@ -6,6 +6,8 @@ import { MapContainer, TileLayer, ImageOverlay, useMap, CircleMarker, Polygon, P
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import type { VillageGeo, VillageHotspot } from "@/lib/village-map";
+import { spotColor, spotIcon } from "@/lib/village-map";
+import { villageIconSvg } from "@/lib/village-icons";
 import { zoneCentroid, zoneColor, type VillageZone } from "@/lib/village-zones";
 
 const M_PER_DEG_LAT = 111320;
@@ -94,20 +96,32 @@ function FlyToTent({ tent }: { tent: MapTent | null }) {
 
 export type MapTent = { id: string; label: string; lat: number; lng: number };
 
-/** Label pin shown for whichever facility/point the rider currently has selected. */
-function pointLabelIcon(label: string) {
+
+/** Facility marker: a clean coloured icon puck, with its name shown once tapped. */
+function facilityIcon(spot: VillageHotspot, active: boolean) {
+  const color = spotColor(spot);
+  const glyph = villageIconSvg(spotIcon(spot), active ? 15 : 13, "#fff");
+  const size = active ? 32 : 26;
   return L.divIcon({
-    className: "rce-village-point",
-    html: `<div style="display:flex;flex-direction:column;align-items:center">
-      <span style="background:#0f172a;color:#fff;font-size:11px;font-weight:800;padding:3px 8px;border-radius:8px;white-space:nowrap;border:2px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.4)">${escapeHtml(
-        label,
-      )}</span>
-      <span style="width:8px;height:8px;background:#0f172a;transform:rotate(45deg) translateY(-3px);border-radius:1px;border-right:2px solid #fff;border-bottom:2px solid #fff"></span>
+    className: "rce-village-facility",
+    html: `<div style="display:flex;flex-direction:column;align-items:center;gap:2px">
+      <span style="display:grid;width:${size}px;height:${size}px;place-items:center;border-radius:999px;background:${color};border:${
+        active ? "2.5px" : "2px"
+      } solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.4)">${glyph}</span>
+      ${
+        active
+          ? `<span style="background:#0f172a;color:#fff;font-size:10px;font-weight:800;padding:2px 7px;border-radius:7px;white-space:nowrap;border:1.5px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.35)">${escapeHtml(
+              spot.title,
+            )}</span>`
+          : ""
+      }
     </div>`,
-    iconSize: [12, 12],
-    iconAnchor: [6, 18],
+    iconSize: [size, size],
+    iconAnchor: [size / 2, size / 2],
   });
 }
+
+
 
 /** Flies to the selected point so its label is actually in view. */
 function FlyToPoint({ position }: { position: [number, number] | null }) {
@@ -265,6 +279,14 @@ export default function VillageMapGeo({
     () => hotspots.find((h) => h.id === selected) ?? null,
     [hotspots, selected],
   );
+
+  // Real facility points only — legacy imports left numeric "tent" points behind,
+  // and those belong to the tent layer, not the icon layer.
+  const facilitySpots = useMemo(
+    () => hotspots.filter((s) => s.title?.trim() && !normalizedNumber(s.title)),
+    [hotspots],
+  );
+
 
   // Older village-map imports created a separate tent pin for every numbered
   // drawn area. Those pins landed near area corners and made the rider map look
@@ -427,17 +449,22 @@ export default function VillageMapGeo({
           <FitBounds bounds={bounds} />
           <Recenter position={me} token={recenterToken} />
 
-          {/* Facility hotspots are intentionally NOT drawn on the map — riders asked
-              for a clean plan where the only pins are the tents. The one exception is
-              the point you've currently selected, which gets a name label until you tap away. */}
-          {selectedSpot ? (
-            <Marker
-              position={hotspotLatLng(geo, selectedSpot, heightM)}
-              icon={pointLabelIcon(selectedSpot.title)}
-              zIndexOffset={1000}
-              eventHandlers={{ click: () => onSelect(null) }}
-            />
-          ) : null}
+          {/* Facility points (toilets, chill zone, food…) show as clean icon pucks.
+              Tapping one expands its name on the map; tapping again or tapping the
+              map clears it. Numeric "tent number" points stay out of this layer. */}
+          {facilitySpots.map((spot) => {
+            const active = selected === spot.id;
+            return (
+              <Marker
+                key={`spot-${spot.id}`}
+                position={hotspotLatLng(geo, spot, heightM)}
+                icon={facilityIcon(spot, active)}
+                zIndexOffset={active ? 1000 : 400}
+                eventHandlers={{ click: () => onSelect(active ? null : spot.id) }}
+              />
+            );
+          })}
+
           <FlyToPoint
             position={selectedSpot ? hotspotLatLng(geo, selectedSpot, heightM) : null}
           />
