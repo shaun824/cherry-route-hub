@@ -44,10 +44,9 @@ export function AssistantWidget() {
   const listRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
 
-  useEffect(() => {
-    if (!open) return;
-    inputRef.current?.focus();
-  }, [open]);
+  // Deliberately do NOT autofocus the input on open: on iOS that pops the
+  // keyboard immediately and hides the greeting/starter questions.
+
 
   useEffect(() => {
     listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: "smooth" });
