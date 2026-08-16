@@ -645,6 +645,129 @@ export type Database = {
           },
         ]
       }
+      event_result_sets: {
+        Row: {
+          column_map: Json
+          created_at: string
+          event_id: string
+          id: string
+          imported_at: string
+          kind: string
+          label: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          column_map?: Json
+          created_at?: string
+          event_id: string
+          id?: string
+          imported_at?: string
+          kind?: string
+          label: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          column_map?: Json
+          created_at?: string
+          event_id?: string
+          id?: string
+          imported_at?: string
+          kind?: string
+          label?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_result_sets_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_results: {
+        Row: {
+          batch: string | null
+          bib_number: string | null
+          category: string | null
+          created_at: string
+          event_entrant_id: string | null
+          event_id: string
+          extras: Json
+          full_name: string
+          gap_text: string | null
+          id: string
+          position: number | null
+          result_set_id: string
+          status: string | null
+          time_ms: number | null
+          time_text: string | null
+          updated_at: string
+        }
+        Insert: {
+          batch?: string | null
+          bib_number?: string | null
+          category?: string | null
+          created_at?: string
+          event_entrant_id?: string | null
+          event_id: string
+          extras?: Json
+          full_name: string
+          gap_text?: string | null
+          id?: string
+          position?: number | null
+          result_set_id: string
+          status?: string | null
+          time_ms?: number | null
+          time_text?: string | null
+          updated_at?: string
+        }
+        Update: {
+          batch?: string | null
+          bib_number?: string | null
+          category?: string | null
+          created_at?: string
+          event_entrant_id?: string | null
+          event_id?: string
+          extras?: Json
+          full_name?: string
+          gap_text?: string | null
+          id?: string
+          position?: number | null
+          result_set_id?: string
+          status?: string | null
+          time_ms?: number | null
+          time_text?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_results_event_entrant_id_fkey"
+            columns: ["event_entrant_id"]
+            isOneToOne: false
+            referencedRelation: "event_entrants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_results_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_results_result_set_id_fkey"
+            columns: ["result_set_id"]
+            isOneToOne: false
+            referencedRelation: "event_result_sets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       event_rooming: {
         Row: {
           created_at: string
@@ -987,6 +1110,9 @@ export type Database = {
           map_query: string | null
           name: string
           photos_album_url: string | null
+          results_published: boolean
+          results_rider_url_template: string | null
+          results_url: string | null
           schedule: Json
           slug: string | null
           social_links: Json
@@ -1024,6 +1150,9 @@ export type Database = {
           map_query?: string | null
           name: string
           photos_album_url?: string | null
+          results_published?: boolean
+          results_rider_url_template?: string | null
+          results_url?: string | null
           schedule?: Json
           slug?: string | null
           social_links?: Json
@@ -1061,6 +1190,9 @@ export type Database = {
           map_query?: string | null
           name?: string
           photos_album_url?: string | null
+          results_published?: boolean
+          results_rider_url_template?: string | null
+          results_url?: string | null
           schedule?: Json
           slug?: string | null
           social_links?: Json
