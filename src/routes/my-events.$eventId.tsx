@@ -1231,7 +1231,9 @@ function AskAdminPanel({
   const qc = useQueryClient();
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
+  const [pending, setPending] = useState<string | null>(null);
   const qaListRef = useRef<HTMLDivElement>(null);
+
 
 
 
@@ -1283,14 +1285,17 @@ function AskAdminPanel({
 
   async function send() {
     if (!text.trim() || !userId) return;
-    setBusy(true);
     const body = text.trim();
+    // Show the rider's message straight away — the bot call can take seconds.
+    setPending(body);
+    setBusy(true);
     setText("");
     try {
       await askBot({ data: { eventId, question: body } });
-      qc.invalidateQueries({ queryKey: ["qa-thread", eventId, userId] });
-      qc.invalidateQueries({ queryKey: ["qa-messages", threadQ.data?.id] });
+      await qc.invalidateQueries({ queryKey: ["qa-thread", eventId, userId] });
+      await qc.invalidateQueries({ queryKey: ["qa-messages", threadQ.data?.id] });
     } catch (err) {
+
       console.error("askEventBot failed", err);
       // Fallback: post the question directly so the admin still sees it.
       let threadId = threadQ.data?.id;
@@ -1318,6 +1323,7 @@ function AskAdminPanel({
       }
     } finally {
       setBusy(false);
+      setPending(null);
     }
   }
 
@@ -1325,7 +1331,8 @@ function AskAdminPanel({
   useEffect(() => {
     const el = qaListRef.current;
     if (el) el.scrollTop = el.scrollHeight;
-  }, [messagesQ.data]);
+  }, [messagesQ.data, pending, busy]);
+
 
   // Offer the WhatsApp handoff once the assistant has admitted it can't answer
   // and no admin has replied since.
@@ -1352,7 +1359,7 @@ function AskAdminPanel({
         ref={qaListRef}
         className="flex-1 overflow-y-auto overscroll-y-auto p-3 [touch-action:pan-y]"
       >
-        {(messagesQ.data ?? []).length === 0 ? (
+        {(messagesQ.data ?? []).length === 0 && !pending ? (
           <p className="mt-6 text-center text-xs text-ink-soft">
             {userId
               ? "No messages yet. Ask a question below and the bot will try first."
@@ -1380,7 +1387,13 @@ function AskAdminPanel({
                 </li>
               );
             })}
+            {pending && (
+              <li className="ml-auto max-w-[80%] rounded-2xl bg-cherry px-3 py-2 text-sm text-white opacity-80">
+                <p className="whitespace-pre-line">{pending}</p>
+              </li>
+            )}
             {busy && (
+
               <li className="max-w-[80%] rounded-2xl bg-sky-100 px-3 py-2 text-sm text-sky-950 ring-1 ring-sky-200">
                 <p className="text-[10px] font-bold uppercase tracking-wider opacity-70">
                   🍒 Assistant bot

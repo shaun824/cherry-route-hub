@@ -42,15 +42,27 @@ export async function buildRiderContext(
       );
   }
 
-  // Every entrant record that belongs to this login (ID-number claims included).
-  const { data: entrantRows } = await admin
+  // Every entrant record that belongs to this login (ID-number claims included),
+  // plus any unclaimed entrant row that carries the same email address.
+  const { data: ownedRows } = await admin
     .from("entrants")
     .select("id, full_name, email")
     .eq("user_id", userId);
-  const entrantIds = (entrantRows ?? []).map((e: any) => e.id as string);
+  let entrantRows = ownedRows ?? [];
+  if (profile?.email) {
+    const { data: byEmail } = await admin
+      .from("entrants")
+      .select("id, full_name, email")
+      .ilike("email", profile.email);
+    for (const e of byEmail ?? []) {
+      if (!entrantRows.some((o: any) => o.id === e.id)) entrantRows = [...entrantRows, e];
+    }
+  }
+  const entrantIds = entrantRows.map((e: any) => e.id as string);
   const emails = new Set<string>();
   if (profile?.email) emails.add(String(profile.email).toLowerCase());
-  for (const e of entrantRows ?? []) if (e.email) emails.add(String(e.email).toLowerCase());
+  for (const e of entrantRows) if (e.email) emails.add(String(e.email).toLowerCase());
+
 
   // Entry Ninja entry for this event.
   let entryIds: string[] = [];
@@ -91,11 +103,25 @@ export async function buildRiderContext(
     )
     .eq("event_id", eventId);
 
+  const names = new Set<string>();
+  const addName = (v?: string | null) => {
+    const n = String(v ?? "").trim().toLowerCase().replace(/\s+/g, " ");
+    if (n.length > 3) names.add(n);
+  };
+  addName(profile?.full_name);
+  for (const e of entrantRows ?? []) addName(e.full_name);
+
   const mine =
     (rooming ?? []).find((r: any) => r.event_entrant_id && entryIds.includes(r.event_entrant_id)) ??
     (rooming ?? []).find((r: any) => r.entrant_id && entrantIds.includes(r.entrant_id)) ??
     (rooming ?? []).find((r: any) => r.email && emails.has(String(r.email).toLowerCase())) ??
+    (rooming ?? []).find(
+      (r: any) =>
+        r.full_name &&
+        names.has(String(r.full_name).trim().toLowerCase().replace(/\s+/g, " ")),
+    ) ??
     null;
+
 
   if (mine) {
     lines.push("\nRider's accommodation for this event (from the uploaded rooming list):");
