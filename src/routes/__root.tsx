@@ -14,6 +14,7 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { AppShell } from "../components/app-shell";
 import { AssistantWidget } from "../components/assistant-widget";
+import { SetPasswordPrompt } from "../components/set-password-prompt";
 import { supabase } from "../integrations/supabase/client";
 import { usePageTracking } from "../lib/analytics";
 import { ensureOfflineWorker } from "../lib/offline-pack";
@@ -129,6 +130,12 @@ function RootComponent() {
   const isAdmin = useRouterState({
     select: (s) => s.location.pathname.startsWith("/admin") || s.location.pathname.startsWith("/auth"),
   });
+  const onAuthPages = useRouterState({
+    select: (s) =>
+      s.location.pathname.startsWith("/auth") ||
+      s.location.pathname.startsWith("/reset-password") ||
+      s.location.pathname.startsWith("/crew"),
+  });
 
   usePageTracking();
 
@@ -159,6 +166,7 @@ function RootComponent() {
           <Outlet />
         </AppShell>
       )}
+      {onAuthPages ? null : <SetPasswordPrompt />}
     </QueryClientProvider>
   );
 }
