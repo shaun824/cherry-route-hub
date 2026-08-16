@@ -8,7 +8,7 @@ import { useAdminStore } from "@/lib/store";
 import { useHydratedStore } from "@/lib/use-hydrated-store";
 import { formatDate, formatTime } from "@/lib/mock-data";
 import { getEventRiders, ROSTER_WINDOW_DAYS } from "@/lib/results.functions";
-import { useSession } from "@/lib/auth";
+import { useIsAdmin, useSession } from "@/lib/auth";
 import type { Event } from "@/lib/mock-data";
 
 
@@ -121,8 +121,12 @@ function SpectatePage() {
 }
 
 function SpectatorCard({ event }: { event: Event }) {
-  const unlocked = Boolean(event.spectatorMode);
+  // Admins can open any event's track page, even before it unlocks publicly.
+  const { isAdmin } = useIsAdmin();
+  const unlocked = Boolean(event.spectatorMode) || isAdmin;
+  const adminPreview = !event.spectatorMode && isAdmin;
   const countdown = useCountdown(event.date);
+
 
   const inner = (
     <div
@@ -156,13 +160,14 @@ function SpectatorCard({ event }: { event: Event }) {
         {unlocked ? (
           <>
             <span className="text-xs font-semibold text-ink">
-              {countdown ?? "Details available"}
+              {adminPreview ? "Admin preview" : (countdown ?? "Details available")}
             </span>
             <span className="inline-flex items-center gap-1 text-xs font-semibold text-cherry">
               View details <ChevronRight className="h-3.5 w-3.5" />
             </span>
           </>
         ) : (
+
           <>
             <span className="inline-flex items-center gap-1 text-xs font-semibold text-ink-soft">
               <Lock className="h-3.5 w-3.5" />
