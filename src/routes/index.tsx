@@ -586,11 +586,10 @@ function SportSection({
             {title}
           </h2>
         )}
-        {showExpanded ? (
-          <Link to="/events" search={{ sport }} className="text-xs font-semibold text-cherry">
-            See all →
-          </Link>
-        ) : null}
+        <Link to="/events" search={{ sport }} className="text-xs font-semibold text-cherry">
+          See all →
+        </Link>
+
       </div>
 
       {/* Even when collapsed we still show the next couple of events so nothing
