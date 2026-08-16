@@ -10,9 +10,9 @@ import type { Event } from "@/lib/mock-data";
 export const Route = createFileRoute("/spectate")({
   head: () => ({
     meta: [
-      { title: "Spectate — Red Cherry Events" },
+      { title: "Track riders — Red Cherry Events" },
       { name: "description", content: "Follow Red Cherry rides as a spectator. Events unlock closer to race day." },
-      { property: "og:title", content: "Spectate — Red Cherry Events" },
+      { property: "og:title", content: "Track riders — Red Cherry Events" },
       { property: "og:description", content: "Follow Red Cherry rides as a spectator. Events unlock closer to race day." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -45,7 +45,7 @@ function SpectatePage() {
 
   return (
     <div>
-      <PageHeader title="Spectate" subtitle="Follow the ride from the sidelines" />
+      <PageHeader title="Track riders" subtitle="Rider lists, bib numbers and results" />
 
       <div className="mx-5 mt-4 flex gap-2">
         {(["upcoming", "live"] as Filter[]).map((f) => {

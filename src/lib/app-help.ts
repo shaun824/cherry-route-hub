@@ -6,7 +6,7 @@ export const APP_HELP_TEXT = `RED CHERRY RIDER HUB — HOW THE APP WORKS
 General
 - The Rider Hub is Red Cherry Events' app for riders, spectators and crew. It works on any phone browser and can be installed to the home screen.
 - Install it: on iPhone open it in Safari, tap the Share button, then "Add to Home Screen". On Android tap the browser menu and "Install app" / "Add to Home screen".
-- Bottom navigation: Home, Adventure Awaits (your events), Feed (news), Spectate, Profile.
+- Bottom navigation: Home, Adventure Awaits (your events), Feed (news), Track riders, Profile.
 
 Home
 - Shows your next event with a countdown, live weather for the venue, upcoming events grouped by sport (mountain biking / motorbike), the news feed highlights, supplier promo codes and sponsors.
@@ -32,7 +32,7 @@ Notifications
 Feed
 - News and announcements from Red Cherry Events, including per-event updates and warnings. Pinned posts appear first.
 
-Spectate
+Track riders
 - For supporters: venue info, parking, food, start and finish lists and the day's running order.
 
 Promos
