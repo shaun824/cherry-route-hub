@@ -23,6 +23,9 @@ export type RoomingRow = {
   event_id: string;
   venue_id: string | null;
   entrant_id: string | null;
+  /** the rider's actual entry for this event (Entry Ninja), when linked */
+  event_entrant_id: string | null;
+  match_source: string | null;
   full_name: string;
   email: string | null;
   tent_number: string | null;
@@ -32,8 +35,14 @@ export type RoomingRow = {
   /** id of the drawn village-map area this person sits in */
   village_zone_id: string | null;
   village_spot_id: string | null;
+  /** id of the exact tent pin, when one has been dropped */
+  village_tent_id: string | null;
   venue?: { id: string; name: string; address: string | null; village_spot_id: string | null } | null;
 };
+
+export const ROOMING_COLUMNS =
+  "id, event_id, venue_id, entrant_id, event_entrant_id, match_source, full_name, email, tent_number, room_type, notes, location_hint, village_zone_id, village_spot_id, village_tent_id, venue:event_venues(id, name, address, village_spot_id)";
+
 
 export async function fetchVenues(eventId: string): Promise<Venue[]> {
   const { data, error } = await supabase
