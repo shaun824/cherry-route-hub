@@ -65,9 +65,13 @@ export function AssistantWidget() {
     try {
       const res = await ask({ data: { question: q, history } });
       setMessages((m) => [...m, { role: "assistant", content: res.answer }]);
-      if (res.needsAdmin) setShowReport(true);
+      if (res.needsAdmin) {
+        setShowReport(true);
+        setEscalated(true);
+      }
     } catch (e) {
       console.error("assistant failed", e);
+      setEscalated(true);
       setMessages((m) => [
         ...m,
         {
@@ -75,6 +79,7 @@ export function AssistantWidget() {
           content: "Sorry — I couldn't answer that just now. Please try again, or use *Report a problem* below.",
         },
       ]);
+
     } finally {
       setThinking(false);
       // Only return focus when the rider was already typing (desktop); never
