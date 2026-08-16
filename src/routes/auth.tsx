@@ -146,11 +146,8 @@ function AuthPage() {
         if (err) throw err;
         setNotice("Check your inbox for a password reset link.");
       } else if (mode === "signup") {
-        try {
-          localStorage.setItem(PENDING_ID_KEY, idNumber.trim());
-        } catch {
-          /* ignore */
-        }
+        writePending(PENDING_ID_KEY, idNumber.trim());
+        writePending(PENDING_NAME_KEY, fullName.trim());
         const { data, error: err } = await supabase.auth.signUp({
           email: email.trim(),
           password,
