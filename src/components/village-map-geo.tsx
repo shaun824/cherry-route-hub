@@ -352,7 +352,7 @@ export default function VillageMapGeo({
             </>
           ) : null}
 
-          {zones.map((z) => {
+          {visibleZones.map((z) => {
             const hot = highlightZoneId === z.id;
             return (
               <Polygon
