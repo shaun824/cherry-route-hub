@@ -1319,6 +1319,244 @@ export type Database = {
         }
         Relationships: []
       }
+      loyalty_coupons: {
+        Row: {
+          code: string
+          created_at: string
+          entrant_id: string
+          expires_at: string | null
+          id: string
+          points_spent: number
+          redeemed_at: string | null
+          reward_id: string | null
+          reward_name: string
+          status: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          entrant_id: string
+          expires_at?: string | null
+          id?: string
+          points_spent: number
+          redeemed_at?: string | null
+          reward_id?: string | null
+          reward_name: string
+          status?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          entrant_id?: string
+          expires_at?: string | null
+          id?: string
+          points_spent?: number
+          redeemed_at?: string | null
+          reward_id?: string | null
+          reward_name?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "loyalty_coupons_entrant_id_fkey"
+            columns: ["entrant_id"]
+            isOneToOne: false
+            referencedRelation: "entrants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "loyalty_coupons_reward_id_fkey"
+            columns: ["reward_id"]
+            isOneToOne: false
+            referencedRelation: "loyalty_rewards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      loyalty_event_values: {
+        Row: {
+          created_at: string
+          en_event_id: number
+          event_date: string | null
+          event_id: string | null
+          event_name: string
+          id: string
+          notes: string | null
+          points: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          en_event_id: number
+          event_date?: string | null
+          event_id?: string | null
+          event_name: string
+          id?: string
+          notes?: string | null
+          points?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          en_event_id?: number
+          event_date?: string | null
+          event_id?: string | null
+          event_name?: string
+          id?: string
+          notes?: string | null
+          points?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "loyalty_event_values_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      loyalty_ledger: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          en_event_id: number | null
+          entrant_id: string
+          id: string
+          kind: string
+          points: number
+          reason: string
+          reward_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          en_event_id?: number | null
+          entrant_id: string
+          id?: string
+          kind?: string
+          points: number
+          reason?: string
+          reward_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          en_event_id?: number | null
+          entrant_id?: string
+          id?: string
+          kind?: string
+          points?: number
+          reason?: string
+          reward_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "loyalty_ledger_entrant_id_fkey"
+            columns: ["entrant_id"]
+            isOneToOne: false
+            referencedRelation: "entrants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      loyalty_participation: {
+        Row: {
+          category: string | null
+          created_at: string
+          en_event_id: number
+          entrant_id: string
+          event_date: string | null
+          event_id: string | null
+          event_name: string
+          id: string
+          source: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          en_event_id: number
+          entrant_id: string
+          event_date?: string | null
+          event_id?: string | null
+          event_name: string
+          id?: string
+          source?: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          en_event_id?: number
+          entrant_id?: string
+          event_date?: string | null
+          event_id?: string | null
+          event_name?: string
+          id?: string
+          source?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "loyalty_participation_entrant_id_fkey"
+            columns: ["entrant_id"]
+            isOneToOne: false
+            referencedRelation: "entrants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "loyalty_participation_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      loyalty_rewards: {
+        Row: {
+          active: boolean
+          cost_points: number
+          created_at: string
+          description: string
+          id: string
+          name: string
+          partner: string | null
+          sort_order: number
+          terms: string | null
+          updated_at: string
+          valid_days: number
+          value_label: string
+        }
+        Insert: {
+          active?: boolean
+          cost_points?: number
+          created_at?: string
+          description?: string
+          id?: string
+          name: string
+          partner?: string | null
+          sort_order?: number
+          terms?: string | null
+          updated_at?: string
+          valid_days?: number
+          value_label?: string
+        }
+        Update: {
+          active?: boolean
+          cost_points?: number
+          created_at?: string
+          description?: string
+          id?: string
+          name?: string
+          partner?: string | null
+          sort_order?: number
+          terms?: string | null
+          updated_at?: string
+          valid_days?: number
+          value_label?: string
+        }
+        Relationships: []
+      }
       notification_deliveries: {
         Row: {
           channel: string
