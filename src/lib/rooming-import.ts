@@ -11,7 +11,10 @@ export type ParsedRoomingRow = {
   location_hint: string;
   /** name of the drawn village-map area this person sits in (optional) */
   area: string;
+  /** Entry Ninja registration ref / bib / ID number from the sheet (optional) */
+  ref: string;
 };
+
 
 export function pickField(row: Record<string, unknown>, keys: string[]): string {
   for (const k of keys) {
