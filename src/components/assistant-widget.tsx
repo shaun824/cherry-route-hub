@@ -47,8 +47,32 @@ export function AssistantWidget() {
   const listRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
 
+  // iOS shrinks/offsets the visual viewport when the keyboard opens, which
+  // pushes a plain `fixed inset-0` overlay off-screen. Track the visual
+  // viewport so the panel always sits centred on what the rider can see, and
+  // re-centres itself the moment the keyboard is dismissed.
+  const [vv, setVv] = useState<{ w: number; h: number; l: number; t: number } | null>(null);
+  useEffect(() => {
+    if (!open || typeof window === "undefined") return;
+    const vp = window.visualViewport;
+    const read = () => {
+      if (vp) setVv({ w: vp.width, h: vp.height, l: vp.offsetLeft, t: vp.offsetTop });
+      else setVv({ w: window.innerWidth, h: window.innerHeight, l: 0, t: 0 });
+    };
+    read();
+    vp?.addEventListener("resize", read);
+    vp?.addEventListener("scroll", read);
+    window.addEventListener("resize", read);
+    return () => {
+      vp?.removeEventListener("resize", read);
+      vp?.removeEventListener("scroll", read);
+      window.removeEventListener("resize", read);
+    };
+  }, [open]);
+
   // Deliberately do NOT autofocus the input on open: on iOS that pops the
   // keyboard immediately and hides the greeting/starter questions.
+
 
 
   useEffect(() => {
