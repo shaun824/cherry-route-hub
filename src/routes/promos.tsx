@@ -4,7 +4,10 @@ import { SponsorScroller } from "@/components/sponsor-scroller";
 import { useAdminStore } from "@/lib/store";
 import { useHydratedStore } from "@/lib/use-hydrated-store";
 import { PromoCodeCard } from "@/components/promo-code-card";
+import { PromoCarousel } from "@/components/promo-carousel";
+import { useShuffledPromos } from "@/lib/use-shuffled-promos";
 import type { EventPromo } from "@/lib/event-promos";
+
 
 export const Route = createFileRoute("/promos")({
   head: () => ({
