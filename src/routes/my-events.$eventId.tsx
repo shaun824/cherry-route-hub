@@ -1420,7 +1420,29 @@ function AskAdminPanel({
                         {label}
                       </p>
                     )}
-                    <p className="whitespace-pre-line">{parsed.body}</p>
+                    {mine ? (
+                      <p className="whitespace-pre-line">{parsed.body}</p>
+                    ) : (
+                      <div className="chat-md space-y-2 whitespace-pre-line">
+                        <ReactMarkdown
+                          components={{
+                            a: ({ node: _n, ...p }) => (
+                              <a
+                                {...p}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="font-semibold underline underline-offset-2"
+                              />
+                            ),
+                            ul: ({ node: _n, ...p }) => <ul {...p} className="ml-4 list-disc space-y-1" />,
+                            ol: ({ node: _n, ...p }) => <ol {...p} className="ml-4 list-decimal space-y-1" />,
+                          }}
+                        >
+                          {parsed.body}
+                        </ReactMarkdown>
+                      </div>
+                    )}
+
                   </div>
                   {/* Suggested next questions — one tap to ask */}
                   {isBot && isLast && !busy && parsed.followUps.length ? (
