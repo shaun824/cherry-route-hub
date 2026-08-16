@@ -132,20 +132,20 @@ function MyEventDetail() {
   /** Switching tabs should always land you at the top of the new section. */
   const scrollToTabTop = useCallback(() => {
     if (typeof window === "undefined") return;
-    const nav = tabNavRef.current;
-    const top = nav ? window.scrollY + nav.getBoundingClientRect().top : 0;
-    window.scrollTo({ top: Math.max(0, top), behavior: "auto" });
+    window.scrollTo({ top: 0, behavior: "auto" });
   }, []);
   const selectTab = useCallback(
     (next: Tab) => {
       setTab(next);
       scrollToTabTop();
-      // Panels mount lazily and can shift layout — re-anchor on the next frames.
+      // Panels mount lazily and can shift layout — re-anchor over the next moments.
       window.requestAnimationFrame(scrollToTabTop);
       window.setTimeout(scrollToTabTop, 60);
+      window.setTimeout(scrollToTabTop, 220);
     },
     [scrollToTabTop],
   );
+
   const [villageFocus, setVillageFocus] = useState<{ zoneId?: string | null; spotId?: string | null; tentId?: string | null }>({});
   const focusVillage = useCallback((f: { zoneId?: string | null; spotId?: string | null; tentId?: string | null }) => {
     setVillageFocus(f);

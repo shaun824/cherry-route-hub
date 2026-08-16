@@ -82,15 +82,13 @@ function SpectatorEventPage() {
   const selectTab = useCallback((next: Tab) => {
     setTab(next);
     if (typeof window === "undefined") return;
-    const scroll = () => {
-      const nav = tabNavRef.current;
-      const top = nav ? window.scrollY + nav.getBoundingClientRect().top - 8 : 0;
-      window.scrollTo({ top: Math.max(0, top), behavior: "auto" });
-    };
+    const scroll = () => window.scrollTo({ top: 0, behavior: "auto" });
     scroll();
     window.requestAnimationFrame(scroll);
     window.setTimeout(scroll, 60);
+    window.setTimeout(scroll, 220);
   }, []);
+
 
   const [categoryFilter, setCategoryFilter] = useState<string>("__all");
   const [groupBy, setGroupBy] = useState<GroupBy>("class");
