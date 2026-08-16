@@ -203,6 +203,24 @@ function AdminKnowledge() {
                 {f.question}
               </p>
               <p className="mt-1 whitespace-pre-line text-sm text-ink-soft">{f.answer}</p>
+              {((f.follow_ups ?? []) as string[]).length > 0 ? (
+                <div className="mt-2">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-ink-soft">
+                    Usually asked next
+                  </p>
+                  <div className="mt-1 flex flex-wrap gap-1.5">
+                    {((f.follow_ups ?? []) as string[]).map((q, i) => (
+                      <span
+                        key={i}
+                        className="rounded-full bg-secondary px-2 py-0.5 text-[11px] text-ink-soft"
+                      >
+                        {q}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+
               <div className="mt-3 flex flex-wrap gap-2">
                 {f.status !== "approved" && (
                   <button
