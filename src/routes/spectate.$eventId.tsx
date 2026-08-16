@@ -151,6 +151,21 @@ function SpectatorEventPage() {
   }, [batches]);
 
   const startGroups = useMemo(() => {
+    if (groupBy === "class") {
+      const { classes, dayRiders } = groupRidersByClass(filtered);
+      const sortRows = (rows: TrackedRider[]) =>
+        [...rows].sort((a, b) => (a.full_name || "").localeCompare(b.full_name || ""));
+      return [
+        ...classes.map((g) => ({ key: g.key, label: g.label, startTime: "", rows: sortRows(g.rows) })),
+        ...dayRiders.map((g) => ({
+          key: g.key,
+          label: `Day riders · ${g.label}`,
+          startTime: "",
+          rows: sortRows(g.rows),
+        })),
+      ];
+    }
+
     const groups = new Map<
       string,
       { key: string; label: string; startTime: string; rows: TrackedRider[] }
@@ -159,6 +174,7 @@ function SpectatorEventPage() {
       if (!groups.has(key)) groups.set(key, { key, label, startTime, rows: [] });
       groups.get(key)!.rows.push(r);
     };
+
 
     for (const r of filtered) {
       if (groupBy === "name") {
