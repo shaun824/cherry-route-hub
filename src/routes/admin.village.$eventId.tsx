@@ -33,6 +33,7 @@ import {
   zonePerimeterM,
   zoneSizeM,
   nextZoneName,
+  pointInZone,
   translateZone,
   zoneSizeM as zoneSizeMetres,
   type VillageZone,
