@@ -42,6 +42,7 @@ function CrewPage() {
   const [openId, setOpenId] = useState<string | null>(null);
   const [focusSpot, setFocusSpot] = useState<string | null>(null);
   const [focusZone, setFocusZone] = useState<string | null>(null);
+  const [focusTent, setFocusTent] = useState<string | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
   const mapRef = useRef<HTMLDivElement>(null);
 
@@ -77,6 +78,7 @@ function CrewPage() {
   function showOnMap(row: CrewRoomingRow) {
     setFocusSpot(row.village_spot_id ?? row.venue?.village_spot_id ?? null);
     setFocusZone(row.village_zone_id ?? null);
+    setFocusTent(row.village_tent_id ?? null);
     mapRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
@@ -128,6 +130,7 @@ function CrewPage() {
               setEventId(e.target.value);
               setOpenId(null);
               setFocusSpot(null);
+              setFocusTent(null);
             }}
             className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
           >
@@ -144,7 +147,7 @@ function CrewPage() {
             <input
               value={term}
               onChange={(e) => setTerm(e.target.value)}
-              placeholder="Search rider name, tent number or email"
+              placeholder="Search name, tent, bib, entry ref or email"
               className="w-full bg-transparent text-sm outline-none"
               autoComplete="off"
             />
@@ -175,6 +178,20 @@ function CrewPage() {
                       <div className="min-w-0">
                         <p className="font-display text-base font-bold text-ink">{r.full_name}</p>
                         <p className="mt-0.5 text-xs text-ink-soft">{whereIsRoom(r) || "No allocation captured"}</p>
+                        {r.entry ? (
+                          <p className="mt-1 text-[11px] font-semibold text-ink-soft">
+                            {[
+                              r.entry.bib_number ? `Bib ${r.entry.bib_number}` : null,
+                              r.entry.category,
+                              r.entry.batch ? `Batch ${r.entry.batch}` : null,
+                              r.entry.registration_ref,
+                            ]
+                              .filter(Boolean)
+                              .join(" · ")}
+                          </p>
+                        ) : (
+                          <p className="mt-1 text-[11px] font-semibold text-amber-600">Not linked to an entry</p>
+                        )}
                       </div>
                       <span className="shrink-0 rounded-xl bg-cherry px-3 py-2 text-center font-display text-lg font-bold leading-none text-white">
                         {r.tent_number || "—"}
@@ -268,7 +285,7 @@ function CrewPage() {
           <h2 className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest text-ink-soft">
             <MapPin className="h-3.5 w-3.5" /> Village map
           </h2>
-          {eventId ? <VillageMapView eventId={eventId} focusSpotId={focusSpot} focusZoneId={focusZone} /> : null}
+          {eventId ? <VillageMapView eventId={eventId} focusSpotId={focusSpot} focusZoneId={focusZone} focusTentId={focusTent} /> : null}
         </section>
     </div>
   );
