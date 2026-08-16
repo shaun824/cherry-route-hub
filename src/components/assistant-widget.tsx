@@ -28,7 +28,7 @@ const STARTERS = [
 const GREETING =
   "Hi 👋 I'm the Red Cherry assistant. Ask me anything about using the app, or about any of our events — schedules, routes, venues, kit lists, your entry, your tent.";
 
-type ChatMsg = { role: "user" | "assistant"; content: string };
+type ChatMsg = { role: "user" | "assistant"; content: string; followUps?: string[] };
 
 export function AssistantWidget() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -88,7 +88,11 @@ export function AssistantWidget() {
     setThinking(true);
     try {
       const res = await ask({ data: { question: q, history } });
-      setMessages((m) => [...m, { role: "assistant", content: res.answer }]);
+      setMessages((m) => [
+        ...m,
+        { role: "assistant", content: res.answer, followUps: res.followUps ?? [] },
+      ]);
+
       if (res.needsAdmin) {
         setShowReport(true);
         setEscalated(true);
@@ -242,6 +246,30 @@ export function AssistantWidget() {
                   )}
                 </div>
               ))}
+
+              {/* Tappable follow-ups from the latest answer */}
+              {!thinking && messages.length > 0
+                ? (() => {
+                    const last = messages[messages.length - 1];
+                    if (last.role !== "assistant" || !last.followUps?.length) return null;
+                    return (
+                      <div className="flex flex-wrap gap-2 pt-1">
+                        {last.followUps.map((s) => (
+                          <button
+                            key={s}
+                            type="button"
+                            onClick={() => void sendQuestion(s)}
+                            className="max-w-full rounded-full bg-background px-3 py-1.5 text-left text-xs font-semibold text-ink-soft ring-1 ring-border hover:text-cherry"
+                          >
+                            {s}
+                          </button>
+                        ))}
+                      </div>
+                    );
+                  })()
+                : null}
+
+
 
 
               {thinking ? (

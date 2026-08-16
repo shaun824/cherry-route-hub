@@ -2,6 +2,8 @@ import { createServerFn } from "@tanstack/react-start";
 import { getRequestHeader } from "@tanstack/react-start/server";
 import { z } from "zod";
 import { BOT_MISS_REPLY } from "@/lib/bot-handoff";
+import { FOLLOWUP_PROMPT_RULE, splitFollowUps } from "@/lib/bot-followups";
+
 
 const BOT_MISS_SENTINEL = "NEEDS_ADMIN";
 
@@ -61,8 +63,10 @@ Rules:
 - Always try hard to answer first. Piece the answer together from anything relevant in the context (event details, schedules, website pages, the person's own records, general app knowledge), and give partial answers with what you DO know rather than handing off. Handing the rider to a human or to WhatsApp is a genuine last resort.
 - Never suggest WhatsApp, "contact the team" or "email us" in an answer you were able to give. Only escalate when the context truly contains nothing usable.
 - Only if the context genuinely has nothing relevant, reply with exactly this token and nothing else: ${BOT_MISS_SENTINEL} (the app then offers our WhatsApp business chat — don't write your own contact message).
+${FOLLOWUP_PROMPT_RULE}
 
 - Never mention the sentinel, "context", or that information was scraped.`;
+
 
 
     const messages: { role: "system" | "user" | "assistant"; content: string }[] = [
@@ -85,16 +89,20 @@ Rules:
         if (raw) answer = raw;
       } else {
         console.error("[app-bot] gateway error", res.status, await res.text().catch(() => ""));
-        if (res.status === 429) return { answer: "I'm getting a lot of questions right now — try again in a moment.", needsAdmin: false };
+        if (res.status === 429) return { answer: "I'm getting a lot of questions right now — try again in a moment.", needsAdmin: false, followUps: [] as string[] };
         if (res.status === 402)
-          return { answer: "The assistant is temporarily unavailable. Please use 'Report a problem' below.", needsAdmin: true };
+          return { answer: "The assistant is temporarily unavailable. Please use 'Report a problem' below.", needsAdmin: true, followUps: [] as string[] };
+
       }
     } catch (e) {
       console.error("[app-bot] gateway call failed", e);
     }
 
-    const needsAdmin = answer.trim().toUpperCase() === BOT_MISS_SENTINEL;
-    const body = needsAdmin ? BOT_MISS_REPLY : answer;
+    const parsed = splitFollowUps(answer);
+    const needsAdmin = parsed.body.trim().toUpperCase() === BOT_MISS_SENTINEL;
+    const body = needsAdmin ? BOT_MISS_REPLY : parsed.body;
+    const followUps = needsAdmin ? [] : parsed.followUps;
+
 
     // Log signed-in event questions into the existing admin Q&A threads so the
     // team sees them and can "Save as FAQ".
@@ -131,5 +139,5 @@ Rules:
       }
     }
 
-    return { answer: body, needsAdmin };
+    return { answer: body, needsAdmin, followUps };
   });

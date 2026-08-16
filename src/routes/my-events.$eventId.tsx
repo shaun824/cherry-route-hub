@@ -1,6 +1,8 @@
 import { entryNinjaRegistrationUrl } from "@/lib/entry-ninja-link";
 import { WhatsappButton } from "@/components/whatsapp-button";
 import { isBotMiss } from "@/lib/bot-handoff";
+import { splitFollowUps } from "@/lib/bot-followups";
+
 import { createFileRoute, Link, notFound, useRouterState } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { askEventBot } from "@/lib/event-bot.functions";
@@ -1311,13 +1313,14 @@ function AskAdminPanel({
 
   const askBot = useServerFn(askEventBot);
 
-  async function send() {
-    if (!text.trim() || !userId) return;
-    const body = text.trim();
+  async function send(preset?: string) {
+    const body = (preset ?? text).trim();
+    if (!body || !userId) return;
     // Show the rider's message straight away — the bot call can take seconds.
     setPending(body);
     setBusy(true);
     setText("");
+
     try {
       await askBot({ data: { eventId, question: body } });
       await qc.invalidateQueries({ queryKey: ["qa-thread", eventId, userId] });
@@ -1398,7 +1401,7 @@ function AskAdminPanel({
         ) : (
 
           <ul className="space-y-2">
-            {(messagesQ.data ?? []).map((m: any) => {
+            {(messagesQ.data ?? []).map((m: any, i: number, arr: any[]) => {
               const mine = m.author_id === userId && !m.is_bot;
               const isBot = Boolean(m.is_bot);
               const bubbleCls = mine
@@ -1407,17 +1410,37 @@ function AskAdminPanel({
                   ? "bg-sky-100 text-sky-950 ring-1 ring-sky-200"
                   : "bg-emerald-100 text-emerald-950";
               const label = isBot ? "🍒 Assistant bot" : "Red Cherry admin";
+              const parsed = isBot ? splitFollowUps(m.body) : { body: m.body, followUps: [] };
+              const isLast = i === arr.length - 1;
               return (
-                <li key={m.id} className={`max-w-[80%] rounded-2xl px-3 py-2 text-sm ${bubbleCls}`}>
-                  {!mine && (
-                    <p className="text-[10px] font-bold uppercase tracking-wider opacity-70">
-                      {label}
-                    </p>
-                  )}
-                  <p className="whitespace-pre-line">{m.body}</p>
+                <li key={m.id} className="space-y-2">
+                  <div className={`max-w-[80%] rounded-2xl px-3 py-2 text-sm ${bubbleCls}`}>
+                    {!mine && (
+                      <p className="text-[10px] font-bold uppercase tracking-wider opacity-70">
+                        {label}
+                      </p>
+                    )}
+                    <p className="whitespace-pre-line">{parsed.body}</p>
+                  </div>
+                  {/* Suggested next questions — one tap to ask */}
+                  {isBot && isLast && !busy && parsed.followUps.length ? (
+                    <div className="flex flex-wrap gap-2">
+                      {parsed.followUps.map((s: string) => (
+                        <button
+                          key={s}
+                          type="button"
+                          onClick={() => void send(s)}
+                          className="rounded-full bg-card px-3 py-1.5 text-left text-[11px] font-semibold text-ink-soft ring-1 ring-border hover:text-cherry"
+                        >
+                          {s}
+                        </button>
+                      ))}
+                    </div>
+                  ) : null}
                 </li>
               );
             })}
+
             {pending && (
               <li className="ml-auto max-w-[80%] rounded-2xl bg-cherry px-3 py-2 text-sm text-white opacity-80">
                 <p className="whitespace-pre-line">{pending}</p>
