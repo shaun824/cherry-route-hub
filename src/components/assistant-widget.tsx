@@ -47,8 +47,32 @@ export function AssistantWidget() {
   const listRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
 
+  // iOS shrinks/offsets the visual viewport when the keyboard opens, which
+  // pushes a plain `fixed inset-0` overlay off-screen. Track the visual
+  // viewport so the panel always sits centred on what the rider can see, and
+  // re-centres itself the moment the keyboard is dismissed.
+  const [vv, setVv] = useState<{ w: number; h: number; l: number; t: number } | null>(null);
+  useEffect(() => {
+    if (!open || typeof window === "undefined") return;
+    const vp = window.visualViewport;
+    const read = () => {
+      if (vp) setVv({ w: vp.width, h: vp.height, l: vp.offsetLeft, t: vp.offsetTop });
+      else setVv({ w: window.innerWidth, h: window.innerHeight, l: 0, t: 0 });
+    };
+    read();
+    vp?.addEventListener("resize", read);
+    vp?.addEventListener("scroll", read);
+    window.addEventListener("resize", read);
+    return () => {
+      vp?.removeEventListener("resize", read);
+      vp?.removeEventListener("scroll", read);
+      window.removeEventListener("resize", read);
+    };
+  }, [open]);
+
   // Deliberately do NOT autofocus the input on open: on iOS that pops the
   // keyboard immediately and hides the greeting/starter questions.
+
 
 
   useEffect(() => {
@@ -107,15 +131,23 @@ export function AssistantWidget() {
       </button>
 
       {open ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center overflow-hidden bg-black/40 p-4 md:p-6">
+        <div
+          className="fixed z-50 flex items-center justify-center overflow-hidden bg-black/40 p-3 md:p-6"
+          style={
+            vv
+              ? { left: vv.l, top: vv.t, width: vv.w, height: vv.h }
+              : { left: 0, top: 0, right: 0, bottom: 0 }
+          }
+        >
           <div
             className="flex w-full min-w-0 flex-col overflow-hidden rounded-3xl bg-card shadow-xl"
             style={{
-              width: "min(90vw, 28rem)",
-              maxWidth: "min(90vw, 28rem)",
-              height: "min(80dvh, 640px)",
-              maxHeight: "80dvh",
+              width: vv ? Math.min(vv.w - 24, 448) : "min(90vw, 28rem)",
+              maxWidth: "100%",
+              height: vv ? Math.min(vv.h - 24, 640) : "min(80dvh, 640px)",
+              maxHeight: "100%",
               paddingBottom: "env(safe-area-inset-bottom)",
+
             }}
           >
 
