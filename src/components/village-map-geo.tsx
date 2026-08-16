@@ -496,6 +496,8 @@ export default function VillageMapGeo({
               </CircleMarker>
             </>
           ) : null}
+
+          <BearingSync bearing={bearing} />
         </MapContainer>
 
         <div className="pointer-events-none absolute right-3 top-3 z-[500] flex gap-2">
@@ -507,6 +509,37 @@ export default function VillageMapGeo({
             {satellite ? "Satellite" : "Street"}
           </button>
         </div>
+
+        {/* Rotate the map to match the way you're facing. */}
+        <div className="pointer-events-none absolute left-3 top-3 z-[500] flex items-center gap-1.5">
+          <button
+            type="button"
+            aria-label="Rotate map anti-clockwise"
+            onClick={() => setBearing((b) => (b + 345) % 360)}
+            className="pointer-events-auto h-9 w-9 rounded-full bg-card/95 text-sm font-bold text-ink shadow ring-1 ring-border"
+          >
+            ↺
+          </button>
+          <button
+            type="button"
+            aria-label="Rotate map clockwise"
+            onClick={() => setBearing((b) => (b + 15) % 360)}
+            className="pointer-events-auto h-9 w-9 rounded-full bg-card/95 text-sm font-bold text-ink shadow ring-1 ring-border"
+          >
+            ↻
+          </button>
+          {bearing !== 0 ? (
+            <button
+              type="button"
+              aria-label="Reset map to north"
+              onClick={() => setBearing(0)}
+              className="pointer-events-auto rounded-full bg-card/95 px-3 py-1.5 text-[11px] font-bold text-ink shadow ring-1 ring-border"
+            >
+              North ↑ {Math.round(bearing)}°
+            </button>
+          ) : null}
+        </div>
+
 
         <button
           type="button"
