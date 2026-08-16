@@ -222,7 +222,7 @@ function MyEventDetail() {
           return (
             <button
               key={t.id}
-              onClick={() => setTab(t.id)}
+              onClick={() => selectTab(t.id)}
               className={`relative flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold ${
                 active ? "bg-cherry text-white" : "text-ink-soft"
               }`}
