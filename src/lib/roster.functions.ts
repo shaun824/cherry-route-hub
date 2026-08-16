@@ -301,7 +301,7 @@ export const linkMyEntry = createServerFn({ method: "POST" })
     }
 
     if (!match) return { ok: false as const, reason: "no_match" as const };
-    if (match.id_number_hash && match.id_number_hash !== idHash) {
+    if (!emailProven && match.id_number_hash && match.id_number_hash !== idHash) {
       return { ok: false as const, reason: "id_mismatch" as const };
     }
     // Claiming a roster row by ID number alone is a guessable path — require the

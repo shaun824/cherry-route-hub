@@ -8,7 +8,7 @@ type Sb = {
   from: (t: string) => any;
 };
 
-const MAX_EVENTS = 80;
+const MAX_EVENTS = 250;
 const CONCURRENCY = 5;
 
 function cleanId(value: string | null | undefined): string {
