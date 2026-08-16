@@ -19,6 +19,7 @@ import { Route as FeedRouteImport } from './routes/feed'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as SpectateIndexRouteImport } from './routes/spectate.index'
 import { Route as MyEventsIndexRouteImport } from './routes/my-events.index'
 import { Route as EventsIndexRouteImport } from './routes/events.index'
 import { Route as CrewIndexRouteImport } from './routes/crew.index'
@@ -119,6 +120,11 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const SpectateIndexRoute = SpectateIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => SpectateRoute,
 } as any)
 const MyEventsIndexRoute = MyEventsIndexRouteImport.update({
   id: '/',
@@ -419,6 +425,7 @@ export interface FileRoutesByFullPath {
   '/crew/': typeof CrewIndexRoute
   '/events/': typeof EventsIndexRoute
   '/my-events/': typeof MyEventsIndexRoute
+  '/spectate/': typeof SpectateIndexRoute
   '/admin/event-info/$eventId': typeof AdminEventInfoEventIdRoute
   '/admin/rider/$userId': typeof AdminRiderUserIdRoute
   '/admin/village/$eventId': typeof AdminVillageEventIdRoute
@@ -450,7 +457,6 @@ export interface FileRoutesByTo {
   '/profile': typeof ProfileRoute
   '/promos': typeof PromosRoute
   '/reset-password': typeof ResetPasswordRoute
-  '/spectate': typeof SpectateRouteWithChildren
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/audit': typeof AdminAuditRoute
   '/admin/bot-log': typeof AdminBotLogRoute
@@ -478,6 +484,7 @@ export interface FileRoutesByTo {
   '/crew': typeof CrewIndexRoute
   '/events': typeof EventsIndexRoute
   '/my-events': typeof MyEventsIndexRoute
+  '/spectate': typeof SpectateIndexRoute
   '/admin/event-info/$eventId': typeof AdminEventInfoEventIdRoute
   '/admin/rider/$userId': typeof AdminRiderUserIdRoute
   '/admin/village/$eventId': typeof AdminVillageEventIdRoute
@@ -541,6 +548,7 @@ export interface FileRoutesById {
   '/crew/': typeof CrewIndexRoute
   '/events/': typeof EventsIndexRoute
   '/my-events/': typeof MyEventsIndexRoute
+  '/spectate/': typeof SpectateIndexRoute
   '/admin/event-info/$eventId': typeof AdminEventInfoEventIdRoute
   '/admin/rider/$userId': typeof AdminRiderUserIdRoute
   '/admin/village/$eventId': typeof AdminVillageEventIdRoute
@@ -605,6 +613,7 @@ export interface FileRouteTypes {
     | '/crew/'
     | '/events/'
     | '/my-events/'
+    | '/spectate/'
     | '/admin/event-info/$eventId'
     | '/admin/rider/$userId'
     | '/admin/village/$eventId'
@@ -636,7 +645,6 @@ export interface FileRouteTypes {
     | '/profile'
     | '/promos'
     | '/reset-password'
-    | '/spectate'
     | '/admin/analytics'
     | '/admin/audit'
     | '/admin/bot-log'
@@ -664,6 +672,7 @@ export interface FileRouteTypes {
     | '/crew'
     | '/events'
     | '/my-events'
+    | '/spectate'
     | '/admin/event-info/$eventId'
     | '/admin/rider/$userId'
     | '/admin/village/$eventId'
@@ -726,6 +735,7 @@ export interface FileRouteTypes {
     | '/crew/'
     | '/events/'
     | '/my-events/'
+    | '/spectate/'
     | '/admin/event-info/$eventId'
     | '/admin/rider/$userId'
     | '/admin/village/$eventId'
@@ -853,6 +863,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/spectate/': {
+      id: '/spectate/'
+      path: '/'
+      fullPath: '/spectate/'
+      preLoaderRoute: typeof SpectateIndexRouteImport
+      parentRoute: typeof SpectateRoute
     }
     '/my-events/': {
       id: '/my-events/'
@@ -1281,10 +1298,12 @@ const MyEventsRouteWithChildren = MyEventsRoute._addFileChildren(
 
 interface SpectateRouteChildren {
   SpectateEventIdRoute: typeof SpectateEventIdRoute
+  SpectateIndexRoute: typeof SpectateIndexRoute
 }
 
 const SpectateRouteChildren: SpectateRouteChildren = {
   SpectateEventIdRoute: SpectateEventIdRoute,
+  SpectateIndexRoute: SpectateIndexRoute,
 }
 
 const SpectateRouteWithChildren = SpectateRoute._addFileChildren(
