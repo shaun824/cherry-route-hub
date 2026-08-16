@@ -138,5 +138,5 @@ ${FOLLOWUP_PROMPT_RULE}
       }
     }
 
-    return { answer: body, needsAdmin };
+    return { answer: body, needsAdmin, followUps };
   });
