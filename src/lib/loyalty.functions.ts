@@ -57,6 +57,29 @@ export const getMyLoyalty = createServerFn({ method: "POST" })
       coupons = (c.data ?? []) as Row[];
     }
 
+    // What this rider has actually paid us, so we can show the 10%-back promise.
+    const enIds = [...new Set(participation.map((r) => Number(r.en_event_id)).filter(Boolean))];
+    let priceById = new Map<number, number>();
+    if (enIds.length) {
+      const { data: values } = await supabase
+        .from("loyalty_event_values")
+        .select("en_event_id, entry_price_cents")
+        .in("en_event_id", enIds);
+      priceById = new Map(
+        ((values ?? []) as Row[]).map((v) => [Number(v.en_event_id), Number(v.entry_price_cents ?? 0)]),
+      );
+    }
+    const cutoff = new Date();
+    cutoff.setFullYear(cutoff.getFullYear() - 3);
+    let spendCents = 0;
+    let spendCents3y = 0;
+    for (const row of participation) {
+      const cents = priceById.get(Number(row.en_event_id)) ?? 0;
+      spendCents += cents;
+      const when = row.event_date ? new Date(String(row.event_date)) : null;
+      if (when && when >= cutoff) spendCents3y += cents;
+    }
+
     return {
       linked: entrantIds.length > 0,
       balance,
@@ -65,10 +88,13 @@ export const getMyLoyalty = createServerFn({ method: "POST" })
       ledger,
       participation,
       coupons,
+      spendCents,
+      spendCents3y,
       rewards: (rewardsRes.data ?? []) as Row[],
       settings: parseLoyaltySettings(settingsRow.data?.value ?? DEFAULT_LOYALTY_SETTINGS),
     };
   });
+
 
 /** Cash out points for a reward — mints a coupon code and debits the ledger. */
 export const redeemReward = createServerFn({ method: "POST" })

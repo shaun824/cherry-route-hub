@@ -107,6 +107,9 @@ function RewardsPage() {
         </div>
       </section>
 
+      {/* Spend-back promise */}
+      {data?.linked ? <SpendBack spendCents3y={(data as any).spendCents3y ?? 0} balance={balance} /> : null}
+
       {!data?.linked ? (
         <div className="rounded-2xl bg-accent p-4 text-sm">
           <p className="font-semibold">We haven't matched your rider record yet.</p>
@@ -118,6 +121,7 @@ function RewardsPage() {
           </Link>
         </div>
       ) : null}
+
 
       {/* Tabs */}
       <div className="flex gap-1 rounded-xl bg-secondary p-1">
@@ -244,6 +248,50 @@ function RewardsPage() {
     </div>
   );
 }
+
+/** Shows the plain-English promise: ride R15 000 worth of events, get R1 500 back. */
+function SpendBack({ spendCents3y, balance }: { spendCents3y: number; balance: number }) {
+  const spend = Math.round(spendCents3y / 100);
+  const target = 15000;
+  const progress = Math.min(1, target ? spend / target : 0);
+  const back = Math.min(balance, Math.floor(spend / 10));
+  const rands = (n: number) => `R${new Intl.NumberFormat("en-ZA").format(n)}`;
+
+  return (
+    <section className="rounded-2xl bg-card p-4 ring-1 ring-border">
+      <h2 className="flex items-center gap-2 font-display text-sm font-bold">
+        <TrendingUp className="h-4 w-4 text-cherry" /> Your 3-year pay-back
+      </h2>
+      <p className="mt-1 text-xs text-ink-soft">
+        Every R10 you spend on entries earns 1 Cherry Mile, and every Mile is worth R1 off a future entry — spend{" "}
+        {rands(target)} with us over three years and you get {rands(1500)} back.
+      </p>
+      <div className="mt-3 flex items-end justify-between">
+        <div>
+          <p className="text-[11px] font-bold uppercase tracking-wide text-ink-soft">Entries, last 3 years</p>
+          <p className="font-display text-2xl font-black leading-none">{rands(spend)}</p>
+        </div>
+        <div className="text-right">
+          <p className="text-[11px] font-bold uppercase tracking-wide text-ink-soft">Earned back</p>
+          <p className="font-display text-2xl font-black leading-none text-cherry">{rands(back)}</p>
+        </div>
+      </div>
+      <div className="mt-3 h-2 overflow-hidden rounded-full bg-secondary">
+        <div className="h-full rounded-full bg-cherry" style={{ width: `${Math.round(progress * 100)}%` }} />
+      </div>
+      <p className="mt-2 text-[11px] font-semibold">
+        {spend >= target ? (
+          <span className="text-emerald-700">
+            Target reached — cash out {rands(1500)} off your next entry in the Rewards tab below.
+          </span>
+        ) : (
+          <span className="text-ink-soft">{rands(target - spend)} more of entries unlocks the {rands(1500)} reward.</span>
+        )}
+      </p>
+    </section>
+  );
+}
+
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
