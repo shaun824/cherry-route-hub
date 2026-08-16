@@ -8,7 +8,8 @@ export const FOLLOWUP_PROMPT_RULE = `- ALWAYS finish your reply by inviting the 
 - Then, on the VERY LAST line and nothing after it, output exactly: ${FOLLOWUP_MARKER} question one | question two | question three
   · 2 to 3 short questions (max ~8 words each), written in the rider's voice ("Where do I park?"), that you can genuinely answer from the context.
   · They must follow on from what was just asked — never generic, never a repeat of the question already answered.
-  · Never mention or explain this line; it is rendered as tappable buttons.`;
+  · Never mention or explain this line; it is rendered as tappable buttons.
+- Learn from where real conversations ended: when an APPROVED ANSWER you used carries a "Riders who asked this usually asked next" line, those are the questions people actually went on to ask. Prefer them (rephrased in the rider's voice) as your follow-ups, and when the context lets you, answer that likely next step in the same reply so the rider gets there in one tap.`;
 
 /** Splits a raw bot reply into the visible body and its follow-up suggestions. */
 export function splitFollowUps(raw: string | null | undefined): {
