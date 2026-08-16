@@ -87,8 +87,6 @@ function Home() {
     .filter((e) => (e.lifecycle ?? "published") === "published")
     .filter((e) => new Date(e.date).getTime() >= Date.now() - 12 * 60 * 60 * 1000)
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-  const motoEvents = upcoming.filter((e) => getEventSport(e.discipline, e.name) === "moto").slice(0, 4);
-  const mtbEvents = upcoming.filter((e) => getEventSport(e.discipline, e.name) === "mtb").slice(0, 4);
 
   // Determine which sport(s) this signed-in rider has actually entered.
   // The query shares its cache with NextEventCard.
