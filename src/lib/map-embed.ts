@@ -171,27 +171,44 @@ export function resolveVenuePoint(opts: {
 
 /**
  * Google Maps links the assistants can hand to riders (pin + turn-by-turn directions).
- * Prefers coordinates, falls back to the venue address text.
+ * Prefers verified coordinates; otherwise falls back to the venue name + address text
+ * so Google searches for the actual place rather than a vague street.
  */
 export function venueMapLinks(opts: {
   mapUrl?: string | null;
   lat?: number | null;
   lng?: number | null;
   address?: string | null;
+  /** Venue / event location name, used to disambiguate the address fallback. */
+  name?: string | null;
 }): { pin: string; directions: string } | null {
   const point = resolveVenuePoint({ mapUrl: opts.mapUrl, lat: opts.lat, lng: opts.lng });
-  if (point) {
+  const valid =
+    point &&
+    Number.isFinite(point.lat) &&
+    Number.isFinite(point.lng) &&
+    Math.abs(point.lat) <= 90 &&
+    Math.abs(point.lng) <= 180 &&
+    !(Math.abs(point.lat) < 0.001 && Math.abs(point.lng) < 0.001);
+
+  if (valid && point) {
     const q = `${point.lat},${point.lng}`;
     return {
       pin: `https://www.google.com/maps/search/?api=1&query=${q}`,
       directions: `https://www.google.com/maps/dir/?api=1&destination=${q}`,
     };
   }
-  const address = (opts.address ?? "").trim();
-  if (!address) return null;
-  const q = encodeURIComponent(address);
+
+  const parts = [opts.name, opts.address]
+    .map((p) => (p ?? "").trim())
+    .filter(Boolean)
+    // drop a duplicate when the name is already inside the address
+    .filter((p, i, arr) => i === 0 || !arr[0].toLowerCase().includes(p.toLowerCase()));
+  if (!parts.length) return null;
+  const q = encodeURIComponent(parts.join(", "));
   return {
     pin: `https://www.google.com/maps/search/?api=1&query=${q}`,
     directions: `https://www.google.com/maps/dir/?api=1&destination=${q}`,
   };
 }
+
