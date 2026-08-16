@@ -180,7 +180,7 @@ export function AssistantWidget() {
               ) : null}
             </div>
 
-            <div className="min-w-0 shrink-0 overflow-y-auto overflow-x-hidden border-t border-border p-3">
+            <div className="min-w-0 max-h-[62%] shrink-0 overflow-y-auto overflow-x-hidden border-t border-border p-3">
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
