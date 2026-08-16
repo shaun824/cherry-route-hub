@@ -60,6 +60,7 @@
     "embla-carousel-react": "^8.6.0",
     "input-otp": "^1.4.2",
     "leaflet": "^1.9.4",
+    "leaflet-rotate": "^0.2.8",
     "leaflet.markercluster": "^1.5.3",
     "lucide-react": "^0.575.0",
     "papaparse": "^5.5.4",

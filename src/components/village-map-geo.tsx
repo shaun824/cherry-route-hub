@@ -5,6 +5,14 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { MapContainer, TileLayer, ImageOverlay, useMap, CircleMarker, Polygon, Popup, Marker } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+// Adds bearing support to Leaflet so riders can spin the village map to match
+// the direction they are facing (two-finger twist, or the on-map controls).
+// The plugin ships as a UMD bundle that patches the global `L`, so expose it
+// first. This module is only ever loaded lazily in the browser.
+(globalThis as unknown as { L: typeof L }).L = L;
+await import("leaflet-rotate");
+
+
 import type { VillageGeo, VillageHotspot } from "@/lib/village-map";
 import { spotColor, spotIcon } from "@/lib/village-map";
 import { villageIconSvg } from "@/lib/village-icons";
@@ -48,6 +56,16 @@ function RotateOverlay({ rotation }: { rotation: number }) {
   }, [map, rotation]);
   return null;
 }
+
+/** Keeps the Leaflet map bearing in sync with the rider's rotation controls. */
+function BearingSync({ bearing }: { bearing: number }) {
+  const map = useMap() as L.Map & { setBearing?: (deg: number) => void };
+  useEffect(() => {
+    map.setBearing?.(bearing);
+  }, [map, bearing]);
+  return null;
+}
+
 
 function FitBounds({ bounds }: { bounds: L.LatLngBoundsExpression }) {
   const map = useMap();
@@ -227,6 +245,8 @@ export default function VillageMapGeo({
   const [geoError, setGeoError] = useState<string | null>(null);
   const [recenterToken, setRecenterToken] = useState(0);
   const [satellite, setSatellite] = useState(true);
+  const [bearing, setBearing] = useState(0);
+
   const [zoom, setZoom] = useState(17);
   const watchRef = useRef<number | null>(null);
 
@@ -347,7 +367,9 @@ export default function VillageMapGeo({
           bounceAtZoomLimits={false}
           touchZoom
           doubleClickZoom
+          {...({ rotate: true, touchRotate: true, rotateControl: false, bearing: 0 } as object)}
           className="h-[65vh] min-h-[340px] w-full"
+
         >
           {satellite ? (
             <TileLayer
@@ -478,6 +500,8 @@ export default function VillageMapGeo({
               </CircleMarker>
             </>
           ) : null}
+
+          <BearingSync bearing={bearing} />
         </MapContainer>
 
         <div className="pointer-events-none absolute right-3 top-3 z-[500] flex gap-2">
@@ -489,6 +513,37 @@ export default function VillageMapGeo({
             {satellite ? "Satellite" : "Street"}
           </button>
         </div>
+
+        {/* Rotate the map to match the way you're facing. */}
+        <div className="pointer-events-none absolute bottom-3 left-3 z-[500] flex items-center gap-1.5">
+          <button
+            type="button"
+            aria-label="Rotate map anti-clockwise"
+            onClick={() => setBearing((b) => (b + 345) % 360)}
+            className="pointer-events-auto h-9 w-9 rounded-full bg-card/95 text-sm font-bold text-ink shadow ring-1 ring-border"
+          >
+            ↺
+          </button>
+          <button
+            type="button"
+            aria-label="Rotate map clockwise"
+            onClick={() => setBearing((b) => (b + 15) % 360)}
+            className="pointer-events-auto h-9 w-9 rounded-full bg-card/95 text-sm font-bold text-ink shadow ring-1 ring-border"
+          >
+            ↻
+          </button>
+          {bearing !== 0 ? (
+            <button
+              type="button"
+              aria-label="Reset map to north"
+              onClick={() => setBearing(0)}
+              className="pointer-events-auto rounded-full bg-card/95 px-3 py-1.5 text-[11px] font-bold text-ink shadow ring-1 ring-border"
+            >
+              North ↑ {Math.round(bearing)}°
+            </button>
+          ) : null}
+        </div>
+
 
         <button
           type="button"
@@ -504,7 +559,7 @@ export default function VillageMapGeo({
         <p className="text-xs text-ink-soft">Live location on · accurate to about {Math.round(accuracy)} m.</p>
       ) : (
         <p className="text-xs text-ink-soft">
-          Drag to move, pinch or scroll to zoom, and tap any marker for details.
+          Drag to move, pinch or scroll to zoom, twist with two fingers (or use ↺ ↻) to rotate, and tap any marker for details.
         </p>
       )}
     </div>
