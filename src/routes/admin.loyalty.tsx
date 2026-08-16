@@ -292,7 +292,7 @@ function EventValues({ rows, settings, onDone }: { rows: any[]; settings: Loyalt
               <th className="px-3 py-2">Event</th>
               <th className="px-3 py-2">Date</th>
               <th className="px-3 py-2">Entry price (R)</th>
-              <th className="px-3 py-2">Hero</th>
+              <th className="px-3 py-2">Sells out</th>
               <th className="px-3 py-2">Points</th>
               <th className="px-3 py-2">Worth</th>
               <th className="px-3 py-2" />
