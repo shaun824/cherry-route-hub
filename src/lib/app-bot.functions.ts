@@ -89,9 +89,10 @@ ${FOLLOWUP_PROMPT_RULE}
         if (raw) answer = raw;
       } else {
         console.error("[app-bot] gateway error", res.status, await res.text().catch(() => ""));
-        if (res.status === 429) return { answer: "I'm getting a lot of questions right now — try again in a moment.", needsAdmin: false };
+        if (res.status === 429) return { answer: "I'm getting a lot of questions right now — try again in a moment.", needsAdmin: false, followUps: [] as string[] };
         if (res.status === 402)
-          return { answer: "The assistant is temporarily unavailable. Please use 'Report a problem' below.", needsAdmin: true };
+          return { answer: "The assistant is temporarily unavailable. Please use 'Report a problem' below.", needsAdmin: true, followUps: [] as string[] };
+
       }
     } catch (e) {
       console.error("[app-bot] gateway call failed", e);
