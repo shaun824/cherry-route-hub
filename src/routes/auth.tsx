@@ -408,6 +408,7 @@ function FindMyEmail() {
   const lookup = useServerFn(lookupEntryEmail);
   const [open, setOpen] = useState(false);
   const [idNumber, setIdNumber] = useState("");
+  const [surname, setSurname] = useState("");
   const [busy, setBusy] = useState(false);
   const [cooldown, setCooldown] = useState(false);
   const [result, setResult] = useState<{ found: boolean; needsEmail: boolean; emails: string[] } | null>(null);
@@ -420,7 +421,7 @@ function FindMyEmail() {
     setErr(null);
     setResult(null);
     try {
-      const res = await lookup({ data: { id_number: idNumber.trim() } });
+      const res = await lookup({ data: { id_number: idNumber.trim(), surname: surname.trim() } });
       setResult({ found: res.found, needsEmail: res.needsEmail, emails: res.emails });
     } catch {
       setErr("Couldn't check that right now. Please try again.");
@@ -445,7 +446,8 @@ function FindMyEmail() {
       {open ? (
         <form onSubmit={handleLookup} className="mt-3 space-y-2 rounded-xl bg-secondary/60 p-3 ring-1 ring-border">
           <p className="text-[11px] leading-snug text-ink-soft">
-            Enter the ID number you entered with and we'll show a hidden version of the email on your entry.
+            Enter the ID number and surname you entered with and we'll show a hidden version of the
+            email on your entry.
           </p>
           <input
             required
@@ -454,6 +456,16 @@ function FindMyEmail() {
             value={idNumber}
             onChange={(e) => setIdNumber(e.target.value)}
             placeholder="ID number"
+            className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+          />
+          <input
+            required
+            minLength={2}
+            maxLength={80}
+            autoComplete="family-name"
+            value={surname}
+            onChange={(e) => setSurname(e.target.value)}
+            placeholder="Surname"
             className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
           />
           <button
