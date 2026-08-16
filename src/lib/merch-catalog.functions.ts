@@ -172,3 +172,15 @@ export const deleteMerchItem = createServerFn({ method: "POST" })
     if (error) throw error;
     return { ok: true };
   });
+
+/** Re-read event websites and enrich the catalogue with descriptions/prices. */
+export const syncMerchWebInfo = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => syncSchema.parse(data ?? {}))
+  .handler(async ({ data, context }) => {
+    const isAdmin = await checkIsAdmin(context.supabase as never);
+    if (!isAdmin) throw new Error("Forbidden");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { syncAllEventMerchInfo } = await import("./merch-scrape.server");
+    return await syncAllEventMerchInfo(supabaseAdmin, data.eventId);
+  });
