@@ -67,12 +67,13 @@ export async function fetchTentRules(eventId: string): Promise<TentRule[]> {
 }
 
 /** The tent pin whose label matches this tent/room number, if any. */
-export function tentForLabel<T extends { label: string }>(
+export function tentForLabel<T extends { label: string; kind?: string | null }>(
   tents: T[],
   tentNumber: string | null | undefined,
 ): T | null {
   if (!tentNumber) return null;
-  return tents.find((t) => labelsMatch(t.label, tentNumber)) ?? null;
+  // Drawing markers share the map table but must never be matched to a rider.
+  return tents.find((t) => (t.kind ?? "tent") !== "marker" && labelsMatch(t.label, tentNumber)) ?? null;
 }
 
 /** Does a bulk rule ("1-40", "A*", "Nyathi*") cover this tent number? */
