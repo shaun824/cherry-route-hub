@@ -158,16 +158,6 @@ function ZoomWatcher({ onZoom }: { onZoom: (z: number) => void }) {
   return null;
 }
 
-/** Compact dot used for tents when zoomed out, so the village doesn't turn into a wall of numbers. */
-function tentDotIcon(active: boolean) {
-  const bg = active ? "#c8102e" : "#1f2937";
-  return L.divIcon({
-    className: "rce-village-tent-dot",
-    html: `<div style="width:9px;height:9px;border-radius:999px;background:${bg};border:1.5px solid rgba(255,255,255,.85);box-shadow:0 1px 3px rgba(0,0,0,.4)"></div>`,
-    iconSize: [9, 9],
-    iconAnchor: [4.5, 4.5],
-  });
-}
 
 function tentIcon(label: string, active: boolean) {
   const bg = active ? "#c8102e" : "#1f2937";
@@ -396,16 +386,16 @@ export default function VillageMapGeo({
             );
             return firstIdx === i;
           }).map((t) => {
-
             const hot = highlightTentId === t.id;
-            // Labels only once you're zoomed in — otherwise the numbers overlap
-            // into an unreadable block. Your own tent always stays labelled.
-            const labelled = hot || zoom >= 19;
+            // Clean-map rule (Weekend Warrior standard): tent numbers only appear
+            // once you're zoomed right in. Zoomed out we render nothing at all —
+            // no dots, no clutter. Your own tent always stays visible.
+            if (!hot && zoom < 19) return null;
             return (
               <Marker
                 key={t.id}
                 position={[t.lat, t.lng]}
-                icon={labelled ? tentIcon(t.label, hot) : tentDotIcon(hot)}
+                icon={tentIcon(t.label, hot)}
                 zIndexOffset={hot ? 900 : 300}
               >
                 <Popup>{hot ? `${t.label} — this is you` : t.label}</Popup>
