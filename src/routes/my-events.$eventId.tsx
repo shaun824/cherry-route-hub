@@ -1311,13 +1311,14 @@ function AskAdminPanel({
 
   const askBot = useServerFn(askEventBot);
 
-  async function send() {
-    if (!text.trim() || !userId) return;
-    const body = text.trim();
+  async function send(preset?: string) {
+    const body = (preset ?? text).trim();
+    if (!body || !userId) return;
     // Show the rider's message straight away — the bot call can take seconds.
     setPending(body);
     setBusy(true);
     setText("");
+
     try {
       await askBot({ data: { eventId, question: body } });
       await qc.invalidateQueries({ queryKey: ["qa-thread", eventId, userId] });
