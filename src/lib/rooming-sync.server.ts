@@ -39,7 +39,8 @@ export async function placeRows(
   const { data: tentRows } = await client
     .from("event_village_tents")
     .select("id, label, zone_id")
-    .eq("event_id", eventId);
+    .eq("event_id", eventId)
+    .neq("kind", "marker");
   const tents = (tentRows ?? []) as { id: string; label: string; zone_id: string | null }[];
 
   const { data: ruleRows } = await client
