@@ -5,6 +5,7 @@ import { useServerFn } from "@tanstack/react-start";
 import {
   ArrowLeft,
   CalendarDays,
+  ChevronRight,
   Car,
   Coffee,
   ExternalLink,
@@ -53,6 +54,7 @@ export const Route = createFileRoute("/spectate/$eventId")({
 });
 
 type Tab = "info" | "riders" | "results";
+type GroupBy = "start" | "bib" | "category" | "name";
 
 function riderResultUrl(template: string | null, bib: string | null) {
   if (!template || !bib) return null;
@@ -65,6 +67,7 @@ function SpectatorEventPage() {
   const event = useAdminStore((s) => s.events.find((e) => e.id === eventId));
   const [tab, setTab] = useState<Tab>("riders");
   const [categoryFilter, setCategoryFilter] = useState<string>("__all");
+  const [groupBy, setGroupBy] = useState<GroupBy>("start");
   const [search, setSearch] = useState("");
 
   const { user } = useSession();
@@ -116,21 +119,34 @@ function SpectatorEventPage() {
       string,
       { key: string; label: string; startTime: string; rows: TrackedRider[] }
     >();
-    for (const r of filtered) {
-      const key = r.batch ?? "__unassigned";
-      const meta = r.batch ? batchLookup.get(r.batch) : undefined;
-      if (!groups.has(key)) {
-        groups.set(key, {
-          key,
-          label: r.batch ?? "All riders",
-          startTime: meta?.startTime ?? "",
-          rows: [],
-        });
-      }
+    const push = (key: string, label: string, startTime: string, r: TrackedRider) => {
+      if (!groups.has(key)) groups.set(key, { key, label, startTime, rows: [] });
       groups.get(key)!.rows.push(r);
+    };
+
+    for (const r of filtered) {
+      if (groupBy === "name") {
+        push("__all", "All riders", "", r);
+      } else if (groupBy === "bib") {
+        push("__all", "By race number", "", r);
+      } else if (groupBy === "category") {
+        push(r.category ?? "__none", r.category ?? "No category", "", r);
+      } else {
+        const meta = r.batch ? batchLookup.get(r.batch) : undefined;
+        push(r.batch ?? "__unassigned", r.batch ?? "All riders", meta?.startTime ?? "", r);
+      }
     }
+
+    const bibValue = (r: TrackedRider) => {
+      const n = Number(String(r.bib_number ?? "").replace(/\D+/g, ""));
+      return Number.isFinite(n) && String(r.bib_number ?? "").trim() ? n : Number.MAX_SAFE_INTEGER;
+    };
     for (const g of groups.values()) {
-      g.rows.sort((a, b) => (a.full_name || "").localeCompare(b.full_name || ""));
+      g.rows.sort((a, b) =>
+        groupBy === "bib"
+          ? bibValue(a) - bibValue(b) || (a.full_name || "").localeCompare(b.full_name || "")
+          : (a.full_name || "").localeCompare(b.full_name || ""),
+      );
     }
     return Array.from(groups.values()).sort((a, b) => {
       if (a.startTime && b.startTime) return a.startTime.localeCompare(b.startTime);
@@ -138,7 +154,7 @@ function SpectatorEventPage() {
       if (b.startTime) return 1;
       return a.label.localeCompare(b.label);
     });
-  }, [filtered, batchLookup]);
+  }, [filtered, batchLookup, groupBy]);
 
   const [activeSet, setActiveSet] = useState<string | null>(null);
   const currentSetId = activeSet ?? results?.sets[0]?.id ?? null;
@@ -368,9 +384,33 @@ function SpectatorEventPage() {
             </div>
           ) : (
           <>
-          <SearchBox value={search} onChange={setSearch} placeholder="Search rider name or bib…" />
+          <SearchBox value={search} onChange={setSearch} placeholder="Search rider name or race number…" />
           <div className="mt-3">
             <CategoryFilter categories={categories} value={categoryFilter} onChange={setCategoryFilter} />
+          </div>
+          <div className="mt-2 flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
+            {([
+              { id: "start", label: "Start times" },
+              { id: "bib", label: "Race numbers" },
+              { id: "category", label: "Groups" },
+              { id: "name", label: "A–Z" },
+            ] as { id: GroupBy; label: string }[]).map((o) => {
+              const active = groupBy === o.id;
+              return (
+                <button
+                  key={o.id}
+                  type="button"
+                  onClick={() => setGroupBy(o.id)}
+                  className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold ring-1 ${
+                    active
+                      ? "bg-ink text-white ring-ink"
+                      : "bg-card text-ink-soft ring-border"
+                  }`}
+                >
+                  {o.label}
+                </button>
+              );
+            })}
           </div>
 
           {ridersQ.isLoading ? (
@@ -393,43 +433,40 @@ function SpectatorEventPage() {
               ) : (
                 startGroups.map((g) => (
                   <section key={g.key} className="rounded-2xl bg-card p-3 ring-1 ring-border">
-                    <header className="flex items-center gap-2 pb-2">
-                      <p className="font-display text-sm font-bold text-ink">{g.label}</p>
-                      <span className="ml-auto rounded-md bg-accent px-2 py-0.5 font-mono text-[11px] font-bold text-cherry-deep">
-                        {g.startTime || `${g.rows.length}`}
+                    <header className="flex items-start gap-2 pb-2">
+                      <p className="min-w-0 flex-1 font-display text-sm font-bold leading-snug text-ink">
+                        {g.label}
+                      </p>
+                      <span className="shrink-0 rounded-md bg-accent px-2 py-0.5 font-mono text-[11px] font-bold text-cherry-deep">
+                        {g.startTime ? g.startTime : `${g.rows.length}`}
                       </span>
                     </header>
                     <ul className="divide-y divide-border">
                       {g.rows.map((r) => {
                         const link = riderResultUrl(results?.results_rider_url_template ?? null, r.bib_number);
-                        const inner = (
-                          <>
-                            <span className="grid h-7 min-w-[2.75rem] place-items-center rounded-md bg-background px-1 font-mono text-[11px] font-semibold text-ink-soft ring-1 ring-border">
-                              {r.bib_number || "—"}
-                            </span>
-                            <span className="flex-1 truncate font-medium text-ink">{r.full_name}</span>
-                            {r.category ? (
-                              <span className="rounded-full bg-secondary px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-ink-soft">
-                                {r.category}
-                              </span>
-                            ) : null}
-                            {link ? <ExternalLink className="h-3.5 w-3.5 shrink-0 text-cherry" /> : null}
-                          </>
-                        );
                         return (
                           <li key={r.id}>
-                            {link ? (
-                              <a
-                                href={link}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="flex items-center gap-3 py-2 text-sm"
-                              >
-                                {inner}
-                              </a>
-                            ) : (
-                              <div className="flex items-center gap-3 py-2 text-sm">{inner}</div>
-                            )}
+                            <Link
+                              to="/spectate/$eventId/rider/$entrantId"
+                              params={{ eventId, entrantId: r.id }}
+                              className="flex items-center gap-3 py-2 text-sm active:opacity-70"
+                            >
+                              <span className="grid h-7 min-w-[2.75rem] place-items-center rounded-md bg-background px-1 font-mono text-[11px] font-semibold text-ink-soft ring-1 ring-border">
+                                {r.bib_number || "—"}
+                              </span>
+                              <span className="min-w-0 flex-1">
+                                <span className="block truncate font-medium text-ink">
+                                  {r.full_name}
+                                </span>
+                                {groupBy !== "category" && r.category ? (
+                                  <span className="block truncate text-[11px] text-ink-soft">
+                                    {r.category}
+                                  </span>
+                                ) : null}
+                              </span>
+                              {link ? <ExternalLink className="h-3.5 w-3.5 shrink-0 text-ink-soft" /> : null}
+                              <ChevronRight className="h-4 w-4 shrink-0 text-cherry" />
+                            </Link>
                           </li>
                         );
                       })}
