@@ -1847,26 +1847,17 @@ function YourEntryCard({ eventId, entryUrl = null }: { eventId: string; entryUrl
 
       <PaymentStatusCard info={row} entryUrl={entryUrl} />
 
-      {(row.jacket_size || (showTshirt && row.tshirt_size)) ? (
-        <div className="mt-3 grid grid-cols-2 gap-2">
-          {row.jacket_size ? (
-            <div className="rounded-xl bg-secondary p-2.5">
-              <p className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-ink-soft">
-                <Shirt className="h-3 w-3" /> Jacket
-              </p>
-              <p className="mt-0.5 font-display text-sm font-bold text-ink">{row.jacket_size}</p>
-            </div>
-          ) : null}
-          {showTshirt && row.tshirt_size ? (
-            <div className="rounded-xl bg-secondary p-2.5">
-              <p className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-ink-soft">
-                <Shirt className="h-3 w-3" /> T-Shirt
-              </p>
-              <p className="mt-0.5 font-display text-sm font-bold text-ink">{row.tshirt_size}</p>
-            </div>
-          ) : null}
-        </div>
-      ) : null}
+      <EntryInclusions
+        eventId={eventId}
+        extras={row.extras}
+        sizes={[
+          ...(row.jacket_size ? [{ label: "Event jacket", value: row.jacket_size }] : []),
+          ...(showTshirt && row.tshirt_size
+            ? [{ label: "Event t-shirt", value: row.tshirt_size }]
+            : []),
+        ]}
+      />
+
 
 
       {rooming ? (
