@@ -7,6 +7,7 @@ import {
   deleteMerchItem,
   listMerchCatalog,
   syncMerchCatalog,
+  syncMerchWebInfo,
   upsertMerchItem,
 } from "@/lib/merch-catalog.functions";
 
@@ -17,6 +18,7 @@ export const Route = createFileRoute("/admin/merchandise")({
 function MerchandisePage() {
   const listFn = useServerFn(listMerchCatalog);
   const syncFn = useServerFn(syncMerchCatalog);
+  const syncWebFn = useServerFn(syncMerchWebInfo);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [note, setNote] = useState<string | null>(null);
@@ -58,6 +60,24 @@ function MerchandisePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [catalog.data]);
 
+  async function runWebSync(eventId?: string) {
+    setBusy(eventId ? `web-${eventId}` : "web-all");
+    setError(null);
+    setNote(null);
+    try {
+      const res = await syncWebFn({ data: eventId ? { eventId } : {} });
+      const updated = res.results.reduce((n, r) => n + r.updated, 0);
+      setNote(`Refreshed ${updated} item description(s) from the event websites.`);
+      const errs = res.results.filter((r) => r.error).map((r) => `${r.name}: ${r.error}`);
+      if (errs.length) setError(errs.join(" · "));
+      await catalog.refetch();
+    } catch (err) {
+      setError((err as Error).message ?? "Website sync failed");
+    } finally {
+      setBusy(null);
+    }
+  }
+
   const events = catalog.data ?? [];
 
   return (
@@ -79,6 +99,14 @@ function MerchandisePage() {
           className="ml-auto inline-flex items-center gap-1.5 rounded-lg border border-border px-2.5 py-1.5 font-semibold text-ink disabled:opacity-50"
         >
           <RefreshCw className={`h-3.5 w-3.5 ${busy === "all" ? "animate-spin" : ""}`} /> Pull all events
+        </button>
+        <button
+          onClick={() => void runWebSync()}
+          disabled={busy !== null}
+          className="inline-flex items-center gap-1.5 rounded-lg border border-border px-2.5 py-1.5 font-semibold text-ink disabled:opacity-50"
+        >
+          <RefreshCw className={`h-3.5 w-3.5 ${busy === "web-all" ? "animate-spin" : ""}`} />
+          Refresh descriptions from websites
         </button>
       </div>
 
