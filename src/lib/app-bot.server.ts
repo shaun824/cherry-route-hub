@@ -39,13 +39,18 @@ function summariseEvent(e: any): string {
     e.lifecycle ? `status: ${e.lifecycle}` : null,
     e.distance_km ? `${e.distance_km} km` : null,
   ].filter(Boolean);
-  return `- ${bits.join(" · ")}${e.entry_ninja_url ? ` — enter: ${e.entry_ninja_url}` : ""}${
-    e.website_url ? ` — website: ${e.website_url}` : ""
-  }`;
+  return `- ${bits.join(" · ")} — app page: /events/${e.id} (rider hub: /my-events/${e.id}, map: /events/${e.id}/map, spectate: /spectate/${e.id})${
+    e.entry_ninja_url ? ` — enter: ${e.entry_ninja_url}` : ""
+  }${e.website_url ? ` — website: ${e.website_url}` : ""}`;
 }
 
+
 function detailEvent(e: any, info: any | null, merch: any[]): string {
-  const lines: string[] = [`EVENT: ${e.name}`];
+  const lines: string[] = [
+    `EVENT: ${e.name}`,
+    `App links: event page /events/${e.id} · rider hub /my-events/${e.id} · route map /events/${e.id}/map · spectator info /spectate/${e.id}`,
+  ];
+
   if (e.event_date) lines.push(`Start date: ${fmtDate(e.event_date)}`);
   if (e.location) lines.push(`Location: ${e.location}`);
   if (e.discipline) lines.push(`Discipline: ${e.discipline}`);

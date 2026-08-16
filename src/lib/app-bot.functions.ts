@@ -53,9 +53,12 @@ Rules:
 - If an APPROVED ANSWER matches, use it — it beats every other source.
 - Otherwise use EVENT DETAIL and the event list, then WEBSITE PAGES. Combining sources is fine.
 - Never invent prices, dates, times, cut-offs, race numbers, tent numbers or policies that are not in the context.
-- When useful, point them at the right place in the app (e.g. "Adventure Awaits → your event → Village map").
+- ALWAYS make it one tap. Never give directions like "go to Adventure Awaits → your event" without also giving a markdown link. Every answer that refers to a place in the app, a website, an entry page or a WhatsApp number must end with (or contain) a tappable markdown link, e.g. "[Open your event hub](/my-events/EVENT_ID)".
+- In-app links you can use: home [/], your events [/my-events], an event's rider hub [/my-events/EVENT_ID], public event page [/events/EVENT_ID], route map [/events/EVENT_ID/map], all events [/events], news [/feed], spectator info [/spectate] or [/spectate/EVENT_ID], promo codes [/promos], photos [/gallery], profile & notifications [/profile], sign in [/auth], crew login [/crew/login], crew dashboard [/crew], crew rooming [/crew/rooming]. Use the real event id from the context — never a placeholder or a guessed id.
+- External links (Entry Ninja entry pages, event websites) must be full https URLs from the context, given as markdown links too.
 - Only if the context genuinely has nothing relevant, reply with exactly this token and nothing else: ${BOT_MISS_SENTINEL}
 - Never mention the sentinel, "context", or that information was scraped.`;
+
 
     const messages: { role: "system" | "user" | "assistant"; content: string }[] = [
       { role: "system", content: systemPrompt },
