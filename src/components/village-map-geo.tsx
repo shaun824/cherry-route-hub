@@ -425,10 +425,17 @@ export default function VillageMapGeo({
             );
           })}
 
-          {tents.filter((t) => {
+          {/* Dropped tent pins are shown exactly where they were placed. Only
+              exact duplicates of the same number are collapsed. */}
+          {tents.filter((t, i, all) => {
             const number = normalizedNumber(t.label);
-            return t.id === highlightTentId || !number || !numberedAreaLabels.has(number);
+            if (!number || t.id === highlightTentId) return true;
+            const firstIdx = all.findIndex(
+              (o) => normalizedNumber(o.label) === number && o.id !== highlightTentId,
+            );
+            return firstIdx === i;
           }).map((t) => {
+
             const hot = highlightTentId === t.id;
             // Labels only once you're zoomed in — otherwise the numbers overlap
             // into an unreadable block. Your own tent always stays labelled.
