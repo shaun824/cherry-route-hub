@@ -159,6 +159,7 @@ function SignedInState() {
 function LinkEntrantForm({ onLinked }: { onLinked: () => void }) {
   const linkFn = useServerFn(linkMyEntry);
   const [idNumber, setIdNumber] = useState("");
+  const [surname, setSurname] = useState("");
   const [status, setStatus] = useState<null | string>(null);
   const [busy, setBusy] = useState(false);
 
@@ -167,11 +168,13 @@ function LinkEntrantForm({ onLinked }: { onLinked: () => void }) {
     setBusy(true);
     setStatus(null);
     try {
-      const res = await linkFn({ data: { id_number: idNumber } });
+      const res = await linkFn({ data: { id_number: idNumber, surname } });
       if (res.ok) {
         onLinked();
       } else if (res.reason === "no_match") {
-        setStatus("We couldn't find an entry matching your email or ID number. Ask Red Cherry admin to add you.");
+        setStatus(
+          "We couldn't find an entry matching your email, or your ID number and surname. Ask Red Cherry admin to add you.",
+        );
       } else if (res.reason === "id_mismatch") {
         setStatus("That ID number doesn't match what we have on file.");
       } else {
@@ -193,8 +196,8 @@ function LinkEntrantForm({ onLinked }: { onLinked: () => void }) {
           <p className="font-display text-base font-bold text-ink">Confirm your identity</p>
         </div>
         <p className="text-xs text-ink-soft">
-          We'll match your email to entries imported from Entry Ninja. Enter your ID number to confirm
-          it's you.
+          We'll match your email to entries imported from Entry Ninja. Enter your ID number and
+          surname to confirm it's you. We only ever store a scrambled version of your ID number.
         </p>
         <label className="block">
           <span className="text-[11px] font-bold uppercase tracking-wider text-ink-soft">ID number</span>
@@ -207,6 +210,18 @@ function LinkEntrantForm({ onLinked }: { onLinked: () => void }) {
             className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
           />
         </label>
+        <label className="block">
+          <span className="text-[11px] font-bold uppercase tracking-wider text-ink-soft">Surname</span>
+          <input
+            required
+            value={surname}
+            onChange={(e) => setSurname(e.target.value)}
+            maxLength={80}
+            autoComplete="family-name"
+            placeholder="As entered on Entry Ninja"
+            className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+          />
+        </label>
         {status ? (
           <p className="rounded-lg bg-cherry/10 px-3 py-2 text-xs font-semibold text-cherry-deep">
             {status}
@@ -214,7 +229,7 @@ function LinkEntrantForm({ onLinked }: { onLinked: () => void }) {
         ) : null}
         <button
           type="submit"
-          disabled={busy || idNumber.length < 4}
+          disabled={busy || idNumber.length < 4 || surname.trim().length < 2}
           className="w-full rounded-xl cherry-gradient py-2.5 text-sm font-bold text-white disabled:opacity-60"
         >
           {busy ? "Checking…" : "Link my entry"}
