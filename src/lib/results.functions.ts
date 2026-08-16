@@ -45,11 +45,48 @@ export type EventResultsPayload = {
 
 const EventInput = z.object({ eventId: z.string().uuid() });
 
-/** Public rider list for an event — safe columns only (no email / phone / ID). */
+/** How long before the event the rider roster unlocks. */
+export const ROSTER_WINDOW_DAYS = 7;
+
+export type RosterPayload = {
+  /** "ok" = riders included; "signin" = must sign in; "locked" = too early. */
+  status: "ok" | "signin" | "locked";
+  /** ISO date the roster opens (7 days before the event). */
+  opens_at: string | null;
+  event_date: string | null;
+  riders: TrackedRider[];
+};
+
+/**
+ * Rider roster for an event, synced in from Entry Ninja.
+ * Only released to signed-in riders, and only inside the 7-day window before
+ * the event (through 3 days after it).
+ */
 export const getEventRiders = createServerFn({ method: "GET" })
   .inputValidator((input: unknown) => EventInput.parse(input))
-  .handler(async ({ data }): Promise<TrackedRider[]> => {
+  .handler(async ({ data }): Promise<RosterPayload> => {
+    const { getRequestHeader } = await import("@tanstack/react-start/server");
+    const { resolveOptionalUserId } = await import("@/lib/app-bot.server");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const { data: ev } = await supabaseAdmin
+      .from("events")
+      .select("event_date")
+      .eq("id", data.eventId)
+      .maybeSingle();
+    const eventDate = (ev?.event_date as string | null) ?? null;
+    const opensAt = eventDate
+      ? new Date(new Date(eventDate).getTime() - ROSTER_WINDOW_DAYS * 86400000).toISOString()
+      : null;
+    const closesAt = eventDate ? new Date(eventDate).getTime() + 3 * 86400000 : null;
+    const now = Date.now();
+    const inWindow =
+      !!opensAt && !!closesAt && now >= new Date(opensAt).getTime() && now <= closesAt;
+
+    const userId = await resolveOptionalUserId(getRequestHeader("authorization") ?? null);
+    if (!userId) return { status: "signin", opens_at: opensAt, event_date: eventDate, riders: [] };
+    if (!inWindow) return { status: "locked", opens_at: opensAt, event_date: eventDate, riders: [] };
+
     const { data: rows, error } = await supabaseAdmin
       .from("event_entrants")
       .select(
@@ -57,7 +94,7 @@ export const getEventRiders = createServerFn({ method: "GET" })
       )
       .eq("event_id", data.eventId);
     if (error) throw new Error(error.message);
-    return (rows ?? [])
+    const riders = (rows ?? [])
       .map((r: any) => ({
         id: String(r.id),
         full_name: String(r.entrants?.full_name ?? ""),
@@ -69,7 +106,9 @@ export const getEventRiders = createServerFn({ method: "GET" })
       }))
       .filter((r) => r.full_name)
       .sort((a, b) => a.full_name.localeCompare(b.full_name));
+    return { status: "ok", opens_at: opensAt, event_date: eventDate, riders };
   });
+
 
 /** Public results for an event: sets + rows + external links. */
 export const getEventResults = createServerFn({ method: "GET" })

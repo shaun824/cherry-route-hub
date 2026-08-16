@@ -1,11 +1,16 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { Binoculars, CalendarDays, ChevronRight, Lock, MapPin } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { PageHeader } from "@/components/ui-bits";
 import { useAdminStore } from "@/lib/store";
 import { useHydratedStore } from "@/lib/use-hydrated-store";
 import { formatDate, formatTime } from "@/lib/mock-data";
+import { getEventRiders, ROSTER_WINDOW_DAYS } from "@/lib/results.functions";
+import { useSession } from "@/lib/auth";
 import type { Event } from "@/lib/mock-data";
+
 
 export const Route = createFileRoute("/spectate/")({
   head: () => ({
@@ -42,6 +47,30 @@ function SpectatePage() {
         return Math.abs(at - now) - Math.abs(bt - now);
       });
   }, [events, filter]);
+
+  // Preload rider rosters for signed-in riders so race-week lists open instantly.
+  const { user } = useSession();
+  const queryClient = useQueryClient();
+  const fetchRiders = useServerFn(getEventRiders);
+  useEffect(() => {
+    if (!user) return;
+    const now = Date.now();
+    const soon = events
+      .filter((e) => {
+        const t = new Date(e.date).getTime();
+        return t - now <= ROSTER_WINDOW_DAYS * 86400000 && t + 3 * 86400000 >= now;
+      })
+      .slice(0, 3);
+    for (const e of soon) {
+      void queryClient.prefetchQuery({
+        queryKey: ["event-riders", e.id, user.id],
+        queryFn: () => fetchRiders({ data: { eventId: e.id } }),
+        staleTime: 60_000,
+      });
+    }
+  }, [events, user, queryClient, fetchRiders]);
+
+
 
   return (
     <div>
