@@ -107,7 +107,38 @@ function SpectatorEventPage() {
     });
   }, [roster, categoryFilter, search]);
 
+  const infoQ = useQuery({
+    queryKey: ["event-info", eventId],
+    queryFn: () => fetchEventInfo(eventId),
+    staleTime: 300_000,
+  });
+  const info = infoQ.data ?? null;
+
+  const spectatorSchedule = useMemo(() => {
+    const items = event?.schedule ?? [];
+    const dayLabel = new Map((event?.days ?? []).map((d) => [d.id, d.label || d.date]));
+    const keep =
+      /(start|finish|prize|podium|award|briefing|registration|batch|expo|hand.?out|line.?up|ceremon)/i;
+    return items
+      .filter((s) => keep.test(`${s.label} ${s.details ?? ""}`))
+      .slice(0, 8)
+      .map((s) => ({
+        time: s.time,
+        title: s.label,
+        day: s.dayId ? dayLabel.get(s.dayId) ?? null : null,
+      }));
+  }, [event?.schedule, event?.days]);
+
+  const spectatorFaqs = useMemo(() => {
+    const faqs = info?.faqs ?? [];
+    const relevant =
+      /(spectat|park|watch|support|family|kids|dog|drone|food|bar|access|drive|shuttle|entry to|venue)/i;
+    const picked = faqs.filter((f) => relevant.test(`${f.q} ${f.a}`));
+    return (picked.length ? picked : faqs).slice(0, 5);
+  }, [info?.faqs]);
+
   const batches = event?.batches ?? [];
+
   const batchLookup = useMemo(() => {
     const m = new Map<string, { name: string; startTime: string }>();
     for (const b of batches) m.set(b.name, { name: b.name, startTime: b.startTime });
