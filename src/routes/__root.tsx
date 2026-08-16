@@ -14,6 +14,7 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { AppShell } from "../components/app-shell";
 import { AssistantWidget } from "../components/assistant-widget";
+import { SetPasswordPrompt } from "../components/set-password-prompt";
 import { supabase } from "../integrations/supabase/client";
 import { usePageTracking } from "../lib/analytics";
 import { ensureOfflineWorker } from "../lib/offline-pack";
