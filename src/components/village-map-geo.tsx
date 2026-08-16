@@ -241,6 +241,8 @@ export default function VillageMapGeo({
   const [geoError, setGeoError] = useState<string | null>(null);
   const [recenterToken, setRecenterToken] = useState(0);
   const [satellite, setSatellite] = useState(true);
+  const [bearing, setBearing] = useState(0);
+
   const [zoom, setZoom] = useState(17);
   const watchRef = useRef<number | null>(null);
 
