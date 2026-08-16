@@ -41,20 +41,39 @@ function apiKey(): string {
   return key;
 }
 
-async function enGet<T>(path: string): Promise<T> {
+async function enGet<T>(path: string, attempt = 0): Promise<T> {
   const res = await fetch(`${BASE}${path}`, {
     headers: { Accept: "application/json", Authorization: `Bearer ${apiKey()}` },
   });
   if (!res.ok) {
+    // Entry Ninja throttles bursts with 429/403 — back off and retry a few times.
+    if ((res.status === 429 || res.status === 403 || res.status >= 500) && attempt < 3) {
+      await new Promise((r) => setTimeout(r, 600 * (attempt + 1)));
+      return enGet<T>(path, attempt + 1);
+    }
     throw new Error(`Entry Ninja API error ${res.status} on ${path}`);
   }
   return (await res.json()) as T;
 }
 
-export async function fetchEnEvents(): Promise<EnEvent[]> {
-  const json = await enGet<{ data: EnEvent[] }>("/api/events");
-  return json.data ?? [];
+/**
+ * The events endpoint is paginated (10 per page) and page 1 only contains the
+ * events still open for entry — past events live on later pages. Walk every
+ * page so history lookups can see the full archive.
+ */
+export async function fetchEnEvents(maxPages = 40): Promise<EnEvent[]> {
+  const out: EnEvent[] = [];
+  for (let page = 1; page <= maxPages; page++) {
+    const json = await enGet<{ data: EnEvent[]; meta?: { current_page: number; last_page: number } }>(
+      `/api/events?page=${page}`,
+    );
+    out.push(...(json.data ?? []));
+    const meta = json.meta;
+    if (!meta || meta.current_page >= meta.last_page) break;
+  }
+  return out;
 }
+
 
 export async function fetchEnEntries(eventId: number, maxPages = 40): Promise<EnEntry[]> {
   const out: EnEntry[] = [];
