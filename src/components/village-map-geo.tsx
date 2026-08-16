@@ -66,6 +66,54 @@ function BearingSync({ bearing }: { bearing: number }) {
   return null;
 }
 
+/**
+ * On touch devices the map only pans with two fingers, so scrolling the page
+ * over the map never gets trapped. A one-finger drag surfaces a hint instead.
+ */
+function TwoFingerPanGate({ onOneFinger }: { onOneFinger: () => void }) {
+  const map = useMap();
+  const hintRef = useRef(onOneFinger);
+  hintRef.current = onOneFinger;
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const coarse = window.matchMedia?.("(pointer: coarse)")?.matches;
+    if (!coarse) return;
+    const el = map.getContainer();
+    map.dragging.disable();
+
+    let startX = 0;
+    let startY = 0;
+    let moved = false;
+
+    const onStart = (e: TouchEvent) => {
+      if (e.touches.length === 1) {
+        startX = e.touches[0].clientX;
+        startY = e.touches[0].clientY;
+        moved = false;
+      }
+    };
+    const onMove = (e: TouchEvent) => {
+      if (e.touches.length !== 1 || moved) return;
+      const dx = e.touches[0].clientX - startX;
+      const dy = e.touches[0].clientY - startY;
+      if (Math.hypot(dx, dy) < 14) return;
+      moved = true;
+      // Sideways drags are clearly map intent; vertical ones scroll the page.
+      if (Math.abs(dx) > Math.abs(dy) * 0.6) hintRef.current();
+    };
+
+    el.addEventListener("touchstart", onStart, { passive: true });
+    el.addEventListener("touchmove", onMove, { passive: true });
+    return () => {
+      el.removeEventListener("touchstart", onStart);
+      el.removeEventListener("touchmove", onMove);
+    };
+  }, [map]);
+
+  return null;
+}
+
 
 function FitBounds({ bounds }: { bounds: L.LatLngBoundsExpression }) {
   const map = useMap();
