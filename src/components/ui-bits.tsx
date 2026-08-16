@@ -67,25 +67,37 @@ export function TypeBadge({ type }: { type: string }) {
   );
 }
 
+/**
+ * The single heading style used above every home-page section:
+ * black display type, sentence case, optional round icon and "See all" link.
+ */
 export function SectionTitle({
   title,
   action,
   actionTo,
+  icon,
 }: {
   title: string;
   action?: string;
   actionTo?: string;
+  icon?: ReactNode;
 }) {
   return (
-    <div className="flex items-baseline justify-between px-5 pb-2 pt-6">
-      <h2 className="font-display text-[15px] font-bold uppercase tracking-wider text-ink-soft">
-        {title}
+    <div className="flex items-center justify-between gap-3 px-5 pb-2 pt-6">
+      <h2 className="flex min-w-0 items-center gap-2 font-display text-base font-bold tracking-tight text-ink">
+        {icon ? (
+          <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-accent text-cherry-deep">
+            {icon}
+          </span>
+        ) : null}
+        <span className="truncate">{title}</span>
       </h2>
       {action && actionTo ? (
-        <Link to={actionTo} className="text-xs font-semibold text-cherry">
+        <Link to={actionTo} className="shrink-0 text-xs font-semibold text-cherry">
           {action} →
         </Link>
       ) : null}
     </div>
   );
 }
+
