@@ -674,6 +674,9 @@ function SettingsForm({ settings, onDone }: { settings: LoyaltySettings; onDone:
           loyaltyBonusPerYear: Math.trunc(Number(form.loyaltyBonusPerYear) || 0),
           pointsPerRand: Number(form.pointsPerRand) || 0,
           heroMultiplier: Number(form.heroMultiplier) || 1,
+          tierWindowMonths: Math.trunc(Number(form.tierWindowMonths) || 36),
+          tierHoldMonths: Math.trunc(Number(form.tierHoldMonths) || 12),
+          expiryMonths: Math.trunc(Number(form.expiryMonths) || 24),
           programName: String(form.programName || "Cherry Miles"),
         });
       }}
@@ -689,7 +692,7 @@ function SettingsForm({ settings, onDone }: { settings: LoyaltySettings; onDone:
           className="w-full rounded-lg border border-border px-3 py-2 text-sm"
         />
       </Field>
-      <Field label="Rand value per point (internal only)">
+      <Field label="Rand value per point when redeemed">
         <input
           value={form.randPerPoint}
           onChange={(e) => setForm({ ...form, randPerPoint: e.target.value })}
@@ -705,14 +708,38 @@ function SettingsForm({ settings, onDone }: { settings: LoyaltySettings; onDone:
           className="w-full rounded-lg border border-border px-3 py-2 text-sm"
         />
       </Field>
-      <Field label="Hero event multiplier">
-        <input
-          value={form.heroMultiplier}
-          onChange={(e) => setForm({ ...form, heroMultiplier: e.target.value })}
-          inputMode="decimal"
-          className="w-full rounded-lg border border-border px-3 py-2 text-sm"
-        />
-      </Field>
+      <p className="rounded-xl bg-secondary px-3 py-2 text-[11px] text-ink-soft">
+        Give-back = points per R1 × rand per point. At {form.pointsPerRand} × R{form.randPerPoint} riders get{" "}
+        <strong>{Math.round((Number(form.pointsPerRand) || 0) * (Number(form.randPerPoint) || 0) * 100)}%</strong> of
+        entry spend back in reward value. Every event earns the same rate — sell-out events are protected on the
+        redemption side instead.
+      </p>
+      <div className="grid grid-cols-3 gap-3">
+        <Field label="Tier window (months)">
+          <input
+            value={form.tierWindowMonths}
+            onChange={(e) => setForm({ ...form, tierWindowMonths: e.target.value })}
+            inputMode="numeric"
+            className="w-full rounded-lg border border-border px-3 py-2 text-sm"
+          />
+        </Field>
+        <Field label="Status hold (months)">
+          <input
+            value={form.tierHoldMonths}
+            onChange={(e) => setForm({ ...form, tierHoldMonths: e.target.value })}
+            inputMode="numeric"
+            className="w-full rounded-lg border border-border px-3 py-2 text-sm"
+          />
+        </Field>
+        <Field label="Points expire after (months idle)">
+          <input
+            value={form.expiryMonths}
+            onChange={(e) => setForm({ ...form, expiryMonths: e.target.value })}
+            inputMode="numeric"
+            className="w-full rounded-lg border border-border px-3 py-2 text-sm"
+          />
+        </Field>
+      </div>
       <Field label="Returning-rider bonus per prior event">
         <input
           value={form.loyaltyBonusPerYear}
@@ -725,6 +752,7 @@ function SettingsForm({ settings, onDone }: { settings: LoyaltySettings; onDone:
         <input type="checkbox" checked={Boolean(form.demoMode)} onChange={(e) => setForm({ ...form, demoMode: e.target.checked })} />
         Demo mode (riders see points as provisional)
       </label>
+
       <button className="rounded-lg bg-cherry px-3 py-1.5 text-xs font-bold text-white" disabled={mut.isPending}>
         Save settings
       </button>

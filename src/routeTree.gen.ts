@@ -69,6 +69,7 @@ import { Route as ApiPublicHooksRoomingSheetSyncRouteImport } from './routes/api
 import { Route as ApiPublicHooksNotificationCronRouteImport } from './routes/api/public/hooks/notification-cron'
 import { Route as ApiPublicHooksNotificationClickRouteImport } from './routes/api/public/hooks/notification-click'
 import { Route as ApiPublicHooksNewsSyncRouteImport } from './routes/api/public/hooks/news-sync'
+import { Route as ApiPublicHooksLoyaltyExpiryRouteImport } from './routes/api/public/hooks/loyalty-expiry'
 import { Route as ApiPublicHooksFaqSuggestRouteImport } from './routes/api/public/hooks/faq-suggest'
 import { Route as ApiPublicHooksEventBotRefreshRouteImport } from './routes/api/public/hooks/event-bot-refresh'
 import { Route as ApiPublicHooksEntryNinjaSyncRouteImport } from './routes/api/public/hooks/entry-ninja-sync'
@@ -380,6 +381,12 @@ const ApiPublicHooksNewsSyncRoute = ApiPublicHooksNewsSyncRouteImport.update({
   path: '/api/public/hooks/news-sync',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicHooksLoyaltyExpiryRoute =
+  ApiPublicHooksLoyaltyExpiryRouteImport.update({
+    id: '/api/public/hooks/loyalty-expiry',
+    path: '/api/public/hooks/loyalty-expiry',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksFaqSuggestRoute =
   ApiPublicHooksFaqSuggestRouteImport.update({
     id: '/api/public/hooks/faq-suggest',
@@ -460,6 +467,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/entry-ninja-sync': typeof ApiPublicHooksEntryNinjaSyncRoute
   '/api/public/hooks/event-bot-refresh': typeof ApiPublicHooksEventBotRefreshRoute
   '/api/public/hooks/faq-suggest': typeof ApiPublicHooksFaqSuggestRoute
+  '/api/public/hooks/loyalty-expiry': typeof ApiPublicHooksLoyaltyExpiryRoute
   '/api/public/hooks/news-sync': typeof ApiPublicHooksNewsSyncRoute
   '/api/public/hooks/notification-click': typeof ApiPublicHooksNotificationClickRoute
   '/api/public/hooks/notification-cron': typeof ApiPublicHooksNotificationCronRoute
@@ -522,6 +530,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/entry-ninja-sync': typeof ApiPublicHooksEntryNinjaSyncRoute
   '/api/public/hooks/event-bot-refresh': typeof ApiPublicHooksEventBotRefreshRoute
   '/api/public/hooks/faq-suggest': typeof ApiPublicHooksFaqSuggestRoute
+  '/api/public/hooks/loyalty-expiry': typeof ApiPublicHooksLoyaltyExpiryRoute
   '/api/public/hooks/news-sync': typeof ApiPublicHooksNewsSyncRoute
   '/api/public/hooks/notification-click': typeof ApiPublicHooksNotificationClickRoute
   '/api/public/hooks/notification-cron': typeof ApiPublicHooksNotificationCronRoute
@@ -589,6 +598,7 @@ export interface FileRoutesById {
   '/api/public/hooks/entry-ninja-sync': typeof ApiPublicHooksEntryNinjaSyncRoute
   '/api/public/hooks/event-bot-refresh': typeof ApiPublicHooksEventBotRefreshRoute
   '/api/public/hooks/faq-suggest': typeof ApiPublicHooksFaqSuggestRoute
+  '/api/public/hooks/loyalty-expiry': typeof ApiPublicHooksLoyaltyExpiryRoute
   '/api/public/hooks/news-sync': typeof ApiPublicHooksNewsSyncRoute
   '/api/public/hooks/notification-click': typeof ApiPublicHooksNotificationClickRoute
   '/api/public/hooks/notification-cron': typeof ApiPublicHooksNotificationCronRoute
@@ -657,6 +667,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/entry-ninja-sync'
     | '/api/public/hooks/event-bot-refresh'
     | '/api/public/hooks/faq-suggest'
+    | '/api/public/hooks/loyalty-expiry'
     | '/api/public/hooks/news-sync'
     | '/api/public/hooks/notification-click'
     | '/api/public/hooks/notification-cron'
@@ -719,6 +730,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/entry-ninja-sync'
     | '/api/public/hooks/event-bot-refresh'
     | '/api/public/hooks/faq-suggest'
+    | '/api/public/hooks/loyalty-expiry'
     | '/api/public/hooks/news-sync'
     | '/api/public/hooks/notification-click'
     | '/api/public/hooks/notification-cron'
@@ -785,6 +797,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/entry-ninja-sync'
     | '/api/public/hooks/event-bot-refresh'
     | '/api/public/hooks/faq-suggest'
+    | '/api/public/hooks/loyalty-expiry'
     | '/api/public/hooks/news-sync'
     | '/api/public/hooks/notification-click'
     | '/api/public/hooks/notification-cron'
@@ -819,6 +832,7 @@ export interface RootRouteChildren {
   ApiPublicHooksEntryNinjaSyncRoute: typeof ApiPublicHooksEntryNinjaSyncRoute
   ApiPublicHooksEventBotRefreshRoute: typeof ApiPublicHooksEventBotRefreshRoute
   ApiPublicHooksFaqSuggestRoute: typeof ApiPublicHooksFaqSuggestRoute
+  ApiPublicHooksLoyaltyExpiryRoute: typeof ApiPublicHooksLoyaltyExpiryRoute
   ApiPublicHooksNewsSyncRoute: typeof ApiPublicHooksNewsSyncRoute
   ApiPublicHooksNotificationClickRoute: typeof ApiPublicHooksNotificationClickRoute
   ApiPublicHooksNotificationCronRoute: typeof ApiPublicHooksNotificationCronRoute
@@ -1253,6 +1267,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksNewsSyncRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/loyalty-expiry': {
+      id: '/api/public/hooks/loyalty-expiry'
+      path: '/api/public/hooks/loyalty-expiry'
+      fullPath: '/api/public/hooks/loyalty-expiry'
+      preLoaderRoute: typeof ApiPublicHooksLoyaltyExpiryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/faq-suggest': {
       id: '/api/public/hooks/faq-suggest'
       path: '/api/public/hooks/faq-suggest'
@@ -1410,6 +1431,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksEntryNinjaSyncRoute: ApiPublicHooksEntryNinjaSyncRoute,
   ApiPublicHooksEventBotRefreshRoute: ApiPublicHooksEventBotRefreshRoute,
   ApiPublicHooksFaqSuggestRoute: ApiPublicHooksFaqSuggestRoute,
+  ApiPublicHooksLoyaltyExpiryRoute: ApiPublicHooksLoyaltyExpiryRoute,
   ApiPublicHooksNewsSyncRoute: ApiPublicHooksNewsSyncRoute,
   ApiPublicHooksNotificationClickRoute: ApiPublicHooksNotificationClickRoute,
   ApiPublicHooksNotificationCronRoute: ApiPublicHooksNotificationCronRoute,
