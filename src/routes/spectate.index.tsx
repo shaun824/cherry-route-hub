@@ -8,7 +8,7 @@ import { useAdminStore } from "@/lib/store";
 import { useHydratedStore } from "@/lib/use-hydrated-store";
 import { formatDate, formatTime } from "@/lib/mock-data";
 import { getEventRiders, ROSTER_WINDOW_DAYS } from "@/lib/results.functions";
-import { useSession } from "@/lib/auth";
+import { useIsAdmin, useSession } from "@/lib/auth";
 import type { Event } from "@/lib/mock-data";
 
 
