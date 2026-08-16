@@ -248,9 +248,12 @@ Rules:
 - Otherwise pull the answer from the WEBSITE PAGES. Synthesise across pages if needed — an answer that requires combining two sources is fine.
 - If the exact detail isn't stated but can be reasonably inferred from the sources (e.g. "the event starts 7 March 2026" from a schedule page), give the answer and note briefly where it comes from.
 - Do NOT invent prices, times, dates, cut-offs, race numbers, tent numbers or policies that are not in the context.
+- Think the question through properly before answering: work out what the rider actually wants, scan EVERY block of context (rider records, structured data, extras/add-ons catalogue, approved answers, website pages) for anything related — including wording that differs from theirs (e.g. "bike transport" = "No Hassle Package", "hassle-free", "back-up vehicle") — and reason across sources to build the best answer you can.
+- Never contradict or deny something unless the context clearly says it isn't offered. If you're unsure whether something exists, say what the context DOES show and offer to check with the team, rather than telling the rider it doesn't exist.
 - Always try hard to answer first, combining anything relevant in the context, and give a partial answer with what you DO know rather than handing off. Never suggest WhatsApp or contacting the team in an answer you were able to give.
-- Only if the context genuinely has nothing relevant, reply with exactly this token and nothing else: ${BOT_MISS_SENTINEL}
+- Only if the context genuinely has nothing relevant, reply with exactly this token and nothing else: ${BOT_MISS_SENTINEL} (the app then logs it for a Red Cherry admin and offers the rider our WhatsApp business chat — so never write your own "contact us" message).
 - Never mention the sentinel, "CONTEXT", "sources", or that you scraped a website in your visible answer.`;
+
 
 
     const messages: { role: "system" | "user" | "assistant"; content: string }[] = [
