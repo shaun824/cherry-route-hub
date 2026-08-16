@@ -187,14 +187,19 @@ export const redeemReward = createServerFn({ method: "POST" })
       created_by: userId,
     });
 
-    // Register the code on Entry Ninja so it can be used at checkout there too.
-    let enResult = { status: "manual", message: "Queued for Entry Ninja." };
-    try {
-      const { pushCouponToEntryNinja } = await import("./loyalty.server");
-      enResult = await pushCouponToEntryNinja(supabaseAdmin as any, coupon.id);
-    } catch {
-      /* redemption still stands even if Entry Ninja is unreachable */
+    // Only entry discounts need to exist at Entry Ninja checkout; merch,
+    // experience and partner rewards are redeemed in person from the app.
+    let enResult = { status: "in-app", message: "Show this code at the Red Cherry stand." };
+    if (reward.kind === "entry" || !reward.kind) {
+      enResult = { status: "manual", message: "Queued for Entry Ninja." };
+      try {
+        const { pushCouponToEntryNinja } = await import("./loyalty.server");
+        enResult = await pushCouponToEntryNinja(supabaseAdmin as any, coupon.id);
+      } catch {
+        /* redemption still stands even if Entry Ninja is unreachable */
+      }
     }
+
 
     return { ok: true as const, coupon, entryNinja: enResult };
   });
