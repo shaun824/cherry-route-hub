@@ -96,20 +96,6 @@ function FlyToTent({ tent }: { tent: MapTent | null }) {
 
 export type MapTent = { id: string; label: string; lat: number; lng: number };
 
-/** Label pin shown for whichever facility/point the rider currently has selected. */
-function pointLabelIcon(label: string) {
-  return L.divIcon({
-    className: "rce-village-point",
-    html: `<div style="display:flex;flex-direction:column;align-items:center">
-      <span style="background:#0f172a;color:#fff;font-size:11px;font-weight:800;padding:3px 8px;border-radius:8px;white-space:nowrap;border:2px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.4)">${escapeHtml(
-        label,
-      )}</span>
-      <span style="width:8px;height:8px;background:#0f172a;transform:rotate(45deg) translateY(-3px);border-radius:1px;border-right:2px solid #fff;border-bottom:2px solid #fff"></span>
-    </div>`,
-    iconSize: [12, 12],
-    iconAnchor: [6, 18],
-  });
-}
 
 /** Facility marker: a clean coloured icon puck, with its name shown once tapped. */
 function facilityIcon(spot: VillageHotspot, active: boolean) {
