@@ -367,6 +367,11 @@ function RoomingAdminPage() {
                 onImport={(parsed, replace) => void importRows(v.id, parsed, replace)}
                 onDeleteRow={(id) => void deleteRow(id)}
                 onSetZone={(id, zoneId) => void setRowZone(id, zoneId)}
+                onSetTent={(id, tentId) => void setRowTent(id, tentId)}
+                onSetEntry={(id, entryId) => void setRowEntry(id, entryId)}
+                onLinkEntries={() => void linkEntries(v.id)}
+                tents={tents}
+                candidates={candidates}
                 onAutoPlace={() => void autoPlace(v.id)}
                 onSaveSheet={(url, range) => void saveSheet(v.id, url, range)}
                 onSyncSheet={() => void syncSheet(v.id)}
@@ -562,17 +567,27 @@ function VenueRooming({
   onImport,
   onDeleteRow,
   onSetZone,
+  onSetTent,
+  onSetEntry,
+  onLinkEntries,
   onAutoPlace,
   onSaveSheet,
   onSyncSheet,
+  tents,
+  candidates,
 }: {
   venue: Venue;
   zones: VillageZone[];
   rows: RoomingRow[];
   busy: boolean;
+  tents: VillageTent[];
+  candidates: EntryCandidate[];
   onImport: (parsed: ParsedRoomingRow[], replace: boolean) => void;
   onDeleteRow: (id: string) => void;
   onSetZone: (id: string, zoneId: string | null) => void;
+  onSetTent: (id: string, tentId: string | null) => void;
+  onSetEntry: (id: string, entryId: string | null) => void;
+  onLinkEntries: () => void;
   onAutoPlace: () => void;
   onSaveSheet: (url: string, range: string) => void;
   onSyncSheet: () => void;
@@ -584,14 +599,18 @@ function VenueRooming({
     () => sheetRows ?? (text.trim() ? parseRoomingCsv(text) : []),
     [text, sheetRows],
   );
-  const placed = rows.filter((r) => r.village_zone_id).length;
+  const placed = rows.filter((r) => r.village_zone_id || r.village_tent_id).length;
+  const linked = rows.filter((r) => r.event_entrant_id).length;
+  const unmatched = rows.filter((r) => !r.event_entrant_id);
+  const [showUnmatched, setShowUnmatched] = useState(false);
+  const visibleRows = showUnmatched ? unmatched : rows;
 
   return (
     <section className="rounded-2xl bg-card p-4 ring-1 ring-border">
       <h2 className="flex flex-wrap items-center gap-2 font-display text-base font-bold text-ink">
         <BedDouble className="h-4 w-4 text-cherry" /> {venue.name}
         <span className="text-xs font-semibold text-ink-soft">
-          · {rows.length} allocated · {placed} on the map
+          · {rows.length} allocated · {linked} linked to entries · {placed} on the map
         </span>
       </h2>
 
@@ -628,6 +647,26 @@ function VenueRooming({
           >
             <Sparkles className="h-3.5 w-3.5" /> Auto-place on map
           </button>
+          <button
+            type="button"
+            disabled={busy || rows.length === 0}
+            onClick={onLinkEntries}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-2.5 py-1.5 text-xs font-bold text-ink disabled:opacity-50"
+            title="Match these people to their real event entries"
+          >
+            <Link2 className="h-3.5 w-3.5" /> Link to entries
+          </button>
+          {unmatched.length > 0 ? (
+            <button
+              type="button"
+              onClick={() => setShowUnmatched((v) => !v)}
+              className={`rounded-lg px-2.5 py-1.5 text-xs font-bold ${
+                showUnmatched ? "bg-cherry text-white" : "border border-border bg-background text-ink"
+              }`}
+            >
+              {unmatched.length} unmatched
+            </button>
+          ) : null}
           <label className="inline-flex items-center gap-1.5 text-xs text-ink-soft">
             <input type="checkbox" checked={replace} onChange={(e) => setReplace(e.target.checked)} />
             Replace this venue's existing list
@@ -676,12 +715,13 @@ function VenueRooming({
                 <th>Tent / room</th>
                 <th>Type</th>
                 <th>Map area</th>
-                <th>Linked</th>
+                <th>Tent pin</th>
+                <th>Entry</th>
                 <th />
               </tr>
             </thead>
             <tbody>
-              {rows.map((r) => (
+              {visibleRows.map((r) => (
                 <tr key={r.id} className="border-b border-border/50">
                   <td className="py-1.5 font-semibold text-ink">{r.full_name}</td>
                   <td className="text-ink-soft">{r.email ?? "—"}</td>
@@ -701,8 +741,39 @@ function VenueRooming({
                       ))}
                     </select>
                   </td>
-                  <td className={r.entrant_id ? "text-emerald-600" : "text-ink-soft"}>
-                    {r.entrant_id ? "Matched" : "Unmatched"}
+                  <td>
+                    <select
+                      value={r.village_tent_id ?? ""}
+                      onChange={(e) => onSetTent(r.id, e.target.value || null)}
+                      className="max-w-[120px] rounded border border-border bg-background px-1.5 py-1 text-[11px]"
+                    >
+                      <option value="">No pin</option>
+                      {tents.map((t) => (
+                        <option key={t.id} value={t.id}>
+                          {t.label}
+                        </option>
+                      ))}
+                    </select>
+                  </td>
+                  <td>
+                    <select
+                      value={r.event_entrant_id ?? ""}
+                      onChange={(e) => onSetEntry(r.id, e.target.value || null)}
+                      className={`max-w-[180px] rounded border border-border bg-background px-1.5 py-1 text-[11px] ${
+                        r.event_entrant_id ? "text-emerald-600" : "text-ink-soft"
+                      }`}
+                    >
+                      <option value="">Not linked</option>
+                      {candidates.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.full_name}
+                          {c.bib_number ? ` · ${c.bib_number}` : ""}
+                        </option>
+                      ))}
+                    </select>
+                    {r.match_source ? (
+                      <span className="ml-1 text-[10px] uppercase text-ink-soft">{r.match_source}</span>
+                    ) : null}
                   </td>
                   <td className="text-right">
                     <button
