@@ -142,9 +142,14 @@ function Home() {
     }) ?? null;
 
   // Spotlight: never repeat the hero. Signed-in riders get the next event they
-  // haven't entered (discovery); guests get whatever is happening next.
+  // haven't entered, preferring a sport they actually ride (a mountain biker
+  // sees the next MTB event); guests get whatever is happening next.
+  const notEntered = upcoming.filter((e) => e.id !== heroEventId && !myEventIds.has(e.id));
+  const sameSportPick = enteredSports.size
+    ? (notEntered.find((e) => enteredSports.has(getEventSport(e.discipline, e.name))) ?? null)
+    : null;
   const spotlightSource = user
-    ? (upcoming.find((e) => e.id !== heroEventId && !myEventIds.has(e.id)) ?? null)
+    ? (sameSportPick ?? notEntered[0] ?? null)
     : (liveNow ?? upcoming[0] ?? null);
   const spotlight = spotlightSource
     ? {
