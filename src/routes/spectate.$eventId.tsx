@@ -22,8 +22,11 @@ import {
   getEventRiders,
   getEventResults,
   type TrackedRider,
+  type RosterPayload,
   type EventResultsPayload,
 } from "@/lib/results.functions";
+import { useSession } from "@/lib/auth";
+
 import { brandHeader } from "@/lib/event-brand";
 import { buildMapEmbedSrc, buildMapLink, resolveVenuePoint } from "@/lib/map-embed";
 import { VenueMiniMap } from "@/components/venue-mini-map";
