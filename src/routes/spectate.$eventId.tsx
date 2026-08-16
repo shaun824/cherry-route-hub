@@ -116,21 +116,34 @@ function SpectatorEventPage() {
       string,
       { key: string; label: string; startTime: string; rows: TrackedRider[] }
     >();
-    for (const r of filtered) {
-      const key = r.batch ?? "__unassigned";
-      const meta = r.batch ? batchLookup.get(r.batch) : undefined;
-      if (!groups.has(key)) {
-        groups.set(key, {
-          key,
-          label: r.batch ?? "All riders",
-          startTime: meta?.startTime ?? "",
-          rows: [],
-        });
-      }
+    const push = (key: string, label: string, startTime: string, r: TrackedRider) => {
+      if (!groups.has(key)) groups.set(key, { key, label, startTime, rows: [] });
       groups.get(key)!.rows.push(r);
+    };
+
+    for (const r of filtered) {
+      if (groupBy === "name") {
+        push("__all", "All riders", "", r);
+      } else if (groupBy === "bib") {
+        push("__all", "By race number", "", r);
+      } else if (groupBy === "category") {
+        push(r.category ?? "__none", r.category ?? "No category", "", r);
+      } else {
+        const meta = r.batch ? batchLookup.get(r.batch) : undefined;
+        push(r.batch ?? "__unassigned", r.batch ?? "All riders", meta?.startTime ?? "", r);
+      }
     }
+
+    const bibValue = (r: TrackedRider) => {
+      const n = Number(String(r.bib_number ?? "").replace(/\D+/g, ""));
+      return Number.isFinite(n) && String(r.bib_number ?? "").trim() ? n : Number.MAX_SAFE_INTEGER;
+    };
     for (const g of groups.values()) {
-      g.rows.sort((a, b) => (a.full_name || "").localeCompare(b.full_name || ""));
+      g.rows.sort((a, b) =>
+        groupBy === "bib"
+          ? bibValue(a) - bibValue(b) || (a.full_name || "").localeCompare(b.full_name || "")
+          : (a.full_name || "").localeCompare(b.full_name || ""),
+      );
     }
     return Array.from(groups.values()).sort((a, b) => {
       if (a.startTime && b.startTime) return a.startTime.localeCompare(b.startTime);
@@ -138,7 +151,7 @@ function SpectatorEventPage() {
       if (b.startTime) return 1;
       return a.label.localeCompare(b.label);
     });
-  }, [filtered, batchLookup]);
+  }, [filtered, batchLookup, groupBy]);
 
   const [activeSet, setActiveSet] = useState<string | null>(null);
   const currentSetId = activeSet ?? results?.sets[0]?.id ?? null;
