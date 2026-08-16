@@ -58,7 +58,14 @@ function Events() {
         })}
       </div>
       <ul className="space-y-3 px-5 py-5">
-        {events.length === 0 ? (
+        {!hydrated && events.length === 0 ? (
+          <>
+            {[0, 1, 2].map((i) => (
+              <li key={i} className="h-32 animate-pulse rounded-2xl bg-card ring-1 ring-border" />
+            ))}
+          </>
+        ) : null}
+        {hydrated && events.length === 0 ? (
           <li className="rounded-2xl bg-card p-6 text-center text-sm text-ink-soft ring-1 ring-border">
             No events in this category yet.
           </li>
