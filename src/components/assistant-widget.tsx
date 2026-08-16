@@ -214,7 +214,12 @@ export function AssistantWidget() {
                               return (
                                 <Link
                                   to={to as any}
-                                  onClick={() => setOpen(false)}
+                                  onClick={() => {
+                                    // Drop focus first so iOS releases any
+                                    // keyboard zoom before the page changes.
+                                    (document.activeElement as HTMLElement | null)?.blur?.();
+                                    setOpen(false);
+                                  }}
                                   className="inline-flex max-w-full items-center gap-1 rounded-full bg-cherry px-3 py-1 text-xs font-semibold !text-white !no-underline"
                                 >
                                   <span className="truncate">{children}</span>
