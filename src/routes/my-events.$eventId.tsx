@@ -1223,6 +1223,9 @@ function AskAdminPanel({
   const qc = useQueryClient();
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
+  const qaListRef = useRef<HTMLDivElement>(null);
+
+
 
   const threadQ = useQuery({
     queryKey: ["qa-thread", eventId, userId],
