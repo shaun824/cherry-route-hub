@@ -13,7 +13,12 @@ import { useSession } from "@/lib/auth";
 import { BrandMark } from "@/components/ui-bits";
 
 
-const searchSchema = z.object({ next: z.string().optional() });
+const searchSchema = z.object({
+  next: z.string().optional(),
+  email: z.string().optional(),
+  add: z.boolean().optional(),
+});
+
 
 /**
  * Where we stash the ID number until a session exists (email confirmation flow).
