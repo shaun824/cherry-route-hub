@@ -47,7 +47,7 @@ function Promos() {
         <PromoCarousel promos={promos} />
       </div>
       <ul className="space-y-3 px-5 pb-5">
-        {promos.slice(1).map((promo) => (
+        {promos.map((promo: EventPromo) => (
           <li key={promo.id}>
             <PromoCodeCard promo={promo} />
           </li>
