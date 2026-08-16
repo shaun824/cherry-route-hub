@@ -74,8 +74,12 @@ export function AssistantWidget() {
       ]);
     } finally {
       setThinking(false);
-      inputRef.current?.focus();
+      // Only return focus when the rider was already typing (desktop); never
+      // force the keyboard open on touch devices.
+      const touch = typeof window !== "undefined" && window.matchMedia("(pointer: coarse)").matches;
+      if (!touch) inputRef.current?.focus();
     }
+
   }
 
   const transcript = messages
