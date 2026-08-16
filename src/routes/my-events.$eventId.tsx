@@ -1360,12 +1360,15 @@ function AskAdminPanel({
         className="flex-1 overflow-y-auto overscroll-y-auto p-3 [touch-action:pan-y]"
       >
         {(messagesQ.data ?? []).length === 0 && !pending ? (
-          <p className="mt-6 text-center text-xs text-ink-soft">
-            {userId
-              ? "No messages yet. Ask a question below and the bot will try first."
-              : "Sign in to ask the assistant about this event."}
-          </p>
+          userId ? (
+            <p className="mt-6 text-center text-xs text-ink-soft">
+              No messages yet. Ask a question below and the bot will try first.
+            </p>
+          ) : (
+            <SignInNudge />
+          )
         ) : (
+
           <ul className="space-y-2">
             {(messagesQ.data ?? []).map((m: any) => {
               const mine = m.author_id === userId && !m.is_bot;
