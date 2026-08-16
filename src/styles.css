@@ -250,3 +250,14 @@
   0%, 100% { transform: scale(1); }
   50% { transform: scale(1.12); }
 }
+
+/* iOS auto-zooms the whole page when a focused field is under 16px, and that
+   zoom sticks around after navigating (e.g. tapping a link from the bot).
+   Force 16px form text on touch devices so the viewport never scales. */
+@media (pointer: coarse) {
+  input:not([type="checkbox"]):not([type="radio"]),
+  textarea,
+  select {
+    font-size: 16px;
+  }
+}
