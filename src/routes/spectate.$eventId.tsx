@@ -5,6 +5,7 @@ import { useServerFn } from "@tanstack/react-start";
 import {
   ArrowLeft,
   CalendarDays,
+  ChevronRight,
   Car,
   Coffee,
   ExternalLink,
@@ -446,7 +447,7 @@ function SpectatorEventPage() {
                         return (
                           <li key={r.id}>
                             <Link
-                              to="/spectate_/$eventId_/rider/$entrantId"
+                              to="/spectate/$eventId/rider/$entrantId"
                               params={{ eventId, entrantId: r.id }}
                               className="flex items-center gap-3 py-2 text-sm active:opacity-70"
                             >
