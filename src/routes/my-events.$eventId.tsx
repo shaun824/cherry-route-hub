@@ -1285,14 +1285,17 @@ function AskAdminPanel({
 
   async function send() {
     if (!text.trim() || !userId) return;
-    setBusy(true);
     const body = text.trim();
+    // Show the rider's message straight away — the bot call can take seconds.
+    setPending(body);
+    setBusy(true);
     setText("");
     try {
       await askBot({ data: { eventId, question: body } });
-      qc.invalidateQueries({ queryKey: ["qa-thread", eventId, userId] });
-      qc.invalidateQueries({ queryKey: ["qa-messages", threadQ.data?.id] });
+      await qc.invalidateQueries({ queryKey: ["qa-thread", eventId, userId] });
+      await qc.invalidateQueries({ queryKey: ["qa-messages", threadQ.data?.id] });
     } catch (err) {
+
       console.error("askEventBot failed", err);
       // Fallback: post the question directly so the admin still sees it.
       let threadId = threadQ.data?.id;
