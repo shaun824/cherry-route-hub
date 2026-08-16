@@ -126,7 +126,7 @@ export function AssistantWidget() {
               </button>
             </div>
 
-            <div ref={listRef} className="flex-1 space-y-3 overflow-y-auto p-4">
+            <div ref={listRef} className="min-w-0 flex-1 space-y-3 overflow-y-auto overflow-x-hidden p-4">
               <div className="max-w-[85%] rounded-2xl bg-secondary px-3 py-2 text-sm text-ink">
                 {GREETING}
               </div>
@@ -138,7 +138,7 @@ export function AssistantWidget() {
                       key={s}
                       type="button"
                       onClick={() => void sendQuestion(s)}
-                      className="rounded-full bg-background px-3 py-1.5 text-xs font-semibold text-ink-soft ring-1 ring-border hover:text-cherry"
+                      className="max-w-full truncate rounded-full bg-background px-3 py-1.5 text-xs font-semibold text-ink-soft ring-1 ring-border hover:text-cherry"
                     >
                       {s}
                     </button>
@@ -149,21 +149,23 @@ export function AssistantWidget() {
               {messages.map((m, i) => (
                 <div
                   key={i}
+                  style={{ overflowWrap: "anywhere" }}
                   className={
                     m.role === "user"
-                      ? "ml-auto max-w-[85%] break-words rounded-2xl bg-cherry px-3 py-2 text-sm text-white"
-                      : "max-w-[85%] break-words rounded-2xl bg-secondary px-3 py-2 text-sm text-ink"
+                      ? "ml-auto w-fit max-w-[85%] min-w-0 break-words rounded-2xl bg-cherry px-3 py-2 text-sm text-white"
+                      : "w-fit max-w-[85%] min-w-0 break-words rounded-2xl bg-secondary px-3 py-2 text-sm text-ink"
                   }
                 >
                   {m.role === "user" ? (
                     <p className="whitespace-pre-line">{m.content}</p>
                   ) : (
-                    <div className="space-y-2 [&_a]:font-semibold [&_a]:text-cherry [&_a]:underline [&_li]:ml-4 [&_li]:list-disc [&_strong]:font-bold">
+                    <div className="min-w-0 space-y-2 [&_a]:font-semibold [&_a]:break-all [&_a]:text-cherry [&_a]:underline [&_li]:ml-4 [&_li]:list-disc [&_pre]:overflow-x-auto [&_strong]:font-bold [&_table]:block [&_table]:overflow-x-auto">
                       <ReactMarkdown>{m.content}</ReactMarkdown>
                     </div>
                   )}
                 </div>
               ))}
+
 
               {thinking ? (
                 <div className="flex max-w-[60%] items-center gap-2 rounded-2xl bg-secondary px-3 py-2 text-sm text-ink-soft">
