@@ -8,6 +8,10 @@ export type LoyaltySettings = {
   randPerPoint: number;
   /** Extra points for each consecutive year a rider comes back. */
   loyaltyBonusPerYear: number;
+  /** Points earned per R1 of entry fee (0.1 = 1 point per R10 spent). */
+  pointsPerRand: number;
+  /** Multiplier applied to hero events (our flagship rides). */
+  heroMultiplier: number;
   programName: string;
 };
 
@@ -16,6 +20,8 @@ export const DEFAULT_LOYALTY_SETTINGS: LoyaltySettings = {
   defaultPoints: 100,
   randPerPoint: 0.2,
   loyaltyBonusPerYear: 25,
+  pointsPerRand: 0.1,
+  heroMultiplier: 2,
   programName: "Cherry Miles",
 };
 
@@ -26,6 +32,8 @@ export function parseLoyaltySettings(value: unknown): LoyaltySettings {
     defaultPoints: Number(v.defaultPoints ?? DEFAULT_LOYALTY_SETTINGS.defaultPoints),
     randPerPoint: Number(v.randPerPoint ?? DEFAULT_LOYALTY_SETTINGS.randPerPoint),
     loyaltyBonusPerYear: Number(v.loyaltyBonusPerYear ?? DEFAULT_LOYALTY_SETTINGS.loyaltyBonusPerYear),
+    pointsPerRand: Number(v.pointsPerRand ?? DEFAULT_LOYALTY_SETTINGS.pointsPerRand),
+    heroMultiplier: Number(v.heroMultiplier ?? DEFAULT_LOYALTY_SETTINGS.heroMultiplier),
     programName: String(v.programName ?? DEFAULT_LOYALTY_SETTINGS.programName),
   };
 }
@@ -62,4 +70,22 @@ export function formatPoints(points: number): string {
 
 export function randValue(points: number, randPerPoint: number): string {
   return `R${new Intl.NumberFormat("en-ZA", { maximumFractionDigits: 0 }).format(points * randPerPoint)}`;
+}
+
+/** Entry price (in cents) → loyalty points, with a bump for hero events. */
+export function pointsFromPrice(
+  entryPriceCents: number | null | undefined,
+  hero: boolean,
+  settings: Pick<LoyaltySettings, "pointsPerRand" | "heroMultiplier" | "defaultPoints">,
+): number {
+  const rand = Number(entryPriceCents ?? 0) / 100;
+  if (!Number.isFinite(rand) || rand <= 0) return settings.defaultPoints;
+  const base = rand * settings.pointsPerRand;
+  const scaled = hero ? base * (settings.heroMultiplier || 1) : base;
+  return Math.max(0, Math.round(scaled / 5) * 5);
+}
+
+export function formatRand(cents: number | null | undefined): string {
+  const n = Number(cents ?? 0) / 100;
+  return `R${new Intl.NumberFormat("en-ZA", { maximumFractionDigits: 0 }).format(n)}`;
 }
