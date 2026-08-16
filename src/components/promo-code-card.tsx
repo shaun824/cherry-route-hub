@@ -152,7 +152,7 @@ export function PromoCodeCard({ promo }: { promo: EventPromo }) {
             </p>
             {promo.discount ? (
               <span className="mt-2 inline-flex rounded-md bg-accent px-2 py-1 text-[11px] font-black uppercase text-cherry-deep">
-                {promo.discount} off
+                {/^\d+$/.test(promo.discount) ? `${promo.discount}%` : promo.discount} off
               </span>
             ) : null}
             {promo.blurb ? (
