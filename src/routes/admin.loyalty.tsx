@@ -823,3 +823,69 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
     </label>
   );
 }
+
+/**
+ * What the outstanding programme actually costs us. Entry discounts are pure
+ * revenue give-back; merch/experience/partner rewards cost far less than their
+ * face value, so we show both numbers side by side.
+ */
+const KIND_COST_FACTOR: Record<string, number> = {
+  entry: 1,
+  merch: 0.4,
+  experience: 0.25,
+  partner: 0,
+};
+
+function LiabilitySplit({
+  coupons,
+  rewards,
+  settings,
+}: {
+  coupons: any[];
+  rewards: any[];
+  settings: LoyaltySettings;
+}) {
+  const kindByReward = new Map<string, string>(rewards.map((r: any) => [r.id, r.kind ?? "entry"]));
+  const open = coupons.filter((c: any) => c.status !== "redeemed" && c.status !== "expired");
+
+  const rows = REWARD_KINDS.map((k) => {
+    const points = open
+      .filter((c: any) => (kindByReward.get(c.reward_id) ?? "entry") === k.key)
+      .reduce((sum: number, c: any) => sum + Number(c.points_spent ?? 0), 0);
+    const face = points * settings.randPerPoint;
+    return { ...k, points, face, cost: face * (KIND_COST_FACTOR[k.key] ?? 1) };
+  }).filter((r) => r.points > 0);
+
+  const totalFace = rows.reduce((s, r) => s + r.face, 0);
+  const totalCost = rows.reduce((s, r) => s + r.cost, 0);
+  const rands = (n: number) => `R${new Intl.NumberFormat("en-ZA", { maximumFractionDigits: 0 }).format(n)}`;
+
+  if (rows.length === 0) return null;
+
+  return (
+    <section className="rounded-2xl bg-card p-4 ring-1 ring-border">
+      <h2 className="font-display text-sm font-bold">Open coupon liability</h2>
+      <p className="mt-1 text-xs text-ink-soft">
+        Face value is what riders see; true cost assumes merch at 40% and experiences at 25% of face, with partner
+        perks funded by the sponsor.
+      </p>
+      <div className="mt-3 space-y-2">
+        {rows.map((r) => (
+          <div key={r.key} className="flex items-center justify-between text-sm">
+            <span className="font-semibold">{r.label}</span>
+            <span className="text-ink-soft">
+              {formatPoints(r.points)} pts · {rands(r.face)} face ·{" "}
+              <strong className="text-ink">{rands(r.cost)} cost</strong>
+            </span>
+          </div>
+        ))}
+        <div className="flex items-center justify-between border-t border-border pt-2 text-sm font-black">
+          <span>Total</span>
+          <span>
+            {rands(totalFace)} face · {rands(totalCost)} cost
+          </span>
+        </div>
+      </div>
+    </section>
+  );
+}
