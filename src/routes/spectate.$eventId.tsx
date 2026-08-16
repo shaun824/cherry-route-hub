@@ -39,8 +39,10 @@ import { fetchVillageMap } from "@/lib/village-map";
 
 import { fetchEventInfo } from "@/lib/event-info";
 import { groupRidersByClass } from "@/lib/rider-classes";
-import { eventPromosFor, shufflePromos, type EventPromo } from "@/lib/event-promos";
+import { eventPromosFor } from "@/lib/event-promos";
+import { useShuffledPromos } from "@/lib/use-shuffled-promos";
 import { PromoCodeCard } from "@/components/promo-code-card";
+
 
 
 export const Route = createFileRoute("/spectate/$eventId")({
