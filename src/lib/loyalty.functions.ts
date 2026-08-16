@@ -37,6 +37,7 @@ export const getMyLoyalty = createServerFn({ method: "POST" })
       supabase.from("site_settings").select("value").eq("key", "loyalty").maybeSingle(),
       supabase.from("loyalty_rewards").select("*").eq("active", true).order("cost_points"),
     ]);
+    const settings = parseLoyaltySettings(settingsRow.data?.value ?? DEFAULT_LOYALTY_SETTINGS);
 
     let participation: Row[] = [];
     let coupons: Row[] = [];
@@ -57,7 +58,7 @@ export const getMyLoyalty = createServerFn({ method: "POST" })
       coupons = (c.data ?? []) as Row[];
     }
 
-    // What this rider has actually paid us, so we can show the 10%-back promise.
+    // What this rider has actually paid us, so we can show the pay-back promise.
     const enIds = [...new Set(participation.map((r) => Number(r.en_event_id)).filter(Boolean))];
     let priceById = new Map<number, number>();
     if (enIds.length) {
@@ -80,6 +81,29 @@ export const getMyLoyalty = createServerFn({ method: "POST" })
       if (when && when >= cutoff) spendCents3y += cents;
     }
 
+    // Tier runs on a rolling window; the previous window is held for a while.
+    const tierCutoff = monthsAgo(settings.tierWindowMonths);
+    const holdCutoff = monthsAgo(settings.tierWindowMonths + settings.tierHoldMonths);
+    let rollingPoints = 0;
+    let heldPoints = 0;
+    for (const l of ledger) {
+      if (Number(l.points) <= 0) continue;
+      const when = new Date(String(l.created_at));
+      if (when >= tierCutoff) rollingPoints += Number(l.points);
+      if (when >= holdCutoff) heldPoints += Number(l.points);
+    }
+
+    // Points expire after a spell of inactivity — warn inside the last 90 days.
+    const lastActivity = ledger.length
+      ? new Date(String(ledger[0]?.created_at))
+      : null;
+    let expiresAt: string | null = null;
+    if (settings.expiryMonths > 0 && lastActivity && balance > 0) {
+      const d = new Date(lastActivity);
+      d.setMonth(d.getMonth() + settings.expiryMonths);
+      expiresAt = d.toISOString();
+    }
+
     return {
       linked: entrantIds.length > 0,
       balance,
@@ -90,10 +114,14 @@ export const getMyLoyalty = createServerFn({ method: "POST" })
       coupons,
       spendCents,
       spendCents3y,
+      rollingPoints,
+      heldPoints,
+      expiresAt,
       rewards: (rewardsRes.data ?? []) as Row[],
-      settings: parseLoyaltySettings(settingsRow.data?.value ?? DEFAULT_LOYALTY_SETTINGS),
+      settings,
     };
   });
+
 
 
 /** Cash out points for a reward — mints a coupon code and debits the ledger. */
