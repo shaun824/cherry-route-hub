@@ -231,7 +231,7 @@ function MyEventDetail() {
           </div>
         )}
         {tab === "village" && (
-          <section className="space-y-3">
+          <section id="village-map-section" className="scroll-mt-16 space-y-3">
             <SectionTitle>Race village</SectionTitle>
             <OfflinePackCard event={event as never} />
             <VillageMapView
