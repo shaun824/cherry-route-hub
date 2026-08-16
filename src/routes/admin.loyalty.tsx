@@ -538,9 +538,42 @@ function Rewards({ rows, settings, onDone }: { rows: any[]; settings: LoyaltySet
             />
           </Field>
         </div>
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="Category">
+            <select
+              value={form.kind ?? "entry"}
+              onChange={(e) => setForm({ ...form, kind: e.target.value })}
+              className="w-full rounded-lg border border-border px-3 py-2 text-sm"
+            >
+              {REWARD_KINDS.map((k) => (
+                <option key={k.key} value={k.key}>
+                  {k.label}
+                </option>
+              ))}
+            </select>
+          </Field>
+          <Field label="Stock (blank = unlimited)">
+            <input
+              value={form.stock ?? ""}
+              onChange={(e) => setForm({ ...form, stock: e.target.value })}
+              inputMode="numeric"
+              placeholder="—"
+              className="w-full rounded-lg border border-border px-3 py-2 text-sm"
+            />
+          </Field>
+        </div>
+        <Field label="Fulfilment notes (internal)">
+          <input
+            value={form.fulfilment_notes ?? ""}
+            onChange={(e) => setForm({ ...form, fulfilment_notes: e.target.value })}
+            placeholder="Hand out at registration desk"
+            className="w-full rounded-lg border border-border px-3 py-2 text-sm"
+          />
+        </Field>
         <Field label="Terms">
           <input value={form.terms ?? ""} onChange={(e) => setForm({ ...form, terms: e.target.value })} className="w-full rounded-lg border border-border px-3 py-2 text-sm" />
         </Field>
+
         <label className="flex items-center gap-2 text-xs font-semibold">
           <input
             type="checkbox"
