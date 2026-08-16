@@ -15,8 +15,19 @@ export type CrewRoomingRow = {
   location_hint: string | null;
   village_zone_id: string | null;
   village_spot_id: string | null;
+  village_tent_id: string | null;
+  event_entrant_id: string | null;
+  match_source: string | null;
+  entry?: {
+    id: string;
+    bib_number: string | null;
+    registration_ref: string | null;
+    category: string | null;
+    batch: string | null;
+  } | null;
   venue?: { id: string; name: string; address: string | null; village_spot_id: string | null } | null;
 };
+
 
 export type CrewEvent = { id: string; name: string; event_date: string };
 
