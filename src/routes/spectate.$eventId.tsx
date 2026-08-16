@@ -38,7 +38,7 @@ import { fetchVillageMap } from "@/lib/village-map";
 
 import { fetchEventInfo } from "@/lib/event-info";
 import { groupRidersByClass } from "@/lib/rider-classes";
-import { eventPromosFor } from "@/lib/event-promos";
+import { eventPromosFor, shufflePromos, type EventPromo } from "@/lib/event-promos";
 import { PromoCodeCard } from "@/components/promo-code-card";
 
 
