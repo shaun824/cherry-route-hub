@@ -3,7 +3,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { checkIsAdmin } from "./is-admin";
-import { DEFAULT_LOYALTY_SETTINGS, parseLoyaltySettings } from "./loyalty";
+import { DEFAULT_LOYALTY_SETTINGS, monthsAgo, parseLoyaltySettings } from "./loyalty";
 
 type Row = Record<string, any>;
 
