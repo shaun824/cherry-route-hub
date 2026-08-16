@@ -65,11 +65,16 @@ function formatEventStructured(event: any, info: any | null): string {
       lat: info.venue_lat != null ? Number(info.venue_lat) : null,
       lng: info.venue_lng != null ? Number(info.venue_lng) : null,
       address: info.venue_address ?? event.location ?? null,
+      name: event.location ?? null,
     });
     if (maps) {
+      lines.push(
+        `These Google Maps links point at the confirmed venue (${event.location ?? info.venue_address}) — use them exactly as given, never build your own.`,
+      );
       lines.push(`Venue on Google Maps: ${maps.pin}`);
       lines.push(`Driving directions to the venue: ${maps.directions}`);
     }
+
     if (info.parking_notes) lines.push(`Parking: ${info.parking_notes}`);
     if (info.route_description) lines.push(`Route notes: ${info.route_description}`);
     if (info.distance_km) lines.push(`Distance: ${info.distance_km} km`);
