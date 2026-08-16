@@ -90,7 +90,25 @@ export function whereIsRoom(row: CrewRoomingRow): string {
 export function matchesSearch(row: CrewRoomingRow, term: string): boolean {
   const t = term.trim().toLowerCase();
   if (!t) return true;
-  return [row.full_name, row.email, row.tent_number, row.room_type, row.venue?.name, row.notes]
+  return [
+    row.full_name,
+    row.email,
+    row.tent_number,
+    row.room_type,
+    row.venue?.name,
+    row.notes,
+    row.entry?.bib_number,
+    row.entry?.registration_ref,
+    row.entry?.category,
+    row.entry?.batch,
+  ]
     .filter(Boolean)
     .some((v) => String(v).toLowerCase().includes(t));
 }
+
+/** Everyone allocated to a given drawn village area. */
+export function occupantsOfZone(rows: CrewRoomingRow[], zoneId: string | null): CrewRoomingRow[] {
+  if (!zoneId) return [];
+  return rows.filter((r) => r.village_zone_id === zoneId);
+}
+
