@@ -1894,31 +1894,6 @@ function YourEntryCard({ eventId, entryUrl = null }: { eventId: string; entryUrl
         </div>
       ) : null}
 
-      {row.extras.length > 0 ? (
-        <div className="mt-3 space-y-3">
-          {groupExtras(row.extras).map((g) => (
-            <div key={g.key}>
-              <p className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-ink-soft">
-                <Package className="h-3 w-3" /> {g.label}
-              </p>
-              <ul className="mt-1.5 divide-y divide-border rounded-xl bg-secondary/60">
-                {g.items.map((x, i) => (
-                  <li key={i} className="flex items-start justify-between gap-3 px-3 py-2 text-xs">
-                    <span className="min-w-0 text-ink">
-                      {x.name}
-                      {x.option ? <span className="text-ink-soft"> · {x.option}</span> : null}
-                    </span>
-                    {x.qty > 1 ? (
-                      <span className="shrink-0 font-semibold text-ink-soft">×{x.qty}</span>
-                    ) : null}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
-        </div>
-      ) : null}
-
       {/* Always offer the Entry Ninja hand-off: direct registration link when we
           have the ref, otherwise the event's own Entry Ninja page. */}
       <a
