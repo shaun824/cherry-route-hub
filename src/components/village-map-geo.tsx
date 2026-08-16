@@ -287,7 +287,14 @@ export default function VillageMapGeo({
 
   const [zoom, setZoom] = useState(17);
   const [twoFingerHint, setTwoFingerHint] = useState(false);
+  const hintTimer = useRef<number | null>(null);
+  const showTwoFingerHint = useCallback(() => {
+    setTwoFingerHint(true);
+    if (hintTimer.current) window.clearTimeout(hintTimer.current);
+    hintTimer.current = window.setTimeout(() => setTwoFingerHint(false), 1800);
+  }, []);
   const watchRef = useRef<number | null>(null);
+
 
 
   useEffect(() => {
