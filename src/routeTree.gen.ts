@@ -69,6 +69,7 @@ import { Route as ApiPublicHooksRoomingSheetSyncRouteImport } from './routes/api
 import { Route as ApiPublicHooksNotificationCronRouteImport } from './routes/api/public/hooks/notification-cron'
 import { Route as ApiPublicHooksNotificationClickRouteImport } from './routes/api/public/hooks/notification-click'
 import { Route as ApiPublicHooksNewsSyncRouteImport } from './routes/api/public/hooks/news-sync'
+import { Route as ApiPublicHooksMerchSyncRouteImport } from './routes/api/public/hooks/merch-sync'
 import { Route as ApiPublicHooksLoyaltyExpiryRouteImport } from './routes/api/public/hooks/loyalty-expiry'
 import { Route as ApiPublicHooksFaqSuggestRouteImport } from './routes/api/public/hooks/faq-suggest'
 import { Route as ApiPublicHooksEventBotRefreshRouteImport } from './routes/api/public/hooks/event-bot-refresh'
@@ -381,6 +382,11 @@ const ApiPublicHooksNewsSyncRoute = ApiPublicHooksNewsSyncRouteImport.update({
   path: '/api/public/hooks/news-sync',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicHooksMerchSyncRoute = ApiPublicHooksMerchSyncRouteImport.update({
+  id: '/api/public/hooks/merch-sync',
+  path: '/api/public/hooks/merch-sync',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicHooksLoyaltyExpiryRoute =
   ApiPublicHooksLoyaltyExpiryRouteImport.update({
     id: '/api/public/hooks/loyalty-expiry',
@@ -468,6 +474,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/event-bot-refresh': typeof ApiPublicHooksEventBotRefreshRoute
   '/api/public/hooks/faq-suggest': typeof ApiPublicHooksFaqSuggestRoute
   '/api/public/hooks/loyalty-expiry': typeof ApiPublicHooksLoyaltyExpiryRoute
+  '/api/public/hooks/merch-sync': typeof ApiPublicHooksMerchSyncRoute
   '/api/public/hooks/news-sync': typeof ApiPublicHooksNewsSyncRoute
   '/api/public/hooks/notification-click': typeof ApiPublicHooksNotificationClickRoute
   '/api/public/hooks/notification-cron': typeof ApiPublicHooksNotificationCronRoute
@@ -531,6 +538,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/event-bot-refresh': typeof ApiPublicHooksEventBotRefreshRoute
   '/api/public/hooks/faq-suggest': typeof ApiPublicHooksFaqSuggestRoute
   '/api/public/hooks/loyalty-expiry': typeof ApiPublicHooksLoyaltyExpiryRoute
+  '/api/public/hooks/merch-sync': typeof ApiPublicHooksMerchSyncRoute
   '/api/public/hooks/news-sync': typeof ApiPublicHooksNewsSyncRoute
   '/api/public/hooks/notification-click': typeof ApiPublicHooksNotificationClickRoute
   '/api/public/hooks/notification-cron': typeof ApiPublicHooksNotificationCronRoute
@@ -599,6 +607,7 @@ export interface FileRoutesById {
   '/api/public/hooks/event-bot-refresh': typeof ApiPublicHooksEventBotRefreshRoute
   '/api/public/hooks/faq-suggest': typeof ApiPublicHooksFaqSuggestRoute
   '/api/public/hooks/loyalty-expiry': typeof ApiPublicHooksLoyaltyExpiryRoute
+  '/api/public/hooks/merch-sync': typeof ApiPublicHooksMerchSyncRoute
   '/api/public/hooks/news-sync': typeof ApiPublicHooksNewsSyncRoute
   '/api/public/hooks/notification-click': typeof ApiPublicHooksNotificationClickRoute
   '/api/public/hooks/notification-cron': typeof ApiPublicHooksNotificationCronRoute
@@ -668,6 +677,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/event-bot-refresh'
     | '/api/public/hooks/faq-suggest'
     | '/api/public/hooks/loyalty-expiry'
+    | '/api/public/hooks/merch-sync'
     | '/api/public/hooks/news-sync'
     | '/api/public/hooks/notification-click'
     | '/api/public/hooks/notification-cron'
@@ -731,6 +741,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/event-bot-refresh'
     | '/api/public/hooks/faq-suggest'
     | '/api/public/hooks/loyalty-expiry'
+    | '/api/public/hooks/merch-sync'
     | '/api/public/hooks/news-sync'
     | '/api/public/hooks/notification-click'
     | '/api/public/hooks/notification-cron'
@@ -798,6 +809,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/event-bot-refresh'
     | '/api/public/hooks/faq-suggest'
     | '/api/public/hooks/loyalty-expiry'
+    | '/api/public/hooks/merch-sync'
     | '/api/public/hooks/news-sync'
     | '/api/public/hooks/notification-click'
     | '/api/public/hooks/notification-cron'
@@ -833,6 +845,7 @@ export interface RootRouteChildren {
   ApiPublicHooksEventBotRefreshRoute: typeof ApiPublicHooksEventBotRefreshRoute
   ApiPublicHooksFaqSuggestRoute: typeof ApiPublicHooksFaqSuggestRoute
   ApiPublicHooksLoyaltyExpiryRoute: typeof ApiPublicHooksLoyaltyExpiryRoute
+  ApiPublicHooksMerchSyncRoute: typeof ApiPublicHooksMerchSyncRoute
   ApiPublicHooksNewsSyncRoute: typeof ApiPublicHooksNewsSyncRoute
   ApiPublicHooksNotificationClickRoute: typeof ApiPublicHooksNotificationClickRoute
   ApiPublicHooksNotificationCronRoute: typeof ApiPublicHooksNotificationCronRoute
@@ -1267,6 +1280,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksNewsSyncRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/merch-sync': {
+      id: '/api/public/hooks/merch-sync'
+      path: '/api/public/hooks/merch-sync'
+      fullPath: '/api/public/hooks/merch-sync'
+      preLoaderRoute: typeof ApiPublicHooksMerchSyncRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/loyalty-expiry': {
       id: '/api/public/hooks/loyalty-expiry'
       path: '/api/public/hooks/loyalty-expiry'
@@ -1432,6 +1452,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksEventBotRefreshRoute: ApiPublicHooksEventBotRefreshRoute,
   ApiPublicHooksFaqSuggestRoute: ApiPublicHooksFaqSuggestRoute,
   ApiPublicHooksLoyaltyExpiryRoute: ApiPublicHooksLoyaltyExpiryRoute,
+  ApiPublicHooksMerchSyncRoute: ApiPublicHooksMerchSyncRoute,
   ApiPublicHooksNewsSyncRoute: ApiPublicHooksNewsSyncRoute,
   ApiPublicHooksNotificationClickRoute: ApiPublicHooksNotificationClickRoute,
   ApiPublicHooksNotificationCronRoute: ApiPublicHooksNotificationCronRoute,

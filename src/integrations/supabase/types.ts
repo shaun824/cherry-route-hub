@@ -566,36 +566,51 @@ export type Database = {
       event_merch_options: {
         Row: {
           created_at: string
+          description: string | null
           en_item_id: number | null
           event_id: string
           id: string
+          image_url: string | null
           name: string
           options: Json
           position: number
+          price_from: number | null
+          source_url: string | null
           synced_at: string
           updated_at: string
+          web_synced_at: string | null
         }
         Insert: {
           created_at?: string
+          description?: string | null
           en_item_id?: number | null
           event_id: string
           id?: string
+          image_url?: string | null
           name: string
           options?: Json
           position?: number
+          price_from?: number | null
+          source_url?: string | null
           synced_at?: string
           updated_at?: string
+          web_synced_at?: string | null
         }
         Update: {
           created_at?: string
+          description?: string | null
           en_item_id?: number | null
           event_id?: string
           id?: string
+          image_url?: string | null
           name?: string
           options?: Json
           position?: number
+          price_from?: number | null
+          source_url?: string | null
           synced_at?: string
           updated_at?: string
+          web_synced_at?: string | null
         }
         Relationships: [
           {

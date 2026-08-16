@@ -57,8 +57,7 @@ import { curatedSponsorsFor } from "@/lib/event-sponsor-overrides";
 import { eventHasTshirt } from "@/lib/apparel";
 import { useAdminStore } from "@/lib/store";
 import { fetchMyEventById, type MyEventRow } from "@/lib/my-events";
-import { groupExtras } from "@/lib/extras-display";
-import { Printer, Shirt, Package, Siren, BedDouble, ExternalLink } from "lucide-react";
+import { Printer, Siren, BedDouble, ExternalLink } from "lucide-react";
 import type { EventDay, EventRoute, FeedPost, ScheduleItem, SocialLinks } from "@/lib/mock-data";
 import { relativeTime } from "@/lib/mock-data";
 import { withRegistrationDayLabels } from "@/lib/event-days";
@@ -70,6 +69,7 @@ import { LockedSection } from "@/components/locked-section";
 import { buildMapEmbedSrc, buildMapLink, resolveVenuePoint } from "@/lib/map-embed";
 import { VenueMiniMap } from "@/components/venue-mini-map";
 import { PaymentStatusCard } from "@/components/payment-status-card";
+import { EntryInclusions } from "@/components/entry-inclusions";
 import { brandHeader } from "@/lib/event-brand";
 import { EventLogo } from "@/components/event-logo";
 import { EventPhotosPanel } from "@/components/event-photos-panel";
@@ -1847,26 +1847,17 @@ function YourEntryCard({ eventId, entryUrl = null }: { eventId: string; entryUrl
 
       <PaymentStatusCard info={row} entryUrl={entryUrl} />
 
-      {(row.jacket_size || (showTshirt && row.tshirt_size)) ? (
-        <div className="mt-3 grid grid-cols-2 gap-2">
-          {row.jacket_size ? (
-            <div className="rounded-xl bg-secondary p-2.5">
-              <p className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-ink-soft">
-                <Shirt className="h-3 w-3" /> Jacket
-              </p>
-              <p className="mt-0.5 font-display text-sm font-bold text-ink">{row.jacket_size}</p>
-            </div>
-          ) : null}
-          {showTshirt && row.tshirt_size ? (
-            <div className="rounded-xl bg-secondary p-2.5">
-              <p className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-ink-soft">
-                <Shirt className="h-3 w-3" /> T-Shirt
-              </p>
-              <p className="mt-0.5 font-display text-sm font-bold text-ink">{row.tshirt_size}</p>
-            </div>
-          ) : null}
-        </div>
-      ) : null}
+      <EntryInclusions
+        eventId={eventId}
+        extras={row.extras}
+        sizes={[
+          ...(row.jacket_size ? [{ label: "Event jacket", value: row.jacket_size }] : []),
+          ...(showTshirt && row.tshirt_size
+            ? [{ label: "Event t-shirt", value: row.tshirt_size }]
+            : []),
+        ]}
+      />
+
 
 
       {rooming ? (
@@ -1900,31 +1891,6 @@ function YourEntryCard({ eventId, entryUrl = null }: { eventId: string; entryUrl
               <MapPin className="h-3.5 w-3.5" /> Show me on the village map
             </button>
           ) : null}
-        </div>
-      ) : null}
-
-      {row.extras.length > 0 ? (
-        <div className="mt-3 space-y-3">
-          {groupExtras(row.extras).map((g) => (
-            <div key={g.key}>
-              <p className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-ink-soft">
-                <Package className="h-3 w-3" /> {g.label}
-              </p>
-              <ul className="mt-1.5 divide-y divide-border rounded-xl bg-secondary/60">
-                {g.items.map((x, i) => (
-                  <li key={i} className="flex items-start justify-between gap-3 px-3 py-2 text-xs">
-                    <span className="min-w-0 text-ink">
-                      {x.name}
-                      {x.option ? <span className="text-ink-soft"> · {x.option}</span> : null}
-                    </span>
-                    {x.qty > 1 ? (
-                      <span className="shrink-0 font-semibold text-ink-soft">×{x.qty}</span>
-                    ) : null}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
         </div>
       ) : null}
 
