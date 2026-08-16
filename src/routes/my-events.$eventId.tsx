@@ -141,10 +141,24 @@ function MyEventDetail() {
     (next: Tab) => {
       setTab(next);
       scrollToTabTop();
-      // Panels mount lazily and can shift layout — re-anchor over the next moments.
-      window.requestAnimationFrame(scrollToTabTop);
-      window.setTimeout(scrollToTabTop, 60);
-      window.setTimeout(scrollToTabTop, 220);
+      // Panels mount lazily and can shift layout — re-anchor over the next moments,
+      // but stop the moment the rider touches the page (e.g. taps the map).
+      const timers: number[] = [];
+      const cancel = () => {
+        timers.forEach((t) => window.clearTimeout(t));
+        window.removeEventListener("touchstart", cancel);
+        window.removeEventListener("wheel", cancel);
+        window.removeEventListener("pointerdown", cancel);
+      };
+      const run = () => {
+        scrollToTabTop();
+      };
+      window.requestAnimationFrame(run);
+      timers.push(window.setTimeout(run, 60), window.setTimeout(cancel, 260));
+      timers.push(window.setTimeout(run, 220));
+      window.addEventListener("touchstart", cancel, { passive: true });
+      window.addEventListener("wheel", cancel, { passive: true });
+      window.addEventListener("pointerdown", cancel);
     },
     [scrollToTabTop],
   );
@@ -155,14 +169,25 @@ function MyEventDetail() {
     setTab("village");
     if (typeof window === "undefined") return;
     window.scrollTo({ top: 0, behavior: "auto" });
-    // The map mounts lazily, so keep nudging it into view for a moment.
+    // The map mounts lazily, so nudge it into view — but never fight the rider:
+    // any touch/scroll of their own stops the nudging immediately.
     let tries = 0;
     const timer = window.setInterval(() => {
       const el = document.getElementById("village-map-section");
       if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
-      if (++tries > 8) window.clearInterval(timer);
+      if (++tries > 8) stop();
     }, 200);
+    function stop() {
+      window.clearInterval(timer);
+      window.removeEventListener("touchstart", stop);
+      window.removeEventListener("wheel", stop);
+      window.removeEventListener("pointerdown", stop);
+    }
+    window.addEventListener("touchstart", stop, { passive: true });
+    window.addEventListener("wheel", stop, { passive: true });
+    window.addEventListener("pointerdown", stop);
   }, []);
+
 
   const eventNews = useAdminStore((s) => s.feed).filter((p) => p.eventId === event.id);
   const hasFreshNews = eventNews.some(
