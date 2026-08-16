@@ -4,24 +4,36 @@ export type LoyaltySettings = {
   demoMode: boolean;
   /** Points awarded for an event that has no explicit value set. */
   defaultPoints: number;
-  /** Rand value of a single point — used for admin liability maths only. */
+  /** Rand value of a single point when it is redeemed. */
   randPerPoint: number;
   /** Extra points for each consecutive year a rider comes back. */
   loyaltyBonusPerYear: number;
   /** Points earned per R1 of entry fee (0.1 = 1 point per R10 spent). */
   pointsPerRand: number;
-  /** Multiplier applied to hero events (our flagship rides). */
+  /**
+   * Legacy earn multiplier for flagship events. Kept at 1: sell-out events
+   * earn at the normal rate and are steered away from on redemption instead.
+   */
   heroMultiplier: number;
+  /** Rolling window (months) used to work out a rider's tier. */
+  tierWindowMonths: number;
+  /** Months a tier is held after a rider drops below its threshold. */
+  tierHoldMonths: number;
+  /** Months of inactivity before unredeemed points expire. */
+  expiryMonths: number;
   programName: string;
 };
 
 export const DEFAULT_LOYALTY_SETTINGS: LoyaltySettings = {
   demoMode: true,
   defaultPoints: 100,
-  randPerPoint: 0.2,
+  randPerPoint: 0.5,
   loyaltyBonusPerYear: 25,
   pointsPerRand: 0.1,
-  heroMultiplier: 2,
+  heroMultiplier: 1,
+  tierWindowMonths: 36,
+  tierHoldMonths: 12,
+  expiryMonths: 24,
   programName: "Cherry Miles",
 };
 
@@ -34,9 +46,27 @@ export function parseLoyaltySettings(value: unknown): LoyaltySettings {
     loyaltyBonusPerYear: Number(v.loyaltyBonusPerYear ?? DEFAULT_LOYALTY_SETTINGS.loyaltyBonusPerYear),
     pointsPerRand: Number(v.pointsPerRand ?? DEFAULT_LOYALTY_SETTINGS.pointsPerRand),
     heroMultiplier: Number(v.heroMultiplier ?? DEFAULT_LOYALTY_SETTINGS.heroMultiplier),
+    tierWindowMonths: Number(v.tierWindowMonths ?? DEFAULT_LOYALTY_SETTINGS.tierWindowMonths),
+    tierHoldMonths: Number(v.tierHoldMonths ?? DEFAULT_LOYALTY_SETTINGS.tierHoldMonths),
+    expiryMonths: Number(v.expiryMonths ?? DEFAULT_LOYALTY_SETTINGS.expiryMonths),
     programName: String(v.programName ?? DEFAULT_LOYALTY_SETTINGS.programName),
   };
 }
+
+/** Reward categories — merch/experience/partner cost us far less than entry discounts. */
+export const REWARD_KINDS = [
+  { key: "merch", label: "Merchandise", blurb: "Kit from the Red Cherry range" },
+  { key: "experience", label: "Experience", blurb: "Perks on event weekend" },
+  { key: "partner", label: "Partner offer", blurb: "Deals from our sponsors" },
+  { key: "entry", label: "Entry discount", blurb: "Rand off a future entry" },
+] as const;
+
+export type RewardKind = (typeof REWARD_KINDS)[number]["key"];
+
+export function rewardKindLabel(kind: string | null | undefined): string {
+  return REWARD_KINDS.find((k) => k.key === kind)?.label ?? "Reward";
+}
+
 
 export type Tier = {
   key: string;
