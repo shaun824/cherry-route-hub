@@ -1,7 +1,7 @@
 // Client-only Leaflet view of the event village: the plan image is placed over
 // a satellite basemap at its real-world position, hotspots become map markers
 // and the rider's live GPS position is shown as a pulsing dot.
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { MapContainer, TileLayer, ImageOverlay, useMap, CircleMarker, Polygon, Popup, Marker } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -63,6 +63,54 @@ function BearingSync({ bearing }: { bearing: number }) {
   useEffect(() => {
     map.setBearing?.(bearing);
   }, [map, bearing]);
+  return null;
+}
+
+/**
+ * On touch devices the map only pans with two fingers, so scrolling the page
+ * over the map never gets trapped. A one-finger drag surfaces a hint instead.
+ */
+function TwoFingerPanGate({ onOneFinger }: { onOneFinger: () => void }) {
+  const map = useMap();
+  const hintRef = useRef(onOneFinger);
+  hintRef.current = onOneFinger;
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const coarse = window.matchMedia?.("(pointer: coarse)")?.matches;
+    if (!coarse) return;
+    const el = map.getContainer();
+    map.dragging.disable();
+
+    let startX = 0;
+    let startY = 0;
+    let moved = false;
+
+    const onStart = (e: TouchEvent) => {
+      if (e.touches.length === 1) {
+        startX = e.touches[0].clientX;
+        startY = e.touches[0].clientY;
+        moved = false;
+      }
+    };
+    const onMove = (e: TouchEvent) => {
+      if (e.touches.length !== 1 || moved) return;
+      const dx = e.touches[0].clientX - startX;
+      const dy = e.touches[0].clientY - startY;
+      if (Math.hypot(dx, dy) < 14) return;
+      moved = true;
+      // Sideways drags are clearly map intent; vertical ones scroll the page.
+      if (Math.abs(dx) > Math.abs(dy) * 0.6) hintRef.current();
+    };
+
+    el.addEventListener("touchstart", onStart, { passive: true });
+    el.addEventListener("touchmove", onMove, { passive: true });
+    return () => {
+      el.removeEventListener("touchstart", onStart);
+      el.removeEventListener("touchmove", onMove);
+    };
+  }, [map]);
+
   return null;
 }
 
@@ -238,7 +286,16 @@ export default function VillageMapGeo({
   const [bearing, setBearing] = useState(0);
 
   const [zoom, setZoom] = useState(17);
+  const [twoFingerHint, setTwoFingerHint] = useState(false);
+  const hintTimer = useRef<number | null>(null);
+  const showTwoFingerHint = useCallback(() => {
+    setTwoFingerHint(true);
+    if (hintTimer.current) window.clearTimeout(hintTimer.current);
+    hintTimer.current = window.setTimeout(() => setTwoFingerHint(false), 1800);
+  }, []);
   const watchRef = useRef<number | null>(null);
+
+
 
   useEffect(() => {
     if (!imageUrl) return;
@@ -492,7 +549,18 @@ export default function VillageMapGeo({
           ) : null}
 
           <BearingSync bearing={bearing} />
+          <TwoFingerPanGate onOneFinger={showTwoFingerHint} />
         </MapContainer>
+
+        {twoFingerHint ? (
+          <div className="pointer-events-none absolute inset-0 z-[600] grid place-items-center bg-ink/45 px-6 text-center">
+            <p className="rounded-2xl bg-card/95 px-4 py-3 text-sm font-bold text-ink shadow-lg ring-1 ring-border">
+              Use two fingers to move the map
+            </p>
+          </div>
+        ) : null}
+
+
 
         <div className="pointer-events-none absolute right-3 top-3 z-[500] flex gap-2">
           <button
@@ -549,7 +617,7 @@ export default function VillageMapGeo({
         <p className="text-xs text-ink-soft">Live location on · accurate to about {Math.round(accuracy)} m.</p>
       ) : (
         <p className="text-xs text-ink-soft">
-          Drag to move, pinch or scroll to zoom, twist with two fingers (or use ↺ ↻) to rotate, and tap any marker for details.
+          Use two fingers to move or zoom the map, twist with two fingers (or use ↺ ↻) to rotate, and tap any marker for details.
         </p>
       )}
     </div>
