@@ -1613,6 +1613,68 @@ export type Database = {
         }
         Relationships: []
       }
+      rider_event_history: {
+        Row: {
+          bib_number: string | null
+          category: string | null
+          created_at: string
+          en_event_id: number
+          event_date: string | null
+          event_id: string | null
+          event_name: string
+          id: string
+          matched_on: string | null
+          paid: boolean | null
+          registration_ref: string | null
+          synced_at: string
+          updated_at: string
+          user_id: string
+          venue: string | null
+        }
+        Insert: {
+          bib_number?: string | null
+          category?: string | null
+          created_at?: string
+          en_event_id: number
+          event_date?: string | null
+          event_id?: string | null
+          event_name: string
+          id?: string
+          matched_on?: string | null
+          paid?: boolean | null
+          registration_ref?: string | null
+          synced_at?: string
+          updated_at?: string
+          user_id: string
+          venue?: string | null
+        }
+        Update: {
+          bib_number?: string | null
+          category?: string | null
+          created_at?: string
+          en_event_id?: number
+          event_date?: string | null
+          event_id?: string | null
+          event_name?: string
+          id?: string
+          matched_on?: string | null
+          paid?: boolean | null
+          registration_ref?: string | null
+          synced_at?: string
+          updated_at?: string
+          user_id?: string
+          venue?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rider_event_history_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       site_settings: {
         Row: {
           key: string
