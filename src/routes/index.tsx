@@ -441,26 +441,15 @@ function Home() {
 
 
       {/* Promo teaser — same tappable card + reminder pop-up as everywhere else */}
-      {promos[0] ? (
+      {homePromos.length > 0 ? (
         <>
           <SectionTitle title="Supplier promos" action="View all" actionTo="/promos" />
           <div className="px-5 pb-2">
-            <PromoCarousel
-              promos={promos.map((p) => ({
-                id: p.id,
-                brand: p.brand,
-                title: p.title,
-                code: p.code || undefined,
-                redeem: p.code ? undefined : "Show this offer to the supplier",
-                discount: p.discount,
-                url: p.url || "#",
-                logoUrl: p.logoUrl ?? "",
-                accent: p.accent,
-              }))}
-            />
+            <PromoCarousel promos={homePromos} />
           </div>
         </>
       ) : null}
+
 
 
       {/* Sponsor scroller hidden while sponsor assets are being refreshed. */}
