@@ -441,3 +441,59 @@ export async function pushCouponToEntryNinja(
 
   return { status, message };
 }
+
+/* ------------------------------ point expiry ------------------------------ */
+
+/**
+ * Miles expire after a spell of inactivity. Any rider whose most recent ledger
+ * activity is older than the configured window has their positive balance
+ * written off with a negative "expire" row, so the ledger stays the single
+ * source of truth.
+ */
+export async function expireIdlePoints(
+  supabase: Sb,
+): Promise<{ riders: number; pointsExpired: number; cutoff: string | null }> {
+  const settings = await loadLoyaltySettings(supabase);
+  if (!settings.expiryMonths || settings.expiryMonths <= 0) {
+    return { riders: 0, pointsExpired: 0, cutoff: null };
+  }
+  const cutoff = new Date();
+  cutoff.setMonth(cutoff.getMonth() - settings.expiryMonths);
+
+  const totals = new Map<string, number>();
+  const lastSeen = new Map<string, number>();
+  for (let page = 0; page < 100; page++) {
+    const { data } = await supabase
+      .from("loyalty_ledger")
+      .select("entrant_id, points, created_at")
+      .range(page * 1000, page * 1000 + 999);
+    const rows = (data ?? []) as { entrant_id: string; points: number; created_at: string }[];
+    for (const r of rows) {
+      totals.set(r.entrant_id, (totals.get(r.entrant_id) ?? 0) + Number(r.points));
+      const when = new Date(r.created_at).getTime();
+      if (when > (lastSeen.get(r.entrant_id) ?? 0)) lastSeen.set(r.entrant_id, when);
+    }
+    if (rows.length < 1000) break;
+  }
+
+  const inserts: { entrant_id: string; points: number; kind: string; reason: string }[] = [];
+  for (const [entrantId, balance] of totals) {
+    if (balance <= 0) continue;
+    if ((lastSeen.get(entrantId) ?? 0) > cutoff.getTime()) continue;
+    inserts.push({
+      entrant_id: entrantId,
+      points: -balance,
+      kind: "expire",
+      reason: `Expired after ${settings.expiryMonths} months of inactivity`,
+    });
+  }
+
+  let expired = 0;
+  for (const batch of chunk(inserts, 500)) {
+    const { error } = await supabase.from("loyalty_ledger").insert(batch);
+    if (error) throw new Error(error.message);
+    expired += batch.reduce((s, r) => s + Math.abs(r.points), 0);
+  }
+
+  return { riders: inserts.length, pointsExpired: expired, cutoff: cutoff.toISOString() };
+}

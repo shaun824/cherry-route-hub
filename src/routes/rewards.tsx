@@ -5,7 +5,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { Award, Copy, Gift, History, Sparkles, Ticket, TrendingUp } from "lucide-react";
 import { toast } from "sonner";
 import { getMyLoyalty, redeemReward } from "@/lib/loyalty.functions";
-import { formatPoints, tierFor, TIERS } from "@/lib/loyalty";
+import { formatPoints, tierForRolling, REWARD_KINDS, TIERS } from "@/lib/loyalty";
 
 export const Route = createFileRoute("/rewards")({
   head: () => ({
@@ -55,7 +55,11 @@ function RewardsPage() {
   });
 
   const balance = data?.balance ?? 0;
-  const { tier, next, toNext, progress } = useMemo(() => tierFor(balance), [balance]);
+  const rolling = (data as any)?.rollingPoints ?? balance;
+  const held = (data as any)?.heldPoints ?? rolling;
+  const { tier, next, toNext, progress } = useMemo(() => tierForRolling(rolling, held), [rolling, held]);
+  const expiresAt = (data as any)?.expiresAt as string | null | undefined;
+
 
   if (isLoading) {
     return <div className="p-6 text-center text-sm text-ink-soft">Loading your rewards…</div>;
@@ -97,9 +101,17 @@ function RewardsPage() {
             <div className="h-full rounded-full bg-cherry" style={{ width: `${Math.round(progress * 100)}%` }} />
           </div>
           <p className="mt-2 text-[11px] text-white/70">
-            {next ? `${formatPoints(toNext)} points to ${next.name}` : "Top tier — you're a Red Cherry legend."}
+            {next
+              ? `${formatPoints(toNext)} points in the last 3 years to reach ${next.name}`
+              : "Top tier — you're a Red Cherry legend."}
           </p>
+          {expiresAt ? (
+            <p className="mt-1 text-[11px] text-white/60">
+              Ride with us before {new Date(expiresAt).toLocaleDateString("en-ZA")} to keep your Miles alive.
+            </p>
+          ) : null}
         </div>
+
         <div className="mt-4 grid grid-cols-3 gap-2 text-center text-[11px]">
           <Stat label="Events" value={String(data?.participation.length ?? 0)} />
           <Stat label="Earned" value={formatPoints(data?.earned ?? 0)} />
@@ -145,39 +157,62 @@ function RewardsPage() {
       </div>
 
       {tab === "rewards" ? (
-        <section className="space-y-3">
-          {(data?.rewards ?? []).map((r: any) => {
-            const affordable = balance >= r.cost_points;
+        <section className="space-y-5">
+          {REWARD_KINDS.map((kind) => {
+            const items = (data?.rewards ?? []).filter(
+              (r: any) => (r.kind ?? "entry") === kind.key,
+            );
+            if (items.length === 0) return null;
             return (
-              <article key={r.id} className="rounded-2xl bg-card p-4 ring-1 ring-border">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <h3 className="font-display text-base font-bold">{r.name}</h3>
-                    <p className="mt-1 text-xs text-ink-soft">{r.description}</p>
-                    {r.terms ? <p className="mt-1 text-[11px] text-ink-soft/80">{r.terms}</p> : null}
-                  </div>
-                  {r.value_label ? (
-                    <span className="shrink-0 rounded-lg bg-accent px-2 py-1 text-xs font-black text-cherry-deep">
-                      {r.value_label}
-                    </span>
-                  ) : null}
+              <div key={kind.key} className="space-y-3">
+                <div>
+                  <h2 className="font-display text-sm font-black uppercase tracking-wide">{kind.label}</h2>
+                  <p className="text-[11px] text-ink-soft">{kind.blurb}</p>
                 </div>
-                <div className="mt-3 flex items-center justify-between">
-                  <span className="text-xs font-bold text-ink-soft">{formatPoints(r.cost_points)} pts</span>
-                  <button
-                    disabled={!affordable || redeemMut.isPending}
-                    onClick={() => redeemMut.mutate(r.id)}
-                    className="rounded-lg bg-cherry px-3 py-1.5 text-xs font-bold text-white disabled:opacity-40"
-                  >
-                    {affordable ? "Cash out" : `Need ${formatPoints(r.cost_points - balance)} more`}
-                  </button>
-                </div>
-              </article>
+                {items.map((r: any) => {
+                  const soldOut = r.stock !== null && r.stock !== undefined && Number(r.stock) <= 0;
+                  const affordable = balance >= r.cost_points;
+                  return (
+                    <article key={r.id} className="rounded-2xl bg-card p-4 ring-1 ring-border">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <h3 className="font-display text-base font-bold">{r.name}</h3>
+                          <p className="mt-1 text-xs text-ink-soft">{r.description}</p>
+                          {r.terms ? <p className="mt-1 text-[11px] text-ink-soft/80">{r.terms}</p> : null}
+                          {!soldOut && r.stock !== null && r.stock !== undefined && Number(r.stock) <= 10 ? (
+                            <p className="mt-1 text-[11px] font-bold text-cherry">Only {r.stock} left</p>
+                          ) : null}
+                        </div>
+                        {r.value_label ? (
+                          <span className="shrink-0 rounded-lg bg-accent px-2 py-1 text-xs font-black text-cherry-deep">
+                            {r.value_label}
+                          </span>
+                        ) : null}
+                      </div>
+                      <div className="mt-3 flex items-center justify-between">
+                        <span className="text-xs font-bold text-ink-soft">{formatPoints(r.cost_points)} pts</span>
+                        <button
+                          disabled={!affordable || soldOut || redeemMut.isPending}
+                          onClick={() => redeemMut.mutate(r.id)}
+                          className="rounded-lg bg-cherry px-3 py-1.5 text-xs font-bold text-white disabled:opacity-40"
+                        >
+                          {soldOut
+                            ? "Sold out"
+                            : affordable
+                              ? "Cash out"
+                              : `Need ${formatPoints(r.cost_points - balance)} more`}
+                        </button>
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
             );
           })}
-          <TierLadder balance={balance} />
+          <TierLadder balance={rolling} />
         </section>
       ) : null}
+
 
       {tab === "history" ? (
         <section className="space-y-2">

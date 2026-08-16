@@ -17,7 +17,7 @@ import {
   saveReward,
   setEventPoints,
 } from "@/lib/loyalty.functions";
-import { formatPoints, pointsFromPrice, randValue, tierFor, type LoyaltySettings } from "@/lib/loyalty";
+import { formatPoints, pointsFromPrice, randValue, tierFor, REWARD_KINDS, type LoyaltySettings } from "@/lib/loyalty";
 
 export const Route = createFileRoute("/admin/loyalty")({
   component: AdminLoyalty,
@@ -106,6 +106,9 @@ function AdminLoyalty() {
         <Kpi icon={Coins} label="Points outstanding" value={formatPoints(data.stats.pointsOutstanding)} />
         <Kpi icon={Ticket} label="Exposure at current rate" value={liability} />
       </div>
+
+      <LiabilitySplit coupons={data.coupons ?? []} rewards={data.rewards ?? []} settings={s} />
+
 
       <div className="flex flex-wrap gap-1 rounded-xl bg-secondary p-1">
         {(
@@ -249,7 +252,7 @@ function EventValues({ rows, settings, onDone }: { rows: any[]; settings: Loyalt
   const priceRun = useServerFn(applyPriceValues);
   const [draft, setDraft] = useState<Record<string, { points: string; price: string }>>({});
   const mut = useMutation({
-    mutationFn: (v: { id: string; points: number; entryPriceCents: number | null; hero?: boolean }) =>
+    mutationFn: (v: { id: string; points: number; entryPriceCents: number | null; hero?: boolean; sellsOut?: boolean }) =>
       save({ data: v }),
     onSuccess: () => {
       toast.success("Event value saved");
@@ -272,9 +275,11 @@ function EventValues({ rows, settings, onDone }: { rows: any[]; settings: Loyalt
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border p-3">
         <p className="text-xs text-ink-soft">
           Points follow the entry fee: <strong>{settings.pointsPerRand} pt per R1</strong> (R1 000 entry ≈{" "}
-          {formatPoints(1000 * settings.pointsPerRand)} pts). Hero events pay {settings.heroMultiplier}×. Events with no
-          price fall back to {settings.defaultPoints} pts.
+          {formatPoints(1000 * settings.pointsPerRand)} pts) on every event. Tick <strong>Sells out</strong> on events
+          you don't need to discount — entry-discount rewards are steered to the events that still need entries. Events
+          with no price fall back to {settings.defaultPoints} pts.
         </p>
+
         <button
           onClick={() => priceMut.mutate()}
           disabled={priceMut.isPending}
@@ -290,7 +295,7 @@ function EventValues({ rows, settings, onDone }: { rows: any[]; settings: Loyalt
               <th className="px-3 py-2">Event</th>
               <th className="px-3 py-2">Date</th>
               <th className="px-3 py-2">Entry price (R)</th>
-              <th className="px-3 py-2">Hero</th>
+              <th className="px-3 py-2">Sells out</th>
               <th className="px-3 py-2">Points</th>
               <th className="px-3 py-2">Worth</th>
               <th className="px-3 py-2" />
@@ -311,7 +316,7 @@ function EventValues({ rows, settings, onDone }: { rows: any[]; settings: Loyalt
                     {r.event_name}
                     {r.hero ? (
                       <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-accent px-2 py-0.5 text-[10px] font-black uppercase text-cherry-deep">
-                        <Star className="h-3 w-3" /> Hero
+                        <Star className="h-3 w-3" /> Sells out
                       </span>
                     ) : null}
                   </td>
@@ -329,16 +334,19 @@ function EventValues({ rows, settings, onDone }: { rows: any[]; settings: Loyalt
                     <input
                       type="checkbox"
                       checked={Boolean(r.hero)}
+                      title="Entry discounts can't be redeemed against events that sell out"
                       onChange={(e) =>
                         mut.mutate({
                           id: r.id,
                           hero: e.target.checked,
+                          sellsOut: e.target.checked,
                           entryPriceCents: Math.round((Number(price) || 0) * 100) || null,
                           points: pointsFromPrice(Math.round((Number(price) || 0) * 100), e.target.checked, settings),
                         })
                       }
                     />
                   </td>
+
                   <td className="px-3 py-2">
                     <input
                       value={points}
@@ -397,7 +405,11 @@ const emptyReward = {
   valid_days: 180,
   active: true,
   sort_order: 0,
+  kind: "merch",
+  stock: "",
+  fulfilment_notes: "",
 };
+
 
 function Rewards({ rows, settings, onDone }: { rows: any[]; settings: LoyaltySettings; onDone: () => void }) {
   const save = useServerFn(saveReward);
@@ -432,15 +444,21 @@ function Rewards({ rows, settings, onDone }: { rows: any[]; settings: LoyaltySet
                 <h3 className="font-display font-bold">{r.name}</h3>
                 <p className="text-xs text-ink-soft">{r.description}</p>
                 <p className="mt-1 text-[11px] text-ink-soft">
+                  <span className="mr-1 rounded-full bg-secondary px-2 py-0.5 font-bold uppercase">
+                    {REWARD_KINDS.find((k) => k.key === (r.kind ?? "entry"))?.label ?? r.kind}
+                  </span>
                   {formatPoints(r.cost_points)} pts · costs you {randValue(r.cost_points, settings.randPerPoint)} · valid{" "}
-                  {r.valid_days} days {r.active ? "" : "· inactive"}
+                  {r.valid_days} days
+                  {r.stock !== null && r.stock !== undefined ? ` · ${r.stock} left` : ""}
+                  {r.active ? "" : " · inactive"}
                 </p>
               </div>
               <div className="flex shrink-0 flex-col gap-1">
                 <button
-                  onClick={() => setForm({ ...r })}
+                  onClick={() => setForm({ ...r, stock: r.stock ?? "" })}
                   className="rounded-lg border border-border px-2 py-1 text-[11px] font-bold"
                 >
+
                   Edit
                 </button>
                 <button
@@ -469,6 +487,10 @@ function Rewards({ rows, settings, onDone }: { rows: any[]; settings: LoyaltySet
             valid_days: Math.trunc(Number(form.valid_days) || 180),
             active: Boolean(form.active),
             sort_order: Math.trunc(Number(form.sort_order) || 0),
+            kind: form.kind ?? "entry",
+            stock: String(form.stock ?? "").trim() === "" ? null : Math.trunc(Number(form.stock) || 0),
+            fulfilment_notes: form.fulfilment_notes ?? null,
+
           });
         }}
       >
@@ -519,9 +541,42 @@ function Rewards({ rows, settings, onDone }: { rows: any[]; settings: LoyaltySet
             />
           </Field>
         </div>
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="Category">
+            <select
+              value={form.kind ?? "entry"}
+              onChange={(e) => setForm({ ...form, kind: e.target.value })}
+              className="w-full rounded-lg border border-border px-3 py-2 text-sm"
+            >
+              {REWARD_KINDS.map((k) => (
+                <option key={k.key} value={k.key}>
+                  {k.label}
+                </option>
+              ))}
+            </select>
+          </Field>
+          <Field label="Stock (blank = unlimited)">
+            <input
+              value={form.stock ?? ""}
+              onChange={(e) => setForm({ ...form, stock: e.target.value })}
+              inputMode="numeric"
+              placeholder="—"
+              className="w-full rounded-lg border border-border px-3 py-2 text-sm"
+            />
+          </Field>
+        </div>
+        <Field label="Fulfilment notes (internal)">
+          <input
+            value={form.fulfilment_notes ?? ""}
+            onChange={(e) => setForm({ ...form, fulfilment_notes: e.target.value })}
+            placeholder="Hand out at registration desk"
+            className="w-full rounded-lg border border-border px-3 py-2 text-sm"
+          />
+        </Field>
         <Field label="Terms">
           <input value={form.terms ?? ""} onChange={(e) => setForm({ ...form, terms: e.target.value })} className="w-full rounded-lg border border-border px-3 py-2 text-sm" />
         </Field>
+
         <label className="flex items-center gap-2 text-xs font-semibold">
           <input
             type="checkbox"
@@ -674,6 +729,9 @@ function SettingsForm({ settings, onDone }: { settings: LoyaltySettings; onDone:
           loyaltyBonusPerYear: Math.trunc(Number(form.loyaltyBonusPerYear) || 0),
           pointsPerRand: Number(form.pointsPerRand) || 0,
           heroMultiplier: Number(form.heroMultiplier) || 1,
+          tierWindowMonths: Math.trunc(Number(form.tierWindowMonths) || 36),
+          tierHoldMonths: Math.trunc(Number(form.tierHoldMonths) || 12),
+          expiryMonths: Math.trunc(Number(form.expiryMonths) || 24),
           programName: String(form.programName || "Cherry Miles"),
         });
       }}
@@ -689,7 +747,7 @@ function SettingsForm({ settings, onDone }: { settings: LoyaltySettings; onDone:
           className="w-full rounded-lg border border-border px-3 py-2 text-sm"
         />
       </Field>
-      <Field label="Rand value per point (internal only)">
+      <Field label="Rand value per point when redeemed">
         <input
           value={form.randPerPoint}
           onChange={(e) => setForm({ ...form, randPerPoint: e.target.value })}
@@ -705,14 +763,38 @@ function SettingsForm({ settings, onDone }: { settings: LoyaltySettings; onDone:
           className="w-full rounded-lg border border-border px-3 py-2 text-sm"
         />
       </Field>
-      <Field label="Hero event multiplier">
-        <input
-          value={form.heroMultiplier}
-          onChange={(e) => setForm({ ...form, heroMultiplier: e.target.value })}
-          inputMode="decimal"
-          className="w-full rounded-lg border border-border px-3 py-2 text-sm"
-        />
-      </Field>
+      <p className="rounded-xl bg-secondary px-3 py-2 text-[11px] text-ink-soft">
+        Give-back = points per R1 × rand per point. At {form.pointsPerRand} × R{form.randPerPoint} riders get{" "}
+        <strong>{Math.round((Number(form.pointsPerRand) || 0) * (Number(form.randPerPoint) || 0) * 100)}%</strong> of
+        entry spend back in reward value. Every event earns the same rate — sell-out events are protected on the
+        redemption side instead.
+      </p>
+      <div className="grid grid-cols-3 gap-3">
+        <Field label="Tier window (months)">
+          <input
+            value={form.tierWindowMonths}
+            onChange={(e) => setForm({ ...form, tierWindowMonths: e.target.value })}
+            inputMode="numeric"
+            className="w-full rounded-lg border border-border px-3 py-2 text-sm"
+          />
+        </Field>
+        <Field label="Status hold (months)">
+          <input
+            value={form.tierHoldMonths}
+            onChange={(e) => setForm({ ...form, tierHoldMonths: e.target.value })}
+            inputMode="numeric"
+            className="w-full rounded-lg border border-border px-3 py-2 text-sm"
+          />
+        </Field>
+        <Field label="Points expire after (months idle)">
+          <input
+            value={form.expiryMonths}
+            onChange={(e) => setForm({ ...form, expiryMonths: e.target.value })}
+            inputMode="numeric"
+            className="w-full rounded-lg border border-border px-3 py-2 text-sm"
+          />
+        </Field>
+      </div>
       <Field label="Returning-rider bonus per prior event">
         <input
           value={form.loyaltyBonusPerYear}
@@ -725,6 +807,7 @@ function SettingsForm({ settings, onDone }: { settings: LoyaltySettings; onDone:
         <input type="checkbox" checked={Boolean(form.demoMode)} onChange={(e) => setForm({ ...form, demoMode: e.target.checked })} />
         Demo mode (riders see points as provisional)
       </label>
+
       <button className="rounded-lg bg-cherry px-3 py-1.5 text-xs font-bold text-white" disabled={mut.isPending}>
         Save settings
       </button>
@@ -738,5 +821,71 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
       <span className="mb-1 block text-[11px] font-bold uppercase tracking-wider text-ink-soft">{label}</span>
       {children}
     </label>
+  );
+}
+
+/**
+ * What the outstanding programme actually costs us. Entry discounts are pure
+ * revenue give-back; merch/experience/partner rewards cost far less than their
+ * face value, so we show both numbers side by side.
+ */
+const KIND_COST_FACTOR: Record<string, number> = {
+  entry: 1,
+  merch: 0.4,
+  experience: 0.25,
+  partner: 0,
+};
+
+function LiabilitySplit({
+  coupons,
+  rewards,
+  settings,
+}: {
+  coupons: any[];
+  rewards: any[];
+  settings: LoyaltySettings;
+}) {
+  const kindByReward = new Map<string, string>(rewards.map((r: any) => [r.id, r.kind ?? "entry"]));
+  const open = coupons.filter((c: any) => c.status !== "redeemed" && c.status !== "expired");
+
+  const rows = REWARD_KINDS.map((k) => {
+    const points = open
+      .filter((c: any) => (kindByReward.get(c.reward_id) ?? "entry") === k.key)
+      .reduce((sum: number, c: any) => sum + Number(c.points_spent ?? 0), 0);
+    const face = points * settings.randPerPoint;
+    return { ...k, points, face, cost: face * (KIND_COST_FACTOR[k.key] ?? 1) };
+  }).filter((r) => r.points > 0);
+
+  const totalFace = rows.reduce((s, r) => s + r.face, 0);
+  const totalCost = rows.reduce((s, r) => s + r.cost, 0);
+  const rands = (n: number) => `R${new Intl.NumberFormat("en-ZA", { maximumFractionDigits: 0 }).format(n)}`;
+
+  if (rows.length === 0) return null;
+
+  return (
+    <section className="rounded-2xl bg-card p-4 ring-1 ring-border">
+      <h2 className="font-display text-sm font-bold">Open coupon liability</h2>
+      <p className="mt-1 text-xs text-ink-soft">
+        Face value is what riders see; true cost assumes merch at 40% and experiences at 25% of face, with partner
+        perks funded by the sponsor.
+      </p>
+      <div className="mt-3 space-y-2">
+        {rows.map((r) => (
+          <div key={r.key} className="flex items-center justify-between text-sm">
+            <span className="font-semibold">{r.label}</span>
+            <span className="text-ink-soft">
+              {formatPoints(r.points)} pts · {rands(r.face)} face ·{" "}
+              <strong className="text-ink">{rands(r.cost)} cost</strong>
+            </span>
+          </div>
+        ))}
+        <div className="flex items-center justify-between border-t border-border pt-2 text-sm font-black">
+          <span>Total</span>
+          <span>
+            {rands(totalFace)} face · {rands(totalCost)} cost
+          </span>
+        </div>
+      </div>
+    </section>
   );
 }

@@ -3,7 +3,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { checkIsAdmin } from "./is-admin";
-import { DEFAULT_LOYALTY_SETTINGS, parseLoyaltySettings } from "./loyalty";
+import { DEFAULT_LOYALTY_SETTINGS, monthsAgo, parseLoyaltySettings } from "./loyalty";
 
 type Row = Record<string, any>;
 
@@ -37,6 +37,7 @@ export const getMyLoyalty = createServerFn({ method: "POST" })
       supabase.from("site_settings").select("value").eq("key", "loyalty").maybeSingle(),
       supabase.from("loyalty_rewards").select("*").eq("active", true).order("cost_points"),
     ]);
+    const settings = parseLoyaltySettings(settingsRow.data?.value ?? DEFAULT_LOYALTY_SETTINGS);
 
     let participation: Row[] = [];
     let coupons: Row[] = [];
@@ -57,7 +58,7 @@ export const getMyLoyalty = createServerFn({ method: "POST" })
       coupons = (c.data ?? []) as Row[];
     }
 
-    // What this rider has actually paid us, so we can show the 10%-back promise.
+    // What this rider has actually paid us, so we can show the pay-back promise.
     const enIds = [...new Set(participation.map((r) => Number(r.en_event_id)).filter(Boolean))];
     let priceById = new Map<number, number>();
     if (enIds.length) {
@@ -80,6 +81,29 @@ export const getMyLoyalty = createServerFn({ method: "POST" })
       if (when && when >= cutoff) spendCents3y += cents;
     }
 
+    // Tier runs on a rolling window; the previous window is held for a while.
+    const tierCutoff = monthsAgo(settings.tierWindowMonths);
+    const holdCutoff = monthsAgo(settings.tierWindowMonths + settings.tierHoldMonths);
+    let rollingPoints = 0;
+    let heldPoints = 0;
+    for (const l of ledger) {
+      if (Number(l.points) <= 0) continue;
+      const when = new Date(String(l.created_at));
+      if (when >= tierCutoff) rollingPoints += Number(l.points);
+      if (when >= holdCutoff) heldPoints += Number(l.points);
+    }
+
+    // Points expire after a spell of inactivity — warn inside the last 90 days.
+    const lastActivity = ledger.length
+      ? new Date(String(ledger[0]?.created_at))
+      : null;
+    let expiresAt: string | null = null;
+    if (settings.expiryMonths > 0 && lastActivity && balance > 0) {
+      const d = new Date(lastActivity);
+      d.setMonth(d.getMonth() + settings.expiryMonths);
+      expiresAt = d.toISOString();
+    }
+
     return {
       linked: entrantIds.length > 0,
       balance,
@@ -90,10 +114,14 @@ export const getMyLoyalty = createServerFn({ method: "POST" })
       coupons,
       spendCents,
       spendCents3y,
+      rollingPoints,
+      heldPoints,
+      expiresAt,
       rewards: (rewardsRes.data ?? []) as Row[],
-      settings: parseLoyaltySettings(settingsRow.data?.value ?? DEFAULT_LOYALTY_SETTINGS),
+      settings,
     };
   });
+
 
 
 /** Cash out points for a reward — mints a coupon code and debits the ledger. */
@@ -113,6 +141,10 @@ export const redeemReward = createServerFn({ method: "POST" })
       .maybeSingle();
     if (!reward) return { ok: false as const, error: "That reward is no longer available." };
 
+    if (reward.stock !== null && Number(reward.stock) <= 0) {
+      return { ok: false as const, error: "That reward is sold out for now." };
+    }
+
     const { balance } = await balanceFor(supabase, entrantIds);
     if (balance < Number(reward.cost_points)) {
       return { ok: false as const, error: "Not enough points for this reward yet." };
@@ -123,6 +155,14 @@ export const redeemReward = createServerFn({ method: "POST" })
     const entrantId = entrantIds[0] as string;
     const code = generateCouponCode();
     const expires = new Date(Date.now() + Number(reward.valid_days ?? 180) * 86400000).toISOString();
+
+    if (reward.stock !== null) {
+      await supabaseAdmin
+        .from("loyalty_rewards")
+        .update({ stock: Math.max(0, Number(reward.stock) - 1) })
+        .eq("id", reward.id);
+    }
+
 
     const { data: coupon, error } = await supabaseAdmin
       .from("loyalty_coupons")
@@ -147,14 +187,19 @@ export const redeemReward = createServerFn({ method: "POST" })
       created_by: userId,
     });
 
-    // Register the code on Entry Ninja so it can be used at checkout there too.
-    let enResult = { status: "manual", message: "Queued for Entry Ninja." };
-    try {
-      const { pushCouponToEntryNinja } = await import("./loyalty.server");
-      enResult = await pushCouponToEntryNinja(supabaseAdmin as any, coupon.id);
-    } catch {
-      /* redemption still stands even if Entry Ninja is unreachable */
+    // Only entry discounts need to exist at Entry Ninja checkout; merch,
+    // experience and partner rewards are redeemed in person from the app.
+    let enResult = { status: "in-app", message: "Show this code at the Red Cherry stand." };
+    if (reward.kind === "entry" || !reward.kind) {
+      enResult = { status: "manual", message: "Queued for Entry Ninja." };
+      try {
+        const { pushCouponToEntryNinja } = await import("./loyalty.server");
+        enResult = await pushCouponToEntryNinja(supabaseAdmin as any, coupon.id);
+      } catch {
+        /* redemption still stands even if Entry Ninja is unreachable */
+      }
     }
+
 
     return { ok: true as const, coupon, entryNinja: enResult };
   });
@@ -248,7 +293,10 @@ export const saveLoyaltySettingsFn = createServerFn({ method: "POST" })
         randPerPoint: z.number().min(0).max(100),
         loyaltyBonusPerYear: z.number().int().min(0).max(10000),
         pointsPerRand: z.number().min(0).max(100).default(0.1),
-        heroMultiplier: z.number().min(1).max(10).default(2),
+        heroMultiplier: z.number().min(1).max(10).default(1),
+        tierWindowMonths: z.number().int().min(6).max(120).default(36),
+        tierHoldMonths: z.number().int().min(0).max(60).default(12),
+        expiryMonths: z.number().int().min(0).max(120).default(24),
         programName: z.string().trim().min(1).max(60),
       })
       .parse(d),
@@ -260,6 +308,7 @@ export const saveLoyaltySettingsFn = createServerFn({ method: "POST" })
     return saveLoyaltySettings(supabase, data);
   });
 
+
 export const setEventPoints = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) =>
@@ -269,6 +318,7 @@ export const setEventPoints = createServerFn({ method: "POST" })
         points: z.number().int().min(0).max(100000),
         entryPriceCents: z.number().int().min(0).max(100000000).nullable().optional(),
         hero: z.boolean().optional(),
+        sellsOut: z.boolean().optional(),
       })
       .parse(d),
   )
@@ -281,10 +331,12 @@ export const setEventPoints = createServerFn({ method: "POST" })
       patch['price_source'] = "manual";
     }
     if (data.hero !== undefined) patch['hero'] = data.hero;
+    if (data.sellsOut !== undefined) patch['sells_out'] = data.sellsOut;
     const { error } = await supabase.from("loyalty_event_values").update(patch).eq("id", data.id);
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
 
 /** Re-value every event from what riders actually paid to enter it. */
 export const applyPriceValues = createServerFn({ method: "POST" })
@@ -322,6 +374,10 @@ export const saveReward = createServerFn({ method: "POST" })
         valid_days: z.number().int().min(1).max(3650).default(180),
         active: z.boolean().default(true),
         sort_order: z.number().int().min(0).max(999).default(0),
+        kind: z.enum(["entry", "merch", "experience", "partner"]).default("entry"),
+        stock: z.number().int().min(0).max(100000).nullable().default(null),
+        fulfilment_notes: z.string().trim().max(500).nullable().default(null),
+
       })
       .parse(d),
   )
