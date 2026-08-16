@@ -160,13 +160,14 @@ function SpectatorCard({ event }: { event: Event }) {
         {unlocked ? (
           <>
             <span className="text-xs font-semibold text-ink">
-              {countdown ?? "Details available"}
+              {adminPreview ? "Admin preview" : (countdown ?? "Details available")}
             </span>
             <span className="inline-flex items-center gap-1 text-xs font-semibold text-cherry">
               View details <ChevronRight className="h-3.5 w-3.5" />
             </span>
           </>
         ) : (
+
           <>
             <span className="inline-flex items-center gap-1 text-xs font-semibold text-ink-soft">
               <Lock className="h-3.5 w-3.5" />
