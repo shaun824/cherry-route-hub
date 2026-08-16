@@ -53,6 +53,7 @@ export const Route = createFileRoute("/spectate/$eventId")({
 });
 
 type Tab = "info" | "riders" | "results";
+type GroupBy = "start" | "bib" | "category" | "name";
 
 function riderResultUrl(template: string | null, bib: string | null) {
   if (!template || !bib) return null;
