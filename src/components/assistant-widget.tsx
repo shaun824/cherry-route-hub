@@ -97,7 +97,13 @@ export function AssistantWidget() {
 
       {open ? (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-0 md:items-center md:p-6">
-          <div className="flex h-[85vh] w-full max-w-md flex-col rounded-t-3xl bg-card shadow-xl md:h-[600px] md:rounded-3xl">
+          <div
+            className="flex w-full max-w-md flex-col overflow-hidden rounded-t-3xl bg-card shadow-xl md:h-[600px] md:rounded-3xl"
+            style={{
+              height: "min(78dvh, 640px)",
+              paddingBottom: "env(safe-area-inset-bottom)",
+            }}
+          >
             <div className="flex items-start justify-between gap-3 border-b border-border p-4">
               <div className="flex items-center gap-2">
                 <span className="grid h-9 w-9 place-items-center rounded-full bg-cherry text-white">
@@ -143,8 +149,8 @@ export function AssistantWidget() {
                   key={i}
                   className={
                     m.role === "user"
-                      ? "ml-auto max-w-[85%] rounded-2xl bg-cherry px-3 py-2 text-sm text-white"
-                      : "max-w-[85%] rounded-2xl bg-secondary px-3 py-2 text-sm text-ink"
+                      ? "ml-auto max-w-[85%] break-words rounded-2xl bg-cherry px-3 py-2 text-sm text-white"
+                      : "max-w-[85%] break-words rounded-2xl bg-secondary px-3 py-2 text-sm text-ink"
                   }
                 >
                   {m.role === "user" ? (
