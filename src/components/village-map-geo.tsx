@@ -486,7 +486,7 @@ export default function VillageMapGeo({
                 radius={7}
                 pathOptions={{ color: "#ffffff", weight: 3, fillColor: "#2563eb", fillOpacity: 1 }}
               >
-                <Popup>You are here</Popup>
+                <Popup autoPan={false} keepInView={false}>You are here</Popup>
               </CircleMarker>
             </>
           ) : null}
