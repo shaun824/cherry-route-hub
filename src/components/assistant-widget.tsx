@@ -264,9 +264,12 @@ export function AssistantWidget() {
                     {showReport ? "Hide report form" : "Report a problem instead"}
                   </span>
                 </button>
-                <div className="shrink-0">
-                  <WhatsappButton context="the Rider Hub app" size="sm" />
-                </div>
+                {escalated ? (
+                  <div className="shrink-0">
+                    <WhatsappButton context="the Rider Hub app" size="sm" />
+                  </div>
+                ) : null}
+
               </div>
 
 
