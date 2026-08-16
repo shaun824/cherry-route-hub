@@ -313,7 +313,7 @@ function EventValues({ rows, settings, onDone }: { rows: any[]; settings: Loyalt
                     {r.event_name}
                     {r.hero ? (
                       <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-accent px-2 py-0.5 text-[10px] font-black uppercase text-cherry-deep">
-                        <Star className="h-3 w-3" /> Hero
+                        <Star className="h-3 w-3" /> Sells out
                       </span>
                     ) : null}
                   </td>
@@ -331,16 +331,19 @@ function EventValues({ rows, settings, onDone }: { rows: any[]; settings: Loyalt
                     <input
                       type="checkbox"
                       checked={Boolean(r.hero)}
+                      title="Entry discounts can't be redeemed against events that sell out"
                       onChange={(e) =>
                         mut.mutate({
                           id: r.id,
                           hero: e.target.checked,
+                          sellsOut: e.target.checked,
                           entryPriceCents: Math.round((Number(price) || 0) * 100) || null,
                           points: pointsFromPrice(Math.round((Number(price) || 0) * 100), e.target.checked, settings),
                         })
                       }
                     />
                   </td>
+
                   <td className="px-3 py-2">
                     <input
                       value={points}
