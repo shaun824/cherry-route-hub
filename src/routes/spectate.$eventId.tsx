@@ -437,7 +437,10 @@ function SpectatorEventPage() {
               )}
             </div>
           )}
+          </>
+          )}
         </div>
+
       ) : null}
 
       {tab === "results" ? (
