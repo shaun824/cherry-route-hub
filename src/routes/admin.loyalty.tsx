@@ -401,13 +401,13 @@ function Rewards({ rows, settings, onDone }: { rows: any[]; settings: LoyaltySet
           <Gift className="h-4 w-4 text-cherry" /> {form.id ? "Edit reward" : "New reward"}
         </h3>
         <Field label="Name">
-          <input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="input" />
+          <input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="w-full rounded-lg border border-border px-3 py-2 text-sm" />
         </Field>
         <Field label="Description">
           <textarea
             value={form.description ?? ""}
             onChange={(e) => setForm({ ...form, description: e.target.value })}
-            className="input h-20"
+            className="h-20 w-full rounded-lg border border-border px-3 py-2 text-sm"
           />
         </Field>
         <div className="grid grid-cols-2 gap-3">
@@ -416,14 +416,14 @@ function Rewards({ rows, settings, onDone }: { rows: any[]; settings: LoyaltySet
               value={form.cost_points}
               onChange={(e) => setForm({ ...form, cost_points: e.target.value })}
               inputMode="numeric"
-              className="input"
+              className="w-full rounded-lg border border-border px-3 py-2 text-sm"
             />
           </Field>
           <Field label="Value badge">
             <input
               value={form.value_label ?? ""}
               onChange={(e) => setForm({ ...form, value_label: e.target.value })}
-              className="input"
+              className="w-full rounded-lg border border-border px-3 py-2 text-sm"
               placeholder="R150"
             />
           </Field>
@@ -432,7 +432,7 @@ function Rewards({ rows, settings, onDone }: { rows: any[]; settings: LoyaltySet
               value={form.valid_days}
               onChange={(e) => setForm({ ...form, valid_days: e.target.value })}
               inputMode="numeric"
-              className="input"
+              className="w-full rounded-lg border border-border px-3 py-2 text-sm"
             />
           </Field>
           <Field label="Sort order">
@@ -440,12 +440,12 @@ function Rewards({ rows, settings, onDone }: { rows: any[]; settings: LoyaltySet
               value={form.sort_order}
               onChange={(e) => setForm({ ...form, sort_order: e.target.value })}
               inputMode="numeric"
-              className="input"
+              className="w-full rounded-lg border border-border px-3 py-2 text-sm"
             />
           </Field>
         </div>
         <Field label="Terms">
-          <input value={form.terms ?? ""} onChange={(e) => setForm({ ...form, terms: e.target.value })} className="input" />
+          <input value={form.terms ?? ""} onChange={(e) => setForm({ ...form, terms: e.target.value })} className="w-full rounded-lg border border-border px-3 py-2 text-sm" />
         </Field>
         <label className="flex items-center gap-2 text-xs font-semibold">
           <input
@@ -570,14 +570,14 @@ function SettingsForm({ settings, onDone }: { settings: LoyaltySettings; onDone:
       }}
     >
       <Field label="Programme name">
-        <input value={form.programName} onChange={(e) => setForm({ ...form, programName: e.target.value })} className="input" />
+        <input value={form.programName} onChange={(e) => setForm({ ...form, programName: e.target.value })} className="w-full rounded-lg border border-border px-3 py-2 text-sm" />
       </Field>
       <Field label="Default points per event">
         <input
           value={form.defaultPoints}
           onChange={(e) => setForm({ ...form, defaultPoints: e.target.value })}
           inputMode="numeric"
-          className="input"
+          className="w-full rounded-lg border border-border px-3 py-2 text-sm"
         />
       </Field>
       <Field label="Rand value per point (internal only)">
@@ -585,7 +585,7 @@ function SettingsForm({ settings, onDone }: { settings: LoyaltySettings; onDone:
           value={form.randPerPoint}
           onChange={(e) => setForm({ ...form, randPerPoint: e.target.value })}
           inputMode="decimal"
-          className="input"
+          className="w-full rounded-lg border border-border px-3 py-2 text-sm"
         />
       </Field>
       <Field label="Returning-rider bonus per prior event">
@@ -593,7 +593,7 @@ function SettingsForm({ settings, onDone }: { settings: LoyaltySettings; onDone:
           value={form.loyaltyBonusPerYear}
           onChange={(e) => setForm({ ...form, loyaltyBonusPerYear: e.target.value })}
           inputMode="numeric"
-          className="input"
+          className="w-full rounded-lg border border-border px-3 py-2 text-sm"
         />
       </Field>
       <label className="flex items-center gap-2 text-xs font-semibold">
