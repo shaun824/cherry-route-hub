@@ -459,7 +459,7 @@ function SportSection({
             />
           </button>
         ) : (
-          <h2 className="flex items-center gap-2 font-display text-[15px] font-bold uppercase tracking-wider text-ink-soft">
+          <h2 className="flex items-center gap-2 font-display text-base font-bold tracking-tight text-ink">
             <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-accent text-cherry-deep">
               <Icon className="h-3.5 w-3.5" />
             </span>
