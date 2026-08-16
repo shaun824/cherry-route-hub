@@ -83,7 +83,7 @@ function Home() {
   const qlCols = Math.min(Math.max(quickLinks.length, 1), 4);
   // Home shows every supplier offer: admin-managed promos + the Weekend Warrior partner set.
   const homePromos = useMemo(() => {
-    const list = promos.map((p) => ({
+    const list: EventPromo[] = promos.map((p) => ({
       id: p.id,
       brand: p.brand,
       title: p.title,
