@@ -286,13 +286,24 @@ export default function VillageMapGeo({
   const [bearing, setBearing] = useState(0);
 
   const [zoom, setZoom] = useState(17);
+  // Shown once as the map loads on touch devices, then dismissed for good on
+  // the first touch — re-showing it on every single tap got in the way.
   const [twoFingerHint, setTwoFingerHint] = useState(false);
   const hintTimer = useRef<number | null>(null);
-  const showTwoFingerHint = useCallback(() => {
-    setTwoFingerHint(true);
+  const dismissTwoFingerHint = useCallback(() => {
     if (hintTimer.current) window.clearTimeout(hintTimer.current);
-    hintTimer.current = window.setTimeout(() => setTwoFingerHint(false), 1800);
+    setTwoFingerHint(false);
   }, []);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (!window.matchMedia?.("(pointer: coarse)")?.matches) return;
+    setTwoFingerHint(true);
+    hintTimer.current = window.setTimeout(() => setTwoFingerHint(false), 4000);
+    return () => {
+      if (hintTimer.current) window.clearTimeout(hintTimer.current);
+    };
+  }, []);
+
   const watchRef = useRef<number | null>(null);
 
 
