@@ -261,8 +261,58 @@ function SpectatorEventPage() {
 
       {tab === "info" ? (
         <div className="px-5 pt-5 pb-8 space-y-4 animate-fade-in">
+          {/* Location + navigate */}
+          <section>
+            <h2 className="font-display text-[13px] font-bold uppercase tracking-wider text-ink-soft">
+              Getting there
+            </h2>
+            {(() => {
+              const address = info?.venue_address || event.location || null;
+              const mapUrl = event.mapQuery || info?.map_embed_url || null;
+              const mapLink = buildMapLink({ mapUrl, address });
+              const embedSrc = buildMapEmbedSrc({ mapUrl, address });
+              const point =
+                info?.venue_lat != null && info?.venue_lng != null
+                  ? { lat: Number(info.venue_lat), lng: Number(info.venue_lng) }
+                  : resolveVenuePoint({ mapUrl });
+              if (!mapLink || (!embedSrc && !point))
+                return <p className="mt-3 text-xs text-ink-soft">No venue set yet.</p>;
+              return (
+                <a
+                  href={mapLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-3 block overflow-hidden rounded-2xl ring-1 ring-border"
+                >
+                  {point ? (
+                    <div className="pointer-events-none h-44 w-full">
+                      <VenueMiniMap lat={point.lat} lng={point.lng} height="176px" />
+                    </div>
+                  ) : (
+                    <iframe
+                      title="Event venue map"
+                      src={embedSrc!}
+                      className="pointer-events-none h-44 w-full"
+                      loading="lazy"
+                      referrerPolicy="no-referrer-when-downgrade"
+                    />
+                  )}
+                  <div className="flex items-center justify-between gap-3 bg-card px-3 py-2 text-xs">
+                    <span className="min-w-0 flex-1 truncate font-semibold text-ink">
+                      {address || "Event venue"}
+                    </span>
+                    <span className="shrink-0 font-semibold text-cherry">Navigate ↗</span>
+                  </div>
+                </a>
+              );
+            })()}
+          </section>
+
+          {/* Spectator essentials */}
           <FactCard icon={Car} title="Parking">
-            {event.spectatorParking ?? "Parking details will be shared closer to race day."}
+            {event.spectatorParking ??
+              info?.parking_notes ??
+              "Parking details will be shared closer to race day."}
           </FactCard>
 
           <FactCard icon={Coffee} title="Food & refreshments">
@@ -281,46 +331,37 @@ function SpectatorEventPage() {
             </FactCard>
           ) : null}
 
-          {/* Location + navigate */}
-          <section>
-            <h2 className="font-display text-[13px] font-bold uppercase tracking-wider text-ink-soft">
-              Venue
-            </h2>
-            {event.mapQuery || event.location ? (() => {
-              const mapLink = buildMapLink({ mapUrl: event.mapQuery, address: event.location });
-              const embedSrc = buildMapEmbedSrc({ mapUrl: event.mapQuery, address: event.location });
-              const venuePoint = resolveVenuePoint({ mapUrl: event.mapQuery });
-              if (!mapLink || (!embedSrc && !venuePoint)) return <p className="mt-3 text-xs text-ink-soft">No venue set yet.</p>;
-              return (
-              <a
-                href={mapLink}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-3 block overflow-hidden rounded-2xl ring-1 ring-border"
-              >
-                {venuePoint ? (
-                  <div className="pointer-events-none h-44 w-full">
-                    <VenueMiniMap lat={venuePoint.lat} lng={venuePoint.lng} height="176px" />
+          {/* Route / what to expect out there */}
+          {info?.route_description || info?.distance_km || info?.elevation_m ? (
+            <section>
+              <h2 className="font-display text-[13px] font-bold uppercase tracking-wider text-ink-soft">
+                The racing
+              </h2>
+              <div className="mt-3 rounded-2xl bg-card p-4 ring-1 ring-border">
+                {info?.distance_km || info?.elevation_m ? (
+                  <div className="mb-2 flex flex-wrap gap-2">
+                    {info?.distance_km ? (
+                      <span className="rounded-full bg-accent px-3 py-1 text-[11px] font-bold text-cherry-deep">
+                        {Math.round(Number(info.distance_km))} km
+                      </span>
+                    ) : null}
+                    {info?.elevation_m ? (
+                      <span className="rounded-full bg-accent px-3 py-1 text-[11px] font-bold text-cherry-deep">
+                        {Math.round(Number(info.elevation_m))} m climbing
+                      </span>
+                    ) : null}
                   </div>
-                ) : (
-                  <iframe
-                    title="Event venue map"
-                    src={embedSrc!}
-                    className="pointer-events-none h-44 w-full"
-                    loading="lazy"
-                    referrerPolicy="no-referrer-when-downgrade"
-                  />
-                )}
-                <div className="flex items-center justify-between bg-card px-3 py-2 text-xs">
-                  <span className="font-semibold text-ink">{event.mapQuery || event.location}</span>
-                  <span className="font-semibold text-cherry">Navigate ↗</span>
-                </div>
-              </a>
-              );
-            })() : (
-              <p className="mt-3 text-xs text-ink-soft">No venue set yet.</p>
-            )}
-          </section>
+                ) : null}
+                {info?.route_description ? (
+                  <p className="whitespace-pre-line text-sm leading-relaxed text-ink-soft">
+                    {info.route_description.length > 320
+                      ? `${info.route_description.slice(0, 320).trim()}…`
+                      : info.route_description}
+                  </p>
+                ) : null}
+              </div>
+            </section>
+          ) : null}
 
           {/* Batch start times */}
           {batches.length > 0 ? (
@@ -350,8 +391,73 @@ function SpectatorEventPage() {
               </ul>
             </section>
           ) : null}
+
+          {/* Spectator-relevant schedule highlights */}
+          {spectatorSchedule.length > 0 ? (
+            <section>
+              <h2 className="font-display text-[13px] font-bold uppercase tracking-wider text-ink-soft">
+                Key moments to catch
+              </h2>
+              <ul className="mt-3 space-y-2">
+                {spectatorSchedule.map((s, i) => (
+                  <li
+                    key={`${s.time}-${i}`}
+                    className="flex items-center gap-3 rounded-xl bg-card p-3 ring-1 ring-border"
+                  >
+                    <span className="grid h-9 w-14 shrink-0 place-items-center rounded-md bg-accent font-mono text-xs font-bold text-cherry-deep">
+                      {s.time || "—"}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-semibold text-ink">{s.title}</p>
+                      {s.day ? <p className="text-[11px] text-ink-soft">{s.day}</p> : null}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ) : null}
+
+          {/* Emergency contacts */}
+          {info?.emergency_contacts?.length ? (
+            <section>
+              <h2 className="font-display text-[13px] font-bold uppercase tracking-wider text-ink-soft">
+                Emergency contacts
+              </h2>
+              <ul className="mt-3 space-y-2">
+                {info.emergency_contacts.map((c, i) => (
+                  <li key={`${c.phone}-${i}`}>
+                    <a
+                      href={`tel:${c.phone.replace(/\s+/g, "")}`}
+                      className="flex items-center justify-between rounded-xl bg-card p-3 ring-1 ring-border"
+                    >
+                      <span className="text-sm font-semibold text-ink">{c.label}</span>
+                      <span className="text-sm font-semibold text-cherry">{c.phone}</span>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ) : null}
+
+          {/* Spectator FAQs */}
+          {spectatorFaqs.length > 0 ? (
+            <section>
+              <h2 className="font-display text-[13px] font-bold uppercase tracking-wider text-ink-soft">
+                Spectator questions
+              </h2>
+              <div className="mt-3 space-y-2">
+                {spectatorFaqs.map((f, i) => (
+                  <details key={i} className="rounded-xl bg-card p-3 ring-1 ring-border">
+                    <summary className="cursor-pointer text-sm font-semibold text-ink">{f.q}</summary>
+                    <p className="mt-2 whitespace-pre-line text-sm text-ink-soft">{f.a}</p>
+                  </details>
+                ))}
+              </div>
+            </section>
+          ) : null}
         </div>
       ) : null}
+
 
       {tab === "riders" ? (
         <div className="px-5 pt-4 pb-8 animate-fade-in">
