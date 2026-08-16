@@ -107,6 +107,9 @@ function AdminLoyalty() {
         <Kpi icon={Ticket} label="Exposure at current rate" value={liability} />
       </div>
 
+      <LiabilitySplit coupons={data.coupons ?? []} rewards={data.rewards ?? []} settings={s} />
+
+
       <div className="flex flex-wrap gap-1 rounded-xl bg-secondary p-1">
         {(
           [
