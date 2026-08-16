@@ -56,6 +56,43 @@ function clearPending() {
   }
 }
 
+type PasswordCredentialCtor = new (d: {
+  id: string;
+  password: string;
+  name?: string;
+}) => Credential;
+
+function passwordCredentialCtor(): PasswordCredentialCtor | undefined {
+  return (window as unknown as { PasswordCredential?: PasswordCredentialCtor }).PasswordCredential;
+}
+
+/** Ask the browser / keychain to remember this login. */
+async function saveCredential(email: string, password: string) {
+  try {
+    const Ctor = passwordCredentialCtor();
+    if (Ctor && navigator.credentials?.store) {
+      await navigator.credentials.store(new Ctor({ id: email, password, name: email }));
+    }
+  } catch {
+    /* Safari falls back to its own save prompt */
+  }
+}
+
+/** Pull a saved login out of the keychain to pre-fill the email field. */
+async function readSavedEmail(): Promise<string | null> {
+  try {
+    if (!passwordCredentialCtor() || !navigator.credentials?.get) return null;
+    const cred = (await navigator.credentials.get({
+      password: true,
+      mediation: "optional",
+    } as CredentialRequestOptions)) as (Credential & { id?: string }) | null;
+    return cred?.id ?? null;
+  } catch {
+    return null;
+  }
+}
+
+
 export const Route = createFileRoute("/auth")({
   validateSearch: searchSchema,
   head: () => ({
