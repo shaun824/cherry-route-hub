@@ -33,6 +33,9 @@ import { useSession } from "@/lib/auth";
 import { brandHeader } from "@/lib/event-brand";
 import { buildMapEmbedSrc, buildMapLink, resolveVenuePoint } from "@/lib/map-embed";
 import { VenueMiniMap } from "@/components/venue-mini-map";
+import { VillageMapView } from "@/components/village-map-view";
+import { fetchVillageMap } from "@/lib/village-map";
+
 import { fetchEventInfo } from "@/lib/event-info";
 import { groupRidersByClass } from "@/lib/rider-classes";
 import { eventPromosFor } from "@/lib/event-promos";
