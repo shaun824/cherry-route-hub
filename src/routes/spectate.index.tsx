@@ -48,6 +48,30 @@ function SpectatePage() {
       });
   }, [events, filter]);
 
+  // Preload rider rosters for signed-in riders so race-week lists open instantly.
+  const { user } = useSession();
+  const queryClient = useQueryClient();
+  const fetchRiders = useServerFn(getEventRiders);
+  useEffect(() => {
+    if (!user) return;
+    const now = Date.now();
+    const soon = events
+      .filter((e) => {
+        const t = new Date(e.date).getTime();
+        return t - now <= ROSTER_WINDOW_DAYS * 86400000 && t + 3 * 86400000 >= now;
+      })
+      .slice(0, 3);
+    for (const e of soon) {
+      void queryClient.prefetchQuery({
+        queryKey: ["event-riders", e.id, user.id],
+        queryFn: () => fetchRiders({ data: { eventId: e.id } }),
+        staleTime: 60_000,
+      });
+    }
+  }, [events, user, queryClient, fetchRiders]);
+
+
+
   return (
     <div>
       <PageHeader title="Track riders" subtitle="Rider lists, bib numbers and results" />
