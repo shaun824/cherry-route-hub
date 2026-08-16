@@ -94,6 +94,27 @@ export function tierFor(points: number): { tier: Tier; next: Tier | null; toNext
   return { tier, next, toNext, progress };
 }
 
+/**
+ * Tier on a rolling window, with a status hold so a rider who skips a season
+ * keeps the tier they earned for a while longer.
+ */
+export function tierForRolling(
+  rollingPoints: number,
+  heldPoints: number,
+): { tier: Tier; next: Tier | null; toNext: number; progress: number; held: boolean } {
+  const live = tierFor(rollingPoints);
+  const hold = tierFor(Math.max(rollingPoints, heldPoints));
+  const held = hold.tier.min > live.tier.min;
+  return { ...live, tier: held ? hold.tier : live.tier, held };
+}
+
+/** Date cutoff N months back from now. */
+export function monthsAgo(months: number): Date {
+  const d = new Date();
+  d.setMonth(d.getMonth() - Math.max(0, Math.round(months)));
+  return d;
+}
+
 export function formatPoints(points: number): string {
   return new Intl.NumberFormat("en-ZA").format(Math.round(points));
 }
@@ -102,18 +123,21 @@ export function randValue(points: number, randPerPoint: number): string {
   return `R${new Intl.NumberFormat("en-ZA", { maximumFractionDigits: 0 }).format(points * randPerPoint)}`;
 }
 
-/** Entry price (in cents) → loyalty points, with a bump for hero events. */
+/**
+ * Entry price (in cents) → loyalty points. Every event earns at the same rate;
+ * sell-out events are handled on the redemption side, not by earning more.
+ */
 export function pointsFromPrice(
   entryPriceCents: number | null | undefined,
-  hero: boolean,
+  _hero: boolean,
   settings: Pick<LoyaltySettings, "pointsPerRand" | "heroMultiplier" | "defaultPoints">,
 ): number {
   const rand = Number(entryPriceCents ?? 0) / 100;
   if (!Number.isFinite(rand) || rand <= 0) return settings.defaultPoints;
   const base = rand * settings.pointsPerRand;
-  const scaled = hero ? base * (settings.heroMultiplier || 1) : base;
-  return Math.max(0, Math.round(scaled / 5) * 5);
+  return Math.max(0, Math.round(base / 5) * 5);
 }
+
 
 export function formatRand(cents: number | null | undefined): string {
   const n = Number(cents ?? 0) / 100;
