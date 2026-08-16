@@ -3,9 +3,11 @@ import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Coins, Gift, RefreshCw, Ticket, Trophy, Users, DownloadCloud } from "lucide-react";
+import { Coins, Gift, RefreshCw, Send, Star, Ticket, Trophy, Users, DownloadCloud } from "lucide-react";
 import {
   adjustRiderPoints,
+  applyPriceValues,
+  pushCouponToEn,
   deleteReward,
   getLoyaltyAdmin,
   markCouponRedeemed,
@@ -15,7 +17,7 @@ import {
   saveReward,
   setEventPoints,
 } from "@/lib/loyalty.functions";
-import { formatPoints, randValue, tierFor, type LoyaltySettings } from "@/lib/loyalty";
+import { formatPoints, pointsFromPrice, randValue, tierFor, type LoyaltySettings } from "@/lib/loyalty";
 
 export const Route = createFileRoute("/admin/loyalty")({
   component: AdminLoyalty,
@@ -244,11 +246,22 @@ function Leaderboard({ rows, onDone }: { rows: any[]; onDone: () => void }) {
 
 function EventValues({ rows, settings, onDone }: { rows: any[]; settings: LoyaltySettings; onDone: () => void }) {
   const save = useServerFn(setEventPoints);
-  const [draft, setDraft] = useState<Record<string, string>>({});
+  const priceRun = useServerFn(applyPriceValues);
+  const [draft, setDraft] = useState<Record<string, { points: string; price: string }>>({});
   const mut = useMutation({
-    mutationFn: (v: { id: string; points: number }) => save({ data: v }),
+    mutationFn: (v: { id: string; points: number; entryPriceCents: number | null; hero?: boolean }) =>
+      save({ data: v }),
     onSuccess: () => {
       toast.success("Event value saved");
+      setDraft({});
+      onDone();
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+  const priceMut = useMutation({
+    mutationFn: () => priceRun({ data: {} } as never),
+    onSuccess: (r: any) => {
+      toast.success(`${r.updated} events re-valued from entry price (${r.skipped} still need a price)`);
       onDone();
     },
     onError: (e: Error) => toast.error(e.message),
@@ -256,16 +269,28 @@ function EventValues({ rows, settings, onDone }: { rows: any[]; settings: Loyalt
 
   return (
     <div className="rounded-2xl bg-card ring-1 ring-border">
-      <p className="border-b border-border p-3 text-xs text-ink-soft">
-        Points awarded to each rider who completed the event. Default for new events: {settings.defaultPoints} pts (≈{" "}
-        {randValue(settings.defaultPoints, settings.randPerPoint)} of value).
-      </p>
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border p-3">
+        <p className="text-xs text-ink-soft">
+          Points follow the entry fee: <strong>{settings.pointsPerRand} pt per R1</strong> (R1 000 entry ≈{" "}
+          {formatPoints(1000 * settings.pointsPerRand)} pts). Hero events pay {settings.heroMultiplier}×. Events with no
+          price fall back to {settings.defaultPoints} pts.
+        </p>
+        <button
+          onClick={() => priceMut.mutate()}
+          disabled={priceMut.isPending}
+          className="rounded-lg bg-ink px-3 py-1.5 text-[11px] font-bold text-white disabled:opacity-50"
+        >
+          {priceMut.isPending ? "Valuing…" : "Value events from entry price"}
+        </button>
+      </div>
       <div className="max-h-[600px] overflow-auto">
         <table className="w-full text-sm">
           <thead className="sticky top-0 bg-secondary text-left text-[11px] uppercase tracking-wide text-ink-soft">
             <tr>
               <th className="px-3 py-2">Event</th>
               <th className="px-3 py-2">Date</th>
+              <th className="px-3 py-2">Entry price (R)</th>
+              <th className="px-3 py-2">Hero</th>
               <th className="px-3 py-2">Points</th>
               <th className="px-3 py-2">Worth</th>
               <th className="px-3 py-2" />
@@ -273,24 +298,74 @@ function EventValues({ rows, settings, onDone }: { rows: any[]; settings: Loyalt
           </thead>
           <tbody>
             {rows.map((r) => {
-              const value = draft[r.id] ?? String(r.points);
+              const d = draft[r.id];
+              const price = d?.price ?? (r.entry_price_cents ? String(Math.round(r.entry_price_cents / 100)) : "");
+              const points = d?.points ?? String(r.points);
+              const set = (patch: Partial<{ points: string; price: string }>) =>
+                setDraft((prev) => ({ ...prev, [r.id]: { points, price, ...patch } }));
+              const suggested = pointsFromPrice(Math.round((Number(price) || 0) * 100), Boolean(r.hero), settings);
+              const dirty = points !== String(r.points) || price !== (r.entry_price_cents ? String(Math.round(r.entry_price_cents / 100)) : "");
               return (
                 <tr key={r.id} className="border-t border-border">
-                  <td className="px-3 py-2 font-semibold">{r.event_name}</td>
+                  <td className="px-3 py-2 font-semibold">
+                    {r.event_name}
+                    {r.hero ? (
+                      <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-accent px-2 py-0.5 text-[10px] font-black uppercase text-cherry-deep">
+                        <Star className="h-3 w-3" /> Hero
+                      </span>
+                    ) : null}
+                  </td>
                   <td className="px-3 py-2 text-ink-soft">{r.event_date ?? "—"}</td>
                   <td className="px-3 py-2">
                     <input
-                      value={value}
-                      onChange={(e) => setDraft((d) => ({ ...d, [r.id]: e.target.value }))}
+                      value={price}
+                      onChange={(e) => set({ price: e.target.value })}
                       inputMode="numeric"
+                      placeholder="—"
                       className="w-24 rounded-lg border border-border px-2 py-1 text-sm"
                     />
                   </td>
-                  <td className="px-3 py-2 text-ink-soft">{randValue(Number(value) || 0, settings.randPerPoint)}</td>
+                  <td className="px-3 py-2">
+                    <input
+                      type="checkbox"
+                      checked={Boolean(r.hero)}
+                      onChange={(e) =>
+                        mut.mutate({
+                          id: r.id,
+                          hero: e.target.checked,
+                          entryPriceCents: Math.round((Number(price) || 0) * 100) || null,
+                          points: pointsFromPrice(Math.round((Number(price) || 0) * 100), e.target.checked, settings),
+                        })
+                      }
+                    />
+                  </td>
+                  <td className="px-3 py-2">
+                    <input
+                      value={points}
+                      onChange={(e) => set({ points: e.target.value })}
+                      inputMode="numeric"
+                      className="w-24 rounded-lg border border-border px-2 py-1 text-sm"
+                    />
+                    {price && suggested !== Number(points) ? (
+                      <button
+                        onClick={() => set({ points: String(suggested) })}
+                        className="mt-1 block text-[10px] font-bold text-cherry"
+                      >
+                        use {formatPoints(suggested)}
+                      </button>
+                    ) : null}
+                  </td>
+                  <td className="px-3 py-2 text-ink-soft">{randValue(Number(points) || 0, settings.randPerPoint)}</td>
                   <td className="px-3 py-2 text-right">
                     <button
-                      disabled={String(r.points) === value}
-                      onClick={() => mut.mutate({ id: r.id, points: Math.max(0, Math.trunc(Number(value) || 0)) })}
+                      disabled={!dirty}
+                      onClick={() =>
+                        mut.mutate({
+                          id: r.id,
+                          points: Math.max(0, Math.trunc(Number(points) || 0)),
+                          entryPriceCents: Math.round((Number(price) || 0) * 100) || null,
+                        })
+                      }
                       className="rounded-lg bg-ink px-2 py-1 text-[11px] font-bold text-white disabled:opacity-30"
                     >
                       Save
@@ -301,7 +376,7 @@ function EventValues({ rows, settings, onDone }: { rows: any[]; settings: Loyalt
             })}
             {rows.length === 0 ? (
               <tr>
-                <td colSpan={5} className="px-3 py-6 text-center text-ink-soft">
+                <td colSpan={7} className="px-3 py-6 text-center text-ink-soft">
                   Run "Pull all entrants" to import events from Entry Ninja.
                 </td>
               </tr>
@@ -476,6 +551,16 @@ function Rewards({ rows, settings, onDone }: { rows: any[]; settings: LoyaltySet
 
 function Coupons({ rows, onDone }: { rows: any[]; onDone: () => void }) {
   const mark = useServerFn(markCouponRedeemed);
+  const push = useServerFn(pushCouponToEn);
+  const pushMut = useMutation({
+    mutationFn: (couponId: string) => push({ data: { couponId } }),
+    onSuccess: (r: any) => {
+      if (r.status === "sent") toast.success(r.message);
+      else toast.warning(r.message);
+      onDone();
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
   const mut = useMutation({
     mutationFn: (v: { id: string; status: "issued" | "redeemed" | "void" }) => mark({ data: v }),
     onSuccess: () => {
@@ -495,6 +580,7 @@ function Coupons({ rows, onDone }: { rows: any[]; onDone: () => void }) {
             <th className="px-3 py-2">Reward</th>
             <th className="px-3 py-2">Points</th>
             <th className="px-3 py-2">Status</th>
+            <th className="px-3 py-2">Entry Ninja</th>
             <th className="px-3 py-2" />
           </tr>
         </thead>
@@ -509,6 +595,27 @@ function Coupons({ rows, onDone }: { rows: any[]; onDone: () => void }) {
               <td className="px-3 py-2">{c.reward_name}</td>
               <td className="px-3 py-2">{formatPoints(c.points_spent)}</td>
               <td className="px-3 py-2">{c.status}</td>
+              <td className="px-3 py-2">
+                <span
+                  className={`rounded-full px-2 py-0.5 text-[10px] font-black uppercase ${
+                    c.en_status === "sent"
+                      ? "bg-emerald-100 text-emerald-700"
+                      : c.en_status === "manual"
+                        ? "bg-amber-100 text-amber-800"
+                        : "bg-secondary text-ink-soft"
+                  }`}
+                  title={c.en_error ?? ""}
+                >
+                  {c.en_status === "sent" ? "on Entry Ninja" : c.en_status === "manual" ? "load manually" : "not sent"}
+                </span>
+                <button
+                  onClick={() => pushMut.mutate(c.id)}
+                  disabled={pushMut.isPending}
+                  className="mt-1 inline-flex items-center gap-1 text-[10px] font-bold text-cherry disabled:opacity-40"
+                >
+                  <Send className="h-3 w-3" /> push code
+                </button>
+              </td>
               <td className="px-3 py-2 text-right">
                 {c.status !== "redeemed" ? (
                   <button
@@ -530,7 +637,7 @@ function Coupons({ rows, onDone }: { rows: any[]; onDone: () => void }) {
           ))}
           {rows.length === 0 ? (
             <tr>
-              <td colSpan={6} className="px-3 py-6 text-center text-ink-soft">
+              <td colSpan={7} className="px-3 py-6 text-center text-ink-soft">
                 No coupons issued yet.
               </td>
             </tr>
@@ -565,6 +672,8 @@ function SettingsForm({ settings, onDone }: { settings: LoyaltySettings; onDone:
           defaultPoints: Math.trunc(Number(form.defaultPoints) || 0),
           randPerPoint: Number(form.randPerPoint) || 0,
           loyaltyBonusPerYear: Math.trunc(Number(form.loyaltyBonusPerYear) || 0),
+          pointsPerRand: Number(form.pointsPerRand) || 0,
+          heroMultiplier: Number(form.heroMultiplier) || 1,
           programName: String(form.programName || "Cherry Miles"),
         });
       }}
@@ -584,6 +693,22 @@ function SettingsForm({ settings, onDone }: { settings: LoyaltySettings; onDone:
         <input
           value={form.randPerPoint}
           onChange={(e) => setForm({ ...form, randPerPoint: e.target.value })}
+          inputMode="decimal"
+          className="w-full rounded-lg border border-border px-3 py-2 text-sm"
+        />
+      </Field>
+      <Field label="Points earned per R1 of entry fee">
+        <input
+          value={form.pointsPerRand}
+          onChange={(e) => setForm({ ...form, pointsPerRand: e.target.value })}
+          inputMode="decimal"
+          className="w-full rounded-lg border border-border px-3 py-2 text-sm"
+        />
+      </Field>
+      <Field label="Hero event multiplier">
+        <input
+          value={form.heroMultiplier}
+          onChange={(e) => setForm({ ...form, heroMultiplier: e.target.value })}
           inputMode="decimal"
           className="w-full rounded-lg border border-border px-3 py-2 text-sm"
         />

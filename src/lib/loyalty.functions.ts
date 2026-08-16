@@ -121,7 +121,16 @@ export const redeemReward = createServerFn({ method: "POST" })
       created_by: userId,
     });
 
-    return { ok: true as const, coupon };
+    // Register the code on Entry Ninja so it can be used at checkout there too.
+    let enResult = { status: "manual", message: "Queued for Entry Ninja." };
+    try {
+      const { pushCouponToEntryNinja } = await import("./loyalty.server");
+      enResult = await pushCouponToEntryNinja(supabaseAdmin as any, coupon.id);
+    } catch {
+      /* redemption still stands even if Entry Ninja is unreachable */
+    }
+
+    return { ok: true as const, coupon, entryNinja: enResult };
   });
 
 /* ---------------------------------- admin --------------------------------- */
@@ -212,6 +221,8 @@ export const saveLoyaltySettingsFn = createServerFn({ method: "POST" })
         defaultPoints: z.number().int().min(0).max(100000),
         randPerPoint: z.number().min(0).max(100),
         loyaltyBonusPerYear: z.number().int().min(0).max(10000),
+        pointsPerRand: z.number().min(0).max(100).default(0.1),
+        heroMultiplier: z.number().min(1).max(10).default(2),
         programName: z.string().trim().min(1).max(60),
       })
       .parse(d),
@@ -226,14 +237,49 @@ export const saveLoyaltySettingsFn = createServerFn({ method: "POST" })
 export const setEventPoints = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) =>
-    z.object({ id: z.string().uuid(), points: z.number().int().min(0).max(100000) }).parse(d),
+    z
+      .object({
+        id: z.string().uuid(),
+        points: z.number().int().min(0).max(100000),
+        entryPriceCents: z.number().int().min(0).max(100000000).nullable().optional(),
+        hero: z.boolean().optional(),
+      })
+      .parse(d),
   )
   .handler(async ({ data, context }) => {
     const { supabase } = context as any;
     await assertAdmin(supabase);
-    const { error } = await supabase.from("loyalty_event_values").update({ points: data.points }).eq("id", data.id);
+    const patch: Row = { points: data.points };
+    if (data.entryPriceCents !== undefined) {
+      patch['entry_price_cents'] = data.entryPriceCents;
+      patch['price_source'] = "manual";
+    }
+    if (data.hero !== undefined) patch['hero'] = data.hero;
+    const { error } = await supabase.from("loyalty_event_values").update(patch).eq("id", data.id);
     if (error) throw new Error(error.message);
     return { ok: true };
+  });
+
+/** Re-value every event from what riders actually paid to enter it. */
+export const applyPriceValues = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase } = context as any;
+    await assertAdmin(supabase);
+    const { applyPriceBasedValues } = await import("./loyalty.server");
+    return applyPriceBasedValues(supabase);
+  });
+
+/** Admin: push (or retry) a coupon code across to Entry Ninja. */
+export const pushCouponToEn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ couponId: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const { supabase } = context as any;
+    await assertAdmin(supabase);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { pushCouponToEntryNinja } = await import("./loyalty.server");
+    return pushCouponToEntryNinja(supabaseAdmin as any, data.couponId);
   });
 
 export const saveReward = createServerFn({ method: "POST" })

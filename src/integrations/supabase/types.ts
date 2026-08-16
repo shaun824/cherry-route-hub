@@ -1323,6 +1323,11 @@ export type Database = {
         Row: {
           code: string
           created_at: string
+          en_error: string | null
+          en_event_id: number | null
+          en_pushed_at: string | null
+          en_ref: string | null
+          en_status: string
           entrant_id: string
           expires_at: string | null
           id: string
@@ -1335,6 +1340,11 @@ export type Database = {
         Insert: {
           code: string
           created_at?: string
+          en_error?: string | null
+          en_event_id?: number | null
+          en_pushed_at?: string | null
+          en_ref?: string | null
+          en_status?: string
           entrant_id: string
           expires_at?: string | null
           id?: string
@@ -1347,6 +1357,11 @@ export type Database = {
         Update: {
           code?: string
           created_at?: string
+          en_error?: string | null
+          en_event_id?: number | null
+          en_pushed_at?: string | null
+          en_ref?: string | null
+          en_status?: string
           entrant_id?: string
           expires_at?: string | null
           id?: string
@@ -1377,34 +1392,43 @@ export type Database = {
         Row: {
           created_at: string
           en_event_id: number
+          entry_price_cents: number | null
           event_date: string | null
           event_id: string | null
           event_name: string
+          hero: boolean
           id: string
           notes: string | null
           points: number
+          price_source: string | null
           updated_at: string
         }
         Insert: {
           created_at?: string
           en_event_id: number
+          entry_price_cents?: number | null
           event_date?: string | null
           event_id?: string | null
           event_name: string
+          hero?: boolean
           id?: string
           notes?: string | null
           points?: number
+          price_source?: string | null
           updated_at?: string
         }
         Update: {
           created_at?: string
           en_event_id?: number
+          entry_price_cents?: number | null
           event_date?: string | null
           event_id?: string | null
           event_name?: string
+          hero?: boolean
           id?: string
           notes?: string | null
           points?: number
+          price_source?: string | null
           updated_at?: string
         }
         Relationships: [
