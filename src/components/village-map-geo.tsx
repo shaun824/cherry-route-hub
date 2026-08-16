@@ -363,7 +363,9 @@ export default function VillageMapGeo({
           bounceAtZoomLimits={false}
           touchZoom
           doubleClickZoom
+          {...({ rotate: true, touchRotate: true, rotateControl: false, bearing: 0 } as object)}
           className="h-[65vh] min-h-[340px] w-full"
+
         >
           {satellite ? (
             <TileLayer
