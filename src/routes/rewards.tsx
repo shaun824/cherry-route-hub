@@ -55,7 +55,11 @@ function RewardsPage() {
   });
 
   const balance = data?.balance ?? 0;
-  const { tier, next, toNext, progress } = useMemo(() => tierFor(balance), [balance]);
+  const rolling = (data as any)?.rollingPoints ?? balance;
+  const held = (data as any)?.heldPoints ?? rolling;
+  const { tier, next, toNext, progress } = useMemo(() => tierForRolling(rolling, held), [rolling, held]);
+  const expiresAt = (data as any)?.expiresAt as string | null | undefined;
+
 
   if (isLoading) {
     return <div className="p-6 text-center text-sm text-ink-soft">Loading your rewards…</div>;
