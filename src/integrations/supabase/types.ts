@@ -1401,6 +1401,7 @@ export type Database = {
           notes: string | null
           points: number
           price_source: string | null
+          sells_out: boolean
           updated_at: string
         }
         Insert: {
@@ -1415,6 +1416,7 @@ export type Database = {
           notes?: string | null
           points?: number
           price_source?: string | null
+          sells_out?: boolean
           updated_at?: string
         }
         Update: {
@@ -1429,6 +1431,7 @@ export type Database = {
           notes?: string | null
           points?: number
           price_source?: string | null
+          sells_out?: boolean
           updated_at?: string
         }
         Relationships: [
@@ -1542,10 +1545,14 @@ export type Database = {
           cost_points: number
           created_at: string
           description: string
+          event_scope: Json
+          fulfilment_notes: string | null
           id: string
+          kind: string
           name: string
           partner: string | null
           sort_order: number
+          stock: number | null
           terms: string | null
           updated_at: string
           valid_days: number
@@ -1556,10 +1563,14 @@ export type Database = {
           cost_points?: number
           created_at?: string
           description?: string
+          event_scope?: Json
+          fulfilment_notes?: string | null
           id?: string
+          kind?: string
           name: string
           partner?: string | null
           sort_order?: number
+          stock?: number | null
           terms?: string | null
           updated_at?: string
           valid_days?: number
@@ -1570,10 +1581,14 @@ export type Database = {
           cost_points?: number
           created_at?: string
           description?: string
+          event_scope?: Json
+          fulfilment_notes?: string | null
           id?: string
+          kind?: string
           name?: string
           partner?: string | null
           sort_order?: number
+          stock?: number | null
           terms?: string | null
           updated_at?: string
           valid_days?: number
