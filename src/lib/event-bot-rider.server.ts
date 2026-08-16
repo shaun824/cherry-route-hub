@@ -91,11 +91,25 @@ export async function buildRiderContext(
     )
     .eq("event_id", eventId);
 
+  const names = new Set<string>();
+  const addName = (v?: string | null) => {
+    const n = String(v ?? "").trim().toLowerCase().replace(/\s+/g, " ");
+    if (n.length > 3) names.add(n);
+  };
+  addName(profile?.full_name);
+  for (const e of entrantRows ?? []) addName(e.full_name);
+
   const mine =
     (rooming ?? []).find((r: any) => r.event_entrant_id && entryIds.includes(r.event_entrant_id)) ??
     (rooming ?? []).find((r: any) => r.entrant_id && entrantIds.includes(r.entrant_id)) ??
     (rooming ?? []).find((r: any) => r.email && emails.has(String(r.email).toLowerCase())) ??
+    (rooming ?? []).find(
+      (r: any) =>
+        r.full_name &&
+        names.has(String(r.full_name).trim().toLowerCase().replace(/\s+/g, " ")),
+    ) ??
     null;
+
 
   if (mine) {
     lines.push("\nRider's accommodation for this event (from the uploaded rooming list):");
