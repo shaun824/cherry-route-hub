@@ -1323,6 +1323,7 @@ function AskAdminPanel({
       }
     } finally {
       setBusy(false);
+      setPending(null);
     }
   }
 
@@ -1330,7 +1331,8 @@ function AskAdminPanel({
   useEffect(() => {
     const el = qaListRef.current;
     if (el) el.scrollTop = el.scrollHeight;
-  }, [messagesQ.data]);
+  }, [messagesQ.data, pending, busy]);
+
 
   // Offer the WhatsApp handoff once the assistant has admitted it can't answer
   // and no admin has replied since.
