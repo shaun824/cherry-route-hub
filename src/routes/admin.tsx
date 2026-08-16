@@ -24,6 +24,8 @@ const nav: { to: string; label: string; icon: typeof LayoutDashboard; exact?: bo
   { to: "/admin/roster", label: "Roster", icon: UserPlus },
   { to: "/admin/entry-ninja", label: "Entry Ninja", icon: Plug },
   { to: "/admin/merchandise", label: "Merchandise", icon: Package },
+  { to: "/admin/results", label: "Results", icon: Trophy },
+
 
   { to: "/admin/rooming", label: "Rooming", icon: BedDouble },
   { to: "/crew", label: "Crew finder", icon: HardHat },
