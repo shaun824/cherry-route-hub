@@ -8,7 +8,7 @@ import "leaflet/dist/leaflet.css";
 import type { VillageGeo, VillageHotspot } from "@/lib/village-map";
 import { spotColor, spotIcon } from "@/lib/village-map";
 import { villageIconSvg } from "@/lib/village-icons";
-import { zoneCentroid, zoneColor, type VillageZone } from "@/lib/village-zones";
+import { zoneAreaM2, zoneCentroid, zoneColor, type VillageZone } from "@/lib/village-zones";
 
 const M_PER_DEG_LAT = 111320;
 
@@ -275,6 +275,22 @@ export default function VillageMapGeo({
     [hotspots],
   );
 
+  // Rider-facing maps only show meaningful blocks. Individual tent footprints
+  // drawn while planning (small squares, usually named "12" or "Area 12") just
+  // clutter the map — the tent pin already carries the number. The rider's own
+  // highlighted area is always drawn.
+  const visibleZones = useMemo(
+    () =>
+      zones.filter((z) => {
+        if (z.id === highlightZoneId) return true;
+        const name = (z.name ?? "").trim();
+        const planningName = /^(?:tent\s*)?\d+$/i.test(name) || /^area\s*\d+$/i.test(name);
+        const small = zoneAreaM2(z) < 150;
+        return !(planningName || small);
+      }),
+    [zones, highlightZoneId],
+  );
+
 
   function locate() {
     if (!("geolocation" in navigator)) {
@@ -352,7 +368,7 @@ export default function VillageMapGeo({
             </>
           ) : null}
 
-          {zones.map((z) => {
+          {visibleZones.map((z) => {
             const hot = highlightZoneId === z.id;
             return (
               <Polygon
