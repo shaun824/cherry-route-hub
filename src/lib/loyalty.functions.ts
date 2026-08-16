@@ -374,6 +374,10 @@ export const saveReward = createServerFn({ method: "POST" })
         valid_days: z.number().int().min(1).max(3650).default(180),
         active: z.boolean().default(true),
         sort_order: z.number().int().min(0).max(999).default(0),
+        kind: z.enum(["entry", "merch", "experience", "partner"]).default("entry"),
+        stock: z.number().int().min(0).max(100000).nullable().default(null),
+        fulfilment_notes: z.string().trim().max(500).nullable().default(null),
+
       })
       .parse(d),
   )
