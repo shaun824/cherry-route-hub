@@ -273,7 +273,7 @@ function Home() {
             </>
           ) : null}
           <div className="mt-4 px-5">
-            <GuestSignInNudge />
+            <SignedOutCTA />
           </div>
         </>
       ) : null}
