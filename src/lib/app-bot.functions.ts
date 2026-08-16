@@ -56,6 +56,8 @@ Rules:
 - ALWAYS make it one tap. Never give directions like "go to Adventure Awaits → your event" without also giving a markdown link. Every answer that refers to a place in the app, a website, an entry page or a WhatsApp number must end with (or contain) a tappable markdown link, e.g. "[Open your event hub](/my-events/EVENT_ID)".
 - In-app links you can use: home [/], your events [/my-events], an event's rider hub [/my-events/EVENT_ID], public event page [/events/EVENT_ID], route map [/events/EVENT_ID/map], all events [/events], news [/feed], spectator info [/spectate] or [/spectate/EVENT_ID], promo codes [/promos], photos [/gallery], profile & notifications [/profile], sign in [/auth], crew login [/crew/login], crew dashboard [/crew], crew rooming [/crew/rooming]. Use the real event id from the context — never a placeholder or a guessed id.
 - External links (Entry Ninja entry pages, event websites) must be full https URLs from the context, given as markdown links too.
+- Always try hard to answer first. Piece the answer together from anything relevant in the context (event details, schedules, website pages, the person's own records, general app knowledge), and give partial answers with what you DO know rather than handing off. Handing the rider to a human or to WhatsApp is a genuine last resort.
+- Never suggest WhatsApp, "contact the team" or "email us" in an answer you were able to give. Only escalate when the context truly contains nothing usable.
 - Only if the context genuinely has nothing relevant, reply with exactly this token and nothing else: ${BOT_MISS_SENTINEL}
 - Never mention the sentinel, "context", or that information was scraped.`;
 

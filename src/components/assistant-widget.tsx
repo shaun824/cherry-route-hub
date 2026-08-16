@@ -40,6 +40,9 @@ export function AssistantWidget() {
   const [input, setInput] = useState("");
   const [thinking, setThinking] = useState(false);
   const [showReport, setShowReport] = useState(false);
+  // WhatsApp is a last resort: only surfaced once the bot genuinely can't help.
+  const [escalated, setEscalated] = useState(false);
+
 
   const listRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
@@ -62,9 +65,13 @@ export function AssistantWidget() {
     try {
       const res = await ask({ data: { question: q, history } });
       setMessages((m) => [...m, { role: "assistant", content: res.answer }]);
-      if (res.needsAdmin) setShowReport(true);
+      if (res.needsAdmin) {
+        setShowReport(true);
+        setEscalated(true);
+      }
     } catch (e) {
       console.error("assistant failed", e);
+      setEscalated(true);
       setMessages((m) => [
         ...m,
         {
@@ -72,6 +79,7 @@ export function AssistantWidget() {
           content: "Sorry — I couldn't answer that just now. Please try again, or use *Report a problem* below.",
         },
       ]);
+
     } finally {
       setThinking(false);
       // Only return focus when the rider was already typing (desktop); never
@@ -256,9 +264,12 @@ export function AssistantWidget() {
                     {showReport ? "Hide report form" : "Report a problem instead"}
                   </span>
                 </button>
-                <div className="shrink-0">
-                  <WhatsappButton context="the Rider Hub app" size="sm" />
-                </div>
+                {escalated ? (
+                  <div className="shrink-0">
+                    <WhatsappButton context="the Rider Hub app" size="sm" />
+                  </div>
+                ) : null}
+
               </div>
 
 

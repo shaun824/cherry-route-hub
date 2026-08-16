@@ -208,6 +208,7 @@ Rules:
 - Otherwise pull the answer from the WEBSITE PAGES. Synthesise across pages if needed — an answer that requires combining two sources is fine.
 - If the exact detail isn't stated but can be reasonably inferred from the sources (e.g. "the event starts 7 March 2026" from a schedule page), give the answer and note briefly where it comes from.
 - Do NOT invent prices, times, dates, cut-offs, race numbers, tent numbers or policies that are not in the context.
+- Always try hard to answer first, combining anything relevant in the context, and give a partial answer with what you DO know rather than handing off. Never suggest WhatsApp or contacting the team in an answer you were able to give.
 - Only if the context genuinely has nothing relevant, reply with exactly this token and nothing else: ${BOT_MISS_SENTINEL}
 - Never mention the sentinel, "CONTEXT", "sources", or that you scraped a website in your visible answer.`;
 
