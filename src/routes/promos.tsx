@@ -4,7 +4,10 @@ import { SponsorScroller } from "@/components/sponsor-scroller";
 import { useAdminStore } from "@/lib/store";
 import { useHydratedStore } from "@/lib/use-hydrated-store";
 import { PromoCodeCard } from "@/components/promo-code-card";
+import { PromoCarousel } from "@/components/promo-carousel";
+import { useShuffledPromos } from "@/lib/use-shuffled-promos";
 import type { EventPromo } from "@/lib/event-promos";
+
 
 export const Route = createFileRoute("/promos")({
   head: () => ({
@@ -18,34 +21,43 @@ export const Route = createFileRoute("/promos")({
 
 function Promos() {
   useHydratedStore();
-  const promos = useAdminStore((s) => s.promos);
+  const storePromos = useAdminStore((s) => s.promos);
+
+  const mapped: EventPromo[] = storePromos.map((p) => ({
+    id: p.id,
+    brand: p.brand,
+    title: p.title,
+    blurb: p.expires
+      ? `Expires ${new Date(p.expires).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" })}`
+      : undefined,
+    code: p.code || undefined,
+    redeem: p.code ? undefined : "Show this offer to the supplier",
+    discount: p.discount,
+    url: p.url || "#",
+    logoUrl: p.logoUrl ?? "",
+    accent: p.accent,
+  }));
+
+  const promos = useShuffledPromos(mapped);
 
   return (
     <div>
       <PageHeader title="Supplier Promos" subtitle="Perks from our sponsors" />
-      <ul className="space-y-3 px-5 py-5">
-        {promos.map((p) => {
-          const promo: EventPromo = {
-            id: p.id,
-            brand: p.brand,
-            title: p.title,
-            blurb: p.expires
-              ? `Expires ${new Date(p.expires).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" })}`
-              : undefined,
-            code: p.code || undefined,
-            redeem: p.code ? undefined : "Show this offer to the supplier",
-            discount: p.discount,
-            url: p.url || "#",
-            logoUrl: p.logoUrl ?? "",
-            accent: p.accent,
-          };
-          return (
-            <li key={p.id}>
-              <PromoCodeCard promo={promo} />
-            </li>
-          );
-        })}
+      <div className="px-5 py-5">
+        <PromoCarousel promos={promos} />
+      </div>
+      <p className="px-5 pb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+        All offers
+      </p>
+      <ul className="space-y-3 px-5 pb-5">
+
+        {promos.map((promo: EventPromo) => (
+          <li key={promo.id}>
+            <PromoCodeCard promo={promo} />
+          </li>
+        ))}
       </ul>
+
       <SponsorScroller title="Our sponsors" />
       <div className="pb-6" />
     </div>
