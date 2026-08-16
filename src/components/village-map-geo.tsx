@@ -244,6 +244,11 @@ export default function VillageMapGeo({
   }, [geo, heightM, showOverlay, hotspots, zones]);
 
 
+  const selectedSpot = useMemo(
+    () => hotspots.find((h) => h.id === selected) ?? null,
+    [hotspots, selected],
+  );
+
 
 
   function locate() {
