@@ -11,6 +11,7 @@ import type { EventPromo } from "@/lib/event-promos";
  */
 export function PromoCodeCard({ promo }: { promo: EventPromo }) {
   const [copied, setCopied] = useState(false);
+  const hasLink = Boolean(promo.url && promo.url !== "#");
   const [open, setOpen] = useState(false);
 
   function copy() {
