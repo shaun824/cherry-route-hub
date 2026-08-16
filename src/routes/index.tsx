@@ -80,6 +80,28 @@ function Home() {
   const pinned = feed.filter((p) => p.pinned)[0];
   const pinnedGeneral = feed.filter((p) => p.pinned && !p.eventId && p.type !== "weather")[0];
   const qlCols = Math.min(Math.max(quickLinks.length, 1), 4);
+  // Home shows every supplier offer: admin-managed promos + the Weekend Warrior partner set.
+  const homePromos = useMemo(() => {
+    const list = promos.map((p) => ({
+      id: p.id,
+      brand: p.brand,
+      title: p.title,
+      code: p.code || undefined,
+      redeem: p.code ? undefined : "Show this offer to the supplier",
+      discount: p.discount,
+      url: p.url || "#",
+      logoUrl: p.logoUrl ?? "",
+      accent: p.accent,
+    }));
+    const seen = new Set(list.map((p) => p.brand.toLowerCase().trim()));
+    for (const p of eventPromosFor("weekend warrior")) {
+      const key = p.brand.toLowerCase().trim();
+      if (seen.has(key)) continue;
+      seen.add(key);
+      list.push({ ...p });
+    }
+    return list;
+  }, [promos]);
   const [notifOpen, setNotifOpen] = useState(false);
   const [noticeOpen, setNoticeOpen] = useState(false);
 
