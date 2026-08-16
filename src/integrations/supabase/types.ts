@@ -1163,6 +1163,30 @@ export type Database = {
         }
         Relationships: []
       }
+      id_lookup_attempts: {
+        Row: {
+          created_at: string
+          id: string
+          id_hash: string | null
+          ip_hash: string | null
+          outcome: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          id_hash?: string | null
+          ip_hash?: string | null
+          outcome: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          id_hash?: string | null
+          ip_hash?: string | null
+          outcome?: string
+        }
+        Relationships: []
+      }
       notification_deliveries: {
         Row: {
           channel: string
