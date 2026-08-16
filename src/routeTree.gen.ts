@@ -52,7 +52,6 @@ import { Route as AdminEventInfoIndexRouteImport } from './routes/admin.event-in
 import { Route as MyEventsEventIdReportRouteImport } from './routes/my-events_.$eventId_.report'
 import { Route as EventsEventIdMapRouteImport } from './routes/events.$eventId.map'
 import { Route as EventsEventIdEnterRouteImport } from './routes/events.$eventId.enter'
-import { Route as ApiPublicSeedCrewLoginRouteImport } from './routes/api/public/seed-crew-login'
 import { Route as AdminVillageEventIdRouteImport } from './routes/admin.village.$eventId'
 import { Route as AdminRiderUserIdRouteImport } from './routes/admin.rider.$userId'
 import { Route as AdminEventInfoEventIdRouteImport } from './routes/admin.event-info.$eventId'
@@ -285,11 +284,6 @@ const EventsEventIdEnterRoute = EventsEventIdEnterRouteImport.update({
   path: '/enter',
   getParentRoute: () => EventsEventIdRoute,
 } as any)
-const ApiPublicSeedCrewLoginRoute = ApiPublicSeedCrewLoginRouteImport.update({
-  id: '/api/public/seed-crew-login',
-  path: '/api/public/seed-crew-login',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AdminVillageEventIdRoute = AdminVillageEventIdRouteImport.update({
   id: '/village/$eventId',
   path: '/village/$eventId',
@@ -421,7 +415,6 @@ export interface FileRoutesByFullPath {
   '/admin/event-info/$eventId': typeof AdminEventInfoEventIdRoute
   '/admin/rider/$userId': typeof AdminRiderUserIdRoute
   '/admin/village/$eventId': typeof AdminVillageEventIdRoute
-  '/api/public/seed-crew-login': typeof ApiPublicSeedCrewLoginRoute
   '/events/$eventId/enter': typeof EventsEventIdEnterRoute
   '/events/$eventId/map': typeof EventsEventIdMapRoute
   '/my-events/$eventId/report': typeof MyEventsEventIdReportRoute
@@ -480,7 +473,6 @@ export interface FileRoutesByTo {
   '/admin/event-info/$eventId': typeof AdminEventInfoEventIdRoute
   '/admin/rider/$userId': typeof AdminRiderUserIdRoute
   '/admin/village/$eventId': typeof AdminVillageEventIdRoute
-  '/api/public/seed-crew-login': typeof ApiPublicSeedCrewLoginRoute
   '/events/$eventId/enter': typeof EventsEventIdEnterRoute
   '/events/$eventId/map': typeof EventsEventIdMapRoute
   '/my-events/$eventId/report': typeof MyEventsEventIdReportRoute
@@ -543,7 +535,6 @@ export interface FileRoutesById {
   '/admin/event-info/$eventId': typeof AdminEventInfoEventIdRoute
   '/admin/rider/$userId': typeof AdminRiderUserIdRoute
   '/admin/village/$eventId': typeof AdminVillageEventIdRoute
-  '/api/public/seed-crew-login': typeof ApiPublicSeedCrewLoginRoute
   '/events/$eventId/enter': typeof EventsEventIdEnterRoute
   '/events/$eventId/map': typeof EventsEventIdMapRoute
   '/my-events_/$eventId_/report': typeof MyEventsEventIdReportRoute
@@ -607,7 +598,6 @@ export interface FileRouteTypes {
     | '/admin/event-info/$eventId'
     | '/admin/rider/$userId'
     | '/admin/village/$eventId'
-    | '/api/public/seed-crew-login'
     | '/events/$eventId/enter'
     | '/events/$eventId/map'
     | '/my-events/$eventId/report'
@@ -666,7 +656,6 @@ export interface FileRouteTypes {
     | '/admin/event-info/$eventId'
     | '/admin/rider/$userId'
     | '/admin/village/$eventId'
-    | '/api/public/seed-crew-login'
     | '/events/$eventId/enter'
     | '/events/$eventId/map'
     | '/my-events/$eventId/report'
@@ -728,7 +717,6 @@ export interface FileRouteTypes {
     | '/admin/event-info/$eventId'
     | '/admin/rider/$userId'
     | '/admin/village/$eventId'
-    | '/api/public/seed-crew-login'
     | '/events/$eventId/enter'
     | '/events/$eventId/map'
     | '/my-events_/$eventId_/report'
@@ -766,7 +754,6 @@ export interface RootRouteChildren {
   EventsEventIdRoute: typeof EventsEventIdRouteWithChildren
   CrewIndexRoute: typeof CrewIndexRoute
   EventsIndexRoute: typeof EventsIndexRoute
-  ApiPublicSeedCrewLoginRoute: typeof ApiPublicSeedCrewLoginRoute
   MyEventsEventIdReportRoute: typeof MyEventsEventIdReportRoute
   ApiPublicHooksContentAuditRoute: typeof ApiPublicHooksContentAuditRoute
   ApiPublicHooksEntryNinjaSyncRoute: typeof ApiPublicHooksEntryNinjaSyncRoute
@@ -1086,13 +1073,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EventsEventIdEnterRouteImport
       parentRoute: typeof EventsEventIdRoute
     }
-    '/api/public/seed-crew-login': {
-      id: '/api/public/seed-crew-login'
-      path: '/api/public/seed-crew-login'
-      fullPath: '/api/public/seed-crew-login'
-      preLoaderRoute: typeof ApiPublicSeedCrewLoginRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/admin/village/$eventId': {
       id: '/admin/village/$eventId'
       path: '/village/$eventId'
@@ -1322,7 +1302,6 @@ const rootRouteChildren: RootRouteChildren = {
   EventsEventIdRoute: EventsEventIdRouteWithChildren,
   CrewIndexRoute: CrewIndexRoute,
   EventsIndexRoute: EventsIndexRoute,
-  ApiPublicSeedCrewLoginRoute: ApiPublicSeedCrewLoginRoute,
   MyEventsEventIdReportRoute: MyEventsEventIdReportRoute,
   ApiPublicHooksContentAuditRoute: ApiPublicHooksContentAuditRoute,
   ApiPublicHooksEntryNinjaSyncRoute: ApiPublicHooksEntryNinjaSyncRoute,
