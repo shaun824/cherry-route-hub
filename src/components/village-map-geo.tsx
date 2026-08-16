@@ -369,8 +369,20 @@ export default function VillageMapGeo({
           <Recenter position={me} token={recenterToken} />
 
           {/* Facility hotspots are intentionally NOT drawn on the map — riders asked
-              for a clean plan where the only pins are the tents. Facilities stay
-              browsable in the list beneath the map. */}
+              for a clean plan where the only pins are the tents. The one exception is
+              the point you've currently selected, which gets a name label until you tap away. */}
+          {selectedSpot ? (
+            <Marker
+              position={hotspotLatLng(geo, selectedSpot, heightM)}
+              icon={pointLabelIcon(selectedSpot.name)}
+              zIndexOffset={1000}
+              eventHandlers={{ click: () => onSelect(null) }}
+            />
+          ) : null}
+          <FlyToPoint
+            position={selectedSpot ? hotspotLatLng(geo, selectedSpot, heightM) : null}
+          />
+          <ClearOnMapClick onClear={() => onSelect(null)} />
 
 
 
