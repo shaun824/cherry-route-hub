@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Fragment, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import {
@@ -38,7 +38,7 @@ import { fetchVillageMap } from "@/lib/village-map";
 
 import { fetchEventInfo } from "@/lib/event-info";
 import { groupRidersByClass } from "@/lib/rider-classes";
-import { eventPromosFor } from "@/lib/event-promos";
+import { eventPromosFor, shufflePromos, type EventPromo } from "@/lib/event-promos";
 import { PromoCodeCard } from "@/components/promo-code-card";
 
 
@@ -153,7 +153,20 @@ function SpectatorEventPage() {
   }, [info?.faqs]);
 
   const batches = event?.batches ?? [];
-  const promos = useMemo(() => eventPromosFor(event?.name), [event?.name]);
+  const basePromos = useMemo(() => eventPromosFor(event?.name), [event?.name]);
+  // Rotate sponsor offers on every load (after hydration, so SSR stays stable)
+  // so no single partner always gets the first slot.
+  const [shuffled, setShuffled] = useState<EventPromo[] | null>(null);
+  const [promoOffset, setPromoOffset] = useState(3);
+  useEffect(() => {
+    setShuffled(shufflePromos(basePromos));
+    setPromoOffset(2 + Math.floor(Math.random() * 2));
+  }, [basePromos]);
+  const promos = shuffled ?? basePromos;
+  const promoAt = (gi: number) =>
+    promos.length && gi >= promoOffset && (gi - promoOffset) % 3 === 0
+      ? promos[Math.floor((gi - promoOffset) / 3) % promos.length]
+      : null;
 
   const batchLookup = useMemo(() => {
     const m = new Map<string, { name: string; startTime: string }>();
@@ -629,10 +642,7 @@ function SpectatorEventPage() {
                 <p className="text-center text-sm text-ink-soft">No riders match that search.</p>
               ) : (
                 startGroups.map((g, gi) => {
-                  const promo =
-                    promos.length && gi > 0 && gi % 3 === 0
-                      ? promos[(Math.floor(gi / 3) - 1) % promos.length]
-                      : null;
+                  const promo = promoAt(gi);
                   return (
                   <Fragment key={g.key}>
                   {promo ? (
@@ -749,10 +759,7 @@ function SpectatorEventPage() {
                   <p className="text-center text-sm text-ink-soft">No results match that search.</p>
                 ) : (
                   resultGroups.map((g, gi) => {
-                    const promo =
-                      promos.length && gi > 0 && gi % 3 === 0
-                        ? promos[(Math.floor(gi / 3) - 1) % promos.length]
-                        : null;
+                    const promo = promoAt(gi);
                     return (
                       <Fragment key={g.key}>
                         {promo ? (
