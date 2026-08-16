@@ -153,7 +153,20 @@ function SpectatorEventPage() {
   }, [info?.faqs]);
 
   const batches = event?.batches ?? [];
-  const promos = useMemo(() => eventPromosFor(event?.name), [event?.name]);
+  const basePromos = useMemo(() => eventPromosFor(event?.name), [event?.name]);
+  // Rotate sponsor offers on every load (after hydration, so SSR stays stable)
+  // so no single partner always gets the first slot.
+  const [shuffled, setShuffled] = useState<EventPromo[] | null>(null);
+  const [promoOffset, setPromoOffset] = useState(3);
+  useEffect(() => {
+    setShuffled(shufflePromos(basePromos));
+    setPromoOffset(2 + Math.floor(Math.random() * 2));
+  }, [basePromos]);
+  const promos = shuffled ?? basePromos;
+  const promoAt = (gi: number) =>
+    promos.length && gi >= promoOffset && (gi - promoOffset) % 3 === 0
+      ? promos[Math.floor((gi - promoOffset) / 3) % promos.length]
+      : null;
 
   const batchLookup = useMemo(() => {
     const m = new Map<string, { name: string; startTime: string }>();
