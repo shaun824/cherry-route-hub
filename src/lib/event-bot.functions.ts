@@ -300,7 +300,7 @@ ${FOLLOWUP_PROMPT_RULE}
       console.error("AI gateway call failed", e);
     }
 
-    const needsAdmin = botAnswer.trim().toUpperCase() === BOT_MISS_SENTINEL;
+    const needsAdmin = splitFollowUps(botAnswer).body.trim().toUpperCase() === BOT_MISS_SENTINEL;
     const botBody = needsAdmin ? BOT_MISS_REPLY : botAnswer;
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
