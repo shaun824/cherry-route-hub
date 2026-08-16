@@ -2,6 +2,7 @@ import { entryNinjaRegistrationUrl } from "@/lib/entry-ninja-link";
 import { WhatsappButton } from "@/components/whatsapp-button";
 import { isBotMiss } from "@/lib/bot-handoff";
 import { splitFollowUps } from "@/lib/bot-followups";
+import ReactMarkdown from "react-markdown";
 
 import { createFileRoute, Link, notFound, useRouterState } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
@@ -1426,7 +1427,7 @@ function AskAdminPanel({
                       <div className="chat-md space-y-2 whitespace-pre-line">
                         <ReactMarkdown
                           components={{
-                            a: ({ node: _n, ...p }) => (
+                            a: ({ node: _n, ...p }: any) => (
                               <a
                                 {...p}
                                 target="_blank"
@@ -1434,8 +1435,8 @@ function AskAdminPanel({
                                 className="font-semibold underline underline-offset-2"
                               />
                             ),
-                            ul: ({ node: _n, ...p }) => <ul {...p} className="ml-4 list-disc space-y-1" />,
-                            ol: ({ node: _n, ...p }) => <ol {...p} className="ml-4 list-decimal space-y-1" />,
+                            ul: ({ node: _n, ...p }: any) => <ul {...p} className="ml-4 list-disc space-y-1" />,
+                            ol: ({ node: _n, ...p }: any) => <ol {...p} className="ml-4 list-decimal space-y-1" />,
                           }}
                         >
                           {parsed.body}
