@@ -137,9 +137,17 @@ function AuthPage() {
       writePending(PENDING_ID_KEY, idNumber.trim());
       writePending(PENDING_NAME_KEY, fullName.trim().split(/\s+/).pop() ?? "");
     }
+    const hint = (emailParam || email).trim();
     const result = await lovable.auth.signInWithOAuth("google", {
       redirect_uri: window.location.origin + "/auth",
+      extraParams: {
+        // Always let people pick which Google account to use, so switching
+        // or adding a second account never silently reuses the last one.
+        prompt: "select_account",
+        ...(add || !hint ? {} : { login_hint: hint }),
+      },
     });
+
     if (result.error) {
       setError(result.error.message || "Sign in failed");
       setBusy(false);
