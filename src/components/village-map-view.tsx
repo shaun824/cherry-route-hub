@@ -80,7 +80,10 @@ export function VillageMapView({
   const tentsQ = useQuery({ queryKey: ["village-tents", eventId], queryFn: () => fetchVillageTents(eventId) });
   const tents = tentsQ.data ?? [];
   const mapTents = useMemo(
-    () => tents.map((t) => ({ id: t.id, label: t.label, lat: t.lat, lng: t.lng })),
+    () =>
+      tents
+        .filter((t) => t.kind !== "marker")
+        .map((t) => ({ id: t.id, label: t.label, lat: t.lat, lng: t.lng, kind: t.kind })),
     [tents],
   );
   const [hovered, setHovered] = useState<string | null>(null);

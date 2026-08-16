@@ -101,7 +101,7 @@ function FlyToTent({ tent }: { tent: MapTent | null }) {
   return null;
 }
 
-export type MapTent = { id: string; label: string; lat: number; lng: number };
+export type MapTent = { id: string; label: string; lat: number; lng: number; kind?: "tent" | "marker" | null };
 
 
 /** Facility marker: a clean coloured icon puck, with its name shown once tapped. */
@@ -186,20 +186,6 @@ function tentIcon(label: string, active: boolean) {
 function normalizedNumber(value: string) {
   const match = value.trim().match(/^(?:tent\s*)?(\d+)$/i);
   return match?.[1] ?? null;
-}
-
-/** Planning imports can leave tent records directly on polygon vertices. Those
- * are editing handles, not real dropped tent pins, and must never reach the
- * rider-facing map. */
-function isZoneCorner(tent: MapTent, zones: VillageZone[]) {
-  const metresPerLngDegree = M_PER_DEG_LAT * Math.cos((tent.lat * Math.PI) / 180);
-  return zones.some((zone) =>
-    zone.points.some((point) => {
-      const northM = (point.lat - tent.lat) * M_PER_DEG_LAT;
-      const eastM = (point.lng - tent.lng) * metresPerLngDegree;
-      return Math.hypot(eastM, northM) < 1.5;
-    }),
-  );
 }
 
 export default function VillageMapGeo({
@@ -301,9 +287,11 @@ export default function VillageMapGeo({
     [zones, highlightZoneId, highlightTentId],
   );
 
+  // Only real tent pins reach the rider map. Points flagged as drawing markers
+  // (the handles used to shape an area) are never rendered, at any zoom.
   const droppedTents = useMemo(
-    () => tents.filter((tent) => !isZoneCorner(tent, zones)),
-    [tents, zones],
+    () => tents.filter((tent) => (tent.kind ?? "tent") !== "marker"),
+    [tents],
   );
 
 

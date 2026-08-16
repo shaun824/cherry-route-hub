@@ -91,6 +91,9 @@ function VillageEditor() {
   const [tentMode, setTentMode] = useState(false);
   const [selectedTent, setSelectedTent] = useState<string | null>(null);
   const [nextTentLabel, setNextTentLabel] = useState("1");
+  // 'tent' drops a real tent number (shown to riders); 'marker' drops a helper
+  // point used only for drawing areas — never rendered on rider-facing maps.
+  const [tentKind, setTentKind] = useState<"tent" | "marker">("tent");
   const qc = useQueryClient();
   const tentsQ = useQuery({
     queryKey: ["village-tents", event.id],
@@ -109,18 +112,28 @@ function VillageEditor() {
     const zone = zones.find((z) => pointInZone({ lat, lng }, z)) ?? null;
     const { error } = await supabase
       .from("event_village_tents")
-      .insert({ event_id: event.id, label, lat, lng, zone_id: zone?.id ?? null });
+      .insert({ event_id: event.id, label, lat, lng, zone_id: zone?.id ?? null, kind: tentKind });
     if (error) {
       alert(error.message);
       return;
     }
-    setNextTentLabel(bumpLabel(label));
+    if (tentKind === "tent") setNextTentLabel(bumpLabel(label));
     await qc.invalidateQueries({ queryKey: ["village-tents", event.id] });
   }
 
   async function moveTent(id: string, lat: number, lng: number) {
     const zone = zones.find((z) => pointInZone({ lat, lng }, z)) ?? null;
     await supabase.from("event_village_tents").update({ lat, lng, zone_id: zone?.id ?? null }).eq("id", id);
+    await qc.invalidateQueries({ queryKey: ["village-tents", event.id] });
+  }
+
+  async function toggleTentKind(id: string) {
+    const tent = tents.find((t) => t.id === id);
+    if (!tent) return;
+    await supabase
+      .from("event_village_tents")
+      .update({ kind: tent.kind === "marker" ? "tent" : "marker" })
+      .eq("id", id);
     await qc.invalidateQueries({ queryKey: ["village-tents", event.id] });
   }
 
@@ -423,8 +436,23 @@ function VillageEditor() {
           <Tent className="h-3.5 w-3.5" /> {tentMode ? "Click to drop tents…" : "Add tent pins"}
         </button>
         {tentMode ? (
+          <div className="inline-flex overflow-hidden rounded-lg ring-1 ring-border">
+            {(["tent", "marker"] as const).map((k) => (
+              <button
+                key={k}
+                onClick={() => setTentKind(k)}
+                className={`px-2.5 py-1.5 text-[11px] font-bold ${
+                  tentKind === k ? "bg-cherry text-white" : "bg-muted text-ink-soft"
+                }`}
+              >
+                {k === "tent" ? "Tent number" : "Area marker"}
+              </button>
+            ))}
+          </div>
+        ) : null}
+        {tentMode ? (
           <label className="inline-flex items-center gap-1.5 rounded-lg bg-secondary px-2 py-1 text-[11px] font-bold text-ink-soft">
-            Next tent
+            {tentKind === "tent" ? "Next tent" : "Marker label"}
             <input
               value={nextTentLabel}
               onChange={(e) => setNextTentLabel(e.target.value)}
@@ -573,13 +601,14 @@ function VillageEditor() {
               onSelectZone={setSelectedZone}
               onRenameZone={(id, name) => updateZone(id, { name })}
               onDuplicateZone={duplicateZone}
-              tents={tents.map((t) => ({ id: t.id, label: t.label, lat: t.lat, lng: t.lng }))}
+              tents={tents.map((t) => ({ id: t.id, label: t.label, lat: t.lat, lng: t.lng, kind: t.kind }))}
               tentMode={tentMode}
               onPlaceTent={placeTent}
               onMoveTent={moveTent}
               onSelectTent={setSelectedTent}
               selectedTent={selectedTent}
               onDeleteTent={(id) => void deleteTent(id)}
+              onToggleTentKind={(id) => void toggleTentKind(id)}
               onDeleteHotspot={(id) => {
                 patch({ hotspots: map.hotspots.filter((h) => h.id !== id) });
                 if (selected === id) setSelected(null);

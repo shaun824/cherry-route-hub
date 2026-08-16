@@ -93,15 +93,15 @@ function FitToContent({ points, token }: { points: ZonePoint[]; token: number })
 
 
 
-function tentPinIcon(label: string, active: boolean) {
-  const bg = active ? "#c8102e" : "#111827";
+function tentPinIcon(label: string, active: boolean, marker = false) {
+  const bg = active ? "#c8102e" : marker ? "#64748b" : "#111827";
   const safe = label.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c] as string);
   return L.divIcon({
     className: "rce-village-tent",
     html: `<div style="display:flex;flex-direction:column;align-items:center">
       <span style="background:${bg};color:#fff;font-size:10px;font-weight:800;padding:2px 6px;border-radius:6px;white-space:nowrap;border:${
         active ? "2px solid #fff" : "1px solid rgba(255,255,255,.6)"
-      };box-shadow:0 2px 6px rgba(0,0,0,.35)">${safe}</span>
+      };box-shadow:0 2px 6px rgba(0,0,0,.35);opacity:${marker ? 0.75 : 1}">${marker ? "◇ " : ""}${safe}</span>
       <span style="width:6px;height:6px;background:${bg};transform:rotate(45deg) translateY(-2px);border-radius:1px"></span>
     </div>`,
     iconSize: [10, 10],
@@ -109,10 +109,29 @@ function tentPinIcon(label: string, active: boolean) {
   });
 }
 
-function MapDeleteBubble({ label, onDelete }: { label: string; onDelete: () => void }) {
+function MapDeleteBubble({
+  label,
+  onDelete,
+  onToggleKind,
+  isMarker,
+}: {
+  label: string;
+  onDelete: () => void;
+  onToggleKind?: () => void;
+  isMarker?: boolean;
+}) {
   return (
     <div className="flex items-center gap-2">
       <span className="text-[11px] font-bold text-ink">{label}</span>
+      {onToggleKind ? (
+        <button
+          type="button"
+          onClick={onToggleKind}
+          className="rounded-lg bg-muted px-2 py-1 text-[11px] font-bold text-ink"
+        >
+          {isMarker ? "Make tent number" : "Make area marker"}
+        </button>
+      ) : null}
       <button
         type="button"
         onClick={() => {
@@ -153,6 +172,7 @@ export default function VillageMapEditorGeo({
   onSelectTent,
   selectedTent = null,
   onDeleteTent,
+  onToggleTentKind,
   onDeleteHotspot,
 }: {
   centre: { lat: number; lng: number };
@@ -174,13 +194,14 @@ export default function VillageMapEditorGeo({
   onSelectZone: (id: string | null) => void;
   onRenameZone?: (id: string, name: string) => void;
   onDuplicateZone?: (id: string) => void;
-  tents?: { id: string; label: string; lat: number; lng: number }[];
+  tents?: { id: string; label: string; lat: number; lng: number; kind?: "tent" | "marker" | null }[];
   tentMode?: boolean;
   onPlaceTent?: (lat: number, lng: number) => void;
   onMoveTent?: (id: string, lat: number, lng: number) => void;
   onSelectTent?: (id: string | null) => void;
   selectedTent?: string | null;
   onDeleteTent?: (id: string) => void;
+  onToggleTentKind?: (id: string) => void;
   onDeleteHotspot?: (id: string) => void;
 }) {
   const [draft, setDraft] = useState<ZonePoint[]>([]);
@@ -255,7 +276,7 @@ export default function VillageMapEditorGeo({
               key={t.id}
               position={[t.lat, t.lng]}
               draggable={!locked}
-              icon={tentPinIcon(t.label, selectedTent === t.id)}
+              icon={tentPinIcon(t.label, selectedTent === t.id, t.kind === "marker")}
               eventHandlers={{
                 click: () => onSelectTent?.(selectedTent === t.id ? null : t.id),
                 dragend: (e) => {
@@ -267,7 +288,9 @@ export default function VillageMapEditorGeo({
               {onDeleteTent && !locked ? (
                 <Popup autoPan={false} closeButton={false}>
                   <MapDeleteBubble
-                    label={`Tent ${t.label}`}
+                    label={t.kind === "marker" ? `Area marker ${t.label}` : `Tent ${t.label}`}
+                    isMarker={t.kind === "marker"}
+                    onToggleKind={onToggleTentKind ? () => onToggleTentKind(t.id) : undefined}
                     onDelete={() => onDeleteTent(t.id)}
                   />
                 </Popup>

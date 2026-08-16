@@ -13,6 +13,9 @@ export type VillageTent = {
   zone_id: string | null;
   capacity: number | null;
   notes: string | null;
+  /** 'tent' = a real tent number pin shown to riders.
+   *  'marker' = a helper point used only to draw an area — never rendered publicly. */
+  kind: "tent" | "marker";
 };
 
 export type TentRule = {
@@ -35,14 +38,19 @@ export async function fetchVillageTents(eventId: string): Promise<VillageTent[]>
 async function fetchVillageTentsLive(eventId: string): Promise<VillageTent[]> {
   const { data, error } = await supabase
     .from("event_village_tents")
-    .select("id, event_id, label, lat, lng, zone_id, capacity, notes")
+    .select("id, event_id, label, lat, lng, zone_id, capacity, notes, kind")
     .eq("event_id", eventId)
     .order("label", { ascending: true });
   if (error) {
     console.warn("[village] tents", error);
     return [];
   }
-  return (data ?? []) as VillageTent[];
+  return ((data ?? []) as VillageTent[]).map((t) => ({ ...t, kind: t.kind === "marker" ? "marker" : "tent" }));
+}
+
+/** Only real tent pins — drawing markers are excluded everywhere rider-facing. */
+export function realTents<T extends { kind?: string | null }>(tents: T[]): T[] {
+  return tents.filter((t) => (t.kind ?? "tent") !== "marker");
 }
 
 export async function fetchTentRules(eventId: string): Promise<TentRule[]> {
@@ -59,12 +67,13 @@ export async function fetchTentRules(eventId: string): Promise<TentRule[]> {
 }
 
 /** The tent pin whose label matches this tent/room number, if any. */
-export function tentForLabel<T extends { label: string }>(
+export function tentForLabel<T extends { label: string; kind?: string | null }>(
   tents: T[],
   tentNumber: string | null | undefined,
 ): T | null {
   if (!tentNumber) return null;
-  return tents.find((t) => labelsMatch(t.label, tentNumber)) ?? null;
+  // Drawing markers share the map table but must never be matched to a rider.
+  return tents.find((t) => (t.kind ?? "tent") !== "marker" && labelsMatch(t.label, tentNumber)) ?? null;
 }
 
 /** Does a bulk rule ("1-40", "A*", "Nyathi*") cover this tent number? */
