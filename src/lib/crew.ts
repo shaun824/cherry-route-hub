@@ -15,8 +15,19 @@ export type CrewRoomingRow = {
   location_hint: string | null;
   village_zone_id: string | null;
   village_spot_id: string | null;
+  village_tent_id: string | null;
+  event_entrant_id: string | null;
+  match_source: string | null;
+  entry?: {
+    id: string;
+    bib_number: string | null;
+    registration_ref: string | null;
+    category: string | null;
+    batch: string | null;
+  } | null;
   venue?: { id: string; name: string; address: string | null; village_spot_id: string | null } | null;
 };
+
 
 export type CrewEvent = { id: string; name: string; event_date: string };
 
@@ -39,7 +50,7 @@ export async function fetchCrewRooming(eventId: string): Promise<CrewRoomingRow[
   const { data, error } = await supabase
     .from("event_rooming")
     .select(
-      "id, event_id, venue_id, full_name, email, tent_number, room_type, notes, location_hint, village_zone_id, village_spot_id, venue:event_venues(id, name, address, village_spot_id)",
+      "id, event_id, venue_id, full_name, email, tent_number, room_type, notes, location_hint, village_zone_id, village_spot_id, village_tent_id, event_entrant_id, match_source, entry:event_entrants(id, bib_number, registration_ref, category, batch), venue:event_venues(id, name, address, village_spot_id)",
     )
     .eq("event_id", eventId)
     .order("full_name", { ascending: true });
@@ -49,6 +60,7 @@ export async function fetchCrewRooming(eventId: string): Promise<CrewRoomingRow[
   }
   return (data ?? []) as unknown as CrewRoomingRow[];
 }
+
 
 export function normaliseTent(v: string | null | undefined): string {
   return (v ?? "").trim().toUpperCase();
@@ -78,7 +90,25 @@ export function whereIsRoom(row: CrewRoomingRow): string {
 export function matchesSearch(row: CrewRoomingRow, term: string): boolean {
   const t = term.trim().toLowerCase();
   if (!t) return true;
-  return [row.full_name, row.email, row.tent_number, row.room_type, row.venue?.name, row.notes]
+  return [
+    row.full_name,
+    row.email,
+    row.tent_number,
+    row.room_type,
+    row.venue?.name,
+    row.notes,
+    row.entry?.bib_number,
+    row.entry?.registration_ref,
+    row.entry?.category,
+    row.entry?.batch,
+  ]
     .filter(Boolean)
     .some((v) => String(v).toLowerCase().includes(t));
 }
+
+/** Everyone allocated to a given drawn village area. */
+export function occupantsOfZone(rows: CrewRoomingRow[], zoneId: string | null): CrewRoomingRow[] {
+  if (!zoneId) return [];
+  return rows.filter((r) => r.village_zone_id === zoneId);
+}
+

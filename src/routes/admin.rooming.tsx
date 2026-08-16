@@ -13,6 +13,8 @@ import {
   type ParsedRoomingRow,
 } from "@/lib/rooming-import";
 import { syncRoomingSheet } from "@/lib/rooming-sheet.functions";
+import { loadEntryCandidates, matchEntry, type EntryCandidate } from "@/lib/rooming-match";
+import { fetchTentRules, fetchVillageTents, ruleMatches, tentForLabel, type VillageTent } from "@/lib/village-tents";
 
 export const Route = createFileRoute("/admin/rooming")({
   component: RoomingAdminPage,
@@ -59,6 +61,24 @@ function RoomingAdminPage() {
 
   const venues = venuesQ.data ?? [];
   const rows = roomingQ.data ?? [];
+  const entriesQ = useQuery({
+    queryKey: ["admin-entry-candidates", eventId],
+    queryFn: () => loadEntryCandidates(supabase, eventId),
+    enabled: !!eventId,
+  });
+  const candidates: EntryCandidate[] = entriesQ.data ?? [];
+  const tentsQ = useQuery({
+    queryKey: ["village-tents", eventId],
+    queryFn: () => fetchVillageTents(eventId),
+    enabled: !!eventId,
+  });
+  const tents: VillageTent[] = tentsQ.data ?? [];
+  const rulesQ = useQuery({
+    queryKey: ["village-tent-rules", eventId],
+    queryFn: () => fetchTentRules(eventId),
+    enabled: !!eventId,
+  });
+  const tentRules = rulesQ.data ?? [];
   const zones = villageQ.data?.zones ?? [];
 
   const byVenue = useMemo(() => {
@@ -130,33 +150,97 @@ function RoomingAdminPage() {
       await supabase.from("event_rooming").delete().eq("event_id", eventId).eq("venue_id", venueId);
     }
 
-    const payload = parsed.map((p) => ({
-      event_id: eventId,
-      venue_id: venueId,
-      entrant_id: p.email ? entrantByEmail.get(p.email.toLowerCase()) ?? null : null,
-      full_name: p.full_name || p.email || "Unnamed",
-      email: p.email || null,
-      tent_number: p.tent_number || null,
-      room_type: p.room_type || null,
-      notes: p.notes || null,
-      location_hint: p.location_hint || null,
-      village_zone_id:
-        zones.find((z) => labelsMatch(z.name, p.area))?.id ??
-        zones.find((z) => labelsMatch(z.name, p.tent_number))?.id ??
-        null,
-    }));
+    const payload = parsed.map((p) => {
+      const match = matchEntry(p, candidates);
+      const tent = tentForLabel(tents, p.tent_number);
+      return {
+        event_id: eventId,
+        venue_id: venueId,
+        entrant_id:
+          match.entrantId ?? (p.email ? entrantByEmail.get(p.email.toLowerCase()) ?? null : null),
+        event_entrant_id: match.entryId,
+        match_source: match.source,
+        full_name: p.full_name || p.email || "Unnamed",
+        email: p.email || null,
+        tent_number: p.tent_number || null,
+        room_type: p.room_type || null,
+        notes: p.notes || null,
+        location_hint: p.location_hint || null,
+        village_tent_id: tent?.id ?? null,
+        village_zone_id:
+          zones.find((z) => labelsMatch(z.name, p.area))?.id ??
+          zones.find((z) => labelsMatch(z.name, p.tent_number))?.id ??
+          tent?.zone_id ??
+          tentRules.find((r) => ruleMatches(r.pattern, p.tent_number))?.zone_id ??
+          null,
+      };
+    });
 
     const { error } = await supabase.from("event_rooming").insert(payload);
     setBusy(false);
     if (error) setMsg(error.message);
     else {
-      const matched = payload.filter((p) => p.entrant_id).length;
+      const matched = payload.filter((p) => p.event_entrant_id).length;
       const placed = payload.filter((p) => p.village_zone_id).length;
       setMsg(
-        `Imported ${payload.length} allocations · ${matched} matched to riders · ${placed} placed on the village map.`,
+        `Imported ${payload.length} allocations · ${matched} linked to entries · ${placed} placed on the village map.`,
       );
       refreshRooming();
     }
+  }
+
+  /** Re-runs the entry matcher over rows already in the list. */
+  async function linkEntries(venueId: string) {
+    const venueRows = byVenue.get(venueId) ?? [];
+    if (candidates.length === 0) {
+      setMsg("No entries loaded for this event yet — sync the entrant list first.");
+      return;
+    }
+    setBusy(true);
+    let linked = 0;
+    for (const r of venueRows) {
+      if (r.event_entrant_id) continue;
+      const match = matchEntry({ full_name: r.full_name, email: r.email, notes: r.notes }, candidates);
+      if (!match.entryId) continue;
+      await supabase
+        .from("event_rooming")
+        .update({
+          event_entrant_id: match.entryId,
+          entrant_id: match.entrantId ?? r.entrant_id,
+          match_source: match.source,
+        })
+        .eq("id", r.id);
+      linked += 1;
+    }
+    setBusy(false);
+    setMsg(linked ? `Linked ${linked} allocations to their entries.` : "No new entry matches found.");
+    refreshRooming();
+  }
+
+  async function setRowEntry(id: string, entryId: string | null) {
+    const cand = candidates.find((c) => c.id === entryId) ?? null;
+    await supabase
+      .from("event_rooming")
+      .update({
+        event_entrant_id: entryId,
+        entrant_id: cand?.entrant_id ?? null,
+        match_source: entryId ? "manual" : "none",
+      })
+      .eq("id", id);
+    refreshRooming();
+  }
+
+  async function setRowTent(id: string, tentId: string | null) {
+    const tent = tents.find((t) => t.id === tentId) ?? null;
+    await supabase
+      .from("event_rooming")
+      .update(
+        tent?.zone_id
+          ? { village_tent_id: tentId, village_zone_id: tent.zone_id }
+          : { village_tent_id: tentId },
+      )
+      .eq("id", id);
+    refreshRooming();
   }
 
   async function setRowZone(id: string, zoneId: string | null) {
@@ -169,17 +253,27 @@ function RoomingAdminPage() {
     const venueRows = byVenue.get(venueId) ?? [];
     const updates = venueRows
       .map((r) => {
-        const zone = zones.find((z) => labelsMatch(z.name, r.tent_number));
-        return zone && zone.id !== r.village_zone_id ? { id: r.id, zone: zone.id } : null;
+        const tent = tentForLabel(tents, r.tent_number);
+        const zoneId =
+          zones.find((z) => labelsMatch(z.name, r.tent_number))?.id ??
+          tent?.zone_id ??
+          tentRules.find((rule) => ruleMatches(rule.pattern, r.tent_number))?.zone_id ??
+          null;
+        if (!zoneId && !tent) return null;
+        if (zoneId === r.village_zone_id && (tent?.id ?? null) === r.village_tent_id) return null;
+        return { id: r.id, zone: zoneId, tent: tent?.id ?? null };
       })
-      .filter(Boolean) as { id: string; zone: string }[];
+      .filter(Boolean) as { id: string; zone: string | null; tent: string | null }[];
     if (updates.length === 0) {
       setMsg("No tent numbers matched a drawn area name on the village map.");
       return;
     }
     setBusy(true);
     for (const u of updates) {
-      await supabase.from("event_rooming").update({ village_zone_id: u.zone }).eq("id", u.id);
+      await supabase
+        .from("event_rooming")
+        .update({ village_zone_id: u.zone, village_tent_id: u.tent })
+        .eq("id", u.id);
     }
     setBusy(false);
     setMsg(`Placed ${updates.length} people on the village map.`);
@@ -278,6 +372,11 @@ function RoomingAdminPage() {
                 onImport={(parsed, replace) => void importRows(v.id, parsed, replace)}
                 onDeleteRow={(id) => void deleteRow(id)}
                 onSetZone={(id, zoneId) => void setRowZone(id, zoneId)}
+                onSetTent={(id, tentId) => void setRowTent(id, tentId)}
+                onSetEntry={(id, entryId) => void setRowEntry(id, entryId)}
+                onLinkEntries={() => void linkEntries(v.id)}
+                tents={tents}
+                candidates={candidates}
                 onAutoPlace={() => void autoPlace(v.id)}
                 onSaveSheet={(url, range) => void saveSheet(v.id, url, range)}
                 onSyncSheet={() => void syncSheet(v.id)}
@@ -473,17 +572,27 @@ function VenueRooming({
   onImport,
   onDeleteRow,
   onSetZone,
+  onSetTent,
+  onSetEntry,
+  onLinkEntries,
   onAutoPlace,
   onSaveSheet,
   onSyncSheet,
+  tents,
+  candidates,
 }: {
   venue: Venue;
   zones: VillageZone[];
   rows: RoomingRow[];
   busy: boolean;
+  tents: VillageTent[];
+  candidates: EntryCandidate[];
   onImport: (parsed: ParsedRoomingRow[], replace: boolean) => void;
   onDeleteRow: (id: string) => void;
   onSetZone: (id: string, zoneId: string | null) => void;
+  onSetTent: (id: string, tentId: string | null) => void;
+  onSetEntry: (id: string, entryId: string | null) => void;
+  onLinkEntries: () => void;
   onAutoPlace: () => void;
   onSaveSheet: (url: string, range: string) => void;
   onSyncSheet: () => void;
@@ -495,14 +604,18 @@ function VenueRooming({
     () => sheetRows ?? (text.trim() ? parseRoomingCsv(text) : []),
     [text, sheetRows],
   );
-  const placed = rows.filter((r) => r.village_zone_id).length;
+  const placed = rows.filter((r) => r.village_zone_id || r.village_tent_id).length;
+  const linked = rows.filter((r) => r.event_entrant_id).length;
+  const unmatched = rows.filter((r) => !r.event_entrant_id);
+  const [showUnmatched, setShowUnmatched] = useState(false);
+  const visibleRows = showUnmatched ? unmatched : rows;
 
   return (
     <section className="rounded-2xl bg-card p-4 ring-1 ring-border">
       <h2 className="flex flex-wrap items-center gap-2 font-display text-base font-bold text-ink">
         <BedDouble className="h-4 w-4 text-cherry" /> {venue.name}
         <span className="text-xs font-semibold text-ink-soft">
-          · {rows.length} allocated · {placed} on the map
+          · {rows.length} allocated · {linked} linked to entries · {placed} on the map
         </span>
       </h2>
 
@@ -539,6 +652,26 @@ function VenueRooming({
           >
             <Sparkles className="h-3.5 w-3.5" /> Auto-place on map
           </button>
+          <button
+            type="button"
+            disabled={busy || rows.length === 0}
+            onClick={onLinkEntries}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-2.5 py-1.5 text-xs font-bold text-ink disabled:opacity-50"
+            title="Match these people to their real event entries"
+          >
+            <Link2 className="h-3.5 w-3.5" /> Link to entries
+          </button>
+          {unmatched.length > 0 ? (
+            <button
+              type="button"
+              onClick={() => setShowUnmatched((v) => !v)}
+              className={`rounded-lg px-2.5 py-1.5 text-xs font-bold ${
+                showUnmatched ? "bg-cherry text-white" : "border border-border bg-background text-ink"
+              }`}
+            >
+              {unmatched.length} unmatched
+            </button>
+          ) : null}
           <label className="inline-flex items-center gap-1.5 text-xs text-ink-soft">
             <input type="checkbox" checked={replace} onChange={(e) => setReplace(e.target.checked)} />
             Replace this venue's existing list
@@ -587,12 +720,13 @@ function VenueRooming({
                 <th>Tent / room</th>
                 <th>Type</th>
                 <th>Map area</th>
-                <th>Linked</th>
+                <th>Tent pin</th>
+                <th>Entry</th>
                 <th />
               </tr>
             </thead>
             <tbody>
-              {rows.map((r) => (
+              {visibleRows.map((r) => (
                 <tr key={r.id} className="border-b border-border/50">
                   <td className="py-1.5 font-semibold text-ink">{r.full_name}</td>
                   <td className="text-ink-soft">{r.email ?? "—"}</td>
@@ -612,8 +746,39 @@ function VenueRooming({
                       ))}
                     </select>
                   </td>
-                  <td className={r.entrant_id ? "text-emerald-600" : "text-ink-soft"}>
-                    {r.entrant_id ? "Matched" : "Unmatched"}
+                  <td>
+                    <select
+                      value={r.village_tent_id ?? ""}
+                      onChange={(e) => onSetTent(r.id, e.target.value || null)}
+                      className="max-w-[120px] rounded border border-border bg-background px-1.5 py-1 text-[11px]"
+                    >
+                      <option value="">No pin</option>
+                      {tents.map((t) => (
+                        <option key={t.id} value={t.id}>
+                          {t.label}
+                        </option>
+                      ))}
+                    </select>
+                  </td>
+                  <td>
+                    <select
+                      value={r.event_entrant_id ?? ""}
+                      onChange={(e) => onSetEntry(r.id, e.target.value || null)}
+                      className={`max-w-[180px] rounded border border-border bg-background px-1.5 py-1 text-[11px] ${
+                        r.event_entrant_id ? "text-emerald-600" : "text-ink-soft"
+                      }`}
+                    >
+                      <option value="">Not linked</option>
+                      {candidates.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.full_name}
+                          {c.bib_number ? ` · ${c.bib_number}` : ""}
+                        </option>
+                      ))}
+                    </select>
+                    {r.match_source && r.match_source !== "none" ? (
+                      <span className="ml-1 text-[10px] uppercase text-ink-soft">{r.match_source}</span>
+                    ) : null}
                   </td>
                   <td className="text-right">
                     <button

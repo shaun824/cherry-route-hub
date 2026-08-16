@@ -11,7 +11,10 @@ export type ParsedRoomingRow = {
   location_hint: string;
   /** name of the drawn village-map area this person sits in (optional) */
   area: string;
+  /** Entry Ninja registration ref / bib / ID number from the sheet (optional) */
+  ref: string;
 };
+
 
 export function pickField(row: Record<string, unknown>, keys: string[]): string {
   for (const k of keys) {
@@ -42,6 +45,23 @@ export function parseRoomingRecords(records: Record<string, unknown>[]): ParsedR
       notes: pickField(r, ["notes", "Notes", "Comment", "Comments"]),
       location_hint: pickField(r, ["location_hint", "location", "Location", "Where", "Block", "Row"]),
       area: pickField(r, ["area", "Area", "map_area", "Map Area", "zone", "Zone", "village_area"]),
+      ref: pickField(r, [
+        "ref",
+        "Ref",
+        "registration_ref",
+        "Registration Ref",
+        "Registration",
+        "Reg Ref",
+        "Entry Ref",
+        "entry_ninja_ref",
+        "bib",
+        "Bib",
+        "Bib Number",
+        "id_number",
+        "ID Number",
+        "ID",
+      ]),
+
     }))
     .filter((r) => r.full_name || r.email || r.tent_number);
 }

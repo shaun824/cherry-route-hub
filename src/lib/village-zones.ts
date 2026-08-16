@@ -286,3 +286,20 @@ export function duplicateZoneGrid(
   }
   return out;
 }
+
+/** Ray-casting test: is this lat/lng inside a drawn area? */
+export function pointInZone(p: { lat: number; lng: number }, zone: VillageZone): boolean {
+  const pts = zone.points ?? [];
+  if (pts.length < 3) return false;
+  let inside = false;
+  for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) {
+    const xi = pts[i].lng;
+    const yi = pts[i].lat;
+    const xj = pts[j].lng;
+    const yj = pts[j].lat;
+    const intersect =
+      yi > p.lat !== yj > p.lat && p.lng < ((xj - xi) * (p.lat - yi)) / (yj - yi || 1e-12) + xi;
+    if (intersect) inside = !inside;
+  }
+  return inside;
+}

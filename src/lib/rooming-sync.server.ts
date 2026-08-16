@@ -1,8 +1,10 @@
 // Applies a rooming list (from a Google Sheet) to one venue: replaces the
-// venue's allocations, links riders by email and drops each person on the
-// matching drawn village-map area.
+// venue's allocations, links each row to the rider's real event entry and drops
+// them on the matching drawn village-map area / tent pin.
 import { labelsMatch, type ParsedRoomingRow } from "@/lib/rooming-import";
 import { readSheetRooming } from "@/lib/rooming-sheet.server";
+import { loadEntryCandidates, matchEntry } from "@/lib/rooming-match";
+import { ruleMatches, tentForLabel } from "@/lib/village-tents";
 
 type AnyClient = {
   from: (table: string) => any;
@@ -25,6 +27,8 @@ export async function placeRows(
     }
   }
 
+  const candidates = await loadEntryCandidates(client, eventId);
+
   const { data: village } = await client
     .from("event_village_maps")
     .select("zones")
@@ -32,27 +36,49 @@ export async function placeRows(
     .maybeSingle();
   const zones: Zone[] = Array.isArray(village?.zones) ? (village!.zones as Zone[]) : [];
 
-  function zoneFor(row: ParsedRoomingRow): string | null {
+  const { data: tentRows } = await client
+    .from("event_village_tents")
+    .select("id, label, zone_id")
+    .eq("event_id", eventId);
+  const tents = (tentRows ?? []) as { id: string; label: string; zone_id: string | null }[];
+
+  const { data: ruleRows } = await client
+    .from("event_village_tent_rules")
+    .select("id, zone_id, pattern")
+    .eq("event_id", eventId);
+  const rules = (ruleRows ?? []) as { id: string; zone_id: string; pattern: string }[];
+
+  function zoneFor(row: ParsedRoomingRow, tentZoneId: string | null): string | null {
     const hit =
       zones.find((z) => labelsMatch(z.name, row.area)) ??
       zones.find((z) => labelsMatch(z.name, row.tent_number));
-    return hit?.id ?? null;
+    if (hit) return hit.id;
+    if (tentZoneId) return tentZoneId;
+    return rules.find((r) => ruleMatches(r.pattern, row.tent_number))?.zone_id ?? null;
   }
 
   await client.from("event_rooming").delete().eq("event_id", eventId).eq("venue_id", venueId);
 
-  const payload = rows.map((r) => ({
-    event_id: eventId,
-    venue_id: venueId,
-    entrant_id: r.email ? entrantByEmail.get(r.email.toLowerCase()) ?? null : null,
-    full_name: r.full_name || r.email || "Unnamed",
-    email: r.email || null,
-    tent_number: r.tent_number || null,
-    room_type: r.room_type || null,
-    notes: r.notes || null,
-    location_hint: r.location_hint || null,
-    village_zone_id: zoneFor(r),
-  }));
+  const payload = rows.map((r) => {
+    const tent = tentForLabel(tents, r.tent_number);
+    const match = matchEntry(r, candidates);
+    return {
+      event_id: eventId,
+      venue_id: venueId,
+      entrant_id:
+        match.entrantId ?? (r.email ? entrantByEmail.get(r.email.toLowerCase()) ?? null : null),
+      event_entrant_id: match.entryId,
+      match_source: match.source,
+      full_name: r.full_name || r.email || "Unnamed",
+      email: r.email || null,
+      tent_number: r.tent_number || null,
+      room_type: r.room_type || null,
+      notes: r.notes || null,
+      location_hint: r.location_hint || null,
+      village_tent_id: tent?.id ?? null,
+      village_zone_id: zoneFor(r, tent?.zone_id ?? null),
+    };
+  });
 
   if (payload.length) {
     const { error } = await client.from("event_rooming").insert(payload);
@@ -61,10 +87,12 @@ export async function placeRows(
 
   return {
     imported: payload.length,
-    matched: payload.filter((p) => p.entrant_id).length,
-    placed: payload.filter((p) => p.village_zone_id).length,
+    matched: payload.filter((p) => p.event_entrant_id || p.entrant_id).length,
+    linked: payload.filter((p) => p.event_entrant_id).length,
+    placed: payload.filter((p) => p.village_zone_id || p.village_tent_id).length,
   };
 }
+
 
 /** Pulls one venue's linked Google Sheet and rewrites its allocations. */
 export async function syncVenueSheet(client: AnyClient, venueId: string) {

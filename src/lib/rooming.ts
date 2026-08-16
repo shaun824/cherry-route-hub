@@ -23,6 +23,9 @@ export type RoomingRow = {
   event_id: string;
   venue_id: string | null;
   entrant_id: string | null;
+  /** the rider's actual entry for this event (Entry Ninja), when linked */
+  event_entrant_id: string | null;
+  match_source: string | null;
   full_name: string;
   email: string | null;
   tent_number: string | null;
@@ -32,8 +35,14 @@ export type RoomingRow = {
   /** id of the drawn village-map area this person sits in */
   village_zone_id: string | null;
   village_spot_id: string | null;
+  /** id of the exact tent pin, when one has been dropped */
+  village_tent_id: string | null;
   venue?: { id: string; name: string; address: string | null; village_spot_id: string | null } | null;
 };
+
+export const ROOMING_COLUMNS =
+  "id, event_id, venue_id, entrant_id, event_entrant_id, match_source, full_name, email, tent_number, room_type, notes, location_hint, village_zone_id, village_spot_id, village_tent_id, venue:event_venues(id, name, address, village_spot_id)";
+
 
 export async function fetchVenues(eventId: string): Promise<Venue[]> {
   const { data, error } = await supabase
@@ -52,16 +61,14 @@ export async function fetchVenues(eventId: string): Promise<Venue[]> {
 export async function fetchRooming(eventId: string): Promise<RoomingRow[]> {
   const { data, error } = await supabase
     .from("event_rooming")
-    .select(
-      "id, event_id, venue_id, entrant_id, full_name, email, tent_number, room_type, notes, location_hint, village_zone_id, village_spot_id, venue:event_venues(id, name, address, village_spot_id)",
-    )
+    .select(ROOMING_COLUMNS)
     .eq("event_id", eventId)
     .order("tent_number", { ascending: true });
   if (error) {
     console.warn("[rooming] list", error);
     return [];
   }
-  return (data ?? []) as RoomingRow[];
+  return (data ?? []) as unknown as RoomingRow[];
 }
 
 /** The signed-in rider's own accommodation allocation for an event (RLS-scoped). */
@@ -77,9 +84,22 @@ export async function fetchMyRooming(eventId: string): Promise<RoomingRow | null
   const { data: mine } = await supabase.from("entrants").select("id").eq("user_id", uid);
   const entrantIds = new Set((mine ?? []).map((e) => e.id));
 
+  // Entries for this event that belong to me — the strongest link.
+  const myEntryIds = new Set<string>();
+  if (entrantIds.size) {
+    const { data: entries } = await supabase
+      .from("event_entrants")
+      .select("id, entrant_id")
+      .eq("event_id", eventId)
+      .in("entrant_id", Array.from(entrantIds));
+    for (const e of entries ?? []) myEntryIds.add(e.id);
+  }
+
   return (
+    rows.find((r) => r.event_entrant_id && myEntryIds.has(r.event_entrant_id)) ??
     rows.find((r) => r.entrant_id && entrantIds.has(r.entrant_id)) ??
     rows.find((r) => email && (r.email ?? "").toLowerCase() === email) ??
     null
+
   );
 }

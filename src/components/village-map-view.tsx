@@ -13,6 +13,7 @@ import {
   type VillageHotspot,
 } from "@/lib/village-map";
 import { villageIcon } from "@/lib/village-icons";
+import { fetchVillageTents } from "@/lib/village-tents";
 
 
 const VillageMapGeo = lazy(() => import("./village-map-geo"));
@@ -68,12 +69,16 @@ export function VillageMapView({
   eventId,
   focusSpotId,
   focusZoneId,
+  focusTentId,
 }: {
   eventId: string;
   focusSpotId?: string | null;
   focusZoneId?: string | null;
+  focusTentId?: string | null;
 }) {
   const q = useQuery({ queryKey: ["village-map", eventId], queryFn: () => fetchVillageMap(eventId) });
+  const tentsQ = useQuery({ queryKey: ["village-tents", eventId], queryFn: () => fetchVillageTents(eventId) });
+  const tents = tentsQ.data ?? [];
   const [hovered, setHovered] = useState<string | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
   const [filter, setFilter] = useState<string | null>(null);
@@ -105,7 +110,7 @@ export function VillageMapView({
   // no pins) is still a perfectly usable live map.
   const geoReady =
     hasVenueCentre(map?.geo) &&
-    ((hasImage && isPlacedGeo(map?.geo)) || pinnedCount > 0 || zoneCount > 0);
+    ((hasImage && isPlacedGeo(map?.geo)) || pinnedCount > 0 || zoneCount > 0 || tents.length > 0);
   const focusZone = (map?.zones ?? []).find((z) => z.id === focusZoneId) ?? null;
   const detail = (map?.hotspots ?? []).find((s) => s.id === (selected ?? hovered)) ?? null;
 
@@ -188,7 +193,9 @@ export function VillageMapView({
               zones={map.zones ?? []}
               selected={selected}
               onSelect={setSelected}
+              tents={tents.map((t) => ({ id: t.id, label: t.label, lat: t.lat, lng: t.lng }))}
               highlightZoneId={focusZoneId ?? null}
+              highlightTentId={focusTentId ?? null}
             />
           </Suspense>
         </ClientOnly>
