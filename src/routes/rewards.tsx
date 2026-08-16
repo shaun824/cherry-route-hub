@@ -107,6 +107,9 @@ function RewardsPage() {
         </div>
       </section>
 
+      {/* Spend-back promise */}
+      {data?.linked ? <SpendBack spendCents3y={(data as any).spendCents3y ?? 0} balance={balance} /> : null}
+
       {!data?.linked ? (
         <div className="rounded-2xl bg-accent p-4 text-sm">
           <p className="font-semibold">We haven't matched your rider record yet.</p>
@@ -118,6 +121,7 @@ function RewardsPage() {
           </Link>
         </div>
       ) : null}
+
 
       {/* Tabs */}
       <div className="flex gap-1 rounded-xl bg-secondary p-1">
