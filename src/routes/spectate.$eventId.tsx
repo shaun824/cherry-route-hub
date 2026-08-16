@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Fragment, useEffect, useMemo, useState } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import {
@@ -74,6 +74,21 @@ function SpectatorEventPage() {
   const { eventId } = Route.useParams();
   const event = useAdminStore((s) => s.events.find((e) => e.id === eventId));
   const [tab, setTab] = useState<Tab>("riders");
+  const tabNavRef = useRef<HTMLDivElement | null>(null);
+  /** Switching tabs should always land you at the top of the new section. */
+  const selectTab = useCallback((next: Tab) => {
+    setTab(next);
+    if (typeof window === "undefined") return;
+    const scroll = () => {
+      const nav = tabNavRef.current;
+      const top = nav ? window.scrollY + nav.getBoundingClientRect().top - 8 : 0;
+      window.scrollTo({ top: Math.max(0, top), behavior: "auto" });
+    };
+    scroll();
+    window.requestAnimationFrame(scroll);
+    window.setTimeout(scroll, 60);
+  }, []);
+
   const [categoryFilter, setCategoryFilter] = useState<string>("__all");
   const [groupBy, setGroupBy] = useState<GroupBy>("class");
   const [search, setSearch] = useState("");
@@ -322,7 +337,7 @@ function SpectatorEventPage() {
       </div>
 
       {/* Tabs */}
-      <div className="sticky top-0 z-20 -mt-3 px-5">
+      <div ref={tabNavRef} className="sticky top-0 z-20 -mt-3 px-5">
         <div className="flex gap-1 rounded-2xl bg-card p-1 shadow-lg ring-1 ring-border">
           {([
             { id: "riders", label: "Riders", icon: Users },
@@ -335,7 +350,7 @@ function SpectatorEventPage() {
               <button
                 key={t.id}
                 type="button"
-                onClick={() => setTab(t.id)}
+                onClick={() => selectTab(t.id)}
                 className={`flex flex-1 items-center justify-center gap-1.5 rounded-xl px-2 py-2 text-xs font-semibold transition-colors ${
                   active ? "bg-cherry text-white shadow-sm" : "text-ink-soft hover:text-ink"
                 }`}

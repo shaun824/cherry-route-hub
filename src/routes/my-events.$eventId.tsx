@@ -126,6 +126,24 @@ function MyEventDetail() {
   const { event } = Route.useLoaderData();
   const { user } = useSession();
   const [tab, setTab] = useState<Tab>("info");
+  const tabNavRef = useRef<HTMLElement | null>(null);
+  /** Switching tabs should always land you at the top of the new section. */
+  const scrollToTabTop = useCallback(() => {
+    if (typeof window === "undefined") return;
+    const nav = tabNavRef.current;
+    const top = nav ? window.scrollY + nav.getBoundingClientRect().top : 0;
+    window.scrollTo({ top: Math.max(0, top), behavior: "auto" });
+  }, []);
+  const selectTab = useCallback(
+    (next: Tab) => {
+      setTab(next);
+      scrollToTabTop();
+      // Panels mount lazily and can shift layout — re-anchor on the next frames.
+      window.requestAnimationFrame(scrollToTabTop);
+      window.setTimeout(scrollToTabTop, 60);
+    },
+    [scrollToTabTop],
+  );
   const [villageFocus, setVillageFocus] = useState<{ zoneId?: string | null; spotId?: string | null; tentId?: string | null }>({});
   const focusVillage = useCallback((f: { zoneId?: string | null; spotId?: string | null; tentId?: string | null }) => {
     setVillageFocus(f);
@@ -140,6 +158,7 @@ function MyEventDetail() {
       if (++tries > 8) window.clearInterval(timer);
     }, 200);
   }, []);
+
   const eventNews = useAdminStore((s) => s.feed).filter((p) => p.eventId === event.id);
   const hasFreshNews = eventNews.some(
     (p) => Date.now() - new Date(p.postedAt).getTime() < 7 * 24 * 60 * 60 * 1000,
@@ -183,7 +202,7 @@ function MyEventDetail() {
         </div>
       </div>
 
-      <nav className="sticky top-0 z-10 flex gap-1 overflow-x-auto border-b border-border bg-card/95 px-2 py-2 backdrop-blur">
+      <nav ref={tabNavRef} className="sticky top-0 z-10 flex gap-1 overflow-x-auto border-b border-border bg-card/95 px-2 py-2 backdrop-blur">
         {(
           [
             { id: "info", label: "Info", icon: Info },
@@ -203,7 +222,7 @@ function MyEventDetail() {
           return (
             <button
               key={t.id}
-              onClick={() => setTab(t.id)}
+              onClick={() => selectTab(t.id)}
               className={`relative flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold ${
                 active ? "bg-cherry text-white" : "text-ink-soft"
               }`}
