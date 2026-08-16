@@ -3,8 +3,15 @@ import { useEffect, useState } from "react";
 import { PageHeader } from "@/components/ui-bits";
 import { supabase } from "@/integrations/supabase/client";
 import { useSession, signOut, useIsCrew } from "@/lib/auth";
-import { LogOut, Save, User as UserIcon, ShieldAlert, HardHat } from "lucide-react";
+import { LogOut, Save, User as UserIcon, ShieldAlert, HardHat, Repeat, Plus, X } from "lucide-react";
 import { NotificationSettings } from "@/components/notification-settings";
+import {
+  listKnownAccounts,
+  rememberAccount,
+  forgetAccount,
+  type KnownAccount,
+} from "@/lib/known-accounts";
+
 
 export const Route = createFileRoute("/profile")({
   head: () => ({
