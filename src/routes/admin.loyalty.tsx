@@ -272,9 +272,11 @@ function EventValues({ rows, settings, onDone }: { rows: any[]; settings: Loyalt
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border p-3">
         <p className="text-xs text-ink-soft">
           Points follow the entry fee: <strong>{settings.pointsPerRand} pt per R1</strong> (R1 000 entry ≈{" "}
-          {formatPoints(1000 * settings.pointsPerRand)} pts). Hero events pay {settings.heroMultiplier}×. Events with no
-          price fall back to {settings.defaultPoints} pts.
+          {formatPoints(1000 * settings.pointsPerRand)} pts) on every event. Tick <strong>Sells out</strong> on events
+          you don't need to discount — entry-discount rewards are steered to the events that still need entries. Events
+          with no price fall back to {settings.defaultPoints} pts.
         </p>
+
         <button
           onClick={() => priceMut.mutate()}
           disabled={priceMut.isPending}
