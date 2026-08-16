@@ -1,6 +1,8 @@
 // Crew planning helpers: group an event's running order into real days and
 // derive a crew timeline (call times, set-up windows, debrief) from it.
 import type { EventDay, ScheduleItem } from "@/lib/mock-data";
+import { withRegistrationDayLabels } from "@/lib/event-days";
+
 
 export type ScheduleDay = {
   id: string;
