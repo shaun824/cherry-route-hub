@@ -149,8 +149,8 @@ export function AssistantWidget() {
                   key={i}
                   className={
                     m.role === "user"
-                      ? "ml-auto max-w-[85%] rounded-2xl bg-cherry px-3 py-2 text-sm text-white"
-                      : "max-w-[85%] rounded-2xl bg-secondary px-3 py-2 text-sm text-ink"
+                      ? "ml-auto max-w-[85%] break-words rounded-2xl bg-cherry px-3 py-2 text-sm text-white"
+                      : "max-w-[85%] break-words rounded-2xl bg-secondary px-3 py-2 text-sm text-ink"
                   }
                 >
                   {m.role === "user" ? (
