@@ -452,9 +452,10 @@ export default function VillageMapGeo({
             );
           })}
 
-          <FlyToPoint
+          <KeepPointInView
             position={selectedSpot ? hotspotLatLng(geo, selectedSpot, heightM) : null}
           />
+
           <ClearOnMapClick onClear={() => onSelect(null)} />
 
 
