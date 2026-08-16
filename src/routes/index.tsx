@@ -829,10 +829,9 @@ function NextEventCard() {
       {rest.length > 0 ? (
         <div>
           <p className="mb-2 font-display text-lg font-bold tracking-tight text-ink">
-            {getEventSport(rest[0].event.discipline, rest[0].event.name) === "moto"
-              ? "More motorbike events you might like"
-              : "More mountain bike events you might like"}
+            More events you are entered for
           </p>
+
 
           <div className="flex snap-x snap-mandatory gap-2 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {rest.map((r) => (
