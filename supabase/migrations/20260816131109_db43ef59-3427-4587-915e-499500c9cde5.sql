@@ -1,0 +1,1 @@
+DELETE FROM public.event_entrants WHERE id = '66fe4f3e-31bc-43f8-9107-71f795217b9d';
