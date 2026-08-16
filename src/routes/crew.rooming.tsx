@@ -13,6 +13,7 @@ import {
   type CrewRoomingRow,
 } from "@/lib/crew";
 import { VillageMapView } from "@/components/village-map-view";
+import { OfflinePackCard } from "@/components/offline-pack-card";
 
 export const Route = createFileRoute("/crew/rooming")({
   head: () => ({
@@ -285,6 +286,7 @@ function CrewPage() {
           <h2 className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest text-ink-soft">
             <MapPin className="h-3.5 w-3.5" /> Village map
           </h2>
+          {eventId ? <div className="mb-3"><OfflinePackCard event={{ id: eventId }} /></div> : null}
           {eventId ? <VillageMapView eventId={eventId} focusSpotId={focusSpot} focusZoneId={focusZone} focusTentId={focusTent} /> : null}
         </section>
     </div>

@@ -42,6 +42,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/lib/auth";
 import { VillageMapView } from "@/components/village-map-view";
+import { OfflinePackCard } from "@/components/offline-pack-card";
 import { buildPackingList, fetchEventInfo, tubelessSanitise, type EventInfoBlock, type PackingItem } from "@/lib/event-info";
 import { getEventSport } from "@/lib/event-sport";
 import { RouteMap } from "@/components/route-map";
@@ -224,6 +225,7 @@ function MyEventDetail() {
         {tab === "village" && (
           <section className="space-y-3">
             <SectionTitle>Race village</SectionTitle>
+            <OfflinePackCard event={event as never} />
             <VillageMapView
               eventId={event.id}
               focusZoneId={villageFocus.zoneId ?? null}
@@ -499,6 +501,9 @@ function RoutesPanel({
       {hasMap ? (
         <section>
           <SectionTitle>Interactive map</SectionTitle>
+          <div className="mt-2 mb-3">
+            <OfflinePackCard event={event as never} />
+          </div>
           <div className="mt-2">
             <LockedSection locked={locked} message="Sign in to view the interactive route map">
               <RouteMap event={event as never} height="320px" />

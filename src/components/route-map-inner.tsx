@@ -280,6 +280,7 @@ export default function RouteMapInner({
 
         >
           <TileLayer
+            crossOrigin="anonymous"
             attribution='&copy; <a href="https://openstreetmap.org">OpenStreetMap</a>'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             maxZoom={24}
