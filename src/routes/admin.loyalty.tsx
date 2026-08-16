@@ -484,6 +484,10 @@ function Rewards({ rows, settings, onDone }: { rows: any[]; settings: LoyaltySet
             valid_days: Math.trunc(Number(form.valid_days) || 180),
             active: Boolean(form.active),
             sort_order: Math.trunc(Number(form.sort_order) || 0),
+            kind: form.kind ?? "entry",
+            stock: String(form.stock ?? "").trim() === "" ? null : Math.trunc(Number(form.stock) || 0),
+            fulfilment_notes: form.fulfilment_notes ?? null,
+
           });
         }}
       >
