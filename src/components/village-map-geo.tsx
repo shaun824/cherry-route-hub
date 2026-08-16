@@ -172,6 +172,23 @@ function tentIcon(label: string, active: boolean) {
   });
 }
 
+function areaNumberIcon(label: string, active: boolean) {
+  const bg = active ? "#c8102e" : "#1f2937";
+  return L.divIcon({
+    className: "rce-village-area-number",
+    html: `<span style="display:grid;min-width:22px;height:22px;place-items:center;border-radius:6px;background:${bg};color:#fff;font-size:10px;font-weight:800;border:${
+      active ? "2px solid #fff" : "1px solid rgba(255,255,255,.65)"
+    };box-shadow:0 1px 4px rgba(0,0,0,.35)">${escapeHtml(label)}</span>`,
+    iconSize: [22, 22],
+    iconAnchor: [11, 11],
+  });
+}
+
+function normalizedNumber(value: string) {
+  const match = value.trim().match(/^(?:tent\s*)?(\d+)$/i);
+  return match?.[1] ?? null;
+}
+
 export default function VillageMapGeo({
   imageUrl,
   geo,
@@ -247,6 +264,25 @@ export default function VillageMapGeo({
   const selectedSpot = useMemo(
     () => hotspots.find((h) => h.id === selected) ?? null,
     [hotspots, selected],
+  );
+
+  // Older village-map imports created a separate tent pin for every numbered
+  // drawn area. Those pins landed near area corners and made the rider map look
+  // like it was showing polygon handles. Use one label at each area's centre
+  // instead; genuine standalone/manual tent pins remain visible below.
+  const numberedAreas = useMemo(() => {
+    const seen = new Set<string>();
+    return zones.flatMap((zone) => {
+      const number = normalizedNumber(zone.name);
+      const centre = zoneCentroid(zone);
+      if (!number || !centre || seen.has(number)) return [];
+      seen.add(number);
+      return [{ zone, number, centre }];
+    });
+  }, [zones]);
+  const numberedAreaLabels = useMemo(
+    () => new Set(numberedAreas.map((area) => area.number)),
+    [numberedAreas],
   );
 
 
@@ -347,7 +383,25 @@ export default function VillageMapGeo({
 
           <ZoomWatcher onZoom={setZoom} />
 
-          {tents.map((t) => {
+          {numberedAreas.map(({ zone, number, centre }) => {
+            const active = highlightZoneId === zone.id;
+            if (!active && zoom < 19) return null;
+            return (
+              <Marker
+                key={`area-label-${zone.id}`}
+                position={[centre.lat, centre.lng]}
+                icon={areaNumberIcon(number, active)}
+                interactive={false}
+                keyboard={false}
+                zIndexOffset={active ? 850 : 200}
+              />
+            );
+          })}
+
+          {tents.filter((t) => {
+            const number = normalizedNumber(t.label);
+            return t.id === highlightTentId || !number || !numberedAreaLabels.has(number);
+          }).map((t) => {
             const hot = highlightTentId === t.id;
             // Labels only once you're zoomed in — otherwise the numbers overlap
             // into an unreadable block. Your own tent always stays labelled.
