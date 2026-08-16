@@ -115,7 +115,7 @@ export const Route = createFileRoute("/my-events/$eventId")({
 });
 
 /** Lets the accommodation card jump the page to the village tab, focused. */
-const VillageFocusContext = createContext<(f: { zoneId?: string | null; spotId?: string | null }) => void>(
+const VillageFocusContext = createContext<(f: { zoneId?: string | null; spotId?: string | null; tentId?: string | null }) => void>(
   () => {},
 );
 
@@ -125,8 +125,8 @@ function MyEventDetail() {
   const { event } = Route.useLoaderData();
   const { user } = useSession();
   const [tab, setTab] = useState<Tab>("info");
-  const [villageFocus, setVillageFocus] = useState<{ zoneId?: string | null; spotId?: string | null }>({});
-  const focusVillage = useCallback((f: { zoneId?: string | null; spotId?: string | null }) => {
+  const [villageFocus, setVillageFocus] = useState<{ zoneId?: string | null; spotId?: string | null; tentId?: string | null }>({});
+  const focusVillage = useCallback((f: { zoneId?: string | null; spotId?: string | null; tentId?: string | null }) => {
     setVillageFocus(f);
     setTab("village");
     if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
@@ -228,6 +228,7 @@ function MyEventDetail() {
               eventId={event.id}
               focusZoneId={villageFocus.zoneId ?? null}
               focusSpotId={villageFocus.spotId ?? null}
+              focusTentId={villageFocus.tentId ?? null}
             />
           </section>
         )}
@@ -1767,13 +1768,14 @@ function YourEntryCard({ eventId, entryUrl = null }: { eventId: string; entryUrl
             <p className="text-[11px] text-ink-soft">{rooming.location_hint}</p>
           ) : null}
           {rooming.notes ? <p className="mt-1 text-[11px] text-ink-soft">{rooming.notes}</p> : null}
-          {rooming.village_zone_id || rooming.village_spot_id || rooming.venue?.village_spot_id ? (
+          {rooming.village_tent_id || rooming.village_zone_id || rooming.village_spot_id || rooming.venue?.village_spot_id ? (
             <button
               type="button"
               onClick={() =>
                 focusVillage({
                   zoneId: rooming.village_zone_id,
                   spotId: rooming.village_spot_id ?? rooming.venue?.village_spot_id ?? null,
+                  tentId: rooming.village_tent_id,
                 })
               }
               className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-cherry px-2.5 py-1.5 text-[11px] font-bold text-white"
