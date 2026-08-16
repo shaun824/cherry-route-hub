@@ -211,18 +211,25 @@ export async function buildGlobalBotContext(
     })
     .filter(Boolean);
 
-  // Admin-approved learned answers (global + focus events).
+  // Admin-approved learned answers (global + focus events). `follow_ups` are the
+  // questions real riders asked next in the same conversation arc.
   const today = new Date().toISOString().slice(0, 10);
   const { data: learned } = await admin
     .from("event_faq_learned")
-    .select("question, answer, expires_on, event_id")
+    .select("question, answer, expires_on, event_id, follow_ups")
     .eq("status", "approved")
     .limit(200);
   const approved = (learned ?? [])
     .filter((f: any) => !f.expires_on || String(f.expires_on) >= today)
     .filter((f: any) => !f.event_id || focusIds.includes(f.event_id))
-    .map((f: any) => `Q: ${f.question}\nA: ${f.answer}`)
+    .map((f: any) => {
+      const next = (f.follow_ups ?? []).filter(Boolean) as string[];
+      return `Q: ${f.question}\nA: ${f.answer}${
+        next.length ? `\nRiders who asked this usually asked next: ${next.join(" | ")}` : ""
+      }`;
+    })
     .join("\n\n");
+
 
   // The signed-in person's own records for the focus event.
   let riderText = "";
