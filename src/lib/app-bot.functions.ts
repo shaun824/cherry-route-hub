@@ -97,8 +97,11 @@ ${FOLLOWUP_PROMPT_RULE}
       console.error("[app-bot] gateway call failed", e);
     }
 
-    const needsAdmin = answer.trim().toUpperCase() === BOT_MISS_SENTINEL;
-    const body = needsAdmin ? BOT_MISS_REPLY : answer;
+    const parsed = splitFollowUps(answer);
+    const needsAdmin = parsed.body.trim().toUpperCase() === BOT_MISS_SENTINEL;
+    const body = needsAdmin ? BOT_MISS_REPLY : parsed.body;
+    const followUps = needsAdmin ? [] : parsed.followUps;
+
 
     // Log signed-in event questions into the existing admin Q&A threads so the
     // team sees them and can "Save as FAQ".
