@@ -501,7 +501,8 @@ function FindMyEmail() {
               </div>
             ) : (
               <p className="rounded-lg bg-card px-3 py-2 text-[11px] text-ink-soft ring-1 ring-border">
-                No entry found for that ID number. Double-check the number, or contact us and we'll help.
+                We couldn't match that ID number and surname. Double-check both, or contact us and
+                we'll help.
               </p>
             )
 
