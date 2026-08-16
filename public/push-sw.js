@@ -62,8 +62,16 @@ async function cacheFirst(request, cacheName) {
   const hit = await cache.match(request, { ignoreVary: true });
   if (hit) return hit;
   try {
-    const res = await fetch(request);
-    if (res && (res.ok || res.type === "opaque")) cache.put(request, res.clone()).catch(() => {});
+    // Re-issue as a CORS request: opaque (no-cors) responses cannot be stored,
+    // and tile servers all send Access-Control-Allow-Origin: *.
+    const corsReq = new Request(request.url, { mode: "cors", credentials: "omit" });
+    let res;
+    try {
+      res = await fetch(corsReq);
+      if (res && res.ok) cache.put(request.url, res.clone()).catch(() => {});
+    } catch (_) {
+      res = await fetch(request);
+    }
     return res;
   } catch (err) {
     const fallback = await cache.match(request, { ignoreVary: true, ignoreSearch: true });
