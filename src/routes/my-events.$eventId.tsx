@@ -1,7 +1,7 @@
 import { entryNinjaRegistrationUrl } from "@/lib/entry-ninja-link";
 import { WhatsappButton } from "@/components/whatsapp-button";
 import { isBotMiss } from "@/lib/bot-handoff";
-import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { createFileRoute, Link, notFound, useRouterState } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { askEventBot } from "@/lib/event-bot.functions";
 import { fetchEventSponsors } from "@/lib/event-sponsors.functions";
@@ -1360,12 +1360,15 @@ function AskAdminPanel({
         className="flex-1 overflow-y-auto overscroll-y-auto p-3 [touch-action:pan-y]"
       >
         {(messagesQ.data ?? []).length === 0 && !pending ? (
-          <p className="mt-6 text-center text-xs text-ink-soft">
-            {userId
-              ? "No messages yet. Ask a question below and the bot will try first."
-              : "Sign in to ask the assistant about this event."}
-          </p>
+          userId ? (
+            <p className="mt-6 text-center text-xs text-ink-soft">
+              No messages yet. Ask a question below and the bot will try first.
+            </p>
+          ) : (
+            <SignInNudge />
+          )
         ) : (
+
           <ul className="space-y-2">
             {(messagesQ.data ?? []).map((m: any) => {
               const mine = m.author_id === userId && !m.is_bot;
@@ -1414,32 +1417,75 @@ function AskAdminPanel({
           </ul>
         )}
       </div>
-      <div className="flex items-center gap-2 border-t border-border p-2">
-        <input
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && !e.shiftKey) {
-              e.preventDefault();
-              void send();
-            }
-          }}
-          placeholder={userId ? "Ask about schedule, packing, venue…" : "Sign in to ask a question"}
-          maxLength={1000}
-          disabled={!userId}
-          className="flex-1 rounded-lg bg-background px-3 py-2 text-sm ring-1 ring-border focus:outline-none focus:ring-cherry disabled:opacity-60"
-        />
-        <button
-          onClick={() => void send()}
-          disabled={busy || !text.trim() || !userId}
-          className="grid h-9 w-9 place-items-center rounded-full cherry-gradient text-white disabled:opacity-60"
-        >
-          <Send className="h-4 w-4" />
-        </button>
-      </div>
+      {userId ? (
+        <div className="flex items-center gap-2 border-t border-border p-2">
+          <input
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                void send();
+              }
+            }}
+            placeholder="Ask about schedule, packing, venue…"
+            maxLength={1000}
+            className="flex-1 rounded-lg bg-background px-3 py-2 text-sm ring-1 ring-border focus:outline-none focus:ring-cherry disabled:opacity-60"
+          />
+          <button
+            onClick={() => void send()}
+            disabled={busy || !text.trim()}
+            className="grid h-9 w-9 place-items-center rounded-full cherry-gradient text-white disabled:opacity-60"
+          >
+            <Send className="h-4 w-4" />
+          </button>
+        </div>
+      ) : (
+        <div className="border-t border-border p-2">
+          <SignInLink className="flex w-full items-center justify-center gap-2 rounded-xl cherry-gradient px-4 py-2.5 text-sm font-bold text-white">
+            Sign in to ask a question
+          </SignInLink>
+        </div>
+      )}
     </div>
   );
 }
+
+function SignInLink({
+  children,
+  className,
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
+  const next = useRouterState({ select: (s) => s.location.href });
+  return (
+    <Link to="/auth" search={{ next }} className={className}>
+      {children}
+    </Link>
+  );
+}
+
+function SignInNudge() {
+  return (
+    <div className="mx-auto mt-4 max-w-[19rem] rounded-2xl bg-background p-4 text-center ring-1 ring-border">
+      <p className="font-display text-sm font-bold text-ink">
+        Sign in to chat about this event 🍒
+      </p>
+      <p className="mt-1 text-xs text-ink-soft">
+        Signing in now means the bot can answer with your entry, sizes, tent number and balance —
+        and an admin can reply straight back to you here. It only takes a moment.
+      </p>
+      <SignInLink className="mt-3 inline-flex items-center justify-center rounded-xl cherry-gradient px-4 py-2 text-xs font-bold text-white">
+        Sign in or create an account
+      </SignInLink>
+      <p className="mt-2 text-[11px] text-ink-soft">
+        Already entered? Use your ID number and surname to link your entry.
+      </p>
+    </div>
+  );
+}
+
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (

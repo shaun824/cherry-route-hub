@@ -4,7 +4,7 @@
 import { useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import { WhatsappButton } from "@/components/whatsapp-button";
-import { useRouterState } from "@tanstack/react-router";
+import { Link, useRouterState } from "@tanstack/react-router";
 import { Bot, Check, Loader2, MessageSquareWarning, Send, Sparkles, X } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { submitFeedback } from "@/lib/feedback.functions";
@@ -175,9 +175,17 @@ export function AssistantWidget() {
 
               {!user ? (
                 <p className="pt-1 text-center text-[11px] text-ink-soft">
-                  Sign in to ask about your own entry, tent or balance.
+                  <Link
+                    to="/auth"
+                    onClick={() => setOpen(false)}
+                    className="font-bold text-cherry underline underline-offset-2"
+                  >
+                    Sign in
+                  </Link>{" "}
+                  to ask about your own entry, tent or balance.
                 </p>
               ) : null}
+
             </div>
 
             <div className="min-w-0 max-h-[62%] shrink-0 overflow-y-auto overflow-x-hidden border-t border-border p-3">
