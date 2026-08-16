@@ -1,6 +1,7 @@
 // Accommodation ("rooming list") helpers. Admins upload a rooming list per
 // venue; riders see only their own allocation (tent / room number).
 import { supabase } from "@/integrations/supabase/client";
+import { withSnapshot } from "@/lib/offline-pack";
 
 export type Venue = {
   id: string;
@@ -59,6 +60,14 @@ export async function fetchVenues(eventId: string): Promise<Venue[]> {
 }
 
 export async function fetchRooming(eventId: string): Promise<RoomingRow[]> {
+  return withSnapshot(
+    `rooming:${eventId}`,
+    () => fetchRoomingLive(eventId),
+    (v) => v.length === 0,
+  );
+}
+
+async function fetchRoomingLive(eventId: string): Promise<RoomingRow[]> {
   const { data, error } = await supabase
     .from("event_rooming")
     .select(ROOMING_COLUMNS)
@@ -73,6 +82,10 @@ export async function fetchRooming(eventId: string): Promise<RoomingRow[]> {
 
 /** The signed-in rider's own accommodation allocation for an event (RLS-scoped). */
 export async function fetchMyRooming(eventId: string): Promise<RoomingRow | null> {
+  return withSnapshot(`my-rooming:${eventId}`, () => fetchMyRoomingLive(eventId), (v) => v === null);
+}
+
+async function fetchMyRoomingLive(eventId: string): Promise<RoomingRow | null> {
   const rows = await fetchRooming(eventId);
   if (rows.length === 0) return null;
 
