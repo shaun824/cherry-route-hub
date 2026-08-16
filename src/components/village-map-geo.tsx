@@ -97,8 +97,20 @@ function clusterIcon(cluster: { getChildCount: () => number }) {
   });
 }
 
-/** Groups nearby hotspot pins; clicking a group spiderfies it so each point is tappable. */
-function ClusteredHotspots({
+/** Small icon-only dots for facilities — labels stay hidden so tent numbers read clearly. */
+function dotIcon(color: string, active: boolean, iconId?: string) {
+  const size = active ? 26 : 20;
+  return L.divIcon({
+    className: "rce-village-dot",
+    html: `<div style="width:${size}px;height:${size}px;border-radius:999px;display:flex;align-items:center;justify-content:center;background:${color};border:${
+      active ? "2px solid #fff" : "1px solid rgba(255,255,255,.7)"
+    };box-shadow:0 2px 6px rgba(0,0,0,.35);color:#fff">${villageIconSvg(iconId)}</div>`,
+    iconSize: [size, size],
+    iconAnchor: [size / 2, size / 2],
+  });
+}
+
+function Hotspots({
   hotspots,
   geo,
   heightM,
@@ -116,19 +128,12 @@ function ClusteredHotspots({
   selectRef.current = onSelect;
 
   useEffect(() => {
-    const group = (L as any).markerClusterGroup({
-      maxClusterRadius: 44,
-      showCoverageOnHover: false,
-      zoomToBoundsOnClick: false,
-      spiderfyOnMaxZoom: true,
-      spiderfyDistanceMultiplier: 1.6,
-      iconCreateFunction: clusterIcon,
-    });
+    const group = L.layerGroup();
 
     for (const s of hotspots) {
       const meta = categoryMeta(s.category);
       const marker = L.marker(hotspotLatLng(geo, s, heightM), {
-        icon: pinIcon(spotColor(s), s.title, selected === s.id, spotIcon(s)),
+        icon: dotIcon(spotColor(s), selected === s.id, spotIcon(s)),
       });
       marker.bindPopup(
         `<strong>${escapeHtml(s.title)}</strong><br/><span style="font-size:11px;text-transform:uppercase;letter-spacing:1px">${escapeHtml(
@@ -141,8 +146,6 @@ function ClusteredHotspots({
       group.addLayer(marker);
     }
 
-    // Always expand a group on tap instead of only zooming in.
-    group.on("clusterclick", (e: any) => e.layer.spiderfy());
     map.addLayer(group);
     return () => {
       map.removeLayer(group);
@@ -151,6 +154,7 @@ function ClusteredHotspots({
 
   return null;
 }
+
 
 
 /** Flies to a drawn area when a rider asks "where is my tent?". */
