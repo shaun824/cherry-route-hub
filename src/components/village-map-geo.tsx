@@ -142,8 +142,9 @@ export default function VillageMapGeo({
   hotspots,
   zones = [],
   tents = [],
-  selected: _selected,
-  onSelect: _onSelect,
+  selected,
+  onSelect,
+
   highlightZoneId = null,
   highlightTentId = null,
 }: {
