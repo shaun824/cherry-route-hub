@@ -249,7 +249,7 @@ function EventValues({ rows, settings, onDone }: { rows: any[]; settings: Loyalt
   const priceRun = useServerFn(applyPriceValues);
   const [draft, setDraft] = useState<Record<string, { points: string; price: string }>>({});
   const mut = useMutation({
-    mutationFn: (v: { id: string; points: number; entryPriceCents: number | null; hero?: boolean }) =>
+    mutationFn: (v: { id: string; points: number; entryPriceCents: number | null; hero?: boolean; sellsOut?: boolean }) =>
       save({ data: v }),
     onSuccess: () => {
       toast.success("Event value saved");
