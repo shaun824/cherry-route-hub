@@ -122,6 +122,13 @@ function SpectatorEventPage() {
   });
   const info = infoQ.data ?? null;
 
+  const villageQ = useQuery({
+    queryKey: ["village-map", eventId],
+    queryFn: () => fetchVillageMap(eventId),
+    staleTime: 300_000,
+  });
+
+
   const spectatorSchedule = useMemo(() => {
     const items = event?.schedule ?? [];
     const dayLabel = new Map((event?.days ?? []).map((d) => [d.id, d.label || d.date]));
