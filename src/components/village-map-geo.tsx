@@ -51,13 +51,20 @@ function RotateOverlay({ rotation }: { rotation: number }) {
 
 function FitBounds({ bounds }: { bounds: L.LatLngBoundsExpression }) {
   const map = useMap();
+  const done = useRef(false);
   useEffect(() => {
+    // Frame the village once, on first mount only. Re-fitting on later renders
+    // (zoom changes, new marker arrays) fought the rider's own pinch/scroll
+    // gesture and snapped the map straight back to the opening view.
+    if (done.current) return;
+    done.current = true;
     // Cap at the highest zoom the satellite imagery actually covers, otherwise
     // the map opens on upscaled/blank tiles.
     map.fitBounds(bounds, { padding: [20, 20], maxZoom: 19 });
   }, [map, bounds]);
   return null;
 }
+
 
 
 function Recenter({ position, token }: { position: [number, number] | null; token: number }) {
