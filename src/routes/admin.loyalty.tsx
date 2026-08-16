@@ -402,7 +402,11 @@ const emptyReward = {
   valid_days: 180,
   active: true,
   sort_order: 0,
+  kind: "merch",
+  stock: "",
+  fulfilment_notes: "",
 };
+
 
 function Rewards({ rows, settings, onDone }: { rows: any[]; settings: LoyaltySettings; onDone: () => void }) {
   const save = useServerFn(saveReward);
