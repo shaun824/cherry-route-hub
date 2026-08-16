@@ -108,6 +108,11 @@ function AuthPage() {
       return;
     }
     linkedRef.current = true;
+    rememberAccount(
+      user.email,
+      (user.user_metadata?.full_name as string | undefined) ?? null,
+    );
+
     const pending = readPending(PENDING_ID_KEY);
     const pendingName = readPending(PENDING_NAME_KEY) ?? "";
     const go = () => navigate({ to: target, replace: true });
