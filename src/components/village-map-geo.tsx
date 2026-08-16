@@ -455,17 +455,22 @@ export default function VillageMapGeo({
           <FitBounds bounds={bounds} />
           <Recenter position={me} token={recenterToken} />
 
-          {/* Facility hotspots are intentionally NOT drawn on the map — riders asked
-              for a clean plan where the only pins are the tents. The one exception is
-              the point you've currently selected, which gets a name label until you tap away. */}
-          {selectedSpot ? (
-            <Marker
-              position={hotspotLatLng(geo, selectedSpot, heightM)}
-              icon={pointLabelIcon(selectedSpot.title)}
-              zIndexOffset={1000}
-              eventHandlers={{ click: () => onSelect(null) }}
-            />
-          ) : null}
+          {/* Facility points (toilets, chill zone, food…) show as clean icon pucks.
+              Tapping one expands its name on the map; tapping again or tapping the
+              map clears it. Numeric "tent number" points stay out of this layer. */}
+          {facilitySpots.map((spot) => {
+            const active = selected === spot.id;
+            return (
+              <Marker
+                key={`spot-${spot.id}`}
+                position={hotspotLatLng(geo, spot, heightM)}
+                icon={facilityIcon(spot, active)}
+                zIndexOffset={active ? 1000 : 400}
+                eventHandlers={{ click: () => onSelect(active ? null : spot.id) }}
+              />
+            );
+          })}
+
           <FlyToPoint
             position={selectedSpot ? hotspotLatLng(geo, selectedSpot, heightM) : null}
           />
