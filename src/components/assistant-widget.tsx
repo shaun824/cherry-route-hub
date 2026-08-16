@@ -88,7 +88,11 @@ export function AssistantWidget() {
     setThinking(true);
     try {
       const res = await ask({ data: { question: q, history } });
-      setMessages((m) => [...m, { role: "assistant", content: res.answer }]);
+      setMessages((m) => [
+        ...m,
+        { role: "assistant", content: res.answer, followUps: res.followUps ?? [] },
+      ]);
+
       if (res.needsAdmin) {
         setShowReport(true);
         setEscalated(true);
