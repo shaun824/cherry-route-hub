@@ -1,9 +1,138 @@
-/* Red Cherry Rider Hub — push messaging service worker.
-   This worker ONLY handles Web Push. It never caches the app shell and never
-   intercepts fetch requests, so it cannot serve stale pages. */
+/* Red Cherry Rider Hub — service worker.
+   Handles Web Push AND offline support for the race village / route maps.
+
+   Caching rules (deliberately narrow so pages never go stale):
+   - Map tiles (OSM + Esri satellite): cache-first, forever. These are the bytes
+     riders pre-download for the venue where there is no signal.
+   - Route files (KML/GPX) and event images: stale-while-revalidate.
+   - App build assets (JS/CSS/fonts): stale-while-revalidate so the app boots offline.
+   - Navigations: network-first with a cached-document fallback.
+   - Everything else (API, Supabase, auth): untouched, always network.
+*/
+
+const TILE_CACHE = "rce-tiles-v1";
+const ASSET_CACHE = "rce-assets-v1";
+const DOC_CACHE = "rce-docs-v1";
 
 self.addEventListener("install", () => self.skipWaiting());
-self.addEventListener("activate", (event) => event.waitUntil(self.clients.claim()));
+self.addEventListener("activate", (event) =>
+  event.waitUntil(
+    (async () => {
+      const keys = await caches.keys();
+      await Promise.all(
+        keys
+          .filter((k) => k.startsWith("rce-") && ![TILE_CACHE, ASSET_CACHE, DOC_CACHE].includes(k))
+          .map((k) => caches.delete(k)),
+      );
+      await self.clients.claim();
+    })(),
+  ),
+);
+
+function isTile(url) {
+  return (
+    /(^|\.)tile\.openstreetmap\.org$/.test(url.hostname) ||
+    /(^|\.)basemaps\.cartocdn\.com$/.test(url.hostname) ||
+    (url.hostname === "server.arcgisonline.com" && url.pathname.includes("/MapServer/tile/"))
+  );
+}
+
+function isRouteFile(url) {
+  return /\.(kml|gpx|geojson)(\?|$)/i.test(url.pathname + url.search);
+}
+
+function isEventMedia(url) {
+  return (
+    /supabase\.co$/.test(url.hostname) &&
+    /\/storage\/v1\/object\//.test(url.pathname) &&
+    /(event-images|event-kmls|sponsor-logos)/.test(url.pathname)
+  );
+}
+
+function isBuildAsset(url) {
+  return (
+    url.origin === self.location.origin &&
+    (/\/(_build|assets)\//.test(url.pathname) ||
+      /\.(js|css|woff2?|png|svg|webp|jpg|jpeg|ico|webmanifest)$/i.test(url.pathname))
+  );
+}
+
+async function cacheFirst(request, cacheName) {
+  const cache = await caches.open(cacheName);
+  const hit = await cache.match(request, { ignoreVary: true });
+  if (hit) return hit;
+  try {
+    const res = await fetch(request);
+    if (res && (res.ok || res.type === "opaque")) cache.put(request, res.clone()).catch(() => {});
+    return res;
+  } catch (err) {
+    const fallback = await cache.match(request, { ignoreVary: true, ignoreSearch: true });
+    if (fallback) return fallback;
+    throw err;
+  }
+}
+
+async function staleWhileRevalidate(request, cacheName) {
+  const cache = await caches.open(cacheName);
+  const hit = await cache.match(request, { ignoreVary: true });
+  const network = fetch(request)
+    .then((res) => {
+      if (res && res.ok) cache.put(request, res.clone()).catch(() => {});
+      return res;
+    })
+    .catch(() => null);
+  if (hit) return hit;
+  const res = await network;
+  if (res) return res;
+  throw new Error("offline and not cached");
+}
+
+async function networkFirstDoc(request) {
+  const cache = await caches.open(DOC_CACHE);
+  try {
+    const res = await fetch(request);
+    if (res && res.ok) cache.put(request, res.clone()).catch(() => {});
+    return res;
+  } catch (err) {
+    const hit =
+      (await cache.match(request, { ignoreVary: true, ignoreSearch: true })) ||
+      (await cache.match("/", { ignoreVary: true, ignoreSearch: true }));
+    if (hit) return hit;
+    return new Response(
+      "<!doctype html><meta charset=utf-8><meta name=viewport content='width=device-width,initial-scale=1'>" +
+        "<body style=\"font-family:system-ui;padding:2rem;text-align:center\"><h1>You're offline</h1>" +
+        "<p>Open the app once with signal to save this page for the venue.</p></body>",
+      { status: 200, headers: { "Content-Type": "text/html; charset=utf-8" } },
+    );
+  }
+}
+
+self.addEventListener("fetch", (event) => {
+  const req = event.request;
+  if (req.method !== "GET") return;
+  let url;
+  try {
+    url = new URL(req.url);
+  } catch (_) {
+    return;
+  }
+  if (url.protocol !== "http:" && url.protocol !== "https:") return;
+
+  if (isTile(url)) return event.respondWith(cacheFirst(req, TILE_CACHE));
+  if (isRouteFile(url) || isEventMedia(url)) return event.respondWith(staleWhileRevalidate(req, ASSET_CACHE));
+  if (isBuildAsset(url)) return event.respondWith(staleWhileRevalidate(req, ASSET_CACHE));
+  if (req.mode === "navigate" && url.origin === self.location.origin) {
+    return event.respondWith(networkFirstDoc(req));
+  }
+});
+
+self.addEventListener("message", (event) => {
+  const data = event.data || {};
+  if (data.type === "RCE_CLEAR_TILES") {
+    event.waitUntil(caches.delete(TILE_CACHE));
+  }
+  if (data.type === "RCE_SKIP_WAITING") self.skipWaiting();
+});
 
 self.addEventListener("push", (event) => {
   let payload = {};
