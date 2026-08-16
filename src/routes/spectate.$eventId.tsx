@@ -383,9 +383,33 @@ function SpectatorEventPage() {
             </div>
           ) : (
           <>
-          <SearchBox value={search} onChange={setSearch} placeholder="Search rider name or bib…" />
+          <SearchBox value={search} onChange={setSearch} placeholder="Search rider name or race number…" />
           <div className="mt-3">
             <CategoryFilter categories={categories} value={categoryFilter} onChange={setCategoryFilter} />
+          </div>
+          <div className="mt-2 flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
+            {([
+              { id: "start", label: "Start times" },
+              { id: "bib", label: "Race numbers" },
+              { id: "category", label: "Groups" },
+              { id: "name", label: "A–Z" },
+            ] as { id: GroupBy; label: string }[]).map((o) => {
+              const active = groupBy === o.id;
+              return (
+                <button
+                  key={o.id}
+                  type="button"
+                  onClick={() => setGroupBy(o.id)}
+                  className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold ring-1 ${
+                    active
+                      ? "bg-ink text-white ring-ink"
+                      : "bg-card text-ink-soft ring-border"
+                  }`}
+                >
+                  {o.label}
+                </button>
+              );
+            })}
           </div>
 
           {ridersQ.isLoading ? (
@@ -408,43 +432,40 @@ function SpectatorEventPage() {
               ) : (
                 startGroups.map((g) => (
                   <section key={g.key} className="rounded-2xl bg-card p-3 ring-1 ring-border">
-                    <header className="flex items-center gap-2 pb-2">
-                      <p className="font-display text-sm font-bold text-ink">{g.label}</p>
-                      <span className="ml-auto rounded-md bg-accent px-2 py-0.5 font-mono text-[11px] font-bold text-cherry-deep">
-                        {g.startTime || `${g.rows.length}`}
+                    <header className="flex items-start gap-2 pb-2">
+                      <p className="min-w-0 flex-1 font-display text-sm font-bold leading-snug text-ink">
+                        {g.label}
+                      </p>
+                      <span className="shrink-0 rounded-md bg-accent px-2 py-0.5 font-mono text-[11px] font-bold text-cherry-deep">
+                        {g.startTime ? g.startTime : `${g.rows.length}`}
                       </span>
                     </header>
                     <ul className="divide-y divide-border">
                       {g.rows.map((r) => {
                         const link = riderResultUrl(results?.results_rider_url_template ?? null, r.bib_number);
-                        const inner = (
-                          <>
-                            <span className="grid h-7 min-w-[2.75rem] place-items-center rounded-md bg-background px-1 font-mono text-[11px] font-semibold text-ink-soft ring-1 ring-border">
-                              {r.bib_number || "—"}
-                            </span>
-                            <span className="flex-1 truncate font-medium text-ink">{r.full_name}</span>
-                            {r.category ? (
-                              <span className="rounded-full bg-secondary px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-ink-soft">
-                                {r.category}
-                              </span>
-                            ) : null}
-                            {link ? <ExternalLink className="h-3.5 w-3.5 shrink-0 text-cherry" /> : null}
-                          </>
-                        );
                         return (
                           <li key={r.id}>
-                            {link ? (
-                              <a
-                                href={link}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="flex items-center gap-3 py-2 text-sm"
-                              >
-                                {inner}
-                              </a>
-                            ) : (
-                              <div className="flex items-center gap-3 py-2 text-sm">{inner}</div>
-                            )}
+                            <Link
+                              to="/spectate_/$eventId_/rider/$entrantId"
+                              params={{ eventId, entrantId: r.id }}
+                              className="flex items-center gap-3 py-2 text-sm active:opacity-70"
+                            >
+                              <span className="grid h-7 min-w-[2.75rem] place-items-center rounded-md bg-background px-1 font-mono text-[11px] font-semibold text-ink-soft ring-1 ring-border">
+                                {r.bib_number || "—"}
+                              </span>
+                              <span className="min-w-0 flex-1">
+                                <span className="block truncate font-medium text-ink">
+                                  {r.full_name}
+                                </span>
+                                {groupBy !== "category" && r.category ? (
+                                  <span className="block truncate text-[11px] text-ink-soft">
+                                    {r.category}
+                                  </span>
+                                ) : null}
+                              </span>
+                              {link ? <ExternalLink className="h-3.5 w-3.5 shrink-0 text-ink-soft" /> : null}
+                              <ChevronRight className="h-4 w-4 shrink-0 text-cherry" />
+                            </Link>
                           </li>
                         );
                       })}
