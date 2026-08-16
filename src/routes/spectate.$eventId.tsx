@@ -173,14 +173,14 @@ function SpectatorEventPage() {
   const batches = event?.batches ?? [];
   const basePromos = useMemo(() => eventPromosFor(event?.name), [event?.name]);
   // Rotate sponsor offers on every load (after hydration, so SSR stays stable)
-  // so no single partner always gets the first slot.
-  const [shuffled, setShuffled] = useState<EventPromo[] | null>(null);
+  // so no single partner always gets the first slot, and never repeat the
+  // offer this browser led with last time.
+  const promos = useShuffledPromos(basePromos);
   const [promoOffset, setPromoOffset] = useState(3);
   useEffect(() => {
-    setShuffled(shufflePromos(basePromos));
     setPromoOffset(2 + Math.floor(Math.random() * 2));
   }, [basePromos]);
-  const promos = shuffled ?? basePromos;
+
   const promoAt = (gi: number) =>
     promos.length && gi >= promoOffset && (gi - promoOffset) % 3 === 0
       ? promos[Math.floor((gi - promoOffset) / 3) % promos.length]
