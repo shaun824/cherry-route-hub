@@ -202,7 +202,7 @@ function MyEventDetail() {
         </div>
       </div>
 
-      <nav className="sticky top-0 z-10 flex gap-1 overflow-x-auto border-b border-border bg-card/95 px-2 py-2 backdrop-blur">
+      <nav ref={tabNavRef} className="sticky top-0 z-10 flex gap-1 overflow-x-auto border-b border-border bg-card/95 px-2 py-2 backdrop-blur">
         {(
           [
             { id: "info", label: "Info", icon: Info },
