@@ -1313,6 +1313,12 @@ function AskAdminPanel({
     }
   }
 
+  // Start (and stay) at the newest message.
+  useEffect(() => {
+    const el = qaListRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
+  }, [messagesQ.data]);
+
   // Offer the WhatsApp handoff once the assistant has admitted it can't answer
   // and no admin has replied since.
   const msgs = (messagesQ.data ?? []) as any[];
