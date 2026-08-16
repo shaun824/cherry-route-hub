@@ -42,7 +42,12 @@ function RewardsPage() {
         toast.error(res?.error ?? "Could not cash out those points.");
         return;
       }
-      toast.success(`Coupon ${res.coupon.code} is ready`);
+      toast.success(`Coupon ${res.coupon.code} is ready`, {
+        description:
+          res.entryNinja?.status === "sent"
+            ? "The code is live on Entry Ninja — use it at checkout."
+            : "Show this code in the app, or quote it to the Red Cherry team at Entry Ninja checkout.",
+      });
       setTab("coupons");
       void qc.invalidateQueries({ queryKey: ["my-loyalty"] });
     },
@@ -221,6 +226,13 @@ function RewardsPage() {
                 <span className="font-mono text-base font-black tracking-widest text-cherry-deep">{c.code}</span>
                 <Copy className="h-4 w-4 text-cherry" />
               </button>
+              <p className="mt-1 text-[11px] font-semibold">
+                {c.en_status === "sent" ? (
+                  <span className="text-emerald-700">Live on Entry Ninja — apply at checkout</span>
+                ) : (
+                  <span className="text-ink-soft">Redeemable in-app · quote the code at Entry Ninja checkout</span>
+                )}
+              </p>
               <p className="mt-2 text-[11px] text-ink-soft">
                 {formatPoints(c.points_spent)} pts ·{" "}
                 {c.expires_at ? `valid until ${new Date(c.expires_at).toLocaleDateString("en-ZA")}` : "no expiry"}
