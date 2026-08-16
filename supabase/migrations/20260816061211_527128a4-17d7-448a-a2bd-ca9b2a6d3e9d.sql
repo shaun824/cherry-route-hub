@@ -1,0 +1,1 @@
+update public.promos set url='https://www.cyclelab.com/' where brand='Cycle Lab' and coalesce(url,'')='';
