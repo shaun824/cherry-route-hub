@@ -363,10 +363,20 @@ export default function VillageMapGeo({
             );
           })}
 
+          <ZoomWatcher onZoom={setZoom} />
+
           {tents.map((t) => {
             const hot = highlightTentId === t.id;
+            // Labels only once you're zoomed in — otherwise the numbers overlap
+            // into an unreadable block. Your own tent always stays labelled.
+            const labelled = hot || zoom >= 19;
             return (
-              <Marker key={t.id} position={[t.lat, t.lng]} icon={tentIcon(t.label, hot)} zIndexOffset={hot ? 900 : 300}>
+              <Marker
+                key={t.id}
+                position={[t.lat, t.lng]}
+                icon={labelled ? tentIcon(t.label, hot) : tentDotIcon(hot)}
+                zIndexOffset={hot ? 900 : 300}
+              >
                 <Popup>{hot ? `${t.label} — this is you` : t.label}</Popup>
               </Marker>
             );
