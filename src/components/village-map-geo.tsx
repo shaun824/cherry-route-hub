@@ -5,9 +5,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { MapContainer, TileLayer, ImageOverlay, useMap, CircleMarker, Polygon, Popup, Marker } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import "leaflet.markercluster";
-import "leaflet.markercluster/dist/MarkerCluster.css";
-import "leaflet.markercluster/dist/MarkerCluster.Default.css";
 import { spotColor, spotIcon, categoryMeta, type VillageGeo, type VillageHotspot } from "@/lib/village-map";
 import { villageIconSvg } from "@/lib/village-icons";
 import { zoneCentroid, zoneColor, type VillageZone } from "@/lib/village-zones";
@@ -29,19 +26,6 @@ function hotspotLatLng(geo: VillageGeo, spot: VillageHotspot, heightM: number): 
 }
 
 
-function pinIcon(color: string, label: string, active: boolean, iconId?: string) {
-  return L.divIcon({
-    className: "rce-village-pin",
-    html: `<div style="display:flex;flex-direction:column;align-items:center;transform:translateY(-6px)">
-      <span style="display:inline-flex;align-items:center;gap:4px;background:${color};color:#fff;font-size:10px;font-weight:800;padding:3px 7px;border-radius:999px;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,.35);border:${
-        active ? "2px solid #fff" : "1px solid rgba(255,255,255,.5)"
-      }">${villageIconSvg(iconId)}${label}</span>
-      <span style="width:8px;height:8px;background:${color};transform:rotate(45deg) translateY(-3px);border-radius:2px"></span>
-    </div>`,
-    iconSize: [10, 10],
-    iconAnchor: [5, 18],
-  });
-}
 
 /** Rotates the image overlay element with CSS (Leaflet has no native rotation). */
 function RotateOverlay({ rotation }: { rotation: number }) {
@@ -87,15 +71,6 @@ function escapeHtml(v: string) {
   return v.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c] as string);
 }
 
-function clusterIcon(cluster: { getChildCount: () => number }) {
-  const n = cluster.getChildCount();
-  const size = n < 10 ? 34 : n < 25 ? 40 : 46;
-  return L.divIcon({
-    className: "rce-village-cluster",
-    html: `<div style="width:${size}px;height:${size}px;border-radius:999px;display:flex;align-items:center;justify-content:center;background:hsl(var(--cherry,352 82% 47%),1);background:#c8102e;color:#fff;font-weight:800;font-size:13px;border:2px solid #fff;box-shadow:0 3px 10px rgba(0,0,0,.35)">${n}</div>`,
-    iconSize: [size, size],
-  });
-}
 
 /** Small icon-only dots for facilities — labels stay hidden so tent numbers read clearly. */
 function dotIcon(color: string, active: boolean, iconId?: string) {
@@ -381,7 +356,7 @@ export default function VillageMapGeo({
           <FitBounds bounds={bounds} />
           <Recenter position={me} token={recenterToken} />
 
-          <ClusteredHotspots
+          <Hotspots
             hotspots={hotspots}
             geo={geo}
             heightM={heightM}
