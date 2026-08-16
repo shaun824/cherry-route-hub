@@ -233,13 +233,13 @@ function MyEventDetail() {
         {tab === "village" && (
           <section id="village-map-section" className="scroll-mt-16 space-y-3">
             <SectionTitle>Race village</SectionTitle>
-            <OfflinePackCard event={event as never} />
             <VillageMapView
               eventId={event.id}
               focusZoneId={villageFocus.zoneId ?? null}
               focusSpotId={villageFocus.spotId ?? null}
               focusTentId={villageFocus.tentId ?? null}
             />
+            <OfflinePackCard event={event as never} />
           </section>
         )}
         {tab === "routes" && <RoutesPanel eventId={event.id} event={event} />}
@@ -509,9 +509,6 @@ function RoutesPanel({
       {hasMap ? (
         <section>
           <SectionTitle>Interactive map</SectionTitle>
-          <div className="mt-2 mb-3">
-            <OfflinePackCard event={event as never} />
-          </div>
           <div className="mt-2">
             <LockedSection locked={locked} message="Sign in to view the interactive route map">
               <RouteMap event={event as never} height="320px" />
@@ -599,6 +596,8 @@ function RoutesPanel({
           </section>
         );
       })}
+
+      {hasMap ? <OfflinePackCard event={event as never} /> : null}
     </div>
   );
 }
