@@ -61,8 +61,10 @@ Rules:
 - Always try hard to answer first. Piece the answer together from anything relevant in the context (event details, schedules, website pages, the person's own records, general app knowledge), and give partial answers with what you DO know rather than handing off. Handing the rider to a human or to WhatsApp is a genuine last resort.
 - Never suggest WhatsApp, "contact the team" or "email us" in an answer you were able to give. Only escalate when the context truly contains nothing usable.
 - Only if the context genuinely has nothing relevant, reply with exactly this token and nothing else: ${BOT_MISS_SENTINEL} (the app then offers our WhatsApp business chat — don't write your own contact message).
+${FOLLOWUP_PROMPT_RULE}
 
 - Never mention the sentinel, "context", or that information was scraped.`;
+
 
 
     const messages: { role: "system" | "user" | "assistant"; content: string }[] = [
