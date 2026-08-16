@@ -147,6 +147,7 @@ export async function suggestLearnedFaqs(admin: SupabaseClient<any, any, any>) {
       question: draft.question.slice(0, 500),
       answer: draft.answer.slice(0, 4000),
       status: "suggested",
+      source_kind: "admin_answer",
       source_thread_id: pair.threadId,
       source_message_id: pair.messageId,
     });
@@ -158,8 +159,25 @@ export async function suggestLearnedFaqs(admin: SupabaseClient<any, any, any>) {
     created++;
   }
 
-  return { scanned: pairs.length, created, skipped };
+  // Then learn from whole conversation arcs — where a chat ends is usually what
+  // the rider was really after.
+  let arcs = { arcs: 0, created: 0, skipped: 0 };
+  try {
+    const { learnFromArcs } = await import("@/lib/faq-arcs.server");
+    arcs = await learnFromArcs(admin);
+  } catch (e) {
+    console.error("[faq-suggest] arc learning failed", e);
+  }
+
+  return {
+    scanned: pairs.length + arcs.arcs,
+    created: created + arcs.created,
+    skipped: skipped + arcs.skipped,
+    arcsScanned: arcs.arcs,
+    arcsCreated: arcs.created,
+  };
 }
+
 
 /** Questions where the bot gave up — the gap report. */
 export async function collectBotGaps(admin: SupabaseClient<any, any, any>) {
