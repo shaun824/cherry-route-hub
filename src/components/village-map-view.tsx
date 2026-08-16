@@ -292,7 +292,7 @@ export function VillageMapView({
       )}
 
       <ul className="grid gap-1.5 sm:grid-cols-2">
-        {(map.hotspots ?? []).map((s) => (
+        {facilities.map((s) => (
           <li key={s.id}>
             <button
               onClick={() => setSelected(s.id)}
