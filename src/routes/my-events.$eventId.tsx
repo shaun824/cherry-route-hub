@@ -599,6 +599,8 @@ function RoutesPanel({
           </section>
         );
       })}
+
+      {hasMap ? <OfflinePackCard event={event as never} /> : null}
     </div>
   );
 }
