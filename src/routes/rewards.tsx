@@ -101,9 +101,17 @@ function RewardsPage() {
             <div className="h-full rounded-full bg-cherry" style={{ width: `${Math.round(progress * 100)}%` }} />
           </div>
           <p className="mt-2 text-[11px] text-white/70">
-            {next ? `${formatPoints(toNext)} points to ${next.name}` : "Top tier — you're a Red Cherry legend."}
+            {next
+              ? `${formatPoints(toNext)} points in the last 3 years to reach ${next.name}`
+              : "Top tier — you're a Red Cherry legend."}
           </p>
+          {expiresAt ? (
+            <p className="mt-1 text-[11px] text-white/60">
+              Ride with us before {new Date(expiresAt).toLocaleDateString("en-ZA")} to keep your Miles alive.
+            </p>
+          ) : null}
         </div>
+
         <div className="mt-4 grid grid-cols-3 gap-2 text-center text-[11px]">
           <Stat label="Events" value={String(data?.participation.length ?? 0)} />
           <Stat label="Earned" value={formatPoints(data?.earned ?? 0)} />
