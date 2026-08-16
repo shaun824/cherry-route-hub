@@ -47,10 +47,17 @@ export function distanceM(a: ZonePoint, b: ZonePoint): number {
 
 export function zoneCentroid(z: VillageZone): ZonePoint | null {
   if (z.points.length === 0) return null;
-  const lat = z.points.reduce((s, p) => s + p.lat, 0) / z.points.length;
-  const lng = z.points.reduce((s, p) => s + p.lng, 0) / z.points.length;
+  // Drawn rings often repeat the first point as the closing point; counting it
+  // twice drags the "centre" out towards that corner.
+  const pts = z.points.slice();
+  const first = pts[0];
+  const last = pts[pts.length - 1];
+  if (pts.length > 2 && first && last && first.lat === last.lat && first.lng === last.lng) pts.pop();
+  const lat = pts.reduce((s, p) => s + p.lat, 0) / pts.length;
+  const lng = pts.reduce((s, p) => s + p.lng, 0) / pts.length;
   return { lat, lng };
 }
+
 
 /** Area in square metres (shoelace on local metre coords). */
 export function zoneAreaM2(z: VillageZone): number {
