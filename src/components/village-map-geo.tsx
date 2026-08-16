@@ -275,6 +275,22 @@ export default function VillageMapGeo({
     [hotspots],
   );
 
+  // Rider-facing maps only show meaningful blocks. Individual tent footprints
+  // drawn while planning (small squares, usually named "12" or "Area 12") just
+  // clutter the map — the tent pin already carries the number. The rider's own
+  // highlighted area is always drawn.
+  const visibleZones = useMemo(
+    () =>
+      zones.filter((z) => {
+        if (z.id === highlightZoneId) return true;
+        const name = (z.name ?? "").trim();
+        const planningName = /^(?:tent\s*)?\d+$/i.test(name) || /^area\s*\d+$/i.test(name);
+        const small = zoneAreaM2(z) < 150;
+        return !(planningName || small);
+      }),
+    [zones, highlightZoneId],
+  );
+
 
   function locate() {
     if (!("geolocation" in navigator)) {
