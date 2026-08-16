@@ -164,23 +164,57 @@ function FlyToZone({ zone }: { zone: VillageZone | null }) {
   return null;
 }
 
+/** Flies straight to an exact tent pin — the tightest "this is your tent" view. */
+function FlyToTent({ tent }: { tent: MapTent | null }) {
+  const map = useMap();
+  useEffect(() => {
+    if (!tent) return;
+    map.flyTo([tent.lat, tent.lng], Math.max(map.getZoom(), 21), { duration: 0.9 });
+  }, [map, tent]);
+  return null;
+}
+
+export type MapTent = { id: string; label: string; lat: number; lng: number };
+
+function tentIcon(label: string, active: boolean) {
+  const bg = active ? "#c8102e" : "#1f2937";
+  return L.divIcon({
+    className: "rce-village-tent",
+    html: `<div style="display:flex;flex-direction:column;align-items:center">
+      <span style="background:${bg};color:#fff;font-size:10px;font-weight:800;padding:2px 6px;border-radius:6px;white-space:nowrap;border:${
+        active ? "2px solid #fff" : "1px solid rgba(255,255,255,.6)"
+      };box-shadow:0 2px 6px rgba(0,0,0,.35)${active ? ";animation:rce-pulse 1.4s ease-in-out infinite" : ""}">${escapeHtml(
+        label,
+      )}</span>
+      <span style="width:6px;height:6px;background:${bg};transform:rotate(45deg) translateY(-2px);border-radius:1px"></span>
+    </div>`,
+    iconSize: [10, 10],
+    iconAnchor: [5, 14],
+  });
+}
+
 export default function VillageMapGeo({
   imageUrl,
   geo,
   hotspots,
   zones = [],
+  tents = [],
   selected,
   onSelect,
   highlightZoneId = null,
+  highlightTentId = null,
 }: {
   imageUrl?: string | null;
   geo: VillageGeo;
   hotspots: VillageHotspot[];
   zones?: VillageZone[];
+  tents?: MapTent[];
   selected: string | null;
   onSelect: (id: string | null) => void;
   highlightZoneId?: string | null;
+  highlightTentId?: string | null;
 }) {
+
   const [ratio, setRatio] = useState(0.76); // height / width, refined once the image loads
   const [me, setMe] = useState<[number, number] | null>(null);
   const [accuracy, setAccuracy] = useState<number | null>(null);
