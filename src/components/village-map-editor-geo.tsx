@@ -93,6 +93,22 @@ function FitToContent({ points, token }: { points: ZonePoint[]; token: number })
 
 
 
+function tentPinIcon(label: string, active: boolean) {
+  const bg = active ? "#c8102e" : "#111827";
+  const safe = label.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c] as string);
+  return L.divIcon({
+    className: "rce-village-tent",
+    html: `<div style="display:flex;flex-direction:column;align-items:center">
+      <span style="background:${bg};color:#fff;font-size:10px;font-weight:800;padding:2px 6px;border-radius:6px;white-space:nowrap;border:${
+        active ? "2px solid #fff" : "1px solid rgba(255,255,255,.6)"
+      };box-shadow:0 2px 6px rgba(0,0,0,.35)">${safe}</span>
+      <span style="width:6px;height:6px;background:${bg};transform:rotate(45deg) translateY(-2px);border-radius:1px"></span>
+    </div>`,
+    iconSize: [10, 10],
+    iconAnchor: [5, 14],
+  });
+}
+
 export default function VillageMapEditorGeo({
   centre,
   centreToken,
@@ -113,6 +129,12 @@ export default function VillageMapEditorGeo({
   onSelectZone,
   onRenameZone,
   onDuplicateZone,
+  tents = [],
+  tentMode = false,
+  onPlaceTent,
+  onMoveTent,
+  onSelectTent,
+  selectedTent = null,
 }: {
   centre: { lat: number; lng: number };
   centreToken: number;
@@ -133,6 +155,12 @@ export default function VillageMapEditorGeo({
   onSelectZone: (id: string | null) => void;
   onRenameZone?: (id: string, name: string) => void;
   onDuplicateZone?: (id: string) => void;
+  tents?: { id: string; label: string; lat: number; lng: number }[];
+  tentMode?: boolean;
+  onPlaceTent?: (lat: number, lng: number) => void;
+  onMoveTent?: (id: string, lat: number, lng: number) => void;
+  onSelectTent?: (id: string | null) => void;
+  selectedTent?: string | null;
 }) {
   const [draft, setDraft] = useState<ZonePoint[]>([]);
   const [cursor, setCursor] = useState<ZonePoint | null>(null);
@@ -154,7 +182,7 @@ export default function VillageMapEditorGeo({
     }
   }, [drawing]);
 
-  const locked = placing || drawing;
+  const locked = placing || drawing || tentMode;
 
   // Editing areas is disabled in add-pin / draw modes — drop any selection.
   useEffect(() => {
@@ -171,7 +199,7 @@ export default function VillageMapEditorGeo({
     <div className="relative">
       <div
         className={`overflow-hidden rounded-2xl ring-1 ring-border ${
-          placing || drawing ? "cursor-crosshair" : ""
+          placing || drawing || tentMode ? "cursor-crosshair" : ""
         }`}
       >
         <MapContainer
@@ -199,6 +227,23 @@ export default function VillageMapEditorGeo({
           <FitToContent points={contentPoints} token={fitToken} />
 
           {placing ? <ClickCatcher onClick={onPlace} /> : null}
+          {tentMode && onPlaceTent ? <ClickCatcher onClick={onPlaceTent} /> : null}
+
+          {tents.map((t) => (
+            <Marker
+              key={t.id}
+              position={[t.lat, t.lng]}
+              draggable={!locked}
+              icon={tentPinIcon(t.label, selectedTent === t.id)}
+              eventHandlers={{
+                click: () => onSelectTent?.(selectedTent === t.id ? null : t.id),
+                dragend: (e) => {
+                  const ll = (e.target as L.Marker).getLatLng();
+                  onMoveTent?.(t.id, ll.lat, ll.lng);
+                },
+              }}
+            />
+          ))}
           {drawing ? (
             <>
               <ClickCatcher onClick={(lat, lng) => setDraft((d) => [...d, { lat, lng }])} />
