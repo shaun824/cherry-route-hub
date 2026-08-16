@@ -579,6 +579,11 @@ function VillageEditor() {
               onMoveTent={moveTent}
               onSelectTent={setSelectedTent}
               selectedTent={selectedTent}
+              onDeleteTent={(id) => void deleteTent(id)}
+              onDeleteHotspot={(id) => {
+                patch({ hotspots: map.hotspots.filter((h) => h.id !== id) });
+                if (selected === id) setSelected(null);
+              }}
             />
           </Suspense>
         </ClientOnly>

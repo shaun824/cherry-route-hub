@@ -2,7 +2,7 @@
 // satellite map of the venue — no plan image required. Also supports drawing
 // measured areas (zones) so the field layout can be planned to the metre.
 import { Fragment, useEffect, useRef, useState } from "react";
-import { MapContainer, TileLayer, Marker, Polygon, Polyline, Tooltip, useMap, useMapEvents } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Polygon, Polyline, Popup, Tooltip, useMap, useMapEvents } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { spotColor, spotIcon, type VillageHotspot } from "@/lib/village-map";
@@ -109,6 +109,23 @@ function tentPinIcon(label: string, active: boolean) {
   });
 }
 
+function MapDeleteBubble({ label, onDelete }: { label: string; onDelete: () => void }) {
+  return (
+    <div className="flex items-center gap-2">
+      <span className="text-[11px] font-bold text-ink">{label}</span>
+      <button
+        type="button"
+        onClick={() => {
+          if (confirm(`Delete ${label} from the map?`)) onDelete();
+        }}
+        className="rounded-lg bg-red-600 px-2 py-1 text-[11px] font-bold text-white"
+      >
+        Delete
+      </button>
+    </div>
+  );
+}
+
 export default function VillageMapEditorGeo({
   centre,
   centreToken,
@@ -135,6 +152,8 @@ export default function VillageMapEditorGeo({
   onMoveTent,
   onSelectTent,
   selectedTent = null,
+  onDeleteTent,
+  onDeleteHotspot,
 }: {
   centre: { lat: number; lng: number };
   centreToken: number;
@@ -161,6 +180,8 @@ export default function VillageMapEditorGeo({
   onMoveTent?: (id: string, lat: number, lng: number) => void;
   onSelectTent?: (id: string | null) => void;
   selectedTent?: string | null;
+  onDeleteTent?: (id: string) => void;
+  onDeleteHotspot?: (id: string) => void;
 }) {
   const [draft, setDraft] = useState<ZonePoint[]>([]);
   const [cursor, setCursor] = useState<ZonePoint | null>(null);
@@ -242,7 +263,16 @@ export default function VillageMapEditorGeo({
                   onMoveTent?.(t.id, ll.lat, ll.lng);
                 },
               }}
-            />
+            >
+              {onDeleteTent && !locked ? (
+                <Popup autoPan={false} closeButton={false}>
+                  <MapDeleteBubble
+                    label={`Tent ${t.label}`}
+                    onDelete={() => onDeleteTent(t.id)}
+                  />
+                </Popup>
+              ) : null}
+            </Marker>
           ))}
           {drawing ? (
             <>
@@ -395,7 +425,16 @@ export default function VillageMapEditorGeo({
                     onMove(s.id, +lat.toFixed(6), +lng.toFixed(6));
                   },
                 }}
-              />
+              >
+                {onDeleteHotspot && !locked ? (
+                  <Popup autoPan={false} closeButton={false}>
+                    <MapDeleteBubble
+                      label={s.title || "this point"}
+                      onDelete={() => onDeleteHotspot(s.id)}
+                    />
+                  </Popup>
+                ) : null}
+              </Marker>
             ))}
         </MapContainer>
       </div>
