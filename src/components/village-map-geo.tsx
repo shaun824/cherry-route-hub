@@ -157,9 +157,9 @@ function ZoomWatcher({ onZoom }: { onZoom: (z: number) => void }) {
   useEffect(() => {
     const update = () => onZoom(map.getZoom());
     update();
-    map.on("zoomend", update);
+    map.on("zoom zoomend", update);
     return () => {
-      map.off("zoomend", update);
+      map.off("zoom zoomend", update);
     };
   }, [map, onZoom]);
   return null;
