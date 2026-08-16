@@ -642,10 +642,7 @@ function SpectatorEventPage() {
                 <p className="text-center text-sm text-ink-soft">No riders match that search.</p>
               ) : (
                 startGroups.map((g, gi) => {
-                  const promo =
-                    promos.length && gi > 0 && gi % 3 === 0
-                      ? promos[(Math.floor(gi / 3) - 1) % promos.length]
-                      : null;
+                  const promo = promoAt(gi);
                   return (
                   <Fragment key={g.key}>
                   {promo ? (
@@ -762,10 +759,7 @@ function SpectatorEventPage() {
                   <p className="text-center text-sm text-ink-soft">No results match that search.</p>
                 ) : (
                   resultGroups.map((g, gi) => {
-                    const promo =
-                      promos.length && gi > 0 && gi % 3 === 0
-                        ? promos[(Math.floor(gi / 3) - 1) % promos.length]
-                        : null;
+                    const promo = promoAt(gi);
                     return (
                       <Fragment key={g.key}>
                         {promo ? (
