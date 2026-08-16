@@ -210,7 +210,13 @@ function AuthPage() {
     setError(null);
     setNotice(null);
     setNoAccount(false);
+    // Never let the button sit on "Please wait…" forever.
+    const watchdog = setTimeout(() => {
+      setBusy(false);
+      setError("That took too long. Check your connection and try again.");
+    }, 20000);
     try {
+
       if (mode === "reset") {
         const { error: err } = await supabase.auth.resetPasswordForEmail(email.trim(), {
           redirectTo: `${window.location.origin}/reset-password`,
