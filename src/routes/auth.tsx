@@ -117,11 +117,8 @@ function AuthPage() {
     setError(null);
     setNotice(null);
     if (mode === "signup" && idNumber.trim().length >= 4) {
-      try {
-        localStorage.setItem(PENDING_ID_KEY, idNumber.trim());
-      } catch {
-        /* ignore */
-      }
+      writePending(PENDING_ID_KEY, idNumber.trim());
+      writePending(PENDING_NAME_KEY, fullName.trim());
     }
     const result = await lovable.auth.signInWithOAuth("google", {
       redirect_uri: window.location.origin + "/auth",
