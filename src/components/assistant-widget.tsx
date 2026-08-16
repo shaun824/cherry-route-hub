@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import { WhatsappButton } from "@/components/whatsapp-button";
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Bot, Check, Loader2, MessageSquareWarning, Send, Sparkles, X } from "lucide-react";
+import { ArrowRight, Bot, Check, Loader2, MessageSquareWarning, Send, Sparkles, X } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { submitFeedback } from "@/lib/feedback.functions";
 import { askAppBot } from "@/lib/app-bot.functions";
