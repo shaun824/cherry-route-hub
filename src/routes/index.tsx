@@ -593,8 +593,9 @@ function SportSection({
         ) : null}
       </div>
 
-      {/* Clear "Tap to expand" prompt shown only while collapsed */}
-      {collapsed && !showExpanded ? (
+      {/* Even when collapsed we still show the next couple of events so nothing
+          disappears from the dashboard — the prompt just reveals the rest. */}
+      {collapsed && !showExpanded && events.length > 2 ? (
         <button
           type="button"
           onClick={toggle}
@@ -608,18 +609,16 @@ function SportSection({
             </span>
           </span>
           <span className="shrink-0 rounded-full bg-accent px-2 py-0.5 text-[11px] font-bold text-cherry-deep">
-            {events.length}
+            +{events.length - 2}
           </span>
         </button>
       ) : null}
 
       {/* Smooth height + opacity animation for the event list */}
-      <div
-        className="overflow-hidden transition-[max-height,opacity] duration-300 ease-out"
-        style={{ maxHeight: showExpanded ? "800px" : "0px", opacity: showExpanded ? 1 : 0 }}
-      >
+      <div className="overflow-hidden transition-[max-height,opacity] duration-300 ease-out">
         <ul className="space-y-2 px-5 pt-1">
-          {events.map((e) => (
+          {(showExpanded ? events : events.slice(0, 2)).map((e) => (
+
             <li key={e.id}>
               <Link
                 to="/my-events/$eventId"
