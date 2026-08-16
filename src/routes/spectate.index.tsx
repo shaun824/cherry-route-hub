@@ -121,8 +121,12 @@ function SpectatePage() {
 }
 
 function SpectatorCard({ event }: { event: Event }) {
-  const unlocked = Boolean(event.spectatorMode);
+  // Admins can open any event's track page, even before it unlocks publicly.
+  const { isAdmin } = useIsAdmin();
+  const unlocked = Boolean(event.spectatorMode) || isAdmin;
+  const adminPreview = !event.spectatorMode && isAdmin;
   const countdown = useCountdown(event.date);
+
 
   const inner = (
     <div
