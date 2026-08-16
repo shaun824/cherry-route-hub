@@ -288,24 +288,29 @@ export default function VillageMapGeo({
   );
 
 
-  // Older village-map imports created a separate tent pin for every numbered
-  // drawn area. Those pins landed near area corners and made the rider map look
-  // like it was showing polygon handles. Use one label at each area's centre
-  // instead; genuine standalone/manual tent pins remain visible below.
+  // Numbered drawn areas get one label at their centre — but only when there is
+  // no manually dropped tent pin carrying the same number. Dropped pins are the
+  // authoritative placement, so they always win.
+  const tentNumbers = useMemo(() => {
+    const set = new Set<string>();
+    for (const t of tents) {
+      const n = normalizedNumber(t.label);
+      if (n) set.add(n);
+    }
+    return set;
+  }, [tents]);
+
   const numberedAreas = useMemo(() => {
     const seen = new Set<string>();
     return zones.flatMap((zone) => {
       const number = normalizedNumber(zone.name);
       const centre = zoneCentroid(zone);
-      if (!number || !centre || seen.has(number)) return [];
+      if (!number || !centre || seen.has(number) || tentNumbers.has(number)) return [];
       seen.add(number);
       return [{ zone, number, centre }];
     });
-  }, [zones]);
-  const numberedAreaLabels = useMemo(
-    () => new Set(numberedAreas.map((area) => area.number)),
-    [numberedAreas],
-  );
+  }, [zones, tentNumbers]);
+
 
 
 
