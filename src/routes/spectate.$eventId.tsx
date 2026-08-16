@@ -65,6 +65,7 @@ function SpectatorEventPage() {
   const event = useAdminStore((s) => s.events.find((e) => e.id === eventId));
   const [tab, setTab] = useState<Tab>("riders");
   const [categoryFilter, setCategoryFilter] = useState<string>("__all");
+  const [groupBy, setGroupBy] = useState<GroupBy>("start");
   const [search, setSearch] = useState("");
 
   const { user } = useSession();
