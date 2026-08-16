@@ -15,8 +15,39 @@ import { BrandMark } from "@/components/ui-bits";
 
 const searchSchema = z.object({ next: z.string().optional() });
 
-/** Where we stash the ID number until a session exists (email confirmation flow). */
+/**
+ * Where we stash the ID number until a session exists (email confirmation flow).
+ * sessionStorage only, and cleared the moment the entry is linked.
+ */
 const PENDING_ID_KEY = "rce:pending-id-link";
+const PENDING_NAME_KEY = "rce:pending-id-name";
+
+function readPending(key: string): string | null {
+  try {
+    return sessionStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+function writePending(key: string, value: string) {
+  try {
+    sessionStorage.setItem(key, value);
+  } catch {
+    /* ignore */
+  }
+}
+
+function clearPending() {
+  try {
+    sessionStorage.removeItem(PENDING_ID_KEY);
+    sessionStorage.removeItem(PENDING_NAME_KEY);
+    // Legacy: earlier builds stored this in localStorage.
+    localStorage.removeItem(PENDING_ID_KEY);
+  } catch {
+    /* ignore */
+  }
+}
 
 export const Route = createFileRoute("/auth")({
   validateSearch: searchSchema,
@@ -65,26 +96,18 @@ function AuthPage() {
       return;
     }
     linkedRef.current = true;
-    const pending = (() => {
-      try {
-        return localStorage.getItem(PENDING_ID_KEY);
-      } catch {
-        return null;
-      }
-    })();
+    const pending = readPending(PENDING_ID_KEY);
+    const pendingName = readPending(PENDING_NAME_KEY) ?? "";
     const go = () => navigate({ to: target, replace: true });
     if (!pending) {
+      clearPending();
       go();
       return;
     }
-    void linkEntry({ data: { id_number: pending } })
+    void linkEntry({ data: { id_number: pending, surname: pendingName } })
       .catch(() => null)
       .finally(() => {
-        try {
-          localStorage.removeItem(PENDING_ID_KEY);
-        } catch {
-          /* ignore */
-        }
+        clearPending();
         go();
       });
   }, [loading, user, target, navigate, linkEntry]);
@@ -94,11 +117,8 @@ function AuthPage() {
     setError(null);
     setNotice(null);
     if (mode === "signup" && idNumber.trim().length >= 4) {
-      try {
-        localStorage.setItem(PENDING_ID_KEY, idNumber.trim());
-      } catch {
-        /* ignore */
-      }
+      writePending(PENDING_ID_KEY, idNumber.trim());
+      writePending(PENDING_NAME_KEY, fullName.trim().split(/\s+/).pop() ?? "");
     }
     const result = await lovable.auth.signInWithOAuth("google", {
       redirect_uri: window.location.origin + "/auth",
@@ -126,11 +146,8 @@ function AuthPage() {
         if (err) throw err;
         setNotice("Check your inbox for a password reset link.");
       } else if (mode === "signup") {
-        try {
-          localStorage.setItem(PENDING_ID_KEY, idNumber.trim());
-        } catch {
-          /* ignore */
-        }
+        writePending(PENDING_ID_KEY, idNumber.trim());
+        writePending(PENDING_NAME_KEY, fullName.trim().split(/\s+/).pop() ?? "");
         const { data, error: err } = await supabase.auth.signUp({
           email: email.trim(),
           password,
@@ -258,7 +275,8 @@ function AuthPage() {
                   className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
                 />
                 <span className="mt-1 block text-[11px] leading-snug text-ink-soft">
-                  This is how we match you to your Entry Ninja entries.
+                  This is how we match you to your Entry Ninja entries. We never store your ID
+                  number — only a scrambled version of it that can't be read back.
                 </span>
               </label>
             </>
@@ -390,6 +408,7 @@ function FindMyEmail() {
   const lookup = useServerFn(lookupEntryEmail);
   const [open, setOpen] = useState(false);
   const [idNumber, setIdNumber] = useState("");
+  const [surname, setSurname] = useState("");
   const [busy, setBusy] = useState(false);
   const [cooldown, setCooldown] = useState(false);
   const [result, setResult] = useState<{ found: boolean; needsEmail: boolean; emails: string[] } | null>(null);
@@ -402,7 +421,7 @@ function FindMyEmail() {
     setErr(null);
     setResult(null);
     try {
-      const res = await lookup({ data: { id_number: idNumber.trim() } });
+      const res = await lookup({ data: { id_number: idNumber.trim(), surname: surname.trim() } });
       setResult({ found: res.found, needsEmail: res.needsEmail, emails: res.emails });
     } catch {
       setErr("Couldn't check that right now. Please try again.");
@@ -427,7 +446,8 @@ function FindMyEmail() {
       {open ? (
         <form onSubmit={handleLookup} className="mt-3 space-y-2 rounded-xl bg-secondary/60 p-3 ring-1 ring-border">
           <p className="text-[11px] leading-snug text-ink-soft">
-            Enter the ID number you entered with and we'll show a hidden version of the email on your entry.
+            Enter the ID number and surname you entered with and we'll show a hidden version of the
+            email on your entry.
           </p>
           <input
             required
@@ -436,6 +456,16 @@ function FindMyEmail() {
             value={idNumber}
             onChange={(e) => setIdNumber(e.target.value)}
             placeholder="ID number"
+            className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+          />
+          <input
+            required
+            minLength={2}
+            maxLength={80}
+            autoComplete="family-name"
+            value={surname}
+            onChange={(e) => setSurname(e.target.value)}
+            placeholder="Surname"
             className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
           />
           <button
@@ -471,7 +501,8 @@ function FindMyEmail() {
               </div>
             ) : (
               <p className="rounded-lg bg-card px-3 py-2 text-[11px] text-ink-soft ring-1 ring-border">
-                No entry found for that ID number. Double-check the number, or contact us and we'll help.
+                We couldn't match that ID number and surname. Double-check both, or contact us and
+                we'll help.
               </p>
             )
 

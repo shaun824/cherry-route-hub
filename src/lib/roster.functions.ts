@@ -248,6 +248,7 @@ export const importRoster = createServerFn({ method: "POST" })
 
 const linkSchema = z.object({
   id_number: z.string().trim().min(4).max(50),
+  surname: z.string().trim().max(80).optional().default(""),
 });
 
 export const linkMyEntry = createServerFn({ method: "POST" })
@@ -255,6 +256,7 @@ export const linkMyEntry = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => linkSchema.parse(data))
   .handler(async ({ data, context }) => {
     const { hashIdNumber } = await import("./id-hash.server");
+    const { surnameMatches } = await import("./id-lookup.server");
     const { userId, supabase } = context;
 
     const email = (context.claims.email as string | undefined)?.toLowerCase() ?? null;
@@ -266,28 +268,46 @@ export const linkMyEntry = createServerFn({ method: "POST" })
     // under RLS via the user's client below.
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-    let match: { id: string; user_id: string | null; id_number_hash: string | null; email: string | null } | null =
-      null;
+    type Match = {
+      id: string;
+      user_id: string | null;
+      id_number_hash: string | null;
+      email: string | null;
+      full_name: string | null;
+    };
+    const cols = "id, user_id, id_number_hash, email, full_name";
+    let match: Match | null = null;
+    // The email on the signed-in account is itself a proof of identity, so an
+    // email match doesn't need the surname second factor.
+    let emailProven = false;
     if (email) {
       const { data: byEmail } = await supabaseAdmin
         .from("entrants")
-        .select("id, user_id, id_number_hash, email")
+        .select(cols)
         .ilike("email", email)
         .maybeSingle();
-      if (byEmail) match = byEmail;
+      if (byEmail) {
+        match = byEmail as Match;
+        emailProven = true;
+      }
     }
     if (!match) {
       const { data: byId } = await supabaseAdmin
         .from("entrants")
-        .select("id, user_id, id_number_hash, email")
+        .select(cols)
         .eq("id_number_hash", idHash)
         .maybeSingle();
-      if (byId) match = byId;
+      if (byId) match = byId as Match;
     }
 
     if (!match) return { ok: false as const, reason: "no_match" as const };
     if (match.id_number_hash && match.id_number_hash !== idHash) {
       return { ok: false as const, reason: "id_mismatch" as const };
+    }
+    // Claiming a roster row by ID number alone is a guessable path — require the
+    // surname as a second factor unless the account email already matches.
+    if (!emailProven && !surnameMatches(match.full_name, data.surname)) {
+      return { ok: false as const, reason: "no_match" as const };
     }
     if (match.user_id && match.user_id !== userId) {
       return { ok: false as const, reason: "already_linked" as const };
