@@ -84,3 +84,16 @@ export function eventPromosFor(eventName: string | null | undefined): EventPromo
     n.includes("plett");
   return match ? [GREEN_MOTION_PROMO] : [];
 }
+
+/**
+ * Random order so every page load leads with a different sponsor offer —
+ * this keeps promo-code usage spread evenly across partners.
+ */
+export function shufflePromos(promos: EventPromo[]): EventPromo[] {
+  const out = [...promos];
+  for (let i = out.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [out[i], out[j]] = [out[j]!, out[i]!];
+  }
+  return out;
+}
