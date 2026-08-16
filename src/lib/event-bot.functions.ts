@@ -79,7 +79,31 @@ function formatEventStructured(event: any, info: any | null): string {
   return lines.join("\n");
 }
 
+function formatMerchCatalogue(rows: any[]): string {
+  if (!rows.length) return "";
+  const lines: string[] = [
+    "EXTRAS / ADD-ONS AVAILABLE ON THE ENTRY FORM (live from Entry Ninja — authoritative for what riders can buy for THIS event):",
+  ];
+  for (const r of rows) {
+    const bits = [r.name];
+    if (r.price_from) bits.push(`from R${Number(r.price_from).toFixed(0)}`);
+    lines.push(`- ${bits.join(" — ")}`);
+    if (r.description) lines.push(`  ${r.description}`);
+    const opts = Array.isArray(r.options) ? r.options : [];
+    for (const o of opts) {
+      const label = o?.name ?? o?.label ?? String(o);
+      lines.push(`  · ${label}${o?.price ? ` (R${Number(o.price).toFixed(0)})` : ""}`);
+    }
+    if (r.source_url) lines.push(`  More info: ${r.source_url}`);
+  }
+  lines.push(
+    "If an add-on is listed above, it IS offered for this event — say so and describe the options. If a rider asks about an add-on that is NOT listed, say it isn't available on this event's entry form (it may be offered on other Red Cherry events or in a future year) rather than denying it exists.",
+  );
+  return lines.join("\n");
+}
+
 // ---------- main server fn ----------
+
 
 export const askEventBot = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -100,6 +124,16 @@ export const askEventBot = createServerFn({ method: "POST" })
       .select("*")
       .eq("event_id", data.eventId)
       .maybeSingle();
+
+    // Entry Ninja extras / merchandise catalogue for this event (No Hassle
+    // Package, jackets, dietary options, single rooms, ...).
+    const { data: merch } = await supabase
+      .from("event_merch_options")
+      .select("name, description, price_from, options, source_url")
+      .eq("event_id", data.eventId)
+      .order("position", { ascending: true });
+
+
 
     // Ensure Q&A thread exists.
     let threadId: string | null = null;
@@ -146,7 +180,13 @@ export const askEventBot = createServerFn({ method: "POST" })
     const history = (recent ?? []).reverse();
 
     // Structured event data.
-    const structured = formatEventStructured(event, info);
+    const structured = [
+      formatEventStructured(event, info),
+      formatMerchCatalogue(merch ?? []),
+    ]
+      .filter(Boolean)
+      .join("\n\n");
+
 
     // Website knowledge base (crawled and cached, auto-refreshed daily).
     const { supabaseAdmin: adminForKb } = await import("@/integrations/supabase/client.server");
