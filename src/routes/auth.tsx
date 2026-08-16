@@ -285,8 +285,10 @@ function AuthPage() {
     } catch (err) {
       setError((err as Error).message || "Something went wrong.");
     } finally {
+      clearTimeout(watchdog);
       setBusy(false);
     }
+
   }
 
   const isSignup = mode === "signup";
