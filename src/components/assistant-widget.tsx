@@ -165,9 +165,35 @@ export function AssistantWidget() {
                   {m.role === "user" ? (
                     <p className="whitespace-pre-line">{m.content}</p>
                   ) : (
-                    <div className="min-w-0 space-y-2 [&_a]:font-semibold [&_a]:break-all [&_a]:text-cherry [&_a]:underline [&_li]:ml-4 [&_li]:list-disc [&_pre]:overflow-x-auto [&_strong]:font-bold [&_table]:block [&_table]:overflow-x-auto">
-                      <ReactMarkdown>{m.content}</ReactMarkdown>
+                    <div className="min-w-0 space-y-2 [&_a]:font-semibold [&_a]:break-words [&_a]:text-cherry [&_a]:underline [&_li]:ml-4 [&_li]:list-disc [&_pre]:overflow-x-auto [&_strong]:font-bold [&_table]:block [&_table]:overflow-x-auto">
+                      <ReactMarkdown
+                        components={{
+                          a: ({ href, children }) => {
+                            const to = typeof href === "string" ? href : "";
+                            if (to.startsWith("/")) {
+                              return (
+                                <Link
+                                  to={to as any}
+                                  onClick={() => setOpen(false)}
+                                  className="inline-flex max-w-full items-center gap-1 rounded-full bg-cherry px-3 py-1 text-xs font-semibold !text-white !no-underline"
+                                >
+                                  <span className="truncate">{children}</span>
+                                  <ArrowRight className="h-3 w-3 shrink-0" />
+                                </Link>
+                              );
+                            }
+                            return (
+                              <a href={to} target="_blank" rel="noreferrer noopener">
+                                {children}
+                              </a>
+                            );
+                          },
+                        }}
+                      >
+                        {m.content}
+                      </ReactMarkdown>
                     </div>
+
                   )}
                 </div>
               ))}
