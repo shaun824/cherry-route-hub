@@ -25,7 +25,7 @@ export const Route = createFileRoute("/events/")({
 });
 
 function Events() {
-  useHydratedStore();
+  const hydrated = useHydratedStore();
   const { sport: sportParam } = Route.useSearch();
   const navigate = useNavigate({ from: "/events/" });
   const filter: SportFilter = sportParam ?? "all";
