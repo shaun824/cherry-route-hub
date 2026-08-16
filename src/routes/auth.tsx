@@ -275,7 +275,8 @@ function AuthPage() {
                   className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
                 />
                 <span className="mt-1 block text-[11px] leading-snug text-ink-soft">
-                  This is how we match you to your Entry Ninja entries.
+                  This is how we match you to your Entry Ninja entries. We never store your ID
+                  number — only a scrambled version of it that can't be read back.
                 </span>
               </label>
             </>
