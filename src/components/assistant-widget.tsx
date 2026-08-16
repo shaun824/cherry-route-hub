@@ -175,9 +175,17 @@ export function AssistantWidget() {
 
               {!user ? (
                 <p className="pt-1 text-center text-[11px] text-ink-soft">
-                  Sign in to ask about your own entry, tent or balance.
+                  <Link
+                    to="/auth"
+                    onClick={() => setOpen(false)}
+                    className="font-bold text-cherry underline underline-offset-2"
+                  >
+                    Sign in
+                  </Link>{" "}
+                  to ask about your own entry, tent or balance.
                 </p>
               ) : null}
+
             </div>
 
             <div className="min-w-0 max-h-[62%] shrink-0 overflow-y-auto overflow-x-hidden border-t border-border p-3">
