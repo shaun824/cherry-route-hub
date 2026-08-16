@@ -34,6 +34,7 @@ import { Route as AdminScheduleSyncRouteImport } from './routes/admin.schedule-s
 import { Route as AdminRosterRouteImport } from './routes/admin.roster'
 import { Route as AdminRoomingRouteImport } from './routes/admin.rooming'
 import { Route as AdminRidersRouteImport } from './routes/admin.riders'
+import { Route as AdminResultsRouteImport } from './routes/admin.results'
 import { Route as AdminPromosRouteImport } from './routes/admin.promos'
 import { Route as AdminNotificationsRouteImport } from './routes/admin.notifications'
 import { Route as AdminMessagesRouteImport } from './routes/admin.messages'
@@ -192,6 +193,11 @@ const AdminRoomingRoute = AdminRoomingRouteImport.update({
 const AdminRidersRoute = AdminRidersRouteImport.update({
   id: '/riders',
   path: '/riders',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminResultsRoute = AdminResultsRouteImport.update({
+  id: '/results',
+  path: '/results',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminPromosRoute = AdminPromosRouteImport.update({
@@ -397,6 +403,7 @@ export interface FileRoutesByFullPath {
   '/admin/messages': typeof AdminMessagesRoute
   '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/promos': typeof AdminPromosRoute
+  '/admin/results': typeof AdminResultsRoute
   '/admin/riders': typeof AdminRidersRoute
   '/admin/rooming': typeof AdminRoomingRoute
   '/admin/roster': typeof AdminRosterRoute
@@ -456,6 +463,7 @@ export interface FileRoutesByTo {
   '/admin/messages': typeof AdminMessagesRoute
   '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/promos': typeof AdminPromosRoute
+  '/admin/results': typeof AdminResultsRoute
   '/admin/riders': typeof AdminRidersRoute
   '/admin/rooming': typeof AdminRoomingRoute
   '/admin/roster': typeof AdminRosterRoute
@@ -517,6 +525,7 @@ export interface FileRoutesById {
   '/admin/messages': typeof AdminMessagesRoute
   '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/promos': typeof AdminPromosRoute
+  '/admin/results': typeof AdminResultsRoute
   '/admin/riders': typeof AdminRidersRoute
   '/admin/rooming': typeof AdminRoomingRoute
   '/admin/roster': typeof AdminRosterRoute
@@ -580,6 +589,7 @@ export interface FileRouteTypes {
     | '/admin/messages'
     | '/admin/notifications'
     | '/admin/promos'
+    | '/admin/results'
     | '/admin/riders'
     | '/admin/rooming'
     | '/admin/roster'
@@ -639,6 +649,7 @@ export interface FileRouteTypes {
     | '/admin/messages'
     | '/admin/notifications'
     | '/admin/promos'
+    | '/admin/results'
     | '/admin/riders'
     | '/admin/rooming'
     | '/admin/roster'
@@ -699,6 +710,7 @@ export interface FileRouteTypes {
     | '/admin/messages'
     | '/admin/notifications'
     | '/admin/promos'
+    | '/admin/results'
     | '/admin/riders'
     | '/admin/rooming'
     | '/admin/roster'
@@ -945,6 +957,13 @@ declare module '@tanstack/react-router' {
       path: '/riders'
       fullPath: '/admin/riders'
       preLoaderRoute: typeof AdminRidersRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/results': {
+      id: '/admin/results'
+      path: '/results'
+      fullPath: '/admin/results'
+      preLoaderRoute: typeof AdminResultsRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/promos': {
@@ -1201,6 +1220,7 @@ interface AdminRouteChildren {
   AdminMessagesRoute: typeof AdminMessagesRoute
   AdminNotificationsRoute: typeof AdminNotificationsRoute
   AdminPromosRoute: typeof AdminPromosRoute
+  AdminResultsRoute: typeof AdminResultsRoute
   AdminRidersRoute: typeof AdminRidersRoute
   AdminRoomingRoute: typeof AdminRoomingRoute
   AdminRosterRoute: typeof AdminRosterRoute
@@ -1228,6 +1248,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminMessagesRoute: AdminMessagesRoute,
   AdminNotificationsRoute: AdminNotificationsRoute,
   AdminPromosRoute: AdminPromosRoute,
+  AdminResultsRoute: AdminResultsRoute,
   AdminRidersRoute: AdminRidersRoute,
   AdminRoomingRoute: AdminRoomingRoute,
   AdminRosterRoute: AdminRosterRoute,
