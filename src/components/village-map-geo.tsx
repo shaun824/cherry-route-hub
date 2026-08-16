@@ -2,7 +2,7 @@
 // a satellite basemap at its real-world position, hotspots become map markers
 // and the rider's live GPS position is shown as a pulsing dot.
 import { useEffect, useMemo, useRef, useState } from "react";
-import { MapContainer, TileLayer, ImageOverlay, useMap, CircleMarker, Polygon, Popup } from "react-leaflet";
+import { MapContainer, TileLayer, ImageOverlay, useMap, CircleMarker, Polygon, Popup, Marker } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import "leaflet.markercluster";
@@ -357,7 +357,19 @@ export default function VillageMapGeo({
             );
           })}
 
-          <FlyToZone zone={zones.find((z) => z.id === highlightZoneId) ?? null} />
+          {tents.map((t) => {
+            const hot = highlightTentId === t.id;
+            return (
+              <Marker key={t.id} position={[t.lat, t.lng]} icon={tentIcon(t.label, hot)} zIndexOffset={hot ? 900 : 300}>
+                <Popup>{hot ? `${t.label} — this is you` : t.label}</Popup>
+              </Marker>
+            );
+          })}
+
+          <FlyToTent tent={tents.find((t) => t.id === highlightTentId) ?? null} />
+          <FlyToZone
+            zone={highlightTentId ? null : zones.find((z) => z.id === highlightZoneId) ?? null}
+          />
 
 
           <FitBounds bounds={bounds} />
