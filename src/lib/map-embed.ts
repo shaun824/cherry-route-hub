@@ -168,3 +168,30 @@ export function resolveVenuePoint(opts: {
   }
   return null;
 }
+
+/**
+ * Google Maps links the assistants can hand to riders (pin + turn-by-turn directions).
+ * Prefers coordinates, falls back to the venue address text.
+ */
+export function venueMapLinks(opts: {
+  mapUrl?: string | null;
+  lat?: number | null;
+  lng?: number | null;
+  address?: string | null;
+}): { pin: string; directions: string } | null {
+  const point = resolveVenuePoint({ mapUrl: opts.mapUrl, lat: opts.lat, lng: opts.lng });
+  if (point) {
+    const q = `${point.lat},${point.lng}`;
+    return {
+      pin: `https://www.google.com/maps/search/?api=1&query=${q}`,
+      directions: `https://www.google.com/maps/dir/?api=1&destination=${q}`,
+    };
+  }
+  const address = (opts.address ?? "").trim();
+  if (!address) return null;
+  const q = encodeURIComponent(address);
+  return {
+    pin: `https://www.google.com/maps/search/?api=1&query=${q}`,
+    directions: `https://www.google.com/maps/dir/?api=1&destination=${q}`,
+  };
+}
