@@ -155,6 +155,31 @@ function FlyToTent({ tent }: { tent: MapTent | null }) {
 
 export type MapTent = { id: string; label: string; lat: number; lng: number };
 
+/** Tracks the live zoom level so markers can thin out when zoomed out. */
+function ZoomWatcher({ onZoom }: { onZoom: (z: number) => void }) {
+  const map = useMap();
+  useEffect(() => {
+    const update = () => onZoom(map.getZoom());
+    update();
+    map.on("zoomend", update);
+    return () => {
+      map.off("zoomend", update);
+    };
+  }, [map, onZoom]);
+  return null;
+}
+
+/** Compact dot used for tents when zoomed out, so the village doesn't turn into a wall of numbers. */
+function tentDotIcon(active: boolean) {
+  const bg = active ? "#c8102e" : "#1f2937";
+  return L.divIcon({
+    className: "rce-village-tent-dot",
+    html: `<div style="width:9px;height:9px;border-radius:999px;background:${bg};border:1.5px solid rgba(255,255,255,.85);box-shadow:0 1px 3px rgba(0,0,0,.4)"></div>`,
+    iconSize: [9, 9],
+    iconAnchor: [4.5, 4.5],
+  });
+}
+
 function tentIcon(label: string, active: boolean) {
   const bg = active ? "#c8102e" : "#1f2937";
   return L.divIcon({
