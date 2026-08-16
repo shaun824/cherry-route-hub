@@ -650,48 +650,57 @@ export type Database = {
           created_at: string
           email: string | null
           entrant_id: string | null
+          event_entrant_id: string | null
           event_id: string
           full_name: string
           id: string
           location_hint: string | null
+          match_source: string
           notes: string | null
           room_type: string | null
           tent_number: string | null
           updated_at: string
           venue_id: string | null
           village_spot_id: string | null
+          village_tent_id: string | null
           village_zone_id: string | null
         }
         Insert: {
           created_at?: string
           email?: string | null
           entrant_id?: string | null
+          event_entrant_id?: string | null
           event_id: string
           full_name: string
           id?: string
           location_hint?: string | null
+          match_source?: string
           notes?: string | null
           room_type?: string | null
           tent_number?: string | null
           updated_at?: string
           venue_id?: string | null
           village_spot_id?: string | null
+          village_tent_id?: string | null
           village_zone_id?: string | null
         }
         Update: {
           created_at?: string
           email?: string | null
           entrant_id?: string | null
+          event_entrant_id?: string | null
           event_id?: string
           full_name?: string
           id?: string
           location_hint?: string | null
+          match_source?: string
           notes?: string | null
           room_type?: string | null
           tent_number?: string | null
           updated_at?: string
           venue_id?: string | null
           village_spot_id?: string | null
+          village_tent_id?: string | null
           village_zone_id?: string | null
         }
         Relationships: [
@@ -700,6 +709,13 @@ export type Database = {
             columns: ["entrant_id"]
             isOneToOne: false
             referencedRelation: "entrants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_rooming_event_entrant_id_fkey"
+            columns: ["event_entrant_id"]
+            isOneToOne: false
+            referencedRelation: "event_entrants"
             referencedColumns: ["id"]
           },
           {
@@ -857,6 +873,88 @@ export type Database = {
             foreignKeyName: "event_village_maps_event_id_fkey"
             columns: ["event_id"]
             isOneToOne: true
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_village_tent_rules: {
+        Row: {
+          created_at: string
+          event_id: string
+          id: string
+          pattern: string
+          updated_at: string
+          zone_id: string
+        }
+        Insert: {
+          created_at?: string
+          event_id: string
+          id?: string
+          pattern: string
+          updated_at?: string
+          zone_id: string
+        }
+        Update: {
+          created_at?: string
+          event_id?: string
+          id?: string
+          pattern?: string
+          updated_at?: string
+          zone_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_village_tent_rules_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_village_tents: {
+        Row: {
+          capacity: number | null
+          created_at: string
+          event_id: string
+          id: string
+          label: string
+          lat: number
+          lng: number
+          notes: string | null
+          updated_at: string
+          zone_id: string | null
+        }
+        Insert: {
+          capacity?: number | null
+          created_at?: string
+          event_id: string
+          id?: string
+          label: string
+          lat: number
+          lng: number
+          notes?: string | null
+          updated_at?: string
+          zone_id?: string | null
+        }
+        Update: {
+          capacity?: number | null
+          created_at?: string
+          event_id?: string
+          id?: string
+          label?: string
+          lat?: number
+          lng?: number
+          notes?: string | null
+          updated_at?: string
+          zone_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_village_tents_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
             referencedRelation: "events"
             referencedColumns: ["id"]
           },
