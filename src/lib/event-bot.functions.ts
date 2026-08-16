@@ -215,7 +215,7 @@ export const askEventBot = createServerFn({ method: "POST" })
     const today = new Date().toISOString().slice(0, 10);
     const { data: learned } = await adminForKb
       .from("event_faq_learned")
-      .select("id, question, answer, expires_on, event_id")
+      .select("id, question, answer, expires_on, event_id, follow_ups")
       .eq("status", "approved")
       .or(`event_id.eq.${data.eventId},event_id.is.null`)
       .limit(100);
@@ -223,8 +223,14 @@ export const askEventBot = createServerFn({ method: "POST" })
       (f: any) => !f.expires_on || String(f.expires_on) >= today,
     );
     const approvedText = approved
-      .map((f: any) => `Q: ${f.question}\nA: ${f.answer}`)
+      .map((f: any) => {
+        const next = ((f.follow_ups ?? []) as string[]).filter(Boolean);
+        return `Q: ${f.question}\nA: ${f.answer}${
+          next.length ? `\nRiders who asked this usually asked next: ${next.join(" | ")}` : ""
+        }`;
+      })
       .join("\n\n");
+
 
     // The signed-in rider's own system data: profile, Entry Ninja entry,
     // accommodation / tent allocation and village-map pin.
