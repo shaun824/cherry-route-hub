@@ -142,15 +142,23 @@ function Home() {
     }) ?? null;
 
   // Spotlight: never repeat the hero. Signed-in riders get the next event they
-  // haven't entered, preferring a sport they actually ride (a mountain biker
-  // sees the next MTB event); guests get whatever is happening next.
+  // haven't entered, in the sport they actually ride — most riders do either MTB
+  // or moto, not both, so we prefer the sport of their own next event.
   const notEntered = upcoming.filter((e) => e.id !== heroEventId && !myEventIds.has(e.id));
-  const sameSportPick = enteredSports.size
-    ? (notEntered.find((e) => enteredSports.has(getEventSport(e.discipline, e.name))) ?? null)
-    : null;
+  const primarySport: "moto" | "mtb" | null = myNext
+    ? getEventSport(myNext.event.discipline, myNext.event.name)
+    : enteredSports.size === 1
+      ? [...enteredSports][0]
+      : null;
+  const sameSportPick = primarySport
+    ? (notEntered.find((e) => getEventSport(e.discipline, e.name) === primarySport) ?? null)
+    : enteredSports.size
+      ? (notEntered.find((e) => enteredSports.has(getEventSport(e.discipline, e.name))) ?? null)
+      : null;
   const spotlightSource = user
     ? (sameSportPick ?? notEntered[0] ?? null)
     : (liveNow ?? upcoming[0] ?? null);
+
   const spotlight = spotlightSource
     ? {
         id: spotlightSource.id,
@@ -812,7 +820,7 @@ function NextEventCard() {
       {rest.length > 0 ? (
         <div>
           <p className="mb-2 text-[11px] font-bold uppercase tracking-widest text-ink-soft">
-            More adventures ahead
+            More adventures you might be interested in
           </p>
           <div className="flex snap-x snap-mandatory gap-2 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {rest.map((r) => (
