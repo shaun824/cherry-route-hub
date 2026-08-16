@@ -515,7 +515,7 @@ export default function VillageMapGeo({
         </div>
 
         {/* Rotate the map to match the way you're facing. */}
-        <div className="pointer-events-none absolute left-3 top-3 z-[500] flex items-center gap-1.5">
+        <div className="pointer-events-none absolute bottom-3 left-3 z-[500] flex items-center gap-1.5">
           <button
             type="button"
             aria-label="Rotate map anti-clockwise"
