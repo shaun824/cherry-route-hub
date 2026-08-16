@@ -1,6 +1,8 @@
 import { entryNinjaRegistrationUrl } from "@/lib/entry-ninja-link";
 import { WhatsappButton } from "@/components/whatsapp-button";
 import { isBotMiss } from "@/lib/bot-handoff";
+import { splitFollowUps } from "@/lib/bot-followups";
+
 import { createFileRoute, Link, notFound, useRouterState } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { askEventBot } from "@/lib/event-bot.functions";
