@@ -224,6 +224,19 @@ function SpectatorEventPage() {
       .sort((a, b) => (a.position ?? 9999) - (b.position ?? 9999));
   }, [results, currentSetId, categoryFilter, search]);
 
+  const resultGroups = useMemo(() => {
+    const withGender = resultRows.map((r) => {
+      const extras = (r.extras ?? {}) as Record<string, string>;
+      const key = Object.keys(extras).find((k) => /^(gender|sex)$/i.test(k));
+      return { ...r, gender: key ? extras[key] : null };
+    });
+    const { classes, dayRiders } = groupRidersByClass(withGender);
+    return [
+      ...classes,
+      ...dayRiders.map((g) => ({ ...g, label: `Day riders · ${g.label}` })),
+    ];
+  }, [resultRows]);
+
   if (!event) {
     return (
       <div className="p-8 text-center">
@@ -707,29 +720,57 @@ function SpectatorEventPage() {
                 <CategoryFilter categories={categories} value={categoryFilter} onChange={setCategoryFilter} />
               </div>
 
-              <ol className="mt-4 space-y-2">
-                {resultRows.length === 0 ? (
+              <div className="mt-4 space-y-4">
+                {resultGroups.length === 0 ? (
                   <p className="text-center text-sm text-ink-soft">No results match that search.</p>
                 ) : (
-                  resultRows.map((r) => (
-                    <li key={r.id} className="flex items-center gap-3 rounded-xl bg-card p-3 ring-1 ring-border">
-                      <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-cherry text-xs font-bold text-white">
-                        {r.position ?? "—"}
-                      </span>
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-semibold text-ink">{r.full_name}</p>
-                        <p className="text-[11px] text-ink-soft">
-                          {r.bib_number ? `#${r.bib_number} · ` : ""}
-                          {r.category ? `${r.category} · ` : ""}
-                          {r.status ?? ""}
-                          {r.gap_text ? ` +${r.gap_text}` : ""}
-                        </p>
-                      </div>
-                      <span className="font-mono text-xs font-semibold text-ink">{r.time_text ?? "—"}</span>
-                    </li>
-                  ))
+                  resultGroups.map((g, gi) => {
+                    const promo =
+                      promos.length && gi > 0 && gi % 3 === 0
+                        ? promos[(Math.floor(gi / 3) - 1) % promos.length]
+                        : null;
+                    return (
+                      <Fragment key={g.key}>
+                        {promo ? (
+                          <div className="py-1">
+                            <PromoCodeCard promo={promo} />
+                          </div>
+                        ) : null}
+                        <section className="rounded-2xl bg-card p-3 ring-1 ring-border">
+                          <header className="flex items-start gap-2 pb-2">
+                            <p className="min-w-0 flex-1 font-display text-sm font-bold leading-snug text-ink">
+                              {g.label}
+                            </p>
+                            <span className="shrink-0 rounded-md bg-accent px-2 py-0.5 font-mono text-[11px] font-bold text-cherry-deep">
+                              {g.rows.length}
+                            </span>
+                          </header>
+                          <ol className="divide-y divide-border">
+                            {g.rows.map((r) => (
+                              <li key={r.id} className="flex items-center gap-3 py-2">
+                                <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-cherry text-[11px] font-bold text-white">
+                                  {r.position ?? "—"}
+                                </span>
+                                <div className="min-w-0 flex-1">
+                                  <p className="truncate text-sm font-semibold text-ink">{r.full_name}</p>
+                                  <p className="truncate text-[11px] text-ink-soft">
+                                    {r.bib_number ? `#${r.bib_number} · ` : ""}
+                                    {r.status ?? ""}
+                                    {r.gap_text ? ` +${r.gap_text}` : ""}
+                                  </p>
+                                </div>
+                                <span className="font-mono text-xs font-semibold text-ink">
+                                  {r.time_text ?? "—"}
+                                </span>
+                              </li>
+                            ))}
+                          </ol>
+                        </section>
+                      </Fragment>
+                    );
+                  })
                 )}
-              </ol>
+              </div>
             </>
           )}
         </div>
