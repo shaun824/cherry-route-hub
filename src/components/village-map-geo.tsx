@@ -53,6 +53,16 @@ function RotateOverlay({ rotation }: { rotation: number }) {
   return null;
 }
 
+/** Keeps the Leaflet map bearing in sync with the rider's rotation controls. */
+function BearingSync({ bearing }: { bearing: number }) {
+  const map = useMap() as L.Map & { setBearing?: (deg: number) => void };
+  useEffect(() => {
+    map.setBearing?.(bearing);
+  }, [map, bearing]);
+  return null;
+}
+
+
 function FitBounds({ bounds }: { bounds: L.LatLngBoundsExpression }) {
   const map = useMap();
   const done = useRef(false);
