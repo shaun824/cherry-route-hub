@@ -8,7 +8,7 @@ import "leaflet/dist/leaflet.css";
 import type { VillageGeo, VillageHotspot } from "@/lib/village-map";
 import { spotColor, spotIcon } from "@/lib/village-map";
 import { villageIconSvg } from "@/lib/village-icons";
-import { zoneAreaM2, zoneCentroid, zoneColor, type VillageZone } from "@/lib/village-zones";
+import { zoneCentroid, zoneColor, type VillageZone } from "@/lib/village-zones";
 
 const M_PER_DEG_LAT = 111320;
 
@@ -272,21 +272,17 @@ export default function VillageMapGeo({
     [hotspots],
   );
 
-  // Rider-facing maps only show meaningful blocks. Individual tent footprints
-  // drawn while planning (small squares, usually named "12" or "Area 12") just
-  // clutter the map — the tent pin already carries the number. The rider's own
-  // highlighted area is always drawn.
+  // Match the Weekend Warrior customer map: keep every deliberately drawn area
+  // visible as a clean polygon, but hide the old per-tent footprint polygons
+  // whose names are only a tent number. Polygon vertices and area names are
+  // never rendered on the customer map.
   const visibleZones = useMemo(
     () =>
       zones.filter((z) => {
         const name = (z.name ?? "").trim();
-        const planningName = /^(?:tent\s*)?\d+$/i.test(name) || /^area\s*\d+$/i.test(name);
-        const small = zoneAreaM2(z) < 150;
-        // A precise tent pin is the customer-facing accommodation marker. Never
-        // bring its underlying planning square back into the rider map just
-        // because that tent is highlighted.
-        if (z.id === highlightZoneId) return !highlightTentId && !planningName && !small;
-        return !(planningName || small);
+        const tentFootprint = /^(?:tent\s*)?\d+$/i.test(name);
+        if (z.id === highlightZoneId) return !highlightTentId && !tentFootprint;
+        return !tentFootprint;
       }),
     [zones, highlightZoneId, highlightTentId],
   );
@@ -374,6 +370,7 @@ export default function VillageMapGeo({
               <Polygon
                 key={z.id}
                 positions={z.points.map((p) => [p.lat, p.lng]) as [number, number][]}
+                interactive={false}
                 pathOptions={{
                   color: hot ? "#c8102e" : zoneColor(z),
                   weight: hot ? 4 : 2,
