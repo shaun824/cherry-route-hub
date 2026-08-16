@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   Activity,
   Bell,
@@ -35,6 +35,7 @@ import { formatDate, relativeTime, type Event } from "@/lib/mock-data";
 import { getEventSport } from "@/lib/event-sport";
 import { useAdminStore } from "@/lib/store";
 import { PromoCarousel } from "@/components/promo-carousel";
+import { eventPromosFor, type EventPromo } from "@/lib/event-promos";
 import { useHydratedStore } from "@/lib/use-hydrated-store";
 import { useSession } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
@@ -80,6 +81,28 @@ function Home() {
   const pinned = feed.filter((p) => p.pinned)[0];
   const pinnedGeneral = feed.filter((p) => p.pinned && !p.eventId && p.type !== "weather")[0];
   const qlCols = Math.min(Math.max(quickLinks.length, 1), 4);
+  // Home shows every supplier offer: admin-managed promos + the Weekend Warrior partner set.
+  const homePromos = useMemo(() => {
+    const list: EventPromo[] = promos.map((p) => ({
+      id: p.id,
+      brand: p.brand,
+      title: p.title,
+      code: p.code || undefined,
+      redeem: p.code ? undefined : "Show this offer to the supplier",
+      discount: p.discount,
+      url: p.url || "#",
+      logoUrl: p.logoUrl ?? "",
+      accent: p.accent,
+    }));
+    const seen = new Set(list.map((p) => p.brand.toLowerCase().trim()));
+    for (const p of eventPromosFor("weekend warrior")) {
+      const key = p.brand.toLowerCase().trim();
+      if (seen.has(key)) continue;
+      seen.add(key);
+      list.push({ ...p });
+    }
+    return list;
+  }, [promos]);
   const [notifOpen, setNotifOpen] = useState(false);
   const [noticeOpen, setNoticeOpen] = useState(false);
 
@@ -441,26 +464,15 @@ function Home() {
 
 
       {/* Promo teaser — same tappable card + reminder pop-up as everywhere else */}
-      {promos[0] ? (
+      {homePromos.length > 0 ? (
         <>
           <SectionTitle title="Supplier promos" action="View all" actionTo="/promos" />
           <div className="px-5 pb-2">
-            <PromoCarousel
-              promos={promos.map((p) => ({
-                id: p.id,
-                brand: p.brand,
-                title: p.title,
-                code: p.code || undefined,
-                redeem: p.code ? undefined : "Show this offer to the supplier",
-                discount: p.discount,
-                url: p.url || "#",
-                logoUrl: p.logoUrl ?? "",
-                accent: p.accent,
-              }))}
-            />
+            <PromoCarousel promos={homePromos} />
           </div>
         </>
       ) : null}
+
 
 
       {/* Sponsor scroller hidden while sponsor assets are being refreshed. */}
