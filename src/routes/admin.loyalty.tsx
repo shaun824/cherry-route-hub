@@ -441,9 +441,6 @@ function Rewards({ rows, settings, onDone }: { rows: any[]; settings: LoyaltySet
                 <h3 className="font-display font-bold">{r.name}</h3>
                 <p className="text-xs text-ink-soft">{r.description}</p>
                 <p className="mt-1 text-[11px] text-ink-soft">
-                <h3 className="font-display font-bold">{r.name}</h3>
-                <p className="text-xs text-ink-soft">{r.description}</p>
-                <p className="mt-1 text-[11px] text-ink-soft">
                   <span className="mr-1 rounded-full bg-secondary px-2 py-0.5 font-bold uppercase">
                     {REWARD_KINDS.find((k) => k.key === (r.kind ?? "entry"))?.label ?? r.kind}
                   </span>
@@ -452,10 +449,13 @@ function Rewards({ rows, settings, onDone }: { rows: any[]; settings: LoyaltySet
                   {r.stock !== null && r.stock !== undefined ? ` · ${r.stock} left` : ""}
                   {r.active ? "" : " · inactive"}
                 </p>
-
-                  onClick={() => setForm({ ...r })}
+              </div>
+              <div className="flex shrink-0 flex-col gap-1">
+                <button
+                  onClick={() => setForm({ ...r, stock: r.stock ?? "" })}
                   className="rounded-lg border border-border px-2 py-1 text-[11px] font-bold"
                 >
+
                   Edit
                 </button>
                 <button
