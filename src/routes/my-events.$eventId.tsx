@@ -1902,7 +1902,13 @@ function YourEntryCard({ eventId, entryUrl = null }: { eventId: string; entryUrl
             ? [{ label: "Event t-shirt", value: row.tshirt_size }]
             : []),
         ]}
+        addUrl={
+          entryNinjaRegistrationUrl(row.registration_ref) ??
+          entryUrl ??
+          "https://entries.redcherryevents.co.za/"
+        }
       />
+
 
 
 
