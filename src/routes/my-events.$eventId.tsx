@@ -130,7 +130,15 @@ function MyEventDetail() {
   const focusVillage = useCallback((f: { zoneId?: string | null; spotId?: string | null; tentId?: string | null }) => {
     setVillageFocus(f);
     setTab("village");
-    if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
+    if (typeof window === "undefined") return;
+    window.scrollTo({ top: 0, behavior: "auto" });
+    // The map mounts lazily, so keep nudging it into view for a moment.
+    let tries = 0;
+    const timer = window.setInterval(() => {
+      const el = document.getElementById("village-map-section");
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+      if (++tries > 8) window.clearInterval(timer);
+    }, 200);
   }, []);
   const eventNews = useAdminStore((s) => s.feed).filter((p) => p.eventId === event.id);
   const hasFreshNews = eventNews.some(
@@ -223,7 +231,7 @@ function MyEventDetail() {
           </div>
         )}
         {tab === "village" && (
-          <section className="space-y-3">
+          <section id="village-map-section" className="scroll-mt-16 space-y-3">
             <SectionTitle>Race village</SectionTitle>
             <OfflinePackCard event={event as never} />
             <VillageMapView
