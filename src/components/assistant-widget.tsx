@@ -219,7 +219,7 @@ export function AssistantWidget() {
                 </button>
               </form>
 
-              <div className="mt-2 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
+              <div className="mt-2 flex min-w-0 flex-wrap items-center justify-between gap-2">
                 <button
                   type="button"
                   onClick={() => setShowReport((v) => !v)}
