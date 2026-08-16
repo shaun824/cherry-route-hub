@@ -5,6 +5,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSession, signOut, useIsCrew } from "@/lib/auth";
 import { LogOut, Save, User as UserIcon, ShieldAlert, HardHat, Repeat, Plus, X } from "lucide-react";
 import { NotificationSettings } from "@/components/notification-settings";
+import { RiderEventHistory } from "@/components/rider-event-history";
+
 import {
   listKnownAccounts,
   rememberAccount,
