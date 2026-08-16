@@ -919,6 +919,7 @@ export type Database = {
           created_at: string
           event_id: string
           id: string
+          kind: string
           label: string
           lat: number
           lng: number
@@ -931,6 +932,7 @@ export type Database = {
           created_at?: string
           event_id: string
           id?: string
+          kind?: string
           label: string
           lat: number
           lng: number
@@ -943,6 +945,7 @@ export type Database = {
           created_at?: string
           event_id?: string
           id?: string
+          kind?: string
           label?: string
           lat?: number
           lng?: number
