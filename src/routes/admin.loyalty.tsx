@@ -17,7 +17,7 @@ import {
   saveReward,
   setEventPoints,
 } from "@/lib/loyalty.functions";
-import { formatPoints, formatRand, pointsFromPrice, randValue, tierFor, type LoyaltySettings } from "@/lib/loyalty";
+import { formatPoints, pointsFromPrice, randValue, tierFor, type LoyaltySettings } from "@/lib/loyalty";
 
 export const Route = createFileRoute("/admin/loyalty")({
   component: AdminLoyalty,
