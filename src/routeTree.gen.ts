@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SpectateRouteImport } from './routes/spectate'
+import { Route as RewardsRouteImport } from './routes/rewards'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as PromosRouteImport } from './routes/promos'
 import { Route as ProfileRouteImport } from './routes/profile'
@@ -40,6 +41,7 @@ import { Route as AdminPromosRouteImport } from './routes/admin.promos'
 import { Route as AdminNotificationsRouteImport } from './routes/admin.notifications'
 import { Route as AdminMessagesRouteImport } from './routes/admin.messages'
 import { Route as AdminMerchandiseRouteImport } from './routes/admin.merchandise'
+import { Route as AdminLoyaltyRouteImport } from './routes/admin.loyalty'
 import { Route as AdminKnowledgeRouteImport } from './routes/admin.knowledge'
 import { Route as AdminFeedRouteImport } from './routes/admin.feed'
 import { Route as AdminEventsRouteImport } from './routes/admin.events'
@@ -75,6 +77,11 @@ import { Route as ApiPublicHooksContentAuditRouteImport } from './routes/api/pub
 const SpectateRoute = SpectateRouteImport.update({
   id: '/spectate',
   path: '/spectate',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RewardsRoute = RewardsRouteImport.update({
+  id: '/rewards',
+  path: '/rewards',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
@@ -225,6 +232,11 @@ const AdminMessagesRoute = AdminMessagesRouteImport.update({
 const AdminMerchandiseRoute = AdminMerchandiseRouteImport.update({
   id: '/merchandise',
   path: '/merchandise',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminLoyaltyRoute = AdminLoyaltyRouteImport.update({
+  id: '/loyalty',
+  path: '/loyalty',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminKnowledgeRoute = AdminKnowledgeRouteImport.update({
@@ -403,6 +415,7 @@ export interface FileRoutesByFullPath {
   '/profile': typeof ProfileRoute
   '/promos': typeof PromosRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/rewards': typeof RewardsRoute
   '/spectate': typeof SpectateRouteWithChildren
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/audit': typeof AdminAuditRoute
@@ -412,6 +425,7 @@ export interface FileRoutesByFullPath {
   '/admin/events': typeof AdminEventsRoute
   '/admin/feed': typeof AdminFeedRoute
   '/admin/knowledge': typeof AdminKnowledgeRoute
+  '/admin/loyalty': typeof AdminLoyaltyRoute
   '/admin/merchandise': typeof AdminMerchandiseRoute
   '/admin/messages': typeof AdminMessagesRoute
   '/admin/notifications': typeof AdminNotificationsRoute
@@ -465,6 +479,7 @@ export interface FileRoutesByTo {
   '/profile': typeof ProfileRoute
   '/promos': typeof PromosRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/rewards': typeof RewardsRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/audit': typeof AdminAuditRoute
   '/admin/bot-log': typeof AdminBotLogRoute
@@ -473,6 +488,7 @@ export interface FileRoutesByTo {
   '/admin/events': typeof AdminEventsRoute
   '/admin/feed': typeof AdminFeedRoute
   '/admin/knowledge': typeof AdminKnowledgeRoute
+  '/admin/loyalty': typeof AdminLoyaltyRoute
   '/admin/merchandise': typeof AdminMerchandiseRoute
   '/admin/messages': typeof AdminMessagesRoute
   '/admin/notifications': typeof AdminNotificationsRoute
@@ -528,6 +544,7 @@ export interface FileRoutesById {
   '/profile': typeof ProfileRoute
   '/promos': typeof PromosRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/rewards': typeof RewardsRoute
   '/spectate': typeof SpectateRouteWithChildren
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/audit': typeof AdminAuditRoute
@@ -537,6 +554,7 @@ export interface FileRoutesById {
   '/admin/events': typeof AdminEventsRoute
   '/admin/feed': typeof AdminFeedRoute
   '/admin/knowledge': typeof AdminKnowledgeRoute
+  '/admin/loyalty': typeof AdminLoyaltyRoute
   '/admin/merchandise': typeof AdminMerchandiseRoute
   '/admin/messages': typeof AdminMessagesRoute
   '/admin/notifications': typeof AdminNotificationsRoute
@@ -594,6 +612,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/promos'
     | '/reset-password'
+    | '/rewards'
     | '/spectate'
     | '/admin/analytics'
     | '/admin/audit'
@@ -603,6 +622,7 @@ export interface FileRouteTypes {
     | '/admin/events'
     | '/admin/feed'
     | '/admin/knowledge'
+    | '/admin/loyalty'
     | '/admin/merchandise'
     | '/admin/messages'
     | '/admin/notifications'
@@ -656,6 +676,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/promos'
     | '/reset-password'
+    | '/rewards'
     | '/admin/analytics'
     | '/admin/audit'
     | '/admin/bot-log'
@@ -664,6 +685,7 @@ export interface FileRouteTypes {
     | '/admin/events'
     | '/admin/feed'
     | '/admin/knowledge'
+    | '/admin/loyalty'
     | '/admin/merchandise'
     | '/admin/messages'
     | '/admin/notifications'
@@ -718,6 +740,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/promos'
     | '/reset-password'
+    | '/rewards'
     | '/spectate'
     | '/admin/analytics'
     | '/admin/audit'
@@ -727,6 +750,7 @@ export interface FileRouteTypes {
     | '/admin/events'
     | '/admin/feed'
     | '/admin/knowledge'
+    | '/admin/loyalty'
     | '/admin/merchandise'
     | '/admin/messages'
     | '/admin/notifications'
@@ -783,6 +807,7 @@ export interface RootRouteChildren {
   ProfileRoute: typeof ProfileRoute
   PromosRoute: typeof PromosRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  RewardsRoute: typeof RewardsRoute
   SpectateRoute: typeof SpectateRouteWithChildren
   CrewLoginRoute: typeof CrewLoginRoute
   CrewRoomingRoute: typeof CrewRoomingRoute
@@ -813,6 +838,13 @@ declare module '@tanstack/react-router' {
       path: '/spectate'
       fullPath: '/spectate'
       preLoaderRoute: typeof SpectateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/rewards': {
+      id: '/rewards'
+      path: '/rewards'
+      fullPath: '/rewards'
+      preLoaderRoute: typeof RewardsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/reset-password': {
@@ -1023,6 +1055,13 @@ declare module '@tanstack/react-router' {
       path: '/merchandise'
       fullPath: '/admin/merchandise'
       preLoaderRoute: typeof AdminMerchandiseRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/loyalty': {
+      id: '/admin/loyalty'
+      path: '/loyalty'
+      fullPath: '/admin/loyalty'
+      preLoaderRoute: typeof AdminLoyaltyRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/knowledge': {
@@ -1254,6 +1293,7 @@ interface AdminRouteChildren {
   AdminEventsRoute: typeof AdminEventsRoute
   AdminFeedRoute: typeof AdminFeedRoute
   AdminKnowledgeRoute: typeof AdminKnowledgeRoute
+  AdminLoyaltyRoute: typeof AdminLoyaltyRoute
   AdminMerchandiseRoute: typeof AdminMerchandiseRoute
   AdminMessagesRoute: typeof AdminMessagesRoute
   AdminNotificationsRoute: typeof AdminNotificationsRoute
@@ -1282,6 +1322,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminEventsRoute: AdminEventsRoute,
   AdminFeedRoute: AdminFeedRoute,
   AdminKnowledgeRoute: AdminKnowledgeRoute,
+  AdminLoyaltyRoute: AdminLoyaltyRoute,
   AdminMerchandiseRoute: AdminMerchandiseRoute,
   AdminMessagesRoute: AdminMessagesRoute,
   AdminNotificationsRoute: AdminNotificationsRoute,
@@ -1357,6 +1398,7 @@ const rootRouteChildren: RootRouteChildren = {
   ProfileRoute: ProfileRoute,
   PromosRoute: PromosRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  RewardsRoute: RewardsRoute,
   SpectateRoute: SpectateRouteWithChildren,
   CrewLoginRoute: CrewLoginRoute,
   CrewRoomingRoute: CrewRoomingRoute,
