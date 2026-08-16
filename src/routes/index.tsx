@@ -566,7 +566,7 @@ function SportSection({
             type="button"
             onClick={toggle}
             aria-expanded={showExpanded}
-            className="flex items-center gap-2 font-display text-base font-bold tracking-tight text-ink active:opacity-70 transition"
+            className="flex items-center gap-2 font-display text-lg font-bold tracking-tight text-ink active:opacity-70 transition"
           >
             <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-accent text-cherry-deep">
               <Icon className="h-3.5 w-3.5" />
@@ -579,7 +579,7 @@ function SportSection({
             />
           </button>
         ) : (
-          <h2 className="flex items-center gap-2 font-display text-base font-bold tracking-tight text-ink">
+          <h2 className="flex items-center gap-2 font-display text-lg font-bold tracking-tight text-ink">
             <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-accent text-cherry-deep">
               <Icon className="h-3.5 w-3.5" />
             </span>
