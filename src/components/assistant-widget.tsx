@@ -131,15 +131,23 @@ export function AssistantWidget() {
       </button>
 
       {open ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center overflow-hidden bg-black/40 p-4 md:p-6">
+        <div
+          className="fixed z-50 flex items-center justify-center overflow-hidden bg-black/40 p-3 md:p-6"
+          style={
+            vv
+              ? { left: vv.l, top: vv.t, width: vv.w, height: vv.h }
+              : { left: 0, top: 0, right: 0, bottom: 0 }
+          }
+        >
           <div
             className="flex w-full min-w-0 flex-col overflow-hidden rounded-3xl bg-card shadow-xl"
             style={{
-              width: "min(90vw, 28rem)",
-              maxWidth: "min(90vw, 28rem)",
-              height: "min(80dvh, 640px)",
-              maxHeight: "80dvh",
+              width: vv ? Math.min(vv.w - 24, 448) : "min(90vw, 28rem)",
+              maxWidth: "100%",
+              height: vv ? Math.min(vv.h - 24, 640) : "min(80dvh, 640px)",
+              maxHeight: "100%",
               paddingBottom: "env(safe-area-inset-bottom)",
+
             }}
           >
 
