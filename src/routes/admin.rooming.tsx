@@ -159,7 +159,7 @@ function RoomingAdminPage() {
         entrant_id:
           match.entrantId ?? (p.email ? entrantByEmail.get(p.email.toLowerCase()) ?? null : null),
         event_entrant_id: match.entryId,
-        match_source: match.source === "none" ? null : match.source,
+        match_source: match.source,
         full_name: p.full_name || p.email || "Unnamed",
         email: p.email || null,
         tent_number: p.tent_number || null,
@@ -224,7 +224,7 @@ function RoomingAdminPage() {
       .update({
         event_entrant_id: entryId,
         entrant_id: cand?.entrant_id ?? null,
-        match_source: entryId ? "manual" : null,
+        match_source: entryId ? "manual" : "none",
       })
       .eq("id", id);
     refreshRooming();
@@ -232,9 +232,14 @@ function RoomingAdminPage() {
 
   async function setRowTent(id: string, tentId: string | null) {
     const tent = tents.find((t) => t.id === tentId) ?? null;
-    const patch: Record<string, unknown> = { village_tent_id: tentId };
-    if (tent?.zone_id) patch.village_zone_id = tent.zone_id;
-    await supabase.from("event_rooming").update(patch).eq("id", id);
+    await supabase
+      .from("event_rooming")
+      .update(
+        tent?.zone_id
+          ? { village_tent_id: tentId, village_zone_id: tent.zone_id }
+          : { village_tent_id: tentId },
+      )
+      .eq("id", id);
     refreshRooming();
   }
 

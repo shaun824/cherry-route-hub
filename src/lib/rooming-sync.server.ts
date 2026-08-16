@@ -68,7 +68,7 @@ export async function placeRows(
       entrant_id:
         match.entrantId ?? (r.email ? entrantByEmail.get(r.email.toLowerCase()) ?? null : null),
       event_entrant_id: match.entryId,
-      match_source: match.source === "none" ? null : match.source,
+      match_source: match.source,
       full_name: r.full_name || r.email || "Unnamed",
       email: r.email || null,
       tent_number: r.tent_number || null,
