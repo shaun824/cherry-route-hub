@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { useIsCrew } from "@/lib/auth";
 import { BrandMark } from "@/components/ui-bits";
+import { loginIdentifierToEmail, isEmailAddress } from "@/lib/crew-username";
 
 export const Route = createFileRoute("/crew/login")({
   head: () => ({
@@ -32,7 +33,7 @@ export const Route = createFileRoute("/crew/login")({
 function CrewLoginPage() {
   const { user, isCrew, loading } = useIsCrew();
   const navigate = useNavigate();
-  const [email, setEmail] = useState("");
+  const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -45,10 +46,15 @@ function CrewLoginPage() {
     e.preventDefault();
     setBusy(true);
     setError(null);
-    const { error: err } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+    const loginEmail = loginIdentifierToEmail(identifier);
+    const { error: err } = await supabase.auth.signInWithPassword({ email: loginEmail, password });
     setBusy(false);
     if (err) {
-      setError(err.message === "Invalid login credentials" ? "That email and password don't match." : err.message);
+      setError(
+        err.message === "Invalid login credentials"
+          ? `That ${isEmailAddress(identifier) ? "email" : "username"} and password don't match.`
+          : err.message,
+      );
       return;
     }
     navigate({ to: "/crew" });
@@ -72,7 +78,7 @@ function CrewLoginPage() {
         </div>
         <h1 className="mt-2 font-display text-2xl font-bold text-ink">Crew sign in</h1>
         <p className="mt-1 text-sm text-ink-soft">
-          Sign in with your Red Cherry account to open the crew dashboard.
+          Use your crew username (or your Red Cherry email) to open the crew dashboard.
         </p>
       </header>
 
@@ -85,16 +91,20 @@ function CrewLoginPage() {
 
       <form onSubmit={signIn} className="space-y-3 rounded-2xl bg-card p-4 shadow-sm ring-1 ring-border">
         <label className="block">
-          <span className="text-[11px] font-bold uppercase tracking-widest text-ink-soft">Email</span>
+          <span className="text-[11px] font-bold uppercase tracking-widest text-ink-soft">Username or email</span>
           <input
-            type="email"
+            type="text"
             required
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
             autoComplete="username"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            value={identifier}
+            onChange={(e) => setIdentifier(e.target.value)}
             className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm text-ink outline-none focus:border-cherry"
-            placeholder="you@redcherryevents.co.za"
+            placeholder="RedCherryCrew"
           />
+          <span className="mt-1 block text-[11px] text-ink-soft">No email needed — your username works on its own.</span>
         </label>
         <label className="block">
           <span className="text-[11px] font-bold uppercase tracking-widest text-ink-soft">Password</span>
