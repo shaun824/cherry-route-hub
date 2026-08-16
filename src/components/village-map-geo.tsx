@@ -322,7 +322,7 @@ export default function VillageMapGeo({
             <TileLayer
               crossOrigin="anonymous"
               attribution="&copy; OpenStreetMap"
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              url="https://a.tile.openstreetmap.org/{z}/{x}/{y}.png"
               maxZoom={24}
               maxNativeZoom={19}
             />

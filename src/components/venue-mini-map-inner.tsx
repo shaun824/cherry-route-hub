@@ -36,7 +36,7 @@ export default function VenueMiniMapInner({
     >
       <TileLayer
             crossOrigin="anonymous"
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        url="https://a.tile.openstreetmap.org/{z}/{x}/{y}.png"
         maxZoom={24}
         maxNativeZoom={19}
       />
