@@ -16,7 +16,7 @@ Target: about 5% of entry revenue returned as reward value.
 
 - Earn: 1 Cherry Mile per R10 of entry fee (unchanged, 0.1 pt/R1).
 - Redeem: 1 Mile = R0.50 of reward value. R8 260 entry → 826 Miles → ~R413 back (5.0%).
-- Hero events (PE Plett) keep the 2x earn multiplier. That pushes PE Plett to ~10% — deliberate, it is the flagship and the repeat-purchase hook. All other events stay at 5%.
+- Ap don't offer more for Pe plett, just use that to base it off of. We sell out on Pe plett so I wouldn't want to offer to much discount there. I would want to reward people to ride Pe plett, but by offering them deals on the other events to push people across into the other events. Tour de e Addo could also give up some revenue to get entries as that doesn't sell out, forest boogie is the same and weekend warrior is a very low cost per ride for us, so giving away discounts there is fine . events (PE Plett) keep the 2x earn multiplier. That pushes PE Plett to ~10% — deliberate, it is the flagship and the repeat-purchase hook. All other events stay at 5%.
 - Returning-rider bonus stays, but is folded into the 5% budget rather than added on top.
 
 Because merch and experience rewards cost you COGS rather than retail, pricing them at retail-equivalent Miles means the true cash cost of the program lands nearer 3% while riders perceive 5%. That is the standard industry play and the reason to push riders toward merch over cash-off.
@@ -25,12 +25,14 @@ Because merch and experience rewards cost you COGS rather than retail, pricing t
 
 Four reward kinds, each priced in Miles:
 
-| Kind | Example | Miles | Real cost to you |
-|---|---|---|---|
-| Entry discount | R150 / R500 / R1 000 off | 300 / 1 000 / 2 000 | Full rand value |
-| Merchandise | Tee, cap, jersey | Priced at retail value | COGS only |
-| Experience | Priority tent, VIP registration, guest pass, early-entry window | 400–1 500 | Near zero |
-| Partner offer | Green Motion, Cycle Lab, Rudy Project | 0–200 | Sponsor funded |
+
+| Kind           | Example                                                         | Miles                  | Real cost to you |
+| -------------- | --------------------------------------------------------------- | ---------------------- | ---------------- |
+| Entry discount | R150 / R500 / R1 000 off                                        | 300 / 1 000 / 2 000    | Full rand value  |
+| Merchandise    | Tee, cap, jersey                                                | Priced at retail value | COGS only        |
+| Experience     | Priority tent, VIP registration, guest pass, early-entry window | 400–1 500              | Near zero        |
+| Partner offer  | Green Motion, Cycle Lab, Rudy Project                           | 0–200                  | Sponsor funded   |
+
 
 Merch and experience rewards get prominence in the rider UI; entry discounts sit last so the cheap-to-serve rewards get chosen first.
 
@@ -38,19 +40,21 @@ Merch and experience rewards get prominence in the rider UI; entry discounts sit
 
 Tier is earned on Miles accrued in the last 36 months, not lifetime. Lifetime balance still shows as the spendable total.
 
-| Tier | 3-yr Miles | Perk |
-|---|---|---|
-| Bronze | 0 | Hub access, partner promos |
-| Silver | 500 | Early entry window |
-| Gold | 1 500 | Priority tent placement, merch discount |
-| Cherry Elite | 3 500 | VIP registration, guest pass |
+
+| Tier         | 3-yr Miles | Perk                                    |
+| ------------ | ---------- | --------------------------------------- |
+| Bronze       | 0          | Hub access, partner promos              |
+| Silver       | 500        | Early entry window                      |
+| Gold         | 1 500      | Priority tent placement, merch discount |
+| Cherry Elite | 3 500      | VIP registration, guest pass            |
+
 
 Add a status-hold rule: a tier is held for 12 months after the rider drops below its threshold, so someone who skips a season does not fall off a cliff.
 
 ## Expiry
 
 - Miles expire after 24 months of inactivity — no event entered and no redemption in that window wipes the balance.
-- Riders see "X Miles expiring on <date>" once inside 90 days, plus a push notification.
+- Riders see "X Miles expiring on &nbsp;" once inside 90 days, plus a push notification.
 - Coupons keep the existing 12-month validity.
 
 ## Technical section
