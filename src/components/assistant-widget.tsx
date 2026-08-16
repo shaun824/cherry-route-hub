@@ -28,7 +28,7 @@ const STARTERS = [
 const GREETING =
   "Hi 👋 I'm the Red Cherry assistant. Ask me anything about using the app, or about any of our events — schedules, routes, venues, kit lists, your entry, your tent.";
 
-type ChatMsg = { role: "user" | "assistant"; content: string };
+type ChatMsg = { role: "user" | "assistant"; content: string; followUps?: string[] };
 
 export function AssistantWidget() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
