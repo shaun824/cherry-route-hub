@@ -127,7 +127,7 @@ export async function buildGlobalBotContext(
 
   // Which events does this person already belong to?
   const myEventIds = new Set<string>();
-  if (userId(opts)) {
+  if (opts.userId) {
     const { data: profile } = await admin
       .from("profiles")
       .select("email")
@@ -233,6 +233,32 @@ export async function buildGlobalBotContext(
   return { text, focusEventIds: focusIds };
 }
 
-function userId(opts: { userId: string | null }) {
-  return Boolean(opts.userId);
+/** Resolve the caller when a Supabase bearer token is present; null when signed out. */
+export async function resolveOptionalUserId(authHeader: string | null): Promise<string | null> {
+  const token = authHeader?.startsWith("Bearer ") ? authHeader.slice(7).trim() : "";
+  if (!token || token.split(".").length !== 3) return null;
+  try {
+    const { createClient } = await import("@supabase/supabase-js");
+    const url = process.env["SUPABASE_URL"];
+    const key = process.env["SUPABASE_PUBLISHABLE_KEY"];
+    if (!url || !key) return null;
+    const client = createClient(url, key, {
+      auth: { persistSession: false, autoRefreshToken: false },
+      global: {
+        fetch: (input, init) => {
+          const headers = new Headers(init?.headers);
+          if (key.startsWith("sb_") && headers.get("Authorization") === `Bearer ${key}`)
+            headers.delete("Authorization");
+          headers.set("apikey", key);
+          return fetch(input, { ...init, headers });
+        },
+      },
+    });
+    const { data, error } = await client.auth.getClaims(token);
+    if (error || !data?.claims?.sub) return null;
+    return String(data.claims.sub);
+  } catch (e) {
+    console.error("[app-bot] token check failed", e);
+    return null;
+  }
 }
