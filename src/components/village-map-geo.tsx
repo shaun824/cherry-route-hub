@@ -392,13 +392,10 @@ export default function VillageMapGeo({
           <FitBounds bounds={bounds} />
           <Recenter position={me} token={recenterToken} />
 
-          <Hotspots
-            hotspots={hotspots}
-            geo={geo}
-            heightM={heightM}
-            selected={selected}
-            onSelect={onSelect}
-          />
+          {/* Facility hotspots are intentionally NOT drawn on the map — riders asked
+              for a clean plan where the only pins are the tents. Facilities stay
+              browsable in the list beneath the map. */}
+
 
 
           {me ? (
