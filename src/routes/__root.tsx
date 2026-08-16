@@ -166,6 +166,7 @@ function RootComponent() {
           <Outlet />
         </AppShell>
       )}
+      {onAuthPages ? null : <SetPasswordPrompt />}
     </QueryClientProvider>
   );
 }
