@@ -62,7 +62,8 @@ type AdminState = {
 };
 
 export const useAdminStore = create<AdminState>()((set) => ({
-  events: seedEvents,
+  // Start empty so no placeholder/demo event flashes before cloud data lands.
+  events: [],
   feed: seedFeed,
   promos: seedPromos,
   sponsors: seedSponsors,
