@@ -394,6 +394,11 @@ export default function VillageMapGeo({
           zoom={17}
           maxZoom={24}
           scrollWheelZoom
+          // Leaflet's keyboard support makes the map container focusable; on
+          // mobile that focus makes the browser jump the page when you tap the
+          // map. Riders never keyboard-drive it, so switch it off.
+          keyboard={false}
+
           zoomSnap={0}
           zoomDelta={0.35}
           wheelPxPerZoomLevel={220}

@@ -84,10 +84,22 @@ function SpectatorEventPage() {
     if (typeof window === "undefined") return;
     const scroll = () => window.scrollTo({ top: 0, behavior: "auto" });
     scroll();
+    // Late panels can shift layout, so re-anchor briefly — but any touch or
+    // scroll of the user's own (tapping the map, panning) cancels it at once.
+    const timers: number[] = [];
+    const cancel = () => {
+      timers.forEach((t) => window.clearTimeout(t));
+      window.removeEventListener("touchstart", cancel);
+      window.removeEventListener("wheel", cancel);
+      window.removeEventListener("pointerdown", cancel);
+    };
     window.requestAnimationFrame(scroll);
-    window.setTimeout(scroll, 60);
-    window.setTimeout(scroll, 220);
+    timers.push(window.setTimeout(scroll, 60), window.setTimeout(scroll, 220), window.setTimeout(cancel, 260));
+    window.addEventListener("touchstart", cancel, { passive: true });
+    window.addEventListener("wheel", cancel, { passive: true });
+    window.addEventListener("pointerdown", cancel);
   }, []);
+
 
 
   const [categoryFilter, setCategoryFilter] = useState<string>("__all");
