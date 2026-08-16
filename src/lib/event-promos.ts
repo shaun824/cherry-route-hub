@@ -27,7 +27,7 @@ export const GREEN_MOTION_PROMO: EventPromo = {
     "Getting to the event? Riders get 15% off Green Motion rentals — quote the code when you book.",
   code: "RCE15",
   discount: "15%",
-  url: "https://www.greenmotion.com/",
+  url: "https://greenmotion.com/",
   logoUrl: gm.url,
   accent: "oklch(0.55 0.14 150)",
 };

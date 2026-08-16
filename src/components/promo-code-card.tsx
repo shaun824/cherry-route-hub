@@ -190,9 +190,6 @@ export function PromoCodeCard({ promo }: { promo: EventPromo }) {
             {hasLink ? (
               <a
                 href={promo.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() => setOpen(false)}
                 className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-cherry px-4 py-3 text-sm font-bold text-white"
               >
                 Continue to {promo.brand} <ExternalLink className="h-4 w-4" />
