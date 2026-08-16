@@ -168,9 +168,21 @@ export const askEventBot = createServerFn({ method: "POST" })
       .map((f: any) => `Q: ${f.question}\nA: ${f.answer}`)
       .join("\n\n");
 
+    // The signed-in rider's own system data: profile, Entry Ninja entry,
+    // accommodation / tent allocation and village-map pin.
+    let riderText = "";
+    try {
+      const { buildRiderContext } = await import("@/lib/event-bot-rider.server");
+      riderText = await buildRiderContext(adminForKb as any, userId, data.eventId);
+    } catch (e) {
+      console.error("rider context failed", e);
+    }
+
     const context_text = [
       approvedText ? "APPROVED ANSWERS (highest priority — verified by Red Cherry admins):" : "",
       approvedText,
+      riderText ? "THIS RIDER'S OWN RECORDS (from our system — authoritative, personal to them):" : "",
+      riderText,
       "STRUCTURED EVENT DATA (authoritative):",
       structured,
       scraped ? "\n\nWEBSITE PAGES:" : "",
@@ -186,16 +198,19 @@ export const askEventBot = createServerFn({ method: "POST" })
 
     const systemPrompt = `You are the Red Cherry Events rider assistant for "${event.name}".
 
-Answer rider questions using the CONTEXT provided (structured event data + scraped official website pages). Be helpful, concise, specific, and friendly. Use 2–5 sentences or a short bulleted list when appropriate.
+Answer rider questions using the CONTEXT provided (this rider's own records, structured event data, and official website pages). Be helpful, concise, specific, and friendly. Use 2–5 sentences or a short bulleted list when appropriate.
 
 Rules:
+- Personal questions ("what tent am I in?", "what's my race number?", "do I still owe anything?", "what category am I in?", "where do I sleep?") must be answered from THIS RIDER'S OWN RECORDS. That block is the truth for anything personal — never fall back to the website for it, and never tell them to contact the organisers when the answer is already in that block.
+- When you give a tent or room allocation, also tell them they can tap "Show me on the village map" on the event page to navigate to it.
 - If an APPROVED ANSWER matches the question, use it — it was verified by a Red Cherry admin and beats every other source.
 - Otherwise prefer STRUCTURED EVENT DATA when it directly answers the question (dates, schedule, routes, venue, rules, FAQs, emergency contacts, packing).
 - Otherwise pull the answer from the WEBSITE PAGES. Synthesise across pages if needed — an answer that requires combining two sources is fine.
 - If the exact detail isn't stated but can be reasonably inferred from the sources (e.g. "the event starts 7 March 2026" from a schedule page), give the answer and note briefly where it comes from.
-- Do NOT invent prices, times, dates, cut-offs or policies that are not in the context.
+- Do NOT invent prices, times, dates, cut-offs, race numbers, tent numbers or policies that are not in the context.
 - Only if the context genuinely has nothing relevant, reply with exactly this token and nothing else: ${BOT_MISS_SENTINEL}
 - Never mention the sentinel, "CONTEXT", "sources", or that you scraped a website in your visible answer.`;
+
 
     const messages: { role: "system" | "user" | "assistant"; content: string }[] = [
       { role: "system", content: systemPrompt },
