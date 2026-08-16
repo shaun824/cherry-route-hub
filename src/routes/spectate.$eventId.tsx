@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { Fragment, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import {
@@ -143,6 +143,7 @@ function SpectatorEventPage() {
   }, [info?.faqs]);
 
   const batches = event?.batches ?? [];
+  const promos = useMemo(() => eventPromosFor(event?.name), [event?.name]);
 
   const batchLookup = useMemo(() => {
     const m = new Map<string, { name: string; startTime: string }>();
@@ -590,8 +591,19 @@ function SpectatorEventPage() {
               {startGroups.length === 0 ? (
                 <p className="text-center text-sm text-ink-soft">No riders match that search.</p>
               ) : (
-                startGroups.map((g) => (
-                  <section key={g.key} className="rounded-2xl bg-card p-3 ring-1 ring-border">
+                startGroups.map((g, gi) => {
+                  const promo =
+                    promos.length && gi > 0 && gi % 3 === 0
+                      ? promos[(Math.floor(gi / 3) - 1) % promos.length]
+                      : null;
+                  return (
+                  <Fragment key={g.key}>
+                  {promo ? (
+                    <div className="py-1">
+                      <PromoCodeCard promo={promo} />
+                    </div>
+                  ) : null}
+                  <section className="rounded-2xl bg-card p-3 ring-1 ring-border">
                     <header className="flex items-start gap-2 pb-2">
                       <p className="min-w-0 flex-1 font-display text-sm font-bold leading-snug text-ink">
                         {g.label}
@@ -631,7 +643,9 @@ function SpectatorEventPage() {
                       })}
                     </ul>
                   </section>
-                ))
+                  </Fragment>
+                  );
+                })
               )}
             </div>
           )}
