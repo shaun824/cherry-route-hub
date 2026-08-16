@@ -350,7 +350,7 @@ function SpectatorEventPage() {
               <button
                 key={t.id}
                 type="button"
-                onClick={() => setTab(t.id)}
+                onClick={() => selectTab(t.id)}
                 className={`flex flex-1 items-center justify-center gap-1.5 rounded-xl px-2 py-2 text-xs font-semibold transition-colors ${
                   active ? "bg-cherry text-white shadow-sm" : "text-ink-soft hover:text-ink"
                 }`}
