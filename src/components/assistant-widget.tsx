@@ -247,6 +247,30 @@ export function AssistantWidget() {
                 </div>
               ))}
 
+              {/* Tappable follow-ups from the latest answer */}
+              {!thinking && messages.length > 0
+                ? (() => {
+                    const last = messages[messages.length - 1];
+                    if (last.role !== "assistant" || !last.followUps?.length) return null;
+                    return (
+                      <div className="flex flex-wrap gap-2 pt-1">
+                        {last.followUps.map((s) => (
+                          <button
+                            key={s}
+                            type="button"
+                            onClick={() => void sendQuestion(s)}
+                            className="max-w-full rounded-full bg-background px-3 py-1.5 text-left text-xs font-semibold text-ink-soft ring-1 ring-border hover:text-cherry"
+                          >
+                            {s}
+                          </button>
+                        ))}
+                      </div>
+                    );
+                  })()
+                : null}
+
+
+
 
               {thinking ? (
                 <div className="flex max-w-[60%] items-center gap-2 rounded-2xl bg-secondary px-3 py-2 text-sm text-ink-soft">
