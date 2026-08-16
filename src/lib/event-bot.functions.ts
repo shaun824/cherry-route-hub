@@ -156,7 +156,13 @@ export const askEventBot = createServerFn({ method: "POST" })
     const history = (recent ?? []).reverse();
 
     // Structured event data.
-    const structured = formatEventStructured(event, info);
+    const structured = [
+      formatEventStructured(event, info),
+      formatMerchCatalogue(merch ?? []),
+    ]
+      .filter(Boolean)
+      .join("\n\n");
+
 
     // Website knowledge base (crawled and cached, auto-refreshed daily).
     const { supabaseAdmin: adminForKb } = await import("@/integrations/supabase/client.server");
