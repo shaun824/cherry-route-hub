@@ -334,9 +334,12 @@ function Profile() {
         </div>
       </form>
 
+      <RiderEventHistory userId={user.id} />
+
       <div className="mt-4">
         <NotificationSettings />
       </div>
+
 
 
       <style>{`
