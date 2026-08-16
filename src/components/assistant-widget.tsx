@@ -44,10 +44,9 @@ export function AssistantWidget() {
   const listRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
 
-  useEffect(() => {
-    if (!open) return;
-    inputRef.current?.focus();
-  }, [open]);
+  // Deliberately do NOT autofocus the input on open: on iOS that pops the
+  // keyboard immediately and hides the greeting/starter questions.
+
 
   useEffect(() => {
     listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: "smooth" });
@@ -75,8 +74,12 @@ export function AssistantWidget() {
       ]);
     } finally {
       setThinking(false);
-      inputRef.current?.focus();
+      // Only return focus when the rider was already typing (desktop); never
+      // force the keyboard open on touch devices.
+      const touch = typeof window !== "undefined" && window.matchMedia("(pointer: coarse)").matches;
+      if (!touch) inputRef.current?.focus();
     }
+
   }
 
   const transcript = messages
@@ -216,7 +219,7 @@ export function AssistantWidget() {
                 </button>
               </form>
 
-              <div className="mt-2 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
+              <div className="mt-2 flex min-w-0 flex-wrap items-center justify-between gap-2">
                 <button
                   type="button"
                   onClick={() => setShowReport((v) => !v)}
