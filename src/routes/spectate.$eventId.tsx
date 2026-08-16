@@ -62,13 +62,17 @@ function SpectatorEventPage() {
   const [categoryFilter, setCategoryFilter] = useState<string>("__all");
   const [search, setSearch] = useState("");
 
+  const { user } = useSession();
   const fetchRiders = useServerFn(getEventRiders);
-  const ridersQ = useQuery<TrackedRider[]>({
-    queryKey: ["event-riders", eventId],
+  const ridersQ = useQuery<RosterPayload>({
+    queryKey: ["event-riders", eventId, user?.id ?? "guest"],
     queryFn: () => fetchRiders({ data: { eventId } }),
     staleTime: 60_000,
   });
-  const roster: TrackedRider[] = ridersQ.data ?? [];
+  const rosterStatus = ridersQ.data?.status ?? "ok";
+  const rosterOpensAt = ridersQ.data?.opens_at ?? null;
+  const roster: TrackedRider[] = ridersQ.data?.riders ?? [];
+
 
   const fetchResults = useServerFn(getEventResults);
   const resultsQ = useQuery<EventResultsPayload>({
