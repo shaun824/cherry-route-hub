@@ -422,7 +422,7 @@ export default function VillageMapGeo({
                 icon={tentIcon(t.label, hot)}
                 zIndexOffset={hot ? 900 : 300}
               >
-                <Popup>{hot ? `${t.label} — this is you` : t.label}</Popup>
+                <Popup autoPan={false} keepInView={false}>{hot ? `${t.label} — this is you` : t.label}</Popup>
               </Marker>
             );
           })}
