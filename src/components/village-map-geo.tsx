@@ -272,13 +272,16 @@ export default function VillageMapGeo({
   const visibleZones = useMemo(
     () =>
       zones.filter((z) => {
-        if (z.id === highlightZoneId) return true;
         const name = (z.name ?? "").trim();
         const planningName = /^(?:tent\s*)?\d+$/i.test(name) || /^area\s*\d+$/i.test(name);
         const small = zoneAreaM2(z) < 150;
+        // A precise tent pin is the customer-facing accommodation marker. Never
+        // bring its underlying planning square back into the rider map just
+        // because that tent is highlighted.
+        if (z.id === highlightZoneId) return !highlightTentId && !planningName && !small;
         return !(planningName || small);
       }),
-    [zones, highlightZoneId],
+    [zones, highlightZoneId, highlightTentId],
   );
 
 
@@ -387,10 +390,11 @@ export default function VillageMapGeo({
             return firstIdx === i;
           }).map((t) => {
             const hot = highlightTentId === t.id;
-            // Clean-map rule (Weekend Warrior standard): tent numbers only appear
-            // once you're zoomed right in. Zoomed out we render nothing at all —
-            // no dots, no clutter. Your own tent always stays visible.
-            if (!hot && zoom < 19) return null;
+            // Clean-map rule (Weekend Warrior standard): the fitted Tour de Addo
+            // view lands at zoom 19, so ordinary tent pins must stay hidden until
+            // the rider deliberately zooms one level closer. No placeholder dots
+            // or area-corner labels are rendered. Your own tent stays visible.
+            if (!hot && zoom < 20) return null;
             return (
               <Marker
                 key={t.id}
