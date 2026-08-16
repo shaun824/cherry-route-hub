@@ -318,6 +318,7 @@ export const setEventPoints = createServerFn({ method: "POST" })
         points: z.number().int().min(0).max(100000),
         entryPriceCents: z.number().int().min(0).max(100000000).nullable().optional(),
         hero: z.boolean().optional(),
+        sellsOut: z.boolean().optional(),
       })
       .parse(d),
   )
@@ -330,10 +331,12 @@ export const setEventPoints = createServerFn({ method: "POST" })
       patch['price_source'] = "manual";
     }
     if (data.hero !== undefined) patch['hero'] = data.hero;
+    if (data.sellsOut !== undefined) patch['sells_out'] = data.sellsOut;
     const { error } = await supabase.from("loyalty_event_values").update(patch).eq("id", data.id);
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
 
 /** Re-value every event from what riders actually paid to enter it. */
 export const applyPriceValues = createServerFn({ method: "POST" })
