@@ -111,6 +111,32 @@ function pointLabelIcon(label: string) {
   });
 }
 
+/** Facility marker: a clean coloured icon puck, with its name shown once tapped. */
+function facilityIcon(spot: VillageHotspot, active: boolean) {
+  const color = spotColor(spot);
+  const glyph = villageIconSvg(spotIcon(spot), active ? 15 : 13, "#fff");
+  const size = active ? 32 : 26;
+  return L.divIcon({
+    className: "rce-village-facility",
+    html: `<div style="display:flex;flex-direction:column;align-items:center;gap:2px">
+      <span style="display:grid;width:${size}px;height:${size}px;place-items:center;border-radius:999px;background:${color};border:${
+        active ? "2.5px" : "2px"
+      } solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.4)">${glyph}</span>
+      ${
+        active
+          ? `<span style="background:#0f172a;color:#fff;font-size:10px;font-weight:800;padding:2px 7px;border-radius:7px;white-space:nowrap;border:1.5px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.35)">${escapeHtml(
+              spot.title,
+            )}</span>`
+          : ""
+      }
+    </div>`,
+    iconSize: [size, size],
+    iconAnchor: [size / 2, size / 2],
+  });
+}
+
+
+
 /** Flies to the selected point so its label is actually in view. */
 function FlyToPoint({ position }: { position: [number, number] | null }) {
   const map = useMap();
