@@ -101,6 +101,16 @@ export const askEventBot = createServerFn({ method: "POST" })
       .eq("event_id", data.eventId)
       .maybeSingle();
 
+    // Entry Ninja extras / merchandise catalogue for this event (No Hassle
+    // Package, jackets, dietary options, single rooms, ...).
+    const { data: merch } = await supabase
+      .from("event_merch_options")
+      .select("name, description, price_from, options, source_url")
+      .eq("event_id", data.eventId)
+      .order("position", { ascending: true });
+
+
+
     // Ensure Q&A thread exists.
     let threadId: string | null = null;
     const { data: existing } = await supabase
