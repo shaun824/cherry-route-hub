@@ -131,8 +131,18 @@ function AuthPage() {
   const linkedRef = useRef(false);
 
   useEffect(() => {
-    setKnownAccounts(listKnownAccounts());
+    const known = listKnownAccounts();
+    setKnownAccounts(known);
+    // Pre-fill from the device keychain when we don't already have an email.
+    void readSavedEmail().then((saved) => {
+      if (!saved) return;
+      setEmail((cur) => (cur.trim() ? cur : saved));
+      setMode((m) => (m === "signup" && !emailParam ? "signin" : m));
+    });
+    if (!emailParam && known.length > 0) setMode("signin");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
 
   const target = next && next.startsWith("/") ? next : "/";
 
