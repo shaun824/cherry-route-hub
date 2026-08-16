@@ -13,6 +13,9 @@ export type VillageTent = {
   zone_id: string | null;
   capacity: number | null;
   notes: string | null;
+  /** 'tent' = a real tent number pin shown to riders.
+   *  'marker' = a helper point used only to draw an area — never rendered publicly. */
+  kind: "tent" | "marker";
 };
 
 export type TentRule = {
@@ -35,14 +38,19 @@ export async function fetchVillageTents(eventId: string): Promise<VillageTent[]>
 async function fetchVillageTentsLive(eventId: string): Promise<VillageTent[]> {
   const { data, error } = await supabase
     .from("event_village_tents")
-    .select("id, event_id, label, lat, lng, zone_id, capacity, notes")
+    .select("id, event_id, label, lat, lng, zone_id, capacity, notes, kind")
     .eq("event_id", eventId)
     .order("label", { ascending: true });
   if (error) {
     console.warn("[village] tents", error);
     return [];
   }
-  return (data ?? []) as VillageTent[];
+  return ((data ?? []) as VillageTent[]).map((t) => ({ ...t, kind: t.kind === "marker" ? "marker" : "tent" }));
+}
+
+/** Only real tent pins — drawing markers are excluded everywhere rider-facing. */
+export function realTents<T extends { kind?: string | null }>(tents: T[]): T[] {
+  return tents.filter((t) => (t.kind ?? "tent") !== "marker");
 }
 
 export async function fetchTentRules(eventId: string): Promise<TentRule[]> {
