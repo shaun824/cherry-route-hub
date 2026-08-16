@@ -9,7 +9,9 @@ import {
   Coffee,
   ExternalLink,
   Info,
+  Lock,
   MapPin,
+
   Search,
   Toilet,
   Trophy,
