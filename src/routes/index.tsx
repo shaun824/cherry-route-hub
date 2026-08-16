@@ -820,7 +820,7 @@ function NextEventCard() {
       {rest.length > 0 ? (
         <div>
           <p className="mb-2 text-[11px] font-bold uppercase tracking-widest text-ink-soft">
-            More adventures ahead
+            More adventures you might be interested in
           </p>
           <div className="flex snap-x snap-mandatory gap-2 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {rest.map((r) => (
