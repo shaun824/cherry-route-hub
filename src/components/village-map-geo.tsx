@@ -5,8 +5,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { MapContainer, TileLayer, ImageOverlay, useMap, CircleMarker, Polygon, Popup, Marker } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { spotColor, spotIcon, categoryMeta, type VillageGeo, type VillageHotspot } from "@/lib/village-map";
-import { villageIconSvg } from "@/lib/village-icons";
+import type { VillageGeo, VillageHotspot } from "@/lib/village-map";
 import { zoneCentroid, zoneColor, type VillageZone } from "@/lib/village-zones";
 
 const M_PER_DEG_LAT = 111320;
@@ -70,66 +69,6 @@ function Recenter({ position, token }: { position: [number, number] | null; toke
 function escapeHtml(v: string) {
   return v.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c] as string);
 }
-
-
-/** Small icon-only dots for facilities — labels stay hidden so tent numbers read clearly. */
-function dotIcon(color: string, active: boolean, iconId?: string) {
-  const size = active ? 26 : 20;
-  return L.divIcon({
-    className: "rce-village-dot",
-    html: `<div style="width:${size}px;height:${size}px;border-radius:999px;display:flex;align-items:center;justify-content:center;background:${color};border:${
-      active ? "2px solid #fff" : "1px solid rgba(255,255,255,.7)"
-    };box-shadow:0 2px 6px rgba(0,0,0,.35);color:#fff">${villageIconSvg(iconId)}</div>`,
-    iconSize: [size, size],
-    iconAnchor: [size / 2, size / 2],
-  });
-}
-
-function Hotspots({
-  hotspots,
-  geo,
-  heightM,
-  selected,
-  onSelect,
-}: {
-  hotspots: VillageHotspot[];
-  geo: VillageGeo;
-  heightM: number;
-  selected: string | null;
-  onSelect: (id: string | null) => void;
-}) {
-  const map = useMap();
-  const selectRef = useRef(onSelect);
-  selectRef.current = onSelect;
-
-  useEffect(() => {
-    const group = L.layerGroup();
-
-    for (const s of hotspots) {
-      const meta = categoryMeta(s.category);
-      const marker = L.marker(hotspotLatLng(geo, s, heightM), {
-        icon: dotIcon(spotColor(s), selected === s.id, spotIcon(s)),
-      });
-      marker.bindPopup(
-        `<strong>${escapeHtml(s.title)}</strong><br/><span style="font-size:11px;text-transform:uppercase;letter-spacing:1px">${escapeHtml(
-          meta.label,
-        )}${s.hours ? ` · ${escapeHtml(s.hours)}` : ""}</span>${
-          s.description ? `<p style="margin-top:6px">${escapeHtml(s.description)}</p>` : ""
-        }`,
-      );
-      marker.on("click", () => selectRef.current(selected === s.id ? null : s.id));
-      group.addLayer(marker);
-    }
-
-    map.addLayer(group);
-    return () => {
-      map.removeLayer(group);
-    };
-  }, [map, hotspots, geo, heightM, selected]);
-
-  return null;
-}
-
 
 
 /** Flies to a drawn area when a rider asks "where is my tent?". */
@@ -203,8 +142,8 @@ export default function VillageMapGeo({
   hotspots,
   zones = [],
   tents = [],
-  selected,
-  onSelect,
+  selected: _selected,
+  onSelect: _onSelect,
   highlightZoneId = null,
   highlightTentId = null,
 }: {
