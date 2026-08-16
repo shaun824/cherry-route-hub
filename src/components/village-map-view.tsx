@@ -298,32 +298,6 @@ export function VillageMapView({
         </p>
       )}
 
-      <ul className="grid gap-1.5 sm:grid-cols-2">
-        {facilities.map((s) => (
-          <li key={s.id}>
-            <button
-              onClick={() => setSelected(s.id)}
-              onMouseEnter={() => setHovered(s.id)}
-              onMouseLeave={() => setHovered(null)}
-              className="flex w-full items-center gap-2 rounded-xl bg-card px-3 py-2 text-left text-sm ring-1 ring-border"
-            >
-              {(() => {
-                const ListIcon = villageIcon(spotIcon(s)).Comp;
-                return (
-                  <span
-                    className="grid h-6 w-6 shrink-0 place-items-center rounded-full text-white"
-                    style={{ backgroundColor: spotColor(s) }}
-                  >
-                    <ListIcon className="h-3.5 w-3.5" />
-                  </span>
-                );
-              })()}
-              <span className="min-w-0 flex-1 truncate font-semibold text-ink">{s.title}</span>
-              {s.hours ? <span className="text-[11px] text-ink-soft">{s.hours}</span> : null}
-            </button>
-          </li>
-        ))}
-      </ul>
     </div>
   );
 }
