@@ -356,6 +356,8 @@ function EventSpotlight({
   heroColor,
   description,
   entered,
+  guest = false,
+  happeningNow = false,
 }: {
   eventId: string;
   name: string;
@@ -365,59 +367,93 @@ function EventSpotlight({
   heroColor?: string | null;
   description?: string;
   entered: boolean;
+  guest?: boolean;
+  happeningNow?: boolean;
 }) {
   const blurb = (description ?? "").trim();
   const teaser = blurb.length > 170 ? `${blurb.slice(0, 170).trimEnd()}…` : blurb;
+  const eyebrow = happeningNow
+    ? "Happening now"
+    : entered
+      ? "You're entered · Your event"
+      : "Coming up · Don't miss out";
   return (
-    <Link
-      to="/my-events/$eventId"
-      params={{ eventId }}
-      className="block overflow-hidden rounded-2xl bg-card shadow-sm ring-1 ring-border active:scale-[0.99] transition-transform"
-    >
-      <div
-        {...brandHeader(heroColor)}
-        className={`${brandHeader(heroColor).className} px-4 py-3 text-white`}
+    <div className="overflow-hidden rounded-2xl bg-card shadow-sm ring-1 ring-border">
+      <Link
+        to="/my-events/$eventId"
+        params={{ eventId }}
+        className="block active:scale-[0.99] transition-transform"
       >
-        <p className="text-[11px] font-bold uppercase tracking-widest opacity-85">
-          {entered ? "You're entered · Your event" : "Coming up · Don't miss out"}
-        </p>
-        <p className="font-display text-lg font-bold leading-tight">{name}</p>
-      </div>
-      <div className="flex items-start gap-3 px-4 py-3">
-        {logoUrl ? (
-          <img
-            src={logoUrl}
-            alt=""
-            className="h-12 w-12 shrink-0 rounded-xl bg-secondary object-contain p-1 ring-1 ring-border"
-          />
-        ) : (
-          <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-accent text-cherry-deep">
-            <CalendarDays className="h-5 w-5" />
-          </span>
-        )}
-        <div className="min-w-0">
-          <p className="text-sm font-semibold text-ink">
-            {formatDate(date)} · <span className="text-cherry">{daysAway(date)}</span>
+        <div
+          {...brandHeader(heroColor)}
+          className={`${brandHeader(heroColor).className} px-4 py-3 text-white`}
+        >
+          <p className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest opacity-85">
+            {happeningNow ? (
+              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-white" />
+            ) : null}
+            {eyebrow}
           </p>
-          <p className="mt-0.5 flex items-center gap-1 truncate text-xs text-muted-foreground">
-            <MapPin className="h-3.5 w-3.5 shrink-0" /> {location}
-          </p>
-          <p className="mt-2 text-sm leading-relaxed text-ink-soft">
-            {entered
-              ? teaser ||
-                "Everything you need for race weekend — schedule, routes, venue, packing list and your entry details."
-              : teaser ||
-                "Riders are already locking in their spots. Read the route, venue and weekend plan before entries close."}
-          </p>
-          <span className="mt-2 inline-flex items-center gap-1 text-xs font-bold text-cherry">
-            {entered ? "Open your event hub" : "Read about this event"}
-            <ChevronRight className="h-3.5 w-3.5" />
-          </span>
+          <p className="font-display text-lg font-bold leading-tight">{name}</p>
         </div>
-      </div>
-    </Link>
+        <div className="flex items-start gap-3 px-4 py-3">
+          {logoUrl ? (
+            <img
+              src={logoUrl}
+              alt=""
+              className="h-12 w-12 shrink-0 rounded-xl bg-secondary object-contain p-1 ring-1 ring-border"
+            />
+          ) : (
+            <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-accent text-cherry-deep">
+              <CalendarDays className="h-5 w-5" />
+            </span>
+          )}
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-ink">
+              {formatDate(date)} · <span className="text-cherry">{daysAway(date)}</span>
+            </p>
+            <p className="mt-0.5 flex items-center gap-1 truncate text-xs text-muted-foreground">
+              <MapPin className="h-3.5 w-3.5 shrink-0" /> {location}
+            </p>
+            <p className="mt-2 text-sm leading-relaxed text-ink-soft">
+              {entered
+                ? teaser ||
+                  "Everything you need for race weekend — schedule, routes, venue, packing list and your entry details."
+                : teaser ||
+                  "Riders are already locking in their spots. Read the route, venue and weekend plan before entries close."}
+            </p>
+            <span className="mt-2 inline-flex items-center gap-1 text-xs font-bold text-cherry">
+              {entered ? "Open your event hub" : "Read about this event"}
+              <ChevronRight className="h-3.5 w-3.5" />
+            </span>
+          </div>
+        </div>
+      </Link>
+
+      {guest ? (
+        <div className="grid grid-cols-4 gap-1 border-t border-border px-2 py-2">
+          {[
+            { label: "Schedule", icon: Calendar },
+            { label: "Route", icon: Activity },
+            { label: "Venue", icon: MapPin },
+            { label: "Village", icon: Globe },
+          ].map((q) => (
+            <Link
+              key={q.label}
+              to="/my-events/$eventId"
+              params={{ eventId }}
+              className="flex flex-col items-center gap-1 rounded-xl px-1 py-2 text-[11px] font-semibold text-ink active:bg-secondary"
+            >
+              <q.icon className="h-4 w-4 text-cherry-deep" />
+              {q.label}
+            </Link>
+          ))}
+        </div>
+      ) : null}
+    </div>
   );
 }
+
 
 function SportSection({
   title,
