@@ -504,7 +504,7 @@ function RoutesPanel({
   event,
 }: {
   eventId: string;
-  event: { days?: unknown };
+  event: { days?: unknown; schedule?: unknown };
 }) {
   const { user, loading } = useSession();
   const locked = !loading && !user;
