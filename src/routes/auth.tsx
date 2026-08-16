@@ -74,24 +74,29 @@ type Mode = "signin" | "signup" | "reset";
 
 function AuthPage() {
   const { user, loading } = useSession();
-  const { next } = Route.useSearch();
+  const { next, email: emailParam, add } = Route.useSearch();
   const navigate = useNavigate();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
-  const [mode, setMode] = useState<Mode>("signup");
+  const [mode, setMode] = useState<Mode>(emailParam || add ? "signin" : "signup");
   const [fullName, setFullName] = useState("");
   const [idNumber, setIdNumber] = useState("");
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(emailParam ?? "");
   const [password, setPassword] = useState("");
   const [noAccount, setNoAccount] = useState(false);
   const [hasEntries, setHasEntries] = useState(false);
+  const [knownAccounts, setKnownAccounts] = useState<KnownAccount[]>([]);
   const checkAccount = useServerFn(checkAccountExists);
   const linkEntry = useServerFn(linkMyEntry);
   const linkedRef = useRef(false);
 
+  useEffect(() => {
+    setKnownAccounts(listKnownAccounts());
+  }, []);
 
   const target = next && next.startsWith("/") ? next : "/";
+
 
   // Once a session exists, claim any entries matching the ID number they gave
   // at sign-up, then continue into the app.
