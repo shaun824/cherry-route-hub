@@ -555,7 +555,7 @@ export default function VillageMapGeo({
         <p className="text-xs text-ink-soft">Live location on · accurate to about {Math.round(accuracy)} m.</p>
       ) : (
         <p className="text-xs text-ink-soft">
-          Drag to move, pinch or scroll to zoom, and tap any marker for details.
+          Drag to move, pinch or scroll to zoom, twist with two fingers (or use ↺ ↻) to rotate, and tap any marker for details.
         </p>
       )}
     </div>
