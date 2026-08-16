@@ -1,5 +1,5 @@
 import { createFileRoute, Outlet, Link, useRouterState, Navigate } from "@tanstack/react-router";
-import { LayoutDashboard, CalendarDays, Newspaper, Tag, Handshake, ArrowLeft, LogOut, Users, Settings, UserPlus, MessagesSquare, BedDouble, Plug, BarChart3 , Package, Tent, Brain, Bot, BellRing, ShieldCheck, HardHat, CalendarClock, KeyRound } from "lucide-react";
+import { LayoutDashboard, CalendarDays, Newspaper, Tag, Handshake, ArrowLeft, LogOut, Users, Settings, UserPlus, MessagesSquare, BedDouble, Plug, BarChart3 , Package, Tent, Brain, Bot, BellRing, ShieldCheck, HardHat, CalendarClock, KeyRound, Trophy } from "lucide-react";
 import rceLogo from "@/assets/rce-logo.png.asset.json";
 import { useHydratedStore } from "@/lib/use-hydrated-store";
 import { useIsAdmin, signOut } from "@/lib/auth";
