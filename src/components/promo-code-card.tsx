@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { Copy, Check, ExternalLink, X } from "lucide-react";
 
 import type { EventPromo } from "@/lib/event-promos";
@@ -113,11 +114,12 @@ export function PromoCodeCard({ promo }: { promo: EventPromo }) {
         </div>
       </div>
 
-      {open ? (
+      {open && typeof document !== "undefined" ? createPortal(
         <div
-          className="fixed inset-0 z-50 grid place-items-center bg-black/60 px-6"
+          className="fixed inset-0 z-[9999] grid place-items-center overflow-y-auto bg-black/60 px-6 py-8"
           role="dialog"
           aria-modal="true"
+          aria-label={`${promo.brand} offer`}
           onClick={() => setOpen(false)}
         >
           <div
@@ -190,6 +192,9 @@ export function PromoCodeCard({ promo }: { promo: EventPromo }) {
             {hasLink ? (
               <a
                 href={promo.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => setOpen(false)}
                 className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-cherry px-4 py-3 text-sm font-bold text-white"
               >
                 Continue to {promo.brand} <ExternalLink className="h-4 w-4" />
@@ -207,7 +212,8 @@ export function PromoCodeCard({ promo }: { promo: EventPromo }) {
               {hasLink ? "Not now" : "Got it"}
             </button>
           </div>
-        </div>
+        </div>,
+        document.body,
       ) : null}
     </>
   );
