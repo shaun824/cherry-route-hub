@@ -61,6 +61,8 @@ import { groupExtras } from "@/lib/extras-display";
 import { Printer, Shirt, Package, Siren, BedDouble, ExternalLink } from "lucide-react";
 import type { EventDay, EventRoute, FeedPost, ScheduleItem, SocialLinks } from "@/lib/mock-data";
 import { relativeTime } from "@/lib/mock-data";
+import { withRegistrationDayLabels } from "@/lib/event-days";
+
 import { TypeBadge } from "@/components/ui-bits";
 
 import { TrackerPanel } from "@/components/tracker-panel";
