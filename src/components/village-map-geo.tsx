@@ -94,6 +94,42 @@ function FlyToTent({ tent }: { tent: MapTent | null }) {
 
 export type MapTent = { id: string; label: string; lat: number; lng: number };
 
+/** Label pin shown for whichever facility/point the rider currently has selected. */
+function pointLabelIcon(label: string) {
+  return L.divIcon({
+    className: "rce-village-point",
+    html: `<div style="display:flex;flex-direction:column;align-items:center">
+      <span style="background:#0f172a;color:#fff;font-size:11px;font-weight:800;padding:3px 8px;border-radius:8px;white-space:nowrap;border:2px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.4)">${escapeHtml(
+        label,
+      )}</span>
+      <span style="width:8px;height:8px;background:#0f172a;transform:rotate(45deg) translateY(-3px);border-radius:1px;border-right:2px solid #fff;border-bottom:2px solid #fff"></span>
+    </div>`,
+    iconSize: [12, 12],
+    iconAnchor: [6, 18],
+  });
+}
+
+/** Flies to the selected point so its label is actually in view. */
+function FlyToPoint({ position }: { position: [number, number] | null }) {
+  const map = useMap();
+  useEffect(() => {
+    if (position) map.flyTo(position, Math.max(map.getZoom(), 19), { duration: 0.7 });
+  }, [map, position]);
+  return null;
+}
+
+/** Tapping empty map clears the selected point, so the label disappears. */
+function ClearOnMapClick({ onClear }: { onClear: () => void }) {
+  const map = useMap();
+  useEffect(() => {
+    map.on("click", onClear);
+    return () => {
+      map.off("click", onClear);
+    };
+  }, [map, onClear]);
+  return null;
+}
+
 /** Tracks the live zoom level so markers can thin out when zoomed out. */
 function ZoomWatcher({ onZoom }: { onZoom: (z: number) => void }) {
   const map = useMap();
