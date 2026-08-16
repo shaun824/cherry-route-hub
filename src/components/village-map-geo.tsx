@@ -130,14 +130,23 @@ function facilityIcon(spot: VillageHotspot, active: boolean) {
 
 
 
-/** Flies to the selected point so its label is actually in view. */
-function FlyToPoint({ position }: { position: [number, number] | null }) {
+/** Keeps a tapped point in view without hijacking the map: no zoom change, and
+    it only nudges the view when the marker (or its label) would sit off-screen. */
+function KeepPointInView({ position }: { position: [number, number] | null }) {
   const map = useMap();
   useEffect(() => {
-    if (position) map.flyTo(position, Math.max(map.getZoom(), 19), { duration: 0.7 });
+    if (!position) return;
+    const pt = map.latLngToContainerPoint(position);
+    const size = map.getSize();
+    const pad = 56;
+    const inside =
+      pt.x > pad && pt.y > pad && pt.x < size.x - pad && pt.y < size.y - pad;
+    if (inside) return;
+    map.panInside(position, { padding: [pad, pad], animate: true, duration: 0.35 });
   }, [map, position]);
   return null;
 }
+
 
 /** Tapping empty map clears the selected point, so the label disappears. */
 function ClearOnMapClick({ onClear }: { onClear: () => void }) {
@@ -413,7 +422,7 @@ export default function VillageMapGeo({
                 icon={tentIcon(t.label, hot)}
                 zIndexOffset={hot ? 900 : 300}
               >
-                <Popup>{hot ? `${t.label} — this is you` : t.label}</Popup>
+                <Popup autoPan={false} keepInView={false}>{hot ? `${t.label} — this is you` : t.label}</Popup>
               </Marker>
             );
           })}
@@ -443,9 +452,10 @@ export default function VillageMapGeo({
             );
           })}
 
-          <FlyToPoint
+          <KeepPointInView
             position={selectedSpot ? hotspotLatLng(geo, selectedSpot, heightM) : null}
           />
+
           <ClearOnMapClick onClear={() => onSelect(null)} />
 
 
