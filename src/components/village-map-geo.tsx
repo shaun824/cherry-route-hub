@@ -188,6 +188,20 @@ function normalizedNumber(value: string) {
   return match?.[1] ?? null;
 }
 
+/** Planning imports can leave tent records directly on polygon vertices. Those
+ * are editing handles, not real dropped tent pins, and must never reach the
+ * rider-facing map. */
+function isZoneCorner(tent: MapTent, zones: VillageZone[]) {
+  const metresPerLngDegree = M_PER_DEG_LAT * Math.cos((tent.lat * Math.PI) / 180);
+  return zones.some((zone) =>
+    zone.points.some((point) => {
+      const northM = (point.lat - tent.lat) * M_PER_DEG_LAT;
+      const eastM = (point.lng - tent.lng) * metresPerLngDegree;
+      return Math.hypot(eastM, northM) < 1.5;
+    }),
+  );
+}
+
 export default function VillageMapGeo({
   imageUrl,
   geo,
@@ -285,6 +299,11 @@ export default function VillageMapGeo({
         return !tentFootprint;
       }),
     [zones, highlightZoneId, highlightTentId],
+  );
+
+  const droppedTents = useMemo(
+    () => tents.filter((tent) => !isZoneCorner(tent, zones)),
+    [tents, zones],
   );
 
 
@@ -385,7 +404,7 @@ export default function VillageMapGeo({
 
           {/* Dropped tent pins are shown exactly where they were placed. Only
               exact duplicates of the same number are collapsed. */}
-          {tents.filter((t, i, all) => {
+          {droppedTents.filter((t, i, all) => {
             const number = normalizedNumber(t.label);
             if (!number || t.id === highlightTentId) return true;
             const firstIdx = all.findIndex(
@@ -411,7 +430,7 @@ export default function VillageMapGeo({
             );
           })}
 
-          <FlyToTent tent={tents.find((t) => t.id === highlightTentId) ?? null} />
+          <FlyToTent tent={droppedTents.find((t) => t.id === highlightTentId) ?? null} />
           <FlyToZone
             zone={highlightTentId ? null : zones.find((z) => z.id === highlightZoneId) ?? null}
           />
