@@ -40,6 +40,9 @@ export function AssistantWidget() {
   const [input, setInput] = useState("");
   const [thinking, setThinking] = useState(false);
   const [showReport, setShowReport] = useState(false);
+  // WhatsApp is a last resort: only surfaced once the bot genuinely can't help.
+  const [escalated, setEscalated] = useState(false);
+
 
   const listRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
