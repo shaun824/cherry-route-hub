@@ -118,7 +118,7 @@ function AuthPage() {
     setNotice(null);
     if (mode === "signup" && idNumber.trim().length >= 4) {
       writePending(PENDING_ID_KEY, idNumber.trim());
-      writePending(PENDING_NAME_KEY, fullName.trim());
+      writePending(PENDING_NAME_KEY, fullName.trim().split(/\s+/).pop() ?? "");
     }
     const result = await lovable.auth.signInWithOAuth("google", {
       redirect_uri: window.location.origin + "/auth",
@@ -147,7 +147,7 @@ function AuthPage() {
         setNotice("Check your inbox for a password reset link.");
       } else if (mode === "signup") {
         writePending(PENDING_ID_KEY, idNumber.trim());
-        writePending(PENDING_NAME_KEY, fullName.trim());
+        writePending(PENDING_NAME_KEY, fullName.trim().split(/\s+/).pop() ?? "");
         const { data, error: err } = await supabase.auth.signUp({
           email: email.trim(),
           password,
