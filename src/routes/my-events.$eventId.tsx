@@ -1131,8 +1131,10 @@ function ChatPanel({ eventId, userId }: { eventId: string; userId: string | null
     };
   }, [eventId, qc]);
 
+  // Always open/settle at the newest message.
   useEffect(() => {
-    listRef.current?.scrollTo({ top: listRef.current.scrollHeight });
+    const el = listRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
   }, [q.data]);
 
   async function send() {
@@ -1149,7 +1151,10 @@ function ChatPanel({ eventId, userId }: { eventId: string; userId: string | null
 
   return (
     <div className="flex h-[60vh] flex-col rounded-2xl bg-card ring-1 ring-border">
-      <div ref={listRef} className="flex-1 overflow-y-auto p-3">
+      <div
+        ref={listRef}
+        className="flex-1 overflow-y-auto overscroll-y-auto p-3 [touch-action:pan-y]"
+      >
         {(q.data ?? []).length === 0 ? (
           <p className="mt-6 text-center text-xs text-ink-soft">
             No messages yet. Say hi to your fellow riders 👋
@@ -1218,6 +1223,9 @@ function AskAdminPanel({
   const qc = useQueryClient();
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
+  const qaListRef = useRef<HTMLDivElement>(null);
+
+
 
   const threadQ = useQuery({
     queryKey: ["qa-thread", eventId, userId],
@@ -1305,6 +1313,12 @@ function AskAdminPanel({
     }
   }
 
+  // Start (and stay) at the newest message.
+  useEffect(() => {
+    const el = qaListRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
+  }, [messagesQ.data]);
+
   // Offer the WhatsApp handoff once the assistant has admitted it can't answer
   // and no admin has replied since.
   const msgs = (messagesQ.data ?? []) as any[];
@@ -1326,7 +1340,10 @@ function AskAdminPanel({
           : "Ask anything about this event — our assistant bot 🍒 answers instantly from the event details & website, and loops in a Red Cherry admin when it isn't sure."}
       </div>
 
-      <div className="flex-1 overflow-y-auto p-3">
+      <div
+        ref={qaListRef}
+        className="flex-1 overflow-y-auto overscroll-y-auto p-3 [touch-action:pan-y]"
+      >
         {(messagesQ.data ?? []).length === 0 ? (
           <p className="mt-6 text-center text-xs text-ink-soft">
             {userId
