@@ -776,7 +776,7 @@ function VenueRooming({
                         </option>
                       ))}
                     </select>
-                    {r.match_source ? (
+                    {r.match_source && r.match_source !== "none" ? (
                       <span className="ml-1 text-[10px] uppercase text-ink-soft">{r.match_source}</span>
                     ) : null}
                   </td>
