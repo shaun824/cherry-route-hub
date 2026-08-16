@@ -7,7 +7,11 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 // Adds bearing support to Leaflet so riders can spin the village map to match
 // the direction they are facing (two-finger twist, or the on-map controls).
-import "leaflet-rotate";
+// The plugin ships as a UMD bundle that patches the global `L`, so expose it
+// first. This module is only ever loaded lazily in the browser.
+(globalThis as unknown as { L: typeof L }).L = L;
+await import("leaflet-rotate");
+
 
 import type { VillageGeo, VillageHotspot } from "@/lib/village-map";
 import { spotColor, spotIcon } from "@/lib/village-map";
