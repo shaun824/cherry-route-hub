@@ -1359,7 +1359,7 @@ function AskAdminPanel({
         ref={qaListRef}
         className="flex-1 overflow-y-auto overscroll-y-auto p-3 [touch-action:pan-y]"
       >
-        {(messagesQ.data ?? []).length === 0 ? (
+        {(messagesQ.data ?? []).length === 0 && !pending ? (
           <p className="mt-6 text-center text-xs text-ink-soft">
             {userId
               ? "No messages yet. Ask a question below and the bot will try first."
@@ -1387,7 +1387,13 @@ function AskAdminPanel({
                 </li>
               );
             })}
+            {pending && (
+              <li className="ml-auto max-w-[80%] rounded-2xl bg-cherry px-3 py-2 text-sm text-white opacity-80">
+                <p className="whitespace-pre-line">{pending}</p>
+              </li>
+            )}
             {busy && (
+
               <li className="max-w-[80%] rounded-2xl bg-sky-100 px-3 py-2 text-sm text-sky-950 ring-1 ring-sky-200">
                 <p className="text-[10px] font-bold uppercase tracking-wider opacity-70">
                   🍒 Assistant bot
