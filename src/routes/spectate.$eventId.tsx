@@ -6,11 +6,11 @@ import {
   ArrowLeft,
   CalendarDays,
   Car,
-  Clock,
   Coffee,
-  Flag,
+  ExternalLink,
   Info,
   MapPin,
+  Search,
   Toilet,
   Trophy,
   Users,
@@ -18,9 +18,12 @@ import {
 import { useAdminStore } from "@/lib/store";
 import { useHydratedStore } from "@/lib/use-hydrated-store";
 import { formatDate, formatTime } from "@/lib/mock-data";
-import { getSpectatorRoster, type SpectatorEntrant } from "@/lib/spectator.functions";
-import { LockedSection } from "@/components/locked-section";
-import { useSession } from "@/lib/auth";
+import {
+  getEventRiders,
+  getEventResults,
+  type TrackedRider,
+  type EventResultsPayload,
+} from "@/lib/results.functions";
 import { brandHeader } from "@/lib/event-brand";
 import { buildMapEmbedSrc, buildMapLink, resolveVenuePoint } from "@/lib/map-embed";
 import { VenueMiniMap } from "@/components/venue-mini-map";
@@ -28,43 +31,52 @@ import { VenueMiniMap } from "@/components/venue-mini-map";
 export const Route = createFileRoute("/spectate/$eventId")({
   head: ({ params }) => ({
     meta: [
-      { title: `Spectate — Red Cherry Events` },
+      { title: `Track riders — Red Cherry Events` },
       {
         name: "description",
-        content: `Spectator info for this Red Cherry event: parking, food, toilets, start times and start & finish lists.`,
+        content: `Track riders at this Red Cherry event: rider list with bib numbers, batches, results and venue info.`,
       },
-      { property: "og:title", content: "Spectate — Red Cherry Events" },
+      { property: "og:title", content: "Track riders — Red Cherry Events" },
       {
         property: "og:description",
-        content: `Spectator info: parking, food, toilets, start times and start & finish lists.`,
+        content: `Rider list with bib numbers, batches, results and spectator venue info.`,
       },
     ],
-    // params referenced so linter is happy without exposing IDs in tags.
     ...({ _: params } as Record<string, unknown>),
   }),
   component: SpectatorEventPage,
 });
 
-type Tab = "info" | "start" | "finish";
+type Tab = "info" | "riders" | "results";
+
+function riderResultUrl(template: string | null, bib: string | null) {
+  if (!template || !bib) return null;
+  return template.includes("{bib}") ? template.replace(/\{bib\}/g, encodeURIComponent(bib)) : template;
+}
 
 function SpectatorEventPage() {
   useHydratedStore();
   const { eventId } = Route.useParams();
   const event = useAdminStore((s) => s.events.find((e) => e.id === eventId));
-  const [tab, setTab] = useState<Tab>("info");
+  const [tab, setTab] = useState<Tab>("riders");
   const [categoryFilter, setCategoryFilter] = useState<string>("__all");
+  const [search, setSearch] = useState("");
 
-  const { user, loading: sessionLoading } = useSession();
-  const locked = !sessionLoading && !user;
-
-  const fetchRoster = useServerFn(getSpectatorRoster);
-  const rosterQ = useQuery<SpectatorEntrant[]>({
-    queryKey: ["spectator-roster", eventId],
-    queryFn: () => fetchRoster({ data: { eventId } }),
-    staleTime: 30_000,
-    enabled: !locked,
+  const fetchRiders = useServerFn(getEventRiders);
+  const ridersQ = useQuery<TrackedRider[]>({
+    queryKey: ["event-riders", eventId],
+    queryFn: () => fetchRiders({ data: { eventId } }),
+    staleTime: 60_000,
   });
-  const roster: SpectatorEntrant[] = rosterQ.data ?? [];
+  const roster: TrackedRider[] = ridersQ.data ?? [];
+
+  const fetchResults = useServerFn(getEventResults);
+  const resultsQ = useQuery<EventResultsPayload>({
+    queryKey: ["event-results", eventId],
+    queryFn: () => fetchResults({ data: { eventId } }),
+    staleTime: 60_000,
+  });
+  const results = resultsQ.data;
 
   const categories = useMemo(() => {
     const set = new Set<string>();
@@ -73,11 +85,16 @@ function SpectatorEventPage() {
   }, [roster]);
 
   const filtered = useMemo(() => {
-    if (categoryFilter === "__all") return roster;
-    return roster.filter((r) => (r.category ?? "") === categoryFilter);
-  }, [roster, categoryFilter]);
+    const q = search.trim().toLowerCase();
+    return roster.filter((r) => {
+      if (categoryFilter !== "__all" && (r.category ?? "") !== categoryFilter) return false;
+      if (!q) return true;
+      return (
+        r.full_name.toLowerCase().includes(q) || (r.bib_number ?? "").toLowerCase().includes(q)
+      );
+    });
+  }, [roster, categoryFilter, search]);
 
-  // Group start list by batch, order by batch start time.
   const batches = event?.batches ?? [];
   const batchLookup = useMemo(() => {
     const m = new Map<string, { name: string; startTime: string }>();
@@ -88,7 +105,7 @@ function SpectatorEventPage() {
   const startGroups = useMemo(() => {
     const groups = new Map<
       string,
-      { key: string; label: string; startTime: string; rows: SpectatorEntrant[] }
+      { key: string; label: string; startTime: string; rows: TrackedRider[] }
     >();
     for (const r of filtered) {
       const key = r.batch ?? "__unassigned";
@@ -96,7 +113,7 @@ function SpectatorEventPage() {
       if (!groups.has(key)) {
         groups.set(key, {
           key,
-          label: r.batch ?? "Unassigned",
+          label: r.batch ?? "All riders",
           startTime: meta?.startTime ?? "",
           rows: [],
         });
@@ -114,22 +131,27 @@ function SpectatorEventPage() {
     });
   }, [filtered, batchLookup]);
 
-  const finishers = useMemo(
-    () =>
-      filtered
-        .filter((r) => !!r.finished_at)
-        .sort(
-          (a, b) => new Date(a.finished_at!).getTime() - new Date(b.finished_at!).getTime(),
-        ),
-    [filtered],
-  );
+  const [activeSet, setActiveSet] = useState<string | null>(null);
+  const currentSetId = activeSet ?? results?.sets[0]?.id ?? null;
+  const resultRows = useMemo(() => {
+    if (!results || !currentSetId) return [];
+    const q = search.trim().toLowerCase();
+    return results.rows
+      .filter((r) => r.result_set_id === currentSetId)
+      .filter((r) => categoryFilter === "__all" || (r.category ?? "") === categoryFilter)
+      .filter(
+        (r) =>
+          !q || r.full_name.toLowerCase().includes(q) || (r.bib_number ?? "").toLowerCase().includes(q),
+      )
+      .sort((a, b) => (a.position ?? 9999) - (b.position ?? 9999));
+  }, [results, currentSetId, categoryFilter, search]);
 
   if (!event) {
     return (
       <div className="p-8 text-center">
         <p className="text-ink">Event not available.</p>
         <Link to="/spectate" className="mt-4 inline-block font-semibold text-cherry">
-          Back to Spectate
+          Back to Track riders
         </Link>
       </div>
     );
@@ -167,7 +189,7 @@ function SpectatorEventPage() {
           ) : null}
           <div className="min-w-0">
             <span className="text-[11px] font-semibold uppercase tracking-widest opacity-85">
-              Spectator info · {event.discipline}
+              Track riders · {event.discipline}
             </span>
             <h1 className="mt-1 font-display text-2xl font-bold leading-tight">{event.name}</h1>
           </div>
@@ -189,9 +211,9 @@ function SpectatorEventPage() {
       <div className="sticky top-0 z-20 -mt-3 px-5">
         <div className="flex gap-1 rounded-2xl bg-card p-1 shadow-lg ring-1 ring-border">
           {([
+            { id: "riders", label: "Riders", icon: Users },
+            { id: "results", label: "Results", icon: Trophy },
             { id: "info", label: "Venue", icon: Info },
-            { id: "start", label: "Start list", icon: Flag },
-            { id: "finish", label: "Finishers", icon: Trophy },
           ] as { id: Tab; label: string; icon: typeof Info }[]).map((t) => {
             const active = tab === t.id;
             const Icon = t.icon;
@@ -306,26 +328,14 @@ function SpectatorEventPage() {
         </div>
       ) : null}
 
-      {tab === "start" || tab === "finish" ? (
+      {tab === "riders" ? (
         <div className="px-5 pt-4 pb-8 animate-fade-in">
-          <CategoryFilter
-            categories={categories}
-            value={categoryFilter}
-            onChange={setCategoryFilter}
-          />
+          <SearchBox value={search} onChange={setSearch} placeholder="Search rider name or bib…" />
+          <div className="mt-3">
+            <CategoryFilter categories={categories} value={categoryFilter} onChange={setCategoryFilter} />
+          </div>
 
-          {locked ? (
-            <LockedSection locked message="Sign in to view start and finish lists">
-              <ul className="mt-4 space-y-2">
-                {[0, 1, 2, 3, 4].map((i) => (
-                  <li key={i} className="flex items-center gap-3 rounded-xl bg-card p-3 ring-1 ring-border">
-                    <span className="h-7 w-11 rounded-md bg-secondary" />
-                    <span className="h-3 flex-1 rounded bg-secondary" />
-                  </li>
-                ))}
-              </ul>
-            </LockedSection>
-          ) : rosterQ.isLoading ? (
+          {ridersQ.isLoading ? (
             <p className="mt-6 text-center text-sm text-ink-soft">Loading riders…</p>
           ) : roster.length === 0 ? (
             <div className="mt-6 rounded-2xl border border-dashed border-border p-6 text-center text-sm text-ink-soft">
@@ -334,81 +344,167 @@ function SpectatorEventPage() {
                 The rider list will appear here once entries are synced from Entry Ninja.
               </p>
             </div>
-          ) : tab === "start" ? (
+          ) : (
             <div className="mt-4 space-y-4">
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-ink-soft">
+                {filtered.length} rider{filtered.length === 1 ? "" : "s"}
+              </p>
               {startGroups.length === 0 ? (
-                <p className="text-center text-sm text-ink-soft">No riders match that filter.</p>
+                <p className="text-center text-sm text-ink-soft">No riders match that search.</p>
               ) : (
                 startGroups.map((g) => (
                   <section key={g.key} className="rounded-2xl bg-card p-3 ring-1 ring-border">
                     <header className="flex items-center gap-2 pb-2">
-                      <Clock className="h-3.5 w-3.5 text-cherry" />
                       <p className="font-display text-sm font-bold text-ink">{g.label}</p>
                       <span className="ml-auto rounded-md bg-accent px-2 py-0.5 font-mono text-[11px] font-bold text-cherry-deep">
-                        {g.startTime || "TBC"}
+                        {g.startTime || `${g.rows.length}`}
                       </span>
                     </header>
                     <ul className="divide-y divide-border">
-                      {g.rows.map((r) => (
-                        <li
-                          key={r.id}
-                          className="flex items-center gap-3 py-2 text-sm"
-                        >
-                          <span className="grid h-7 min-w-[2.75rem] place-items-center rounded-md bg-background px-1 font-mono text-[11px] font-semibold text-ink-soft ring-1 ring-border">
-                            {r.bib_number || "—"}
-                          </span>
-                          <span className="flex-1 truncate font-medium text-ink">{r.full_name}</span>
-                          {r.category ? (
-                            <span className="rounded-full bg-secondary px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-ink-soft">
-                              {r.category}
+                      {g.rows.map((r) => {
+                        const link = riderResultUrl(results?.results_rider_url_template ?? null, r.bib_number);
+                        const inner = (
+                          <>
+                            <span className="grid h-7 min-w-[2.75rem] place-items-center rounded-md bg-background px-1 font-mono text-[11px] font-semibold text-ink-soft ring-1 ring-border">
+                              {r.bib_number || "—"}
                             </span>
-                          ) : null}
-                        </li>
-                      ))}
+                            <span className="flex-1 truncate font-medium text-ink">{r.full_name}</span>
+                            {r.category ? (
+                              <span className="rounded-full bg-secondary px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-ink-soft">
+                                {r.category}
+                              </span>
+                            ) : null}
+                            {link ? <ExternalLink className="h-3.5 w-3.5 shrink-0 text-cherry" /> : null}
+                          </>
+                        );
+                        return (
+                          <li key={r.id}>
+                            {link ? (
+                              <a
+                                href={link}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-3 py-2 text-sm"
+                              >
+                                {inner}
+                              </a>
+                            ) : (
+                              <div className="flex items-center gap-3 py-2 text-sm">{inner}</div>
+                            )}
+                          </li>
+                        );
+                      })}
                     </ul>
                   </section>
                 ))
               )}
             </div>
+          )}
+        </div>
+      ) : null}
+
+      {tab === "results" ? (
+        <div className="px-5 pt-4 pb-8 animate-fade-in">
+          {results?.results_url ? (
+            <a
+              href={results.results_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mb-4 flex items-center justify-between rounded-2xl bg-cherry px-4 py-3 text-sm font-semibold text-white"
+            >
+              Open official results
+              <ExternalLink className="h-4 w-4" />
+            </a>
+          ) : null}
+
+          {resultsQ.isLoading ? (
+            <p className="mt-6 text-center text-sm text-ink-soft">Loading results…</p>
+          ) : !results || results.sets.length === 0 || !results.results_published ? (
+            <div className="rounded-2xl border border-dashed border-border p-6 text-center text-sm text-ink-soft">
+              <Trophy className="mx-auto h-5 w-5 text-cherry" />
+              <p className="mt-2">
+                Results aren’t published yet. They’ll show here as soon as timing data lands.
+              </p>
+            </div>
           ) : (
-            <div className="mt-4">
-              {finishers.length === 0 ? (
-                <div className="rounded-2xl border border-dashed border-border p-6 text-center text-sm text-ink-soft">
-                  <Trophy className="mx-auto h-5 w-5 text-cherry" />
-                  <p className="mt-2">
-                    Finish times will appear here as riders cross the line.
-                  </p>
+            <>
+              {results.sets.length > 1 ? (
+                <div className="flex gap-2 overflow-x-auto pb-2">
+                  {results.sets.map((s) => {
+                    const active = s.id === currentSetId;
+                    return (
+                      <button
+                        key={s.id}
+                        type="button"
+                        onClick={() => setActiveSet(s.id)}
+                        className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold ring-1 ${
+                          active ? "bg-cherry text-white ring-cherry" : "bg-card text-ink-soft ring-border"
+                        }`}
+                      >
+                        {s.label}
+                      </button>
+                    );
+                  })}
                 </div>
-              ) : (
-                <ol className="space-y-2">
-                  {finishers.map((r, i) => (
-                    <li
-                      key={r.id}
-                      className="flex items-center gap-3 rounded-xl bg-card p-3 ring-1 ring-border"
-                    >
-                      <span className="grid h-8 w-8 place-items-center rounded-full bg-cherry text-xs font-bold text-white">
-                        {i + 1}
+              ) : null}
+
+              <div className="mt-2">
+                <SearchBox value={search} onChange={setSearch} placeholder="Search rider name or bib…" />
+              </div>
+              <div className="mt-3">
+                <CategoryFilter categories={categories} value={categoryFilter} onChange={setCategoryFilter} />
+              </div>
+
+              <ol className="mt-4 space-y-2">
+                {resultRows.length === 0 ? (
+                  <p className="text-center text-sm text-ink-soft">No results match that search.</p>
+                ) : (
+                  resultRows.map((r) => (
+                    <li key={r.id} className="flex items-center gap-3 rounded-xl bg-card p-3 ring-1 ring-border">
+                      <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-cherry text-xs font-bold text-white">
+                        {r.position ?? "—"}
                       </span>
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-sm font-semibold text-ink">{r.full_name}</p>
                         <p className="text-[11px] text-ink-soft">
-                          {r.category ? `${r.category} · ` : ""}
                           {r.bib_number ? `#${r.bib_number} · ` : ""}
-                          {new Date(r.finished_at!).toLocaleTimeString("en-ZA", {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
+                          {r.category ? `${r.category} · ` : ""}
+                          {r.status ?? ""}
+                          {r.gap_text ? ` +${r.gap_text}` : ""}
                         </p>
                       </div>
+                      <span className="font-mono text-xs font-semibold text-ink">{r.time_text ?? "—"}</span>
                     </li>
-                  ))}
-                </ol>
-              )}
-            </div>
+                  ))
+                )}
+              </ol>
+            </>
           )}
         </div>
       ) : null}
     </div>
+  );
+}
+
+function SearchBox({
+  value,
+  onChange,
+  placeholder,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  placeholder: string;
+}) {
+  return (
+    <label className="flex items-center gap-2 rounded-xl bg-card px-3 py-2 ring-1 ring-border">
+      <Search className="h-4 w-4 text-ink-soft" />
+      <input
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        className="w-full bg-transparent text-sm text-ink outline-none placeholder:text-ink-soft"
+      />
+    </label>
   );
 }
 
