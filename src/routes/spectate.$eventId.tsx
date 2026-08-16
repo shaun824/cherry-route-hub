@@ -74,6 +74,21 @@ function SpectatorEventPage() {
   const { eventId } = Route.useParams();
   const event = useAdminStore((s) => s.events.find((e) => e.id === eventId));
   const [tab, setTab] = useState<Tab>("riders");
+  const tabNavRef = useRef<HTMLDivElement | null>(null);
+  /** Switching tabs should always land you at the top of the new section. */
+  const selectTab = useCallback((next: Tab) => {
+    setTab(next);
+    if (typeof window === "undefined") return;
+    const scroll = () => {
+      const nav = tabNavRef.current;
+      const top = nav ? window.scrollY + nav.getBoundingClientRect().top - 8 : 0;
+      window.scrollTo({ top: Math.max(0, top), behavior: "auto" });
+    };
+    scroll();
+    window.requestAnimationFrame(scroll);
+    window.setTimeout(scroll, 60);
+  }, []);
+
   const [categoryFilter, setCategoryFilter] = useState<string>("__all");
   const [groupBy, setGroupBy] = useState<GroupBy>("class");
   const [search, setSearch] = useState("");
