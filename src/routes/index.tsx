@@ -307,7 +307,8 @@ function Home() {
               </Link>
             );
           })}
-        </div>
+          </div>
+        </>
       ) : null}
 
       {/* Pinned general notice (slim, expandable) */}
