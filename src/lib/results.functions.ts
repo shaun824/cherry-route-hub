@@ -85,7 +85,19 @@ export const getEventRiders = createServerFn({ method: "GET" })
 
     const userId = await resolveOptionalUserId(getRequestHeader("authorization") ?? null);
     if (!userId) return { status: "signin", opens_at: opensAt, event_date: eventDate, riders: [] };
-    if (!inWindow) return { status: "locked", opens_at: opensAt, event_date: eventDate, riders: [] };
+
+    // Admins can preview the roster at any time (before the public window opens).
+    const { data: roleRow } = await supabaseAdmin
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId)
+      .eq("role", "admin")
+      .maybeSingle();
+    const isAdmin = !!roleRow;
+
+    if (!inWindow && !isAdmin)
+      return { status: "locked", opens_at: opensAt, event_date: eventDate, riders: [] };
+
 
     const { data: rows, error } = await supabaseAdmin
       .from("event_entrants")
