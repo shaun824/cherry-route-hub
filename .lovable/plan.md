@@ -14,6 +14,7 @@ Headings are also inconsistent: section titles are small grey uppercase text, wh
 
 **Stop the repeat**
 - The spotlight card only shows an event that is not already the "Your next event" hero. For a signed-in rider whose next event is already in the hero, the spotlight either shows the next event they have *not* entered (real discovery value) or is hidden entirely.
+- Signed-out visitors get a home page built for quick answers: the spotlight becomes a fuller "next event" card with date, countdown, location and one-tap links to schedule, route, venue and village map — no sign-in required. If an event is running right now (or starts within 24 hours), that event takes the top slot instead, with a "Happening now" label and the latest event updates from the feed shown directly underneath, plus a soft "sign in to see your own entry, tent and balance" nudge rather than a sign-in wall.
 - The sport lists exclude any event already shown above them (hero event and spotlight event), so each event appears once per screen.
 - Signed-out visitors are unchanged: no hero, so the spotlight stays as the lead card.
 
