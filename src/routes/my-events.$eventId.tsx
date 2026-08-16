@@ -1231,7 +1231,9 @@ function AskAdminPanel({
   const qc = useQueryClient();
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
+  const [pending, setPending] = useState<string | null>(null);
   const qaListRef = useRef<HTMLDivElement>(null);
+
 
 
 
