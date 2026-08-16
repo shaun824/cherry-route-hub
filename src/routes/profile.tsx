@@ -175,16 +175,8 @@ function Profile() {
         </div>
       </div>
 
-      <Link
-        to="/rewards"
-        className="mx-5 mt-4 flex items-center justify-between rounded-2xl bg-ink p-4 text-white"
-      >
-        <div>
-          <p className="font-display text-sm font-bold">Cherry Miles rewards</p>
-          <p className="mt-0.5 text-xs text-white/70">See your points, tier and coupon codes</p>
-        </div>
-        <span className="rounded-lg bg-cherry px-3 py-1.5 text-xs font-bold">View</span>
-      </Link>
+      <RewardsSummary />
+
 
 
 
