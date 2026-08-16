@@ -303,7 +303,14 @@ function Home() {
       {/* Spotlight on another event — discovery for riders already entered */}
       {user && spotlight ? (
         <>
-          <SectionTitle title="Next up" />
+          <SectionTitle
+            title={
+              spotlight.entered
+                ? "View details on your next event"
+                : "More events you might like"
+            }
+          />
+
           <div className="px-5">
             <EventSpotlight
               eventId={spotlight.id}
