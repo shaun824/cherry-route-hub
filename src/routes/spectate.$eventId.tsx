@@ -337,6 +337,35 @@ function SpectatorEventPage() {
 
       {tab === "riders" ? (
         <div className="px-5 pt-4 pb-8 animate-fade-in">
+          {rosterStatus !== "ok" && !ridersQ.isLoading ? (
+            <div className="mt-2 rounded-2xl border border-dashed border-border bg-card p-6 text-center">
+              <Lock className="mx-auto h-5 w-5 text-cherry" />
+              {rosterStatus === "signin" ? (
+                <>
+                  <p className="mt-2 text-sm font-semibold text-ink">Riders only</p>
+                  <p className="mt-1 text-sm text-ink-soft">
+                    Sign in to see the full rider list, bib numbers and start batches.
+                  </p>
+                  <Link
+                    to="/auth"
+                    className="mt-4 inline-block rounded-full bg-cherry px-5 py-2 text-sm font-semibold text-white"
+                  >
+                    Sign in
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <p className="mt-2 text-sm font-semibold text-ink">Rider list opens race week</p>
+                  <p className="mt-1 text-sm text-ink-soft">
+                    Bib numbers and start batches go live{" "}
+                    {rosterOpensAt ? `on ${formatDate(rosterOpensAt)}` : "one week before the event"} — a
+                    week before race day.
+                  </p>
+                </>
+              )}
+            </div>
+          ) : (
+          <>
           <SearchBox value={search} onChange={setSearch} placeholder="Search rider name or bib…" />
           <div className="mt-3">
             <CategoryFilter categories={categories} value={categoryFilter} onChange={setCategoryFilter} />
@@ -344,6 +373,7 @@ function SpectatorEventPage() {
 
           {ridersQ.isLoading ? (
             <p className="mt-6 text-center text-sm text-ink-soft">Loading riders…</p>
+
           ) : roster.length === 0 ? (
             <div className="mt-6 rounded-2xl border border-dashed border-border p-6 text-center text-sm text-ink-soft">
               <Users className="mx-auto h-5 w-5 text-cherry" />
