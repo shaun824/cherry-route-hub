@@ -13,6 +13,8 @@ import {
   type ParsedRoomingRow,
 } from "@/lib/rooming-import";
 import { syncRoomingSheet } from "@/lib/rooming-sheet.functions";
+import { loadEntryCandidates, matchEntry, type EntryCandidate } from "@/lib/rooming-match";
+import { fetchTentRules, fetchVillageTents, ruleMatches, tentForLabel, type VillageTent } from "@/lib/village-tents";
 
 export const Route = createFileRoute("/admin/rooming")({
   component: RoomingAdminPage,
@@ -59,6 +61,24 @@ function RoomingAdminPage() {
 
   const venues = venuesQ.data ?? [];
   const rows = roomingQ.data ?? [];
+  const entriesQ = useQuery({
+    queryKey: ["admin-entry-candidates", eventId],
+    queryFn: () => loadEntryCandidates(supabase, eventId),
+    enabled: !!eventId,
+  });
+  const candidates: EntryCandidate[] = entriesQ.data ?? [];
+  const tentsQ = useQuery({
+    queryKey: ["village-tents", eventId],
+    queryFn: () => fetchVillageTents(eventId),
+    enabled: !!eventId,
+  });
+  const tents: VillageTent[] = tentsQ.data ?? [];
+  const rulesQ = useQuery({
+    queryKey: ["village-tent-rules", eventId],
+    queryFn: () => fetchTentRules(eventId),
+    enabled: !!eventId,
+  });
+  const tentRules = rulesQ.data ?? [];
   const zones = villageQ.data?.zones ?? [];
 
   const byVenue = useMemo(() => {
@@ -130,33 +150,92 @@ function RoomingAdminPage() {
       await supabase.from("event_rooming").delete().eq("event_id", eventId).eq("venue_id", venueId);
     }
 
-    const payload = parsed.map((p) => ({
-      event_id: eventId,
-      venue_id: venueId,
-      entrant_id: p.email ? entrantByEmail.get(p.email.toLowerCase()) ?? null : null,
-      full_name: p.full_name || p.email || "Unnamed",
-      email: p.email || null,
-      tent_number: p.tent_number || null,
-      room_type: p.room_type || null,
-      notes: p.notes || null,
-      location_hint: p.location_hint || null,
-      village_zone_id:
-        zones.find((z) => labelsMatch(z.name, p.area))?.id ??
-        zones.find((z) => labelsMatch(z.name, p.tent_number))?.id ??
-        null,
-    }));
+    const payload = parsed.map((p) => {
+      const match = matchEntry(p, candidates);
+      const tent = tentForLabel(tents, p.tent_number);
+      return {
+        event_id: eventId,
+        venue_id: venueId,
+        entrant_id:
+          match.entrantId ?? (p.email ? entrantByEmail.get(p.email.toLowerCase()) ?? null : null),
+        event_entrant_id: match.entryId,
+        match_source: match.source === "none" ? null : match.source,
+        full_name: p.full_name || p.email || "Unnamed",
+        email: p.email || null,
+        tent_number: p.tent_number || null,
+        room_type: p.room_type || null,
+        notes: p.notes || null,
+        location_hint: p.location_hint || null,
+        village_tent_id: tent?.id ?? null,
+        village_zone_id:
+          zones.find((z) => labelsMatch(z.name, p.area))?.id ??
+          zones.find((z) => labelsMatch(z.name, p.tent_number))?.id ??
+          tent?.zone_id ??
+          tentRules.find((r) => ruleMatches(r.pattern, p.tent_number))?.zone_id ??
+          null,
+      };
+    });
 
     const { error } = await supabase.from("event_rooming").insert(payload);
     setBusy(false);
     if (error) setMsg(error.message);
     else {
-      const matched = payload.filter((p) => p.entrant_id).length;
+      const matched = payload.filter((p) => p.event_entrant_id).length;
       const placed = payload.filter((p) => p.village_zone_id).length;
       setMsg(
-        `Imported ${payload.length} allocations · ${matched} matched to riders · ${placed} placed on the village map.`,
+        `Imported ${payload.length} allocations · ${matched} linked to entries · ${placed} placed on the village map.`,
       );
       refreshRooming();
     }
+  }
+
+  /** Re-runs the entry matcher over rows already in the list. */
+  async function linkEntries(venueId: string) {
+    const venueRows = byVenue.get(venueId) ?? [];
+    if (candidates.length === 0) {
+      setMsg("No entries loaded for this event yet — sync the entrant list first.");
+      return;
+    }
+    setBusy(true);
+    let linked = 0;
+    for (const r of venueRows) {
+      if (r.event_entrant_id) continue;
+      const match = matchEntry({ full_name: r.full_name, email: r.email, notes: r.notes }, candidates);
+      if (!match.entryId) continue;
+      await supabase
+        .from("event_rooming")
+        .update({
+          event_entrant_id: match.entryId,
+          entrant_id: match.entrantId ?? r.entrant_id,
+          match_source: match.source,
+        })
+        .eq("id", r.id);
+      linked += 1;
+    }
+    setBusy(false);
+    setMsg(linked ? `Linked ${linked} allocations to their entries.` : "No new entry matches found.");
+    refreshRooming();
+  }
+
+  async function setRowEntry(id: string, entryId: string | null) {
+    const cand = candidates.find((c) => c.id === entryId) ?? null;
+    await supabase
+      .from("event_rooming")
+      .update({
+        event_entrant_id: entryId,
+        entrant_id: cand?.entrant_id ?? null,
+        match_source: entryId ? "manual" : null,
+      })
+      .eq("id", id);
+    refreshRooming();
+  }
+
+  async function setRowTent(id: string, tentId: string | null) {
+    const tent = tents.find((t) => t.id === tentId) ?? null;
+    const patch: Record<string, unknown> = { village_tent_id: tentId };
+    if (tent?.zone_id) patch.village_zone_id = tent.zone_id;
+    await supabase.from("event_rooming").update(patch).eq("id", id);
+    refreshRooming();
   }
 
   async function setRowZone(id: string, zoneId: string | null) {
@@ -169,17 +248,27 @@ function RoomingAdminPage() {
     const venueRows = byVenue.get(venueId) ?? [];
     const updates = venueRows
       .map((r) => {
-        const zone = zones.find((z) => labelsMatch(z.name, r.tent_number));
-        return zone && zone.id !== r.village_zone_id ? { id: r.id, zone: zone.id } : null;
+        const tent = tentForLabel(tents, r.tent_number);
+        const zoneId =
+          zones.find((z) => labelsMatch(z.name, r.tent_number))?.id ??
+          tent?.zone_id ??
+          tentRules.find((rule) => ruleMatches(rule.pattern, r.tent_number))?.zone_id ??
+          null;
+        if (!zoneId && !tent) return null;
+        if (zoneId === r.village_zone_id && (tent?.id ?? null) === r.village_tent_id) return null;
+        return { id: r.id, zone: zoneId, tent: tent?.id ?? null };
       })
-      .filter(Boolean) as { id: string; zone: string }[];
+      .filter(Boolean) as { id: string; zone: string | null; tent: string | null }[];
     if (updates.length === 0) {
       setMsg("No tent numbers matched a drawn area name on the village map.");
       return;
     }
     setBusy(true);
     for (const u of updates) {
-      await supabase.from("event_rooming").update({ village_zone_id: u.zone }).eq("id", u.id);
+      await supabase
+        .from("event_rooming")
+        .update({ village_zone_id: u.zone, village_tent_id: u.tent })
+        .eq("id", u.id);
     }
     setBusy(false);
     setMsg(`Placed ${updates.length} people on the village map.`);
