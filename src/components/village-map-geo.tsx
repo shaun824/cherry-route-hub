@@ -238,7 +238,9 @@ export default function VillageMapGeo({
   const [bearing, setBearing] = useState(0);
 
   const [zoom, setZoom] = useState(17);
+  const [twoFingerHint, setTwoFingerHint] = useState(false);
   const watchRef = useRef<number | null>(null);
+
 
   useEffect(() => {
     if (!imageUrl) return;
