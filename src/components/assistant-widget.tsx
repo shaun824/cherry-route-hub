@@ -180,20 +180,20 @@ export function AssistantWidget() {
               ) : null}
             </div>
 
-            <div className="border-t border-border p-3">
+            <div className="min-w-0 shrink-0 overflow-y-auto overflow-x-hidden border-t border-border p-3">
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
                   void sendQuestion(input);
                 }}
-                className="flex items-center gap-2"
+                className="flex min-w-0 items-center gap-2"
               >
                 <input
                   ref={inputRef}
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   placeholder="Ask a question…"
-                  className="flex-1 rounded-full border border-border bg-background px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-cherry/40"
+                  className="min-w-0 flex-1 rounded-full border border-border bg-background px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-cherry/40"
                 />
                 <button
                   type="submit"
@@ -205,17 +205,22 @@ export function AssistantWidget() {
                 </button>
               </form>
 
-              <div className="mt-2 flex items-center justify-between gap-2">
+              <div className="mt-2 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
                 <button
                   type="button"
                   onClick={() => setShowReport((v) => !v)}
-                  className="inline-flex items-center gap-1 text-[11px] font-semibold text-ink-soft hover:text-cherry"
+                  className="inline-flex min-w-0 items-center gap-1 text-[11px] font-semibold text-ink-soft hover:text-cherry"
                 >
-                  <MessageSquareWarning className="h-3.5 w-3.5" />
-                  {showReport ? "Hide report form" : "Report a problem instead"}
+                  <MessageSquareWarning className="h-3.5 w-3.5 shrink-0" />
+                  <span className="truncate">
+                    {showReport ? "Hide report form" : "Report a problem instead"}
+                  </span>
                 </button>
-                <WhatsappButton context="the Rider Hub app" size="sm" />
+                <div className="shrink-0">
+                  <WhatsappButton context="the Rider Hub app" size="sm" />
+                </div>
               </div>
+
 
               {showReport ? (
                 <ReportForm
