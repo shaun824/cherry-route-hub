@@ -53,6 +53,22 @@ function Profile() {
   const [initialLoad, setInitialLoad] = useState(true);
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState<{ kind: "ok" | "err"; text: string } | null>(null);
+  const [accounts, setAccounts] = useState<KnownAccount[]>([]);
+
+  useEffect(() => {
+    if (user?.email) rememberAccount(user.email, form.full_name || null);
+    setAccounts(listKnownAccounts());
+  }, [user?.email, form.full_name]);
+
+  async function switchTo(email?: string) {
+    await signOut();
+    navigate({
+      to: "/auth",
+      search: email ? { email, next: "/profile" } : { add: true, next: "/profile" },
+      replace: true,
+    });
+  }
+
 
   useEffect(() => {
     if (loading) return;
