@@ -13,7 +13,7 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { AppShell } from "../components/app-shell";
-import { FeedbackWidget } from "../components/feedback-widget";
+import { AssistantWidget } from "../components/assistant-widget";
 import { supabase } from "../integrations/supabase/client";
 import { usePageTracking } from "../lib/analytics";
 import { ensureOfflineWorker } from "../lib/offline-pack";
@@ -152,7 +152,7 @@ function RootComponent() {
       {isAdmin ? (
         <>
           <Outlet />
-          <FeedbackWidget />
+          <AssistantWidget />
         </>
       ) : (
         <AppShell>
