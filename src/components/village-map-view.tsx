@@ -79,6 +79,10 @@ export function VillageMapView({
   const q = useQuery({ queryKey: ["village-map", eventId], queryFn: () => fetchVillageMap(eventId) });
   const tentsQ = useQuery({ queryKey: ["village-tents", eventId], queryFn: () => fetchVillageTents(eventId) });
   const tents = tentsQ.data ?? [];
+  const mapTents = useMemo(
+    () => tents.map((t) => ({ id: t.id, label: t.label, lat: t.lat, lng: t.lng })),
+    [tents],
+  );
   const [hovered, setHovered] = useState<string | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
   const [filter, setFilter] = useState<string | null>(null);
@@ -203,7 +207,7 @@ export function VillageMapView({
               zones={map.zones ?? []}
               selected={selected}
               onSelect={setSelected}
-              tents={tents.map((t) => ({ id: t.id, label: t.label, lat: t.lat, lng: t.lng }))}
+              tents={mapTents}
               highlightZoneId={focusZoneId ?? null}
               highlightTentId={focusTentId ?? null}
             />
