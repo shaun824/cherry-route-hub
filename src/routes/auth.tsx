@@ -197,7 +197,7 @@ function AuthPage() {
           );
         }
       } else {
-        const { error: err } = await supabase.auth.signInWithPassword({
+        const { data, error: err } = await supabase.auth.signInWithPassword({
           email: email.trim(),
           password,
         });
@@ -218,7 +218,17 @@ function AuthPage() {
           }
           throw err;
         }
+        // Offer the browser/keychain a save, then move on ourselves rather than
+        // waiting on the session listener.
+        const signedInEmail = data.user?.email ?? email.trim();
+        rememberAccount(
+          signedInEmail,
+          (data.user?.user_metadata?.["full_name"] as string | undefined) ?? null,
+        );
+        await saveCredential(signedInEmail, password);
+        navigate({ to: target, replace: true });
       }
+
     } catch (err) {
       setError((err as Error).message || "Something went wrong.");
     } finally {
