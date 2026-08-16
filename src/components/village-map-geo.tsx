@@ -70,10 +70,10 @@ function BearingSync({ bearing }: { bearing: number }) {
  * On touch devices the map only pans with two fingers, so scrolling the page
  * over the map never gets trapped. A one-finger drag surfaces a hint instead.
  */
-function TwoFingerPanGate({ onOneFinger }: { onOneFinger: () => void }) {
+function TwoFingerPanGate({ onTouch }: { onTouch: () => void }) {
   const map = useMap();
-  const hintRef = useRef(onOneFinger);
-  hintRef.current = onOneFinger;
+  const cbRef = useRef(onTouch);
+  cbRef.current = onTouch;
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -82,37 +82,14 @@ function TwoFingerPanGate({ onOneFinger }: { onOneFinger: () => void }) {
     const el = map.getContainer();
     map.dragging.disable();
 
-    let startX = 0;
-    let startY = 0;
-    let moved = false;
-
-    const onStart = (e: TouchEvent) => {
-      if (e.touches.length === 1) {
-        startX = e.touches[0].clientX;
-        startY = e.touches[0].clientY;
-        moved = false;
-      }
-    };
-    const onMove = (e: TouchEvent) => {
-      if (e.touches.length !== 1 || moved) return;
-      const dx = e.touches[0].clientX - startX;
-      const dy = e.touches[0].clientY - startY;
-      if (Math.hypot(dx, dy) < 14) return;
-      moved = true;
-      // Sideways drags are clearly map intent; vertical ones scroll the page.
-      if (Math.abs(dx) > Math.abs(dy) * 0.6) hintRef.current();
-    };
-
+    const onStart = () => cbRef.current();
     el.addEventListener("touchstart", onStart, { passive: true });
-    el.addEventListener("touchmove", onMove, { passive: true });
-    return () => {
-      el.removeEventListener("touchstart", onStart);
-      el.removeEventListener("touchmove", onMove);
-    };
+    return () => el.removeEventListener("touchstart", onStart);
   }, [map]);
 
   return null;
 }
+
 
 
 function FitBounds({ bounds }: { bounds: L.LatLngBoundsExpression }) {
@@ -286,13 +263,24 @@ export default function VillageMapGeo({
   const [bearing, setBearing] = useState(0);
 
   const [zoom, setZoom] = useState(17);
+  // Shown once as the map loads on touch devices, then dismissed for good on
+  // the first touch — re-showing it on every single tap got in the way.
   const [twoFingerHint, setTwoFingerHint] = useState(false);
   const hintTimer = useRef<number | null>(null);
-  const showTwoFingerHint = useCallback(() => {
-    setTwoFingerHint(true);
+  const dismissTwoFingerHint = useCallback(() => {
     if (hintTimer.current) window.clearTimeout(hintTimer.current);
-    hintTimer.current = window.setTimeout(() => setTwoFingerHint(false), 1800);
+    setTwoFingerHint(false);
   }, []);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (!window.matchMedia?.("(pointer: coarse)")?.matches) return;
+    setTwoFingerHint(true);
+    hintTimer.current = window.setTimeout(() => setTwoFingerHint(false), 4000);
+    return () => {
+      if (hintTimer.current) window.clearTimeout(hintTimer.current);
+    };
+  }, []);
+
   const watchRef = useRef<number | null>(null);
 
 
@@ -549,7 +537,7 @@ export default function VillageMapGeo({
           ) : null}
 
           <BearingSync bearing={bearing} />
-          <TwoFingerPanGate onOneFinger={showTwoFingerHint} />
+          <TwoFingerPanGate onTouch={dismissTwoFingerHint} />
         </MapContainer>
 
         {twoFingerHint ? (
