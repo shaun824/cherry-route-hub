@@ -1,0 +1,184 @@
+{
+  "version": 1,
+  "sdk_version": "0.26.2",
+  "path": "/mcp",
+  "auth": {
+    "type": "oauth",
+    "issuer": "https://dxelpuaqatgoceselpvp.supabase.co/auth/v1",
+    "accepted_audiences": [
+      "authenticated"
+    ]
+  },
+  "mcp": {
+    "server": {
+      "name": "cherry-rider-hub",
+      "version": "0.1.0",
+      "title": "Cherry Rider Hub"
+    },
+    "tools": [
+      {
+        "name": "list_events",
+        "title": "List events",
+        "description": "List Red Cherry Events rides and races with dates, locations and discipline. Defaults to upcoming events.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "scope": {
+              "default": "upcoming",
+              "description": "Which events to return.",
+              "type": "string",
+              "enum": [
+                "upcoming",
+                "past",
+                "all"
+              ]
+            },
+            "limit": {
+              "default": 20,
+              "description": "Maximum number of events.",
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50
+            }
+          }
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "get_event",
+        "title": "Get event details",
+        "description": "Get full details for one event: schedule, venue, route info, packing list, FAQs and parking notes. Look the id up with list_events.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "event_id": {
+              "type": "string",
+              "minLength": 1,
+              "description": "The event id returned by list_events."
+            }
+          },
+          "required": [
+            "event_id"
+          ]
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_my_entries",
+        "title": "List my entries",
+        "description": "List the signed-in rider's event entries, including category, batch, bib number and payment balance.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "limit": {
+              "default": 20,
+              "description": "Maximum number of entries.",
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50
+            }
+          }
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "get_my_loyalty",
+        "title": "Get my Cherry Miles",
+        "description": "Get the signed-in rider's Cherry Miles loyalty balance and recent ledger entries.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {}
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "get_event_results",
+        "title": "Get event results",
+        "description": "Get published results for an event, optionally filtered by rider name. Returns position, category and finishing time.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "event_id": {
+              "type": "string",
+              "minLength": 1,
+              "description": "The event id returned by list_events."
+            },
+            "name": {
+              "description": "Filter to riders whose name contains this text.",
+              "type": "string"
+            },
+            "limit": {
+              "default": 25,
+              "description": "Maximum number of rows.",
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          },
+          "required": [
+            "event_id"
+          ]
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_news",
+        "title": "List news posts",
+        "description": "List recent Red Cherry Events news feed posts, newest first.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "event_id": {
+              "description": "Only posts for this event id.",
+              "type": "string"
+            },
+            "limit": {
+              "default": 10,
+              "description": "Maximum number of posts.",
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50
+            }
+          }
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}
