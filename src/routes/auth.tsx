@@ -186,7 +186,12 @@ function AuthPage() {
     }
     const hint = (emailParam || email).trim();
     const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin + "/auth",
+      // Preserve where they were headed (e.g. an OAuth consent screen) across
+      // the Google round-trip, otherwise they land back on the home page.
+      redirect_uri:
+        window.location.origin +
+        "/auth" +
+        (target !== "/" ? `?next=${encodeURIComponent(target)}` : ""),
       extraParams: {
         // Always let people pick which Google account to use, so switching
         // or adding a second account never silently reuses the last one.
@@ -230,7 +235,9 @@ function AuthPage() {
           email: email.trim(),
           password,
           options: {
-            emailRedirectTo: window.location.origin,
+            emailRedirectTo:
+              window.location.origin +
+              (target !== "/" ? `/auth?next=${encodeURIComponent(target)}` : ""),
             data: { full_name: fullName.trim() },
           },
         });

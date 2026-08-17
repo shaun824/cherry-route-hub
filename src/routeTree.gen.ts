@@ -15,6 +15,7 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as PromosRouteImport } from './routes/promos'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as MyEventsRouteImport } from './routes/my-events'
+import { Route as McpRouteImport } from './routes/mcp'
 import { Route as GalleryRouteImport } from './routes/gallery'
 import { Route as FeedRouteImport } from './routes/feed'
 import { Route as AuthRouteImport } from './routes/auth'
@@ -50,6 +51,8 @@ import { Route as AdminCrewRouteImport } from './routes/admin.crew'
 import { Route as AdminBotLogRouteImport } from './routes/admin.bot-log'
 import { Route as AdminAuditRouteImport } from './routes/admin.audit'
 import { Route as AdminAnalyticsRouteImport } from './routes/admin.analytics'
+import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
+import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
 import { Route as EventsEventIdIndexRouteImport } from './routes/events.$eventId.index'
 import { Route as AdminVillageIndexRouteImport } from './routes/admin.village.index'
 import { Route as AdminEventInfoIndexRouteImport } from './routes/admin.event-info.index'
@@ -59,6 +62,8 @@ import { Route as EventsEventIdEnterRouteImport } from './routes/events.$eventId
 import { Route as AdminVillageEventIdRouteImport } from './routes/admin.village.$eventId'
 import { Route as AdminRiderUserIdRouteImport } from './routes/admin.rider.$userId'
 import { Route as AdminEventInfoEventIdRouteImport } from './routes/admin.event-info.$eventId'
+import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
+import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
 import { Route as SpectateEventIdRiderEntrantIdRouteImport } from './routes/spectate_.$eventId_.rider.$entrantId'
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
@@ -104,6 +109,11 @@ const ProfileRoute = ProfileRouteImport.update({
 const MyEventsRoute = MyEventsRouteImport.update({
   id: '/my-events',
   path: '/my-events',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const McpRoute = McpRouteImport.update({
+  id: '/mcp',
+  path: '/mcp',
   getParentRoute: () => rootRouteImport,
 } as any)
 const GalleryRoute = GalleryRouteImport.update({
@@ -281,6 +291,18 @@ const AdminAnalyticsRoute = AdminAnalyticsRouteImport.update({
   path: '/analytics',
   getParentRoute: () => AdminRoute,
 } as any)
+const Char91DotwellKnownChar93OauthProtectedResourceRoute =
+  Char91DotwellKnownChar93OauthProtectedResourceRouteImport.update({
+    id: '/.well-known/oauth-protected-resource',
+    path: '/.well-known/oauth-protected-resource',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const Char91DotmcpChar93ListToolsRoute =
+  Char91DotmcpChar93ListToolsRouteImport.update({
+    id: '/.mcp/list-tools',
+    path: '/.mcp/list-tools',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const EventsEventIdIndexRoute = EventsEventIdIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -325,6 +347,17 @@ const AdminEventInfoEventIdRoute = AdminEventInfoEventIdRouteImport.update({
   id: '/event-info/$eventId',
   path: '/event-info/$eventId',
   getParentRoute: () => AdminRoute,
+} as any)
+const Char91DotmcpChar93InvokeToolToolRoute =
+  Char91DotmcpChar93InvokeToolToolRouteImport.update({
+    id: '/.mcp/invoke-tool/$tool',
+    path: '/.mcp/invoke-tool/$tool',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const DotlovableOauthConsentRoute = DotlovableOauthConsentRouteImport.update({
+  id: '/.lovable/oauth/consent',
+  path: '/.lovable/oauth/consent',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const SpectateEventIdRiderEntrantIdRoute =
   SpectateEventIdRiderEntrantIdRouteImport.update({
@@ -424,12 +457,15 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/feed': typeof FeedRoute
   '/gallery': typeof GalleryRoute
+  '/mcp': typeof McpRoute
   '/my-events': typeof MyEventsRouteWithChildren
   '/profile': typeof ProfileRoute
   '/promos': typeof PromosRoute
   '/reset-password': typeof ResetPasswordRoute
   '/rewards': typeof RewardsRoute
   '/spectate': typeof SpectateRouteWithChildren
+  '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/audit': typeof AdminAuditRoute
   '/admin/bot-log': typeof AdminBotLogRoute
@@ -460,6 +496,8 @@ export interface FileRoutesByFullPath {
   '/events/': typeof EventsIndexRoute
   '/my-events/': typeof MyEventsIndexRoute
   '/spectate/': typeof SpectateIndexRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
+  '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/admin/event-info/$eventId': typeof AdminEventInfoEventIdRoute
   '/admin/rider/$userId': typeof AdminRiderUserIdRoute
   '/admin/village/$eventId': typeof AdminVillageEventIdRoute
@@ -491,10 +529,13 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/feed': typeof FeedRoute
   '/gallery': typeof GalleryRoute
+  '/mcp': typeof McpRoute
   '/profile': typeof ProfileRoute
   '/promos': typeof PromosRoute
   '/reset-password': typeof ResetPasswordRoute
   '/rewards': typeof RewardsRoute
+  '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/audit': typeof AdminAuditRoute
   '/admin/bot-log': typeof AdminBotLogRoute
@@ -524,6 +565,8 @@ export interface FileRoutesByTo {
   '/events': typeof EventsIndexRoute
   '/my-events': typeof MyEventsIndexRoute
   '/spectate': typeof SpectateIndexRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
+  '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/admin/event-info/$eventId': typeof AdminEventInfoEventIdRoute
   '/admin/rider/$userId': typeof AdminRiderUserIdRoute
   '/admin/village/$eventId': typeof AdminVillageEventIdRoute
@@ -557,12 +600,15 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/feed': typeof FeedRoute
   '/gallery': typeof GalleryRoute
+  '/mcp': typeof McpRoute
   '/my-events': typeof MyEventsRouteWithChildren
   '/profile': typeof ProfileRoute
   '/promos': typeof PromosRoute
   '/reset-password': typeof ResetPasswordRoute
   '/rewards': typeof RewardsRoute
   '/spectate': typeof SpectateRouteWithChildren
+  '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/audit': typeof AdminAuditRoute
   '/admin/bot-log': typeof AdminBotLogRoute
@@ -593,6 +639,8 @@ export interface FileRoutesById {
   '/events/': typeof EventsIndexRoute
   '/my-events/': typeof MyEventsIndexRoute
   '/spectate/': typeof SpectateIndexRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
+  '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/admin/event-info/$eventId': typeof AdminEventInfoEventIdRoute
   '/admin/rider/$userId': typeof AdminRiderUserIdRoute
   '/admin/village/$eventId': typeof AdminVillageEventIdRoute
@@ -627,12 +675,15 @@ export interface FileRouteTypes {
     | '/auth'
     | '/feed'
     | '/gallery'
+    | '/mcp'
     | '/my-events'
     | '/profile'
     | '/promos'
     | '/reset-password'
     | '/rewards'
     | '/spectate'
+    | '/.mcp/list-tools'
+    | '/.well-known/oauth-protected-resource'
     | '/admin/analytics'
     | '/admin/audit'
     | '/admin/bot-log'
@@ -663,6 +714,8 @@ export interface FileRouteTypes {
     | '/events/'
     | '/my-events/'
     | '/spectate/'
+    | '/.lovable/oauth/consent'
+    | '/.mcp/invoke-tool/$tool'
     | '/admin/event-info/$eventId'
     | '/admin/rider/$userId'
     | '/admin/village/$eventId'
@@ -694,10 +747,13 @@ export interface FileRouteTypes {
     | '/auth'
     | '/feed'
     | '/gallery'
+    | '/mcp'
     | '/profile'
     | '/promos'
     | '/reset-password'
     | '/rewards'
+    | '/.mcp/list-tools'
+    | '/.well-known/oauth-protected-resource'
     | '/admin/analytics'
     | '/admin/audit'
     | '/admin/bot-log'
@@ -727,6 +783,8 @@ export interface FileRouteTypes {
     | '/events'
     | '/my-events'
     | '/spectate'
+    | '/.lovable/oauth/consent'
+    | '/.mcp/invoke-tool/$tool'
     | '/admin/event-info/$eventId'
     | '/admin/rider/$userId'
     | '/admin/village/$eventId'
@@ -759,12 +817,15 @@ export interface FileRouteTypes {
     | '/auth'
     | '/feed'
     | '/gallery'
+    | '/mcp'
     | '/my-events'
     | '/profile'
     | '/promos'
     | '/reset-password'
     | '/rewards'
     | '/spectate'
+    | '/.mcp/list-tools'
+    | '/.well-known/oauth-protected-resource'
     | '/admin/analytics'
     | '/admin/audit'
     | '/admin/bot-log'
@@ -795,6 +856,8 @@ export interface FileRouteTypes {
     | '/events/'
     | '/my-events/'
     | '/spectate/'
+    | '/.lovable/oauth/consent'
+    | '/.mcp/invoke-tool/$tool'
     | '/admin/event-info/$eventId'
     | '/admin/rider/$userId'
     | '/admin/village/$eventId'
@@ -828,17 +891,22 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   FeedRoute: typeof FeedRoute
   GalleryRoute: typeof GalleryRoute
+  McpRoute: typeof McpRoute
   MyEventsRoute: typeof MyEventsRouteWithChildren
   ProfileRoute: typeof ProfileRoute
   PromosRoute: typeof PromosRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   RewardsRoute: typeof RewardsRoute
   SpectateRoute: typeof SpectateRouteWithChildren
+  Char91DotmcpChar93ListToolsRoute: typeof Char91DotmcpChar93ListToolsRoute
+  Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   CrewLoginRoute: typeof CrewLoginRoute
   CrewRoomingRoute: typeof CrewRoomingRoute
   EventsEventIdRoute: typeof EventsEventIdRouteWithChildren
   CrewIndexRoute: typeof CrewIndexRoute
   EventsIndexRoute: typeof EventsIndexRoute
+  DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
+  Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
   MyEventsEventIdReportRoute: typeof MyEventsEventIdReportRoute
   ApiPublicHooksContentAuditRoute: typeof ApiPublicHooksContentAuditRoute
   ApiPublicHooksEntryNinjaSyncRoute: typeof ApiPublicHooksEntryNinjaSyncRoute
@@ -900,6 +968,13 @@ declare module '@tanstack/react-router' {
       path: '/my-events'
       fullPath: '/my-events'
       preLoaderRoute: typeof MyEventsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mcp': {
+      id: '/mcp'
+      path: '/mcp'
+      fullPath: '/mcp'
+      preLoaderRoute: typeof McpRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/gallery': {
@@ -1147,6 +1222,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAnalyticsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/.well-known/oauth-protected-resource': {
+      id: '/.well-known/oauth-protected-resource'
+      path: '/.well-known/oauth-protected-resource'
+      fullPath: '/.well-known/oauth-protected-resource'
+      preLoaderRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/.mcp/list-tools': {
+      id: '/.mcp/list-tools'
+      path: '/.mcp/list-tools'
+      fullPath: '/.mcp/list-tools'
+      preLoaderRoute: typeof Char91DotmcpChar93ListToolsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/events/$eventId/': {
       id: '/events/$eventId/'
       path: '/'
@@ -1209,6 +1298,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/event-info/$eventId'
       preLoaderRoute: typeof AdminEventInfoEventIdRouteImport
       parentRoute: typeof AdminRoute
+    }
+    '/.mcp/invoke-tool/$tool': {
+      id: '/.mcp/invoke-tool/$tool'
+      path: '/.mcp/invoke-tool/$tool'
+      fullPath: '/.mcp/invoke-tool/$tool'
+      preLoaderRoute: typeof Char91DotmcpChar93InvokeToolToolRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/.lovable/oauth/consent': {
+      id: '/.lovable/oauth/consent'
+      path: '/.lovable/oauth/consent'
+      fullPath: '/.lovable/oauth/consent'
+      preLoaderRoute: typeof DotlovableOauthConsentRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/spectate_/$eventId_/rider/$entrantId': {
       id: '/spectate_/$eventId_/rider/$entrantId'
@@ -1435,17 +1538,23 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   FeedRoute: FeedRoute,
   GalleryRoute: GalleryRoute,
+  McpRoute: McpRoute,
   MyEventsRoute: MyEventsRouteWithChildren,
   ProfileRoute: ProfileRoute,
   PromosRoute: PromosRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   RewardsRoute: RewardsRoute,
   SpectateRoute: SpectateRouteWithChildren,
+  Char91DotmcpChar93ListToolsRoute: Char91DotmcpChar93ListToolsRoute,
+  Char91DotwellKnownChar93OauthProtectedResourceRoute:
+    Char91DotwellKnownChar93OauthProtectedResourceRoute,
   CrewLoginRoute: CrewLoginRoute,
   CrewRoomingRoute: CrewRoomingRoute,
   EventsEventIdRoute: EventsEventIdRouteWithChildren,
   CrewIndexRoute: CrewIndexRoute,
   EventsIndexRoute: EventsIndexRoute,
+  DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
+  Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
   MyEventsEventIdReportRoute: MyEventsEventIdReportRoute,
   ApiPublicHooksContentAuditRoute: ApiPublicHooksContentAuditRoute,
   ApiPublicHooksEntryNinjaSyncRoute: ApiPublicHooksEntryNinjaSyncRoute,
