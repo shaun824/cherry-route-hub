@@ -533,15 +533,34 @@ function EventSpotlight({
           {...brandHeader(heroColor)}
           className={`${brandHeader(heroColor).className} px-4 py-3 text-white`}
         >
-          <p className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest opacity-85">
-            {happeningNow ? (
-              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-white" />
+          <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
+            <div className="min-w-0">
+              <p className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest opacity-85">
+                {happeningNow ? (
+                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-white" />
+                ) : null}
+                {eyebrow}
+              </p>
+              <p className="font-display text-lg font-bold leading-tight">{name}</p>
+            </div>
+            {titleSponsor ? (
+              <div className="w-[112px] shrink-0 sm:w-[150px]">
+                <div className="grid h-16 w-full place-items-center rounded-xl bg-white p-2 shadow-sm sm:h-20">
+                  <img
+                    src={titleSponsor.logoUrl}
+                    alt={`${titleSponsor.name} — title sponsor`}
+                    loading="lazy"
+                    className="max-h-full max-w-full object-contain"
+                  />
+                </div>
+                <p className="mt-1 text-center text-[8px] font-bold uppercase tracking-[0.16em] opacity-80">
+                  Title sponsor
+                </p>
+              </div>
             ) : null}
-            {eyebrow}
-          </p>
-          <p className="font-display text-lg font-bold leading-tight">{name}</p>
+          </div>
         </div>
-        <div className="grid grid-cols-[auto_minmax(0,1fr)] items-start gap-3 px-4 py-3">
+        <div className="flex items-start gap-3 px-4 py-3">
           {logoUrl ? (
             <img
               src={logoUrl}
@@ -554,31 +573,12 @@ function EventSpotlight({
             </span>
           )}
           <div className="min-w-0">
-            <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
-              <div className="min-w-0">
-                <p className="text-sm font-semibold text-ink">
-                  {formatDate(date)} · <span className="text-cherry">{daysAway(date)}</span>
-                </p>
-                <p className="mt-0.5 flex items-center gap-1 truncate text-xs text-muted-foreground">
-                  <MapPin className="h-3.5 w-3.5 shrink-0" /> {location}
-                </p>
-              </div>
-              {titleSponsor ? (
-                <div className="w-28 shrink-0 sm:w-40">
-                  <div className="grid h-16 w-full place-items-center rounded-xl bg-white p-2 ring-1 ring-black/10 sm:h-20">
-                    <img
-                      src={titleSponsor.logoUrl}
-                      alt={`${titleSponsor.name} — title sponsor`}
-                      loading="lazy"
-                      className="max-h-full max-w-full object-contain"
-                    />
-                  </div>
-                  <p className="mt-1 text-center text-[9px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-                    Title sponsor
-                  </p>
-                </div>
-              ) : null}
-            </div>
+            <p className="text-sm font-semibold text-ink">
+              {formatDate(date)} · <span className="text-cherry">{daysAway(date)}</span>
+            </p>
+            <p className="mt-0.5 flex items-center gap-1 truncate text-xs text-muted-foreground">
+              <MapPin className="h-3.5 w-3.5 shrink-0" /> {location}
+            </p>
             <p className="mt-2 text-sm leading-relaxed text-ink-soft">
               {entered
                 ? teaser ||
