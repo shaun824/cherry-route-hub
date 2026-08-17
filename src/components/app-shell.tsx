@@ -57,12 +57,12 @@ export function AppShell({ children }: { children: ReactNode }) {
     <div className="min-h-screen bg-secondary/30 md:flex">
       {/* Tablet / desktop side navigation */}
       <aside className="sticky top-0 hidden h-screen w-[15rem] shrink-0 flex-col border-r border-border bg-card px-4 py-6 md:flex lg:w-[17rem]">
-        <Link to="/" className="flex items-center gap-3">
+        <Link to={inCrewArea ? "/crew" : "/"} className="flex items-center gap-3">
           <BrandMark size={40} />
           <span className="font-display text-sm font-bold leading-tight">
             Red Cherry
             <span className="block text-[11px] font-semibold uppercase tracking-wider text-ink-soft">
-              Rider Hub
+              {inCrewArea ? "Crew Tools" : "Rider Hub"}
             </span>
           </span>
         </Link>
@@ -75,7 +75,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               return (
                 <li key={t.to}>
                   <Link
-                    to={t.to}
+                    to={t.to as never}
                     className={
                       active
                         ? "flex items-center gap-3 rounded-xl bg-cherry px-3 py-2.5 text-sm font-bold text-white"
@@ -83,13 +83,32 @@ export function AppShell({ children }: { children: ReactNode }) {
                     }
                   >
                     <Icon className="h-4.5 w-4.5" strokeWidth={active ? 2.4 : 2} />
-                    {"fullLabel" in t ? t.fullLabel : t.label}
+                    {t.fullLabel ?? t.label}
                   </Link>
                 </li>
               );
             })}
           </ul>
         </nav>
+
+        {showCrewReturn ? (
+          <div className="rounded-2xl bg-ink px-3 py-3 text-white">
+            <p className="text-[13px] font-bold">You're on crew</p>
+            <p className="mt-0.5 text-[11px] opacity-75">Jump back to the on-site tools</p>
+            <div className="mt-2 flex items-center gap-2">
+              <Link to="/crew" className="inline-flex rounded-full bg-cherry px-3 py-1.5 text-xs font-bold text-white">
+                Crew tools
+              </Link>
+              <button
+                type="button"
+                onClick={exitCrewMode}
+                className="text-[11px] font-semibold text-white/70 hover:text-white"
+              >
+                Stay in rider app
+              </button>
+            </div>
+          </div>
+        ) : null}
 
         {showSignInCta ? (
           <div className="rounded-2xl bg-ink px-3 py-3 text-white">
@@ -104,6 +123,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             </Link>
           </div>
         ) : null}
+
       </aside>
 
       {/* Content column: phone-width on mobile, roomy centred column on larger screens */}
