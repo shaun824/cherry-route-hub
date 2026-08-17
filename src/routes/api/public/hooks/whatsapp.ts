@@ -38,6 +38,24 @@ export const Route = createFileRoute("/api/public/hooks/whatsapp")({
           for (const entry of payload?.entry ?? []) {
             for (const change of entry?.changes ?? []) {
               const value = change?.value ?? {};
+
+              // Delivery / read receipts for broadcasts we sent.
+              for (const st of value.statuses ?? []) {
+                const id = String(st?.id ?? "");
+                const status = String(st?.status ?? "");
+                if (!id || !status) continue;
+                await supabaseAdmin
+                  .from("notification_deliveries")
+                  .update({
+                    wa_status: status,
+                    wa_status_at: new Date().toISOString(),
+                    ...(status === "failed"
+                      ? { status: "failed", error: String(st?.errors?.[0]?.title ?? "failed").slice(0, 300) }
+                      : {}),
+                  })
+                  .eq("wa_message_id", id);
+              }
+
               const contacts: any[] = value.contacts ?? [];
               for (const msg of value.messages ?? []) {
                 if (msg?.type !== "text") continue;
@@ -48,6 +66,19 @@ export const Route = createFileRoute("/api/public/hooks/whatsapp")({
                   contacts.find((c) => String(c?.wa_id ?? "").replace(/[^\d]/g, "") === from)
                     ?.profile?.name ?? null;
 
+                // Consent keywords take priority over normal ingestion.
+                const keyword = body.trim().toUpperCase();
+                if (["STOP", "UNSUBSCRIBE", "OPTOUT", "OPT OUT"].includes(keyword)) {
+                  await supabaseAdmin
+                    .from("whatsapp_opt_outs")
+                    .upsert({ phone: from, reason: "rider sent STOP" });
+                  continue;
+                }
+                if (["START", "SUBSCRIBE", "UNSTOP"].includes(keyword)) {
+                  await supabaseAdmin.from("whatsapp_opt_outs").delete().eq("phone", from);
+                  continue;
+                }
+
                 await ingestInbound(supabaseAdmin, from, waName, body);
               }
             }
@@ -56,6 +87,7 @@ export const Route = createFileRoute("/api/public/hooks/whatsapp")({
           console.error("[whatsapp] inbound handling failed", err);
           // Always 200 so Meta does not retry-storm on a storage hiccup.
         }
+
 
         return new Response("ok", { status: 200 });
       },

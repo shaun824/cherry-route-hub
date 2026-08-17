@@ -1,10 +1,24 @@
 // Server-only notification fan-out: resolves the audience, writes the
 // notification record, and pushes to every registered device.
 import { sendWebPush, type PushTarget } from "./push.server";
-import { sendWhatsAppText, whatsappConfigured } from "./whatsapp.server";
+import {
+  loadOptOuts,
+  normalizePhone,
+  sendWhatsAppTemplate,
+  sendWhatsAppText,
+  waWindowOpen,
+  whatsappConfigured,
+} from "./whatsapp.server";
 
 export type Audience = "all" | "event" | "batch";
 export type NotificationKind = "news" | "event_reminder" | "safety" | "general";
+
+export type WaTemplate = {
+  name: string;
+  language: string;
+  /** Values for {{1}}, {{2}}… in the approved template body. */
+  variables: string[];
+};
 
 export type DispatchInput = {
   title: string;
@@ -17,6 +31,10 @@ export type DispatchInput = {
   urgent?: boolean;
   kind?: NotificationKind;
   whatsapp?: boolean;
+  /** When set, WhatsApp goes out as an approved template (works outside 24h). */
+  waTemplate?: WaTemplate | null;
+  /** Skip push entirely — WhatsApp-only broadcast. */
+  skipPush?: boolean;
   source?: string;
   dedupeKey?: string | null;
   createdBy?: string | null;
@@ -29,8 +47,10 @@ export type DispatchResult = {
   delivered: number;
   failed: number;
   whatsappSent: number;
+  whatsappSkipped?: number;
   skipped?: string;
 };
+
 
 const CHUNK = 20;
 
@@ -93,8 +113,10 @@ export async function dispatchNotification(input: DispatchInput): Promise<Dispat
 
   const { userIds, phones } = await resolveUserIds(admin, input);
 
-  // Devices
+  // Devices (skipped entirely for WhatsApp-only broadcasts)
   let subQuery = admin.from("push_subscriptions").select("id, user_id, endpoint, p256dh, auth");
+  if (input.skipPush) subQuery = subQuery.eq("user_id", "00000000-0000-0000-0000-000000000000");
+
   if (userIds !== null) {
     if (!userIds.length) subQuery = subQuery.eq("user_id", "00000000-0000-0000-0000-000000000000");
     else subQuery = subQuery.in("user_id", userIds.slice(0, 1000));
@@ -199,20 +221,42 @@ export async function dispatchNotification(input: DispatchInput): Promise<Dispat
   }
   if (deadIds.length) await admin.from("push_subscriptions").delete().in("id", deadIds);
 
-  // Optional WhatsApp broadcast (only works inside Meta's rules; dormant without secrets)
+  // Optional WhatsApp broadcast. Templates work any time; free-form text is
+  // only allowed inside Meta's 24h window after the rider messaged us.
   let whatsappSent = 0;
+  let whatsappSkipped = 0;
   if (input.whatsapp && whatsappConfigured() && phones.length) {
+    const normalized = Array.from(new Set(phones.map(normalizePhone).filter(Boolean)));
+    const optedOut = await loadOptOuts(admin, normalized);
+    const eligible = normalized.filter((p) => !optedOut.has(p));
+    whatsappSkipped += normalized.length - eligible.length;
+
     const text = `*${input.title}*\n\n${input.body}${input.url ? `\n\n${input.url}` : ""}`;
+    const tpl = input.waTemplate ?? null;
     const waRows: any[] = [];
-    for (let i = 0; i < phones.length; i += 10) {
-      const slice = phones.slice(i, i + 10);
-      const results = await Promise.allSettled(slice.map((p) => sendWhatsAppText(p, text)));
-      results.forEach((r) => {
+
+    for (let i = 0; i < eligible.length; i += 10) {
+      const slice = eligible.slice(i, i + 10);
+      const results = await Promise.allSettled(
+        slice.map(async (p) => {
+          if (tpl) return sendWhatsAppTemplate(p, tpl.name, tpl.language, tpl.variables);
+          if (!(await waWindowOpen(admin, p))) throw new Error("outside-24h-window");
+          return sendWhatsAppText(p, text);
+        }),
+      );
+      results.forEach((r, idx) => {
+        const phone = slice[idx]!;
+        const outsideWindow =
+          r.status === "rejected" && String((r as PromiseRejectedResult).reason).includes("outside-24h-window");
         if (r.status === "fulfilled") whatsappSent += 1;
+        else if (outsideWindow) whatsappSkipped += 1;
         waRows.push({
           notification_id: notificationId,
           channel: "whatsapp",
-          status: r.status === "fulfilled" ? "sent" : "failed",
+          wa_phone: phone,
+          wa_message_id: r.status === "fulfilled" ? r.value || null : null,
+          wa_status: r.status === "fulfilled" ? "accepted" : outsideWindow ? "skipped" : "failed",
+          status: r.status === "fulfilled" ? "sent" : outsideWindow ? "skipped" : "failed",
           error:
             r.status === "rejected" ? String((r as PromiseRejectedResult).reason).slice(0, 300) : null,
         });
@@ -228,5 +272,6 @@ export async function dispatchNotification(input: DispatchInput): Promise<Dispat
     .update({ delivered_count: delivered, failed_count: failed })
     .eq("id", notificationId);
 
-  return { notificationId, recipients: targets.length, delivered, failed, whatsappSent };
+  return { notificationId, recipients: targets.length, delivered, failed, whatsappSent, whatsappSkipped };
+
 }

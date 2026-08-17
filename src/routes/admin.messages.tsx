@@ -229,15 +229,35 @@ function ThreadView({
     }
   }
 
+  const lastInbound = (() => {
+    const msgs = (q.data ?? []) as any[];
+    for (let i = msgs.length - 1; i >= 0; i--) {
+      if (!msgs[i].is_admin_msg && !msgs[i].is_bot) return new Date(msgs[i].created_at).getTime();
+    }
+    return null;
+  })();
+  const windowMsLeft = lastInbound ? lastInbound + 24 * 60 * 60 * 1000 - Date.now() : -1;
+  const windowOpen = windowMsLeft > 0;
+
   return (
     <div className="flex h-[70vh] flex-col">
       {isWhatsapp ? (
-        <div className="flex items-center gap-1.5 rounded-lg bg-[#25D366]/10 px-3 py-2 text-[11px] font-semibold text-ink-soft">
+        <div className="flex flex-wrap items-center gap-1.5 rounded-lg bg-[#25D366]/10 px-3 py-2 text-[11px] font-semibold text-ink-soft">
           <MessageCircle className="h-3.5 w-3.5 text-[#25D366]" />
-          WhatsApp thread{thread?.wa_phone ? ` · ${thread.wa_phone}` : ""} — replies are delivered
-          over WhatsApp. Outside Meta&apos;s 24-hour window a template is required.
+          WhatsApp thread{thread?.wa_phone ? ` · ${thread.wa_phone}` : ""}
+          {windowOpen ? (
+            <span className="rounded-full bg-[#25D366]/20 px-2 py-0.5 text-[#128C3E]">
+              Reply window open · {Math.floor(windowMsLeft / 3_600_000)}h{" "}
+              {Math.floor((windowMsLeft % 3_600_000) / 60_000)}m left
+            </span>
+          ) : (
+            <span className="rounded-full bg-cherry/10 px-2 py-0.5 text-cherry">
+              Window closed — an approved template is required
+            </span>
+          )}
         </div>
       ) : null}
+
       {note ? <p className="px-3 py-1 text-[11px] text-ink-soft">{note}</p> : null}
       <div className="flex-1 space-y-2 overflow-y-auto p-2">
         {(q.data ?? []).map((m: any, i: number) => {
