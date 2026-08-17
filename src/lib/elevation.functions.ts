@@ -2,6 +2,7 @@
 // in elevation.server.ts so the server-fn splitter can't drop them.
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { lookupElevations, summarise } from "./elevation.server";
 
 export const getRouteElevation = createServerFn({ method: "POST" })
   .inputValidator((raw: unknown) =>
@@ -13,7 +14,6 @@ export const getRouteElevation = createServerFn({ method: "POST" })
       .parse(raw),
   )
   .handler(async ({ data }) => {
-    const { lookupElevations, summarise } = await import("./elevation.server");
     const elevations = await lookupElevations(data.coords as [number, number][]);
     if (!elevations) {
       console.error("[elevation] all terrain providers failed");
