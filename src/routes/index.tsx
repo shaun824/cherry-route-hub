@@ -721,16 +721,24 @@ function SportSection({
 }
 
 function daysAway(iso: string): string {
-  const diff = new Date(iso).getTime() - Date.now();
-  if (!Number.isFinite(diff)) return "";
-  if (diff <= 0) return "Underway";
-  const days = Math.floor(diff / 86_400_000);
+  const target = new Date(iso);
+  if (Number.isNaN(target.getTime())) return "";
+  const now = new Date();
+  // Calendar-day difference, not 24h blocks: an event at 05:00 in two sleeps
+  // must read "In 2 days", never "Tomorrow".
+  const days = Math.round(
+    (new Date(target.getFullYear(), target.getMonth(), target.getDate()).getTime() -
+      new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime()) /
+      86_400_000,
+  );
+  if (days < 0) return "Underway";
   if (days === 0) return "Today";
   if (days === 1) return "Tomorrow";
   if (days < 31) return `In ${days} days`;
   const months = Math.round(days / 30);
   return `In ${months} month${months > 1 ? "s" : ""}`;
 }
+
 
 function NotificationsSheet({
 
