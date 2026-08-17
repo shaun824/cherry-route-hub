@@ -14,7 +14,7 @@ Body:
 
 ## When it sends
 
-- **Automatic:** during the Entry Ninja sync, whenever an entry is newly linked for a rider+event pair for the first time and the rider has an email address. Riders imported without an email are skipped (they claim by ID later).
+- **Automatic:** every time a rider enters an event — the Entry Ninja sync sends the email for each new entry, so a returning rider gets a fresh one for each event they enter, and its buttons deep-link straight to that event's page in the app. Riders imported without an email are skipped (they claim by ID later).
 - **Never twice:** a send is recorded per entry; re-syncs, updates and repeated cron runs don't resend.
 - **Manual backfill:** a new admin panel lets you pick an event, see how many entrants have never been emailed, and send in controlled batches (e.g. 50 at a time) with a live count of sent / skipped / suppressed.
 - Sends are paced so we stay inside the hourly email allowance; suppressed (bounced/unsubscribed) recipients are skipped silently.
