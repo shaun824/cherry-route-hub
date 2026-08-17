@@ -42,6 +42,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { fetchMyEvents, type MyEventRow } from "@/lib/my-events";
 import type { QuickLinkIcon } from "@/lib/settings";
 import { brandHeader } from "@/lib/event-brand";
+import { curatedSponsorsFor } from "@/lib/event-sponsor-overrides";
 
 
 
@@ -513,6 +514,7 @@ function EventSpotlight({
   guest?: boolean;
   happeningNow?: boolean;
 }) {
+  const titleSponsor = curatedSponsorsFor(name)?.title ?? null;
   const blurb = (description ?? "").trim();
   const teaser = blurb.length > 170 ? `${blurb.slice(0, 170).trimEnd()}…` : blurb;
   const eyebrow = happeningNow
@@ -539,7 +541,7 @@ function EventSpotlight({
           </p>
           <p className="font-display text-lg font-bold leading-tight">{name}</p>
         </div>
-        <div className="flex items-start gap-3 px-4 py-3">
+        <div className="grid grid-cols-[auto_minmax(0,1fr)] items-start gap-3 px-4 py-3">
           {logoUrl ? (
             <img
               src={logoUrl}
@@ -552,12 +554,31 @@ function EventSpotlight({
             </span>
           )}
           <div className="min-w-0">
-            <p className="text-sm font-semibold text-ink">
-              {formatDate(date)} · <span className="text-cherry">{daysAway(date)}</span>
-            </p>
-            <p className="mt-0.5 flex items-center gap-1 truncate text-xs text-muted-foreground">
-              <MapPin className="h-3.5 w-3.5 shrink-0" /> {location}
-            </p>
+            <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-ink">
+                  {formatDate(date)} · <span className="text-cherry">{daysAway(date)}</span>
+                </p>
+                <p className="mt-0.5 flex items-center gap-1 truncate text-xs text-muted-foreground">
+                  <MapPin className="h-3.5 w-3.5 shrink-0" /> {location}
+                </p>
+              </div>
+              {titleSponsor ? (
+                <div className="w-28 shrink-0 sm:w-40">
+                  <div className="grid h-16 w-full place-items-center rounded-xl bg-white p-2 ring-1 ring-black/10 sm:h-20">
+                    <img
+                      src={titleSponsor.logoUrl}
+                      alt={`${titleSponsor.name} — title sponsor`}
+                      loading="lazy"
+                      className="max-h-full max-w-full object-contain"
+                    />
+                  </div>
+                  <p className="mt-1 text-center text-[9px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                    Title sponsor
+                  </p>
+                </div>
+              ) : null}
+            </div>
             <p className="mt-2 text-sm leading-relaxed text-ink-soft">
               {entered
                 ? teaser ||
