@@ -42,6 +42,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { fetchMyEvents, type MyEventRow } from "@/lib/my-events";
 import type { QuickLinkIcon } from "@/lib/settings";
 import { brandHeader } from "@/lib/event-brand";
+import { curatedSponsorsFor } from "@/lib/event-sponsor-overrides";
 
 
 
@@ -513,6 +514,7 @@ function EventSpotlight({
   guest?: boolean;
   happeningNow?: boolean;
 }) {
+  const titleSponsor = curatedSponsorsFor(name)?.title ?? null;
   const blurb = (description ?? "").trim();
   const teaser = blurb.length > 170 ? `${blurb.slice(0, 170).trimEnd()}…` : blurb;
   const eyebrow = happeningNow
@@ -531,13 +533,32 @@ function EventSpotlight({
           {...brandHeader(heroColor)}
           className={`${brandHeader(heroColor).className} px-4 py-3 text-white`}
         >
-          <p className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest opacity-85">
-            {happeningNow ? (
-              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-white" />
+          <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
+            <div className="min-w-0">
+              <p className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest opacity-85">
+                {happeningNow ? (
+                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-white" />
+                ) : null}
+                {eyebrow}
+              </p>
+              <p className="font-display text-lg font-bold leading-tight">{name}</p>
+            </div>
+            {titleSponsor ? (
+              <div className="w-[112px] shrink-0 sm:w-[150px]">
+                <div className="grid h-16 w-full place-items-center rounded-xl bg-white p-2 shadow-sm sm:h-20">
+                  <img
+                    src={titleSponsor.logoUrl}
+                    alt={`${titleSponsor.name} — title sponsor`}
+                    loading="lazy"
+                    className="max-h-full max-w-full object-contain"
+                  />
+                </div>
+                <p className="mt-1 text-center text-[8px] font-bold uppercase tracking-[0.16em] opacity-80">
+                  Title sponsor
+                </p>
+              </div>
             ) : null}
-            {eyebrow}
-          </p>
-          <p className="font-display text-lg font-bold leading-tight">{name}</p>
+          </div>
         </div>
         <div className="flex items-start gap-3 px-4 py-3">
           {logoUrl ? (
