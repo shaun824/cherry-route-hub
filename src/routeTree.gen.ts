@@ -29,6 +29,7 @@ import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as SpectateEventIdRouteImport } from './routes/spectate.$eventId'
 import { Route as MyEventsEventIdRouteImport } from './routes/my-events.$eventId'
 import { Route as EventsEventIdRouteImport } from './routes/events.$eventId'
+import { Route as CrewRunSheetRouteImport } from './routes/crew.run-sheet'
 import { Route as CrewRoomingRouteImport } from './routes/crew.rooming'
 import { Route as CrewLoginRouteImport } from './routes/crew.login'
 import { Route as AdminSponsorsRouteImport } from './routes/admin.sponsors'
@@ -183,6 +184,11 @@ const MyEventsEventIdRoute = MyEventsEventIdRouteImport.update({
 const EventsEventIdRoute = EventsEventIdRouteImport.update({
   id: '/events/$eventId',
   path: '/events/$eventId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CrewRunSheetRoute = CrewRunSheetRouteImport.update({
+  id: '/crew/run-sheet',
+  path: '/crew/run-sheet',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CrewRoomingRoute = CrewRoomingRouteImport.update({
@@ -515,6 +521,7 @@ export interface FileRoutesByFullPath {
   '/admin/sponsors': typeof AdminSponsorsRoute
   '/crew/login': typeof CrewLoginRoute
   '/crew/rooming': typeof CrewRoomingRoute
+  '/crew/run-sheet': typeof CrewRunSheetRoute
   '/events/$eventId': typeof EventsEventIdRouteWithChildren
   '/my-events/$eventId': typeof MyEventsEventIdRoute
   '/spectate/$eventId': typeof SpectateEventIdRoute
@@ -589,6 +596,7 @@ export interface FileRoutesByTo {
   '/admin/sponsors': typeof AdminSponsorsRoute
   '/crew/login': typeof CrewLoginRoute
   '/crew/rooming': typeof CrewRoomingRoute
+  '/crew/run-sheet': typeof CrewRunSheetRoute
   '/my-events/$eventId': typeof MyEventsEventIdRoute
   '/spectate/$eventId': typeof SpectateEventIdRoute
   '/admin': typeof AdminIndexRoute
@@ -666,6 +674,7 @@ export interface FileRoutesById {
   '/admin/sponsors': typeof AdminSponsorsRoute
   '/crew/login': typeof CrewLoginRoute
   '/crew/rooming': typeof CrewRoomingRoute
+  '/crew/run-sheet': typeof CrewRunSheetRoute
   '/events/$eventId': typeof EventsEventIdRouteWithChildren
   '/my-events/$eventId': typeof MyEventsEventIdRoute
   '/spectate/$eventId': typeof SpectateEventIdRoute
@@ -745,6 +754,7 @@ export interface FileRouteTypes {
     | '/admin/sponsors'
     | '/crew/login'
     | '/crew/rooming'
+    | '/crew/run-sheet'
     | '/events/$eventId'
     | '/my-events/$eventId'
     | '/spectate/$eventId'
@@ -819,6 +829,7 @@ export interface FileRouteTypes {
     | '/admin/sponsors'
     | '/crew/login'
     | '/crew/rooming'
+    | '/crew/run-sheet'
     | '/my-events/$eventId'
     | '/spectate/$eventId'
     | '/admin'
@@ -895,6 +906,7 @@ export interface FileRouteTypes {
     | '/admin/sponsors'
     | '/crew/login'
     | '/crew/rooming'
+    | '/crew/run-sheet'
     | '/events/$eventId'
     | '/my-events/$eventId'
     | '/spectate/$eventId'
@@ -953,6 +965,7 @@ export interface RootRouteChildren {
   Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   CrewLoginRoute: typeof CrewLoginRoute
   CrewRoomingRoute: typeof CrewRoomingRoute
+  CrewRunSheetRoute: typeof CrewRunSheetRoute
   EventsEventIdRoute: typeof EventsEventIdRouteWithChildren
   CrewIndexRoute: typeof CrewIndexRoute
   EventsIndexRoute: typeof EventsIndexRoute
@@ -1121,6 +1134,13 @@ declare module '@tanstack/react-router' {
       path: '/events/$eventId'
       fullPath: '/events/$eventId'
       preLoaderRoute: typeof EventsEventIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/crew/run-sheet': {
+      id: '/crew/run-sheet'
+      path: '/crew/run-sheet'
+      fullPath: '/crew/run-sheet'
+      preLoaderRoute: typeof CrewRunSheetRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/crew/rooming': {
@@ -1633,6 +1653,7 @@ const rootRouteChildren: RootRouteChildren = {
     Char91DotwellKnownChar93OauthProtectedResourceRoute,
   CrewLoginRoute: CrewLoginRoute,
   CrewRoomingRoute: CrewRoomingRoute,
+  CrewRunSheetRoute: CrewRunSheetRoute,
   EventsEventIdRoute: EventsEventIdRouteWithChildren,
   CrewIndexRoute: CrewIndexRoute,
   EventsIndexRoute: EventsIndexRoute,
