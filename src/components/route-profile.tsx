@@ -2,7 +2,6 @@
 // builds a distance/elevation series (from KML altitudes when present, otherwise
 // from the terrain lookup server function) and draws a hoverable SVG chart.
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useServerFn } from "@tanstack/react-start";
 import { Mountain, TrendingUp } from "lucide-react";
 import {
   gainFromSeries,
@@ -12,7 +11,6 @@ import {
   type LatLngAlt,
 } from "@/lib/geo";
 
-import { getRouteElevation } from "@/lib/elevation.functions";
 import type { CustomMarker, EventRoute } from "@/lib/mock-data";
 import { setRouteHover } from "@/lib/route-hover";
 
@@ -58,6 +56,28 @@ function totalGain(series: Point[]): number {
   );
 }
 
+/** Browser fallback when the server-side terrain provider is unavailable. */
+async function fetchBrowserElevations(coords: [number, number][]): Promise<number[] | null> {
+  const elevations: number[] = [];
+  for (let start = 0; start < coords.length; start += 100) {
+    const batch = coords.slice(start, start + 100);
+    const params = new URLSearchParams({
+      latitude: batch.map(([, lat]) => lat.toFixed(6)).join(","),
+      longitude: batch.map(([lng]) => lng.toFixed(6)).join(","),
+    });
+    try {
+      const response = await fetch(`https://api.open-meteo.com/v1/elevation?${params}`);
+      if (!response.ok) return null;
+      const payload = (await response.json()) as { elevation?: number[] };
+      if (!payload.elevation || payload.elevation.length !== batch.length) return null;
+      elevations.push(...payload.elevation);
+    } catch {
+      return null;
+    }
+  }
+  return elevations;
+}
+
 
 export function RouteProfile({
   route,
@@ -75,12 +95,13 @@ export function RouteProfile({
   const [pins, setPins] = useState<Pin[]>([]);
   const [failed, setFailed] = useState(false);
   const [hover, setHover] = useState<number | null>(null);
-  const fetchElev = useServerFn(getRouteElevation);
   const svgRef = useRef<SVGSVGElement | null>(null);
 
   useEffect(() => {
     if (kmls.length === 0) return;
     let cancelled = false;
+    setFailed(false);
+    setSeries(null);
     (async () => {
       const merged: LatLngAlt[] = [];
       for (const url of kmls) {
@@ -146,24 +167,22 @@ export function RouteProfile({
       const step = Math.max(1, merged.length / maxPts);
       for (let i = 0; i < merged.length; i += step) idx.push(Math.floor(i));
       if (idx[idx.length - 1] !== merged.length - 1) idx.push(merged.length - 1);
-      try {
-        const res = await fetchElev({
-          data: { coords: idx.map((i) => [merged[i][0], merged[i][1]] as [number, number]) },
-        });
-        if (cancelled) return;
-        if (res.available && res.profile) {
-          const pts = idx.map((i, n) => ({
-            km: km[i],
-            ele: res.profile[n],
-            lat: merged[i][1],
-            lng: merged[i][0],
-          }));
-          setGain(totalGain(pts));
-          setSeries(pts);
-        } else setFailed(true);
-      } catch {
-        if (!cancelled) setFailed(true);
+      const profile = await fetchBrowserElevations(
+        idx.map((i) => [merged[i][0], merged[i][1]] as [number, number]),
+      );
+      if (cancelled) return;
+      if (!profile || profile.length !== idx.length) {
+        setFailed(true);
+        return;
       }
+      const pts = idx.map((i, n) => ({
+        km: km[i],
+        ele: profile[n],
+        lat: merged[i][1],
+        lng: merged[i][0],
+      }));
+      setGain(totalGain(pts));
+      setSeries(pts);
     })();
     return () => {
       cancelled = true;
