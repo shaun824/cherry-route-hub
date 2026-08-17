@@ -689,8 +689,15 @@ function RoutesPanel({
                     )}
 
                   </li>
+                  {promo ? (
+                    <li className="pt-1">
+                      <PromoInline promo={promo} />
+                    </li>
+                  ) : null}
+                  </Fragment>
                 );
               })}
+
             </ul>
           </section>
         );
