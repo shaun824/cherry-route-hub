@@ -29,11 +29,13 @@ import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as SpectateEventIdRouteImport } from './routes/spectate.$eventId'
 import { Route as MyEventsEventIdRouteImport } from './routes/my-events.$eventId'
 import { Route as EventsEventIdRouteImport } from './routes/events.$eventId'
+import { Route as CrewRunSheetRouteImport } from './routes/crew.run-sheet'
 import { Route as CrewRoomingRouteImport } from './routes/crew.rooming'
 import { Route as CrewLoginRouteImport } from './routes/crew.login'
 import { Route as AdminSponsorsRouteImport } from './routes/admin.sponsors'
 import { Route as AdminSettingsRouteImport } from './routes/admin.settings'
 import { Route as AdminScheduleSyncRouteImport } from './routes/admin.schedule-sync'
+import { Route as AdminRunSheetRouteImport } from './routes/admin.run-sheet'
 import { Route as AdminRosterRouteImport } from './routes/admin.roster'
 import { Route as AdminRoomingRouteImport } from './routes/admin.rooming'
 import { Route as AdminRidersRouteImport } from './routes/admin.riders'
@@ -59,6 +61,7 @@ import { Route as AdminEventInfoIndexRouteImport } from './routes/admin.event-in
 import { Route as MyEventsEventIdReportRouteImport } from './routes/my-events_.$eventId_.report'
 import { Route as EventsEventIdMapRouteImport } from './routes/events.$eventId.map'
 import { Route as EventsEventIdEnterRouteImport } from './routes/events.$eventId.enter'
+import { Route as CrewDepartmentDeptIdRouteImport } from './routes/crew.department.$deptId'
 import { Route as AdminVillageEventIdRouteImport } from './routes/admin.village.$eventId'
 import { Route as AdminRiderUserIdRouteImport } from './routes/admin.rider.$userId'
 import { Route as AdminEventInfoEventIdRouteImport } from './routes/admin.event-info.$eventId'
@@ -70,6 +73,7 @@ import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/em
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
 import { Route as ApiPublicHooksWhatsappRouteImport } from './routes/api/public/hooks/whatsapp'
 import { Route as ApiPublicHooksScheduleSyncRouteImport } from './routes/api/public/hooks/schedule-sync'
+import { Route as ApiPublicHooksRunSheetSyncRouteImport } from './routes/api/public/hooks/run-sheet-sync'
 import { Route as ApiPublicHooksRoomingSheetSyncRouteImport } from './routes/api/public/hooks/rooming-sheet-sync'
 import { Route as ApiPublicHooksNotificationCronRouteImport } from './routes/api/public/hooks/notification-cron'
 import { Route as ApiPublicHooksNotificationClickRouteImport } from './routes/api/public/hooks/notification-click'
@@ -183,6 +187,11 @@ const EventsEventIdRoute = EventsEventIdRouteImport.update({
   path: '/events/$eventId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CrewRunSheetRoute = CrewRunSheetRouteImport.update({
+  id: '/crew/run-sheet',
+  path: '/crew/run-sheet',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CrewRoomingRoute = CrewRoomingRouteImport.update({
   id: '/crew/rooming',
   path: '/crew/rooming',
@@ -206,6 +215,11 @@ const AdminSettingsRoute = AdminSettingsRouteImport.update({
 const AdminScheduleSyncRoute = AdminScheduleSyncRouteImport.update({
   id: '/schedule-sync',
   path: '/schedule-sync',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminRunSheetRoute = AdminRunSheetRouteImport.update({
+  id: '/run-sheet',
+  path: '/run-sheet',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminRosterRoute = AdminRosterRouteImport.update({
@@ -335,6 +349,11 @@ const EventsEventIdEnterRoute = EventsEventIdEnterRouteImport.update({
   path: '/enter',
   getParentRoute: () => EventsEventIdRoute,
 } as any)
+const CrewDepartmentDeptIdRoute = CrewDepartmentDeptIdRouteImport.update({
+  id: '/crew/department/$deptId',
+  path: '/crew/department/$deptId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminVillageEventIdRoute = AdminVillageEventIdRouteImport.update({
   id: '/village/$eventId',
   path: '/village/$eventId',
@@ -392,6 +411,12 @@ const ApiPublicHooksScheduleSyncRoute =
   ApiPublicHooksScheduleSyncRouteImport.update({
     id: '/api/public/hooks/schedule-sync',
     path: '/api/public/hooks/schedule-sync',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicHooksRunSheetSyncRoute =
+  ApiPublicHooksRunSheetSyncRouteImport.update({
+    id: '/api/public/hooks/run-sheet-sync',
+    path: '/api/public/hooks/run-sheet-sync',
     getParentRoute: () => rootRouteImport,
   } as any)
 const ApiPublicHooksRoomingSheetSyncRoute =
@@ -497,11 +522,13 @@ export interface FileRoutesByFullPath {
   '/admin/riders': typeof AdminRidersRoute
   '/admin/rooming': typeof AdminRoomingRoute
   '/admin/roster': typeof AdminRosterRoute
+  '/admin/run-sheet': typeof AdminRunSheetRoute
   '/admin/schedule-sync': typeof AdminScheduleSyncRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/sponsors': typeof AdminSponsorsRoute
   '/crew/login': typeof CrewLoginRoute
   '/crew/rooming': typeof CrewRoomingRoute
+  '/crew/run-sheet': typeof CrewRunSheetRoute
   '/events/$eventId': typeof EventsEventIdRouteWithChildren
   '/my-events/$eventId': typeof MyEventsEventIdRoute
   '/spectate/$eventId': typeof SpectateEventIdRoute
@@ -515,6 +542,7 @@ export interface FileRoutesByFullPath {
   '/admin/event-info/$eventId': typeof AdminEventInfoEventIdRoute
   '/admin/rider/$userId': typeof AdminRiderUserIdRoute
   '/admin/village/$eventId': typeof AdminVillageEventIdRoute
+  '/crew/department/$deptId': typeof CrewDepartmentDeptIdRoute
   '/events/$eventId/enter': typeof EventsEventIdEnterRoute
   '/events/$eventId/map': typeof EventsEventIdMapRoute
   '/my-events/$eventId/report': typeof MyEventsEventIdReportRoute
@@ -533,6 +561,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/notification-click': typeof ApiPublicHooksNotificationClickRoute
   '/api/public/hooks/notification-cron': typeof ApiPublicHooksNotificationCronRoute
   '/api/public/hooks/rooming-sheet-sync': typeof ApiPublicHooksRoomingSheetSyncRoute
+  '/api/public/hooks/run-sheet-sync': typeof ApiPublicHooksRunSheetSyncRoute
   '/api/public/hooks/schedule-sync': typeof ApiPublicHooksScheduleSyncRoute
   '/api/public/hooks/whatsapp': typeof ApiPublicHooksWhatsappRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -569,11 +598,13 @@ export interface FileRoutesByTo {
   '/admin/riders': typeof AdminRidersRoute
   '/admin/rooming': typeof AdminRoomingRoute
   '/admin/roster': typeof AdminRosterRoute
+  '/admin/run-sheet': typeof AdminRunSheetRoute
   '/admin/schedule-sync': typeof AdminScheduleSyncRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/sponsors': typeof AdminSponsorsRoute
   '/crew/login': typeof CrewLoginRoute
   '/crew/rooming': typeof CrewRoomingRoute
+  '/crew/run-sheet': typeof CrewRunSheetRoute
   '/my-events/$eventId': typeof MyEventsEventIdRoute
   '/spectate/$eventId': typeof SpectateEventIdRoute
   '/admin': typeof AdminIndexRoute
@@ -586,6 +617,7 @@ export interface FileRoutesByTo {
   '/admin/event-info/$eventId': typeof AdminEventInfoEventIdRoute
   '/admin/rider/$userId': typeof AdminRiderUserIdRoute
   '/admin/village/$eventId': typeof AdminVillageEventIdRoute
+  '/crew/department/$deptId': typeof CrewDepartmentDeptIdRoute
   '/events/$eventId/enter': typeof EventsEventIdEnterRoute
   '/events/$eventId/map': typeof EventsEventIdMapRoute
   '/my-events/$eventId/report': typeof MyEventsEventIdReportRoute
@@ -604,6 +636,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/notification-click': typeof ApiPublicHooksNotificationClickRoute
   '/api/public/hooks/notification-cron': typeof ApiPublicHooksNotificationCronRoute
   '/api/public/hooks/rooming-sheet-sync': typeof ApiPublicHooksRoomingSheetSyncRoute
+  '/api/public/hooks/run-sheet-sync': typeof ApiPublicHooksRunSheetSyncRoute
   '/api/public/hooks/schedule-sync': typeof ApiPublicHooksScheduleSyncRoute
   '/api/public/hooks/whatsapp': typeof ApiPublicHooksWhatsappRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -644,11 +677,13 @@ export interface FileRoutesById {
   '/admin/riders': typeof AdminRidersRoute
   '/admin/rooming': typeof AdminRoomingRoute
   '/admin/roster': typeof AdminRosterRoute
+  '/admin/run-sheet': typeof AdminRunSheetRoute
   '/admin/schedule-sync': typeof AdminScheduleSyncRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/sponsors': typeof AdminSponsorsRoute
   '/crew/login': typeof CrewLoginRoute
   '/crew/rooming': typeof CrewRoomingRoute
+  '/crew/run-sheet': typeof CrewRunSheetRoute
   '/events/$eventId': typeof EventsEventIdRouteWithChildren
   '/my-events/$eventId': typeof MyEventsEventIdRoute
   '/spectate/$eventId': typeof SpectateEventIdRoute
@@ -662,6 +697,7 @@ export interface FileRoutesById {
   '/admin/event-info/$eventId': typeof AdminEventInfoEventIdRoute
   '/admin/rider/$userId': typeof AdminRiderUserIdRoute
   '/admin/village/$eventId': typeof AdminVillageEventIdRoute
+  '/crew/department/$deptId': typeof CrewDepartmentDeptIdRoute
   '/events/$eventId/enter': typeof EventsEventIdEnterRoute
   '/events/$eventId/map': typeof EventsEventIdMapRoute
   '/my-events_/$eventId_/report': typeof MyEventsEventIdReportRoute
@@ -680,6 +716,7 @@ export interface FileRoutesById {
   '/api/public/hooks/notification-click': typeof ApiPublicHooksNotificationClickRoute
   '/api/public/hooks/notification-cron': typeof ApiPublicHooksNotificationCronRoute
   '/api/public/hooks/rooming-sheet-sync': typeof ApiPublicHooksRoomingSheetSyncRoute
+  '/api/public/hooks/run-sheet-sync': typeof ApiPublicHooksRunSheetSyncRoute
   '/api/public/hooks/schedule-sync': typeof ApiPublicHooksScheduleSyncRoute
   '/api/public/hooks/whatsapp': typeof ApiPublicHooksWhatsappRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -721,11 +758,13 @@ export interface FileRouteTypes {
     | '/admin/riders'
     | '/admin/rooming'
     | '/admin/roster'
+    | '/admin/run-sheet'
     | '/admin/schedule-sync'
     | '/admin/settings'
     | '/admin/sponsors'
     | '/crew/login'
     | '/crew/rooming'
+    | '/crew/run-sheet'
     | '/events/$eventId'
     | '/my-events/$eventId'
     | '/spectate/$eventId'
@@ -739,6 +778,7 @@ export interface FileRouteTypes {
     | '/admin/event-info/$eventId'
     | '/admin/rider/$userId'
     | '/admin/village/$eventId'
+    | '/crew/department/$deptId'
     | '/events/$eventId/enter'
     | '/events/$eventId/map'
     | '/my-events/$eventId/report'
@@ -757,6 +797,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/notification-click'
     | '/api/public/hooks/notification-cron'
     | '/api/public/hooks/rooming-sheet-sync'
+    | '/api/public/hooks/run-sheet-sync'
     | '/api/public/hooks/schedule-sync'
     | '/api/public/hooks/whatsapp'
     | '/lovable/email/auth/preview'
@@ -793,11 +834,13 @@ export interface FileRouteTypes {
     | '/admin/riders'
     | '/admin/rooming'
     | '/admin/roster'
+    | '/admin/run-sheet'
     | '/admin/schedule-sync'
     | '/admin/settings'
     | '/admin/sponsors'
     | '/crew/login'
     | '/crew/rooming'
+    | '/crew/run-sheet'
     | '/my-events/$eventId'
     | '/spectate/$eventId'
     | '/admin'
@@ -810,6 +853,7 @@ export interface FileRouteTypes {
     | '/admin/event-info/$eventId'
     | '/admin/rider/$userId'
     | '/admin/village/$eventId'
+    | '/crew/department/$deptId'
     | '/events/$eventId/enter'
     | '/events/$eventId/map'
     | '/my-events/$eventId/report'
@@ -828,6 +872,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/notification-click'
     | '/api/public/hooks/notification-cron'
     | '/api/public/hooks/rooming-sheet-sync'
+    | '/api/public/hooks/run-sheet-sync'
     | '/api/public/hooks/schedule-sync'
     | '/api/public/hooks/whatsapp'
     | '/lovable/email/auth/preview'
@@ -867,11 +912,13 @@ export interface FileRouteTypes {
     | '/admin/riders'
     | '/admin/rooming'
     | '/admin/roster'
+    | '/admin/run-sheet'
     | '/admin/schedule-sync'
     | '/admin/settings'
     | '/admin/sponsors'
     | '/crew/login'
     | '/crew/rooming'
+    | '/crew/run-sheet'
     | '/events/$eventId'
     | '/my-events/$eventId'
     | '/spectate/$eventId'
@@ -885,6 +932,7 @@ export interface FileRouteTypes {
     | '/admin/event-info/$eventId'
     | '/admin/rider/$userId'
     | '/admin/village/$eventId'
+    | '/crew/department/$deptId'
     | '/events/$eventId/enter'
     | '/events/$eventId/map'
     | '/my-events_/$eventId_/report'
@@ -903,6 +951,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/notification-click'
     | '/api/public/hooks/notification-cron'
     | '/api/public/hooks/rooming-sheet-sync'
+    | '/api/public/hooks/run-sheet-sync'
     | '/api/public/hooks/schedule-sync'
     | '/api/public/hooks/whatsapp'
     | '/lovable/email/auth/preview'
@@ -928,11 +977,13 @@ export interface RootRouteChildren {
   Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   CrewLoginRoute: typeof CrewLoginRoute
   CrewRoomingRoute: typeof CrewRoomingRoute
+  CrewRunSheetRoute: typeof CrewRunSheetRoute
   EventsEventIdRoute: typeof EventsEventIdRouteWithChildren
   CrewIndexRoute: typeof CrewIndexRoute
   EventsIndexRoute: typeof EventsIndexRoute
   DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
   Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
+  CrewDepartmentDeptIdRoute: typeof CrewDepartmentDeptIdRoute
   MyEventsEventIdReportRoute: typeof MyEventsEventIdReportRoute
   ApiPublicHooksContentAuditRoute: typeof ApiPublicHooksContentAuditRoute
   ApiPublicHooksEntryNinjaSyncRoute: typeof ApiPublicHooksEntryNinjaSyncRoute
@@ -946,6 +997,7 @@ export interface RootRouteChildren {
   ApiPublicHooksNotificationClickRoute: typeof ApiPublicHooksNotificationClickRoute
   ApiPublicHooksNotificationCronRoute: typeof ApiPublicHooksNotificationCronRoute
   ApiPublicHooksRoomingSheetSyncRoute: typeof ApiPublicHooksRoomingSheetSyncRoute
+  ApiPublicHooksRunSheetSyncRoute: typeof ApiPublicHooksRunSheetSyncRoute
   ApiPublicHooksScheduleSyncRoute: typeof ApiPublicHooksScheduleSyncRoute
   ApiPublicHooksWhatsappRoute: typeof ApiPublicHooksWhatsappRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
@@ -1096,6 +1148,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EventsEventIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/crew/run-sheet': {
+      id: '/crew/run-sheet'
+      path: '/crew/run-sheet'
+      fullPath: '/crew/run-sheet'
+      preLoaderRoute: typeof CrewRunSheetRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/crew/rooming': {
       id: '/crew/rooming'
       path: '/crew/rooming'
@@ -1129,6 +1188,13 @@ declare module '@tanstack/react-router' {
       path: '/schedule-sync'
       fullPath: '/admin/schedule-sync'
       preLoaderRoute: typeof AdminScheduleSyncRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/run-sheet': {
+      id: '/admin/run-sheet'
+      path: '/run-sheet'
+      fullPath: '/admin/run-sheet'
+      preLoaderRoute: typeof AdminRunSheetRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/roster': {
@@ -1306,6 +1372,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EventsEventIdEnterRouteImport
       parentRoute: typeof EventsEventIdRoute
     }
+    '/crew/department/$deptId': {
+      id: '/crew/department/$deptId'
+      path: '/crew/department/$deptId'
+      fullPath: '/crew/department/$deptId'
+      preLoaderRoute: typeof CrewDepartmentDeptIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/village/$eventId': {
       id: '/admin/village/$eventId'
       path: '/village/$eventId'
@@ -1381,6 +1454,13 @@ declare module '@tanstack/react-router' {
       path: '/api/public/hooks/schedule-sync'
       fullPath: '/api/public/hooks/schedule-sync'
       preLoaderRoute: typeof ApiPublicHooksScheduleSyncRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/run-sheet-sync': {
+      id: '/api/public/hooks/run-sheet-sync'
+      path: '/api/public/hooks/run-sheet-sync'
+      fullPath: '/api/public/hooks/run-sheet-sync'
+      preLoaderRoute: typeof ApiPublicHooksRunSheetSyncRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/hooks/rooming-sheet-sync': {
@@ -1488,6 +1568,7 @@ interface AdminRouteChildren {
   AdminRidersRoute: typeof AdminRidersRoute
   AdminRoomingRoute: typeof AdminRoomingRoute
   AdminRosterRoute: typeof AdminRosterRoute
+  AdminRunSheetRoute: typeof AdminRunSheetRoute
   AdminScheduleSyncRoute: typeof AdminScheduleSyncRoute
   AdminSettingsRoute: typeof AdminSettingsRoute
   AdminSponsorsRoute: typeof AdminSponsorsRoute
@@ -1517,6 +1598,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminRidersRoute: AdminRidersRoute,
   AdminRoomingRoute: AdminRoomingRoute,
   AdminRosterRoute: AdminRosterRoute,
+  AdminRunSheetRoute: AdminRunSheetRoute,
   AdminScheduleSyncRoute: AdminScheduleSyncRoute,
   AdminSettingsRoute: AdminSettingsRoute,
   AdminSponsorsRoute: AdminSponsorsRoute,
@@ -1592,11 +1674,13 @@ const rootRouteChildren: RootRouteChildren = {
     Char91DotwellKnownChar93OauthProtectedResourceRoute,
   CrewLoginRoute: CrewLoginRoute,
   CrewRoomingRoute: CrewRoomingRoute,
+  CrewRunSheetRoute: CrewRunSheetRoute,
   EventsEventIdRoute: EventsEventIdRouteWithChildren,
   CrewIndexRoute: CrewIndexRoute,
   EventsIndexRoute: EventsIndexRoute,
   DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
   Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
+  CrewDepartmentDeptIdRoute: CrewDepartmentDeptIdRoute,
   MyEventsEventIdReportRoute: MyEventsEventIdReportRoute,
   ApiPublicHooksContentAuditRoute: ApiPublicHooksContentAuditRoute,
   ApiPublicHooksEntryNinjaSyncRoute: ApiPublicHooksEntryNinjaSyncRoute,
@@ -1610,6 +1694,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksNotificationClickRoute: ApiPublicHooksNotificationClickRoute,
   ApiPublicHooksNotificationCronRoute: ApiPublicHooksNotificationCronRoute,
   ApiPublicHooksRoomingSheetSyncRoute: ApiPublicHooksRoomingSheetSyncRoute,
+  ApiPublicHooksRunSheetSyncRoute: ApiPublicHooksRunSheetSyncRoute,
   ApiPublicHooksScheduleSyncRoute: ApiPublicHooksScheduleSyncRoute,
   ApiPublicHooksWhatsappRoute: ApiPublicHooksWhatsappRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,

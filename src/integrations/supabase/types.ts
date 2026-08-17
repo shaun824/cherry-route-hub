@@ -251,6 +251,179 @@ export type Database = {
         }
         Relationships: []
       }
+      crew_department_assignments: {
+        Row: {
+          created_at: string
+          department_id: string
+          event_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          department_id: string
+          event_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          department_id?: string
+          event_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crew_department_assignments_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "event_departments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crew_department_assignments_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crew_task_state: {
+        Row: {
+          done: boolean
+          task_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          done?: boolean
+          task_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          done?: boolean
+          task_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crew_task_state_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "run_sheet_tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crew_waivers: {
+        Row: {
+          accepted_at: string
+          department_id: string | null
+          event_id: string
+          full_name: string
+          id: string
+          user_agent: string | null
+          user_id: string
+          waiver_version: string
+        }
+        Insert: {
+          accepted_at?: string
+          department_id?: string | null
+          event_id: string
+          full_name: string
+          id?: string
+          user_agent?: string | null
+          user_id: string
+          waiver_version?: string
+        }
+        Update: {
+          accepted_at?: string
+          department_id?: string | null
+          event_id?: string
+          full_name?: string
+          id?: string
+          user_agent?: string | null
+          user_id?: string
+          waiver_version?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crew_waivers_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "event_departments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crew_waivers_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      department_packing_items: {
+        Row: {
+          created_at: string
+          critical: boolean
+          department_id: string
+          event_id: string
+          id: string
+          item: string
+          notes: string | null
+          qty: string | null
+          sort_order: number
+          source: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          critical?: boolean
+          department_id: string
+          event_id: string
+          id?: string
+          item: string
+          notes?: string | null
+          qty?: string | null
+          sort_order?: number
+          source?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          critical?: boolean
+          department_id?: string
+          event_id?: string
+          id?: string
+          item?: string
+          notes?: string | null
+          qty?: string | null
+          sort_order?: number
+          source?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "department_packing_items_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "event_departments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "department_packing_items_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       entrants: {
         Row: {
           created_at: string
@@ -409,6 +582,56 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "event_chat_messages_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_departments: {
+        Row: {
+          contact: string | null
+          created_at: string
+          event_id: string
+          id: string
+          lead_name: string | null
+          name: string
+          overview: string | null
+          safety_notes: string | null
+          slug: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          contact?: string | null
+          created_at?: string
+          event_id: string
+          id?: string
+          lead_name?: string | null
+          name: string
+          overview?: string | null
+          safety_notes?: string | null
+          slug: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          contact?: string | null
+          created_at?: string
+          event_id?: string
+          id?: string
+          lead_name?: string | null
+          name?: string
+          overview?: string | null
+          safety_notes?: string | null
+          slug?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_departments_event_id_fkey"
             columns: ["event_id"]
             isOneToOne: false
             referencedRelation: "events"
@@ -1226,6 +1449,10 @@ export type Database = {
           results_published: boolean
           results_rider_url_template: string | null
           results_url: string | null
+          run_sheet_error: string | null
+          run_sheet_rows: number | null
+          run_sheet_synced_at: string | null
+          run_sheet_url: string | null
           schedule: Json
           slug: string | null
           social_links: Json
@@ -1266,6 +1493,10 @@ export type Database = {
           results_published?: boolean
           results_rider_url_template?: string | null
           results_url?: string | null
+          run_sheet_error?: string | null
+          run_sheet_rows?: number | null
+          run_sheet_synced_at?: string | null
+          run_sheet_url?: string | null
           schedule?: Json
           slug?: string | null
           social_links?: Json
@@ -1306,6 +1537,10 @@ export type Database = {
           results_published?: boolean
           results_rider_url_template?: string | null
           results_url?: string | null
+          run_sheet_error?: string | null
+          run_sheet_rows?: number | null
+          run_sheet_synced_at?: string | null
+          run_sheet_url?: string | null
           schedule?: Json
           slug?: string | null
           social_links?: Json
@@ -1945,6 +2180,63 @@ export type Database = {
           },
         ]
       }
+      packing_suggestions: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          created_by_name: string | null
+          department_id: string
+          event_id: string
+          id: string
+          item: string
+          notes: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          created_by_name?: string | null
+          department_id: string
+          event_id: string
+          id?: string
+          item: string
+          notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          created_by_name?: string | null
+          department_id?: string
+          event_id?: string
+          id?: string
+          item?: string
+          notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "packing_suggestions_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "event_departments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "packing_suggestions_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -2123,6 +2415,75 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "rider_event_history_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      run_sheet_tasks: {
+        Row: {
+          created_at: string
+          day_index: number
+          day_label: string
+          department_id: string
+          detail: string | null
+          end_time: string | null
+          event_id: string
+          id: string
+          location: string | null
+          notes: string | null
+          owner: string | null
+          sort_order: number
+          start_time: string | null
+          task: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          day_index?: number
+          day_label?: string
+          department_id: string
+          detail?: string | null
+          end_time?: string | null
+          event_id: string
+          id?: string
+          location?: string | null
+          notes?: string | null
+          owner?: string | null
+          sort_order?: number
+          start_time?: string | null
+          task: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          day_index?: number
+          day_label?: string
+          department_id?: string
+          detail?: string | null
+          end_time?: string | null
+          event_id?: string
+          id?: string
+          location?: string | null
+          notes?: string | null
+          owner?: string | null
+          sort_order?: number
+          start_time?: string | null
+          task?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "run_sheet_tasks_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "event_departments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "run_sheet_tasks_event_id_fkey"
             columns: ["event_id"]
             isOneToOne: false
             referencedRelation: "events"
