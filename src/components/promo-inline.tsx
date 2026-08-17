@@ -22,8 +22,9 @@ export function PromoInline({ promo }: { promo: EventPromo }) {
     out.push(
       promo.code
         ? `Use code ${promo.code} — riders only`
-        : (promo.redeem ?? `${promo.discount} for Red Cherry riders`),
+        : `${promo.discount} for Red Cherry riders`,
     );
+
     return out;
   }, [promo]);
 
