@@ -182,6 +182,36 @@ function EventInfoEditor() {
         />
       </Section>
 
+      <Section title="Registration / check-in venue (only if different to the event venue)">
+        <Field
+          label="Check-in venue name"
+          value={info.reg_venue_name ?? ""}
+          onChange={(v) => patch("reg_venue_name", v || null)}
+        />
+        <Field
+          label="Check-in address"
+          value={info.reg_venue_address ?? ""}
+          onChange={(v) => patch("reg_venue_address", v || null)}
+        />
+        <div className="grid grid-cols-2 gap-3">
+          <Field
+            label="Check-in latitude"
+            value={String(info.reg_venue_lat ?? "")}
+            onChange={(v) => patch("reg_venue_lat", v ? Number(v) : null)}
+          />
+          <Field
+            label="Check-in longitude"
+            value={String(info.reg_venue_lng ?? "")}
+            onChange={(v) => patch("reg_venue_lng", v ? Number(v) : null)}
+          />
+        </div>
+        <TextArea
+          label="Check-in notes"
+          value={info.reg_notes ?? ""}
+          onChange={(v) => patch("reg_notes", v || null)}
+        />
+      </Section>
+
       <Section title="Route">
         <div className="grid grid-cols-2 gap-3">
           <Field

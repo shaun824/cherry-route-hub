@@ -99,6 +99,22 @@ function detailEvent(e: any, info: any | null, merch: any[]): string {
       lines.push(`Driving directions to the venue: ${maps.directions}`);
     }
 
+    if (info.reg_venue_name || info.reg_venue_address) {
+      lines.push(
+        `IMPORTANT — registration / check-in happens at a DIFFERENT place to the riding venue: ${info.reg_venue_name ?? ""}${
+          info.reg_venue_address ? ` — ${info.reg_venue_address}` : ""
+        }`,
+      );
+      const regMaps = venueMapLinks({
+        mapUrl: null,
+        lat: info.reg_venue_lat != null ? Number(info.reg_venue_lat) : null,
+        lng: info.reg_venue_lng != null ? Number(info.reg_venue_lng) : null,
+        address: info.reg_venue_address ?? info.reg_venue_name ?? null,
+        name: info.reg_venue_name ?? null,
+      });
+      if (regMaps) lines.push(`Registration venue on Google Maps: ${regMaps.pin}`);
+    }
+    if (info.reg_notes) lines.push(`Registration notes: ${info.reg_notes}`);
     if (info.parking_notes) lines.push(`Parking: ${info.parking_notes}`);
     if (info.route_description) lines.push(`Route: ${info.route_description}`);
     if (info.distance_km) lines.push(`Distance: ${info.distance_km} km`);
