@@ -1,0 +1,2 @@
+UPDATE public.event_entrants SET welcome_email_sent_at = now() WHERE welcome_email_sent_at IS NULL;
+ALTER TABLE public.event_entrants ADD COLUMN IF NOT EXISTS welcome_email_skipped boolean NOT NULL DEFAULT false;

@@ -1,0 +1,2 @@
+ALTER TABLE public.event_entrants ADD COLUMN IF NOT EXISTS welcome_email_sent_at timestamptz;
+CREATE INDEX IF NOT EXISTS event_entrants_welcome_pending_idx ON public.event_entrants (event_id) WHERE welcome_email_sent_at IS NULL;

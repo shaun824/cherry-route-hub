@@ -2,8 +2,13 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Link2, RefreshCw, CheckCircle2, AlertTriangle, Plug } from "lucide-react";
-import { listEntryNinjaEvents, syncEntryNinjaEvent } from "@/lib/entryninja.functions";
+import { Link2, RefreshCw, CheckCircle2, AlertTriangle, Plug, Mail } from "lucide-react";
+import {
+  listEntryNinjaEvents,
+  syncEntryNinjaEvent,
+  countEntryWelcomes,
+  sendEntryWelcomeBatch,
+} from "@/lib/entryninja.functions";
 
 export const Route = createFileRoute("/admin/entry-ninja")({
   component: EntryNinjaPage,
@@ -126,6 +131,105 @@ function EntryNinjaPage() {
           </div>
         ))}
       </div>
+
+      <WelcomeEmailsCard
+        events={(events.data ?? [])
+          .filter((e) => e.matchedEventId)
+          .map((e) => ({ id: e.matchedEventId as string, name: e.matchedEventName ?? e.name }))}
+      />
     </div>
+  );
+}
+
+function WelcomeEmailsCard({ events }: { events: { id: string; name: string }[] }) {
+  const countFn = useServerFn(countEntryWelcomes);
+  const sendFn = useServerFn(sendEntryWelcomeBatch);
+  const [eventId, setEventId] = useState<string>("");
+  const [batch, setBatch] = useState(50);
+  const [busy, setBusy] = useState(false);
+  const [note, setNote] = useState<string | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+
+  const counts = useQuery({
+    queryKey: ["entry-welcome-counts", eventId],
+    queryFn: () => countFn({ data: eventId ? { eventId } : {} }),
+    staleTime: 15_000,
+  });
+
+  async function send(mode: "new" | "backfill") {
+    setBusy(true);
+    setErr(null);
+    setNote(null);
+    try {
+      const r = await sendFn({
+        data: { ...(eventId ? { eventId } : {}), limit: batch, mode },
+      });
+      setNote(
+        `${r.sent} sent · ${r.suppressed} suppressed · ${r.skipped} skipped (no email or draft event)` +
+          (r.errors.length ? ` · ${r.errors[0]}` : ""),
+      );
+      void counts.refetch();
+    } catch (e) {
+      setErr((e as Error).message ?? "Send failed");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <section className="space-y-3 rounded-xl border border-border bg-card p-4">
+      <header className="flex items-center gap-2">
+        <Mail className="h-4 w-4 text-cherry" />
+        <h2 className="font-display text-sm font-bold">Welcome emails</h2>
+      </header>
+      <p className="text-xs text-ink-soft">
+        Every new Entry Ninja entry automatically gets a &ldquo;you&rsquo;re in&rdquo; email that
+        explains the app and links straight to that event&rsquo;s page. Use this panel to email an
+        existing roster in controlled batches — nobody is ever emailed twice for the same entry.
+      </p>
+
+      <div className="flex flex-wrap items-center gap-2">
+        <select
+          value={eventId}
+          onChange={(e) => setEventId(e.target.value)}
+          className="rounded-lg border border-border bg-background px-2.5 py-2 text-xs"
+        >
+          <option value="">All linked events</option>
+          {events.map((e) => (
+            <option key={e.id} value={e.id}>
+              {e.name}
+            </option>
+          ))}
+        </select>
+        <label className="flex items-center gap-1.5 text-xs text-ink-soft">
+          Batch
+          <input
+            type="number"
+            min={1}
+            max={200}
+            value={batch}
+            onChange={(e) => setBatch(Number(e.target.value) || 50)}
+            className="w-16 rounded-lg border border-border bg-background px-2 py-1.5 text-xs"
+          />
+        </label>
+        <button
+          onClick={() => void send("new")}
+          disabled={busy}
+          className="rounded-lg border border-border px-3 py-2 text-xs font-semibold disabled:opacity-60"
+        >
+          Send pending ({counts.data?.pending ?? "…"})
+        </button>
+        <button
+          onClick={() => void send("backfill")}
+          disabled={busy}
+          className="rounded-lg bg-cherry px-3 py-2 text-xs font-semibold text-white disabled:opacity-60"
+        >
+          {busy ? "Sending…" : `Backfill existing (${counts.data?.historic ?? "…"})`}
+        </button>
+      </div>
+
+      {note && <p className="text-xs font-semibold text-emerald-700">{note}</p>}
+      {err && <p className="text-xs text-destructive">{err}</p>}
+    </section>
   );
 }

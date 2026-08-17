@@ -23,11 +23,19 @@ export const Route = createFileRoute("/api/public/hooks/entry-ninja-sync")({
 
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
         const { syncAllLinkedEvents } = await import("@/lib/entryninja-sync.server");
+        const { sendPendingEntryWelcomes } = await import("@/lib/entry-welcome.server");
 
         try {
           const summary = await syncAllLinkedEvents(supabaseAdmin);
-          console.log("[entry-ninja-sync]", JSON.stringify(summary));
-          return new Response(JSON.stringify({ success: true, ...summary }), {
+          // Every brand-new entry gets a "you're in" email pointing at its event page.
+          let welcome: unknown = null;
+          try {
+            welcome = await sendPendingEntryWelcomes(supabaseAdmin, { limit: 100 });
+          } catch (mailErr) {
+            console.error("[entry-ninja-sync] welcome emails failed", mailErr);
+          }
+          console.log("[entry-ninja-sync]", JSON.stringify({ ...summary, welcome }));
+          return new Response(JSON.stringify({ success: true, ...summary, welcome }), {
             headers: { "Content-Type": "application/json" },
           });
         } catch (err) {

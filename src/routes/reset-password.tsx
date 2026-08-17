@@ -4,6 +4,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { BrandMark } from "@/components/ui-bits";
 
 export const Route = createFileRoute("/reset-password")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    next: typeof search["next"] === "string" && search["next"].startsWith("/") ? search["next"] : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Reset password · Red Cherry Events" },
@@ -16,6 +19,7 @@ export const Route = createFileRoute("/reset-password")({
 
 function ResetPasswordPage() {
   const navigate = useNavigate();
+  const { next } = Route.useSearch();
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -32,7 +36,7 @@ function ResetPasswordPage() {
       return;
     }
     setDone(true);
-    setTimeout(() => navigate({ to: "/", replace: true }), 1200);
+    setTimeout(() => navigate({ to: next ?? "/", replace: true }), 1200);
   }
 
   return (
