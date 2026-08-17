@@ -167,24 +167,51 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
       ) : null}
 
+      {/* Mobile-only "back to crew tools" pill for signed-in crew browsing the rider app */}
+      {showCrewReturn ? (
+        <div
+          className="fixed inset-x-0 z-30 mx-auto w-full max-w-md px-3 md:hidden"
+          style={{ bottom: "calc(env(safe-area-inset-bottom) + 68px)" }}
+        >
+          <div className="flex items-center gap-2 rounded-2xl bg-ink px-3 py-2 text-white shadow-lg ring-1 ring-black/20">
+            <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white/15">
+              <HardHat className="h-4 w-4" />
+            </span>
+            <p className="min-w-0 flex-1 text-[13px] font-bold leading-tight">Back to crew tools</p>
+            <Link to="/crew" className="shrink-0 rounded-full bg-cherry px-3 py-1.5 text-xs font-bold text-white">
+              Open
+            </Link>
+            <button
+              type="button"
+              aria-label="Stay in the rider app"
+              onClick={exitCrewMode}
+              className="grid h-7 w-7 shrink-0 place-items-center rounded-full text-white/70 hover:text-white"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        </div>
+      ) : null}
+
       {/* Mobile-only bottom tab bar */}
       <nav
         aria-label="Primary"
         className="fixed inset-x-0 bottom-0 z-30 mx-auto w-full max-w-md border-t border-border/70 bg-card md:hidden"
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       >
-        <ul className="grid grid-cols-4">
+        <ul className={inCrewArea ? "grid grid-cols-3" : "grid grid-cols-4"}>
           {tabs.map((t) => {
             const active = t.match(pathname);
             const Icon = t.icon;
             return (
               <li key={t.to}>
                 <Link
-                  to={t.to}
+                  to={t.to as never}
                   preload="intent"
-                  aria-label={"fullLabel" in t ? t.fullLabel : t.label}
+                  aria-label={t.fullLabel ?? t.label}
                   className="flex select-none flex-col items-center gap-1 py-3 text-[11px] font-medium"
                 >
+
                   <span
                     className={
                       active
