@@ -235,7 +235,9 @@ function AuthPage() {
           email: email.trim(),
           password,
           options: {
-            emailRedirectTo: window.location.origin,
+            emailRedirectTo:
+              window.location.origin +
+              (target !== "/" ? `/auth?next=${encodeURIComponent(target)}` : ""),
             data: { full_name: fullName.trim() },
           },
         });
