@@ -22,4 +22,5 @@ export interface TemplateEntry {
  */
 export const TEMPLATES: Record<string, TemplateEntry> = {
   'feedback-notification': feedbackNotification,
+  'entry-welcome': entryWelcome,
 }
