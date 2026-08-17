@@ -12,6 +12,7 @@ import {
 } from "@/lib/geo";
 
 import type { CustomMarker, EventRoute } from "@/lib/mock-data";
+import { PRECOMPUTED_ROUTE_ELEVATIONS } from "@/lib/precomputed-route-elevations";
 import { setRouteHover } from "@/lib/route-hover";
 
 type Point = { km: number; ele: number; lat: number; lng: number };
@@ -76,6 +77,15 @@ async function fetchBrowserElevations(coords: [number, number][]): Promise<numbe
     }
   }
   return elevations;
+}
+
+function precomputedElevations(urls: string[], expectedLength: number): number[] | null {
+  for (const url of urls) {
+    const fileName = decodeURIComponent(url.split("/").pop() ?? "").toLowerCase();
+    const profile = PRECOMPUTED_ROUTE_ELEVATIONS[fileName];
+    if (profile?.length === expectedLength) return profile;
+  }
+  return null;
 }
 
 
@@ -167,9 +177,10 @@ export function RouteProfile({
       const step = Math.max(1, merged.length / maxPts);
       for (let i = 0; i < merged.length; i += step) idx.push(Math.floor(i));
       if (idx[idx.length - 1] !== merged.length - 1) idx.push(merged.length - 1);
-      const profile = await fetchBrowserElevations(
-        idx.map((i) => [merged[i][0], merged[i][1]] as [number, number]),
-      );
+      const sampledCoords = idx.map((i) => [merged[i][0], merged[i][1]] as [number, number]);
+      const profile =
+        precomputedElevations(kmls, idx.length) ??
+        (await fetchBrowserElevations(sampledCoords));
       if (cancelled) return;
       if (!profile || profile.length !== idx.length) {
         setFailed(true);
