@@ -90,6 +90,8 @@ type Props = {
   height?: string;
   showToggles?: boolean;
   showStats?: boolean;
+  /** Only render routes belonging to these day ids (undefined = all days). */
+  dayIds?: string[];
 };
 
 function FitToBounds({ bounds }: { bounds: [[number, number], [number, number]] | null }) {
@@ -105,6 +107,7 @@ export default function RouteMapInner({
   height = "360px",
   showToggles = true,
   showStats = true,
+  dayIds,
 }: Props) {
   const [loaded, setLoaded] = useState<Loaded[]>([]);
   const [enabled, setEnabled] = useState<Record<string, boolean>>({});
@@ -112,10 +115,14 @@ export default function RouteMapInner({
   const fetchElev = useServerFn(getRouteElevation);
   const elevationRequested = useRef(new Set<string>());
 
+  const dayKey = dayIds ? dayIds.join(",") : "";
+
   // Collect all routes across days that have either KMLs or custom markers.
   const routes = useMemo(() => {
+    const only = dayKey ? new Set(dayKey.split(",")) : null;
     const out: { route: EventRoute; dayLabel: string }[] = [];
     for (const day of withRegistrationDayLabels(event.days ?? [], (event.schedule as any) ?? [])) {
+      if (only && !only.has(day.id)) continue;
       const dayLabel = day.label || new Date(day.date).toLocaleDateString("en-ZA", { weekday: "short", day: "numeric", month: "short" });
       for (const r of day.routes ?? []) {
         const hasKml = (r.kmlUrls ?? []).length > 0;
@@ -124,7 +131,8 @@ export default function RouteMapInner({
       }
     }
     return out;
-  }, [event]);
+  }, [event, dayKey]);
+
 
   // Fetch + parse all KMLs. Waypoints in the KML are intentionally ignored —
   // only admin-defined custom markers are rendered.
