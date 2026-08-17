@@ -258,9 +258,24 @@ export const askEventBot = createServerFn({ method: "POST" })
       console.error("rider context failed", e);
     }
 
+    // Business knowledge taught by the team (public tier only — riders read this bot).
+    let knowledgeText = "";
+    try {
+      const { buildKnowledgeContext } = await import("@/lib/knowledge-ingest.server");
+      knowledgeText = await buildKnowledgeContext(adminForKb as any, {
+        question: data.question,
+        eventIds: [data.eventId],
+        includeInternal: false,
+      });
+    } catch (e) {
+      console.error("[event-bot] knowledge context failed", e);
+    }
+
     const context_text = [
       approvedText ? "APPROVED ANSWERS (highest priority — verified by Red Cherry admins):" : "",
       approvedText,
+      knowledgeText ? "RED CHERRY BUSINESS KNOWLEDGE (written by the team — trust it):" : "",
+      knowledgeText,
       riderText ? "THIS RIDER'S OWN RECORDS (from our system — authoritative, personal to them):" : "",
       riderText,
       "STRUCTURED EVENT DATA (authoritative):",
