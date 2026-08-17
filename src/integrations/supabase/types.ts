@@ -519,6 +519,11 @@ export type Database = {
           map_embed_url: string | null
           packing_list: Json
           parking_notes: string | null
+          reg_notes: string | null
+          reg_venue_address: string | null
+          reg_venue_lat: number | null
+          reg_venue_lng: number | null
+          reg_venue_name: string | null
           route_description: string | null
           rules_md: string | null
           updated_at: string
@@ -538,6 +543,11 @@ export type Database = {
           map_embed_url?: string | null
           packing_list?: Json
           parking_notes?: string | null
+          reg_notes?: string | null
+          reg_venue_address?: string | null
+          reg_venue_lat?: number | null
+          reg_venue_lng?: number | null
+          reg_venue_name?: string | null
           route_description?: string | null
           rules_md?: string | null
           updated_at?: string
@@ -557,6 +567,11 @@ export type Database = {
           map_embed_url?: string | null
           packing_list?: Json
           parking_notes?: string | null
+          reg_notes?: string | null
+          reg_venue_address?: string | null
+          reg_venue_lat?: number | null
+          reg_venue_lng?: number | null
+          reg_venue_name?: string | null
           route_description?: string | null
           rules_md?: string | null
           updated_at?: string
