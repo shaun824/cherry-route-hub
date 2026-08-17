@@ -548,9 +548,13 @@ function RoutesPanel({
     Array.isArray(event.days) ? (event.days as EventDay[]) : [],
     Array.isArray(event.schedule) ? (event.schedule as ScheduleItem[]) : [],
   );
+  const routeDays = days.filter((d) => (d.routes ?? []).length > 0);
   const allRoutes = days.flatMap((d) => d.routes ?? []);
   const hasMap = allRoutes.some((r) => (r.kmlUrls ?? []).length > 0);
-
+  const [activeDay, setActiveDay] = useState<string>("all");
+  const shownDays =
+    activeDay === "all" ? routeDays : routeDays.filter((d) => d.id === activeDay);
+  const mapDayIds = activeDay === "all" ? undefined : [activeDay];
 
   if (allRoutes.length === 0) {
     return <EmptyBlock>Routes for this event will be published here soon.</EmptyBlock>;
@@ -558,12 +562,34 @@ function RoutesPanel({
 
   return (
     <div className="space-y-5">
+      {routeDays.length > 1 ? (
+        <div className="flex gap-1 overflow-x-auto rounded-full bg-secondary p-1">
+          {[{ id: "all", label: "All days" }, ...routeDays.map((d) => ({ id: d.id, label: d.label || d.id }))].map(
+            (t) => {
+              const on = activeDay === t.id;
+              return (
+                <button
+                  key={t.id}
+                  type="button"
+                  onClick={() => setActiveDay(t.id)}
+                  className={`whitespace-nowrap rounded-full px-3.5 py-1.5 text-xs font-bold transition ${
+                    on ? "bg-cherry text-white shadow-sm" : "text-ink-soft"
+                  }`}
+                >
+                  {t.label}
+                </button>
+              );
+            },
+          )}
+        </div>
+      ) : null}
+
       {hasMap ? (
         <section>
           <SectionTitle>Interactive map</SectionTitle>
           <div className="mt-2">
             <LockedSection locked={locked} message="Sign in to view the interactive route map">
-              <RouteMap event={event as never} height="320px" />
+              <RouteMap event={event as never} height="320px" dayIds={mapDayIds} />
             </LockedSection>
             {!locked ? (
               <Link
@@ -578,7 +604,8 @@ function RoutesPanel({
         </section>
       ) : null}
 
-      {days.map((day, di) => {
+      {shownDays.map((day, di) => {
+
         const routes = day.routes ?? [];
         if (routes.length === 0) return null;
         return (
