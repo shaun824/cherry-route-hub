@@ -30,6 +30,9 @@ const GREETING =
 
 type ChatMsg = { role: "user" | "assistant"; content: string; followUps?: string[] };
 
+const NUDGE_KEY = "rce-assistant-nudge-seen";
+
+
 export function AssistantWidget() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { user } = useSession();
