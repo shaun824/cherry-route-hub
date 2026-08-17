@@ -58,6 +58,28 @@ function totalGain(series: Point[]): number {
   );
 }
 
+/** Browser fallback when the server-side terrain provider is unavailable. */
+async function fetchBrowserElevations(coords: [number, number][]): Promise<number[] | null> {
+  const elevations: number[] = [];
+  for (let start = 0; start < coords.length; start += 100) {
+    const batch = coords.slice(start, start + 100);
+    const params = new URLSearchParams({
+      latitude: batch.map(([, lat]) => lat.toFixed(6)).join(","),
+      longitude: batch.map(([lng]) => lng.toFixed(6)).join(","),
+    });
+    try {
+      const response = await fetch(`https://api.open-meteo.com/v1/elevation?${params}`);
+      if (!response.ok) return null;
+      const payload = (await response.json()) as { elevation?: number[] };
+      if (!payload.elevation || payload.elevation.length !== batch.length) return null;
+      elevations.push(...payload.elevation);
+    } catch {
+      return null;
+    }
+  }
+  return elevations;
+}
+
 
 export function RouteProfile({
   route,
@@ -81,6 +103,8 @@ export function RouteProfile({
   useEffect(() => {
     if (kmls.length === 0) return;
     let cancelled = false;
+    setFailed(false);
+    setSeries(null);
     (async () => {
       const merged: LatLngAlt[] = [];
       for (const url of kmls) {
@@ -151,10 +175,14 @@ export function RouteProfile({
           data: { coords: idx.map((i) => [merged[i][0], merged[i][1]] as [number, number]) },
         });
         if (cancelled) return;
-        if (res.available && res.profile) {
+        const profile = res.available && res.profile
+          ? res.profile
+          : await fetchBrowserElevations(idx.map((i) => [merged[i][0], merged[i][1]] as [number, number]));
+        if (cancelled) return;
+        if (profile && profile.length === idx.length) {
           const pts = idx.map((i, n) => ({
             km: km[i],
-            ele: res.profile[n],
+            ele: profile[n],
             lat: merged[i][1],
             lng: merged[i][0],
           }));
@@ -162,7 +190,22 @@ export function RouteProfile({
           setSeries(pts);
         } else setFailed(true);
       } catch {
-        if (!cancelled) setFailed(true);
+        const profile = await fetchBrowserElevations(
+          idx.map((i) => [merged[i][0], merged[i][1]] as [number, number]),
+        );
+        if (cancelled) return;
+        if (profile && profile.length === idx.length) {
+          const pts = idx.map((i, n) => ({
+            km: km[i],
+            ele: profile[n],
+            lat: merged[i][1],
+            lng: merged[i][0],
+          }));
+          setGain(totalGain(pts));
+          setSeries(pts);
+        } else {
+          setFailed(true);
+        }
       }
     })();
     return () => {
