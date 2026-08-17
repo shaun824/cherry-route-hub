@@ -9,6 +9,14 @@ type AnyClient = SupabaseClient<any, any, any>;
 
 const APP_URL = "https://riderapp.redcherryevents.co.za";
 
+/**
+ * Entries that existed when welcome emails launched were stamped as "sent" by
+ * the rollout migration so nobody got a surprise email about an old entry.
+ * Anything stamped before this cutoff is historic and only eligible for an
+ * explicit admin backfill.
+ */
+const LEGACY_CUTOFF = "2026-08-17T10:30:00Z";
+
 export type WelcomeBatchResult = {
   candidates: number;
   sent: number;
