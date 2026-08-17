@@ -145,6 +145,29 @@
   animation: marquee-reverse linear infinite;
 }
 
+/* Sweeping highlight across inline rider-offer strips (promo modules). */
+@keyframes promo-shine {
+  0% { transform: translateX(-120%) skewX(-18deg); opacity: 0; }
+  12% { opacity: 0.55; }
+  60% { opacity: 0.35; }
+  100% { transform: translateX(320%) skewX(-18deg); opacity: 0; }
+}
+
+@utility animate-promo-shine {
+  animation: promo-shine 4.5s ease-in-out infinite;
+}
+
+@keyframes promo-line-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@utility animate-promo-line-in {
+  animation: promo-line-in 0.45s ease-out both;
+}
+
+
+
 
 /* ---------- App-like smoothness ---------- */
 @layer base {
