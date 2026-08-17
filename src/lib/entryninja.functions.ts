@@ -58,3 +58,39 @@ export const syncEntryNinjaEvent = createServerFn({ method: "POST" })
     });
   });
 
+
+const welcomeSchema = z.object({
+  eventId: z.string().uuid().optional(),
+  limit: z.number().int().min(1).max(200).optional(),
+  mode: z.enum(["new", "backfill"]).optional(),
+});
+
+/** How many entries are still waiting on a welcome email. */
+export const countEntryWelcomes = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => welcomeSchema.parse(data ?? {}))
+  .handler(async ({ data, context }) => {
+    const isAdmin = await checkIsAdmin(context.supabase as never);
+    if (!isAdmin) throw new Error("Forbidden");
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { countPendingEntryWelcomes } = await import("./entry-welcome.server");
+    return countPendingEntryWelcomes(supabaseAdmin, data.eventId ? { eventId: data.eventId } : {});
+  });
+
+/** Sends a controlled batch of "you're entered" welcome emails. */
+export const sendEntryWelcomeBatch = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => welcomeSchema.parse(data ?? {}))
+  .handler(async ({ data, context }) => {
+    const isAdmin = await checkIsAdmin(context.supabase as never);
+    if (!isAdmin) throw new Error("Forbidden");
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { sendPendingEntryWelcomes } = await import("./entry-welcome.server");
+    return sendPendingEntryWelcomes(supabaseAdmin, {
+      ...(data.eventId ? { eventId: data.eventId } : {}),
+      limit: data.limit ?? 50,
+      mode: data.mode ?? "new",
+    });
+  });
