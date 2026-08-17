@@ -3,6 +3,7 @@ import { getRequestHeader } from "@tanstack/react-start/server";
 import { z } from "zod";
 import { BOT_MISS_REPLY } from "@/lib/bot-handoff";
 import { FOLLOWUP_PROMPT_RULE, splitFollowUps } from "@/lib/bot-followups";
+import { CONFIDENTIALITY_RULES } from "@/lib/knowledge-redact";
 
 
 const BOT_MISS_SENTINEL = "NEEDS_ADMIN";
