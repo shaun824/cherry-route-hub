@@ -81,11 +81,13 @@ async function buildActionLink(
 
 /**
  * Sends the welcome email for every entry that hasn't had one yet.
- * Pass an eventId to restrict it to a single event (admin backfill).
+ * - mode "new" (default): only entries synced since the feature went live.
+ * - mode "backfill": also includes historic entries stamped by the rollout
+ *   migration, so an admin can deliberately email an existing roster once.
  */
 export async function sendPendingEntryWelcomes(
   admin: AnyClient,
-  opts: { eventId?: string; limit?: number } = {},
+  opts: { eventId?: string; limit?: number; mode?: "new" | "backfill" } = {},
 ): Promise<WelcomeBatchResult> {
   const limit = Math.min(Math.max(opts.limit ?? 50, 1), 200);
   const result: WelcomeBatchResult = {
@@ -101,10 +103,14 @@ export async function sendPendingEntryWelcomes(
     .select(
       "id, event_id, entrant_id, category, bib_number, entrants(full_name, email), events(id, name, event_date, location, lifecycle)",
     )
-    .is("welcome_email_sent_at", null)
     .order("created_at", { ascending: true })
     .limit(limit * 3);
+  query =
+    opts.mode === "backfill"
+      ? query.or(`welcome_email_sent_at.is.null,welcome_email_sent_at.lt.${LEGACY_CUTOFF}`)
+      : query.is("welcome_email_sent_at", null);
   if (opts.eventId) query = query.eq("event_id", opts.eventId);
+
 
   const { data, error } = await query;
   if (error) throw error;
