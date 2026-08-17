@@ -183,13 +183,19 @@ export async function sendPendingEntryWelcomes(
   return result;
 }
 
-/** How many entries are still waiting on a welcome email. */
-export async function countPendingEntryWelcomes(admin: AnyClient, eventId?: string) {
-  let q = admin
-    .from("event_entrants")
-    .select("id", { count: "exact", head: true })
-    .is("welcome_email_sent_at", null);
-  if (eventId) q = q.eq("event_id", eventId);
-  const { count } = await q;
-  return count ?? 0;
+/** How many entries are waiting on a welcome email, new vs historic. */
+export async function countPendingEntryWelcomes(
+  admin: AnyClient,
+  opts: { eventId?: string } = {},
+) {
+  const base = () => {
+    let q = admin.from("event_entrants").select("id", { count: "exact", head: true });
+    if (opts.eventId) q = q.eq("event_id", opts.eventId);
+    return q;
+  };
+  const [fresh, legacy] = await Promise.all([
+    base().is("welcome_email_sent_at", null),
+    base().lt("welcome_email_sent_at", LEGACY_CUTOFF),
+  ]);
+  return { pending: fresh.count ?? 0, historic: legacy.count ?? 0 };
 }
