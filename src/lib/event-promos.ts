@@ -35,9 +35,10 @@ export const GREEN_MOTION_PROMO: EventPromo = {
 const RUDY_PROMO: EventPromo = {
   id: "rudy-750",
   brand: "Rudy Project",
-  title: "R750 off your purchase at the event",
-  blurb: "Visit the Rudy Project stand in the village and get R750 off your purchase.",
-  redeem: "Show this offer at the Rudy Project stand",
+  title: "R750 off in store at the event",
+  blurb:
+    "Redeemable at the event only — visit the Rudy Project stand in the village to claim your R750 off.",
+  redeem: "Claim in store at the Rudy Project stand — event only",
   discount: "R750",
   url: "https://www.rudyprojectsa.co.za/",
   logoUrl: rudy.url,
@@ -47,9 +48,10 @@ const RUDY_PROMO: EventPromo = {
 const CYCLE_LAB_PROMO: EventPromo = {
   id: "cycle-lab-150",
   brand: "Cycle Lab",
-  title: "R150 off your purchases at the event",
-  blurb: "Shopping at the Cycle Lab stand? Get R150 off — redeem using your cell number.",
-  redeem: "Use your cell number to redeem at the Cycle Lab stand",
+  title: "R150 off in store at the event",
+  blurb:
+    "Redeemable at the event only — claim R150 off in store at the Cycle Lab stand, linked to your cell phone number.",
+  redeem: "Claim in store at the Cycle Lab stand with your cell number",
   discount: "R150",
   url: "https://www.cyclelab.com/",
   logoUrl: cycleLab.url,
