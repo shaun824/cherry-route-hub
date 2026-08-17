@@ -2,7 +2,6 @@
 // builds a distance/elevation series (from KML altitudes when present, otherwise
 // from the terrain lookup server function) and draws a hoverable SVG chart.
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useServerFn } from "@tanstack/react-start";
 import { Mountain, TrendingUp } from "lucide-react";
 import {
   gainFromSeries,
@@ -12,7 +11,6 @@ import {
   type LatLngAlt,
 } from "@/lib/geo";
 
-import { getRouteElevation } from "@/lib/elevation.functions";
 import type { CustomMarker, EventRoute } from "@/lib/mock-data";
 import { setRouteHover } from "@/lib/route-hover";
 
@@ -97,7 +95,6 @@ export function RouteProfile({
   const [pins, setPins] = useState<Pin[]>([]);
   const [failed, setFailed] = useState(false);
   const [hover, setHover] = useState<number | null>(null);
-  const fetchElev = useServerFn(getRouteElevation);
   const svgRef = useRef<SVGSVGElement | null>(null);
 
   useEffect(() => {
@@ -170,43 +167,22 @@ export function RouteProfile({
       const step = Math.max(1, merged.length / maxPts);
       for (let i = 0; i < merged.length; i += step) idx.push(Math.floor(i));
       if (idx[idx.length - 1] !== merged.length - 1) idx.push(merged.length - 1);
-      try {
-        const res = await fetchElev({
-          data: { coords: idx.map((i) => [merged[i][0], merged[i][1]] as [number, number]) },
-        });
-        if (cancelled) return;
-        const profile = res.available && res.profile
-          ? res.profile
-          : await fetchBrowserElevations(idx.map((i) => [merged[i][0], merged[i][1]] as [number, number]));
-        if (cancelled) return;
-        if (profile && profile.length === idx.length) {
-          const pts = idx.map((i, n) => ({
-            km: km[i],
-            ele: profile[n],
-            lat: merged[i][1],
-            lng: merged[i][0],
-          }));
-          setGain(totalGain(pts));
-          setSeries(pts);
-        } else setFailed(true);
-      } catch {
-        const profile = await fetchBrowserElevations(
-          idx.map((i) => [merged[i][0], merged[i][1]] as [number, number]),
-        );
-        if (cancelled) return;
-        if (profile && profile.length === idx.length) {
-          const pts = idx.map((i, n) => ({
-            km: km[i],
-            ele: profile[n],
-            lat: merged[i][1],
-            lng: merged[i][0],
-          }));
-          setGain(totalGain(pts));
-          setSeries(pts);
-        } else {
-          setFailed(true);
-        }
+      const profile = await fetchBrowserElevations(
+        idx.map((i) => [merged[i][0], merged[i][1]] as [number, number]),
+      );
+      if (cancelled) return;
+      if (!profile || profile.length !== idx.length) {
+        setFailed(true);
+        return;
       }
+      const pts = idx.map((i, n) => ({
+        km: km[i],
+        ele: profile[n],
+        lat: merged[i][1],
+        lng: merged[i][0],
+      }));
+      setGain(totalGain(pts));
+      setSeries(pts);
     })();
     return () => {
       cancelled = true;
