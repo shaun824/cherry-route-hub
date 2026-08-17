@@ -242,8 +242,13 @@ export default function RouteMapInner({
     );
   }
 
+  // "100%" means fill the parent (fullscreen map page): the map pane grows and
+  // the toggles/stats keep their natural height.
+  const fill = height === "100%";
+
   return (
-    <div className="space-y-3">
+    <div className={fill ? "flex h-full flex-col gap-3 p-3" : "space-y-3"}>
+
       {showToggles && loaded.length > 1 && (
         <div className="flex flex-wrap gap-2">
           {loaded.map((l) => {
