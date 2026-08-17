@@ -151,7 +151,7 @@ export type GlobalBotContext = { text: string; focusEventIds: string[] };
 
 export async function buildGlobalBotContext(
   admin: AnyClient,
-  opts: { question: string; userId: string | null },
+  opts: { question: string; userId: string | null; isAdmin?: boolean },
 ): Promise<GlobalBotContext> {
   const { data: events } = await admin
     .from("events")
@@ -258,11 +258,27 @@ export async function buildGlobalBotContext(
     }
   }
 
+  // Business knowledge the team has taught the assistant (emails, playbooks,
+  // product notes, policies). Internal-tier notes only for verified admins.
+  let knowledgeText = "";
+  try {
+    const { buildKnowledgeContext } = await import("@/lib/knowledge-ingest.server");
+    knowledgeText = await buildKnowledgeContext(admin, {
+      question: opts.question,
+      eventIds: focusIds,
+      includeInternal: opts.isAdmin === true,
+    });
+  } catch (e) {
+    console.error("[app-bot] knowledge context failed", e);
+  }
+
   const text = [
     "HOW THE APP WORKS (use this for any 'how do I…' question about the app):",
     APP_HELP_TEXT,
     approved ? "APPROVED ANSWERS (verified by Red Cherry admins — highest priority):" : "",
     approved,
+    knowledgeText ? "RED CHERRY BUSINESS KNOWLEDGE (written by the team — trust it):" : "",
+    knowledgeText,
     riderText ? "THIS PERSON'S OWN RECORDS (authoritative, personal to them):" : "",
     riderText,
     "ALL CURRENT AND UPCOMING EVENTS:",

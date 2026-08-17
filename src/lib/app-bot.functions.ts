@@ -36,9 +36,22 @@ export const askAppBot = createServerFn({ method: "POST" })
     const authHeader = getRequestHeader("authorization") ?? null;
     const userId = await resolveOptionalUserId(authHeader);
 
+    // Internal-tier knowledge is only ever exposed to verified admins.
+    let isAdmin = false;
+    if (userId) {
+      const { data: roles } = await supabaseAdmin
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", userId)
+        .eq("role", "admin")
+        .limit(1);
+      isAdmin = (roles?.length ?? 0) > 0;
+    }
+
     const { text: contextText, focusEventIds } = await buildGlobalBotContext(supabaseAdmin as any, {
       question: data.question,
       userId,
+      isAdmin,
     });
 
     const systemPrompt = `You are the Red Cherry Events assistant inside the Rider Hub app. You help riders, spectators and crew with (a) how to use the app and (b) questions about any Red Cherry event, current or future.
@@ -68,7 +81,9 @@ Rules:
 ${FOLLOWUP_PROMPT_RULE}
 
 
-- Never mention the sentinel, "context", or that information was scraped.`;
+- Never mention the sentinel, "context", or that information was scraped.
+
+${CONFIDENTIALITY_RULES}`;
 
 
 

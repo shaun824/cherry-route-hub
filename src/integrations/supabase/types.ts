@@ -144,6 +144,77 @@ export type Database = {
         }
         Relationships: []
       }
+      business_knowledge: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          body: string
+          category: string
+          created_at: string
+          created_by: string | null
+          event_id: string | null
+          id: string
+          redaction_notes: string[]
+          review_on: string | null
+          source_kind: string
+          source_ref: string | null
+          status: string
+          summary: string | null
+          tier: string
+          times_used: number
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          body: string
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          event_id?: string | null
+          id?: string
+          redaction_notes?: string[]
+          review_on?: string | null
+          source_kind?: string
+          source_ref?: string | null
+          status?: string
+          summary?: string | null
+          tier?: string
+          times_used?: number
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          body?: string
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          event_id?: string | null
+          id?: string
+          redaction_notes?: string[]
+          review_on?: string | null
+          source_kind?: string
+          source_ref?: string | null
+          status?: string
+          summary?: string | null
+          tier?: string
+          times_used?: number
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_knowledge_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       content_audit_runs: {
         Row: {
           created_at: string
@@ -1360,6 +1431,59 @@ export type Database = {
           outcome?: string
         }
         Relationships: []
+      }
+      knowledge_intake: {
+        Row: {
+          body_hash: string
+          created_at: string
+          error: string | null
+          from_address: string | null
+          id: string
+          knowledge_id: string | null
+          processed_at: string | null
+          raw_body: string
+          received_at: string
+          status: string
+          subject: string | null
+          updated_at: string
+        }
+        Insert: {
+          body_hash: string
+          created_at?: string
+          error?: string | null
+          from_address?: string | null
+          id?: string
+          knowledge_id?: string | null
+          processed_at?: string | null
+          raw_body: string
+          received_at?: string
+          status?: string
+          subject?: string | null
+          updated_at?: string
+        }
+        Update: {
+          body_hash?: string
+          created_at?: string
+          error?: string | null
+          from_address?: string | null
+          id?: string
+          knowledge_id?: string | null
+          processed_at?: string | null
+          raw_body?: string
+          received_at?: string
+          status?: string
+          subject?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "knowledge_intake_knowledge_id_fkey"
+            columns: ["knowledge_id"]
+            isOneToOne: false
+            referencedRelation: "business_knowledge"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       loyalty_coupons: {
         Row: {
