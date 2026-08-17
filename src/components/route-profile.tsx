@@ -166,7 +166,7 @@ export function RouteProfile({
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [kmls.join("|")]);
+  }, [kmls.join("|"), (markers ?? []).map((m) => m.id).join("|")]);
 
 
   const chart = useMemo(() => {
