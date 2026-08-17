@@ -56,6 +56,9 @@ import { fetchMyRooming } from "@/lib/rooming";
 import { SponsorScroller } from "@/components/sponsor-scroller";
 import { eventPromosFor } from "@/lib/event-promos";
 import { PromoCarousel } from "@/components/promo-carousel";
+import { PromoInline } from "@/components/promo-inline";
+import { useShuffledPromos } from "@/lib/use-shuffled-promos";
+
 import { curatedSponsorsFor } from "@/lib/event-sponsor-overrides";
 import { eventHasTshirt } from "@/lib/apparel";
 import { useAdminStore } from "@/lib/store";
