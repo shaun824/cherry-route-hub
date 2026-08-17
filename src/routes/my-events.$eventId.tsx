@@ -611,8 +611,14 @@ function RoutesPanel({
               </Link>
             ) : null}
           </div>
+          {promos[0] ? (
+            <div className="mt-3">
+              <PromoInline promo={promos[0]} />
+            </div>
+          ) : null}
         </section>
       ) : null}
+
 
       {shownDays.map((day, di) => {
 
