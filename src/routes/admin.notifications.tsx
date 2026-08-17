@@ -12,6 +12,7 @@ import {
   sendNotification,
 } from "@/lib/notifications.functions";
 import { sendTestPush } from "@/lib/push.functions";
+import { WhatsappBroadcastPanel } from "@/components/whatsapp-broadcast";
 
 export const Route = createFileRoute("/admin/notifications")({
   component: AdminNotifications,
@@ -257,6 +258,8 @@ function AdminNotifications() {
           </div>
         </div>
       </section>
+
+      <WhatsappBroadcastPanel />
 
       <section className="rounded-2xl border border-border bg-card p-5">
         <h2 className="font-display text-lg font-bold">Recent sends</h2>
