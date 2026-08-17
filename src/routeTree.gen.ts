@@ -35,6 +35,7 @@ import { Route as CrewLoginRouteImport } from './routes/crew.login'
 import { Route as AdminSponsorsRouteImport } from './routes/admin.sponsors'
 import { Route as AdminSettingsRouteImport } from './routes/admin.settings'
 import { Route as AdminScheduleSyncRouteImport } from './routes/admin.schedule-sync'
+import { Route as AdminRunSheetRouteImport } from './routes/admin.run-sheet'
 import { Route as AdminRosterRouteImport } from './routes/admin.roster'
 import { Route as AdminRoomingRouteImport } from './routes/admin.rooming'
 import { Route as AdminRidersRouteImport } from './routes/admin.riders'
@@ -214,6 +215,11 @@ const AdminSettingsRoute = AdminSettingsRouteImport.update({
 const AdminScheduleSyncRoute = AdminScheduleSyncRouteImport.update({
   id: '/schedule-sync',
   path: '/schedule-sync',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminRunSheetRoute = AdminRunSheetRouteImport.update({
+  id: '/run-sheet',
+  path: '/run-sheet',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminRosterRoute = AdminRosterRouteImport.update({
@@ -516,6 +522,7 @@ export interface FileRoutesByFullPath {
   '/admin/riders': typeof AdminRidersRoute
   '/admin/rooming': typeof AdminRoomingRoute
   '/admin/roster': typeof AdminRosterRoute
+  '/admin/run-sheet': typeof AdminRunSheetRoute
   '/admin/schedule-sync': typeof AdminScheduleSyncRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/sponsors': typeof AdminSponsorsRoute
@@ -591,6 +598,7 @@ export interface FileRoutesByTo {
   '/admin/riders': typeof AdminRidersRoute
   '/admin/rooming': typeof AdminRoomingRoute
   '/admin/roster': typeof AdminRosterRoute
+  '/admin/run-sheet': typeof AdminRunSheetRoute
   '/admin/schedule-sync': typeof AdminScheduleSyncRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/sponsors': typeof AdminSponsorsRoute
@@ -669,6 +677,7 @@ export interface FileRoutesById {
   '/admin/riders': typeof AdminRidersRoute
   '/admin/rooming': typeof AdminRoomingRoute
   '/admin/roster': typeof AdminRosterRoute
+  '/admin/run-sheet': typeof AdminRunSheetRoute
   '/admin/schedule-sync': typeof AdminScheduleSyncRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/sponsors': typeof AdminSponsorsRoute
@@ -749,6 +758,7 @@ export interface FileRouteTypes {
     | '/admin/riders'
     | '/admin/rooming'
     | '/admin/roster'
+    | '/admin/run-sheet'
     | '/admin/schedule-sync'
     | '/admin/settings'
     | '/admin/sponsors'
@@ -824,6 +834,7 @@ export interface FileRouteTypes {
     | '/admin/riders'
     | '/admin/rooming'
     | '/admin/roster'
+    | '/admin/run-sheet'
     | '/admin/schedule-sync'
     | '/admin/settings'
     | '/admin/sponsors'
@@ -901,6 +912,7 @@ export interface FileRouteTypes {
     | '/admin/riders'
     | '/admin/rooming'
     | '/admin/roster'
+    | '/admin/run-sheet'
     | '/admin/schedule-sync'
     | '/admin/settings'
     | '/admin/sponsors'
@@ -1176,6 +1188,13 @@ declare module '@tanstack/react-router' {
       path: '/schedule-sync'
       fullPath: '/admin/schedule-sync'
       preLoaderRoute: typeof AdminScheduleSyncRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/run-sheet': {
+      id: '/admin/run-sheet'
+      path: '/run-sheet'
+      fullPath: '/admin/run-sheet'
+      preLoaderRoute: typeof AdminRunSheetRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/roster': {
@@ -1549,6 +1568,7 @@ interface AdminRouteChildren {
   AdminRidersRoute: typeof AdminRidersRoute
   AdminRoomingRoute: typeof AdminRoomingRoute
   AdminRosterRoute: typeof AdminRosterRoute
+  AdminRunSheetRoute: typeof AdminRunSheetRoute
   AdminScheduleSyncRoute: typeof AdminScheduleSyncRoute
   AdminSettingsRoute: typeof AdminSettingsRoute
   AdminSponsorsRoute: typeof AdminSponsorsRoute
@@ -1578,6 +1598,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminRidersRoute: AdminRidersRoute,
   AdminRoomingRoute: AdminRoomingRoute,
   AdminRosterRoute: AdminRosterRoute,
+  AdminRunSheetRoute: AdminRunSheetRoute,
   AdminScheduleSyncRoute: AdminScheduleSyncRoute,
   AdminSettingsRoute: AdminSettingsRoute,
   AdminSponsorsRoute: AdminSponsorsRoute,
