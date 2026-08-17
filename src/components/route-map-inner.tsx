@@ -45,12 +45,14 @@ const MARKER_GLYPH: Record<NonNullable<CustomMarker["icon"]>, string> = {
 
 function customIcon(color: string, icon: CustomMarker["icon"], logoUrl?: string) {
   if (logoUrl) {
+    // Sponsor logos are mostly wide lock-ups, so use a wide rounded plate
+    // instead of a circle — a circle shrinks wordmarks until they're unreadable.
     return L.divIcon({
       className: "rce-custom-marker",
-      html: `<div style="border-color:${color};" class="flex h-11 w-11 items-center justify-center overflow-hidden rounded-full border-2 bg-white shadow-lg"><img src="${logoUrl}" alt="" style="max-width:82%;max-height:82%;object-fit:contain;" /></div>`,
-      iconSize: [44, 44],
-      iconAnchor: [22, 22],
-      popupAnchor: [0, -22],
+      html: `<div style="border-color:${color};" class="flex h-9 w-[74px] items-center justify-center overflow-hidden rounded-lg border-2 bg-white px-1 shadow-lg"><img src="${logoUrl}" alt="" style="max-width:100%;max-height:100%;object-fit:contain;" /></div>`,
+      iconSize: [74, 36],
+      iconAnchor: [37, 18],
+      popupAnchor: [0, -18],
     });
   }
   const glyph = MARKER_GLYPH[icon ?? "pin"];
@@ -62,6 +64,7 @@ function customIcon(color: string, icon: CustomMarker["icon"], logoUrl?: string)
     popupAnchor: [0, -16],
   });
 }
+
 
 
 
