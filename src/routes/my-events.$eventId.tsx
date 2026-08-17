@@ -632,7 +632,7 @@ function RoutesPanel({
                       <p className="text-sm font-semibold text-ink">{r.name}</p>
                     </div>
                     <RouteFileStats route={r} />
-                    <RouteProfile route={r} color={r.color} />
+                    <RouteProfile route={r} color={r.color} markers={dayMarkers} />
 
                     {r.description ? (
                       <p className="mt-2 text-xs leading-relaxed text-ink-soft">{r.description}</p>
