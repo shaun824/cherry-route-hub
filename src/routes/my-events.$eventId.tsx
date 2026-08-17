@@ -792,8 +792,57 @@ function InfoPanel({
       ) : null}
 
 
+      {info?.reg_venue_name || info?.reg_venue_address ? (
+        <section>
+          <SectionTitle>Registration / check-in</SectionTitle>
+          {(() => {
+            const regAddress = info.reg_venue_address ?? info.reg_venue_name ?? "";
+            const regLink =
+              buildMapLink({
+                mapUrl: null,
+                lat: info.reg_venue_lat,
+                lng: info.reg_venue_lng,
+                address: regAddress,
+              }) ?? "https://www.google.com/maps";
+            return (
+              <div className="mt-2 overflow-hidden rounded-xl bg-card ring-1 ring-border">
+                {info.reg_venue_lat != null && info.reg_venue_lng != null ? (
+                  <a href={regLink} target="_blank" rel="noopener noreferrer" className="block">
+                    <div className="pointer-events-none h-44 w-full">
+                      <VenueMiniMap lat={Number(info.reg_venue_lat)} lng={Number(info.reg_venue_lng)} height="176px" />
+                    </div>
+                  </a>
+                ) : null}
+                <div className="p-3">
+                  <p className="inline-flex rounded-full bg-cherry/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest text-cherry">
+                    Check in here first
+                  </p>
+                  <p className="mt-2 flex items-start gap-2 text-sm font-semibold text-ink">
+                    <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-cherry" />
+                    {info.reg_venue_name ?? regAddress}
+                  </p>
+                  {info.reg_venue_name && info.reg_venue_address ? (
+                    <p className="mt-1 pl-6 text-xs text-ink-soft">{info.reg_venue_address}</p>
+                  ) : null}
+                  {info.reg_notes ? <p className="mt-2 text-xs text-ink-soft">{info.reg_notes}</p> : null}
+                  <a
+                    href={regLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-3 inline-block rounded-lg bg-ink px-3 py-1.5 text-xs font-semibold text-white"
+                  >
+                    Navigate to check-in ↗
+                  </a>
+                </div>
+              </div>
+            );
+          })()}
+        </section>
+      ) : null}
+
       <section>
-        <SectionTitle>Venue</SectionTitle>
+        <SectionTitle>{info?.reg_venue_name || info?.reg_venue_address ? "Event venue" : "Venue"}</SectionTitle>
+
         {(() => {
           const venue =
             info?.venue_address ||
