@@ -250,6 +250,7 @@ function Profile() {
       </section>
 
 
+      <AdminShortcut />
       <CrewShortcut />
 
       <form onSubmit={handleSave} className="mx-5 mt-4 space-y-4 rounded-2xl bg-card p-4 ring-1 ring-border">
