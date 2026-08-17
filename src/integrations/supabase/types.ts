@@ -367,6 +367,7 @@ export type Database = {
           started_at: string | null
           tshirt_size: string | null
           updated_at: string
+          welcome_email_sent_at: string | null
         }
         Insert: {
           amount_due_cents?: number | null
@@ -389,6 +390,7 @@ export type Database = {
           started_at?: string | null
           tshirt_size?: string | null
           updated_at?: string
+          welcome_email_sent_at?: string | null
         }
         Update: {
           amount_due_cents?: number | null
@@ -411,6 +413,7 @@ export type Database = {
           started_at?: string | null
           tshirt_size?: string | null
           updated_at?: string
+          welcome_email_sent_at?: string | null
         }
         Relationships: [
           {
