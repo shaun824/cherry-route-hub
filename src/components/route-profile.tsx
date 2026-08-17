@@ -100,9 +100,12 @@ export function RouteProfile({
       const km = cumulativeKm(merged);
       // Project each admin marker (water points, sponsor stops) onto the route
       // so it can be shown at its true distance on the profile.
-      const markers = route.customMarkers ?? [];
-      if (markers.length) {
-        const projected: Pin[] = markers.map((m) => {
+      const own = route.customMarkers ?? [];
+      const seen = new Set(own.map((m) => m.id));
+      const pool = [...own, ...(markers ?? []).filter((m) => !seen.has(m.id))];
+      if (pool.length) {
+        const projected: Pin[] = [];
+        for (const m of pool) {
           let best = 0;
           let bestD = Infinity;
           for (let i = 0; i < merged.length; i++) {
@@ -112,8 +115,10 @@ export function RouteProfile({
               best = i;
             }
           }
-          return { id: m.id, name: m.name, km: km[best], color: m.color, logoUrl: m.logoUrl, icon: m.icon };
-        });
+          // Shared day markers only belong on routes that actually pass them.
+          if (bestD > 250) continue;
+          projected.push({ id: m.id, name: m.name, km: km[best], color: m.color, logoUrl: m.logoUrl, icon: m.icon });
+        }
         projected.sort((a, b) => a.km - b.km);
         setPins(projected);
       }
