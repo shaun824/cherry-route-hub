@@ -1,0 +1,1 @@
+update public.entrants set user_id = '0fff1bbf-c521-4cb4-a7b5-fbec34c6d82c' where email ilike 'mark.pretorius@mandg.co.za';
