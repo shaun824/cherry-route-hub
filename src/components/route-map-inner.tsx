@@ -47,14 +47,19 @@ function customIcon(color: string, icon: CustomMarker["icon"], logoUrl?: string)
   if (logoUrl) {
     // Sponsor logos are mostly wide lock-ups, so use a wide rounded plate
     // instead of a circle — a circle shrinks wordmarks until they're unreadable.
+    // NOTE: Leaflet's stylesheet forces `.leaflet-marker-pane img { max-width: none !important }`,
+    // so the image MUST be sized with explicit width/height, not max-width.
+    const W = 108;
+    const H = 44;
     return L.divIcon({
       className: "rce-custom-marker",
-      html: `<div style="border-color:${color};" class="flex h-9 w-[74px] items-center justify-center overflow-hidden rounded-lg border-2 bg-white px-1 shadow-lg"><img src="${logoUrl}" alt="" style="max-width:100%;max-height:100%;object-fit:contain;" /></div>`,
-      iconSize: [74, 36],
-      iconAnchor: [37, 18],
-      popupAnchor: [0, -18],
+      html: `<div style="border-color:${color};width:${W}px;height:${H}px;" class="flex items-center justify-center overflow-hidden rounded-xl border-2 bg-white px-1.5 py-1 shadow-lg"><img src="${logoUrl}" alt="" style="width:100%;height:100%;object-fit:contain;display:block;" /></div>`,
+      iconSize: [W, H],
+      iconAnchor: [W / 2, H / 2],
+      popupAnchor: [0, -H / 2],
     });
   }
+
   const glyph = MARKER_GLYPH[icon ?? "pin"];
   return L.divIcon({
     className: "rce-custom-marker",
