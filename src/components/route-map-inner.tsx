@@ -22,6 +22,7 @@ import {
 } from "@/lib/geo";
 import { getRouteElevation } from "@/lib/elevation.functions";
 import { withRegistrationDayLabels } from "@/lib/event-days";
+import { useRouteHover } from "@/lib/route-hover";
 
 // Fix Leaflet's default icon paths (Vite bundles differently than webpack).
 delete (L.Icon.Default.prototype as unknown as { _getIconUrl?: unknown })._getIconUrl;
@@ -98,6 +99,25 @@ type Props = {
   /** Only render routes belonging to these day ids (undefined = all days). */
   dayIds?: string[];
 };
+
+/** Shows where the rider is hovering on an elevation profile below the map. */
+function HoverMarker() {
+  const hover = useRouteHover();
+  if (!hover) return null;
+  return (
+    <Marker
+      position={[hover.lat, hover.lng] as [number, number]}
+      interactive={false}
+      zIndexOffset={1000}
+      icon={L.divIcon({
+        className: "rce-hover-marker",
+        html: `<div style="width:18px;height:18px;border-radius:9999px;background:#e11d48;border:3px solid #fff;box-shadow:0 0 0 3px rgba(225,29,72,.35);"></div>`,
+        iconSize: [18, 18],
+        iconAnchor: [9, 9],
+      })}
+    />
+  );
+}
 
 function FitToBounds({ bounds }: { bounds: [[number, number], [number, number]] | null }) {
   const map = useMap();
@@ -312,6 +332,7 @@ export default function RouteMapInner({
             maxNativeZoom={19}
           />
           <FitToBounds bounds={bounds} />
+          <HoverMarker />
           {visible.map((l) =>
             l.lines.map((line, i) => (
               <Polyline

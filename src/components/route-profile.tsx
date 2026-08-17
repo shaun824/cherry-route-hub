@@ -13,9 +13,22 @@ import {
 } from "@/lib/geo";
 
 import { getRouteElevation } from "@/lib/elevation.functions";
-import type { EventRoute } from "@/lib/mock-data";
+import type { CustomMarker, EventRoute } from "@/lib/mock-data";
+import { setRouteHover } from "@/lib/route-hover";
 
-type Point = { km: number; ele: number };
+type Point = { km: number; ele: number; lat: number; lng: number };
+type Pin = { id: string; name: string; km: number; color?: string; logoUrl?: string; icon?: CustomMarker["icon"] };
+
+const PIN_GLYPH: Record<NonNullable<CustomMarker["icon"]>, string> = {
+  pin: "📍",
+  start: "🚩",
+  finish: "🏁",
+  aid: "🩹",
+  warning: "⚠️",
+  photo: "📷",
+  food: "🍎",
+  water: "💧",
+};
 
 /** Cumulative distance (km) at every coordinate, at full resolution. */
 function cumulativeKm(coords: LatLngAlt[]): number[] {
@@ -50,6 +63,7 @@ export function RouteProfile({ route, color }: { route: EventRoute; color?: stri
   const kmls = route.kmlUrls ?? [];
   const [series, setSeries] = useState<Point[] | null>(null);
   const [gain, setGain] = useState<number | null>(null);
+  const [pins, setPins] = useState<Pin[]>([]);
   const [failed, setFailed] = useState(false);
   const [hover, setHover] = useState<number | null>(null);
   const fetchElev = useServerFn(getRouteElevation);
@@ -75,6 +89,25 @@ export function RouteProfile({ route, color }: { route: EventRoute; color?: stri
         return;
       }
       const km = cumulativeKm(merged);
+      // Project each admin marker (water points, sponsor stops) onto the route
+      // so it can be shown at its true distance on the profile.
+      const markers = route.customMarkers ?? [];
+      if (markers.length) {
+        const projected: Pin[] = markers.map((m) => {
+          let best = 0;
+          let bestD = Infinity;
+          for (let i = 0; i < merged.length; i++) {
+            const d = haversineMeters(merged[i], [m.lng, m.lat, undefined]);
+            if (d < bestD) {
+              bestD = d;
+              best = i;
+            }
+          }
+          return { id: m.id, name: m.name, km: km[best], color: m.color, logoUrl: m.logoUrl, icon: m.icon };
+        });
+        projected.sort((a, b) => a.km - b.km);
+        setPins(projected);
+      }
       const hasAlt = merged.some(
         (c) => typeof c[2] === "number" && Number.isFinite(c[2]) && c[2] !== 0,
       );
@@ -82,7 +115,8 @@ export function RouteProfile({ route, color }: { route: EventRoute; color?: stri
         const full: Point[] = [];
         for (let i = 0; i < merged.length; i++) {
           const ele = merged[i][2];
-          if (typeof ele === "number" && Number.isFinite(ele)) full.push({ km: km[i], ele });
+          if (typeof ele === "number" && Number.isFinite(ele))
+            full.push({ km: km[i], ele, lat: merged[i][1], lng: merged[i][0] });
         }
         setGain(totalGain(full));
         setSeries(forDisplay(full));
@@ -101,7 +135,12 @@ export function RouteProfile({ route, color }: { route: EventRoute; color?: stri
         });
         if (cancelled) return;
         if (res.available && res.profile) {
-          const pts = idx.map((i, n) => ({ km: km[i], ele: res.profile[n] }));
+          const pts = idx.map((i, n) => ({
+            km: km[i],
+            ele: res.profile[n],
+            lat: merged[i][1],
+            lng: merged[i][0],
+          }));
           setGain(totalGain(pts));
           setSeries(pts);
         } else setFailed(true);
@@ -165,6 +204,13 @@ export function RouteProfile({ route, color }: { route: EventRoute; color?: stri
       }
     }
     setHover(best);
+    const p = series[best];
+    setRouteHover({ routeId: route.id, lat: p.lat, lng: p.lng, km: p.km });
+  };
+
+  const clearHover = () => {
+    setHover(null);
+    setRouteHover(null);
   };
 
   return (
@@ -183,6 +229,36 @@ export function RouteProfile({ route, color }: { route: EventRoute; color?: stri
         </div>
       </div>
 
+      <div className="relative">
+      {pins.length > 0 ? (
+        <div className="pointer-events-none relative mt-2 h-7">
+          {pins.map((p) => (
+            <div
+              key={`pb-${p.id}`}
+              className="absolute -translate-x-1/2"
+              style={{ left: `${(chart.x(p.km) / chart.W) * 100}%` }}
+              title={`${p.name} · ${p.km.toFixed(1)} km`}
+            >
+              {p.logoUrl ? (
+                <div
+                  className="flex h-7 w-[62px] items-center justify-center overflow-hidden rounded-md border bg-white px-1 shadow-sm"
+                  style={{ borderColor: p.color || stroke }}
+                >
+                  <img src={p.logoUrl} alt={p.name} className="h-full w-full object-contain" />
+                </div>
+              ) : (
+                <div
+                  className="grid h-6 w-6 place-items-center rounded-full text-[11px] shadow-sm ring-2 ring-white"
+                  style={{ background: p.color || stroke }}
+                >
+                  {PIN_GLYPH[p.icon ?? "pin"]}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      ) : null}
+
       <svg
         ref={svgRef}
         viewBox={`0 0 ${chart.W} ${chart.H}`}
@@ -190,9 +266,10 @@ export function RouteProfile({ route, color }: { route: EventRoute; color?: stri
         role="img"
         aria-label={`Elevation profile for ${route.name}`}
         onMouseMove={(e) => onMove(e.clientX)}
-        onMouseLeave={() => setHover(null)}
+        onMouseLeave={clearHover}
         onTouchStart={(e) => onMove(e.touches[0].clientX)}
         onTouchMove={(e) => onMove(e.touches[0].clientX)}
+        onTouchEnd={clearHover}
       >
         <defs>
           <linearGradient id={`rp-${route.id}`} x1="0" y1="0" x2="0" y2="1">
@@ -238,6 +315,20 @@ export function RouteProfile({ route, color }: { route: EventRoute; color?: stri
           </text>
         ))}
 
+        {pins.map((p) => (
+          <line
+            key={`pl-${p.id}`}
+            x1={chart.x(p.km)}
+            x2={chart.x(p.km)}
+            y1={chart.pad.t}
+            y2={chart.H - chart.pad.b}
+            stroke="currentColor"
+            className="text-ink-soft/40"
+            strokeWidth="1"
+            strokeDasharray="2 3"
+          />
+        ))}
+
         {hoverPoint ? (
           <g>
             <line
@@ -253,6 +344,7 @@ export function RouteProfile({ route, color }: { route: EventRoute; color?: stri
           </g>
         ) : null}
       </svg>
+      </div>
 
       <p className="mt-1 text-[11px] font-semibold text-ink">
         {hoverPoint
