@@ -377,6 +377,26 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
+/** Admin-only shortcut into the super admin console. */
+function AdminShortcut() {
+  const { isAdmin } = useIsAdmin();
+  if (!isAdmin) return null;
+  return (
+    <Link
+      to="/admin"
+      className="mx-5 mt-4 flex items-center gap-3 rounded-2xl bg-cherry p-4 text-white"
+    >
+      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-white/20">
+        <ShieldCheck className="h-5 w-5" />
+      </span>
+      <span className="min-w-0">
+        <span className="block font-display text-sm font-bold">Super admin console</span>
+        <span className="block text-[11px] opacity-90">Events, riders, feed, promos and settings</span>
+      </span>
+    </Link>
+  );
+}
+
 /** Crew-only shortcut to the on-site rooming finder. */
 function CrewShortcut() {
   const { isCrew } = useIsCrew();
