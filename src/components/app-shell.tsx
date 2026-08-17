@@ -1,13 +1,14 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Home, Ticket, Binoculars, User, LogIn, X } from "lucide-react";
+import { Home, Ticket, Binoculars, User, LogIn, X, HardHat, BedDouble, Smartphone } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
-import { useSession } from "@/lib/auth";
+import { useSession, useIsCrew } from "@/lib/auth";
+import { useCrewMode } from "@/lib/crew-mode";
 import { Footer } from "@/components/footer";
 import { BrandMark } from "@/components/ui-bits";
 import { AssistantWidget } from "@/components/assistant-widget";
 import { InstallAppPrompt } from "@/components/install-app-prompt";
 
-const tabs = [
+const riderTabs = [
   { to: "/", label: "Home", icon: Home, match: (p: string) => p === "/" },
   // Short label keeps the 4-up bottom bar readable; fullLabel is used on desktop + screen readers.
   { to: "/my-events", label: "Adventure", fullLabel: "Adventure Awaits", icon: Ticket, match: (p: string) => p.startsWith("/my-events") || p.startsWith("/events") },
@@ -15,9 +16,17 @@ const tabs = [
   { to: "/profile", label: "Profile", icon: User, match: (p: string) => p.startsWith("/profile") },
 ] as const;
 
+const crewTabs = [
+  { to: "/crew", label: "Crew", fullLabel: "Crew dashboard", icon: HardHat, match: (p: string) => p === "/crew" || p === "/crew/" },
+  { to: "/crew/rooming", label: "Rooming", fullLabel: "Rooming finder", icon: BedDouble, match: (p: string) => p.startsWith("/crew/rooming") },
+  { to: "/", label: "Rider app", fullLabel: "Rider app", icon: Smartphone, match: () => false },
+] as const;
+
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { user, loading } = useSession();
+  const { isCrew } = useIsCrew();
+  const { crewMode, inCrewArea, exitCrewMode } = useCrewMode(pathname);
   const [dismissed, setDismissed] = useState(false);
 
   useEffect(() => {
@@ -25,7 +34,15 @@ export function AppShell({ children }: { children: ReactNode }) {
     setDismissed(window.sessionStorage.getItem("rce.signin-cta-dismissed") === "1");
   }, []);
 
-  const showSignInCta = !loading && !user && !dismissed;
+  const tabs: readonly {
+    to: string;
+    label: string;
+    fullLabel?: string;
+    icon: typeof Home;
+    match: (p: string) => boolean;
+  }[] = inCrewArea ? crewTabs : riderTabs;
+  const showSignInCta = !loading && !user && !dismissed && !inCrewArea;
+  const showCrewReturn = !inCrewArea && crewMode && isCrew;
   const nextPath = pathname === "/auth" ? "/" : pathname;
 
   function dismiss() {
@@ -34,6 +51,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       window.sessionStorage.setItem("rce.signin-cta-dismissed", "1");
     }
   }
+
 
   return (
     <div className="min-h-screen bg-secondary/30 md:flex">
