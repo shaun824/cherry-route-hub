@@ -2,8 +2,13 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Link2, RefreshCw, CheckCircle2, AlertTriangle, Plug } from "lucide-react";
-import { listEntryNinjaEvents, syncEntryNinjaEvent } from "@/lib/entryninja.functions";
+import { Link2, RefreshCw, CheckCircle2, AlertTriangle, Plug, Mail } from "lucide-react";
+import {
+  listEntryNinjaEvents,
+  syncEntryNinjaEvent,
+  countEntryWelcomes,
+  sendEntryWelcomeBatch,
+} from "@/lib/entryninja.functions";
 
 export const Route = createFileRoute("/admin/entry-ninja")({
   component: EntryNinjaPage,
