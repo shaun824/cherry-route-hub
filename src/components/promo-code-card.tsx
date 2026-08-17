@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
-import { createPortal } from "react-dom";
-import { Copy, Check, ExternalLink, X } from "lucide-react";
+import { Copy, Check, ExternalLink } from "lucide-react";
 
 import type { EventPromo } from "@/lib/event-promos";
+import { PromoReminderDialog } from "@/components/promo-reminder-dialog";
+
 
 /**
  * Promo module. Tapping anywhere on the offer opens a reminder pop-up showing
