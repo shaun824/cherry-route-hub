@@ -124,15 +124,40 @@ export function AssistantWidget() {
 
   return (
     <>
+      {/* First-session attention: nudge bubble beside the launcher */}
+      {nudge && !open ? (
+        <button
+          type="button"
+          onClick={() => {
+            dismissNudge();
+            setOpen(true);
+          }}
+          className="fixed right-16 z-40 max-w-[62vw] animate-fade-in rounded-2xl rounded-br-sm bg-cherry px-3 py-2 text-left text-xs font-semibold text-white shadow-lg ring-1 ring-black/10 md:right-20"
+          style={{ bottom: "calc(env(safe-area-inset-bottom) + 92px)" }}
+        >
+          Hi 👋 Ask me anything — routes, schedules, your entry
+        </button>
+      ) : null}
+
       <button
         type="button"
-        onClick={() => setOpen(true)}
+        onClick={() => {
+          dismissNudge();
+          setOpen(true);
+        }}
         aria-label="Ask Red Cherry — app and event assistant"
         className="fixed right-3 z-40 grid h-12 w-12 place-items-center rounded-full bg-ink text-white shadow-lg ring-1 ring-black/10 transition hover:scale-105 md:right-6 md:bottom-6"
         style={{ bottom: "calc(env(safe-area-inset-bottom) + 84px)" }}
       >
-        <Bot className="h-5 w-5" />
+        {nudge && !open ? (
+          <>
+            <span className="pointer-events-none absolute inset-0 animate-ping rounded-full bg-cherry/60" />
+            <span className="pointer-events-none absolute -inset-1 rounded-full ring-2 ring-cherry/40" />
+          </>
+        ) : null}
+        <Bot className={`h-5 w-5 ${nudge && !open ? "animate-bounce" : ""}`} />
       </button>
+
 
       {open ? (
         <div
