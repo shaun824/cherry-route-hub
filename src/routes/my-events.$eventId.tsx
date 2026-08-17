@@ -629,8 +629,15 @@ function RoutesPanel({
             <ul className="mt-2 space-y-3">
               {routes.map((r: EventRoute, ri) => {
                 const kmls = r.kmlUrls ?? [];
+                // Space the offers out: one strip after every second route card.
+                const cardIndex = cardCount++;
+                const promo =
+                  promos.length > 0 && cardIndex % 2 === 1
+                    ? promos[Math.floor(cardIndex / 2) % promos.length]
+                    : null;
                 return (
-                  <li key={r.id || ri} className="rounded-2xl bg-card p-4 ring-1 ring-border">
+                  <Fragment key={r.id || ri}>
+                  <li className="rounded-2xl bg-card p-4 ring-1 ring-border">
                     <div className="flex items-center gap-2">
                       <span
                         className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white"
