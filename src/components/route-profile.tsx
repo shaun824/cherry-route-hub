@@ -102,10 +102,11 @@ export function RouteProfile({
       // so it can be shown at its true distance on the profile.
       const own = route.customMarkers ?? [];
       const seen = new Set(own.map((m) => m.id));
-      const pool = [...own, ...(markers ?? []).filter((m) => !seen.has(m.id))];
+      const shared = (markers ?? []).filter((m) => !seen.has(m.id));
+      const pool = [...own.map((m) => ({ m, ownRoute: true })), ...shared.map((m) => ({ m, ownRoute: false }))];
       if (pool.length) {
         const projected: Pin[] = [];
-        for (const m of pool) {
+        for (const { m, ownRoute } of pool) {
           let best = 0;
           let bestD = Infinity;
           for (let i = 0; i < merged.length; i++) {
@@ -115,10 +116,12 @@ export function RouteProfile({
               best = i;
             }
           }
-          // Shared day markers only belong on routes that actually pass them.
-          if (bestD > 250) continue;
+          // A route's own markers always show. Shared day markers (water points,
+          // marshals) only appear on routes that actually pass them.
+          if (!ownRoute && bestD > 800) continue;
           projected.push({ id: m.id, name: m.name, km: km[best], color: m.color, logoUrl: m.logoUrl, icon: m.icon });
         }
+
         projected.sort((a, b) => a.km - b.km);
         setPins(projected);
       }
