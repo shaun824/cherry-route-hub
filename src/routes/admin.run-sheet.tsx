@@ -125,6 +125,7 @@ function AdminRunSheet() {
       if (v.approve) {
         const { error } = await supabase.from("department_packing_items").insert({
           department_id: v.departmentId,
+          event_id: eventId,
           item: v.item,
           notes: v.notes,
           source: "crew",
@@ -267,8 +268,8 @@ function AdminRunSheet() {
                 {previewM.data.departments.length} departments · {previewM.data.taskCount} tasks ·{" "}
                 {previewM.data.packingCount} packing items · {previewM.data.briefCount} briefs
               </p>
-              {previewM.data.skipped?.length ? (
-                <p className="mt-1 text-xs text-ink-soft">Skipped rows: {previewM.data.skipped.length}</p>
+              {previewM.data.skipped ? (
+                <p className="mt-1 text-xs text-ink-soft">Skipped rows: {previewM.data.skipped}</p>
               ) : null}
               <ul className="mt-3 max-h-72 space-y-1 overflow-y-auto text-xs text-ink-soft">
                 {previewM.data.sample.map((t: any, i: number) => (
