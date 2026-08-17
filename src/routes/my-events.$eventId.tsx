@@ -294,7 +294,7 @@ function MyEventDetail() {
             <OfflinePackCard event={event as never} />
           </section>
         )}
-        {tab === "routes" && <RoutesPanel eventId={event.id} event={event} />}
+        {tab === "routes" && <RoutesPanel eventId={event.id} event={event} eventName={event.name} />}
         {tab === "news" && <EventNewsPanel posts={eventNews} />}
         {tab === "photos" && (
           <section className="space-y-3">
@@ -639,7 +639,7 @@ function RoutesPanel({
                 const cardIndex = cardCount++;
                 const promo =
                   promos.length > 0 && cardIndex % 2 === 1
-                    ? promos[Math.floor(cardIndex / 2) % promos.length]
+                    ? promos[(Math.floor(cardIndex / 2) + 1) % promos.length]
                     : null;
                 return (
                   <Fragment key={r.id || ri}>
@@ -819,7 +819,7 @@ function InfoPanel({
         <section>
           <SectionTitle>Routes</SectionTitle>
           <div className="mt-2">
-            <RoutesPanel eventId={eventId} event={event} />
+            <RoutesPanel eventId={eventId} event={event} eventName={eventName} />
           </div>
         </section>
       ) : null}
