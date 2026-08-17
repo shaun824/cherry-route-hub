@@ -36,6 +36,24 @@ export function AssistantWidget() {
   const ask = useServerFn(askAppBot);
 
   const [open, setOpen] = useState(false);
+  // First-session nudge so riders notice the assistant exists.
+  const [nudge, setNudge] = useState(false);
+  useEffect(() => {
+    let seen = true;
+    try {
+      seen = sessionStorage.getItem(NUDGE_KEY) === "1";
+    } catch {
+      seen = true;
+    }
+    if (seen) return;
+    const show = window.setTimeout(() => setNudge(true), 1200);
+    const hide = window.setTimeout(() => setNudge(false), 13000);
+    return () => {
+      window.clearTimeout(show);
+      window.clearTimeout(hide);
+    };
+  }, []);
+
   const [messages, setMessages] = useState<ChatMsg[]>([]);
   const [input, setInput] = useState("");
   const [thinking, setThinking] = useState(false);
