@@ -70,6 +70,7 @@ import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/em
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
 import { Route as ApiPublicHooksWhatsappRouteImport } from './routes/api/public/hooks/whatsapp'
 import { Route as ApiPublicHooksScheduleSyncRouteImport } from './routes/api/public/hooks/schedule-sync'
+import { Route as ApiPublicHooksRunSheetSyncRouteImport } from './routes/api/public/hooks/run-sheet-sync'
 import { Route as ApiPublicHooksRoomingSheetSyncRouteImport } from './routes/api/public/hooks/rooming-sheet-sync'
 import { Route as ApiPublicHooksNotificationCronRouteImport } from './routes/api/public/hooks/notification-cron'
 import { Route as ApiPublicHooksNotificationClickRouteImport } from './routes/api/public/hooks/notification-click'
@@ -394,6 +395,12 @@ const ApiPublicHooksScheduleSyncRoute =
     path: '/api/public/hooks/schedule-sync',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksRunSheetSyncRoute =
+  ApiPublicHooksRunSheetSyncRouteImport.update({
+    id: '/api/public/hooks/run-sheet-sync',
+    path: '/api/public/hooks/run-sheet-sync',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksRoomingSheetSyncRoute =
   ApiPublicHooksRoomingSheetSyncRouteImport.update({
     id: '/api/public/hooks/rooming-sheet-sync',
@@ -533,6 +540,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/notification-click': typeof ApiPublicHooksNotificationClickRoute
   '/api/public/hooks/notification-cron': typeof ApiPublicHooksNotificationCronRoute
   '/api/public/hooks/rooming-sheet-sync': typeof ApiPublicHooksRoomingSheetSyncRoute
+  '/api/public/hooks/run-sheet-sync': typeof ApiPublicHooksRunSheetSyncRoute
   '/api/public/hooks/schedule-sync': typeof ApiPublicHooksScheduleSyncRoute
   '/api/public/hooks/whatsapp': typeof ApiPublicHooksWhatsappRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -604,6 +612,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/notification-click': typeof ApiPublicHooksNotificationClickRoute
   '/api/public/hooks/notification-cron': typeof ApiPublicHooksNotificationCronRoute
   '/api/public/hooks/rooming-sheet-sync': typeof ApiPublicHooksRoomingSheetSyncRoute
+  '/api/public/hooks/run-sheet-sync': typeof ApiPublicHooksRunSheetSyncRoute
   '/api/public/hooks/schedule-sync': typeof ApiPublicHooksScheduleSyncRoute
   '/api/public/hooks/whatsapp': typeof ApiPublicHooksWhatsappRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -680,6 +689,7 @@ export interface FileRoutesById {
   '/api/public/hooks/notification-click': typeof ApiPublicHooksNotificationClickRoute
   '/api/public/hooks/notification-cron': typeof ApiPublicHooksNotificationCronRoute
   '/api/public/hooks/rooming-sheet-sync': typeof ApiPublicHooksRoomingSheetSyncRoute
+  '/api/public/hooks/run-sheet-sync': typeof ApiPublicHooksRunSheetSyncRoute
   '/api/public/hooks/schedule-sync': typeof ApiPublicHooksScheduleSyncRoute
   '/api/public/hooks/whatsapp': typeof ApiPublicHooksWhatsappRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -757,6 +767,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/notification-click'
     | '/api/public/hooks/notification-cron'
     | '/api/public/hooks/rooming-sheet-sync'
+    | '/api/public/hooks/run-sheet-sync'
     | '/api/public/hooks/schedule-sync'
     | '/api/public/hooks/whatsapp'
     | '/lovable/email/auth/preview'
@@ -828,6 +839,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/notification-click'
     | '/api/public/hooks/notification-cron'
     | '/api/public/hooks/rooming-sheet-sync'
+    | '/api/public/hooks/run-sheet-sync'
     | '/api/public/hooks/schedule-sync'
     | '/api/public/hooks/whatsapp'
     | '/lovable/email/auth/preview'
@@ -903,6 +915,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/notification-click'
     | '/api/public/hooks/notification-cron'
     | '/api/public/hooks/rooming-sheet-sync'
+    | '/api/public/hooks/run-sheet-sync'
     | '/api/public/hooks/schedule-sync'
     | '/api/public/hooks/whatsapp'
     | '/lovable/email/auth/preview'
@@ -946,6 +959,7 @@ export interface RootRouteChildren {
   ApiPublicHooksNotificationClickRoute: typeof ApiPublicHooksNotificationClickRoute
   ApiPublicHooksNotificationCronRoute: typeof ApiPublicHooksNotificationCronRoute
   ApiPublicHooksRoomingSheetSyncRoute: typeof ApiPublicHooksRoomingSheetSyncRoute
+  ApiPublicHooksRunSheetSyncRoute: typeof ApiPublicHooksRunSheetSyncRoute
   ApiPublicHooksScheduleSyncRoute: typeof ApiPublicHooksScheduleSyncRoute
   ApiPublicHooksWhatsappRoute: typeof ApiPublicHooksWhatsappRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
@@ -1383,6 +1397,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksScheduleSyncRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/run-sheet-sync': {
+      id: '/api/public/hooks/run-sheet-sync'
+      path: '/api/public/hooks/run-sheet-sync'
+      fullPath: '/api/public/hooks/run-sheet-sync'
+      preLoaderRoute: typeof ApiPublicHooksRunSheetSyncRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/rooming-sheet-sync': {
       id: '/api/public/hooks/rooming-sheet-sync'
       path: '/api/public/hooks/rooming-sheet-sync'
@@ -1610,6 +1631,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksNotificationClickRoute: ApiPublicHooksNotificationClickRoute,
   ApiPublicHooksNotificationCronRoute: ApiPublicHooksNotificationCronRoute,
   ApiPublicHooksRoomingSheetSyncRoute: ApiPublicHooksRoomingSheetSyncRoute,
+  ApiPublicHooksRunSheetSyncRoute: ApiPublicHooksRunSheetSyncRoute,
   ApiPublicHooksScheduleSyncRoute: ApiPublicHooksScheduleSyncRoute,
   ApiPublicHooksWhatsappRoute: ApiPublicHooksWhatsappRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
