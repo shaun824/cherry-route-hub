@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Home, Ticket, Binoculars, User, LogIn, X, HardHat, BedDouble, Smartphone } from "lucide-react";
+import { Home, Ticket, Binoculars, User, LogIn, X, HardHat, BedDouble, Smartphone, ClipboardList } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { useSession, useIsCrew } from "@/lib/auth";
 import { useCrewMode } from "@/lib/crew-mode";
