@@ -122,6 +122,16 @@ export function AssistantWidget() {
     .map((m) => `${m.role === "user" ? "Rider" : "Assistant"}: ${m.content}`)
     .join("\n\n");
 
+  function dismissNudge() {
+    setNudge(false);
+    try {
+      sessionStorage.setItem(NUDGE_KEY, "1");
+    } catch {
+      /* ignore */
+    }
+  }
+
+
   return (
     <>
       {/* First-session attention: nudge bubble beside the launcher */}
