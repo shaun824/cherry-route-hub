@@ -45,12 +45,14 @@ const MARKER_GLYPH: Record<NonNullable<CustomMarker["icon"]>, string> = {
 
 function customIcon(color: string, icon: CustomMarker["icon"], logoUrl?: string) {
   if (logoUrl) {
+    // Sponsor logos are mostly wide lock-ups, so use a wide rounded plate
+    // instead of a circle — a circle shrinks wordmarks until they're unreadable.
     return L.divIcon({
       className: "rce-custom-marker",
-      html: `<div style="border-color:${color};" class="flex h-11 w-11 items-center justify-center overflow-hidden rounded-full border-2 bg-white shadow-lg"><img src="${logoUrl}" alt="" style="max-width:82%;max-height:82%;object-fit:contain;" /></div>`,
-      iconSize: [44, 44],
-      iconAnchor: [22, 22],
-      popupAnchor: [0, -22],
+      html: `<div style="border-color:${color};" class="flex h-9 w-[74px] items-center justify-center overflow-hidden rounded-lg border-2 bg-white px-1 shadow-lg"><img src="${logoUrl}" alt="" style="max-width:100%;max-height:100%;object-fit:contain;" /></div>`,
+      iconSize: [74, 36],
+      iconAnchor: [37, 18],
+      popupAnchor: [0, -18],
     });
   }
   const glyph = MARKER_GLYPH[icon ?? "pin"];
@@ -62,6 +64,7 @@ function customIcon(color: string, icon: CustomMarker["icon"], logoUrl?: string)
     popupAnchor: [0, -16],
   });
 }
+
 
 
 
@@ -87,6 +90,8 @@ type Props = {
   height?: string;
   showToggles?: boolean;
   showStats?: boolean;
+  /** Only render routes belonging to these day ids (undefined = all days). */
+  dayIds?: string[];
 };
 
 function FitToBounds({ bounds }: { bounds: [[number, number], [number, number]] | null }) {
@@ -102,6 +107,7 @@ export default function RouteMapInner({
   height = "360px",
   showToggles = true,
   showStats = true,
+  dayIds,
 }: Props) {
   const [loaded, setLoaded] = useState<Loaded[]>([]);
   const [enabled, setEnabled] = useState<Record<string, boolean>>({});
@@ -109,10 +115,14 @@ export default function RouteMapInner({
   const fetchElev = useServerFn(getRouteElevation);
   const elevationRequested = useRef(new Set<string>());
 
+  const dayKey = dayIds ? dayIds.join(",") : "";
+
   // Collect all routes across days that have either KMLs or custom markers.
   const routes = useMemo(() => {
+    const only = dayKey ? new Set(dayKey.split(",")) : null;
     const out: { route: EventRoute; dayLabel: string }[] = [];
     for (const day of withRegistrationDayLabels(event.days ?? [], (event.schedule as any) ?? [])) {
+      if (only && !only.has(day.id)) continue;
       const dayLabel = day.label || new Date(day.date).toLocaleDateString("en-ZA", { weekday: "short", day: "numeric", month: "short" });
       for (const r of day.routes ?? []) {
         const hasKml = (r.kmlUrls ?? []).length > 0;
@@ -121,7 +131,8 @@ export default function RouteMapInner({
       }
     }
     return out;
-  }, [event]);
+  }, [event, dayKey]);
+
 
   // Fetch + parse all KMLs. Waypoints in the KML are intentionally ignored —
   // only admin-defined custom markers are rendered.
@@ -231,8 +242,13 @@ export default function RouteMapInner({
     );
   }
 
+  // "100%" means fill the parent (fullscreen map page): the map pane grows and
+  // the toggles/stats keep their natural height.
+  const fill = height === "100%";
+
   return (
-    <div className="space-y-3">
+    <div className={fill ? "flex h-full flex-col gap-3 p-3" : "space-y-3"}>
+
       {showToggles && loaded.length > 1 && (
         <div className="flex flex-wrap gap-2">
           {loaded.map((l) => {
@@ -261,7 +277,10 @@ export default function RouteMapInner({
         </div>
       )}
 
-      <div className="overflow-hidden rounded-2xl ring-1 ring-border">
+      <div
+        className={`overflow-hidden rounded-2xl ring-1 ring-border ${fill ? "min-h-0 flex-1" : ""}`}
+      >
+
         <MapContainer
           key={loaded.map((l) => l.route.id).join(",")}
           center={bounds ? undefined : [-33.9249, 18.4241]}

@@ -44,7 +44,10 @@ export function withRegistrationDayLabels(
   const ordered = [...list].sort((a, b) => String(a.date ?? "").localeCompare(String(b.date ?? "")));
   // Only step in when the labels are the auto-generated kind.
   if (!ordered.every((d) => isGeneric(d.label))) return list;
+  // A day with riding routes on it is never a registration-only day.
+  if ((ordered[0]?.routes ?? []).length > 0) return list;
   if (!firstDayIsRegistration(ordered[0]?.id, items)) return list;
+
 
   const relabelled = new Map<string, string>();
   ordered.forEach((d, i) => {
