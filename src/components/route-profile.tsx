@@ -59,7 +59,16 @@ function totalGain(series: Point[]): number {
 }
 
 
-export function RouteProfile({ route, color }: { route: EventRoute; color?: string }) {
+export function RouteProfile({
+  route,
+  color,
+  markers,
+}: {
+  route: EventRoute;
+  color?: string;
+  /** Extra day-level markers (water points, marshals) to project onto this route. */
+  markers?: CustomMarker[];
+}) {
   const kmls = route.kmlUrls ?? [];
   const [series, setSeries] = useState<Point[] | null>(null);
   const [gain, setGain] = useState<number | null>(null);
