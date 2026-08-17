@@ -76,6 +76,7 @@ import { Route as ApiPublicHooksNotificationClickRouteImport } from './routes/ap
 import { Route as ApiPublicHooksNewsSyncRouteImport } from './routes/api/public/hooks/news-sync'
 import { Route as ApiPublicHooksMerchSyncRouteImport } from './routes/api/public/hooks/merch-sync'
 import { Route as ApiPublicHooksLoyaltyExpiryRouteImport } from './routes/api/public/hooks/loyalty-expiry'
+import { Route as ApiPublicHooksInviteRiderRouteImport } from './routes/api/public/hooks/invite-rider'
 import { Route as ApiPublicHooksFaqSuggestRouteImport } from './routes/api/public/hooks/faq-suggest'
 import { Route as ApiPublicHooksEventBotRefreshRouteImport } from './routes/api/public/hooks/event-bot-refresh'
 import { Route as ApiPublicHooksEntryNinjaSyncRouteImport } from './routes/api/public/hooks/entry-ninja-sync'
@@ -426,6 +427,12 @@ const ApiPublicHooksLoyaltyExpiryRoute =
     path: '/api/public/hooks/loyalty-expiry',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksInviteRiderRoute =
+  ApiPublicHooksInviteRiderRouteImport.update({
+    id: '/api/public/hooks/invite-rider',
+    path: '/api/public/hooks/invite-rider',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksFaqSuggestRoute =
   ApiPublicHooksFaqSuggestRouteImport.update({
     id: '/api/public/hooks/faq-suggest',
@@ -511,6 +518,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/entry-ninja-sync': typeof ApiPublicHooksEntryNinjaSyncRoute
   '/api/public/hooks/event-bot-refresh': typeof ApiPublicHooksEventBotRefreshRoute
   '/api/public/hooks/faq-suggest': typeof ApiPublicHooksFaqSuggestRoute
+  '/api/public/hooks/invite-rider': typeof ApiPublicHooksInviteRiderRoute
   '/api/public/hooks/loyalty-expiry': typeof ApiPublicHooksLoyaltyExpiryRoute
   '/api/public/hooks/merch-sync': typeof ApiPublicHooksMerchSyncRoute
   '/api/public/hooks/news-sync': typeof ApiPublicHooksNewsSyncRoute
@@ -580,6 +588,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/entry-ninja-sync': typeof ApiPublicHooksEntryNinjaSyncRoute
   '/api/public/hooks/event-bot-refresh': typeof ApiPublicHooksEventBotRefreshRoute
   '/api/public/hooks/faq-suggest': typeof ApiPublicHooksFaqSuggestRoute
+  '/api/public/hooks/invite-rider': typeof ApiPublicHooksInviteRiderRoute
   '/api/public/hooks/loyalty-expiry': typeof ApiPublicHooksLoyaltyExpiryRoute
   '/api/public/hooks/merch-sync': typeof ApiPublicHooksMerchSyncRoute
   '/api/public/hooks/news-sync': typeof ApiPublicHooksNewsSyncRoute
@@ -654,6 +663,7 @@ export interface FileRoutesById {
   '/api/public/hooks/entry-ninja-sync': typeof ApiPublicHooksEntryNinjaSyncRoute
   '/api/public/hooks/event-bot-refresh': typeof ApiPublicHooksEventBotRefreshRoute
   '/api/public/hooks/faq-suggest': typeof ApiPublicHooksFaqSuggestRoute
+  '/api/public/hooks/invite-rider': typeof ApiPublicHooksInviteRiderRoute
   '/api/public/hooks/loyalty-expiry': typeof ApiPublicHooksLoyaltyExpiryRoute
   '/api/public/hooks/merch-sync': typeof ApiPublicHooksMerchSyncRoute
   '/api/public/hooks/news-sync': typeof ApiPublicHooksNewsSyncRoute
@@ -729,6 +739,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/entry-ninja-sync'
     | '/api/public/hooks/event-bot-refresh'
     | '/api/public/hooks/faq-suggest'
+    | '/api/public/hooks/invite-rider'
     | '/api/public/hooks/loyalty-expiry'
     | '/api/public/hooks/merch-sync'
     | '/api/public/hooks/news-sync'
@@ -798,6 +809,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/entry-ninja-sync'
     | '/api/public/hooks/event-bot-refresh'
     | '/api/public/hooks/faq-suggest'
+    | '/api/public/hooks/invite-rider'
     | '/api/public/hooks/loyalty-expiry'
     | '/api/public/hooks/merch-sync'
     | '/api/public/hooks/news-sync'
@@ -871,6 +883,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/entry-ninja-sync'
     | '/api/public/hooks/event-bot-refresh'
     | '/api/public/hooks/faq-suggest'
+    | '/api/public/hooks/invite-rider'
     | '/api/public/hooks/loyalty-expiry'
     | '/api/public/hooks/merch-sync'
     | '/api/public/hooks/news-sync'
@@ -912,6 +925,7 @@ export interface RootRouteChildren {
   ApiPublicHooksEntryNinjaSyncRoute: typeof ApiPublicHooksEntryNinjaSyncRoute
   ApiPublicHooksEventBotRefreshRoute: typeof ApiPublicHooksEventBotRefreshRoute
   ApiPublicHooksFaqSuggestRoute: typeof ApiPublicHooksFaqSuggestRoute
+  ApiPublicHooksInviteRiderRoute: typeof ApiPublicHooksInviteRiderRoute
   ApiPublicHooksLoyaltyExpiryRoute: typeof ApiPublicHooksLoyaltyExpiryRoute
   ApiPublicHooksMerchSyncRoute: typeof ApiPublicHooksMerchSyncRoute
   ApiPublicHooksNewsSyncRoute: typeof ApiPublicHooksNewsSyncRoute
@@ -1397,6 +1411,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksLoyaltyExpiryRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/invite-rider': {
+      id: '/api/public/hooks/invite-rider'
+      path: '/api/public/hooks/invite-rider'
+      fullPath: '/api/public/hooks/invite-rider'
+      preLoaderRoute: typeof ApiPublicHooksInviteRiderRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/faq-suggest': {
       id: '/api/public/hooks/faq-suggest'
       path: '/api/public/hooks/faq-suggest'
@@ -1560,6 +1581,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksEntryNinjaSyncRoute: ApiPublicHooksEntryNinjaSyncRoute,
   ApiPublicHooksEventBotRefreshRoute: ApiPublicHooksEventBotRefreshRoute,
   ApiPublicHooksFaqSuggestRoute: ApiPublicHooksFaqSuggestRoute,
+  ApiPublicHooksInviteRiderRoute: ApiPublicHooksInviteRiderRoute,
   ApiPublicHooksLoyaltyExpiryRoute: ApiPublicHooksLoyaltyExpiryRoute,
   ApiPublicHooksMerchSyncRoute: ApiPublicHooksMerchSyncRoute,
   ApiPublicHooksNewsSyncRoute: ApiPublicHooksNewsSyncRoute,
