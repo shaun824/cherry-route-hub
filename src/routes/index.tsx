@@ -1002,22 +1002,25 @@ function NextEventHero({ row }: { row: MyEventRow }) {
       <p className="mt-1 font-display text-2xl font-bold leading-tight">{row.event.name}</p>
 
       {row.event.title_sponsor_logo_url || row.event.title_sponsor_name ? (
-        <div className="mt-3 flex items-center gap-2.5 rounded-xl bg-white px-3 py-2 shadow-sm ring-1 ring-black/10">
-          <span className="text-[9px] font-bold uppercase tracking-widest text-ink-soft">
+        <div className="mt-3 flex flex-col items-center gap-2 rounded-2xl bg-white px-4 py-3 shadow-md ring-1 ring-black/10">
+          <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-ink-soft">
             Title sponsor
           </span>
           {row.event.title_sponsor_logo_url ? (
             <img
               src={row.event.title_sponsor_logo_url}
               alt={row.event.title_sponsor_name ?? "Title sponsor"}
-              className="h-7 max-w-[120px] object-contain"
+              className="h-14 w-full max-w-[260px] object-contain sm:h-16 sm:max-w-[320px]"
               loading="lazy"
             />
           ) : (
-            <span className="truncate text-xs font-bold text-ink">{row.event.title_sponsor_name}</span>
+            <span className="text-center font-display text-lg font-black text-ink">
+              {row.event.title_sponsor_name}
+            </span>
           )}
         </div>
       ) : null}
+
 
       <div className="mt-4 flex items-end justify-between gap-3">
         <div>
