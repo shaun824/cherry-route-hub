@@ -8,7 +8,7 @@ import { createFileRoute, Link, notFound, useRouterState } from "@tanstack/react
 import { useServerFn } from "@tanstack/react-start";
 import { askEventBot } from "@/lib/event-bot.functions";
 import { fetchEventSponsors } from "@/lib/event-sponsors.functions";
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { createContext, Fragment, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { EventWeatherCard } from "@/components/event-weather";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -56,6 +56,9 @@ import { fetchMyRooming } from "@/lib/rooming";
 import { SponsorScroller } from "@/components/sponsor-scroller";
 import { eventPromosFor } from "@/lib/event-promos";
 import { PromoCarousel } from "@/components/promo-carousel";
+import { PromoInline } from "@/components/promo-inline";
+import { useShuffledPromos } from "@/lib/use-shuffled-promos";
+
 import { curatedSponsorsFor } from "@/lib/event-sponsor-overrides";
 import { eventHasTshirt } from "@/lib/apparel";
 import { useAdminStore } from "@/lib/store";
@@ -291,7 +294,7 @@ function MyEventDetail() {
             <OfflinePackCard event={event as never} />
           </section>
         )}
-        {tab === "routes" && <RoutesPanel eventId={event.id} event={event} />}
+        {tab === "routes" && <RoutesPanel eventId={event.id} event={event} eventName={event.name} />}
         {tab === "news" && <EventNewsPanel posts={eventNews} />}
         {tab === "photos" && (
           <section className="space-y-3">
@@ -530,9 +533,11 @@ function DownloadLink({ url, label }: { url: string; label: string }) {
 function RoutesPanel({
   eventId,
   event,
+  eventName,
 }: {
   eventId: string;
-  event: { days?: unknown; schedule?: unknown };
+  event: { days?: unknown; schedule?: unknown; name?: string | null };
+  eventName?: string | null;
 }) {
   const { user, loading } = useSession();
   const locked = !loading && !user;
@@ -544,6 +549,8 @@ function RoutesPanel({
   });
   const isEntrant = !!entryQ.data;
   const downloadsLocked = locked || (!!user && !entryQ.isLoading && !isEntrant);
+  // Rider offers live inside the routes — the most-viewed part of the page.
+  const promos = useShuffledPromos(eventPromosFor(eventName ?? event.name ?? ""));
   const days: EventDay[] = withRegistrationDayLabels(
     Array.isArray(event.days) ? (event.days as EventDay[]) : [],
     Array.isArray(event.schedule) ? (event.schedule as ScheduleItem[]) : [],
@@ -555,6 +562,9 @@ function RoutesPanel({
   const shownDays =
     activeDay === "all" ? routeDays : routeDays.filter((d) => d.id === activeDay);
   const mapDayIds = activeDay === "all" ? undefined : [activeDay];
+  // Running counter so offers are spaced evenly across every day's route cards.
+  let cardCount = 0;
+
 
   if (allRoutes.length === 0) {
     return <EmptyBlock>Routes for this event will be published here soon.</EmptyBlock>;
@@ -601,8 +611,14 @@ function RoutesPanel({
               </Link>
             ) : null}
           </div>
+          {promos[0] ? (
+            <div className="mt-3">
+              <PromoInline promo={promos[0]} />
+            </div>
+          ) : null}
         </section>
       ) : null}
+
 
       {shownDays.map((day, di) => {
 
@@ -619,8 +635,15 @@ function RoutesPanel({
             <ul className="mt-2 space-y-3">
               {routes.map((r: EventRoute, ri) => {
                 const kmls = r.kmlUrls ?? [];
+                // Space the offers out: one strip after every second route card.
+                const cardIndex = cardCount++;
+                const promo =
+                  promos.length > 0 && cardIndex % 2 === 1
+                    ? promos[(Math.floor(cardIndex / 2) + 1) % promos.length]
+                    : null;
                 return (
-                  <li key={r.id || ri} className="rounded-2xl bg-card p-4 ring-1 ring-border">
+                  <Fragment key={r.id || ri}>
+                  <li className="rounded-2xl bg-card p-4 ring-1 ring-border">
                     <div className="flex items-center gap-2">
                       <span
                         className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white"
@@ -672,8 +695,15 @@ function RoutesPanel({
                     )}
 
                   </li>
+                  {promo ? (
+                    <li className="pt-1">
+                      <PromoInline promo={promo} />
+                    </li>
+                  ) : null}
+                  </Fragment>
                 );
               })}
+
             </ul>
           </section>
         );
@@ -789,7 +819,7 @@ function InfoPanel({
         <section>
           <SectionTitle>Routes</SectionTitle>
           <div className="mt-2">
-            <RoutesPanel eventId={eventId} event={event} />
+            <RoutesPanel eventId={eventId} event={event} eventName={eventName} />
           </div>
         </section>
       ) : null}
