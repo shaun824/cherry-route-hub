@@ -255,6 +255,13 @@ function CrewDashboard() {
 
       <section className="grid gap-2 sm:grid-cols-2">
         <Tile
+          to="/crew/run-sheet"
+          icon={<ClipboardList className="h-5 w-5" />}
+          title="Run sheet"
+          body="Your department's instructions for each day, packing lists and onboarding."
+        />
+        <Tile
+
           to="/crew/rooming"
           icon={<Search className="h-5 w-5" />}
           title="Find a rider"
