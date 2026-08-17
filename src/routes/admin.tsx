@@ -29,7 +29,9 @@ const nav: { to: string; label: string; icon: typeof LayoutDashboard; exact?: bo
 
   { to: "/admin/loyalty", label: "Loyalty", icon: Medal },
   { to: "/admin/rooming", label: "Rooming", icon: BedDouble },
+  { to: "/admin/run-sheet", label: "Run sheets", icon: ClipboardList },
   { to: "/crew", label: "Crew finder", icon: HardHat },
+
   { to: "/admin/messages", label: "Messages", icon: MessagesSquare },
   { to: "/admin/knowledge", label: "Bot knowledge", icon: Brain },
   { to: "/admin/bot-log", label: "Bot Q&A log", icon: Bot },
