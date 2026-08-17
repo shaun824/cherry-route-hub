@@ -277,7 +277,10 @@ export default function RouteMapInner({
         </div>
       )}
 
-      <div className="overflow-hidden rounded-2xl ring-1 ring-border">
+      <div
+        className={`overflow-hidden rounded-2xl ring-1 ring-border ${fill ? "min-h-0 flex-1" : ""}`}
+      >
+
         <MapContainer
           key={loaded.map((l) => l.route.id).join(",")}
           center={bounds ? undefined : [-33.9249, 18.4241]}
