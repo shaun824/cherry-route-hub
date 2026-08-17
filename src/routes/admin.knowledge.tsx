@@ -12,6 +12,7 @@ import {
   setLearnedFaqStatus,
   upsertLearnedFaq,
 } from "@/lib/faq-learned.functions";
+import { KnowledgeIntake, KnowledgeLibrary } from "@/components/knowledge-library";
 
 export const Route = createFileRoute("/admin/knowledge")({
   head: () => ({
@@ -27,7 +28,7 @@ type Status = "suggested" | "approved" | "rejected";
 
 function AdminKnowledge() {
   const qc = useQueryClient();
-  const [tab, setTab] = useState<Status | "gaps">("suggested");
+  const [tab, setTab] = useState<Status | "gaps" | "library" | "intake">("suggested");
 
   const list = useServerFn(listLearnedFaqs);
   const gaps = useServerFn(listBotGaps);
@@ -48,8 +49,8 @@ function AdminKnowledge() {
 
   const faqsQ = useQuery({
     queryKey: ["learned-faqs", tab],
-    queryFn: () => list({ data: { status: tab === "gaps" ? "approved" : tab } }),
-    enabled: tab !== "gaps",
+    queryFn: () => list({ data: { status: tab === "suggested" || tab === "approved" || tab === "rejected" ? tab : "approved" } }),
+    enabled: tab === "suggested" || tab === "approved" || tab === "rejected",
   });
 
   const gapsQ = useQuery({
@@ -129,7 +130,9 @@ function AdminKnowledge() {
             { id: "approved", label: "Approved" },
             { id: "rejected", label: "Rejected" },
             { id: "gaps", label: "Unanswered questions" },
-          ] as { id: Status | "gaps"; label: string }[]
+            { id: "library", label: "Business knowledge" },
+            { id: "intake", label: "Email intake" },
+          ] as { id: Status | "gaps" | "library" | "intake"; label: string }[]
         ).map((t) => (
           <button
             key={t.id}
@@ -143,7 +146,11 @@ function AdminKnowledge() {
         ))}
       </nav>
 
-      {tab === "gaps" ? (
+      {tab === "library" ? (
+        <KnowledgeLibrary events={(eventsQ.data ?? []) as { id: string; name: string }[]} />
+      ) : tab === "intake" ? (
+        <KnowledgeIntake />
+      ) : tab === "gaps" ? (
         <section className="rounded-2xl bg-card p-4 ring-1 ring-border">
           <div className="flex items-center gap-2 pb-2">
             <Sparkles className="h-4 w-4 text-cherry" />

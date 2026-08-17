@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { BOT_MISS_REPLY } from "@/lib/bot-handoff";
+import { CONFIDENTIALITY_RULES } from "@/lib/knowledge-redact";
 import { FOLLOWUP_PROMPT_RULE, splitFollowUps } from "@/lib/bot-followups";
 import { venueMapLinks } from "@/lib/map-embed";
 
@@ -258,9 +259,24 @@ export const askEventBot = createServerFn({ method: "POST" })
       console.error("rider context failed", e);
     }
 
+    // Business knowledge taught by the team (public tier only — riders read this bot).
+    let knowledgeText = "";
+    try {
+      const { buildKnowledgeContext } = await import("@/lib/knowledge-ingest.server");
+      knowledgeText = await buildKnowledgeContext(adminForKb as any, {
+        question: data.question,
+        eventIds: [data.eventId],
+        includeInternal: false,
+      });
+    } catch (e) {
+      console.error("[event-bot] knowledge context failed", e);
+    }
+
     const context_text = [
       approvedText ? "APPROVED ANSWERS (highest priority — verified by Red Cherry admins):" : "",
       approvedText,
+      knowledgeText ? "RED CHERRY BUSINESS KNOWLEDGE (written by the team — trust it):" : "",
+      knowledgeText,
       riderText ? "THIS RIDER'S OWN RECORDS (from our system — authoritative, personal to them):" : "",
       riderText,
       "STRUCTURED EVENT DATA (authoritative):",
@@ -295,7 +311,9 @@ Rules:
 - Directions, parking and "where is it?" questions: always include the Google Maps links from the context as markdown links, e.g. [Open in Google Maps](…) and [Get directions](…). Add them whenever the venue, parking, arrival or travel comes up, even in passing.
 - Give the rider somewhere to read more: when your answer comes from a website page or an extra/add-on with a "More info" or SOURCE url, finish that point with a markdown link, e.g. [Read more on the event website](https://…). Use only urls that appear in the context — never invent or guess a link — and keep it to one or two links per answer.
 ${FOLLOWUP_PROMPT_RULE}
-- Never mention the sentinel, "CONTEXT", "sources", or that you scraped a website in your visible answer.`;
+- Never mention the sentinel, "CONTEXT", "sources", or that you scraped a website in your visible answer.
+
+${CONFIDENTIALITY_RULES}`;
 
 
 
