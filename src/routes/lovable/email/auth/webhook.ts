@@ -34,14 +34,42 @@ const handler = createAuthEmailHandler({
         }),
     },
     invite: {
-      subject: "You've been invited",
-      render: (data) =>
-        React.createElement(InviteEmail, {
+      subject: 'Your Red Cherry Events Rider Hub account is ready',
+      render: async (data) => {
+        // Personalise with the rider's name and the events already on their
+        // roster row. Falls back to a generic invite if the lookup fails.
+        let firstName: string | undefined
+        let events: string[] = []
+        try {
+          const { supabaseAdmin } = await import('@/integrations/supabase/client.server')
+          const { data: entrant } = await supabaseAdmin
+            .from('entrants')
+            .select('id, full_name')
+            .ilike('email', data.email)
+            .maybeSingle()
+          if (entrant?.full_name) firstName = entrant.full_name.trim().split(/\s+/)[0]
+          if (entrant?.id) {
+            const { data: rows } = await supabaseAdmin
+              .from('event_entrants')
+              .select('events(name, event_date)')
+              .eq('entrant_id', entrant.id)
+            events = (rows ?? [])
+              .map((r) => (r as { events?: { name?: string } | null }).events?.name)
+              .filter((n): n is string => Boolean(n))
+          }
+        } catch {
+          /* personalisation is best-effort — the invite must still send */
+        }
+        return React.createElement(InviteEmail, {
           siteName: SITE_NAME,
           siteUrl: SITE_URL,
           confirmationUrl: data.url,
-        }),
+          firstName,
+          events,
+        })
+      },
     },
+
     magiclink: {
       subject: 'Your login link',
       render: (data) =>
