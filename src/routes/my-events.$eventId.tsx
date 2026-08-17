@@ -530,9 +530,11 @@ function DownloadLink({ url, label }: { url: string; label: string }) {
 function RoutesPanel({
   eventId,
   event,
+  eventName,
 }: {
   eventId: string;
-  event: { days?: unknown; schedule?: unknown };
+  event: { days?: unknown; schedule?: unknown; name?: string | null };
+  eventName?: string | null;
 }) {
   const { user, loading } = useSession();
   const locked = !loading && !user;
@@ -544,6 +546,8 @@ function RoutesPanel({
   });
   const isEntrant = !!entryQ.data;
   const downloadsLocked = locked || (!!user && !entryQ.isLoading && !isEntrant);
+  // Rider offers live inside the routes — the most-viewed part of the page.
+  const promos = useShuffledPromos(eventPromosFor(eventName ?? event.name ?? ""));
   const days: EventDay[] = withRegistrationDayLabels(
     Array.isArray(event.days) ? (event.days as EventDay[]) : [],
     Array.isArray(event.schedule) ? (event.schedule as ScheduleItem[]) : [],
@@ -555,6 +559,9 @@ function RoutesPanel({
   const shownDays =
     activeDay === "all" ? routeDays : routeDays.filter((d) => d.id === activeDay);
   const mapDayIds = activeDay === "all" ? undefined : [activeDay];
+  // Running counter so offers are spaced evenly across every day's route cards.
+  let cardCount = 0;
+
 
   if (allRoutes.length === 0) {
     return <EmptyBlock>Routes for this event will be published here soon.</EmptyBlock>;
