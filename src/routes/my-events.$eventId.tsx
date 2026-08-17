@@ -608,6 +608,9 @@ function RoutesPanel({
 
         const routes = day.routes ?? [];
         if (routes.length === 0) return null;
+        // Water points / marshals are physical stops shared by every route on the
+        // day — the profile only keeps the ones a given route actually passes.
+        const dayMarkers = routes.flatMap((r: EventRoute) => r.customMarkers ?? []);
         return (
           <section key={day.id || di}>
             <SectionTitle>
@@ -629,7 +632,7 @@ function RoutesPanel({
                       <p className="text-sm font-semibold text-ink">{r.name}</p>
                     </div>
                     <RouteFileStats route={r} />
-                    <RouteProfile route={r} color={r.color} />
+                    <RouteProfile route={r} color={r.color} markers={dayMarkers} />
 
                     {r.description ? (
                       <p className="mt-2 text-xs leading-relaxed text-ink-soft">{r.description}</p>
