@@ -18,9 +18,11 @@ const riderTabs = [
 
 const crewTabs = [
   { to: "/crew", label: "Crew", fullLabel: "Crew dashboard", icon: HardHat, match: (p: string) => p === "/crew" || p === "/crew/" },
+  { to: "/crew/run-sheet", label: "Run sheet", fullLabel: "Run sheet", icon: ClipboardList, match: (p: string) => p.startsWith("/crew/run-sheet") || p.startsWith("/crew/department") },
   { to: "/crew/rooming", label: "Rooming", fullLabel: "Rooming finder", icon: BedDouble, match: (p: string) => p.startsWith("/crew/rooming") },
   { to: "/", label: "Rider app", fullLabel: "Rider app", icon: Smartphone, match: () => false },
 ] as const;
+
 
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
