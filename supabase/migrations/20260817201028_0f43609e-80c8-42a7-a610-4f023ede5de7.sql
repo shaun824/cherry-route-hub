@@ -1,0 +1,1 @@
+update public.events set hero_color = '#7fbe60,#4f8c3a' where slug = 'mg-pe-plett-2027';
