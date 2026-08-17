@@ -11,7 +11,10 @@ type Props = {
   height?: string;
   showToggles?: boolean;
   showStats?: boolean;
+  /** Only render routes belonging to these day ids (undefined = all days). */
+  dayIds?: string[];
 };
+
 
 function Skeleton({ height }: { height: string }) {
   return (
