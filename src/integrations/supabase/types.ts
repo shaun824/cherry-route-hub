@@ -1634,6 +1634,10 @@ export type Database = {
           status: string
           subscription_id: string | null
           user_id: string | null
+          wa_message_id: string | null
+          wa_phone: string | null
+          wa_status: string | null
+          wa_status_at: string | null
         }
         Insert: {
           channel?: string
@@ -1645,6 +1649,10 @@ export type Database = {
           status?: string
           subscription_id?: string | null
           user_id?: string | null
+          wa_message_id?: string | null
+          wa_phone?: string | null
+          wa_status?: string | null
+          wa_status_at?: string | null
         }
         Update: {
           channel?: string
@@ -1656,6 +1664,10 @@ export type Database = {
           status?: string
           subscription_id?: string | null
           user_id?: string | null
+          wa_message_id?: string | null
+          wa_phone?: string | null
+          wa_status?: string | null
+          wa_status_at?: string | null
         }
         Relationships: [
           {
@@ -2057,6 +2069,63 @@ export type Database = {
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
+        }
+        Relationships: []
+      }
+      whatsapp_opt_outs: {
+        Row: {
+          created_at: string
+          phone: string
+          reason: string | null
+        }
+        Insert: {
+          created_at?: string
+          phone: string
+          reason?: string | null
+        }
+        Update: {
+          created_at?: string
+          phone?: string
+          reason?: string | null
+        }
+        Relationships: []
+      }
+      whatsapp_templates: {
+        Row: {
+          active: boolean
+          body_preview: string | null
+          created_at: string
+          description: string | null
+          id: string
+          language: string
+          name: string
+          updated_at: string
+          variable_count: number
+          variable_labels: string[]
+        }
+        Insert: {
+          active?: boolean
+          body_preview?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          language?: string
+          name: string
+          updated_at?: string
+          variable_count?: number
+          variable_labels?: string[]
+        }
+        Update: {
+          active?: boolean
+          body_preview?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          language?: string
+          name?: string
+          updated_at?: string
+          variable_count?: number
+          variable_labels?: string[]
         }
         Relationships: []
       }
