@@ -2,8 +2,8 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { PageHeader } from "@/components/ui-bits";
 import { supabase } from "@/integrations/supabase/client";
-import { useSession, signOut, useIsCrew } from "@/lib/auth";
-import { LogOut, Save, User as UserIcon, ShieldAlert, HardHat, Repeat, Plus, X } from "lucide-react";
+import { useSession, signOut, useIsCrew, useIsAdmin } from "@/lib/auth";
+import { LogOut, Save, User as UserIcon, ShieldAlert, ShieldCheck, HardHat, Repeat, Plus, X } from "lucide-react";
 import { NotificationSettings } from "@/components/notification-settings";
 import { RiderEventHistory } from "@/components/rider-event-history";
 import { RewardsSummary } from "@/components/rewards-summary";
@@ -250,6 +250,7 @@ function Profile() {
       </section>
 
 
+      <AdminShortcut />
       <CrewShortcut />
 
       <form onSubmit={handleSave} className="mx-5 mt-4 space-y-4 rounded-2xl bg-card p-4 ring-1 ring-border">
@@ -373,6 +374,26 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
       <span className="mb-1 block text-[11px] font-bold uppercase tracking-wider text-ink-soft">{label}</span>
       {children}
     </label>
+  );
+}
+
+/** Admin-only shortcut into the super admin console. */
+function AdminShortcut() {
+  const { isAdmin } = useIsAdmin();
+  if (!isAdmin) return null;
+  return (
+    <Link
+      to="/admin"
+      className="mx-5 mt-4 flex items-center gap-3 rounded-2xl bg-cherry p-4 text-white"
+    >
+      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-white/20">
+        <ShieldCheck className="h-5 w-5" />
+      </span>
+      <span className="min-w-0">
+        <span className="block font-display text-sm font-bold">Super admin console</span>
+        <span className="block text-[11px] opacity-90">Events, riders, feed, promos and settings</span>
+      </span>
+    </Link>
   );
 }
 
