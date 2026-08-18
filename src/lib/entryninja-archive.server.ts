@@ -60,6 +60,14 @@ export async function backfillArchiveChunk(
           .eq("id", eventId);
       }
       const r = await syncEnEvent(supabase, { enEventId: en.id, eventId, enEvent: en });
+      // History rows must never trigger a "you're entered" email.
+      if (isPast(en.date)) {
+        await supabase
+          .from("event_entrants")
+          .update({ welcome_email_skipped: true })
+          .eq("event_id", eventId)
+          .is("welcome_email_sent_at", null);
+      }
       results.push({
         enEventId: en.id,
         eventName: r.eventName,
