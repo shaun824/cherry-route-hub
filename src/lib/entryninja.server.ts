@@ -177,3 +177,66 @@ export async function enPost(
   }
   return { ok: res.ok, status: res.status, json, text: text.slice(0, 300) };
 }
+
+/**
+ * Entry Ninja exposes team / group membership in a few different shapes
+ * depending on how the organiser set the event up: a `team` or `group` object
+ * on the entry, a flat string, something on the registration, or a custom
+ * "Team name" question answered in the extras. Normalise all of them.
+ */
+export function extractTeam(entry: unknown): { name: string | null; ref: string | null } {
+  const e = (entry ?? {}) as Record<string, any>;
+  const asName = (v: unknown): string | null => {
+    if (!v) return null;
+    if (typeof v === "string") return v.trim() || null;
+    if (typeof v === "object") {
+      const o = v as Record<string, any>;
+      const n = o["name"] ?? o["team_name"] ?? o["title"] ?? o["label"];
+      return typeof n === "string" && n.trim() ? n.trim() : null;
+    }
+    return null;
+  };
+  const asRef = (v: unknown): string | null => {
+    if (v && typeof v === "object") {
+      const o = v as Record<string, any>;
+      const id = o["id"] ?? o["reference"] ?? o["code"];
+      if (id != null && String(id).trim()) return String(id).trim();
+    }
+    return null;
+  };
+
+  const candidates = [
+    e["team"],
+    e["group"],
+    e["team_name"],
+    e["group_name"],
+    e["club"],
+    e["registration"]?.["team"],
+    e["registration"]?.["group"],
+    e["registration"]?.["team_name"],
+    e["entrant"]?.["team"],
+    e["entrant"]?.["club"],
+  ];
+  for (const c of candidates) {
+    const name = asName(c);
+    if (name) return { name, ref: asRef(c) };
+  }
+
+  // Custom questions / extras: "Team name", "Group name", "Team / group".
+  const answered = [
+    ...toLineArray(e["extra"]),
+    ...toLineArray(e["merchandise"]),
+    ...(Array.isArray(e["validations"]) ? (e["validations"] as any[]) : []),
+    ...(Array.isArray(e["questions"]) ? (e["questions"] as any[]) : []),
+    ...(Array.isArray(e["answers"]) ? (e["answers"] as any[]) : []),
+  ] as any[];
+  for (const line of answered) {
+    const label = String(line?.item?.name ?? line?.question ?? line?.name ?? line?.label ?? "").toLowerCase();
+    if (!/team|group/.test(label)) continue;
+    const value = line?.option?.name ?? line?.answer ?? line?.value ?? line?.response;
+    const name = asName(value);
+    if (name) return { name, ref: null };
+  }
+
+  return { name: null, ref: null };
+}
