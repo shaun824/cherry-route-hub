@@ -59,7 +59,7 @@ export async function backfillArchiveChunk(
           .update({ lifecycle: "archived", status: "completed" })
           .eq("id", eventId);
       }
-      const r = await syncEnEvent(supabase, { enEventId: en.id, eventId });
+      const r = await syncEnEvent(supabase, { enEventId: en.id, eventId, enEvent: en });
       results.push({
         enEventId: en.id,
         eventName: r.eventName,
