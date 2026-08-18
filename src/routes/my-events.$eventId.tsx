@@ -62,8 +62,8 @@ import { useShuffledPromos } from "@/lib/use-shuffled-promos";
 import { curatedSponsorsFor } from "@/lib/event-sponsor-overrides";
 import { eventHasTshirt } from "@/lib/apparel";
 import { useAdminStore } from "@/lib/store";
-import { fetchMyEventById, type MyEventRow } from "@/lib/my-events";
-import { Printer, Siren, BedDouble, ExternalLink } from "lucide-react";
+import { fetchMyEventById, fetchMyTeam, type MyEventRow } from "@/lib/my-events";
+import { Printer, Siren, BedDouble, ExternalLink, Users } from "lucide-react";
 import type { EventDay, EventRoute, FeedPost, ScheduleItem, SocialLinks } from "@/lib/mock-data";
 import { relativeTime } from "@/lib/mock-data";
 import { withRegistrationDayLabels } from "@/lib/event-days";
@@ -2046,6 +2046,8 @@ function YourEntryCard({ eventId, entryUrl = null }: { eventId: string; entryUrl
 
 
 
+      <TeamCard eventId={eventId} teamName={row.team_name} />
+
       {rooming ? (
         <div className="mt-3 rounded-xl bg-secondary p-2.5">
           <p className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-ink-soft">
@@ -2111,5 +2113,50 @@ function YourEntryCard({ eventId, entryUrl = null }: { eventId: string; entryUrl
       ) : null}
 
     </section>
+  );
+}
+
+
+/** Team / group from Entry Ninja: name plus everyone else riding with you. */
+function TeamCard({ eventId, teamName }: { eventId: string; teamName: string | null }) {
+  const q = useQuery({
+    queryKey: ["my-team", eventId],
+    queryFn: () => fetchMyTeam(eventId),
+    staleTime: 60_000,
+    enabled: Boolean(teamName),
+  });
+  if (!teamName) return null;
+  const members = q.data?.members ?? [];
+  const others = members.filter((m) => !m.is_me);
+  return (
+    <div className="mt-3 rounded-xl bg-secondary p-2.5">
+      <p className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-ink-soft">
+        <Users className="h-3 w-3" /> Your team
+      </p>
+      <p className="mt-0.5 font-display text-sm font-bold text-ink">{q.data?.teamName ?? teamName}</p>
+      {others.length > 0 ? (
+        <ul className="mt-2 space-y-1">
+          {others.map((m) => (
+            <li
+              key={`${m.full_name}-${m.bib_number ?? ""}`}
+              className="flex items-center justify-between gap-2 rounded-lg bg-card px-2 py-1.5 text-[11px]"
+            >
+              <span className="font-semibold text-ink">{m.full_name}</span>
+              <span className="text-ink-soft">
+                {[m.category, m.batch, m.bib_number ? `#${m.bib_number}` : null]
+                  .filter(Boolean)
+                  .join(" · ")}
+              </span>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="mt-1 text-[11px] text-ink-soft">
+          {q.isLoading
+            ? "Loading your team…"
+            : "You're the only rider on this team so far — teammates appear here as they enter."}
+        </p>
+      )}
+    </div>
   );
 }
