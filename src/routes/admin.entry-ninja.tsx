@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Link2, RefreshCw, CheckCircle2, AlertTriangle, Plug, Mail, History, Users } from "lucide-react";
@@ -153,7 +153,8 @@ function ArchiveBackfillCard() {
   const linkFn = useServerFn(linkRosterToAccounts);
   const coverageFn = useServerFn(rosterCoverage);
   const [busy, setBusy] = useState(false);
-  const [stop, setStop] = useState(false);
+  const stopRef = useRef(false);
+  const [stopping, setStopping] = useState(false);
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
   const [log, setLog] = useState<string[]>([]);
   const [err, setErr] = useState<string | null>(null);
@@ -166,7 +167,8 @@ function ArchiveBackfillCard() {
 
   async function runAll() {
     setBusy(true);
-    setStop(false);
+    stopRef.current = false;
+    setStopping(false);
     setErr(null);
     setLog([]);
     let start = 0;
@@ -186,7 +188,7 @@ function ArchiveBackfillCard() {
         );
         if (res.nextStart == null) break;
         start = res.nextStart;
-        if (stop) break;
+        if (stopRef.current) break;
       }
       const linkRes = await linkFn({});
       setLog((prev) => [`Linked ${linkRes.linked} roster records to app accounts.`, ...prev]);
@@ -259,10 +261,13 @@ function ArchiveBackfillCard() {
         </button>
         {busy && (
           <button
-            onClick={() => setStop(true)}
+            onClick={() => {
+              stopRef.current = true;
+              setStopping(true);
+            }}
             className="rounded-lg border border-border px-3 py-2 text-xs font-semibold"
           >
-            Stop after this batch
+            {stopping ? "Stopping…" : "Stop after this batch"}
           </button>
         )}
         {progress && (

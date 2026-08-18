@@ -27,6 +27,14 @@ export const Route = createFileRoute("/api/public/hooks/entry-ninja-sync")({
 
         try {
           const summary = await syncAllLinkedEvents(supabaseAdmin);
+          // Keep roster records attached to app accounts as riders sign up.
+          let linkedAccounts: unknown = null;
+          try {
+            const { linkEntrantsToAccounts } = await import("@/lib/entryninja-archive.server");
+            linkedAccounts = await linkEntrantsToAccounts(supabaseAdmin);
+          } catch (linkErr) {
+            console.error("[entry-ninja-sync] account linking failed", linkErr);
+          }
           // Every brand-new entry gets a "you're in" email pointing at its event page.
           let welcome: unknown = null;
           try {
@@ -34,8 +42,8 @@ export const Route = createFileRoute("/api/public/hooks/entry-ninja-sync")({
           } catch (mailErr) {
             console.error("[entry-ninja-sync] welcome emails failed", mailErr);
           }
-          console.log("[entry-ninja-sync]", JSON.stringify({ ...summary, welcome }));
-          return new Response(JSON.stringify({ success: true, ...summary, welcome }), {
+          console.log("[entry-ninja-sync]", JSON.stringify({ ...summary, welcome, linkedAccounts }));
+          return new Response(JSON.stringify({ success: true, ...summary, welcome, linkedAccounts }), {
             headers: { "Content-Type": "application/json" },
           });
         } catch (err) {
