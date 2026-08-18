@@ -2,7 +2,12 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Link2, RefreshCw, CheckCircle2, AlertTriangle, Plug, Mail } from "lucide-react";
+import { Link2, RefreshCw, CheckCircle2, AlertTriangle, Plug, Mail, History, Users } from "lucide-react";
+import {
+  backfillEntryNinjaArchive,
+  linkRosterToAccounts,
+  rosterCoverage,
+} from "@/lib/entryninja-archive.functions";
 import {
   listEntryNinjaEvents,
   syncEntryNinjaEvent,
@@ -132,12 +137,150 @@ function EntryNinjaPage() {
         ))}
       </div>
 
+      <ArchiveBackfillCard />
+
       <WelcomeEmailsCard
         events={(events.data ?? [])
           .filter((e) => e.matchedEventId)
           .map((e) => ({ id: e.matchedEventId as string, name: e.matchedEventName ?? e.name }))}
       />
     </div>
+  );
+}
+
+function ArchiveBackfillCard() {
+  const runChunk = useServerFn(backfillEntryNinjaArchive);
+  const linkFn = useServerFn(linkRosterToAccounts);
+  const coverageFn = useServerFn(rosterCoverage);
+  const [busy, setBusy] = useState(false);
+  const [stop, setStop] = useState(false);
+  const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
+  const [log, setLog] = useState<string[]>([]);
+  const [err, setErr] = useState<string | null>(null);
+
+  const coverage = useQuery({
+    queryKey: ["roster-coverage"],
+    queryFn: () => coverageFn({}),
+    staleTime: 30_000,
+  });
+
+  async function runAll() {
+    setBusy(true);
+    setStop(false);
+    setErr(null);
+    setLog([]);
+    let start = 0;
+    try {
+      for (;;) {
+        const res = await runChunk({ data: { start, count: 3 } });
+        setProgress({ done: res.start + res.processed, total: res.total });
+        setLog((prev) =>
+          [
+            ...res.results.map((r) =>
+              r.ok
+                ? `${r.eventName}: ${r.totalEntries} entries · ${r.created} new riders · ${r.updated} updated`
+                : `${r.eventName}: failed — ${r.error}`,
+            ),
+            ...prev,
+          ].slice(0, 60),
+        );
+        if (res.nextStart == null) break;
+        start = res.nextStart;
+        if (stop) break;
+      }
+      const linkRes = await linkFn({});
+      setLog((prev) => [`Linked ${linkRes.linked} roster records to app accounts.`, ...prev]);
+      void coverage.refetch();
+    } catch (e) {
+      setErr((e as Error).message ?? "Backfill failed");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function linkOnly() {
+    setBusy(true);
+    setErr(null);
+    try {
+      const r = await linkFn({});
+      setLog((prev) => [`Linked ${r.linked} of ${r.checked} roster records to app accounts.`, ...prev]);
+      void coverage.refetch();
+    } catch (e) {
+      setErr((e as Error).message ?? "Linking failed");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const c = coverage.data;
+
+  return (
+    <section className="space-y-3 rounded-xl border border-border bg-card p-4">
+      <header className="flex items-center gap-2">
+        <History className="h-4 w-4 text-cherry" />
+        <h2 className="font-display text-sm font-bold">Full history backfill</h2>
+      </header>
+      <p className="text-xs text-ink-soft">
+        Walks every event on the Entry Ninja account — including ones never linked here — and pulls
+        each entrant into the roster with their ID number stored securely, so anyone who has ever
+        entered with us can claim their profile and see their history. Past events that don&rsquo;t
+        exist in the app are created as archived records for history only.
+      </p>
+
+      <div className="grid grid-cols-2 gap-2 text-xs sm:grid-cols-4">
+        {[
+          ["Riders on file", c?.entrants],
+          ["With ID number", c?.withIdNumber],
+          ["Linked to accounts", c?.linkedToAccounts],
+          ["Event entries", c?.entries],
+        ].map(([label, value]) => (
+          <div key={String(label)} className="rounded-lg border border-border bg-background p-2.5">
+            <p className="font-display text-base font-bold">{value ?? "…"}</p>
+            <p className="text-[11px] text-ink-soft">{label}</p>
+          </div>
+        ))}
+      </div>
+
+      <div className="flex flex-wrap items-center gap-2">
+        <button
+          onClick={() => void runAll()}
+          disabled={busy}
+          className="inline-flex items-center gap-1.5 rounded-lg bg-cherry px-3 py-2 text-xs font-semibold text-white disabled:opacity-60"
+        >
+          <RefreshCw className={`h-3.5 w-3.5 ${busy ? "animate-spin" : ""}`} />
+          {busy ? "Pulling history…" : "Pull full history"}
+        </button>
+        <button
+          onClick={() => void linkOnly()}
+          disabled={busy}
+          className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-xs font-semibold disabled:opacity-60"
+        >
+          <Users className="h-3.5 w-3.5" /> Link riders to accounts
+        </button>
+        {busy && (
+          <button
+            onClick={() => setStop(true)}
+            className="rounded-lg border border-border px-3 py-2 text-xs font-semibold"
+          >
+            Stop after this batch
+          </button>
+        )}
+        {progress && (
+          <span className="text-xs text-ink-soft">
+            {progress.done} of {progress.total} events
+          </span>
+        )}
+      </div>
+
+      {err && <p className="text-xs text-destructive">{err}</p>}
+      {log.length > 0 && (
+        <ul className="max-h-48 space-y-1 overflow-auto text-[11px] text-ink-soft">
+          {log.map((line, i) => (
+            <li key={i}>{line}</li>
+          ))}
+        </ul>
+      )}
+    </section>
   );
 }
 
