@@ -18,6 +18,7 @@ export type MyEventRow = {
   jacket_size: string | null;
   tshirt_size: string | null;
   extras: ExtraItem[];
+  team_name: string | null;
   notes: string | null;
   paid: boolean | null;
   amount_due_cents: number | null;
@@ -79,7 +80,7 @@ export async function fetchMyEvents(): Promise<MyEventRow[]> {
   const { data, error } = await supabase
     .from("event_entrants")
     .select(
-      "id, event_id, category, batch, bib_number, registration_ref, jacket_size, tshirt_size, extras, notes, paid, amount_due_cents, amount_paid_cents, event:events(id, name, discipline, event_date, location, distance_km, status, hero_color, logo_url, description, social_links, title_sponsor_name, title_sponsor_logo_url, title_sponsor_url)",
+      "id, event_id, category, batch, bib_number, registration_ref, jacket_size, tshirt_size, extras, team_name, notes, paid, amount_due_cents, amount_paid_cents, event:events(id, name, discipline, event_date, location, distance_km, status, hero_color, logo_url, description, social_links, title_sponsor_name, title_sponsor_logo_url, title_sponsor_url)",
     )
     .in("entrant_id", entrantIds)
     .order("created_at", { ascending: false });
@@ -99,6 +100,7 @@ export async function fetchMyEvents(): Promise<MyEventRow[]> {
       jacket_size: (r as { jacket_size: string | null }).jacket_size ?? null,
       tshirt_size: (r as { tshirt_size: string | null }).tshirt_size ?? null,
       extras: normalizeExtras((r as { extras: unknown }).extras),
+      team_name: ((r as { team_name?: string | null }).team_name ?? null) || null,
       notes: (r as { notes: string | null }).notes ?? null,
       paid: (r as { paid: boolean | null }).paid ?? null,
       amount_due_cents: (r as { amount_due_cents: number | null }).amount_due_cents ?? null,
@@ -117,4 +119,27 @@ export async function fetchMyEvents(): Promise<MyEventRow[]> {
 export async function fetchMyEventById(eventId: string): Promise<MyEventRow | null> {
   const rows = await fetchMyEvents();
   return rows.find((r) => r.event_id === eventId) ?? null;
+}
+
+
+export type TeamMate = {
+  full_name: string;
+  category: string | null;
+  batch: string | null;
+  bib_number: string | null;
+  is_me: boolean;
+};
+
+/** Teammates for the signed-in rider on this event (empty when they have no team). */
+export async function fetchMyTeam(
+  eventId: string,
+): Promise<{ teamName: string; members: TeamMate[] } | null> {
+  const { data, error } = await (supabase.rpc as any)("my_event_team", { _event_id: eventId });
+  if (error) {
+    console.warn("[my-events] team", error);
+    return null;
+  }
+  const rows = (data ?? []) as (TeamMate & { team_name: string })[];
+  if (rows.length === 0) return null;
+  return { teamName: rows[0]!.team_name, members: rows };
 }

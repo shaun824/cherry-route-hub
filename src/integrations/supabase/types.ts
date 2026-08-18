@@ -659,6 +659,8 @@ export type Database = {
           payment_synced_at: string | null
           registration_ref: string | null
           started_at: string | null
+          team_name: string | null
+          team_ref: string | null
           tshirt_size: string | null
           updated_at: string
           welcome_email_sent_at: string | null
@@ -683,6 +685,8 @@ export type Database = {
           payment_synced_at?: string | null
           registration_ref?: string | null
           started_at?: string | null
+          team_name?: string | null
+          team_ref?: string | null
           tshirt_size?: string | null
           updated_at?: string
           welcome_email_sent_at?: string | null
@@ -707,6 +711,8 @@ export type Database = {
           payment_synced_at?: string | null
           registration_ref?: string | null
           started_at?: string | null
+          team_name?: string | null
+          team_ref?: string | null
           tshirt_size?: string | null
           updated_at?: string
           welcome_email_sent_at?: string | null
@@ -2634,7 +2640,17 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      my_event_team: {
+        Args: { _event_id: string }
+        Returns: {
+          batch: string
+          bib_number: string
+          category: string
+          full_name: string
+          is_me: boolean
+          team_name: string
+        }[]
+      }
     }
     Enums: {
       app_role: "admin" | "rider" | "crew"
