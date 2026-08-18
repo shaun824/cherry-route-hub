@@ -129,7 +129,7 @@ export async function sendPendingEntryWelcomes(
     const email = (row.entrants?.email ?? "").trim().toLowerCase();
     const event = row.events;
     // No email, or the event isn't live in the app yet — leave it pending.
-    if (!email || !event || event.lifecycle === "draft") {
+    if (!email || !event || event.lifecycle === "draft" || event.lifecycle === "archived") {
       result.skipped++;
       continue;
     }

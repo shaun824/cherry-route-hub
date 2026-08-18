@@ -85,6 +85,7 @@ import { Route as ApiPublicHooksInviteRiderRouteImport } from './routes/api/publ
 import { Route as ApiPublicHooksFaqSuggestRouteImport } from './routes/api/public/hooks/faq-suggest'
 import { Route as ApiPublicHooksEventBotRefreshRouteImport } from './routes/api/public/hooks/event-bot-refresh'
 import { Route as ApiPublicHooksEntryNinjaSyncRouteImport } from './routes/api/public/hooks/entry-ninja-sync'
+import { Route as ApiPublicHooksEntryNinjaArchiveRouteImport } from './routes/api/public/hooks/entry-ninja-archive'
 import { Route as ApiPublicHooksContentAuditRouteImport } from './routes/api/public/hooks/content-audit'
 
 const SpectateRoute = SpectateRouteImport.update({
@@ -483,6 +484,12 @@ const ApiPublicHooksEntryNinjaSyncRoute =
     path: '/api/public/hooks/entry-ninja-sync',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksEntryNinjaArchiveRoute =
+  ApiPublicHooksEntryNinjaArchiveRouteImport.update({
+    id: '/api/public/hooks/entry-ninja-archive',
+    path: '/api/public/hooks/entry-ninja-archive',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksContentAuditRoute =
   ApiPublicHooksContentAuditRouteImport.update({
     id: '/api/public/hooks/content-audit',
@@ -550,6 +557,7 @@ export interface FileRoutesByFullPath {
   '/admin/village/': typeof AdminVillageIndexRoute
   '/events/$eventId/': typeof EventsEventIdIndexRoute
   '/api/public/hooks/content-audit': typeof ApiPublicHooksContentAuditRoute
+  '/api/public/hooks/entry-ninja-archive': typeof ApiPublicHooksEntryNinjaArchiveRoute
   '/api/public/hooks/entry-ninja-sync': typeof ApiPublicHooksEntryNinjaSyncRoute
   '/api/public/hooks/event-bot-refresh': typeof ApiPublicHooksEventBotRefreshRoute
   '/api/public/hooks/faq-suggest': typeof ApiPublicHooksFaqSuggestRoute
@@ -625,6 +633,7 @@ export interface FileRoutesByTo {
   '/admin/village': typeof AdminVillageIndexRoute
   '/events/$eventId': typeof EventsEventIdIndexRoute
   '/api/public/hooks/content-audit': typeof ApiPublicHooksContentAuditRoute
+  '/api/public/hooks/entry-ninja-archive': typeof ApiPublicHooksEntryNinjaArchiveRoute
   '/api/public/hooks/entry-ninja-sync': typeof ApiPublicHooksEntryNinjaSyncRoute
   '/api/public/hooks/event-bot-refresh': typeof ApiPublicHooksEventBotRefreshRoute
   '/api/public/hooks/faq-suggest': typeof ApiPublicHooksFaqSuggestRoute
@@ -705,6 +714,7 @@ export interface FileRoutesById {
   '/admin/village/': typeof AdminVillageIndexRoute
   '/events/$eventId/': typeof EventsEventIdIndexRoute
   '/api/public/hooks/content-audit': typeof ApiPublicHooksContentAuditRoute
+  '/api/public/hooks/entry-ninja-archive': typeof ApiPublicHooksEntryNinjaArchiveRoute
   '/api/public/hooks/entry-ninja-sync': typeof ApiPublicHooksEntryNinjaSyncRoute
   '/api/public/hooks/event-bot-refresh': typeof ApiPublicHooksEventBotRefreshRoute
   '/api/public/hooks/faq-suggest': typeof ApiPublicHooksFaqSuggestRoute
@@ -786,6 +796,7 @@ export interface FileRouteTypes {
     | '/admin/village/'
     | '/events/$eventId/'
     | '/api/public/hooks/content-audit'
+    | '/api/public/hooks/entry-ninja-archive'
     | '/api/public/hooks/entry-ninja-sync'
     | '/api/public/hooks/event-bot-refresh'
     | '/api/public/hooks/faq-suggest'
@@ -861,6 +872,7 @@ export interface FileRouteTypes {
     | '/admin/village'
     | '/events/$eventId'
     | '/api/public/hooks/content-audit'
+    | '/api/public/hooks/entry-ninja-archive'
     | '/api/public/hooks/entry-ninja-sync'
     | '/api/public/hooks/event-bot-refresh'
     | '/api/public/hooks/faq-suggest'
@@ -940,6 +952,7 @@ export interface FileRouteTypes {
     | '/admin/village/'
     | '/events/$eventId/'
     | '/api/public/hooks/content-audit'
+    | '/api/public/hooks/entry-ninja-archive'
     | '/api/public/hooks/entry-ninja-sync'
     | '/api/public/hooks/event-bot-refresh'
     | '/api/public/hooks/faq-suggest'
@@ -986,6 +999,7 @@ export interface RootRouteChildren {
   CrewDepartmentDeptIdRoute: typeof CrewDepartmentDeptIdRoute
   MyEventsEventIdReportRoute: typeof MyEventsEventIdReportRoute
   ApiPublicHooksContentAuditRoute: typeof ApiPublicHooksContentAuditRoute
+  ApiPublicHooksEntryNinjaArchiveRoute: typeof ApiPublicHooksEntryNinjaArchiveRoute
   ApiPublicHooksEntryNinjaSyncRoute: typeof ApiPublicHooksEntryNinjaSyncRoute
   ApiPublicHooksEventBotRefreshRoute: typeof ApiPublicHooksEventBotRefreshRoute
   ApiPublicHooksFaqSuggestRoute: typeof ApiPublicHooksFaqSuggestRoute
@@ -1540,6 +1554,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksEntryNinjaSyncRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/entry-ninja-archive': {
+      id: '/api/public/hooks/entry-ninja-archive'
+      path: '/api/public/hooks/entry-ninja-archive'
+      fullPath: '/api/public/hooks/entry-ninja-archive'
+      preLoaderRoute: typeof ApiPublicHooksEntryNinjaArchiveRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/content-audit': {
       id: '/api/public/hooks/content-audit'
       path: '/api/public/hooks/content-audit'
@@ -1683,6 +1704,7 @@ const rootRouteChildren: RootRouteChildren = {
   CrewDepartmentDeptIdRoute: CrewDepartmentDeptIdRoute,
   MyEventsEventIdReportRoute: MyEventsEventIdReportRoute,
   ApiPublicHooksContentAuditRoute: ApiPublicHooksContentAuditRoute,
+  ApiPublicHooksEntryNinjaArchiveRoute: ApiPublicHooksEntryNinjaArchiveRoute,
   ApiPublicHooksEntryNinjaSyncRoute: ApiPublicHooksEntryNinjaSyncRoute,
   ApiPublicHooksEventBotRefreshRoute: ApiPublicHooksEventBotRefreshRoute,
   ApiPublicHooksFaqSuggestRoute: ApiPublicHooksFaqSuggestRoute,
