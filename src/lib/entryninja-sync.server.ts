@@ -66,11 +66,12 @@ export async function resolveOrCreateEvent(
 
 export async function syncEnEvent(
   supabase: AnyClient,
-  opts: { enEventId: number; eventId?: string },
+  opts: { enEventId: number; eventId?: string; enEvent?: EnEvent },
 ): Promise<SyncResult> {
-  const enEvents = await fetchEnEvents();
-  const enEvent = enEvents.find((e) => e.id === opts.enEventId);
+  const enEvent =
+    opts.enEvent ?? (await fetchEnEvents()).find((e) => e.id === opts.enEventId);
   if (!enEvent) throw new Error("That event isn't available on your Entry Ninja account.");
+
 
   const { eventId, createdEvent } = await resolveOrCreateEvent(supabase, enEvent, opts.eventId);
   const entries = await fetchEnEntries(enEvent.id);
