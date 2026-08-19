@@ -85,7 +85,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
-      { name: "theme-color", content: "#c8102e" },
+      { name: "theme-color", content: "#ffffff" },
       { title: "Red Cherry Events — Rider Hub" },
       { name: "description", content: "The rider hub for Red Cherry Events: race news, event info, live tracking, SOS and loyalty rewards." },
       { name: "author", content: "Red Cherry Events" },
@@ -99,9 +99,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         rel: "stylesheet",
         href: appCss,
       },
-      { rel: "icon", href: "/favicon.png", type: "image/png" },
-      { rel: "manifest", href: "/manifest.webmanifest" },
-      { rel: "apple-touch-icon", href: "/icons/icon-192.png" },
+      { rel: "icon", href: "/favicon-v2.png?v=2", type: "image/png" },
+      { rel: "shortcut icon", href: "/favicon-v2.png?v=2", type: "image/png" },
+      { rel: "manifest", href: "/manifest.webmanifest?v=2" },
+      { rel: "apple-touch-icon", sizes: "180x180", href: "/icons/apple-touch-180-v2.png?v=2" },
+
     ],
   }),
   shellComponent: RootShell,
