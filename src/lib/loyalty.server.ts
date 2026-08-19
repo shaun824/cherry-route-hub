@@ -232,6 +232,95 @@ export async function backfillLoyalty(
   };
 }
 
+/**
+ * Build participation straight from the local roster (event_entrants) instead of
+ * re-walking the Entry Ninja API. The archive backfill already pulled every past
+ * entry, so this credits every rider on every event we hold locally.
+ */
+export async function syncParticipationFromRoster(
+  supabase: Sb,
+): Promise<{ events: number; entries: number; valuesCreated: number; participationAdded: number }> {
+  const settings = await loadLoyaltySettings(supabase);
+  const { pointsFromPrice } = await import("./loyalty");
+
+  const { data: eventRows } = await supabase
+    .from("events")
+    .select("id, name, event_date, entry_ninja_id")
+    .not("entry_ninja_id", "is", null);
+  const events = ((eventRows ?? []) as { id: string; name: string; event_date: string; entry_ninja_id: string }[])
+    .filter((e) => new Date(e.event_date).getTime() <= Date.now());
+
+  const { data: valueRows } = await supabase.from("loyalty_event_values").select("en_event_id");
+  const haveValue = new Set(((valueRows ?? []) as { en_event_id: number }[]).map((v) => Number(v.en_event_id)));
+
+  let entries = 0;
+  let valuesCreated = 0;
+  let participationAdded = 0;
+
+  for (const ev of events) {
+    const enId = Number(ev.entry_ninja_id);
+    if (!Number.isFinite(enId)) continue;
+
+    const rows: { entrant_id: string; category: string | null; amount_due_cents: number | null }[] = [];
+    for (let page = 0; page < 20; page++) {
+      const { data } = await supabase
+        .from("event_entrants")
+        .select("entrant_id, category, amount_due_cents")
+        .eq("event_id", ev.id)
+        .range(page * 1000, page * 1000 + 999);
+      const batch = (data ?? []) as typeof rows;
+      rows.push(...batch);
+      if (batch.length < 1000) break;
+    }
+    if (rows.length === 0) continue;
+    entries += rows.length;
+
+    if (!haveValue.has(enId)) {
+      const amounts = rows
+        .map((r) => Number(r.amount_due_cents ?? 0))
+        .filter((n) => n > 0)
+        .sort((a, b) => a - b);
+      const median = amounts.length ? (amounts[Math.floor(amounts.length / 2)] as number) : null;
+      const { error } = await supabase.from("loyalty_event_values").insert({
+        en_event_id: enId,
+        event_id: ev.id,
+        event_name: ev.name,
+        event_date: String(ev.event_date).slice(0, 10),
+        points: median ? pointsFromPrice(median, false, settings) : settings.defaultPoints,
+        entry_price_cents: median,
+        price_source: median ? "entry-ninja" : null,
+      });
+      if (!error) {
+        valuesCreated++;
+        haveValue.add(enId);
+      }
+    }
+
+    const seen = new Set<string>();
+    const participation = rows
+      .filter((r) => r.entrant_id && !seen.has(r.entrant_id) && seen.add(r.entrant_id))
+      .map((r) => ({
+        entrant_id: r.entrant_id,
+        en_event_id: enId,
+        event_id: ev.id,
+        event_name: ev.name,
+        event_date: String(ev.event_date).slice(0, 10),
+        category: r.category,
+        source: "roster",
+      }));
+
+    for (const batch of chunk(participation, 500)) {
+      const { error } = await supabase
+        .from("loyalty_participation")
+        .upsert(batch, { onConflict: "entrant_id,en_event_id", ignoreDuplicates: true });
+      if (!error) participationAdded += batch.length;
+    }
+  }
+
+  return { events: events.length, entries, valuesCreated, participationAdded };
+}
+
+
 /** Rebuild every "earn" ledger row from participation + current event values. */
 export async function recalculateLedger(supabase: Sb): Promise<{ riders: number; rows: number; points: number }> {
   const settings = await loadLoyaltySettings(supabase);
