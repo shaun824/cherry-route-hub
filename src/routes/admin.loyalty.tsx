@@ -39,12 +39,23 @@ function AdminLoyalty() {
 
   const backfill = useServerFn(runLoyaltyBackfill);
   const recalc = useServerFn(runLoyaltyRecalc);
+  const rosterSync = useServerFn(runLoyaltyRosterSync);
 
   const backfillMut = useMutation({
     mutationFn: (sinceYear: number) => backfill({ data: { sinceYear, maxEvents: 60 } }),
     onSuccess: (r: any) => {
       toast.success(
         `Scanned ${r.eventsScanned} events · ${r.peopleCreated} new profiles · ${r.participationAdded} entries linked`,
+      );
+      refresh();
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+  const rosterMut = useMutation({
+    mutationFn: () => rosterSync({ data: {} } as never),
+    onSuccess: (r: any) => {
+      toast.success(
+        `${r.participationAdded} entries credited across ${r.events} events · ${formatPoints(r.ledger?.points ?? 0)} points for ${r.ledger?.riders ?? 0} riders`,
       );
       refresh();
     },
