@@ -437,6 +437,18 @@ export const runLoyaltyBackfill = createServerFn({ method: "POST" })
     return backfillLoyalty(supabase, data);
   });
 
+/** Credit every rider on every past event we already hold locally (no Entry Ninja calls). */
+export const runLoyaltyRosterSync = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase } = context as any;
+    await assertAdmin(supabase);
+    const { syncParticipationFromRoster, recalculateLedger } = await import("./loyalty.server");
+    const synced = await syncParticipationFromRoster(supabase);
+    const ledger = await recalculateLedger(supabase);
+    return { ...synced, ledger };
+  });
+
 export const runLoyaltyRecalc = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
