@@ -13,6 +13,7 @@ import {
   markCouponRedeemed,
   runLoyaltyBackfill,
   runLoyaltyRecalc,
+  runLoyaltyRosterSync,
   saveLoyaltySettingsFn,
   saveReward,
   setEventPoints,
