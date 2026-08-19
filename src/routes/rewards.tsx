@@ -6,6 +6,8 @@ import { Award, Copy, Gift, History, Sparkles, Ticket, TrendingUp } from "lucide
 import { toast } from "sonner";
 import { getMyLoyalty, redeemReward } from "@/lib/loyalty.functions";
 import { formatPoints, tierForRolling, REWARD_KINDS, TIERS } from "@/lib/loyalty";
+import { LOYALTY_PUBLIC } from "@/lib/loyalty-visibility";
+import { useIsAdmin } from "@/lib/auth";
 
 export const Route = createFileRoute("/rewards")({
   head: () => ({
@@ -25,6 +27,8 @@ export const Route = createFileRoute("/rewards")({
 });
 
 function RewardsPage() {
+  const { isAdmin } = useIsAdmin();
+  const visible = LOYALTY_PUBLIC || isAdmin;
   const fetchLoyalty = useServerFn(getMyLoyalty);
   const redeem = useServerFn(redeemReward);
   const qc = useQueryClient();
@@ -33,6 +37,7 @@ function RewardsPage() {
   const { data, isLoading } = useQuery({
     queryKey: ["my-loyalty"],
     queryFn: () => fetchLoyalty({ data: {} } as never),
+    enabled: visible,
   });
 
   const redeemMut = useMutation({
@@ -60,6 +65,26 @@ function RewardsPage() {
   const { tier, next, toNext, progress } = useMemo(() => tierForRolling(rolling, held), [rolling, held]);
   const expiresAt = (data as any)?.expiresAt as string | null | undefined;
 
+
+  if (!visible) {
+    return (
+      <div className="px-4 pb-28 pt-6">
+        <div className="rounded-2xl bg-ink p-6 text-white">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-white/80">
+            <Sparkles className="h-3 w-3 text-cherry" /> Coming soon
+          </span>
+          <h1 className="mt-3 font-display text-3xl font-black leading-tight">Cherry Miles</h1>
+          <p className="mt-2 text-sm text-white/70">
+            Our rider loyalty programme is almost ready. You'll earn points for every Red Cherry event you ride and
+            cash them out for entry discounts and kit. Nothing to do for now — your past events are already counted.
+          </p>
+          <Link to="/" className="mt-5 inline-flex rounded-full bg-cherry px-4 py-2 text-sm font-bold">
+            Back to the hub
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return <div className="p-6 text-center text-sm text-ink-soft">Loading your rewards…</div>;
