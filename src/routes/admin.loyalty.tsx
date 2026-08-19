@@ -96,6 +96,14 @@ function AdminLoyalty() {
             {backfillMut.isPending ? "Pulling entrants…" : "Pull all entrants"}
           </button>
           <button
+            onClick={() => rosterMut.mutate()}
+            disabled={rosterMut.isPending}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-bold disabled:opacity-50"
+          >
+            <RefreshCw className={`h-3.5 w-3.5 ${rosterMut.isPending ? "animate-spin" : ""}`} />
+            {rosterMut.isPending ? "Crediting roster…" : "Credit points from roster"}
+          </button>
+          <button
             onClick={() => recalcMut.mutate()}
             disabled={recalcMut.isPending}
             className="inline-flex items-center gap-1.5 rounded-lg bg-cherry px-3 py-1.5 text-xs font-bold text-white disabled:opacity-50"
