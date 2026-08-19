@@ -321,6 +321,7 @@ export async function syncParticipationFromRoster(
 }
 
 
+/** Rebuild every "earn" ledger row from participation + current event values. */
 export async function recalculateLedger(supabase: Sb): Promise<{ riders: number; rows: number; points: number }> {
   const settings = await loadLoyaltySettings(supabase);
 
