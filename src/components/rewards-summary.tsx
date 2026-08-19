@@ -29,8 +29,9 @@ function RewardsComingSoon() {
 
 /** Live Cherry Miles snapshot for the profile page. */
 export function RewardsSummary() {
-  const isAdmin = useIsAdmin();
+  const { isAdmin } = useIsAdmin();
   const visible = LOYALTY_PUBLIC || isAdmin;
+
   const fetchLoyalty = useServerFn(getMyLoyalty);
   const { data, isLoading } = useQuery({
     queryKey: ["my-loyalty"],
