@@ -51,7 +51,10 @@ export function RewardsSummary() {
   const affordable = ((data?.rewards ?? []) as any[]).filter((r) => balance >= r.cost_points).length;
   const liveCoupons = ((data?.coupons ?? []) as any[]).filter((c) => c.status !== "redeemed").length;
 
+  if (!visible) return <RewardsComingSoon />;
+
   if (isLoading) {
+
     return (
       <section className="mx-5 mt-4 rounded-2xl bg-ink p-5 text-white/70">
         <p className="text-sm">Loading your Cherry Miles…</p>
