@@ -2,17 +2,42 @@ import { Link } from "@tanstack/react-router";
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Gift, Sparkles, Ticket } from "lucide-react";
+import { Gift, Sparkles, Ticket, Lock } from "lucide-react";
 import { getMyLoyalty } from "@/lib/loyalty.functions";
 import { formatPoints, tierFor } from "@/lib/loyalty";
+import { LOYALTY_PUBLIC } from "@/lib/loyalty-visibility";
+import { useIsAdmin } from "@/lib/auth";
+
+/** Teaser shown to riders while Cherry Miles is still under wraps. */
+function RewardsComingSoon() {
+  return (
+    <section className="mx-5 mt-4 overflow-hidden rounded-2xl bg-ink p-5 text-white shadow-lg">
+      <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-white/80">
+        <Sparkles className="h-3 w-3 text-cherry" /> Coming soon
+      </span>
+      <p className="mt-3 font-display text-2xl font-black leading-tight">Cherry Miles</p>
+      <p className="mt-2 text-sm text-white/70">
+        A loyalty programme that rewards you for every Red Cherry event you ride — points on every entry, and
+        coupons you can cash out against future races. We're putting the finishing touches on it.
+      </p>
+      <p className="mt-3 inline-flex items-center gap-1.5 text-[11px] text-white/50">
+        <Lock className="h-3 w-3" /> Your past events are already being counted.
+      </p>
+    </section>
+  );
+}
 
 /** Live Cherry Miles snapshot for the profile page. */
 export function RewardsSummary() {
+  const isAdmin = useIsAdmin();
+  const visible = LOYALTY_PUBLIC || isAdmin;
   const fetchLoyalty = useServerFn(getMyLoyalty);
   const { data, isLoading } = useQuery({
     queryKey: ["my-loyalty"],
     queryFn: () => fetchLoyalty({ data: {} } as never),
+    enabled: visible,
   });
+
 
   const balance = data?.balance ?? 0;
   const { tier, next, toNext, progress } = useMemo(() => tierFor(balance), [balance]);
