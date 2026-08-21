@@ -19,7 +19,7 @@ async function isStaff(userId: string | null): Promise<boolean> {
 
 const SESSION_KEY = "rce_analytics_session";
 
-function getSessionId(): string {
+export function getSessionId(): string {
   try {
     const existing = sessionStorage.getItem(SESSION_KEY);
     if (existing) return existing;

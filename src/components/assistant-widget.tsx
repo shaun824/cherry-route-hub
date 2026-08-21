@@ -10,6 +10,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { submitFeedback } from "@/lib/feedback.functions";
 import { askAppBot } from "@/lib/app-bot.functions";
 import { useSession } from "@/lib/auth";
+import { getSessionId } from "@/lib/analytics";
 
 const categories = [
   { value: "issue", label: "Something's broken" },
@@ -108,7 +109,7 @@ export function AssistantWidget() {
     setInput("");
     setThinking(true);
     try {
-      const res = await ask({ data: { question: q, history } });
+      const res = await ask({ data: { question: q, history, sessionId: getSessionId() } });
       setMessages((m) => [
         ...m,
         { role: "assistant", content: res.answer, followUps: res.followUps ?? [] },
