@@ -108,7 +108,7 @@ export function AssistantWidget() {
     setInput("");
     setThinking(true);
     try {
-      const res = await ask({ data: { question: q, history } });
+      const res = await ask({ data: { question: q, history, sessionId: getSessionId() } });
       setMessages((m) => [
         ...m,
         { role: "assistant", content: res.answer, followUps: res.followUps ?? [] },
