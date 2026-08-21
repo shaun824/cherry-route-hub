@@ -56,7 +56,8 @@ export type Database = {
         Row: {
           channel: string
           created_at: string
-          event_id: string
+          event_id: string | null
+          guest_key: string | null
           id: string
           last_message_at: string | null
           rider_user_id: string | null
@@ -67,7 +68,8 @@ export type Database = {
         Insert: {
           channel?: string
           created_at?: string
-          event_id: string
+          event_id?: string | null
+          guest_key?: string | null
           id?: string
           last_message_at?: string | null
           rider_user_id?: string | null
@@ -78,7 +80,8 @@ export type Database = {
         Update: {
           channel?: string
           created_at?: string
-          event_id?: string
+          event_id?: string | null
+          guest_key?: string | null
           id?: string
           last_message_at?: string | null
           rider_user_id?: string | null
