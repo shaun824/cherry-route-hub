@@ -732,6 +732,7 @@ function Coupons({ rows, onDone }: { rows: any[]; onDone: () => void }) {
 
 function SettingsForm({ settings, onDone }: { settings: LoyaltySettings; onDone: () => void }) {
   const save = useServerFn(saveLoyaltySettingsFn);
+  const recalc = useServerFn(runLoyaltyRecalc);
   const [form, setForm] = useState<any>(settings);
   useEffect(() => setForm(settings), [settings]);
 
@@ -741,8 +742,18 @@ function SettingsForm({ settings, onDone }: { settings: LoyaltySettings; onDone:
       toast.success("Loyalty settings saved");
       onDone();
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(e.message || "Could not save settings"),
   });
+
+  const recalcMut = useMutation({
+    mutationFn: () => recalc({ data: {} } as never),
+    onSuccess: (r: any) => {
+      toast.success(`${formatPoints(r?.points ?? 0)} points across ${r?.riders ?? 0} riders`);
+      onDone();
+    },
+    onError: (e: Error) => toast.error(e.message || "Recalculate failed"),
+  });
+
 
   return (
     <form
