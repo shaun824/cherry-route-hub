@@ -288,25 +288,32 @@ export const saveLoyaltySettingsFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) =>
     z
       .object({
-        demoMode: z.boolean(),
-        defaultPoints: z.number().int().min(0).max(100000),
-        randPerPoint: z.number().min(0).max(100),
-        loyaltyBonusPerYear: z.number().int().min(0).max(10000),
-        pointsPerRand: z.number().min(0).max(100).default(0.1),
-        heroMultiplier: z.number().min(1).max(10).default(1),
-        tierWindowMonths: z.number().int().min(6).max(120).default(36),
-        tierHoldMonths: z.number().int().min(0).max(60).default(12),
-        expiryMonths: z.number().int().min(0).max(120).default(24),
-        programName: z.string().trim().min(1).max(60),
+        demoMode: z.boolean().default(false),
+        defaultPoints: z.coerce.number().min(0).max(100000).default(100),
+        randPerPoint: z.coerce.number().min(0).max(100).default(0.5),
+        loyaltyBonusPerYear: z.coerce.number().min(0).max(10000).default(25),
+        pointsPerRand: z.coerce.number().min(0).max(100).default(0.1),
+        heroMultiplier: z.coerce.number().min(1).max(10).default(1),
+        tierWindowMonths: z.coerce.number().min(1).max(240).default(36),
+        tierHoldMonths: z.coerce.number().min(0).max(120).default(12),
+        expiryMonths: z.coerce.number().min(0).max(240).default(24),
+        programName: z.string().trim().min(1).max(60).default("Cherry Miles"),
       })
-      .parse(d),
+      .parse(d ?? {}),
   )
   .handler(async ({ data, context }) => {
     const { supabase } = context as any;
     await assertAdmin(supabase);
-    const { saveLoyaltySettings } = await import("./loyalty.server");
-    return saveLoyaltySettings(supabase, data);
+    // Kept inline (no heavy server-module import) so saving settings is a
+    // single, fast write.
+    const settings = parseLoyaltySettings(data);
+    const { error } = await supabase
+      .from("site_settings")
+      .upsert({ key: "loyalty", value: settings }, { onConflict: "key" });
+    if (error) throw new Error(error.message);
+    return settings;
   });
+
 
 
 export const setEventPoints = createServerFn({ method: "POST" })
@@ -481,4 +488,73 @@ export const adjustRiderPoints = createServerFn({ method: "POST" })
     });
     if (error) throw new Error(error.message);
     return { ok: true };
+  });
+
+/** Everything we know about one rider, for the admin loyalty profile page. */
+export const getLoyaltyRider = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ entrantId: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const { supabase } = context as any;
+    await assertAdmin(supabase);
+    const id = data.entrantId;
+
+    const { data: entrant, error } = await supabase
+      .from("entrants")
+      .select("id, full_name, email, phone, notes, user_id, id_number_last4, created_at")
+      .eq("id", id)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    if (!entrant) throw new Error("Rider not found");
+
+    const [ledgerRes, partRes, couponsRes, entriesRes, profileRes] = await Promise.all([
+      supabase
+        .from("loyalty_ledger")
+        .select("id, points, kind, reason, created_at, en_event_id")
+        .eq("entrant_id", id)
+        .order("created_at", { ascending: false })
+        .limit(300),
+      supabase
+        .from("loyalty_participation")
+        .select("id, event_name, event_date, category, source, en_event_id")
+        .eq("entrant_id", id)
+        .order("event_date", { ascending: false })
+        .limit(300),
+      supabase
+        .from("loyalty_coupons")
+        .select("id, code, reward_name, points_spent, status, expires_at, created_at, redeemed_at")
+        .eq("entrant_id", id)
+        .order("created_at", { ascending: false })
+        .limit(100),
+      supabase
+        .from("event_entrants")
+        .select(
+          "id, category, batch, bib_number, registration_ref, paid, amount_due_cents, amount_paid_cents, team_name, event:events(id, name, event_date)",
+        )
+        .eq("entrant_id", id)
+        .limit(100),
+      entrant.user_id
+        ? supabase
+            .from("profiles")
+            .select("id, full_name, email, phone, tshirt_size, jacket_size, created_at")
+            .eq("id", entrant.user_id)
+            .maybeSingle()
+        : Promise.resolve({ data: null }),
+    ]);
+
+    const ledger = (ledgerRes.data ?? []) as Row[];
+    const earned = ledger.filter((r) => Number(r.points) > 0).reduce((s, r) => s + Number(r.points), 0);
+    const spent = ledger.filter((r) => Number(r.points) < 0).reduce((s, r) => s + Number(r.points), 0);
+
+    return {
+      entrant: entrant as Row,
+      profile: (profileRes as Row).data ?? null,
+      balance: earned + spent,
+      earned,
+      spent: Math.abs(spent),
+      ledger,
+      participation: (partRes.data ?? []) as Row[],
+      coupons: (couponsRes.data ?? []) as Row[],
+      entries: (entriesRes.data ?? []) as Row[],
+    };
   });

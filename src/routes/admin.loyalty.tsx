@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -221,9 +221,16 @@ function Leaderboard({ rows, onDone }: { rows: any[]; onDone: () => void }) {
                 <tr key={r.entrantId} className="border-t border-border">
                   <td className="px-3 py-2 text-ink-soft">{i + 1}</td>
                   <td className="px-3 py-2">
-                    <p className="font-semibold">{r.name}</p>
+                    <Link
+                      to="/admin/loyalty/rider/$entrantId"
+                      params={{ entrantId: r.entrantId }}
+                      className="font-semibold text-ink hover:text-cherry hover:underline"
+                    >
+                      {r.name}
+                    </Link>
                     <p className="text-[11px] text-ink-soft">{r.email ?? "no email"}</p>
                   </td>
+
                   <td className="px-3 py-2">{r.events}</td>
                   <td className="px-3 py-2 font-bold">{formatPoints(r.points)}</td>
                   <td className="px-3 py-2">

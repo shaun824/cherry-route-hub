@@ -87,6 +87,7 @@ import { Route as ApiPublicHooksEventBotRefreshRouteImport } from './routes/api/
 import { Route as ApiPublicHooksEntryNinjaSyncRouteImport } from './routes/api/public/hooks/entry-ninja-sync'
 import { Route as ApiPublicHooksEntryNinjaArchiveRouteImport } from './routes/api/public/hooks/entry-ninja-archive'
 import { Route as ApiPublicHooksContentAuditRouteImport } from './routes/api/public/hooks/content-audit'
+import { Route as AdminLoyaltyRiderEntrantIdRouteImport } from './routes/admin.loyalty.rider.$entrantId'
 
 const SpectateRoute = SpectateRouteImport.update({
   id: '/spectate',
@@ -496,6 +497,12 @@ const ApiPublicHooksContentAuditRoute =
     path: '/api/public/hooks/content-audit',
     getParentRoute: () => rootRouteImport,
   } as any)
+const AdminLoyaltyRiderEntrantIdRoute =
+  AdminLoyaltyRiderEntrantIdRouteImport.update({
+    id: '/rider/$entrantId',
+    path: '/rider/$entrantId',
+    getParentRoute: () => AdminLoyaltyRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -520,7 +527,7 @@ export interface FileRoutesByFullPath {
   '/admin/events': typeof AdminEventsRoute
   '/admin/feed': typeof AdminFeedRoute
   '/admin/knowledge': typeof AdminKnowledgeRoute
-  '/admin/loyalty': typeof AdminLoyaltyRoute
+  '/admin/loyalty': typeof AdminLoyaltyRouteWithChildren
   '/admin/merchandise': typeof AdminMerchandiseRoute
   '/admin/messages': typeof AdminMessagesRoute
   '/admin/notifications': typeof AdminNotificationsRoute
@@ -556,6 +563,7 @@ export interface FileRoutesByFullPath {
   '/admin/event-info/': typeof AdminEventInfoIndexRoute
   '/admin/village/': typeof AdminVillageIndexRoute
   '/events/$eventId/': typeof EventsEventIdIndexRoute
+  '/admin/loyalty/rider/$entrantId': typeof AdminLoyaltyRiderEntrantIdRoute
   '/api/public/hooks/content-audit': typeof ApiPublicHooksContentAuditRoute
   '/api/public/hooks/entry-ninja-archive': typeof ApiPublicHooksEntryNinjaArchiveRoute
   '/api/public/hooks/entry-ninja-sync': typeof ApiPublicHooksEntryNinjaSyncRoute
@@ -597,7 +605,7 @@ export interface FileRoutesByTo {
   '/admin/events': typeof AdminEventsRoute
   '/admin/feed': typeof AdminFeedRoute
   '/admin/knowledge': typeof AdminKnowledgeRoute
-  '/admin/loyalty': typeof AdminLoyaltyRoute
+  '/admin/loyalty': typeof AdminLoyaltyRouteWithChildren
   '/admin/merchandise': typeof AdminMerchandiseRoute
   '/admin/messages': typeof AdminMessagesRoute
   '/admin/notifications': typeof AdminNotificationsRoute
@@ -632,6 +640,7 @@ export interface FileRoutesByTo {
   '/admin/event-info': typeof AdminEventInfoIndexRoute
   '/admin/village': typeof AdminVillageIndexRoute
   '/events/$eventId': typeof EventsEventIdIndexRoute
+  '/admin/loyalty/rider/$entrantId': typeof AdminLoyaltyRiderEntrantIdRoute
   '/api/public/hooks/content-audit': typeof ApiPublicHooksContentAuditRoute
   '/api/public/hooks/entry-ninja-archive': typeof ApiPublicHooksEntryNinjaArchiveRoute
   '/api/public/hooks/entry-ninja-sync': typeof ApiPublicHooksEntryNinjaSyncRoute
@@ -677,7 +686,7 @@ export interface FileRoutesById {
   '/admin/events': typeof AdminEventsRoute
   '/admin/feed': typeof AdminFeedRoute
   '/admin/knowledge': typeof AdminKnowledgeRoute
-  '/admin/loyalty': typeof AdminLoyaltyRoute
+  '/admin/loyalty': typeof AdminLoyaltyRouteWithChildren
   '/admin/merchandise': typeof AdminMerchandiseRoute
   '/admin/messages': typeof AdminMessagesRoute
   '/admin/notifications': typeof AdminNotificationsRoute
@@ -713,6 +722,7 @@ export interface FileRoutesById {
   '/admin/event-info/': typeof AdminEventInfoIndexRoute
   '/admin/village/': typeof AdminVillageIndexRoute
   '/events/$eventId/': typeof EventsEventIdIndexRoute
+  '/admin/loyalty/rider/$entrantId': typeof AdminLoyaltyRiderEntrantIdRoute
   '/api/public/hooks/content-audit': typeof ApiPublicHooksContentAuditRoute
   '/api/public/hooks/entry-ninja-archive': typeof ApiPublicHooksEntryNinjaArchiveRoute
   '/api/public/hooks/entry-ninja-sync': typeof ApiPublicHooksEntryNinjaSyncRoute
@@ -795,6 +805,7 @@ export interface FileRouteTypes {
     | '/admin/event-info/'
     | '/admin/village/'
     | '/events/$eventId/'
+    | '/admin/loyalty/rider/$entrantId'
     | '/api/public/hooks/content-audit'
     | '/api/public/hooks/entry-ninja-archive'
     | '/api/public/hooks/entry-ninja-sync'
@@ -871,6 +882,7 @@ export interface FileRouteTypes {
     | '/admin/event-info'
     | '/admin/village'
     | '/events/$eventId'
+    | '/admin/loyalty/rider/$entrantId'
     | '/api/public/hooks/content-audit'
     | '/api/public/hooks/entry-ninja-archive'
     | '/api/public/hooks/entry-ninja-sync'
@@ -951,6 +963,7 @@ export interface FileRouteTypes {
     | '/admin/event-info/'
     | '/admin/village/'
     | '/events/$eventId/'
+    | '/admin/loyalty/rider/$entrantId'
     | '/api/public/hooks/content-audit'
     | '/api/public/hooks/entry-ninja-archive'
     | '/api/public/hooks/entry-ninja-sync'
@@ -1568,8 +1581,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksContentAuditRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/loyalty/rider/$entrantId': {
+      id: '/admin/loyalty/rider/$entrantId'
+      path: '/rider/$entrantId'
+      fullPath: '/admin/loyalty/rider/$entrantId'
+      preLoaderRoute: typeof AdminLoyaltyRiderEntrantIdRouteImport
+      parentRoute: typeof AdminLoyaltyRoute
+    }
   }
 }
+
+interface AdminLoyaltyRouteChildren {
+  AdminLoyaltyRiderEntrantIdRoute: typeof AdminLoyaltyRiderEntrantIdRoute
+}
+
+const AdminLoyaltyRouteChildren: AdminLoyaltyRouteChildren = {
+  AdminLoyaltyRiderEntrantIdRoute: AdminLoyaltyRiderEntrantIdRoute,
+}
+
+const AdminLoyaltyRouteWithChildren = AdminLoyaltyRoute._addFileChildren(
+  AdminLoyaltyRouteChildren,
+)
 
 interface AdminRouteChildren {
   AdminAnalyticsRoute: typeof AdminAnalyticsRoute
@@ -1580,7 +1612,7 @@ interface AdminRouteChildren {
   AdminEventsRoute: typeof AdminEventsRoute
   AdminFeedRoute: typeof AdminFeedRoute
   AdminKnowledgeRoute: typeof AdminKnowledgeRoute
-  AdminLoyaltyRoute: typeof AdminLoyaltyRoute
+  AdminLoyaltyRoute: typeof AdminLoyaltyRouteWithChildren
   AdminMerchandiseRoute: typeof AdminMerchandiseRoute
   AdminMessagesRoute: typeof AdminMessagesRoute
   AdminNotificationsRoute: typeof AdminNotificationsRoute
@@ -1610,7 +1642,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminEventsRoute: AdminEventsRoute,
   AdminFeedRoute: AdminFeedRoute,
   AdminKnowledgeRoute: AdminKnowledgeRoute,
-  AdminLoyaltyRoute: AdminLoyaltyRoute,
+  AdminLoyaltyRoute: AdminLoyaltyRouteWithChildren,
   AdminMerchandiseRoute: AdminMerchandiseRoute,
   AdminMessagesRoute: AdminMessagesRoute,
   AdminNotificationsRoute: AdminNotificationsRoute,
