@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -221,9 +221,16 @@ function Leaderboard({ rows, onDone }: { rows: any[]; onDone: () => void }) {
                 <tr key={r.entrantId} className="border-t border-border">
                   <td className="px-3 py-2 text-ink-soft">{i + 1}</td>
                   <td className="px-3 py-2">
-                    <p className="font-semibold">{r.name}</p>
+                    <Link
+                      to="/admin/loyalty/rider/$entrantId"
+                      params={{ entrantId: r.entrantId }}
+                      className="font-semibold text-ink hover:text-cherry hover:underline"
+                    >
+                      {r.name}
+                    </Link>
                     <p className="text-[11px] text-ink-soft">{r.email ?? "no email"}</p>
                   </td>
+
                   <td className="px-3 py-2">{r.events}</td>
                   <td className="px-3 py-2 font-bold">{formatPoints(r.points)}</td>
                   <td className="px-3 py-2">
@@ -725,6 +732,7 @@ function Coupons({ rows, onDone }: { rows: any[]; onDone: () => void }) {
 
 function SettingsForm({ settings, onDone }: { settings: LoyaltySettings; onDone: () => void }) {
   const save = useServerFn(saveLoyaltySettingsFn);
+  const recalc = useServerFn(runLoyaltyRecalc);
   const [form, setForm] = useState<any>(settings);
   useEffect(() => setForm(settings), [settings]);
 
@@ -734,8 +742,18 @@ function SettingsForm({ settings, onDone }: { settings: LoyaltySettings; onDone:
       toast.success("Loyalty settings saved");
       onDone();
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(e.message || "Could not save settings"),
   });
+
+  const recalcMut = useMutation({
+    mutationFn: () => recalc({ data: {} } as never),
+    onSuccess: (r: any) => {
+      toast.success(`${formatPoints(r?.points ?? 0)} points across ${r?.riders ?? 0} riders`);
+      onDone();
+    },
+    onError: (e: Error) => toast.error(e.message || "Recalculate failed"),
+  });
+
 
   return (
     <form
@@ -828,9 +846,28 @@ function SettingsForm({ settings, onDone }: { settings: LoyaltySettings; onDone:
         Demo mode (riders see points as provisional)
       </label>
 
-      <button className="rounded-lg bg-cherry px-3 py-1.5 text-xs font-bold text-white" disabled={mut.isPending}>
-        Save settings
-      </button>
+      <div className="flex flex-wrap items-center gap-2">
+        <button
+          type="submit"
+          className="rounded-lg bg-cherry px-3 py-1.5 text-xs font-bold text-white disabled:opacity-50"
+          disabled={mut.isPending || recalcMut.isPending}
+        >
+          {mut.isPending ? "Saving…" : "Save settings"}
+        </button>
+        <button
+          type="button"
+          onClick={() => recalcMut.mutate()}
+          className="rounded-lg border border-border px-3 py-1.5 text-xs font-bold disabled:opacity-50"
+          disabled={mut.isPending || recalcMut.isPending}
+        >
+          {recalcMut.isPending ? "Recalculating…" : "Recalculate points now"}
+        </button>
+      </div>
+      <p className="text-[11px] text-ink-soft">
+        Recalculate rebuilds every rider's points from their event history using these values. Run it after changing
+        the earn rate.
+      </p>
+
     </form>
   );
 }
