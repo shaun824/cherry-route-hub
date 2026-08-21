@@ -19,6 +19,7 @@ const AskInput = z.object({
     )
     .max(16)
     .default([]),
+  sessionId: z.string().trim().max(100).optional(),
 });
 
 /**
