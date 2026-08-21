@@ -124,22 +124,27 @@ ${CONFIDENTIALITY_RULES}`;
     const followUps = needsAdmin ? [] : parsed.followUps;
 
 
-    // Log signed-in event questions into the existing admin Q&A threads so the
-    // team sees them and can "Save as FAQ".
-    if (userId && focusEventIds[0]) {
+    // Log EVERY assistant conversation — signed in or not, event-specific or
+    // general app help — so the team sees real usage in Admin → Bot log.
+    {
       try {
-        const eventId = focusEventIds[0];
-        const { data: existing } = await supabaseAdmin
-          .from("admin_qa_threads")
-          .select("id")
-          .eq("event_id", eventId)
-          .eq("rider_user_id", userId)
-          .maybeSingle();
-        let threadId = existing?.id as string | undefined;
+        const eventId = focusEventIds[0] ?? null;
+        const guestKey = userId ? null : (data.sessionId?.trim() || "anon");
+
+        let query = supabaseAdmin.from("admin_qa_threads").select("id").limit(1);
+        query = eventId ? query.eq("event_id", eventId) : query.is("event_id", null);
+        query = userId ? query.eq("rider_user_id", userId) : query.eq("guest_key", guestKey as string);
+        const { data: existingRows } = await query;
+        let threadId = existingRows?.[0]?.id as string | undefined;
         if (!threadId) {
           const { data: created } = await supabaseAdmin
             .from("admin_qa_threads")
-            .insert({ event_id: eventId, rider_user_id: userId })
+            .insert({
+              event_id: eventId,
+              rider_user_id: userId,
+              guest_key: guestKey,
+              wa_name: userId ? null : "Visitor (not signed in)",
+            })
             .select("id")
             .single();
           threadId = created?.id as string | undefined;
