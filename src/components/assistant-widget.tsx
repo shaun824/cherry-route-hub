@@ -10,6 +10,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { submitFeedback } from "@/lib/feedback.functions";
 import { askAppBot } from "@/lib/app-bot.functions";
 import { useSession } from "@/lib/auth";
+import { getSessionId } from "@/lib/analytics";
 
 const categories = [
   { value: "issue", label: "Something's broken" },
