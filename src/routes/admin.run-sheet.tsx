@@ -282,14 +282,31 @@ function AdminRunSheet() {
               {previewM.data.skipped ? (
                 <p className="mt-1 text-xs text-ink-soft">Skipped rows: {previewM.data.skipped}</p>
               ) : null}
+              <div className="mt-3 space-y-1 text-xs">
+                {(previewM.data.tabs ?? []).map((t: any) => (
+                  <div key={t.tab} className="rounded-lg border border-border px-2 py-1.5">
+                    <p className="font-semibold text-foreground">
+                      {t.tab} · {t.kind}
+                      {t.headerRow ? ` · header row ${t.headerRow}` : " · no header found"}
+                    </p>
+                    <p className="text-ink-soft">
+                      {t.used} used · {t.skipped} skipped
+                      {t.unknownColumns?.length
+                        ? ` · unrecognised columns: ${t.unknownColumns.join(", ")}`
+                        : ""}
+                    </p>
+                  </div>
+                ))}
+              </div>
               <ul className="mt-3 max-h-72 space-y-1 overflow-y-auto text-xs text-ink-soft">
                 {previewM.data.sample.map((t: any, i: number) => (
                   <li key={i}>
-                    <span className="text-foreground">{t.day_label}</span> · {t.start_time ?? "—"} ·{" "}
+                    <span className="text-foreground">{t.day || "—"}</span> · {t.start || "—"} ·{" "}
                     {t.department} · {t.task}
                   </li>
                 ))}
               </ul>
+
             </div>
           ) : null}
 
