@@ -575,6 +575,7 @@ function RoutesPanel({
 
   return (
     <div className="space-y-5">
+      <FuelNotice eventName={eventName ?? event.name} />
       {routeDays.length > 1 ? (
         <div className="flex gap-1 overflow-x-auto rounded-full bg-secondary p-1">
           {[{ id: "all", label: "All days" }, ...routeDays.map((d) => ({ id: d.id, label: d.label || d.id }))].map(
