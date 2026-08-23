@@ -299,6 +299,14 @@ export async function syncEventRunSheet(client: AnyClient, eventId: string): Pro
 
   try {
     const parsed = await readRunSheet(event.run_sheet_url);
+    if (!parsed.departments.length) {
+      const seen = parsed.tabs.map((t) => `${t.tab} (${t.rows} rows)`).join(", ") || "no tabs";
+      throw new Error(
+        `Read the sheet but found no Department/Task columns. Tabs checked: ${seen}. Add a "Department" and "Task" column header, or name each tab after its department.`,
+      );
+    }
+
+
 
     // Departments: upsert by slug so assignments and waivers survive a resync.
     const { data: existingDepts } = await client
