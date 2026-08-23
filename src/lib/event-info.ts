@@ -280,6 +280,7 @@ export function emptyEventInfo(eventId: string): EventInfoBlock {
     parking_notes: null,
     packing_list: [],
     route_description: null,
+    finish_location: null,
     distance_km: null,
     elevation_m: null,
     gpx_url: null,
