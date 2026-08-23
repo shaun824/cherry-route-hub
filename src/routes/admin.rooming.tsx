@@ -378,6 +378,8 @@ function RoomingAdminPage() {
 
       {eventId ? (
         <>
+          <VenueSyncPanel eventId={eventId} />
+
           <VenueManager
             spots={villageQ.data?.hotspots ?? []}
             venues={venues}
@@ -386,6 +388,8 @@ function RoomingAdminPage() {
             onSave={saveVenue}
             onDelete={deleteVenue}
           />
+
+
 
           <NightCoverage
             days={eventDaysQ.data?.days ?? []}
