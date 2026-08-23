@@ -28,6 +28,7 @@ type Props = {
   /** compact = the card on the event info tab; full = the Accommodation tab */
   variant?: "compact" | "full";
   enabled?: boolean;
+  finishLocation?: string | null;
 };
 
 export function useMyNights(eventId: string, days: Props["days"], schedule: Props["schedule"], enabled = true) {
