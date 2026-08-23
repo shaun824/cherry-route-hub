@@ -252,6 +252,7 @@ export async function saveEventInfo(info: EventInfoBlock): Promise<boolean> {
     parking_notes: info.parking_notes,
     packing_list: toJson(info.packing_list),
     route_description: info.route_description,
+    finish_location: info.finish_location,
     distance_km: info.distance_km,
     elevation_m: info.elevation_m,
     gpx_url: info.gpx_url,
