@@ -339,6 +339,23 @@ function VillageEditor() {
     if (ok) setTimeout(() => setSaved(false), 2000);
   }
 
+  async function addVenue() {
+    const name = window.prompt("Venue name (e.g. St Francis Links)");
+    if (!name?.trim()) return;
+    const { data, error } = await supabase
+      .from("event_venues")
+      .insert({ event_id: event.id, name: name.trim(), sort_order: venues.length })
+      .select("id")
+      .maybeSingle();
+    if (error || !data) {
+      alert(error?.message ?? "Could not add that venue.");
+      return;
+    }
+    await router.invalidate();
+    setVenueId(data.id);
+  }
+
+
   return (
     <div className="space-y-5 pb-24">
       <div className="flex items-center gap-3">
