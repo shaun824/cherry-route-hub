@@ -5,6 +5,10 @@ export type PaymentInfo = {
   paid: boolean | null;
   amount_due_cents?: number | null;
   amount_paid_cents?: number | null;
+  /** Entry value worked out from the event price book, when no imported amount exists. */
+  priced_total_cents?: number | null;
+  /** True when the price book covered every line of the entry. */
+  priced_complete?: boolean;
 };
 
 export type PaymentStatus = {
@@ -45,6 +49,28 @@ export function paymentStatus(info: PaymentInfo | null | undefined): PaymentStat
           : `Entry total ${formatRands(due)}.`,
       balanceCents: balance,
     };
+  }
+
+  // No imported amount — fall back to the event price book.
+  const priced = info.priced_total_cents ?? null;
+  if (priced != null && priced > 0) {
+    if (info.paid === true) {
+      return {
+        state: "paid",
+        label: "Fully paid",
+        detail: `Entry total ${formatRands(priced)} — nothing outstanding.`,
+        balanceCents: 0,
+      };
+    }
+    if (info.paid === false) {
+      const approx = info.priced_complete ? "" : " (at least — some extras aren't priced yet)";
+      return {
+        state: "outstanding",
+        label: `Balance outstanding: ${formatRands(priced)}`,
+        detail: `Your entry and extras come to ${formatRands(priced)}${approx}. Settle it on Entry Ninja to confirm your spot.`,
+        balanceCents: priced,
+      };
+    }
   }
 
   if (info.paid === true) {
