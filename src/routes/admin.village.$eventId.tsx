@@ -84,6 +84,7 @@ async function uploadVillageImage(file: File): Promise<string> {
 
 function VillageEditor() {
   const { event, info, venues } = Route.useLoaderData();
+  const router = useRouter();
   // Multi-venue events (PE PLETT) get one village per venue. Events with no
   // venues keep the single "main village" (venue_id null).
   const [venueId, setVenueId] = useState<string | null>(venues[0]?.id ?? null);
