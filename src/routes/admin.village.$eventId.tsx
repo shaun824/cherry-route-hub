@@ -135,19 +135,19 @@ function VillageEditor() {
     const zone = zones.find((z) => pointInZone({ lat, lng }, z)) ?? null;
     const { error } = await supabase
       .from("event_village_tents")
-      .insert({ event_id: event.id, label, lat, lng, zone_id: zone?.id ?? null, kind: tentKind });
+      .insert({ event_id: event.id, venue_id: venueId, label, lat, lng, zone_id: zone?.id ?? null, kind: tentKind });
     if (error) {
       alert(error.message);
       return;
     }
     if (tentKind === "tent") setNextTentLabel(bumpLabel(label));
-    await qc.invalidateQueries({ queryKey: ["village-tents", event.id] });
+    await qc.invalidateQueries({ queryKey: ["village-tents", event.id, venueId] });
   }
 
   async function moveTent(id: string, lat: number, lng: number) {
     const zone = zones.find((z) => pointInZone({ lat, lng }, z)) ?? null;
     await supabase.from("event_village_tents").update({ lat, lng, zone_id: zone?.id ?? null }).eq("id", id);
-    await qc.invalidateQueries({ queryKey: ["village-tents", event.id] });
+    await qc.invalidateQueries({ queryKey: ["village-tents", event.id, venueId] });
   }
 
   async function toggleTentKind(id: string) {
@@ -157,13 +157,13 @@ function VillageEditor() {
       .from("event_village_tents")
       .update({ kind: tent.kind === "marker" ? "tent" : "marker" })
       .eq("id", id);
-    await qc.invalidateQueries({ queryKey: ["village-tents", event.id] });
+    await qc.invalidateQueries({ queryKey: ["village-tents", event.id, venueId] });
   }
 
   async function deleteTent(id: string) {
     await supabase.from("event_village_tents").delete().eq("id", id);
     setSelectedTent(null);
-    await qc.invalidateQueries({ queryKey: ["village-tents", event.id] });
+    await qc.invalidateQueries({ queryKey: ["village-tents", event.id, venueId] });
   }
   const fileRef = useRef<HTMLInputElement>(null);
   const dragRef = useRef<string | null>(null);
@@ -171,13 +171,14 @@ function VillageEditor() {
 
   useEffect(() => {
     if (!q.data) return;
-    const loaded = q.data;
+    const loaded = { ...q.data, venue_id: venueId };
     if (!hasVenueCentre(loaded.geo) && info?.venue_lat && info?.venue_lng) {
       setMap({ ...loaded, geo: { lat: info.venue_lat, lng: info.venue_lng, widthM: 0 } });
     } else {
       setMap(loaded);
     }
-  }, [q.data, info?.venue_lat, info?.venue_lng]);
+  }, [q.data, venueId, info?.venue_lat, info?.venue_lng]);
+
 
   const usingImage = !!map.image_url;
   const centre = useMemo(
