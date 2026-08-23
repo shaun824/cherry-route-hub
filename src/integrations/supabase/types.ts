@@ -1031,6 +1031,47 @@ export type Database = {
           },
         ]
       }
+      event_price_book: {
+        Row: {
+          created_at: string
+          event_id: string
+          id: string
+          kind: string
+          label: string
+          notes: string | null
+          price_cents: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          event_id: string
+          id?: string
+          kind: string
+          label: string
+          notes?: string | null
+          price_cents: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          event_id?: string
+          id?: string
+          kind?: string
+          label?: string
+          notes?: string | null
+          price_cents?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_price_book_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       event_result_sets: {
         Row: {
           column_map: Json
