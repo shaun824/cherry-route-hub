@@ -1736,6 +1736,56 @@ function EmptyBlock({ children }: { children: React.ReactNode }) {
   );
 }
 
+function EventSectionNav({
+  onSelectTab,
+  hasRoutes,
+  hasFreshNews,
+}: {
+  onSelectTab: (tab: Tab) => void;
+  hasRoutes: boolean;
+  hasFreshNews: boolean;
+}) {
+  const links = [
+    { tab: "routes" as Tab, label: "Routes", icon: MapIcon, show: hasRoutes },
+    { tab: "village" as Tab, label: "Village map", icon: Tent, show: true },
+    { tab: "packing" as Tab, label: "Packing list", icon: CheckSquare, show: true },
+    { tab: "news" as Tab, label: "News", icon: Newspaper, show: true, badge: hasFreshNews },
+    { tab: "photos" as Tab, label: "Photos", icon: ImageIcon, show: true },
+    { tab: "chat" as Tab, label: "Event chat", icon: MessageCircle, show: true },
+    { tab: "ask" as Tab, label: "Ask admin", icon: MessagesSquare, show: true },
+    { tab: "sponsors" as Tab, label: "Sponsors", icon: Handshake, show: true },
+  ].filter((l) => l.show);
+
+  return (
+    <section>
+      <SectionTitle>Explore this event</SectionTitle>
+      <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
+        {links.map((l) => {
+          const Icon = l.icon;
+          return (
+            <button
+              key={l.tab}
+              type="button"
+              onClick={() => onSelectTab(l.tab)}
+              className="flex flex-col items-start gap-2 rounded-2xl bg-card p-3 text-left ring-1 ring-border transition hover:bg-secondary"
+            >
+              <span className="relative">
+                <span className="grid h-9 w-9 place-items-center rounded-full bg-cherry/10 text-cherry">
+                  <Icon className="h-4.5 w-4.5" />
+                </span>
+                {l.badge ? (
+                  <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-cherry ring-2 ring-card" />
+                ) : null}
+              </span>
+              <span className="text-sm font-bold text-ink">{l.label}</span>
+            </button>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
 const SOCIAL_META: {
   key: keyof SocialLinks;
   label: string;
