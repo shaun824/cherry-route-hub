@@ -367,6 +367,14 @@ function RoomingAdminPage() {
             onDelete={deleteVenue}
           />
 
+          <NightCoverage
+            days={eventDaysQ.data?.days ?? []}
+            schedule={eventDaysQ.data?.schedule ?? []}
+            venues={venues}
+            rows={rows}
+          />
+
+
           {venues.length === 0 ? (
             <p className="rounded-2xl border border-dashed border-border p-4 text-sm text-ink-soft">
               Add a venue first — even single-venue events need one so the rooming list has a home.
