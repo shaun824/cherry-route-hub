@@ -9,7 +9,7 @@ import { createFileRoute, Link, notFound, useRouterState } from "@tanstack/react
 import { useServerFn } from "@tanstack/react-start";
 import { askEventBot } from "@/lib/event-bot.functions";
 import { fetchEventSponsors } from "@/lib/event-sponsors.functions";
-import { createContext, Fragment, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { EventWeatherCard } from "@/components/event-weather";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -77,6 +77,7 @@ import { buildMapEmbedSrc, buildMapLink, resolveVenuePoint } from "@/lib/map-emb
 import { VenueMiniMap } from "@/components/venue-mini-map";
 import { PaymentStatusCard } from "@/components/payment-status-card";
 import { EntryInclusions } from "@/components/entry-inclusions";
+import { VillageFocusContext } from "@/lib/village-focus";
 import { brandHeader } from "@/lib/event-brand";
 import { EventLogo } from "@/components/event-logo";
 import { EventPhotosPanel } from "@/components/event-photos-panel";
@@ -126,9 +127,7 @@ export const Route = createFileRoute("/my-events/$eventId")({
 });
 
 /** Lets the accommodation card jump the page to the village tab, focused. */
-const VillageFocusContext = createContext<(f: { zoneId?: string | null; spotId?: string | null; tentId?: string | null; venueId?: string | null }) => void>(
-  () => {},
-);
+
 
 type Tab = "info" | "village" | "routes" | "news" | "photos" | "chat" | "ask" | "packing" | "sponsors";
 

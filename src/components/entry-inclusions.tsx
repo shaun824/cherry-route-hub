@@ -2,6 +2,7 @@
 // slick, icon-led list with a plain-English description and collection
 // instructions. Descriptions scraped from the event website (kept fresh by the
 // weekly merch sync) override the built-in fallbacks.
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   Backpack,
@@ -10,6 +11,7 @@ import {
   Bike,
   Camera,
   CircleHelp,
+  Info,
   Droplets,
   ExternalLink,
   HeartPulse,
@@ -29,6 +31,7 @@ import type { LucideIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { groupExtras, type DisplayExtra } from "@/lib/extras-display";
 import type { ExtraItem } from "@/lib/my-events";
+import { InclusionInfoDialog } from "@/components/inclusion-info-dialog";
 import { inclusionMeta, merchKey, merchKeysMatch, type InclusionIcon } from "@/lib/inclusion-meta";
 
 const ICONS: Record<InclusionIcon, LucideIcon> = {
@@ -87,10 +90,13 @@ const ZAR = (n: number) =>
 function InclusionRow({
   item,
   catalog,
+  eventId,
 }: {
   item: DisplayExtra & { sizeLabel?: string | null };
   catalog: CatalogRow[] | undefined;
+  eventId: string;
 }) {
+  const [open, setOpen] = useState(false);
   const meta = inclusionMeta(item.name);
   const Icon = ICONS[meta.icon] ?? Package;
   const match = findCatalog(catalog, item.name);
@@ -125,16 +131,36 @@ function InclusionRow({
             From {ZAR(match.price_from)}
           </p>
         ) : null}
-        {match?.source_url ? (
-          <a
-            href={match.source_url}
-            target="_blank"
-            rel="noreferrer"
-            className="mt-1 inline-flex items-center gap-1 text-[11px] font-bold text-cherry"
+        <div className="mt-2 flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setOpen(true)}
+            className="inline-flex items-center gap-1 rounded-lg bg-secondary px-2.5 py-1.5 text-[11px] font-bold text-ink ring-1 ring-border"
           >
-            More on the website <ExternalLink className="h-3 w-3" />
-          </a>
-        ) : null}
+            <Info className="h-3.5 w-3.5" /> More info
+          </button>
+          {match?.source_url ? (
+            <a
+              href={match.source_url}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-1 text-[11px] font-bold text-cherry"
+            >
+              On the website <ExternalLink className="h-3 w-3" />
+            </a>
+          ) : null}
+        </div>
+        <InclusionInfoDialog
+          open={open}
+          onOpenChange={setOpen}
+          eventId={eventId}
+          name={item.name}
+          option={item.option}
+          qty={item.qty}
+          websiteDescription={match?.description ?? null}
+          priceFrom={match?.price_from ?? null}
+          sourceUrl={match?.source_url ?? null}
+        />
       </div>
     </li>
   );
@@ -230,7 +256,7 @@ export function EntryInclusions({
       {sizeItems.length ? (
         <ul className="divide-y divide-border bg-card">
           {sizeItems.map((s) => (
-            <InclusionRow key={s.name} item={s} catalog={catalogQ.data} />
+            <InclusionRow key={s.name} item={s} catalog={catalogQ.data} eventId={eventId} />
           ))}
         </ul>
       ) : null}
@@ -242,7 +268,7 @@ export function EntryInclusions({
           </p>
           <ul className="divide-y divide-border bg-card">
             {g.items.map((item, i) => (
-              <InclusionRow key={`${g.key}-${i}`} item={item} catalog={catalogQ.data} />
+              <InclusionRow key={`${g.key}-${i}`} item={item} catalog={catalogQ.data} eventId={eventId} />
             ))}
           </ul>
         </div>
