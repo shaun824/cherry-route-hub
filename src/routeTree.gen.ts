@@ -33,6 +33,7 @@ import { Route as CrewRunSheetRouteImport } from './routes/crew.run-sheet'
 import { Route as CrewRoomingRouteImport } from './routes/crew.rooming'
 import { Route as CrewLoginRouteImport } from './routes/crew.login'
 import { Route as AdminSponsorsRouteImport } from './routes/admin.sponsors'
+import { Route as AdminSocialRouteImport } from './routes/admin.social'
 import { Route as AdminSettingsRouteImport } from './routes/admin.settings'
 import { Route as AdminScheduleSyncRouteImport } from './routes/admin.schedule-sync'
 import { Route as AdminRunSheetRouteImport } from './routes/admin.run-sheet'
@@ -207,6 +208,11 @@ const CrewLoginRoute = CrewLoginRouteImport.update({
 const AdminSponsorsRoute = AdminSponsorsRouteImport.update({
   id: '/sponsors',
   path: '/sponsors',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminSocialRoute = AdminSocialRouteImport.update({
+  id: '/social',
+  path: '/social',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminSettingsRoute = AdminSettingsRouteImport.update({
@@ -539,6 +545,7 @@ export interface FileRoutesByFullPath {
   '/admin/run-sheet': typeof AdminRunSheetRoute
   '/admin/schedule-sync': typeof AdminScheduleSyncRoute
   '/admin/settings': typeof AdminSettingsRoute
+  '/admin/social': typeof AdminSocialRoute
   '/admin/sponsors': typeof AdminSponsorsRoute
   '/crew/login': typeof CrewLoginRoute
   '/crew/rooming': typeof CrewRoomingRoute
@@ -617,6 +624,7 @@ export interface FileRoutesByTo {
   '/admin/run-sheet': typeof AdminRunSheetRoute
   '/admin/schedule-sync': typeof AdminScheduleSyncRoute
   '/admin/settings': typeof AdminSettingsRoute
+  '/admin/social': typeof AdminSocialRoute
   '/admin/sponsors': typeof AdminSponsorsRoute
   '/crew/login': typeof CrewLoginRoute
   '/crew/rooming': typeof CrewRoomingRoute
@@ -698,6 +706,7 @@ export interface FileRoutesById {
   '/admin/run-sheet': typeof AdminRunSheetRoute
   '/admin/schedule-sync': typeof AdminScheduleSyncRoute
   '/admin/settings': typeof AdminSettingsRoute
+  '/admin/social': typeof AdminSocialRoute
   '/admin/sponsors': typeof AdminSponsorsRoute
   '/crew/login': typeof CrewLoginRoute
   '/crew/rooming': typeof CrewRoomingRoute
@@ -781,6 +790,7 @@ export interface FileRouteTypes {
     | '/admin/run-sheet'
     | '/admin/schedule-sync'
     | '/admin/settings'
+    | '/admin/social'
     | '/admin/sponsors'
     | '/crew/login'
     | '/crew/rooming'
@@ -859,6 +869,7 @@ export interface FileRouteTypes {
     | '/admin/run-sheet'
     | '/admin/schedule-sync'
     | '/admin/settings'
+    | '/admin/social'
     | '/admin/sponsors'
     | '/crew/login'
     | '/crew/rooming'
@@ -939,6 +950,7 @@ export interface FileRouteTypes {
     | '/admin/run-sheet'
     | '/admin/schedule-sync'
     | '/admin/settings'
+    | '/admin/social'
     | '/admin/sponsors'
     | '/crew/login'
     | '/crew/rooming'
@@ -1201,6 +1213,13 @@ declare module '@tanstack/react-router' {
       path: '/sponsors'
       fullPath: '/admin/sponsors'
       preLoaderRoute: typeof AdminSponsorsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/social': {
+      id: '/admin/social'
+      path: '/social'
+      fullPath: '/admin/social'
+      preLoaderRoute: typeof AdminSocialRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/settings': {
@@ -1624,6 +1643,7 @@ interface AdminRouteChildren {
   AdminRunSheetRoute: typeof AdminRunSheetRoute
   AdminScheduleSyncRoute: typeof AdminScheduleSyncRoute
   AdminSettingsRoute: typeof AdminSettingsRoute
+  AdminSocialRoute: typeof AdminSocialRoute
   AdminSponsorsRoute: typeof AdminSponsorsRoute
   AdminIndexRoute: typeof AdminIndexRoute
   AdminEventInfoEventIdRoute: typeof AdminEventInfoEventIdRoute
@@ -1654,6 +1674,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminRunSheetRoute: AdminRunSheetRoute,
   AdminScheduleSyncRoute: AdminScheduleSyncRoute,
   AdminSettingsRoute: AdminSettingsRoute,
+  AdminSocialRoute: AdminSocialRoute,
   AdminSponsorsRoute: AdminSponsorsRoute,
   AdminIndexRoute: AdminIndexRoute,
   AdminEventInfoEventIdRoute: AdminEventInfoEventIdRoute,
