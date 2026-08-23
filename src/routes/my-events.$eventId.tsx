@@ -281,7 +281,7 @@ function MyEventDetail() {
                 <AskAdminPanel eventId={event.id} userId={user?.id ?? null} eventName={event.name} compact />
               </div>
             </section>
-            <InfoPanel eventId={event.id} description={event.description} distanceKm={event.distance_km} event={event} isLive={event.status === "live"} eventName={event.name} />
+            <InfoPanel eventId={event.id} description={event.description} distanceKm={event.distance_km} event={event} isLive={event.status === "live"} eventName={event.name} onTabChange={selectTab} hasFreshNews={hasFreshNews} />
           </div>
         )}
         {tab === "village" && (
@@ -725,6 +725,8 @@ function InfoPanel({
   event,
   isLive,
   eventName,
+  onTabChange,
+  hasFreshNews,
 }: {
   eventId: string;
   description: string | null;
@@ -732,6 +734,8 @@ function InfoPanel({
   event: { id?: string; days?: unknown; schedule?: unknown; location?: string | null; map_query?: string | null; social_links?: unknown; entry_ninja_url?: string | null; website_url?: string | null; event_date?: string | null };
   isLive: boolean;
   eventName: string;
+  onTabChange: (tab: Tab) => void;
+  hasFreshNews: boolean;
 }) {
   // Weather is only worth showing (and refreshing) inside the forecast window.
   const daysToEvent = event.event_date
@@ -819,14 +823,11 @@ function InfoPanel({
         </section>
       ) : null}
 
-      {days.some((d) => (d.routes ?? []).length > 0) ? (
-        <section>
-          <SectionTitle>Routes</SectionTitle>
-          <div className="mt-2">
-            <RoutesPanel eventId={eventId} event={event} eventName={eventName} />
-          </div>
-        </section>
-      ) : null}
+      <EventSectionNav
+        onSelectTab={onTabChange}
+        hasRoutes={days.some((d) => (d.routes ?? []).length > 0)}
+        hasFreshNews={hasFreshNews}
+      />
 
 
       {info?.reg_venue_name || info?.reg_venue_address ? (
@@ -1732,6 +1733,56 @@ function EmptyBlock({ children }: { children: React.ReactNode }) {
     <div className="mt-2 rounded-xl border border-dashed border-border p-4 text-center text-xs text-ink-soft">
       {children}
     </div>
+  );
+}
+
+function EventSectionNav({
+  onSelectTab,
+  hasRoutes,
+  hasFreshNews,
+}: {
+  onSelectTab: (tab: Tab) => void;
+  hasRoutes: boolean;
+  hasFreshNews: boolean;
+}) {
+  const links = [
+    { tab: "routes" as Tab, label: "Routes", icon: MapIcon, show: hasRoutes },
+    { tab: "village" as Tab, label: "Village map", icon: Tent, show: true },
+    { tab: "packing" as Tab, label: "Packing list", icon: CheckSquare, show: true },
+    { tab: "news" as Tab, label: "News", icon: Newspaper, show: true, badge: hasFreshNews },
+    { tab: "photos" as Tab, label: "Photos", icon: ImageIcon, show: true },
+    { tab: "chat" as Tab, label: "Event chat", icon: MessageCircle, show: true },
+    { tab: "ask" as Tab, label: "Ask admin", icon: MessagesSquare, show: true },
+    { tab: "sponsors" as Tab, label: "Sponsors", icon: Handshake, show: true },
+  ].filter((l) => l.show);
+
+  return (
+    <section>
+      <SectionTitle>Explore this event</SectionTitle>
+      <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
+        {links.map((l) => {
+          const Icon = l.icon;
+          return (
+            <button
+              key={l.tab}
+              type="button"
+              onClick={() => onSelectTab(l.tab)}
+              className="flex flex-col items-start gap-2 rounded-2xl bg-card p-3 text-left ring-1 ring-border transition hover:bg-secondary"
+            >
+              <span className="relative">
+                <span className="grid h-9 w-9 place-items-center rounded-full bg-cherry/10 text-cherry">
+                  <Icon className="h-4.5 w-4.5" />
+                </span>
+                {l.badge ? (
+                  <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-cherry ring-2 ring-card" />
+                ) : null}
+              </span>
+              <span className="text-sm font-bold text-ink">{l.label}</span>
+            </button>
+          );
+        })}
+      </div>
+    </section>
   );
 }
 
