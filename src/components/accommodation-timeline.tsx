@@ -188,9 +188,16 @@ function NightRow({
 
           {variant === "full" ? (
             <div className="mt-1 space-y-0.5 text-[11px] text-ink-soft">
-              {v?.address ? <p>{v.address}</p> : null}
-              {v?.check_in ? <p>Check-in: {v.check_in}</p> : null}
-              {v?.check_out ? <p>Check-out: {v.check_out}</p> : null}
+              {hotel ? (
+                <p>
+                  The race village stays at {hotel.villageVenue ?? "the main venue"} — it can't sleep
+                  everyone, so overflow riders are booked at nearby hotels. Yours is {hotel.hotel}
+                  {hotel.note ? ` (${hotel.note})` : ""}.
+                </p>
+              ) : null}
+              {!hotel && v?.address ? <p>{v.address}</p> : null}
+              {!hotel && v?.check_in ? <p>Check-in: {v.check_in}</p> : null}
+              {!hotel && v?.check_out ? <p>Check-out: {v.check_out}</p> : null}
               {v?.notes ? <p>{v.notes}</p> : null}
               {a?.location_hint ? <p>Where to find it: {a.location_hint}</p> : null}
               {a?.notes ? <p>{a.notes}</p> : null}
