@@ -960,7 +960,7 @@ function InfoPanel({
       <FollowSection links={(event.social_links as SocialLinks | null) ?? undefined} />
 
       <SocialWall
-        eventId={event.id as string}
+        eventId={(event.id as string) ?? null}
         title={`${eventName} on Instagram`}
         instagramUrl={(event.social_links as SocialLinks | null)?.instagram ?? null}
         facebookUrl={(event.social_links as SocialLinks | null)?.facebook ?? null}
