@@ -4,10 +4,22 @@ import { useContext, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { BedDouble, MapPin, Navigation, Tent } from "lucide-react";
 import { fetchVenues, type RoomingRow, type Venue } from "@/lib/rooming";
-import { buildNights, fetchMyRoomingRows, isTonight, nightDateLabel, type NightStay } from "@/lib/accommodation";
+import {
+  buildNights,
+  fetchMyHotelChoice,
+  fetchMyRoomingRows,
+  isTonight,
+  nightDateLabel,
+  sameHotel,
+  type HotelChoice,
+  type NightStay,
+} from "@/lib/accommodation";
 import { buildMapLink } from "@/lib/map-embed";
 import { VillageFocusContext } from "@/lib/village-focus";
 import type { EventDay, ScheduleItem } from "@/lib/mock-data";
+
+/** Where the rider actually sleeps on a night, once their hotel answer is applied. */
+export type NightHotel = { hotel: string; note: string | null; villageVenue: string | null };
 
 type Props = {
   eventId: string;
