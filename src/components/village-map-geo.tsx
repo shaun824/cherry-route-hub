@@ -207,6 +207,30 @@ function ZoomWatcher({ onZoom }: { onZoom: (z: number) => void }) {
   return null;
 }
 
+/**
+ * Tracks the visible area so big villages (hundreds of tents across several
+ * venues) only ever mount the markers a rider can actually see.
+ */
+function ViewportWatcher({ onView }: { onView: (b: L.LatLngBounds) => void }) {
+  const map = useMap();
+  useEffect(() => {
+    let frame = 0;
+    const update = () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => onView(map.getBounds().pad(0.35)));
+    };
+    update();
+    map.on("moveend zoomend", update);
+    return () => {
+      cancelAnimationFrame(frame);
+      map.off("moveend zoomend", update);
+    };
+  }, [map, onView]);
+  return null;
+}
+
+
+
 
 function tentIcon(label: string, active: boolean) {
   const bg = active ? "#c8102e" : "#1f2937";
