@@ -77,6 +77,7 @@ import { buildMapEmbedSrc, buildMapLink, resolveVenuePoint } from "@/lib/map-emb
 import { VenueMiniMap } from "@/components/venue-mini-map";
 import { PaymentStatusCard } from "@/components/payment-status-card";
 import { EntryInclusions } from "@/components/entry-inclusions";
+import { VillageFocusContext } from "@/lib/village-focus";
 import { brandHeader } from "@/lib/event-brand";
 import { EventLogo } from "@/components/event-logo";
 import { EventPhotosPanel } from "@/components/event-photos-panel";
