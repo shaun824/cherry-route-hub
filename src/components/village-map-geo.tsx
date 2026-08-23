@@ -490,6 +490,7 @@ export default function VillageMapGeo({
           })}
 
           <ZoomWatcher onZoom={setZoom} />
+          <ViewportWatcher onView={setView} />
 
           {/* Dropped tent pins are shown exactly where they were placed. Only
               exact duplicates of the same number are collapsed. */}
@@ -507,6 +508,10 @@ export default function VillageMapGeo({
             // the rider deliberately zooms one level closer. No placeholder dots
             // or area-corner labels are rendered. Your own tent stays visible.
             if (!hot && zoom < 20) return null;
+            // Villages with hundreds of tents stay smooth because off-screen
+            // pins are never mounted.
+            if (!hot && !inView(t.lat, t.lng)) return null;
+
             return (
               <Marker
                 key={t.id}
