@@ -548,6 +548,7 @@ export default function VillageMapGeo({
           })}
 
           <FlyToTent tent={droppedTents.find((t) => t.id === highlightTentId) ?? null} />
+          <FlyToSpot position={flySpotPos} token={flyToken} />
           <FlyToZone
             zone={highlightTentId ? null : zones.find((z) => z.id === highlightZoneId) ?? null}
           />
