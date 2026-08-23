@@ -5,6 +5,7 @@ import { Minus, Plus, X } from "lucide-react";
 import {
   categoryMeta,
   fetchVillageMap,
+  fetchVillageMaps,
   hasVenueCentre,
   isPinnedSpot,
   isPlacedGeo,
@@ -14,6 +15,8 @@ import {
 } from "@/lib/village-map";
 import { villageIcon } from "@/lib/village-icons";
 import { fetchVillageTents } from "@/lib/village-tents";
+import { supabase } from "@/integrations/supabase/client";
+
 
 
 const VillageMapGeo = lazy(() => import("./village-map-geo"));
