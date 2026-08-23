@@ -514,6 +514,8 @@ export default function VillageMapGeo({
 
             return (
               <Marker
+                keyboard={false}
+                autoPanOnFocus={false}
                 key={t.id}
                 position={[t.lat, t.lng]}
                 icon={tentIcon(t.label, hot)}
@@ -542,6 +544,8 @@ export default function VillageMapGeo({
             if (!active && !inView(pos[0], pos[1])) return null;
             return (
               <Marker
+                keyboard={false}
+                autoPanOnFocus={false}
                 key={`spot-${spot.id}`}
                 position={pos}
                 icon={facilityIcon(spot, active)}
