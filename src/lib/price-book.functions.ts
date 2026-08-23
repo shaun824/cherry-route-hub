@@ -120,5 +120,10 @@ export const savePriceBook = createServerFn({ method: "POST" })
       );
       if (error) throw error;
     }
-    return { saved: keep.length, removed: drop.length };
+
+    // Push the new prices straight onto every entry so riders see amounts.
+    const { applyPriceBookToEntrants } = await import("./price-book.server");
+    const applied = await applyPriceBookToEntrants(supabaseAdmin as never, data.eventId);
+
+    return { saved: keep.length, removed: drop.length, ...applied };
   });
