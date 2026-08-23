@@ -135,6 +135,9 @@ function detailEvent(e: any, info: any | null, merch: any[]): string {
   }
 
   if (merch.length) {
+    lines.push(
+      "Branded merchandise supplier: Enjoy (all Red Cherry Events). All event t-shirts, riding tops, jackets and apparel are produced and sold by Enjoy, who have a stand at every event.",
+    );
     lines.push("Merchandise available on Entry Ninja:");
     for (const m of merch.slice(0, 30)) {
       const opts = Array.isArray(m.options)
@@ -143,6 +146,7 @@ function detailEvent(e: any, info: any | null, merch: any[]): string {
       lines.push(`- ${m.name}${opts ? ` (${opts})` : ""}`);
     }
   }
+
 
   return lines.join("\n");
 }

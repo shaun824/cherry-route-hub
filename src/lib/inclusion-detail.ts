@@ -36,18 +36,19 @@ const RULES: Rule[] = [
     test: /riding top|race fit|jersey|cycling top|t[\s-]?shirt|tee\b|golf ?shirt|vest|cap|beanie|sock|jacket|softshell|windbreaker/i,
     detail: {
       included: [
-        "One garment per rider in the exact size chosen on your Entry Ninja entry.",
-        "Official event artwork with the current year's sponsor set.",
+        "One Enjoy-branded garment per rider in the exact size chosen on your Entry Ninja entry.",
+        "Official event artwork with the current year's sponsor set, produced by Enjoy.",
         "Packed into your rider bag with your number board and timing chip.",
       ],
       goodToKnow: [
-        "Try it on at the merch stand before you leave the venue — size swaps are only possible on the day, while stock lasts.",
-        "Sizes are locked a few weeks before the event when we place the order, so change yours on Entry Ninja early.",
-        "Extra garments can be bought at the merch stand if stock allows.",
+        "Try it on at the Enjoy merch stand before you leave the venue — size swaps are only possible on the day, while stock lasts.",
+        "Sizes are locked a few weeks before the event when we place the Enjoy order, so change yours on Entry Ninja early.",
+        "Extra garments can be bought from Enjoy at the merch stand if stock allows.",
       ],
-      wherePlain: "Collected at the registration marquee, swaps at the merchandise stand.",
+      wherePlain: "Collected at the registration marquee, swaps at the Enjoy merchandise stand.",
       categories: ["registration", "shop"],
-      match: /registration|merch|apparel|shop|kit/i,
+      match: /registration|merch|apparel|shop|kit|enjoy/i,
+
     },
   },
   {
