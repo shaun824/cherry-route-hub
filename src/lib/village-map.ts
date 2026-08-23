@@ -51,7 +51,11 @@ export type VillageGeo = {
 };
 
 export type VillageMap = {
+  /** row id — present once the village has been saved */
+  id?: string;
   event_id: string;
+  /** which venue this village belongs to; null = the event's main village */
+  venue_id: string | null;
   image_url: string | null;
   intro: string | null;
   hotspots: VillageHotspot[];
@@ -59,6 +63,7 @@ export type VillageMap = {
   /** drawn areas used for field layout planning */
   zones: VillageZone[];
 };
+
 
 export function isPlacedGeo(geo: VillageGeo | null | undefined): geo is VillageGeo {
   return !!geo && Number.isFinite(geo.lat) && Number.isFinite(geo.lng) && (geo.widthM ?? 0) > 0;
