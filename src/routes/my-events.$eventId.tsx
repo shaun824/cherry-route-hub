@@ -1,4 +1,5 @@
 import { entryNinjaRegistrationUrl } from "@/lib/entry-ninja-link";
+import { SocialWall } from "@/components/social-wall";
 import { WhatsappButton } from "@/components/whatsapp-button";
 import { isBotMiss } from "@/lib/bot-handoff";
 import { splitFollowUps } from "@/lib/bot-followups";
@@ -957,6 +958,14 @@ function InfoPanel({
       </section>
 
       <FollowSection links={(event.social_links as SocialLinks | null) ?? undefined} />
+
+      <SocialWall
+        eventId={event.id as string}
+        title={`${eventName} on Instagram`}
+        instagramUrl={(event.social_links as SocialLinks | null)?.instagram ?? null}
+        facebookUrl={(event.social_links as SocialLinks | null)?.facebook ?? null}
+        limit={6}
+      />
 
 
       <SponsorsBlock eventName={eventName} />

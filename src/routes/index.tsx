@@ -30,6 +30,7 @@ import {
 
 import { BrandMark, SectionTitle, TypeBadge } from "@/components/ui-bits";
 import { SponsorScroller } from "@/components/sponsor-scroller";
+import { SocialWall } from "@/components/social-wall";
 import { InstallPrompt, PushOptIn } from "@/components/push-optin";
 import { formatDate, relativeTime, type Event } from "@/lib/mock-data";
 import { getEventSport } from "@/lib/event-sport";
