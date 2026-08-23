@@ -2817,6 +2817,7 @@ export type Database = {
           full_name: string
           is_me: boolean
           team_name: string
+          tent_number: string
         }[]
       }
     }

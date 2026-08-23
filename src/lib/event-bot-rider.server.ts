@@ -72,7 +72,7 @@ export async function buildRiderContext(
     const { data: entries } = await admin
       .from("event_entrants")
       .select(
-        "id, category, batch, bib_number, registration_ref, external_id, paid, amount_due_cents, amount_paid_cents, tshirt_size, jacket_size, extras, notes",
+        "id, category, batch, bib_number, registration_ref, external_id, team_name, paid, amount_due_cents, amount_paid_cents, tshirt_size, jacket_size, extras, notes",
       )
       .eq("event_id", eventId)
       .in("entrant_id", entrantIds);
@@ -113,6 +113,19 @@ export async function buildRiderContext(
       if (paidAmt) lines.push(`- Paid so far: ${money(paidAmt)}`);
       if (!e.paid && due > paidAmt) lines.push(`- Amount still owing: ${money(due - paidAmt)}`);
       if (e.notes) lines.push(`- Entry notes: ${e.notes}`);
+      if (e.team_name) {
+        lines.push(`- Team: ${e.team_name}`);
+        const { data: mates } = await admin
+          .from("event_entrants")
+          .select("category, bib_number, entrant:entrants(full_name)")
+          .eq("event_id", eventId)
+          .ilike("team_name", e.team_name);
+        const names = (mates ?? [])
+          .map((m: any) => m.entrant?.full_name)
+          .filter(Boolean);
+        if (names.length > 1)
+          lines.push(`- Team mates on this entry: ${names.join(", ")}`);
+      }
     }
   }
 

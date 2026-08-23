@@ -128,7 +128,9 @@ export type TeamMate = {
   batch: string | null;
   bib_number: string | null;
   is_me: boolean;
+  tent_number: string | null;
 };
+
 
 /** Teammates for the signed-in rider on this event (empty when they have no team). */
 export async function fetchMyTeam(
