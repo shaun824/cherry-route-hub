@@ -10,6 +10,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { UpcomingBySport } from "@/components/upcoming-by-sport";
 import { brandHeader } from "@/lib/event-brand";
 import { EventLogo } from "@/components/event-logo";
+import { SyncMyEntryButton } from "@/components/sync-my-entry";
 
 export const Route = createFileRoute("/my-events/")({
   component: MyEventsIndex,
