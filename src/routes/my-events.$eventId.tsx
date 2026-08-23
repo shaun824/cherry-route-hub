@@ -65,7 +65,7 @@ import { useShuffledPromos } from "@/lib/use-shuffled-promos";
 
 import { curatedSponsorsFor } from "@/lib/event-sponsor-overrides";
 import { useAdminStore } from "@/lib/store";
-import { fetchMyEventById, fetchMyTeam, type MyEventRow } from "@/lib/my-events";
+import { fetchMyEventById, fetchMyTeam, fetchMyEntryGroup, type MyEventRow } from "@/lib/my-events";
 import { Printer, Siren, BedDouble, ExternalLink, Users } from "lucide-react";
 import type { EventDay, EventRoute, FeedPost, ScheduleItem, SocialLinks } from "@/lib/mock-data";
 import { relativeTime } from "@/lib/mock-data";
@@ -78,6 +78,7 @@ import { LockedSection } from "@/components/locked-section";
 import { buildMapEmbedSrc, buildMapLink, resolveVenuePoint } from "@/lib/map-embed";
 import { VenueMiniMap } from "@/components/venue-mini-map";
 import { PaymentStatusCard } from "@/components/payment-status-card";
+import { GroupPaymentCard } from "@/components/group-payment-card";
 import { priceEntry } from "@/lib/entry-pricing";
 import { fetchPriceBook } from "@/lib/price-book";
 import { EntryInclusions } from "@/components/entry-inclusions";
@@ -2174,6 +2175,8 @@ function YourEntryCard({ eventId, entryUrl = null }: { eventId: string; entryUrl
         entryUrl={entryUrl}
         lines={row.amount_due_cents == null ? pricing.lines : []}
       />
+
+      <GroupPaymentCard eventId={eventId} entryUrl={entryUrl} />
 
       <EntryInclusions
         eventId={eventId}
