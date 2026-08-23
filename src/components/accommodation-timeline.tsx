@@ -28,6 +28,7 @@ type Props = {
   /** compact = the card on the event info tab; full = the Accommodation tab */
   variant?: "compact" | "full";
   enabled?: boolean;
+  finishLocation?: string | null;
 };
 
 export function useMyNights(eventId: string, days: Props["days"], schedule: Props["schedule"], enabled = true) {
@@ -92,7 +93,7 @@ function hotelNightMap(nights: NightStay[], choice: HotelChoice | null): Map<num
   return map;
 }
 
-export function AccommodationTimeline({ eventId, days, schedule, variant = "compact", enabled = true }: Props) {
+export function AccommodationTimeline({ eventId, days, schedule, variant = "compact", enabled = true, finishLocation }: Props) {
   const { nights, multiVenue, loading } = useMyNights(eventId, days, schedule, enabled);
   const choiceQ = useQuery({
     queryKey: ["my-hotel-choice", eventId],
@@ -120,7 +121,9 @@ export function AccommodationTimeline({ eventId, days, schedule, variant = "comp
         ))}
       </ol>
       <p className="mt-2 text-[11px] text-ink-soft">
-        The last day is a finish day — there's no accommodation on the final night.
+        {finishLocation
+          ? `The last day finishes at ${finishLocation} — there's no accommodation on the final night.`
+          : "The last day is a finish day — there's no accommodation on the final night."}
       </p>
 
     </section>

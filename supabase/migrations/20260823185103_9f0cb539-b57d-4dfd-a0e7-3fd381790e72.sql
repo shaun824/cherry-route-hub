@@ -1,0 +1,1 @@
+ALTER TABLE public.event_info_blocks ADD COLUMN finish_location TEXT;

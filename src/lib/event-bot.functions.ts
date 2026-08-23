@@ -94,6 +94,7 @@ function formatEventStructured(event: any, info: any | null): string {
     if (info.reg_notes) lines.push(`Registration notes: ${info.reg_notes}`);
     if (info.parking_notes) lines.push(`Parking: ${info.parking_notes}`);
     if (info.route_description) lines.push(`Route notes: ${info.route_description}`);
+    if (info.finish_location) lines.push(`Finish location: ${info.finish_location}`);
     if (info.distance_km) lines.push(`Distance: ${info.distance_km} km`);
     if (info.elevation_m) lines.push(`Elevation: ${info.elevation_m} m`);
     if (info.rules_md) lines.push(`\nRules:\n${info.rules_md}`);

@@ -828,6 +828,7 @@ function InfoPanel({
           schedule={schedule}
           variant="compact"
           enabled={signedIn}
+          finishLocation={info?.finish_location}
         />
       ) : null}
 

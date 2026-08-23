@@ -859,6 +859,7 @@ export type Database = {
           emergency_contacts: Json
           event_id: string
           faqs: Json
+          finish_location: string | null
           gpx_url: string | null
           map_embed_url: string | null
           packing_list: Json
@@ -883,6 +884,7 @@ export type Database = {
           emergency_contacts?: Json
           event_id: string
           faqs?: Json
+          finish_location?: string | null
           gpx_url?: string | null
           map_embed_url?: string | null
           packing_list?: Json
@@ -907,6 +909,7 @@ export type Database = {
           emergency_contacts?: Json
           event_id?: string
           faqs?: Json
+          finish_location?: string | null
           gpx_url?: string | null
           map_embed_url?: string | null
           packing_list?: Json

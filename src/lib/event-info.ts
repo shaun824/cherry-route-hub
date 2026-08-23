@@ -181,6 +181,8 @@ export type EventInfoBlock = {
   parking_notes: string | null;
   packing_list: PackingItem[];
   route_description: string | null;
+  /** Where the event finishes, shown on the accommodation timeline and info tab. */
+  finish_location: string | null;
   distance_km: number | null;
   elevation_m: number | null;
   gpx_url: string | null;
@@ -224,6 +226,7 @@ export async function fetchEventInfo(eventId: string): Promise<EventInfoBlock | 
     parking_notes: data.parking_notes,
     packing_list: parseJsonArray<PackingItem>(data.packing_list),
     route_description: data.route_description,
+    finish_location: (data as any).finish_location ?? null,
     distance_km: data.distance_km as number | null,
     elevation_m: data.elevation_m as number | null,
     gpx_url: data.gpx_url,
@@ -249,6 +252,7 @@ export async function saveEventInfo(info: EventInfoBlock): Promise<boolean> {
     parking_notes: info.parking_notes,
     packing_list: toJson(info.packing_list),
     route_description: info.route_description,
+    finish_location: info.finish_location,
     distance_km: info.distance_km,
     elevation_m: info.elevation_m,
     gpx_url: info.gpx_url,
@@ -276,6 +280,7 @@ export function emptyEventInfo(eventId: string): EventInfoBlock {
     parking_notes: null,
     packing_list: [],
     route_description: null,
+    finish_location: null,
     distance_km: null,
     elevation_m: null,
     gpx_url: null,

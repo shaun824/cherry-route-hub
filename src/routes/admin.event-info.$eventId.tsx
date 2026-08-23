@@ -234,6 +234,11 @@ function EventInfoEditor() {
           rows={4}
         />
         <Field
+          label="Finish location"
+          value={info.finish_location ?? ""}
+          onChange={(v) => patch("finish_location", v || null)}
+        />
+        <Field
           label="GPX download URL"
           value={info.gpx_url ?? ""}
           onChange={(v) => patch("gpx_url", v || null)}
