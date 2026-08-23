@@ -2,6 +2,7 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import { Home, Ticket, Binoculars, User, LogIn, X, HardHat, BedDouble, Smartphone, ClipboardList } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { useSession, useIsCrew } from "@/lib/auth";
+import { useEntryAutoSync } from "@/lib/use-entry-autosync";
 import { useCrewMode } from "@/lib/crew-mode";
 import { Footer } from "@/components/footer";
 import { BrandMark } from "@/components/ui-bits";
@@ -30,6 +31,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const { isCrew } = useIsCrew();
   const { crewMode, inCrewArea, exitCrewMode } = useCrewMode(pathname);
   const [dismissed, setDismissed] = useState(false);
+  useEntryAutoSync(Boolean(user));
 
   useEffect(() => {
     if (typeof window === "undefined") return;

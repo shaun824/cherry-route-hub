@@ -10,6 +10,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { UpcomingBySport } from "@/components/upcoming-by-sport";
 import { brandHeader } from "@/lib/event-brand";
 import { EventLogo } from "@/components/event-logo";
+import { SyncMyEntryButton } from "@/components/sync-my-entry";
 
 export const Route = createFileRoute("/my-events/")({
   component: MyEventsIndex,
@@ -84,9 +85,10 @@ function SignedInState() {
         <div className="mx-5 mt-4 rounded-2xl border border-dashed border-border p-8 text-center">
           <CalendarDays className="mx-auto h-6 w-6 text-muted-foreground" />
           <p className="mt-2 text-sm text-ink-soft">
-            You're linked, but there aren't any events assigned to you yet. Once your Entry Ninja
-            entry is imported by Red Cherry admin, it'll show up here.
+            You're linked, but there aren't any events assigned to you yet. Just entered? Tap below
+            to pull it through straight away.
           </p>
+          <SyncMyEntryButton className="mt-4" />
         </div>
       ) : (
         <ul className="space-y-3 px-5 py-4">

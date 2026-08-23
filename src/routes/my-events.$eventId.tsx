@@ -80,6 +80,7 @@ import { brandHeader } from "@/lib/event-brand";
 import { EventLogo } from "@/components/event-logo";
 import { EventPhotosPanel } from "@/components/event-photos-panel";
 import { FeedPostBody } from "@/components/feed-post-body";
+import { SyncMyEntryButton } from "@/components/sync-my-entry";
 
 import { Image as ImageIcon } from "lucide-react";
 
@@ -1913,6 +1914,7 @@ function EnterEventCta({ entryUrl }: { entryUrl: string | null }) {
       >
         Enter on Entry Ninja <ExternalLink className="h-4 w-4" />
       </a>
+      <SyncMyEntryButton className="mt-2" />
     </section>
   );
 }
