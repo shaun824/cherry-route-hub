@@ -126,6 +126,75 @@ async function fetchMyRoomingRowsLive(eventId: string): Promise<RoomingRow[]> {
   );
 }
 
+/**
+ * Some events ask riders, as a custom question on Entry Ninja, which hotel they
+ * want for the nights at the race village (the village venue can't sleep
+ * everyone, so overflow riders go to nearby hotels).
+ */
+export type HotelChoice = {
+  /** hotel the rider picked, e.g. "Mountain Breeze" */
+  hotel: string;
+  /** the rest of the answer, e.g. "1.2km off site" */
+  note: string | null;
+  /** rider night numbers the question referred to, e.g. [2, 3] */
+  questionNights: number[];
+  raw: string;
+};
+
+export function parseHotelChoice(
+  extras: { name?: string | null; size?: string | null }[] | null | undefined,
+): HotelChoice | null {
+  const hit = (extras ?? []).find(
+    (x) => /hotel|housed|accommodat/i.test(String(x?.name ?? "")) && String(x?.size ?? "").trim(),
+  );
+  if (!hit) return null;
+  const raw = String(hit.size).trim();
+  const [hotel, ...rest] = raw.split(/\s+[-–—]\s+/);
+  const nights = Array.from(String(hit.name ?? "").matchAll(/\d+/g)).map((m) => Number(m[0]));
+  return {
+    hotel: hotel.trim(),
+    note: rest.length ? rest.join(" - ").trim() : null,
+    questionNights: nights,
+    raw,
+  };
+}
+
+/** The signed-in rider's hotel answer for this event, if they were asked. */
+export async function fetchMyHotelChoice(eventId: string): Promise<HotelChoice | null> {
+  const { data: auth } = await supabase.auth.getUser();
+  const uid = auth.user?.id;
+  if (!uid) return null;
+  const { data: mine } = await supabase.from("entrants").select("id").eq("user_id", uid);
+  const ids = (mine ?? []).map((e) => e.id);
+  if (!ids.length) return null;
+  const { data } = await supabase
+    .from("event_entrants")
+    .select("extras")
+    .eq("event_id", eventId)
+    .in("entrant_id", ids);
+  for (const row of data ?? []) {
+    const parsed = parseHotelChoice(
+      Array.isArray(row.extras) ? (row.extras as { name?: string; size?: string }[]) : [],
+    );
+    if (parsed) return parsed;
+  }
+  return null;
+}
+
+/** True when two venue/hotel names refer to the same place. */
+export function sameHotel(a: string | null | undefined, b: string | null | undefined) {
+  const norm = (s: string) =>
+    s
+      .toLowerCase()
+      .replace(/\b(and|&|the|spa|lodge|hotel|resort|guest house)\b/g, " ")
+      .replace(/[^a-z0-9]+/g, " ")
+      .trim();
+  const na = norm(String(a ?? ""));
+  const nb = norm(String(b ?? ""));
+  if (!na || !nb) return false;
+  return na === nb || na.startsWith(nb) || nb.startsWith(na);
+}
+
 export function nightDateLabel(date: string | null) {
   if (!date) return "";
   const d = new Date(`${date}T12:00:00`);
