@@ -126,9 +126,7 @@ export const Route = createFileRoute("/my-events/$eventId")({
 });
 
 /** Lets the accommodation card jump the page to the village tab, focused. */
-const VillageFocusContext = createContext<(f: { zoneId?: string | null; spotId?: string | null; tentId?: string | null; venueId?: string | null }) => void>(
-  () => {},
-);
+
 
 type Tab = "info" | "village" | "routes" | "news" | "photos" | "chat" | "ask" | "packing" | "sponsors";
 
