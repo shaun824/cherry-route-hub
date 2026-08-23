@@ -180,7 +180,7 @@ const RULES: Rule[] = [
   },
   {
     // Weekend Warrior camping packages, exactly as listed on the event website.
-    test: /double\s*(luxury|lux)\s*tent|luxury\s*tent\s*\(?\s*double|2\s*(?:sleeper|man)\s*luxury/i,
+    test: /double[^a-z]{0,4}(?:luxury|lux)?\s*tent|luxury\s*tent[^a-z]{0,4}double|2\s*(?:sleeper|man)\s*luxury/i,
     detail: {
       included: [
         "A pitched luxury tent that sleeps 2 people.",
