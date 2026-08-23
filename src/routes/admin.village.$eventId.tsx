@@ -361,6 +361,41 @@ function VillageEditor() {
         </button>
       </div>
 
+      {/* One village per venue — multi-day events can run several race villages. */}
+      <div className="rounded-2xl bg-card p-4 ring-1 ring-border">
+        <p className="text-[11px] font-bold uppercase tracking-widest text-ink-soft">
+          Which village are you building?
+        </p>
+        <div className="mt-2 flex flex-wrap gap-1.5">
+          {venues.length === 0 ? (
+            <span className="rounded-full bg-cherry px-3 py-1.5 text-xs font-bold text-white">Main village</span>
+          ) : null}
+          {venues.map((v) => (
+            <button
+              key={v.id}
+              onClick={() => setVenueId(v.id)}
+              className={`rounded-full px-3 py-1.5 text-xs font-bold ${
+                venueId === v.id ? "bg-cherry text-white" : "bg-muted text-ink"
+              }`}
+            >
+              {v.name}
+            </button>
+          ))}
+          <button
+            onClick={() => void addVenue()}
+            className="rounded-full bg-muted px-3 py-1.5 text-xs font-bold text-ink-soft"
+          >
+            + Add venue
+          </button>
+        </div>
+        <p className="mt-2 text-[11px] text-ink-soft">
+          {activeVenue
+            ? `Points, areas, tents and rooming lists below belong to ${activeVenue.name} only.`
+            : "This event has one race village. Add a venue to run separate villages per day."}
+        </p>
+      </div>
+
+
       <div className="rounded-2xl bg-card p-4 ring-1 ring-border">
         <label className="text-[11px] font-bold uppercase tracking-widest text-ink-soft">
           Intro text (shown above the map)
