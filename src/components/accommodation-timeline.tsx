@@ -59,8 +59,48 @@ export function useMyNights(eventId: string, days: Props["days"], schedule: Prop
   };
 }
 
+/**
+ * Which nights the "which hotel would you like?" question covers, and what the
+ * rider ends up with on those nights. The question numbers nights from the
+ * first night of racing, so any leading self-booked (pre-event) nights are
+ * added back on.
+ */
+function hotelNightMap(nights: NightStay[], choice: HotelChoice | null): Map<number, NightHotel> {
+  const map = new Map<number, NightHotel>();
+  if (!choice) return map;
+  let offset = 0;
+  for (const n of nights) {
+    if (n.venue?.self_booked) offset += 1;
+    else break;
+  }
+  let scoped = choice.questionNights.map((n) => n + offset).filter((i) => nights.some((n) => n.index === i));
+  if (scoped.length === 0) {
+    // Fall back to the longest stay — the race village nights.
+    const counts = new Map<string, number>();
+    for (const n of nights) if (n.venue && !n.venue.self_booked) counts.set(n.venue.id, (counts.get(n.venue.id) ?? 0) + 1);
+    let best: string | null = null;
+    for (const [id, c] of counts) if (!best || c > (counts.get(best) ?? 0)) best = id;
+    scoped = nights.filter((n) => n.venue?.id === best).map((n) => n.index);
+  }
+  for (const i of scoped) {
+    const night = nights.find((n) => n.index === i);
+    if (!night) continue;
+    const village = night.venue?.name ?? null;
+    if (sameHotel(choice.hotel, village)) continue; // staying at the race village itself
+    map.set(i, { hotel: choice.hotel, note: choice.note, villageVenue: village });
+  }
+  return map;
+}
+
 export function AccommodationTimeline({ eventId, days, schedule, variant = "compact", enabled = true }: Props) {
   const { nights, multiVenue, loading } = useMyNights(eventId, days, schedule, enabled);
+  const choiceQ = useQuery({
+    queryKey: ["my-hotel-choice", eventId],
+    queryFn: () => fetchMyHotelChoice(eventId),
+    staleTime: 5 * 60_000,
+    enabled,
+  });
+  const hotels = useMemo(() => hotelNightMap(nights, choiceQ.data ?? null), [nights, choiceQ.data]);
 
   if (!enabled) return null;
   if (loading) return <div className="h-24 animate-pulse rounded-2xl bg-secondary" />;
@@ -76,7 +116,7 @@ export function AccommodationTimeline({ eventId, days, schedule, variant = "comp
       </p>
       <ol className="mt-3 space-y-2">
         {nights.map((n) => (
-          <NightRow key={n.index} night={n} variant={variant} />
+          <NightRow key={n.index} night={n} variant={variant} hotel={hotels.get(n.index) ?? null} />
         ))}
       </ol>
       <p className="mt-2 text-[11px] text-ink-soft">
@@ -87,7 +127,15 @@ export function AccommodationTimeline({ eventId, days, schedule, variant = "comp
   );
 }
 
-function NightRow({ night, variant }: { night: NightStay; variant: "compact" | "full" }) {
+function NightRow({
+  night,
+  variant,
+  hotel,
+}: {
+  night: NightStay;
+  variant: "compact" | "full";
+  hotel?: NightHotel | null;
+}) {
   const focusVillage = useContext(VillageFocusContext);
   const a = night.allocation;
   const v = night.venue;
