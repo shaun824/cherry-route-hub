@@ -144,6 +144,77 @@ function findHeaderRow(values: unknown[][]): number | null {
 
 const GENERIC_TAB = /^(sheet\d*|run\s*sheet|master|schedule|programme|program|tasks?|main|overview)$/i;
 
+const DAYISH =
+  /(mon|tue|wed|thu|fri|sat|sun)|^\d{1,2}[\s/-]|(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)|day\s*\d/i;
+
+/** Tidies a matrix column heading like "Kyle Driver \n- Vehicles - Green Motion". */
+function cleanDeptName(v: string): string {
+  const first = v.split("\n")[0]!.trim().replace(/\s+/g, " ");
+  return first.slice(0, 60);
+}
+
+/**
+ * Detects the "grid" run sheet: department names across a top row, days down
+ * column A, and each cell holding that department's instructions for the day.
+ */
+function parseMatrixTab(values: unknown[][]): { headerRow: number; tasks: RunSheetTaskRow[]; departments: string[] } | null {
+  const limit = Math.min(values.length, 8);
+  let headerRow = -1;
+  let width = 0;
+  for (let i = 0; i < limit; i += 1) {
+    const filled = (values[i] ?? []).filter((c) => String(c ?? "").trim()).length;
+    if (filled >= 4 && filled > width) {
+      headerRow = i;
+      width = filled;
+    }
+  }
+  if (headerRow < 0) return null;
+
+  const header = (values[headerRow] ?? []).map((c) => String(c ?? "").trim());
+  const bodyRows = values.slice(headerRow + 1);
+  const dayRows = bodyRows.filter((r) => DAYISH.test(String(r?.[0] ?? "").trim()));
+  if (dayRows.length < 2) return null;
+
+  // Columns that carry a department heading (skip the day / date columns).
+  const deptCols: { idx: number; name: string }[] = [];
+  header.forEach((h, idx) => {
+    const clean = cleanDeptName(h);
+    if (!clean) return;
+    if (idx <= 1 && /^(day|date|when)$/i.test(clean)) return;
+    if (idx <= 1) return;
+    deptCols.push({ idx, name: clean });
+  });
+  if (deptCols.length < 2) return null;
+
+  const tasks: RunSheetTaskRow[] = [];
+  for (const row of bodyRows) {
+    const dayCell = String(row?.[0] ?? "").trim();
+    if (!DAYISH.test(dayCell)) continue;
+    const dateCell = String(row?.[1] ?? "").trim();
+    const day = [dayCell, dateCell].filter(Boolean).join(" ");
+    for (const col of deptCols) {
+      const cell = String(row?.[col.idx] ?? "").trim();
+      if (!cell || cell === "," || cell === "-") continue;
+      const lines = cell.split("\n").map((l) => l.trim()).filter(Boolean);
+      const task = lines[0]!.slice(0, 300);
+      const detail = lines.slice(1).join("\n");
+      tasks.push({
+        department: col.name,
+        day,
+        start: "",
+        end: "",
+        task,
+        detail,
+        owner: "",
+        location: "",
+        notes: "",
+      });
+    }
+  }
+  if (!tasks.length) return null;
+  return { headerRow, tasks, departments: deptCols.map((c) => c.name) };
+}
+
 /** Pulls every tab of the run sheet and normalises the rows it understands. */
 export async function readRunSheet(sheetUrl: string, range?: string | null): Promise<RunSheetParse> {
   const id = spreadsheetIdFromUrl(sheetUrl);
@@ -166,9 +237,24 @@ export async function readRunSheet(sheetUrl: string, range?: string | null): Pro
   for (const { tab, values } of sheets) {
     const headerRow = findHeaderRow(values);
     if (headerRow === null) {
-      tabs.push({ tab: tab || "Sheet", kind: "ignored", headerRow: null, rows: values.length, used: 0, skipped: values.length, unknownColumns: [] });
+      const matrix = parseMatrixTab(values);
+      if (matrix) {
+        tasks.push(...matrix.tasks);
+        tabs.push({
+          tab: tab || "Sheet",
+          kind: "tasks",
+          headerRow: matrix.headerRow + 1,
+          rows: values.length,
+          used: matrix.tasks.length,
+          skipped: 0,
+          unknownColumns: [],
+        });
+      } else {
+        tabs.push({ tab: tab || "Sheet", kind: "ignored", headerRow: null, rows: values.length, used: 0, skipped: values.length, unknownColumns: [] });
+      }
       continue;
     }
+
     const records = rowsToRecords(values.slice(headerRow));
     const headerCells = (values[headerRow] ?? []).map(norm).filter(Boolean);
     const unknownColumns = headerCells.filter((c) => !ALL_KNOWN.has(c));
