@@ -275,6 +275,8 @@ export default function VillageMapGeo({
 
   highlightZoneId = null,
   highlightTentId = null,
+  flyToSpotId = null,
+  flyToken = 0,
 }: {
   imageUrl?: string | null;
   geo: VillageGeo;
