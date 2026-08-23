@@ -3,7 +3,6 @@
 // Entry Ninja's API only tells us paid: true/false — it never returns money
 // values. So admins keep a per-event price book (entry categories + extras)
 // and we price each entry from it.
-import { supabase } from "@/integrations/supabase/client";
 
 export type PriceRow = {
   id: string;
@@ -81,18 +80,4 @@ export function priceEntry(
 
   const totalCents = lines.length ? lines.reduce((s, l) => s + l.totalCents, 0) : null;
   return { totalCents, lines, missing, complete: missing.length === 0 && totalCents != null };
-}
-
-export async function fetchPriceBook(eventId: string): Promise<PriceRow[]> {
-  const { data, error } = await supabase
-    .from("event_price_book")
-    .select("id, event_id, kind, label, price_cents, notes")
-    .eq("event_id", eventId)
-    .order("kind")
-    .order("label");
-  if (error) {
-    console.warn("[price-book]", error);
-    return [];
-  }
-  return (data ?? []) as PriceRow[];
 }
