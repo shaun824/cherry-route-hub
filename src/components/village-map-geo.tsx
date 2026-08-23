@@ -538,16 +538,19 @@ export default function VillageMapGeo({
               map clears it. Numeric "tent number" points stay out of this layer. */}
           {facilitySpots.map((spot) => {
             const active = selected === spot.id;
+            const pos = hotspotLatLng(geo, spot, heightM);
+            if (!active && !inView(pos[0], pos[1])) return null;
             return (
               <Marker
                 key={`spot-${spot.id}`}
-                position={hotspotLatLng(geo, spot, heightM)}
+                position={pos}
                 icon={facilityIcon(spot, active)}
                 zIndexOffset={active ? 1000 : 400}
                 eventHandlers={{ click: () => onSelect(active ? null : spot.id) }}
               />
             );
           })}
+
 
           <KeepPointInView
             position={selectedSpot ? hotspotLatLng(geo, selectedSpot, heightM) : null}
