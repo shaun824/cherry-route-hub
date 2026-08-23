@@ -134,6 +134,16 @@ function FlyToZone({ zone }: { zone: VillageZone | null }) {
   return null;
 }
 
+/** Flies to a facility pin when a rider taps "show me on the map" elsewhere. */
+function FlyToSpot({ position, token }: { position: [number, number] | null; token: number }) {
+  const map = useMap();
+  useEffect(() => {
+    if (!position || !token) return;
+    map.flyTo(position, Math.max(map.getZoom(), 19), { duration: 0.8 });
+  }, [map, position?.[0], position?.[1], token]);
+  return null;
+}
+
 /** Flies straight to an exact tent pin — the tightest "this is your tent" view. */
 function FlyToTent({ tent }: { tent: MapTent | null }) {
   const map = useMap();
