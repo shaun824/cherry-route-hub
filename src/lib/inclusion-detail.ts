@@ -179,6 +179,83 @@ const RULES: Rule[] = [
     },
   },
   {
+    // Weekend Warrior camping packages, exactly as listed on the event website.
+    test: /double\s*(luxury|lux)\s*tent|luxury\s*tent\s*\(?\s*double|2\s*(?:sleeper|man)\s*luxury/i,
+    detail: {
+      included: [
+        "A pitched luxury tent that sleeps 2 people.",
+        "A proper bed and mattress for each person.",
+        "Bedding is included — duvet, pillows and linen are made up for you.",
+        "Side table, chair and a light inside the tent.",
+        "Available from Friday night.",
+      ],
+      goodToKnow: [
+        "Nothing to bring for sleeping — bedding, bed and mattress are all set up before you arrive.",
+        "Your tent number shows on the village map here — tap it and it lights up your spot.",
+        "Power in the village is for charging points and lights; don't run heaters off the tent light.",
+        "Tents are pitched by the crew, so please don't move one without asking the village manager.",
+      ],
+      wherePlain: "Luxury tent row in the camping zone of the rider village.",
+      categories: ["camping", "toilets"],
+      match: /camp|tent|luxury|ablution|shower|toilet/i,
+    },
+  },
+  {
+    test: /single\s*(luxury|lux)\s*tent|luxury\s*tent/i,
+    detail: {
+      included: [
+        "A pitched luxury tent that sleeps 1 person.",
+        "A proper bed and mattress.",
+        "Bedding is included — duvet, pillow and linen are made up for you.",
+        "Side table and chair.",
+        "Available from Friday night.",
+      ],
+      goodToKnow: [
+        "No sleeping bag needed — bedding is supplied and made up.",
+        "Your tent number shows on the village map here — tap it and it lights up your spot.",
+        "Tents are pitched by the crew, so please don't move one without asking the village manager.",
+      ],
+      wherePlain: "Luxury tent row in the camping zone of the rider village.",
+      categories: ["camping", "toilets"],
+      match: /camp|tent|luxury|ablution|shower|toilet/i,
+    },
+  },
+  {
+    test: /rce tent|tent rental|tent hire|hire a tent/i,
+    detail: {
+      included: [
+        "A pitched RCE tent that easily sleeps 2 people.",
+        "Available from Friday night.",
+        "Access to the village ablutions, hot showers and charging points.",
+      ],
+      goodToKnow: [
+        "No mattress or bedding is included — bring your own mattress, sleeping bag and pillow.",
+        "Available to Weekend Warriors only.",
+        "Your tent number shows on the village map here — tap it and it lights up your spot.",
+      ],
+      wherePlain: "RCE tent rows in the camping zone of the rider village.",
+      categories: ["camping", "toilets"],
+      match: /camp|tent|ablution|shower|toilet/i,
+    },
+  },
+  {
+    test: /bring (your )?own tent|own tent/i,
+    detail: {
+      included: [
+        "A camping spot in the village for your own tent, limited to a 4m x 4m setup.",
+        "Access to the village ablutions, hot showers and charging points.",
+      ],
+      goodToKnow: [
+        "Only 30 spots are available, so pitch early on Friday.",
+        "No power at your tent or trailer.",
+        "Parking is on the bank next to the field.",
+      ],
+      wherePlain: "Own-tent camping field in the rider village.",
+      categories: ["camping", "parking", "toilets"],
+      match: /camp|tent|parking|ablution|shower|toilet/i,
+    },
+  },
+  {
     test: /chalet|hotel|lodge|room|single room|accommodation|housed|sharing/i,
     detail: {
       included: [
