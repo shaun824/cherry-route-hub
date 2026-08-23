@@ -44,6 +44,7 @@ function CrewPage() {
   const [focusSpot, setFocusSpot] = useState<string | null>(null);
   const [focusZone, setFocusZone] = useState<string | null>(null);
   const [focusTent, setFocusTent] = useState<string | null>(null);
+  const [focusVenue, setFocusVenue] = useState<string | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
   const mapRef = useRef<HTMLDivElement>(null);
 
