@@ -9,7 +9,7 @@ import { createFileRoute, Link, notFound, useRouterState } from "@tanstack/react
 import { useServerFn } from "@tanstack/react-start";
 import { askEventBot } from "@/lib/event-bot.functions";
 import { fetchEventSponsors } from "@/lib/event-sponsors.functions";
-import { createContext, Fragment, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { EventWeatherCard } from "@/components/event-weather";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
