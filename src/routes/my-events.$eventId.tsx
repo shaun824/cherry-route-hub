@@ -2209,6 +2209,15 @@ function YourEntryCard({ eventId, entryUrl = null }: { eventId: string; entryUrl
 
 
 /** Team / group from Entry Ninja: name plus everyone else riding with you. */
+function initials(name: string) {
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((p) => p[0]?.toUpperCase() ?? "")
+    .join("");
+}
+
 function TeamCard({ eventId, teamName }: { eventId: string; teamName: string | null }) {
   const q = useQuery({
     queryKey: ["my-team", eventId],
@@ -2219,35 +2228,75 @@ function TeamCard({ eventId, teamName }: { eventId: string; teamName: string | n
   if (!teamName) return null;
   const members = q.data?.members ?? [];
   const others = members.filter((m) => !m.is_me);
+  const name = q.data?.teamName ?? teamName;
+
   return (
-    <div className="mt-3 rounded-xl bg-secondary p-2.5">
-      <p className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-ink-soft">
-        <Users className="h-3 w-3" /> Your team
-      </p>
-      <p className="mt-0.5 font-display text-sm font-bold text-ink">{q.data?.teamName ?? teamName}</p>
+    <div className="mt-3 overflow-hidden rounded-2xl bg-card ring-1 ring-border">
+      <div className="flex items-center gap-3 bg-cherry px-3 py-2.5 text-white">
+        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-white/20 text-[12px] font-black">
+          {initials(name) || "T"}
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-white/80">
+            Your team
+          </p>
+          <p className="truncate font-display text-base font-black leading-tight">{name}</p>
+        </div>
+        <span className="shrink-0 rounded-lg bg-white/20 px-2 py-1 text-[11px] font-bold">
+          <Users className="mr-1 inline h-3 w-3" />
+          {members.length || 1}
+        </span>
+      </div>
+
       {others.length > 0 ? (
-        <ul className="mt-2 space-y-1">
-          {others.map((m) => (
+        <ul className="divide-y divide-border">
+          {members.map((m) => (
             <li
               key={`${m.full_name}-${m.bib_number ?? ""}`}
-              className="flex items-center justify-between gap-2 rounded-lg bg-card px-2 py-1.5 text-[11px]"
+              className="flex items-center gap-2.5 px-3 py-2"
             >
-              <span className="font-semibold text-ink">{m.full_name}</span>
-              <span className="text-ink-soft">
-                {[m.category, m.batch, m.bib_number ? `#${m.bib_number}` : null]
-                  .filter(Boolean)
-                  .join(" · ")}
+              <span
+                className={`grid h-8 w-8 shrink-0 place-items-center rounded-full text-[11px] font-black ${
+                  m.is_me ? "bg-cherry/10 text-cherry" : "bg-secondary text-ink-soft"
+                }`}
+              >
+                {initials(m.full_name)}
               </span>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-[13px] font-bold text-ink">
+                  {m.full_name}
+                  {m.is_me ? (
+                    <span className="ml-1.5 rounded bg-cherry px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-white">
+                      You
+                    </span>
+                  ) : null}
+                </p>
+                <p className="truncate text-[11px] text-ink-soft">
+                  {[
+                    m.category,
+                    m.batch ? `Batch ${m.batch}` : null,
+                    m.bib_number ? `#${m.bib_number}` : null,
+                    m.tent_number ? `Tent ${m.tent_number}` : null,
+                  ]
+                    .filter(Boolean)
+                    .join(" · ") || "Entry confirmed"}
+                </p>
+              </div>
             </li>
           ))}
         </ul>
       ) : (
-        <p className="mt-1 text-[11px] text-ink-soft">
+        <p className="px-3 py-2.5 text-[11px] text-ink-soft">
           {q.isLoading
             ? "Loading your team…"
             : "You're the only rider on this team so far — teammates appear here as they enter."}
         </p>
       )}
+      <p className="border-t border-border bg-secondary/50 px-3 py-2 text-[10px] text-ink-soft">
+        Team details come from your Entry Ninja registration. Anyone missing? They'll show here once
+        their entry syncs.
+      </p>
     </div>
   );
 }
+
