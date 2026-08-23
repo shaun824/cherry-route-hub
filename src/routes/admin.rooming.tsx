@@ -477,8 +477,51 @@ function VenueManager({
                 </button>
               </div>
             </div>
+            <div className="grid gap-2 md:grid-cols-4">
+              <input
+                type="number"
+                min={1}
+                value={cur.night_start ?? ""}
+                onChange={(e) =>
+                  setEdits((s) => ({
+                    ...s,
+                    [v.id]: { ...cur, night_start: e.target.value ? Number(e.target.value) : null },
+                  }))
+                }
+                className="rounded-lg border border-border bg-background px-2 py-1.5 text-sm"
+                placeholder="First night (1 = night of day 1)"
+                title="Which night of the event riders first sleep here"
+              />
+              <input
+                type="number"
+                min={1}
+                value={cur.nights ?? ""}
+                onChange={(e) =>
+                  setEdits((s) => ({
+                    ...s,
+                    [v.id]: { ...cur, nights: e.target.value ? Number(e.target.value) : null },
+                  }))
+                }
+                className="rounded-lg border border-border bg-background px-2 py-1.5 text-sm"
+                placeholder="Number of nights"
+              />
+              <input
+                value={cur.check_in ?? ""}
+                onChange={(e) => setEdits((s) => ({ ...s, [v.id]: { ...cur, check_in: e.target.value || null } }))}
+                className="rounded-lg border border-border bg-background px-2 py-1.5 text-sm"
+                placeholder="Check-in (e.g. from 14:00)"
+              />
+              <input
+                value={cur.check_out ?? ""}
+                onChange={(e) => setEdits((s) => ({ ...s, [v.id]: { ...cur, check_out: e.target.value || null } }))}
+                className="rounded-lg border border-border bg-background px-2 py-1.5 text-sm"
+                placeholder="Check-out (e.g. by 09:00)"
+              />
+            </div>
+            </div>
           );
         })}
+
       </div>
 
       <div className="mt-3 grid gap-2 md:grid-cols-[1fr_1.5fr_auto]">
