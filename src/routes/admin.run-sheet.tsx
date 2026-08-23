@@ -217,9 +217,20 @@ function AdminRunSheet() {
               className="mt-2 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm"
             />
             <p className="mt-2 text-xs text-ink-soft">
-              Tabs read: <strong>Run Sheet</strong>, <strong>Packing</strong>, <strong>Brief</strong>. Share
-              the sheet with anyone-with-link viewer access.
+              Every tab is read. A tab needs a <strong>Task</strong> column, plus either a{" "}
+              <strong>Department</strong> column or a tab named after the department. Tabs named{" "}
+              <strong>Packing</strong> or <strong>Brief</strong> are treated as kit lists and role briefs.
+              Share the sheet with anyone-with-link viewer access.
             </p>
+            <p className="mt-2 text-xs text-ink-soft">
+              Saving links this sheet to <strong>{event?.name ?? "—"}</strong>.
+            </p>
+            {otherLinked.length ? (
+              <p className="mt-1 text-xs text-amber-600">
+                Also linked elsewhere: {otherLinked.map((e) => e.name).join(", ")}.
+              </p>
+            ) : null}
+
             <div className="mt-3 flex flex-wrap gap-2">
               <button
                 type="button"
