@@ -823,14 +823,11 @@ function InfoPanel({
         </section>
       ) : null}
 
-      {days.some((d) => (d.routes ?? []).length > 0) ? (
-        <section>
-          <SectionTitle>Routes</SectionTitle>
-          <div className="mt-2">
-            <RoutesPanel eventId={eventId} event={event} eventName={eventName} />
-          </div>
-        </section>
-      ) : null}
+      <EventSectionNav
+        onSelectTab={onTabChange}
+        hasRoutes={days.some((d) => (d.routes ?? []).length > 0)}
+        hasFreshNews={hasFreshNews}
+      />
 
 
       {info?.reg_venue_name || info?.reg_venue_address ? (
