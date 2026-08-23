@@ -304,6 +304,8 @@ export function VillageMapView({
               tents={mapTents}
               highlightZoneId={focusZoneId ?? null}
               highlightTentId={focusTentId ?? null}
+              flyToSpotId={focusSpotId ?? null}
+              flyToken={flyToken}
             />
           </Suspense>
         </ClientOnly>
