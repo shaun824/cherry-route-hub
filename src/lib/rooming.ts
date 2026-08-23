@@ -23,6 +23,8 @@ export type Venue = {
   nights: number | null;
   check_in: string | null;
   check_out: string | null;
+  /** rider books and pays for this night themselves (e.g. pre-event registration night) */
+  self_booked: boolean | null;
 };
 
 
@@ -55,7 +57,7 @@ export const ROOMING_COLUMNS =
   "id, event_id, venue_id, entrant_id, event_entrant_id, match_source, full_name, email, tent_number, room_type, notes, location_hint, night_index, village_zone_id, village_spot_id, village_tent_id, venue:event_venues(id, name, address, village_spot_id)";
 
 export const VENUE_COLUMNS =
-  "id, event_id, name, address, notes, sort_order, village_spot_id, rooming_sheet_url, rooming_sheet_range, rooming_sheet_synced_at, rooming_sheet_error, rooming_sheet_rows, night_start, nights, check_in, check_out";
+  "id, event_id, name, address, notes, sort_order, village_spot_id, rooming_sheet_url, rooming_sheet_range, rooming_sheet_synced_at, rooming_sheet_error, rooming_sheet_rows, night_start, nights, check_in, check_out, self_booked";
 
 export async function fetchVenues(eventId: string): Promise<Venue[]> {
   const { data, error } = await supabase
