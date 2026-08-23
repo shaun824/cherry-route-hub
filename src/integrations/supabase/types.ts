@@ -1381,6 +1381,47 @@ export type Database = {
           },
         ]
       }
+      event_venue_sync: {
+        Row: {
+          applied_at: string | null
+          created_at: string
+          event_id: string
+          last_error: string | null
+          sources: Json
+          stays: Json
+          synced_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          applied_at?: string | null
+          created_at?: string
+          event_id: string
+          last_error?: string | null
+          sources?: Json
+          stays?: Json
+          synced_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          applied_at?: string | null
+          created_at?: string
+          event_id?: string
+          last_error?: string | null
+          sources?: Json
+          stays?: Json
+          synced_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_venue_sync_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: true
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       event_venues: {
         Row: {
           address: string | null

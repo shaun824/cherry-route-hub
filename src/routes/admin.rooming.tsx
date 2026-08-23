@@ -18,6 +18,7 @@ import {
 import { syncRoomingSheet } from "@/lib/rooming-sheet.functions";
 import { loadEntryCandidates, matchEntry, type EntryCandidate } from "@/lib/rooming-match";
 import { fetchTentRules, fetchVillageTents, ruleMatches, tentForLabel, type VillageTent } from "@/lib/village-tents";
+import { VenueSyncPanel } from "@/components/venue-sync-panel";
 
 export const Route = createFileRoute("/admin/rooming")({
   component: RoomingAdminPage,
@@ -378,6 +379,8 @@ function RoomingAdminPage() {
 
       {eventId ? (
         <>
+          <VenueSyncPanel eventId={eventId} />
+
           <VenueManager
             spots={villageQ.data?.hotspots ?? []}
             venues={venues}
@@ -386,6 +389,8 @@ function RoomingAdminPage() {
             onSave={saveVenue}
             onDelete={deleteVenue}
           />
+
+
 
           <NightCoverage
             days={eventDaysQ.data?.days ?? []}

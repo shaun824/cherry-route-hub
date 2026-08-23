@@ -74,6 +74,7 @@ import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/l
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
 import { Route as ApiPublicHooksWhatsappRouteImport } from './routes/api/public/hooks/whatsapp'
+import { Route as ApiPublicHooksVenueSyncRouteImport } from './routes/api/public/hooks/venue-sync'
 import { Route as ApiPublicHooksScheduleSyncRouteImport } from './routes/api/public/hooks/schedule-sync'
 import { Route as ApiPublicHooksRunSheetSyncRouteImport } from './routes/api/public/hooks/run-sheet-sync'
 import { Route as ApiPublicHooksRoomingSheetSyncRouteImport } from './routes/api/public/hooks/rooming-sheet-sync'
@@ -421,6 +422,11 @@ const ApiPublicHooksWhatsappRoute = ApiPublicHooksWhatsappRouteImport.update({
   path: '/api/public/hooks/whatsapp',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicHooksVenueSyncRoute = ApiPublicHooksVenueSyncRouteImport.update({
+  id: '/api/public/hooks/venue-sync',
+  path: '/api/public/hooks/venue-sync',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicHooksScheduleSyncRoute =
   ApiPublicHooksScheduleSyncRouteImport.update({
     id: '/api/public/hooks/schedule-sync',
@@ -593,6 +599,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/rooming-sheet-sync': typeof ApiPublicHooksRoomingSheetSyncRoute
   '/api/public/hooks/run-sheet-sync': typeof ApiPublicHooksRunSheetSyncRoute
   '/api/public/hooks/schedule-sync': typeof ApiPublicHooksScheduleSyncRoute
+  '/api/public/hooks/venue-sync': typeof ApiPublicHooksVenueSyncRoute
   '/api/public/hooks/whatsapp': typeof ApiPublicHooksWhatsappRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -672,6 +679,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/rooming-sheet-sync': typeof ApiPublicHooksRoomingSheetSyncRoute
   '/api/public/hooks/run-sheet-sync': typeof ApiPublicHooksRunSheetSyncRoute
   '/api/public/hooks/schedule-sync': typeof ApiPublicHooksScheduleSyncRoute
+  '/api/public/hooks/venue-sync': typeof ApiPublicHooksVenueSyncRoute
   '/api/public/hooks/whatsapp': typeof ApiPublicHooksWhatsappRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -756,6 +764,7 @@ export interface FileRoutesById {
   '/api/public/hooks/rooming-sheet-sync': typeof ApiPublicHooksRoomingSheetSyncRoute
   '/api/public/hooks/run-sheet-sync': typeof ApiPublicHooksRunSheetSyncRoute
   '/api/public/hooks/schedule-sync': typeof ApiPublicHooksScheduleSyncRoute
+  '/api/public/hooks/venue-sync': typeof ApiPublicHooksVenueSyncRoute
   '/api/public/hooks/whatsapp': typeof ApiPublicHooksWhatsappRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -841,6 +850,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/rooming-sheet-sync'
     | '/api/public/hooks/run-sheet-sync'
     | '/api/public/hooks/schedule-sync'
+    | '/api/public/hooks/venue-sync'
     | '/api/public/hooks/whatsapp'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -920,6 +930,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/rooming-sheet-sync'
     | '/api/public/hooks/run-sheet-sync'
     | '/api/public/hooks/schedule-sync'
+    | '/api/public/hooks/venue-sync'
     | '/api/public/hooks/whatsapp'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -1003,6 +1014,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/rooming-sheet-sync'
     | '/api/public/hooks/run-sheet-sync'
     | '/api/public/hooks/schedule-sync'
+    | '/api/public/hooks/venue-sync'
     | '/api/public/hooks/whatsapp'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -1050,6 +1062,7 @@ export interface RootRouteChildren {
   ApiPublicHooksRoomingSheetSyncRoute: typeof ApiPublicHooksRoomingSheetSyncRoute
   ApiPublicHooksRunSheetSyncRoute: typeof ApiPublicHooksRunSheetSyncRoute
   ApiPublicHooksScheduleSyncRoute: typeof ApiPublicHooksScheduleSyncRoute
+  ApiPublicHooksVenueSyncRoute: typeof ApiPublicHooksVenueSyncRoute
   ApiPublicHooksWhatsappRoute: typeof ApiPublicHooksWhatsappRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
   LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
@@ -1514,6 +1527,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksWhatsappRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/venue-sync': {
+      id: '/api/public/hooks/venue-sync'
+      path: '/api/public/hooks/venue-sync'
+      fullPath: '/api/public/hooks/venue-sync'
+      preLoaderRoute: typeof ApiPublicHooksVenueSyncRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/schedule-sync': {
       id: '/api/public/hooks/schedule-sync'
       path: '/api/public/hooks/schedule-sync'
@@ -1792,6 +1812,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksRoomingSheetSyncRoute: ApiPublicHooksRoomingSheetSyncRoute,
   ApiPublicHooksRunSheetSyncRoute: ApiPublicHooksRunSheetSyncRoute,
   ApiPublicHooksScheduleSyncRoute: ApiPublicHooksScheduleSyncRoute,
+  ApiPublicHooksVenueSyncRoute: ApiPublicHooksVenueSyncRoute,
   ApiPublicHooksWhatsappRoute: ApiPublicHooksWhatsappRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
   LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
