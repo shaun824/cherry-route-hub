@@ -126,7 +126,7 @@ export const Route = createFileRoute("/my-events/$eventId")({
 });
 
 /** Lets the accommodation card jump the page to the village tab, focused. */
-const VillageFocusContext = createContext<(f: { zoneId?: string | null; spotId?: string | null; tentId?: string | null }) => void>(
+const VillageFocusContext = createContext<(f: { zoneId?: string | null; spotId?: string | null; tentId?: string | null; venueId?: string | null }) => void>(
   () => {},
 );
 
@@ -168,8 +168,8 @@ function MyEventDetail() {
     [scrollToTabTop],
   );
 
-  const [villageFocus, setVillageFocus] = useState<{ zoneId?: string | null; spotId?: string | null; tentId?: string | null }>({});
-  const focusVillage = useCallback((f: { zoneId?: string | null; spotId?: string | null; tentId?: string | null }) => {
+  const [villageFocus, setVillageFocus] = useState<{ zoneId?: string | null; spotId?: string | null; tentId?: string | null; venueId?: string | null }>({});
+  const focusVillage = useCallback((f: { zoneId?: string | null; spotId?: string | null; tentId?: string | null; venueId?: string | null }) => {
     setVillageFocus(f);
     setTab("village");
     if (typeof window === "undefined") return;
@@ -292,6 +292,7 @@ function MyEventDetail() {
               focusZoneId={villageFocus.zoneId ?? null}
               focusSpotId={villageFocus.spotId ?? null}
               focusTentId={villageFocus.tentId ?? null}
+              venueId={villageFocus.venueId ?? null}
             />
             <OfflinePackCard event={event as never} />
           </section>
@@ -2083,6 +2084,7 @@ function YourEntryCard({ eventId, entryUrl = null }: { eventId: string; entryUrl
                   zoneId: rooming.village_zone_id,
                   spotId: rooming.village_spot_id ?? rooming.venue?.village_spot_id ?? null,
                   tentId: rooming.village_tent_id,
+                  venueId: rooming.venue_id ?? null,
                 })
               }
               className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-cherry px-2.5 py-1.5 text-[11px] font-bold text-white"

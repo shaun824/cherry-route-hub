@@ -7,6 +7,7 @@ import { withSnapshot } from "@/lib/offline-pack";
 export type VillageTent = {
   id: string;
   event_id: string;
+  venue_id?: string | null;
   label: string;
   lat: number;
   lng: number;
@@ -21,26 +22,28 @@ export type VillageTent = {
 export type TentRule = {
   id: string;
   event_id: string;
+  venue_id?: string | null;
   zone_id: string;
   /** "1-40", "A*", "Nyathi*" — matched against the tent number */
   pattern: string;
 };
 
-export async function fetchVillageTents(eventId: string): Promise<VillageTent[]> {
+export async function fetchVillageTents(eventId: string, venueId: string | null = null): Promise<VillageTent[]> {
   if (!eventId) return [];
   return withSnapshot(
-    `village-tents:${eventId}`,
-    () => fetchVillageTentsLive(eventId),
+    `village-tents:${eventId}:${venueId ?? "main"}`,
+    () => fetchVillageTentsLive(eventId, venueId),
     (v) => v.length === 0,
   );
 }
 
-async function fetchVillageTentsLive(eventId: string): Promise<VillageTent[]> {
-  const { data, error } = await supabase
+async function fetchVillageTentsLive(eventId: string, venueId: string | null): Promise<VillageTent[]> {
+  let query = supabase
     .from("event_village_tents")
-    .select("id, event_id, label, lat, lng, zone_id, capacity, notes, kind")
-    .eq("event_id", eventId)
-    .order("label", { ascending: true });
+    .select("id, event_id, venue_id, label, lat, lng, zone_id, capacity, notes, kind")
+    .eq("event_id", eventId);
+  query = venueId ? query.eq("venue_id", venueId) : query.is("venue_id", null);
+  const { data, error } = await query.order("label", { ascending: true });
   if (error) {
     console.warn("[village] tents", error);
     return [];
@@ -53,18 +56,21 @@ export function realTents<T extends { kind?: string | null }>(tents: T[]): T[] {
   return tents.filter((t) => (t.kind ?? "tent") !== "marker");
 }
 
-export async function fetchTentRules(eventId: string): Promise<TentRule[]> {
+export async function fetchTentRules(eventId: string, venueId: string | null = null): Promise<TentRule[]> {
   if (!eventId) return [];
-  const { data, error } = await supabase
+  let query = supabase
     .from("event_village_tent_rules")
-    .select("id, event_id, zone_id, pattern")
+    .select("id, event_id, venue_id, zone_id, pattern")
     .eq("event_id", eventId);
+  query = venueId ? query.eq("venue_id", venueId) : query.is("venue_id", null);
+  const { data, error } = await query;
   if (error) {
     console.warn("[village] tent rules", error);
     return [];
   }
   return (data ?? []) as TentRule[];
 }
+
 
 /** The tent pin whose label matches this tent/room number, if any. */
 export function tentForLabel<T extends { label: string; kind?: string | null }>(

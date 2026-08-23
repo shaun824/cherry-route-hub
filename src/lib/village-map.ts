@@ -51,7 +51,11 @@ export type VillageGeo = {
 };
 
 export type VillageMap = {
+  /** row id — present once the village has been saved */
+  id?: string;
   event_id: string;
+  /** which venue this village belongs to; null = the event's main village */
+  venue_id: string | null;
   image_url: string | null;
   intro: string | null;
   hotspots: VillageHotspot[];
@@ -59,6 +63,7 @@ export type VillageMap = {
   /** drawn areas used for field layout planning */
   zones: VillageZone[];
 };
+
 
 export function isPlacedGeo(geo: VillageGeo | null | undefined): geo is VillageGeo {
   return !!geo && Number.isFinite(geo.lat) && Number.isFinite(geo.lng) && (geo.widthM ?? 0) > 0;
@@ -171,57 +176,98 @@ export function categoryMeta(id: VillageCategory) {
   return VILLAGE_CATEGORIES.find((c) => c.id === id) ?? VILLAGE_CATEGORIES[VILLAGE_CATEGORIES.length - 1];
 }
 
-export function emptyVillageMap(eventId: string): VillageMap {
-  return { event_id: eventId, image_url: null, intro: null, hotspots: [], geo: null, zones: [] };
+export function emptyVillageMap(eventId: string, venueId: string | null = null): VillageMap {
+  return { event_id: eventId, venue_id: venueId, image_url: null, intro: null, hotspots: [], geo: null, zones: [] };
 }
 
-export async function fetchVillageMap(eventId: string): Promise<VillageMap | null> {
+const MAP_COLUMNS = "id, event_id, venue_id, image_url, intro, hotspots, geo, zones";
+
+/** One village per venue. `venueId === null` is the event's main/only village. */
+export async function fetchVillageMap(eventId: string, venueId: string | null = null): Promise<VillageMap | null> {
   return withSnapshot(
-    `village-map:${eventId}`,
-    () => fetchVillageMapLive(eventId),
+    `village-map:${eventId}:${venueId ?? "main"}`,
+    () => fetchVillageMapLive(eventId, venueId),
     (v) => v === null,
   );
 }
 
-async function fetchVillageMapLive(eventId: string): Promise<VillageMap | null> {
-  const { data, error } = await supabase
-    .from("event_village_maps")
-    .select("event_id, image_url, intro, hotspots, geo, zones")
-    .eq("event_id", eventId)
-    .maybeSingle();
-  if (error) {
-    console.warn("[village-map:fetch]", error);
-    return null;
-  }
-  if (!data) return null;
+/** Every village belonging to an event (main village + per-venue villages). */
+export async function fetchVillageMaps(eventId: string): Promise<VillageMap[]> {
+  return withSnapshot(
+    `village-maps:${eventId}`,
+    async () => {
+      const { data, error } = await supabase
+        .from("event_village_maps")
+        .select(MAP_COLUMNS)
+        .eq("event_id", eventId);
+      if (error) {
+        console.warn("[village-map:fetch-all]", error);
+        return [];
+      }
+      return (data ?? []).map(normaliseMapRow);
+    },
+    (v) => v.length === 0,
+  );
+}
+
+function normaliseMapRow(data: Record<string, unknown>): VillageMap {
   const raw = Array.isArray(data.hotspots) ? (data.hotspots as unknown as VillageHotspot[]) : [];
-  const rawGeo = (data as { geo?: unknown }).geo as VillageGeo | null | undefined;
-  const rawZones = (data as { zones?: unknown }).zones;
+  const rawGeo = data.geo as VillageGeo | null | undefined;
+  const rawZones = data.zones;
   const zones = Array.isArray(rawZones)
     ? (rawZones as unknown as VillageZone[]).filter((z) => z && Array.isArray(z.points) && z.points.length > 2)
     : [];
   return {
-    event_id: data.event_id,
-    image_url: data.image_url,
-    intro: data.intro,
+    id: (data.id as string | undefined) ?? undefined,
+    event_id: data.event_id as string,
+    venue_id: (data.venue_id as string | null) ?? null,
+    image_url: (data.image_url as string | null) ?? null,
+    intro: (data.intro as string | null) ?? null,
     hotspots: raw
       .filter((h) => h && (Number.isFinite(h.x) || Number.isFinite(h.lat)))
       .map((h) => ({ ...h, x: Number.isFinite(h.x) ? h.x : 50, y: Number.isFinite(h.y) ? h.y : 50 })),
     geo: hasVenueCentre(rawGeo) ? { ...rawGeo, widthM: rawGeo.widthM ?? 0 } : null,
     zones,
-
   };
 }
 
+async function fetchVillageMapLive(eventId: string, venueId: string | null): Promise<VillageMap | null> {
+  let query = supabase.from("event_village_maps").select(MAP_COLUMNS).eq("event_id", eventId);
+  query = venueId ? query.eq("venue_id", venueId) : query.is("venue_id", null);
+  const { data, error } = await query.maybeSingle();
+  if (error) {
+    console.warn("[village-map:fetch]", error);
+    return null;
+  }
+  if (!data) return null;
+  return normaliseMapRow(data as unknown as Record<string, unknown>);
+}
+
 export async function saveVillageMap(map: VillageMap): Promise<boolean> {
-  const { error } = await supabase.from("event_village_maps").upsert({
+  const payload = {
     event_id: map.event_id,
+    venue_id: map.venue_id ?? null,
     image_url: map.image_url,
     intro: map.intro,
     hotspots: map.hotspots as unknown as Json,
     geo: (map.geo ?? {}) as unknown as Json,
     zones: (map.zones ?? []) as unknown as Json,
-  });
+  };
+
+  // The (event_id, venue_id) uniqueness is enforced with an expression index, so
+  // PostgREST upsert can't target it — find the existing row ourselves.
+  let existing = map.id ?? null;
+  if (!existing) {
+    let q = supabase.from("event_village_maps").select("id").eq("event_id", map.event_id);
+    q = map.venue_id ? q.eq("venue_id", map.venue_id) : q.is("venue_id", null);
+    const { data } = await q.maybeSingle();
+    existing = (data as { id?: string } | null)?.id ?? null;
+  }
+
+  const { error } = existing
+    ? await supabase.from("event_village_maps").update(payload).eq("id", existing)
+    : await supabase.from("event_village_maps").insert(payload);
   if (error) console.warn("[village-map:save]", error);
   return !error;
 }
+

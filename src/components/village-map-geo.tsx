@@ -207,6 +207,30 @@ function ZoomWatcher({ onZoom }: { onZoom: (z: number) => void }) {
   return null;
 }
 
+/**
+ * Tracks the visible area so big villages (hundreds of tents across several
+ * venues) only ever mount the markers a rider can actually see.
+ */
+function ViewportWatcher({ onView }: { onView: (b: L.LatLngBounds) => void }) {
+  const map = useMap();
+  useEffect(() => {
+    let frame = 0;
+    const update = () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => onView(map.getBounds().pad(0.35)));
+    };
+    update();
+    map.on("moveend zoomend", update);
+    return () => {
+      cancelAnimationFrame(frame);
+      map.off("moveend zoomend", update);
+    };
+  }, [map, onView]);
+  return null;
+}
+
+
+
 
 function tentIcon(label: string, active: boolean) {
   const bg = active ? "#c8102e" : "#1f2937";
@@ -263,6 +287,12 @@ export default function VillageMapGeo({
   const [bearing, setBearing] = useState(0);
 
   const [zoom, setZoom] = useState(17);
+  const [view, setView] = useState<L.LatLngBounds | null>(null);
+  const inView = useCallback(
+    (lat: number, lng: number) => !view || view.contains(L.latLng(lat, lng)),
+    [view],
+  );
+
   // Shown once as the map loads on touch devices, then dismissed for good on
   // the first touch — re-showing it on every single tap got in the way.
   const [twoFingerHint, setTwoFingerHint] = useState(false);
@@ -460,6 +490,7 @@ export default function VillageMapGeo({
           })}
 
           <ZoomWatcher onZoom={setZoom} />
+          <ViewportWatcher onView={setView} />
 
           {/* Dropped tent pins are shown exactly where they were placed. Only
               exact duplicates of the same number are collapsed. */}
@@ -477,6 +508,10 @@ export default function VillageMapGeo({
             // the rider deliberately zooms one level closer. No placeholder dots
             // or area-corner labels are rendered. Your own tent stays visible.
             if (!hot && zoom < 20) return null;
+            // Villages with hundreds of tents stay smooth because off-screen
+            // pins are never mounted.
+            if (!hot && !inView(t.lat, t.lng)) return null;
+
             return (
               <Marker
                 key={t.id}
@@ -503,16 +538,19 @@ export default function VillageMapGeo({
               map clears it. Numeric "tent number" points stay out of this layer. */}
           {facilitySpots.map((spot) => {
             const active = selected === spot.id;
+            const pos = hotspotLatLng(geo, spot, heightM);
+            if (!active && !inView(pos[0], pos[1])) return null;
             return (
               <Marker
                 key={`spot-${spot.id}`}
-                position={hotspotLatLng(geo, spot, heightM)}
+                position={pos}
                 icon={facilityIcon(spot, active)}
                 zIndexOffset={active ? 1000 : 400}
                 eventHandlers={{ click: () => onSelect(active ? null : spot.id) }}
               />
             );
           })}
+
 
           <KeepPointInView
             position={selectedSpot ? hotspotLatLng(geo, selectedSpot, heightM) : null}

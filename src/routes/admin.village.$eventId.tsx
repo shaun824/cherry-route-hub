@@ -1,4 +1,4 @@
-import { createFileRoute, ClientOnly, Link, notFound } from "@tanstack/react-router";
+import { createFileRoute, ClientOnly, Link, notFound, useRouter } from "@tanstack/react-router";
 import { Suspense, lazy, useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Loader2, MapPin, PencilRuler, Save, Sparkles, Square, Tent, Trash2, Upload, X } from "lucide-react";
@@ -57,10 +57,16 @@ export const Route = createFileRoute("/admin/village/$eventId")({
       .select("venue_lat, venue_lng, venue_address")
       .eq("event_id", params.eventId)
       .maybeSingle();
-    return { event: data, info: info ?? null };
+    const { data: venues } = await supabase
+      .from("event_venues")
+      .select("id, name, address, sort_order")
+      .eq("event_id", params.eventId)
+      .order("sort_order", { ascending: true });
+    return { event: data, info: info ?? null, venues: venues ?? [] };
   },
   component: VillageEditor,
 });
+
 
 async function uploadVillageImage(file: File): Promise<string> {
   const ext = file.name.split(".").pop()?.toLowerCase() ?? "png";
@@ -77,9 +83,17 @@ async function uploadVillageImage(file: File): Promise<string> {
 }
 
 function VillageEditor() {
-  const { event, info } = Route.useLoaderData();
-  const q = useQuery({ queryKey: ["village-map", event.id], queryFn: () => fetchVillageMap(event.id) });
-  const [map, setMap] = useState<VillageMap>(() => emptyVillageMap(event.id));
+  const { event, info, venues } = Route.useLoaderData();
+  const router = useRouter();
+  // Multi-venue events (PE PLETT) get one village per venue. Events with no
+  // venues keep the single "main village" (venue_id null).
+  const [venueId, setVenueId] = useState<string | null>(venues[0]?.id ?? null);
+  const activeVenue = venues.find((v) => v.id === venueId) ?? null;
+  const q = useQuery({
+    queryKey: ["village-map", event.id, venueId],
+    queryFn: () => fetchVillageMap(event.id, venueId),
+  });
+  const [map, setMap] = useState<VillageMap>(() => emptyVillageMap(event.id, venues[0]?.id ?? null));
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -96,10 +110,20 @@ function VillageEditor() {
   const [tentKind, setTentKind] = useState<"tent" | "marker">("tent");
   const qc = useQueryClient();
   const tentsQ = useQuery({
-    queryKey: ["village-tents", event.id],
-    queryFn: () => fetchVillageTents(event.id),
+    queryKey: ["village-tents", event.id, venueId],
+    queryFn: () => fetchVillageTents(event.id, venueId),
   });
   const tents = tentsQ.data ?? [];
+
+  // Switching village: clear the editor immediately so nothing from the previous
+  // village can be saved onto the new one.
+  useEffect(() => {
+    setMap(emptyVillageMap(event.id, venueId));
+    setSelected(null);
+    setSelectedZone(null);
+    setSelectedTent(null);
+  }, [venueId, event.id]);
+
 
   function bumpLabel(label: string) {
     const n = Number(label.match(/\d+$/)?.[0] ?? NaN);
@@ -112,19 +136,19 @@ function VillageEditor() {
     const zone = zones.find((z) => pointInZone({ lat, lng }, z)) ?? null;
     const { error } = await supabase
       .from("event_village_tents")
-      .insert({ event_id: event.id, label, lat, lng, zone_id: zone?.id ?? null, kind: tentKind });
+      .insert({ event_id: event.id, venue_id: venueId, label, lat, lng, zone_id: zone?.id ?? null, kind: tentKind });
     if (error) {
       alert(error.message);
       return;
     }
     if (tentKind === "tent") setNextTentLabel(bumpLabel(label));
-    await qc.invalidateQueries({ queryKey: ["village-tents", event.id] });
+    await qc.invalidateQueries({ queryKey: ["village-tents", event.id, venueId] });
   }
 
   async function moveTent(id: string, lat: number, lng: number) {
     const zone = zones.find((z) => pointInZone({ lat, lng }, z)) ?? null;
     await supabase.from("event_village_tents").update({ lat, lng, zone_id: zone?.id ?? null }).eq("id", id);
-    await qc.invalidateQueries({ queryKey: ["village-tents", event.id] });
+    await qc.invalidateQueries({ queryKey: ["village-tents", event.id, venueId] });
   }
 
   async function toggleTentKind(id: string) {
@@ -134,13 +158,13 @@ function VillageEditor() {
       .from("event_village_tents")
       .update({ kind: tent.kind === "marker" ? "tent" : "marker" })
       .eq("id", id);
-    await qc.invalidateQueries({ queryKey: ["village-tents", event.id] });
+    await qc.invalidateQueries({ queryKey: ["village-tents", event.id, venueId] });
   }
 
   async function deleteTent(id: string) {
     await supabase.from("event_village_tents").delete().eq("id", id);
     setSelectedTent(null);
-    await qc.invalidateQueries({ queryKey: ["village-tents", event.id] });
+    await qc.invalidateQueries({ queryKey: ["village-tents", event.id, venueId] });
   }
   const fileRef = useRef<HTMLInputElement>(null);
   const dragRef = useRef<string | null>(null);
@@ -148,13 +172,14 @@ function VillageEditor() {
 
   useEffect(() => {
     if (!q.data) return;
-    const loaded = q.data;
+    const loaded = { ...q.data, venue_id: venueId };
     if (!hasVenueCentre(loaded.geo) && info?.venue_lat && info?.venue_lng) {
       setMap({ ...loaded, geo: { lat: info.venue_lat, lng: info.venue_lng, widthM: 0 } });
     } else {
       setMap(loaded);
     }
-  }, [q.data, info?.venue_lat, info?.venue_lng]);
+  }, [q.data, venueId, info?.venue_lat, info?.venue_lng]);
+
 
   const usingImage = !!map.image_url;
   const centre = useMemo(
@@ -315,6 +340,23 @@ function VillageEditor() {
     if (ok) setTimeout(() => setSaved(false), 2000);
   }
 
+  async function addVenue() {
+    const name = window.prompt("Venue name (e.g. St Francis Links)");
+    if (!name?.trim()) return;
+    const { data, error } = await supabase
+      .from("event_venues")
+      .insert({ event_id: event.id, name: name.trim(), sort_order: venues.length })
+      .select("id")
+      .maybeSingle();
+    if (error || !data) {
+      alert(error?.message ?? "Could not add that venue.");
+      return;
+    }
+    await router.invalidate();
+    setVenueId(data.id);
+  }
+
+
   return (
     <div className="space-y-5 pb-24">
       <div className="flex items-center gap-3">
@@ -336,6 +378,41 @@ function VillageEditor() {
           {saving ? "Saving…" : saved ? "Saved!" : "Save"}
         </button>
       </div>
+
+      {/* One village per venue — multi-day events can run several race villages. */}
+      <div className="rounded-2xl bg-card p-4 ring-1 ring-border">
+        <p className="text-[11px] font-bold uppercase tracking-widest text-ink-soft">
+          Which village are you building?
+        </p>
+        <div className="mt-2 flex flex-wrap gap-1.5">
+          {venues.length === 0 ? (
+            <span className="rounded-full bg-cherry px-3 py-1.5 text-xs font-bold text-white">Main village</span>
+          ) : null}
+          {venues.map((v) => (
+            <button
+              key={v.id}
+              onClick={() => setVenueId(v.id)}
+              className={`rounded-full px-3 py-1.5 text-xs font-bold ${
+                venueId === v.id ? "bg-cherry text-white" : "bg-muted text-ink"
+              }`}
+            >
+              {v.name}
+            </button>
+          ))}
+          <button
+            onClick={() => void addVenue()}
+            className="rounded-full bg-muted px-3 py-1.5 text-xs font-bold text-ink-soft"
+          >
+            + Add venue
+          </button>
+        </div>
+        <p className="mt-2 text-[11px] text-ink-soft">
+          {activeVenue
+            ? `Points, areas, tents and rooming lists below belong to ${activeVenue.name} only.`
+            : "This event has one race village. Add a venue to run separate villages per day."}
+        </p>
+      </div>
+
 
       <div className="rounded-2xl bg-card p-4 ring-1 ring-border">
         <label className="text-[11px] font-bold uppercase tracking-widest text-ink-soft">
