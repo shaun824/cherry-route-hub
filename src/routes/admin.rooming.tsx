@@ -4,7 +4,10 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { BedDouble, FileUp, Link2, MapPin, Plus, RefreshCw, Save, Sparkles, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchRooming, fetchVenues, type RoomingRow, type Venue } from "@/lib/rooming";
+import { eventNights } from "@/lib/accommodation";
+import type { EventDay, ScheduleItem } from "@/lib/mock-data";
 import { fetchVillageMap } from "@/lib/village-map";
+
 import type { VillageZone } from "@/lib/village-zones";
 import {
   labelsMatch,
