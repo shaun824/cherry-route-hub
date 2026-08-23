@@ -53,6 +53,23 @@ function RoomingAdminPage() {
     enabled: !!eventId,
   });
 
+  const eventDaysQ = useQuery({
+    queryKey: ["admin-event-days", eventId],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("events")
+        .select("days, schedule")
+        .eq("id", eventId)
+        .maybeSingle();
+      return {
+        days: (Array.isArray(data?.days) ? data!.days : []) as unknown as EventDay[],
+        schedule: (Array.isArray(data?.schedule) ? data!.schedule : []) as unknown as ScheduleItem[],
+      };
+    },
+    enabled: !!eventId,
+  });
+
+
   const roomingQ = useQuery({
     queryKey: ["admin-rooming", eventId],
     queryFn: () => fetchRooming(eventId),
