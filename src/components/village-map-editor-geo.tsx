@@ -249,6 +249,8 @@ export default function VillageMapEditorGeo({
           zoom={17}
           maxZoom={24}
           scrollWheelZoom
+          // Focusable map containers make the browser jump the page on tap.
+          keyboard={false}
           zoomSnap={0}
           zoomDelta={0.35}
           wheelPxPerZoomLevel={220}
