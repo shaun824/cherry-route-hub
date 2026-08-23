@@ -1246,6 +1246,56 @@ export type Database = {
           },
         ]
       }
+      event_social_posts: {
+        Row: {
+          active: boolean
+          caption: string | null
+          created_at: string
+          event_id: string | null
+          id: string
+          platform: string
+          post_url: string
+          posted_at: string | null
+          sort_index: number
+          source: string | null
+          thumbnail_url: string | null
+        }
+        Insert: {
+          active?: boolean
+          caption?: string | null
+          created_at?: string
+          event_id?: string | null
+          id?: string
+          platform?: string
+          post_url: string
+          posted_at?: string | null
+          sort_index?: number
+          source?: string | null
+          thumbnail_url?: string | null
+        }
+        Update: {
+          active?: boolean
+          caption?: string | null
+          created_at?: string
+          event_id?: string | null
+          id?: string
+          platform?: string
+          post_url?: string
+          posted_at?: string | null
+          sort_index?: number
+          source?: string | null
+          thumbnail_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_social_posts_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       event_venues: {
         Row: {
           address: string | null
