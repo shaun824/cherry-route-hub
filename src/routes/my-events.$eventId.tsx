@@ -58,6 +58,7 @@ import { SponsorScroller } from "@/components/sponsor-scroller";
 import { eventPromosFor } from "@/lib/event-promos";
 import { PromoCarousel } from "@/components/promo-carousel";
 import { PromoInline } from "@/components/promo-inline";
+import { FuelNotice } from "@/components/fuel-notice";
 import { useShuffledPromos } from "@/lib/use-shuffled-promos";
 
 import { curatedSponsorsFor } from "@/lib/event-sponsor-overrides";
