@@ -195,7 +195,17 @@ export async function applyVenueRows(
   eventId: string,
   stays: ScrapedStay[],
 ) {
-  const rows = toVenueRows(stays);
+  const all = toVenueRows(stays);
+  // Drop vague entries (e.g. just a town name) when a properly named venue covers it.
+  const rows = all.filter(
+    (r) =>
+      !all.some(
+        (other) =>
+          other !== r &&
+          other.name.toLowerCase().includes(r.name.toLowerCase()) &&
+          other.name.length > r.name.length,
+      ),
+  );
   if (!rows.length) return { created: 0, updated: 0 };
 
   const { data: existing } = await admin
@@ -203,16 +213,24 @@ export async function applyVenueRows(
     .select("id, name, address, notes, sort_order")
     .eq("event_id", eventId);
 
-  const byName = new Map(
-    (existing ?? []).map((v: any) => [String(v.name).trim().toLowerCase(), v]),
-  );
+  const norm = (s: string) => s.trim().toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+  const findExisting = (name: string) => {
+    const target = norm(name);
+    return (
+      (existing ?? []).find((v: any) => norm(v.name) === target) ??
+      (existing ?? []).find(
+        (v: any) => norm(v.name).includes(target) || target.includes(norm(v.name)),
+      )
+    );
+  };
 
   let created = 0;
   let updated = 0;
   let sort = (existing ?? []).length;
 
   for (const row of rows) {
-    const match = byName.get(row.name.toLowerCase());
+    const match = findExisting(row.name);
+
     if (match) {
       const { error } = await admin
         .from("event_venues")
