@@ -1,36 +1,42 @@
-# Real Instagram photos and reels in the app
+# Fix the run sheet import (no departments coming through)
 
-Today the social wall only shows post links we found on event websites, rendered through Instagram's own embed script — slow, sometimes blank, and never automatically up to date. This replaces it with the official Instagram Graph API so the app holds the actual images, videos and captions and plays them itself.
+## What I found
 
-## What riders will see
+- No PE Plett event has a run sheet link saved. The only event with a linked sheet is **Tour de Addo 2027 | Best of Darlington Dam** — so either the link was saved while that event was selected in the picker, or it was never saved for PE Plett.
+- That linked sheet did run a sync (19 Aug) with **no error**, but it produced **0 departments, 0 tasks, 0 packing rows**. So the reader reached the sheet and understood nothing in it.
 
-- A swipeable media scroller on the home page and at the bottom of each event page.
-- Reels and videos autoplay muted and loop as you scroll; tap to unmute, tap the caption to open the post in Instagram.
-- Photos and carousels show full-bleed with the caption, date and the account handle.
-- Everything loads from our own cache, so it works fast on event Wi-Fi and doesn't depend on Instagram's embed script.
+Why nothing was understood: the importer only reads the **first tab** for tasks (range `A1:Z5000`), assumes **row 1 is the header row**, and requires two columns named close to `Department` and `Task`. It also only looks for extra data in tabs named exactly `Packing` and `Brief`. A real-world run sheet (title rows above the headers, per-department tabs, a "Time / Who / What" layout) parses to nothing — and the sync reports success because zero valid rows is not treated as an error.
 
-## What you'll need to do once
+## What to change
 
-Your Meta Business account (the one already behind WhatsApp) needs to be linked to each Instagram account we pull:
+### 1. Make the reader work with real run sheets
 
-1. Instagram account set to Professional (Business or Creator) and linked to a Facebook Page.
-2. Grant the app the `instagram_basic` / `pages_show_list` permissions and hand over a long-lived token — I'll ask for it as a secret when we build.
-3. Accounts you do not own (partner/venue pages) can still be pulled read-only via business discovery as long as they are professional accounts; anything else stays a manual "add a post link" entry.
+- Read the sheet's tab list first, then scan every tab instead of only the first one.
+- Find the header row anywhere in the first ~15 rows of a tab (the row with the most recognised column names), rather than assuming row 1.
+- Widen column matching: `Department / Dept / Area / Team / Crew`, `Task / Job / What / Activity / Instruction`, `Time / Start`, `Who / Owner / Responsible`, plus existing aliases.
+- When a tab has no Department column but the tab itself is named after a department (e.g. a "Registration" tab), use the tab name as the department for every row in it.
+- Keep `Packing` / `Brief` tab handling, and also match tabs whose name contains "packing" or "brief".
 
-## Admin controls
+### 2. Stop silent empty syncs
 
-The existing Social feeds admin page gets:
-- An Instagram account field per event (handle or account ID) instead of just a profile URL.
-- "Pull latest posts" per event, plus an automatic refresh every few hours.
-- A list of pulled posts with thumbnails, and a hide toggle so you can drop anything off the wall.
-- Manual post links keep working alongside the pulled ones.
+- If a sync finds zero departments, record it as an error on the event ("Read the sheet but found no Department/Task columns") instead of a clean success, and surface it in the admin screen.
+
+### 3. Better admin feedback
+
+- The Preview button reports per tab: tab name, header row used, rows read, rows skipped, and the column names it did not recognise. That makes a mismatch obvious in one click.
+- Show, next to the event picker, which event the link is being saved against, and warn when the selected event already has a different sheet linked.
+
+### 4. Link it to PE Plett
+
+Once the reader is fixed, save the sheet URL against the correct PE Plett event and run the sync; if the Tour de Addo link was a mis-click, clear it.
 
 ## Technical notes
 
-- Secret `INSTAGRAM_ACCESS_TOKEN` (long-lived Meta token) plus an optional `INSTAGRAM_BUSINESS_ID`, read only inside server function handlers.
-- New server module `src/lib/instagram.server.ts`: fetch `/{ig-user-id}/media` with fields `id,caption,media_type,media_url,thumbnail_url,permalink,timestamp,children{media_url,media_type}`, and `business_discovery` for other handles.
-- Extend `event_social_posts` with `media_type`, `media_url`, `thumbnail_url`, `posted_at`, `cached_path`, `hidden`; keep `source` so website-scraped and manual rows survive. Migration includes GRANTs and public read policy for active rows.
-- Instagram CDN URLs expire, so each refresh downloads media into a public Supabase Storage bucket (`social-media`) and stores that path; the app never links to the expiring CDN URL.
-- Refresh path: `runSocialSync` server fn (admin-gated) for the manual button plus a `/api/public/hooks/social-sync` cron endpoint with a shared-secret header, scheduled a few times a day.
-- `src/components/social-wall.tsx` rewritten to render our cached media directly — `<video muted playsInline loop autoPlay preload="metadata">` for reels driven by an IntersectionObserver (only the in-view card plays), `<img loading="lazy">` for photos. Instagram's `embed.js` is dropped.
-- Website scraping stays as the fallback for events without a linked professional account.
+- `src/lib/run-sheet.server.ts`: add a `spreadsheets/{id}?fields=sheets.properties.title` gateway call, a `findHeaderRow` helper, per-tab parsing loop, tab-name fallback for department, and a zero-department error path in `syncEventRunSheet`.
+- `src/lib/run-sheet.functions.ts`: extend `previewRunSheet`'s return with the per-tab diagnostics.
+- `src/routes/admin.run-sheet.tsx`: render the per-tab preview table and the linked-event warning.
+- No schema changes; existing `run_sheet_error` / `run_sheet_rows` columns carry the new state.
+
+## To confirm
+
+I can't see the sheet contents from here. If the sync still finds nothing after this, sharing the sheet's tab names and its header row will pin it down immediately.
