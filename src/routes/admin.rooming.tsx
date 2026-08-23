@@ -427,7 +427,65 @@ function RoomingAdminPage() {
   );
 }
 
+/** Quick sanity check: which venue hosts each night, and how many beds are placed there. */
+function NightCoverage({
+  days,
+  schedule,
+  venues,
+  rows,
+}: {
+  days: EventDay[];
+  schedule: ScheduleItem[];
+  venues: Venue[];
+  rows: RoomingRow[];
+}) {
+  const nights = eventNights(days, schedule);
+  if (nights.length === 0 || venues.length < 2) return null;
+
+  return (
+    <section className="rounded-2xl bg-card p-4 ring-1 ring-border">
+      <h2 className="font-display text-sm font-bold text-ink">Night-by-night coverage</h2>
+      <p className="mt-1 text-xs text-ink-soft">
+        Riders see this timeline on the event page. Set “first night” and “number of nights” on each
+        venue above so every night below has a home.
+      </p>
+      <ul className="mt-3 space-y-1.5">
+        {nights.map((n) => {
+          const hosts = venues.filter((v) => {
+            const start = v.night_start ?? 1;
+            const count = v.nights ?? Math.max(1, nights.length - start + 1);
+            return n.index >= start && n.index < start + count;
+          });
+          const placed = hosts.reduce(
+            (sum, v) => sum + rows.filter((r) => r.venue_id === v.id).length,
+            0,
+          );
+          return (
+            <li
+              key={n.index}
+              className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-secondary/60 px-3 py-2 text-xs"
+            >
+              <span className="font-bold text-ink">
+                Night {n.index}
+                {n.dayLabel ? <span className="font-medium text-ink-soft"> · after {n.dayLabel}</span> : null}
+              </span>
+              {hosts.length === 0 ? (
+                <span className="font-bold text-cherry">No venue set</span>
+              ) : (
+                <span className="text-ink-soft">
+                  {hosts.map((v) => v.name).join(" + ")} · {placed} placed
+                </span>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+    </section>
+  );
+}
+
 function VenueManager({
+
   spots,
   venues,
   busy,
