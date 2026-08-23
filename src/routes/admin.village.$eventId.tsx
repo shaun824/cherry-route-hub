@@ -83,9 +83,16 @@ async function uploadVillageImage(file: File): Promise<string> {
 }
 
 function VillageEditor() {
-  const { event, info } = Route.useLoaderData();
-  const q = useQuery({ queryKey: ["village-map", event.id], queryFn: () => fetchVillageMap(event.id) });
-  const [map, setMap] = useState<VillageMap>(() => emptyVillageMap(event.id));
+  const { event, info, venues } = Route.useLoaderData();
+  // Multi-venue events (PE PLETT) get one village per venue. Events with no
+  // venues keep the single "main village" (venue_id null).
+  const [venueId, setVenueId] = useState<string | null>(venues[0]?.id ?? null);
+  const activeVenue = venues.find((v) => v.id === venueId) ?? null;
+  const q = useQuery({
+    queryKey: ["village-map", event.id, venueId],
+    queryFn: () => fetchVillageMap(event.id, venueId),
+  });
+  const [map, setMap] = useState<VillageMap>(() => emptyVillageMap(event.id, venues[0]?.id ?? null));
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -102,10 +109,20 @@ function VillageEditor() {
   const [tentKind, setTentKind] = useState<"tent" | "marker">("tent");
   const qc = useQueryClient();
   const tentsQ = useQuery({
-    queryKey: ["village-tents", event.id],
-    queryFn: () => fetchVillageTents(event.id),
+    queryKey: ["village-tents", event.id, venueId],
+    queryFn: () => fetchVillageTents(event.id, venueId),
   });
   const tents = tentsQ.data ?? [];
+
+  // Switching village: clear the editor immediately so nothing from the previous
+  // village can be saved onto the new one.
+  useEffect(() => {
+    setMap(emptyVillageMap(event.id, venueId));
+    setSelected(null);
+    setSelectedZone(null);
+    setSelectedTent(null);
+  }, [venueId, event.id]);
+
 
   function bumpLabel(label: string) {
     const n = Number(label.match(/\d+$/)?.[0] ?? NaN);
