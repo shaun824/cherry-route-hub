@@ -1,4 +1,4 @@
-import { createFileRoute, ClientOnly, Link, notFound } from "@tanstack/react-router";
+import { createFileRoute, ClientOnly, Link, notFound, useRouter } from "@tanstack/react-router";
 import { Suspense, lazy, useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Loader2, MapPin, PencilRuler, Save, Sparkles, Square, Tent, Trash2, Upload, X } from "lucide-react";
