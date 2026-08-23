@@ -134,6 +134,16 @@ function FlyToZone({ zone }: { zone: VillageZone | null }) {
   return null;
 }
 
+/** Flies to a facility pin when a rider taps "show me on the map" elsewhere. */
+function FlyToSpot({ position, token }: { position: [number, number] | null; token: number }) {
+  const map = useMap();
+  useEffect(() => {
+    if (!position || !token) return;
+    map.flyTo(position, Math.max(map.getZoom(), 19), { duration: 0.8 });
+  }, [map, position?.[0], position?.[1], token]);
+  return null;
+}
+
 /** Flies straight to an exact tent pin — the tightest "this is your tent" view. */
 function FlyToTent({ tent }: { tent: MapTent | null }) {
   const map = useMap();
@@ -265,6 +275,8 @@ export default function VillageMapGeo({
 
   highlightZoneId = null,
   highlightTentId = null,
+  flyToSpotId = null,
+  flyToken = 0,
 }: {
   imageUrl?: string | null;
   geo: VillageGeo;
@@ -275,6 +287,8 @@ export default function VillageMapGeo({
   onSelect: (id: string | null) => void;
   highlightZoneId?: string | null;
   highlightTentId?: string | null;
+  flyToSpotId?: string | null;
+  flyToken?: number;
 }) {
 
   const [ratio, setRatio] = useState(0.76); // height / width, refined once the image loads
@@ -358,6 +372,13 @@ export default function VillageMapGeo({
     () => hotspots.find((h) => h.id === selected) ?? null,
     [hotspots, selected],
   );
+
+  const flySpotPos = useMemo(() => {
+    const spot = hotspots.find((h) => h.id === flyToSpotId) ?? null;
+    if (!spot) return null;
+    const ll = hotspotLatLng(geo, spot, heightM);
+    return ll ? ([ll[0], ll[1]] as [number, number]) : null;
+  }, [hotspots, flyToSpotId, geo, heightM]);
 
   // Real facility points only — legacy imports left numeric "tent" points behind,
   // and those belong to the tent layer, not the icon layer.
@@ -527,6 +548,7 @@ export default function VillageMapGeo({
           })}
 
           <FlyToTent tent={droppedTents.find((t) => t.id === highlightTentId) ?? null} />
+          <FlyToSpot position={flySpotPos} token={flyToken} />
           <FlyToZone
             zone={highlightTentId ? null : zones.find((z) => z.id === highlightZoneId) ?? null}
           />
