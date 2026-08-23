@@ -67,6 +67,10 @@ export function AccommodationTimeline({ eventId, days, schedule, variant = "comp
           <NightRow key={n.index} night={n} variant={variant} />
         ))}
       </ol>
+      <p className="mt-2 text-[11px] text-ink-soft">
+        The last day is a finish day — there's no accommodation on the final night.
+      </p>
+
     </section>
   );
 }
@@ -95,7 +99,11 @@ function NightRow({ night, variant }: { night: NightStay; variant: "compact" | "
           <p className="mt-0.5 truncate font-display text-sm font-bold text-ink">
             {v?.name ?? "Venue to be confirmed"}
           </p>
-          {a ? (
+          {v?.self_booked ? (
+            <p className="text-[11px] font-semibold text-cherry">
+              Booked separately — this night isn't part of your entry
+            </p>
+          ) : a ? (
             <p className="text-[11px] font-semibold text-ink">
               {a.tent_number ? `Tent / room ${a.tent_number}` : "Allocated"}
               {a.room_type ? <span className="font-normal text-ink-soft"> · {a.room_type}</span> : null}
@@ -105,6 +113,7 @@ function NightRow({ night, variant }: { night: NightStay; variant: "compact" | "
               Rooming list not loaded yet — allocations are published within 5 days of the event.
             </p>
           )}
+
           {variant === "full" ? (
             <div className="mt-1 space-y-0.5 text-[11px] text-ink-soft">
               {v?.address ? <p>{v.address}</p> : null}

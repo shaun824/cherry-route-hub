@@ -146,6 +146,8 @@ function RoomingAdminPage() {
         nights: v.nights,
         check_in: v.check_in,
         check_out: v.check_out,
+        self_booked: Boolean(v.self_booked),
+
       })
       .eq("id", v.id);
     setBusy(false);
@@ -609,6 +611,15 @@ function VenueManager({
                 placeholder="Check-out (e.g. by 09:00)"
               />
             </div>
+            <label className="mt-2 flex items-center gap-2 text-xs font-semibold text-ink-soft">
+              <input
+                type="checkbox"
+                checked={Boolean(cur.self_booked)}
+                onChange={(e) => setEdits((s) => ({ ...s, [v.id]: { ...cur, self_booked: e.target.checked } }))}
+              />
+              Riders book this night themselves (pre-event / not included in the entry)
+            </label>
+
             </div>
           );
         })}
