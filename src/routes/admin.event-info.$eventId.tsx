@@ -237,7 +237,6 @@ function EventInfoEditor() {
           label="Finish location"
           value={info.finish_location ?? ""}
           onChange={(v) => patch("finish_location", v || null)}
-          placeholder="e.g. De Vasselot campsite, Nature's Valley"
         />
         <Field
           label="GPX download URL"
