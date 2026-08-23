@@ -181,6 +181,8 @@ export type EventInfoBlock = {
   parking_notes: string | null;
   packing_list: PackingItem[];
   route_description: string | null;
+  /** Where the event finishes, shown on the accommodation timeline and info tab. */
+  finish_location: string | null;
   distance_km: number | null;
   elevation_m: number | null;
   gpx_url: string | null;
