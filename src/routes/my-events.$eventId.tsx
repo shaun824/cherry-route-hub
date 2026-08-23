@@ -1102,6 +1102,7 @@ function PackingPanel({
 
   return (
     <div className="space-y-4">
+      <FuelNotice eventName={event.name} />
       <div className="rounded-xl bg-card p-3 ring-1 ring-border">
         <div className="flex items-center justify-between text-xs text-ink-soft">
           <span className="font-semibold text-ink">Packed {done} / {total}</span>
