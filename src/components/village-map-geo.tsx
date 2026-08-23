@@ -287,6 +287,12 @@ export default function VillageMapGeo({
   const [bearing, setBearing] = useState(0);
 
   const [zoom, setZoom] = useState(17);
+  const [view, setView] = useState<L.LatLngBounds | null>(null);
+  const inView = useCallback(
+    (lat: number, lng: number) => !view || view.contains(L.latLng(lat, lng)),
+    [view],
+  );
+
   // Shown once as the map loads on touch devices, then dismissed for good on
   // the first touch — re-showing it on every single tap got in the way.
   const [twoFingerHint, setTwoFingerHint] = useState(false);
