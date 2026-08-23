@@ -158,8 +158,19 @@ function NightRow({
             {tonight ? <span className="ml-1.5 text-cherry">Tonight</span> : null}
           </p>
           <p className="mt-0.5 truncate font-display text-sm font-bold text-ink">
-            {v?.name ?? "Venue to be confirmed"}
+            {stayName ?? "Venue to be confirmed"}
           </p>
+          {hotel ? (
+            <p className="text-[11px] font-semibold text-cherry">
+              You chose this hotel{hotel.note ? ` — ${hotel.note}` : ""}
+              {hotel.villageVenue ? (
+                <span className="font-normal text-ink-soft">
+                  {" "}
+                  · race village stays at {hotel.villageVenue}
+                </span>
+              ) : null}
+            </p>
+          ) : null}
           {v?.self_booked ? (
             <p className="text-[11px] font-semibold text-cherry">
               Booked separately — this night isn't part of your entry
