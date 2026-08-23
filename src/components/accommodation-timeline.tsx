@@ -67,6 +67,10 @@ export function AccommodationTimeline({ eventId, days, schedule, variant = "comp
           <NightRow key={n.index} night={n} variant={variant} />
         ))}
       </ol>
+      <p className="mt-2 text-[11px] text-ink-soft">
+        The last day is a finish day — there's no accommodation on the final night.
+      </p>
+
     </section>
   );
 }
