@@ -145,3 +145,58 @@ export async function fetchMyTeam(
   if (rows.length === 0) return null;
   return { teamName: rows[0]!.team_name, members: rows };
 }
+
+
+export type GroupEntryMember = {
+  full_name: string;
+  category: string | null;
+  is_me: boolean;
+  paid: boolean | null;
+  amount_due_cents: number | null;
+  amount_paid_cents: number | null;
+};
+
+export type GroupEntryTotals = {
+  groupRef: string;
+  members: GroupEntryMember[];
+  dueCents: number;
+  paidCents: number;
+  outstandingCents: number;
+  /** True when every member has an amount on file. */
+  complete: boolean;
+};
+
+/**
+ * Everyone covered by the signed-in rider's registration (multi-person / team
+ * entries), with the full group total owed and paid.
+ */
+export async function fetchMyEntryGroup(eventId: string): Promise<GroupEntryTotals | null> {
+  const { data, error } = await (supabase.rpc as any)("my_entry_group", { _event_id: eventId });
+  if (error) {
+    console.warn("[my-events] entry group", error);
+    return null;
+  }
+  const rows = (data ?? []) as (GroupEntryMember & { group_ref: string })[];
+  if (rows.length < 2) return null; // solo entries already show their own card
+
+  let due = 0;
+  let paid = 0;
+  let complete = true;
+  for (const r of rows) {
+    if (r.amount_due_cents == null) {
+      complete = false;
+      continue;
+    }
+    due += r.amount_due_cents;
+    paid += r.amount_paid_cents ?? (r.paid === true ? r.amount_due_cents : 0);
+  }
+
+  return {
+    groupRef: rows[0]!.group_ref,
+    members: rows,
+    dueCents: due,
+    paidCents: paid,
+    outstandingCents: Math.max(0, due - paid),
+    complete,
+  };
+}
