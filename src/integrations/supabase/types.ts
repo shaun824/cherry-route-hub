@@ -218,6 +218,47 @@ export type Database = {
           },
         ]
       }
+      content_audit_resolutions: {
+        Row: {
+          area: string | null
+          event_id: string | null
+          issue_key: string
+          message: string | null
+          note: string | null
+          resolved_at: string
+          resolved_by: string | null
+          status: string
+        }
+        Insert: {
+          area?: string | null
+          event_id?: string | null
+          issue_key: string
+          message?: string | null
+          note?: string | null
+          resolved_at?: string
+          resolved_by?: string | null
+          status?: string
+        }
+        Update: {
+          area?: string | null
+          event_id?: string | null
+          issue_key?: string
+          message?: string | null
+          note?: string | null
+          resolved_at?: string
+          resolved_by?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_audit_resolutions_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       content_audit_runs: {
         Row: {
           created_at: string

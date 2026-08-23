@@ -32,6 +32,7 @@ import { BrandMark, SectionTitle, TypeBadge } from "@/components/ui-bits";
 import { SponsorScroller } from "@/components/sponsor-scroller";
 import { SocialWall } from "@/components/social-wall";
 import { InstallPrompt, PushOptIn } from "@/components/push-optin";
+import { AdminAuditWarnings } from "@/components/admin-audit-warnings";
 import { formatDate, relativeTime, type Event } from "@/lib/mock-data";
 import { getEventSport } from "@/lib/event-sport";
 import { useAdminStore } from "@/lib/store";
@@ -324,6 +325,8 @@ function Home() {
           </div>
         </>
       ) : null}
+
+      <AdminAuditWarnings />
 
       <div className="mt-4 space-y-3 px-5">
         <PushOptIn />
