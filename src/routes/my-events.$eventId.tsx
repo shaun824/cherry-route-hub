@@ -1913,6 +1913,7 @@ function EnterEventCta({ entryUrl }: { entryUrl: string | null }) {
       >
         Enter on Entry Ninja <ExternalLink className="h-4 w-4" />
       </a>
+      <SyncMyEntryButton className="mt-2" />
     </section>
   );
 }
