@@ -30,6 +30,7 @@ import {
 
 import { BrandMark, SectionTitle, TypeBadge } from "@/components/ui-bits";
 import { SponsorScroller } from "@/components/sponsor-scroller";
+import { SocialWall } from "@/components/social-wall";
 import { InstallPrompt, PushOptIn } from "@/components/push-optin";
 import { formatDate, relativeTime, type Event } from "@/lib/mock-data";
 import { getEventSport } from "@/lib/event-sport";
@@ -473,6 +474,19 @@ function Home() {
           </div>
         </>
       ) : null}
+
+      {/* Social wall — pulled from our event Instagram feeds */}
+      <div className="px-5 pt-4">
+        <SocialWall
+          title="From the start line"
+          subtitle="Latest from our event Instagram feeds"
+          instagramUrl="https://www.instagram.com/redcherryevents_za/"
+          facebookUrl="https://www.facebook.com/redcherryeventsza"
+          limit={6}
+        />
+      </div>
+
+
 
 
 

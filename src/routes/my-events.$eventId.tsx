@@ -1,4 +1,5 @@
 import { entryNinjaRegistrationUrl } from "@/lib/entry-ninja-link";
+import { SocialWall } from "@/components/social-wall";
 import { WhatsappButton } from "@/components/whatsapp-button";
 import { isBotMiss } from "@/lib/bot-handoff";
 import { splitFollowUps } from "@/lib/bot-followups";
@@ -726,7 +727,7 @@ function InfoPanel({
   eventId: string;
   description: string | null;
   distanceKm: number;
-  event: { days?: unknown; schedule?: unknown; location?: string | null; map_query?: string | null; social_links?: unknown; entry_ninja_url?: string | null; website_url?: string | null; event_date?: string | null };
+  event: { id?: string; days?: unknown; schedule?: unknown; location?: string | null; map_query?: string | null; social_links?: unknown; entry_ninja_url?: string | null; website_url?: string | null; event_date?: string | null };
   isLive: boolean;
   eventName: string;
 }) {
@@ -957,6 +958,14 @@ function InfoPanel({
       </section>
 
       <FollowSection links={(event.social_links as SocialLinks | null) ?? undefined} />
+
+      <SocialWall
+        eventId={(event.id as string) ?? null}
+        title={`${eventName} on Instagram`}
+        instagramUrl={(event.social_links as SocialLinks | null)?.instagram ?? null}
+        facebookUrl={(event.social_links as SocialLinks | null)?.facebook ?? null}
+        limit={6}
+      />
 
 
       <SponsorsBlock eventName={eventName} />
