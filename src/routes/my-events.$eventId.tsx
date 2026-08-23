@@ -2120,12 +2120,9 @@ function YourEntryCard({ eventId, entryUrl = null }: { eventId: string; entryUrl
       <EntryInclusions
         eventId={eventId}
         extras={row.extras}
-        sizes={[
-          ...(row.jacket_size ? [{ label: "Event jacket", value: row.jacket_size }] : []),
-          ...(showTshirt && row.tshirt_size
-            ? [{ label: "Event t-shirt", value: row.tshirt_size }]
-            : []),
-        ]}
+        // Only show what actually comes back from Entry Ninja — sizes already
+        // appear as extras lines, so we no longer synthesise apparel rows.
+
         addUrl={
           entryNinjaRegistrationUrl(row.registration_ref) ??
           entryUrl ??
