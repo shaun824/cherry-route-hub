@@ -1,0 +1,1 @@
+ALTER TABLE public.event_venues ADD COLUMN IF NOT EXISTS self_booked boolean NOT NULL DEFAULT false;

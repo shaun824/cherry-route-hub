@@ -1439,6 +1439,7 @@ export type Database = {
           rooming_sheet_rows: number | null
           rooming_sheet_synced_at: string | null
           rooming_sheet_url: string | null
+          self_booked: boolean
           sort_order: number
           updated_at: string
           village_spot_id: string | null
@@ -1459,6 +1460,7 @@ export type Database = {
           rooming_sheet_rows?: number | null
           rooming_sheet_synced_at?: string | null
           rooming_sheet_url?: string | null
+          self_booked?: boolean
           sort_order?: number
           updated_at?: string
           village_spot_id?: string | null
@@ -1479,6 +1481,7 @@ export type Database = {
           rooming_sheet_rows?: number | null
           rooming_sheet_synced_at?: string | null
           rooming_sheet_url?: string | null
+          self_booked?: boolean
           sort_order?: number
           updated_at?: string
           village_spot_id?: string | null
