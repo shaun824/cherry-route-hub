@@ -1,16 +1,20 @@
 // Shows the rider's Entry Ninja payment confirmation: fully paid, or the
 // balance still owed.
 import { CheckCircle2, AlertTriangle, Clock, ExternalLink } from "lucide-react";
-import { paymentStatus, type PaymentInfo } from "@/lib/payment-status";
+import { formatRands, paymentStatus, type PaymentInfo } from "@/lib/payment-status";
+import type { PricedLine } from "@/lib/entry-pricing";
 
 export function PaymentStatusCard({
   info,
   entryUrl = null,
   compact = false,
+  lines = [],
 }: {
   info: PaymentInfo | null | undefined;
   entryUrl?: string | null;
   compact?: boolean;
+  /** Optional breakdown of what makes up the amount (entry + extras). */
+  lines?: PricedLine[];
 }) {
   const status = paymentStatus(info);
   if (!status) return null;
@@ -32,6 +36,19 @@ export function PaymentStatusCard({
           <p className="text-xs font-bold">{status.label}</p>
           {!compact && status.detail ? (
             <p className="mt-0.5 text-[11px] leading-relaxed opacity-80">{status.detail}</p>
+          ) : null}
+          {!compact && status.state === "outstanding" && lines.length > 0 ? (
+            <ul className="mt-2 space-y-0.5 border-t border-current/15 pt-2 text-[11px]">
+              {lines.map((l, i) => (
+                <li key={`${l.label}-${i}`} className="flex justify-between gap-3">
+                  <span className="truncate opacity-90">
+                    {l.label}
+                    {l.qty > 1 ? ` x${l.qty}` : ""}
+                  </span>
+                  <span className="shrink-0 font-semibold tabular-nums">{formatRands(l.totalCents)}</span>
+                </li>
+              ))}
+            </ul>
           ) : null}
           {status.state === "outstanding" && entryUrl ? (
             <a
