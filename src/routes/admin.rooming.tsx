@@ -146,6 +146,8 @@ function RoomingAdminPage() {
         nights: v.nights,
         check_in: v.check_in,
         check_out: v.check_out,
+        self_booked: Boolean(v.self_booked),
+
       })
       .eq("id", v.id);
     setBusy(false);
