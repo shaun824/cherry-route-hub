@@ -373,6 +373,13 @@ export default function VillageMapGeo({
     [hotspots, selected],
   );
 
+  const flySpotPos = useMemo(() => {
+    const spot = hotspots.find((h) => h.id === flyToSpotId) ?? null;
+    if (!spot) return null;
+    const ll = hotspotLatLng(geo, spot, heightM);
+    return ll ? ([ll[0], ll[1]] as [number, number]) : null;
+  }, [hotspots, flyToSpotId, geo, heightM]);
+
   // Real facility points only — legacy imports left numeric "tent" points behind,
   // and those belong to the tent layer, not the icon layer.
   const facilitySpots = useMemo(
