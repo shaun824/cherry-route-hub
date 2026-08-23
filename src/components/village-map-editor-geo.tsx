@@ -273,6 +273,8 @@ export default function VillageMapEditorGeo({
 
           {tents.map((t) => (
             <Marker
+              keyboard={false}
+              autoPanOnFocus={false}
               key={t.id}
               position={[t.lat, t.lng]}
               draggable={!locked}
@@ -384,6 +386,8 @@ export default function VillageMapEditorGeo({
                 {active && c ? (
                   <>
                     <Marker
+                      keyboard={false}
+                      autoPanOnFocus={false}
                       position={[c.lat, c.lng]}
                       icon={moveIcon(zoneColor(z))}
                       draggable
@@ -396,6 +400,8 @@ export default function VillageMapEditorGeo({
                     />
                     {z.points.map((p, i) => (
                       <Marker
+                        keyboard={false}
+                        autoPanOnFocus={false}
                         key={`${z.id}-v${i}`}
                         position={[p.lat, p.lng]}
                         icon={handleIcon(zoneColor(z))}
@@ -430,13 +436,15 @@ export default function VillageMapEditorGeo({
             />
           ) : null}
           {draft.map((p, i) => (
-            <Marker key={`draft-${i}`} position={[p.lat, p.lng]} icon={handleIcon("#c8102e", 10)} />
+            <Marker keyboard={false} autoPanOnFocus={false} key={`draft-${i}`} position={[p.lat, p.lng]} icon={handleIcon("#c8102e", 10)} />
           ))}
 
           {hotspots
             .filter((s) => Number.isFinite(s.lat) && Number.isFinite(s.lng))
             .map((s) => (
               <Marker
+                keyboard={false}
+                autoPanOnFocus={false}
                 key={s.id}
                 position={[s.lat as number, s.lng as number]}
                 draggable
