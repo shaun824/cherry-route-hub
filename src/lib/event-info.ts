@@ -226,6 +226,7 @@ export async function fetchEventInfo(eventId: string): Promise<EventInfoBlock | 
     parking_notes: data.parking_notes,
     packing_list: parseJsonArray<PackingItem>(data.packing_list),
     route_description: data.route_description,
+    finish_location: (data as any).finish_location ?? null,
     distance_km: data.distance_km as number | null,
     elevation_m: data.elevation_m as number | null,
     gpx_url: data.gpx_url,
