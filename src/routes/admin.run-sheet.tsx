@@ -48,6 +48,7 @@ function AdminRunSheet() {
   });
   const events = eventsQ.data ?? [];
   const event = events.find((e) => e.id === eventId);
+  const otherLinked = events.filter((e) => e.id !== eventId && !!e.run_sheet_url);
 
   useEffect(() => {
     if (!eventId && events.length) setEventId(events[0].id);
