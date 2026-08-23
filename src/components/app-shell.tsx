@@ -2,6 +2,7 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import { Home, Ticket, Binoculars, User, LogIn, X, HardHat, BedDouble, Smartphone, ClipboardList } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { useSession, useIsCrew } from "@/lib/auth";
+import { useEntryAutoSync } from "@/lib/use-entry-autosync";
 import { useCrewMode } from "@/lib/crew-mode";
 import { Footer } from "@/components/footer";
 import { BrandMark } from "@/components/ui-bits";
