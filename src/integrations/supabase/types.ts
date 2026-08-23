@@ -1361,9 +1361,11 @@ export type Database = {
           event_id: string
           geo: Json
           hotspots: Json
+          id: string
           image_url: string | null
           intro: string | null
           updated_at: string
+          venue_id: string | null
           zones: Json
         }
         Insert: {
@@ -1371,9 +1373,11 @@ export type Database = {
           event_id: string
           geo?: Json
           hotspots?: Json
+          id?: string
           image_url?: string | null
           intro?: string | null
           updated_at?: string
+          venue_id?: string | null
           zones?: Json
         }
         Update: {
@@ -1381,17 +1385,26 @@ export type Database = {
           event_id?: string
           geo?: Json
           hotspots?: Json
+          id?: string
           image_url?: string | null
           intro?: string | null
           updated_at?: string
+          venue_id?: string | null
           zones?: Json
         }
         Relationships: [
           {
             foreignKeyName: "event_village_maps_event_id_fkey"
             columns: ["event_id"]
-            isOneToOne: true
+            isOneToOne: false
             referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_village_maps_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "event_venues"
             referencedColumns: ["id"]
           },
         ]
@@ -1403,6 +1416,7 @@ export type Database = {
           id: string
           pattern: string
           updated_at: string
+          venue_id: string | null
           zone_id: string
         }
         Insert: {
@@ -1411,6 +1425,7 @@ export type Database = {
           id?: string
           pattern: string
           updated_at?: string
+          venue_id?: string | null
           zone_id: string
         }
         Update: {
@@ -1419,6 +1434,7 @@ export type Database = {
           id?: string
           pattern?: string
           updated_at?: string
+          venue_id?: string | null
           zone_id?: string
         }
         Relationships: [
@@ -1427,6 +1443,13 @@ export type Database = {
             columns: ["event_id"]
             isOneToOne: false
             referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_village_tent_rules_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "event_venues"
             referencedColumns: ["id"]
           },
         ]
@@ -1443,6 +1466,7 @@ export type Database = {
           lng: number
           notes: string | null
           updated_at: string
+          venue_id: string | null
           zone_id: string | null
         }
         Insert: {
@@ -1456,6 +1480,7 @@ export type Database = {
           lng: number
           notes?: string | null
           updated_at?: string
+          venue_id?: string | null
           zone_id?: string | null
         }
         Update: {
@@ -1469,6 +1494,7 @@ export type Database = {
           lng?: number
           notes?: string | null
           updated_at?: string
+          venue_id?: string | null
           zone_id?: string | null
         }
         Relationships: [
@@ -1477,6 +1503,13 @@ export type Database = {
             columns: ["event_id"]
             isOneToOne: false
             referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_village_tents_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "event_venues"
             referencedColumns: ["id"]
           },
         ]
