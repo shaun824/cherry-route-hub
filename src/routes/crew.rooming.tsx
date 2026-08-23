@@ -77,11 +77,14 @@ function CrewPage() {
   }, [rows]);
 
   function showOnMap(row: CrewRoomingRow) {
+    // Multi-venue events: jump the map to the village this person is staying at.
+    setFocusVenue(row.venue_id ?? null);
     setFocusSpot(row.village_spot_id ?? row.venue?.village_spot_id ?? null);
     setFocusZone(row.village_zone_id ?? null);
     setFocusTent(row.village_tent_id ?? null);
     mapRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
+
 
   async function copyWhere(row: CrewRoomingRow) {
     try {
