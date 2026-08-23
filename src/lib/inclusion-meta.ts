@@ -132,6 +132,22 @@ const RULES: Rule[] = [
     },
   },
   {
+    test: /luxury\s*tent/i,
+    meta: {
+      icon: "bed",
+      blurb: "Pitched luxury tent with bed, mattress and bedding included.",
+      howTo: "Set up before you arrive — from Friday night. Your tent number shows on the village map in this app.",
+    },
+  },
+  {
+    test: /rce tent|tent rental|tent hire/i,
+    meta: {
+      icon: "tent",
+      blurb: "Pitched RCE tent that sleeps 2 — no mattress or bedding included.",
+      howTo: "Bring your own mattress and bedding. Your tent number shows on the village map in this app.",
+    },
+  },
+  {
     test: /camp|tent/i,
     meta: {
       icon: "tent",
