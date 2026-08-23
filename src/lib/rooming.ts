@@ -17,7 +17,14 @@ export type Venue = {
   rooming_sheet_synced_at: string | null;
   rooming_sheet_error: string | null;
   rooming_sheet_rows: number | null;
+  /** 1-based night this venue starts hosting on (moving events) */
+  night_start: number | null;
+  /** how many consecutive nights this venue hosts */
+  nights: number | null;
+  check_in: string | null;
+  check_out: string | null;
 };
+
 
 export type RoomingRow = {
   id: string;
@@ -33,6 +40,9 @@ export type RoomingRow = {
   room_type: string | null;
   notes: string | null;
   location_hint: string | null;
+  /** when set, this allocation only applies to that one night of the event */
+  night_index: number | null;
+
   /** id of the drawn village-map area this person sits in */
   village_zone_id: string | null;
   village_spot_id: string | null;
@@ -42,14 +52,17 @@ export type RoomingRow = {
 };
 
 export const ROOMING_COLUMNS =
-  "id, event_id, venue_id, entrant_id, event_entrant_id, match_source, full_name, email, tent_number, room_type, notes, location_hint, village_zone_id, village_spot_id, village_tent_id, venue:event_venues(id, name, address, village_spot_id)";
+  "id, event_id, venue_id, entrant_id, event_entrant_id, match_source, full_name, email, tent_number, room_type, notes, location_hint, night_index, village_zone_id, village_spot_id, village_tent_id, venue:event_venues(id, name, address, village_spot_id)";
 
+export const VENUE_COLUMNS =
+  "id, event_id, name, address, notes, sort_order, village_spot_id, rooming_sheet_url, rooming_sheet_range, rooming_sheet_synced_at, rooming_sheet_error, rooming_sheet_rows, night_start, nights, check_in, check_out";
 
 export async function fetchVenues(eventId: string): Promise<Venue[]> {
   const { data, error } = await supabase
     .from("event_venues")
-    .select("id, event_id, name, address, notes, sort_order, village_spot_id, rooming_sheet_url, rooming_sheet_range, rooming_sheet_synced_at, rooming_sheet_error, rooming_sheet_rows")
+    .select(VENUE_COLUMNS)
     .eq("event_id", eventId)
+
     .order("sort_order", { ascending: true })
     .order("name", { ascending: true });
   if (error) {

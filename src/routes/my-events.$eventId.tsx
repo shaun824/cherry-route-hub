@@ -53,7 +53,9 @@ import { RouteMap } from "@/components/route-map";
 import { RouteFileStats } from "@/components/route-file-stats";
 import { RouteProfile } from "@/components/route-profile";
 
-import { fetchMyRooming } from "@/lib/rooming";
+import { fetchMyRooming, fetchVenues } from "@/lib/rooming";
+import { AccommodationTimeline, useMyNights } from "@/components/accommodation-timeline";
+
 import { SponsorScroller } from "@/components/sponsor-scroller";
 import { eventPromosFor } from "@/lib/event-promos";
 import { PromoCarousel } from "@/components/promo-carousel";
@@ -131,7 +133,7 @@ export const Route = createFileRoute("/my-events/$eventId")({
 /** Lets the accommodation card jump the page to the village tab, focused. */
 
 
-type Tab = "info" | "village" | "routes" | "news" | "photos" | "chat" | "ask" | "packing" | "sponsors";
+type Tab = "info" | "village" | "routes" | "news" | "photos" | "chat" | "ask" | "packing" | "sponsors" | "accommodation";
 
 function MyEventDetail() {
   const { event } = Route.useLoaderData();
@@ -200,6 +202,13 @@ function MyEventDetail() {
     (p) => Date.now() - new Date(p.postedAt).getTime() < 7 * 24 * 60 * 60 * 1000,
   );
 
+  // Moving events sleep somewhere different each night — they get their own tab.
+  const eventDays = Array.isArray(event.days) ? (event.days as EventDay[]) : [];
+  const eventSchedule = Array.isArray(event.schedule) ? (event.schedule as ScheduleItem[]) : [];
+  const stays = useMyNights(event.id, eventDays, eventSchedule, Boolean(user));
+  const hasNightly = stays.multiVenue && stays.nights.length > 0;
+
+
 
 
   return (
@@ -244,6 +253,7 @@ function MyEventDetail() {
             { id: "info", label: "Info", icon: Info },
             { id: "routes", label: "Routes", icon: MapIcon },
             { id: "village", label: "Village", icon: Tent },
+            ...(hasNightly ? [{ id: "accommodation" as Tab, label: "Accommodation", icon: BedDouble }] : []),
             { id: "news", label: "News", icon: Newspaper },
             { id: "photos", label: "Photos", icon: ImageIcon },
 
@@ -253,6 +263,7 @@ function MyEventDetail() {
             { id: "sponsors", label: "Sponsors", icon: Handshake },
           ] as { id: Tab; label: string; icon: typeof Info }[]
         ).map((t) => {
+
           const Icon = t.icon;
           const active = tab === t.id;
           return (
@@ -282,8 +293,24 @@ function MyEventDetail() {
                 <AskAdminPanel eventId={event.id} userId={user?.id ?? null} eventName={event.name} compact />
               </div>
             </section>
-            <InfoPanel eventId={event.id} description={event.description} distanceKm={event.distance_km} event={event} isLive={event.status === "live"} eventName={event.name} onTabChange={selectTab} hasFreshNews={hasFreshNews} />
+            <InfoPanel eventId={event.id} description={event.description} distanceKm={event.distance_km} event={event} isLive={event.status === "live"} eventName={event.name} onTabChange={selectTab} hasFreshNews={hasFreshNews} hasNightly={hasNightly} signedIn={Boolean(user)} />
           </div>
+        )}
+        {tab === "accommodation" && (
+          <section className="space-y-3">
+            <SectionTitle>Accommodation</SectionTitle>
+            <p className="text-xs text-ink-soft">
+              This event moves between venues — here is where you sleep each night, with your own
+              tent or room allocation.
+            </p>
+            <AccommodationTimeline
+              eventId={event.id}
+              days={eventDays}
+              schedule={eventSchedule}
+              variant="full"
+              enabled={Boolean(user)}
+            />
+          </section>
         )}
         {tab === "village" && (
           <section id="village-map-section" className="scroll-mt-16 space-y-3">
@@ -298,6 +325,7 @@ function MyEventDetail() {
             <OfflinePackCard event={event as never} />
           </section>
         )}
+
         {tab === "routes" && <RoutesPanel eventId={event.id} event={event} eventName={event.name} />}
         {tab === "news" && <EventNewsPanel posts={eventNews} />}
         {tab === "photos" && (
@@ -728,6 +756,9 @@ function InfoPanel({
   eventName,
   onTabChange,
   hasFreshNews,
+  hasNightly,
+  signedIn,
+
 }: {
   eventId: string;
   description: string | null;
@@ -737,6 +768,9 @@ function InfoPanel({
   eventName: string;
   onTabChange: (tab: Tab) => void;
   hasFreshNews: boolean;
+  hasNightly: boolean;
+  signedIn: boolean;
+
 }) {
   // Weather is only worth showing (and refreshing) inside the forecast window.
   const daysToEvent = event.event_date
@@ -786,6 +820,17 @@ function InfoPanel({
         entryUrl={event.entry_ninja_url ?? event.website_url ?? null}
       />
 
+      {hasNightly ? (
+        <AccommodationTimeline
+          eventId={eventId}
+          days={Array.isArray(event.days) ? (event.days as EventDay[]) : []}
+          schedule={schedule}
+          variant="compact"
+          enabled={signedIn}
+        />
+      ) : null}
+
+
       {eventPromosFor(eventName).length > 0 ? (
         <section>
           <SectionTitle>Rider offers</SectionTitle>
@@ -828,7 +873,9 @@ function InfoPanel({
         onSelectTab={onTabChange}
         hasRoutes={days.some((d) => (d.routes ?? []).length > 0)}
         hasFreshNews={hasFreshNews}
+        hasAccommodation={hasNightly}
       />
+
 
 
       {info?.reg_venue_name || info?.reg_venue_address ? (
@@ -1741,15 +1788,19 @@ function EventSectionNav({
   onSelectTab,
   hasRoutes,
   hasFreshNews,
+  hasAccommodation = false,
 }: {
   onSelectTab: (tab: Tab) => void;
   hasRoutes: boolean;
   hasFreshNews: boolean;
+  hasAccommodation?: boolean;
 }) {
   const links = [
     { tab: "routes" as Tab, label: "Routes", icon: MapIcon, show: hasRoutes },
+    { tab: "accommodation" as Tab, label: "Accommodation", icon: BedDouble, show: hasAccommodation },
     { tab: "village" as Tab, label: "Village map", icon: Tent, show: true },
     { tab: "packing" as Tab, label: "Packing list", icon: CheckSquare, show: true },
+
     { tab: "news" as Tab, label: "News", icon: Newspaper, show: true, badge: hasFreshNews },
     { tab: "photos" as Tab, label: "Photos", icon: ImageIcon, show: true },
     { tab: "chat" as Tab, label: "Event chat", icon: MessageCircle, show: true },
@@ -2009,7 +2060,16 @@ function YourEntryCard({ eventId, entryUrl = null }: { eventId: string; entryUrl
     staleTime: 30_000,
     enabled: signedIn,
   });
-  const rooming = roomingQ.data ?? null;
+  // On moving events the night-by-night timeline replaces this single card.
+  const venuesQ = useQuery({
+    queryKey: ["event-venues", eventId],
+    queryFn: () => fetchVenues(eventId),
+    staleTime: 5 * 60_000,
+    enabled: signedIn,
+  });
+  const multiVenue = (venuesQ.data ?? []).length > 1;
+  const rooming = multiVenue ? null : (roomingQ.data ?? null);
+
   const priceBookQ = useQuery({
     queryKey: ["event-price-book", eventId],
     queryFn: () => fetchPriceBook(eventId),

@@ -116,12 +116,22 @@ function RoomingAdminPage() {
     setBusy(true);
     const { error } = await supabase
       .from("event_venues")
-      .update({ name: v.name, address: v.address, notes: v.notes, village_spot_id: v.village_spot_id })
+      .update({
+        name: v.name,
+        address: v.address,
+        notes: v.notes,
+        village_spot_id: v.village_spot_id,
+        night_start: v.night_start,
+        nights: v.nights,
+        check_in: v.check_in,
+        check_out: v.check_out,
+      })
       .eq("id", v.id);
     setBusy(false);
     setMsg(error ? error.message : "Venue saved.");
     void qc.invalidateQueries({ queryKey: ["admin-venues", eventId] });
   }
+
 
   async function deleteVenue(id: string) {
     if (!confirm("Delete this venue? Its rooming rows will become unassigned.")) return;
@@ -418,7 +428,9 @@ function VenueManager({
         {venues.map((v) => {
           const cur = edits[v.id] ?? v;
           return (
-            <div key={v.id} className="grid gap-2 rounded-xl bg-secondary/60 p-3 md:grid-cols-[1fr_1.5fr_1fr_auto]">
+            <div key={v.id} className="space-y-2 rounded-xl bg-secondary/60 p-3">
+            <div className="grid gap-2 md:grid-cols-[1fr_1.5fr_1fr_auto]">
+
               <input
                 value={cur.name}
                 onChange={(e) => setEdits((s) => ({ ...s, [v.id]: { ...cur, name: e.target.value } }))}
