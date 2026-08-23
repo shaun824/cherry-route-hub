@@ -1044,12 +1044,23 @@ function PackingPanel({
   }, [event.days]);
 
   const items: PackingItem[] = useMemo(() => {
-    if (configured.length > 0) return tubelessSanitise(configured);
-    return buildPackingList({
-      rideDays,
-      nights,
-      sport: getEventSport(event.discipline, event.name),
-    });
+    const base =
+      configured.length > 0
+        ? tubelessSanitise(configured)
+        : buildPackingList({
+            rideDays,
+            nights,
+            sport: getEventSport(event.discipline, event.name),
+          });
+    if (!isFuelCarryEvent(event.name)) return base;
+    const fuelItems: PackingItem[] = [
+      { key: "fuel-full-tank", label: "Arrive with a full tank", category: "Fuel", essential: true },
+      { key: "fuel-35l", label: "35 ℓ of fuel in sealed jerry cans (we transport it)", category: "Fuel", essential: true },
+      { key: "fuel-marked", label: "Cans marked with your name & race number", category: "Fuel", essential: true },
+      { key: "fuel-funnel", label: "Funnel / pouring spout", category: "Fuel" },
+    ];
+    const existing = new Set(base.map((i) => i.key));
+    return [...base, ...fuelItems.filter((i) => !existing.has(i.key))];
   }, [configured, rideDays, nights, event.discipline, event.name]);
   const usingDefault = configured.length === 0;
 
