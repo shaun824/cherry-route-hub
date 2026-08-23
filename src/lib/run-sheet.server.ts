@@ -35,12 +35,23 @@ export type RunSheetBriefRow = {
   safety: string;
 };
 
+export type RunSheetTabDiag = {
+  tab: string;
+  kind: "tasks" | "packing" | "brief" | "ignored";
+  headerRow: number | null;
+  rows: number;
+  used: number;
+  skipped: number;
+  unknownColumns: string[];
+};
+
 export type RunSheetParse = {
   tasks: RunSheetTaskRow[];
   packing: RunSheetPackingRow[];
   briefs: RunSheetBriefRow[];
   departments: string[];
   skipped: number;
+  tabs: RunSheetTabDiag[];
 };
 
 export function spreadsheetIdFromUrl(url: string): string | null {
