@@ -77,6 +77,7 @@ import { LockedSection } from "@/components/locked-section";
 import { buildMapEmbedSrc, buildMapLink, resolveVenuePoint } from "@/lib/map-embed";
 import { VenueMiniMap } from "@/components/venue-mini-map";
 import { PaymentStatusCard } from "@/components/payment-status-card";
+import { fetchPriceBook, priceEntry } from "@/lib/entry-pricing";
 import { EntryInclusions } from "@/components/entry-inclusions";
 import { VillageFocusContext } from "@/lib/village-focus";
 import { brandHeader } from "@/lib/event-brand";
@@ -2009,6 +2010,12 @@ function YourEntryCard({ eventId, entryUrl = null }: { eventId: string; entryUrl
     enabled: signedIn,
   });
   const rooming = roomingQ.data ?? null;
+  const priceBookQ = useQuery({
+    queryKey: ["event-price-book", eventId],
+    queryFn: () => fetchPriceBook(eventId),
+    staleTime: 5 * 60_000,
+    enabled: signedIn,
+  });
   const focusVillage = useContext(VillageFocusContext);
 
   if (!signedIn) {
@@ -2059,6 +2066,8 @@ function YourEntryCard({ eventId, entryUrl = null }: { eventId: string; entryUrl
     );
   }
 
+  const pricing = priceEntry(priceBookQ.data ?? [], { category: row.category, extras: row.extras });
+
   const chips: { label: string; value: string; tone?: "cherry" | "dark" }[] = [];
   if (row.category) chips.push({ label: "Category", value: row.category });
   if (row.batch) chips.push({ label: "Batch", value: row.batch });
@@ -2101,7 +2110,11 @@ function YourEntryCard({ eventId, entryUrl = null }: { eventId: string; entryUrl
         </div>
       ) : null}
 
-      <PaymentStatusCard info={row} entryUrl={entryUrl} />
+      <PaymentStatusCard
+        info={{ ...row, priced_total_cents: pricing.totalCents, priced_complete: pricing.complete }}
+        entryUrl={entryUrl}
+        lines={row.amount_due_cents == null ? pricing.lines : []}
+      />
 
       <EntryInclusions
         eventId={eventId}
