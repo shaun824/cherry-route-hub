@@ -58,6 +58,7 @@ import { SponsorScroller } from "@/components/sponsor-scroller";
 import { eventPromosFor } from "@/lib/event-promos";
 import { PromoCarousel } from "@/components/promo-carousel";
 import { PromoInline } from "@/components/promo-inline";
+import { FuelNotice, isFuelCarryEvent } from "@/components/fuel-notice";
 import { useShuffledPromos } from "@/lib/use-shuffled-promos";
 
 import { curatedSponsorsFor } from "@/lib/event-sponsor-overrides";
@@ -574,6 +575,7 @@ function RoutesPanel({
 
   return (
     <div className="space-y-5">
+      <FuelNotice eventName={eventName ?? event.name} />
       {routeDays.length > 1 ? (
         <div className="flex gap-1 overflow-x-auto rounded-full bg-secondary p-1">
           {[{ id: "all", label: "All days" }, ...routeDays.map((d) => ({ id: d.id, label: d.label || d.id }))].map(
@@ -1042,12 +1044,23 @@ function PackingPanel({
   }, [event.days]);
 
   const items: PackingItem[] = useMemo(() => {
-    if (configured.length > 0) return tubelessSanitise(configured);
-    return buildPackingList({
-      rideDays,
-      nights,
-      sport: getEventSport(event.discipline, event.name),
-    });
+    const base =
+      configured.length > 0
+        ? tubelessSanitise(configured)
+        : buildPackingList({
+            rideDays,
+            nights,
+            sport: getEventSport(event.discipline, event.name),
+          });
+    if (!isFuelCarryEvent(event.name)) return base;
+    const fuelItems: PackingItem[] = [
+      { key: "fuel-full-tank", label: "Arrive with a full tank", category: "Fuel", essential: true },
+      { key: "fuel-35l", label: "35 ℓ of fuel in sealed jerry cans (we transport it)", category: "Fuel", essential: true },
+      { key: "fuel-marked", label: "Cans marked with your name & race number", category: "Fuel", essential: true },
+      { key: "fuel-funnel", label: "Funnel / pouring spout", category: "Fuel" },
+    ];
+    const existing = new Set(base.map((i) => i.key));
+    return [...base, ...fuelItems.filter((i) => !existing.has(i.key))];
   }, [configured, rideDays, nights, event.discipline, event.name]);
   const usingDefault = configured.length === 0;
 
@@ -1101,6 +1114,7 @@ function PackingPanel({
 
   return (
     <div className="space-y-4">
+      <FuelNotice eventName={event.name} />
       <div className="rounded-xl bg-card p-3 ring-1 ring-border">
         <div className="flex items-center justify-between text-xs text-ink-soft">
           <span className="font-semibold text-ink">Packed {done} / {total}</span>
