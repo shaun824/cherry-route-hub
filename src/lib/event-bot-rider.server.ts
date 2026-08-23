@@ -146,16 +146,42 @@ export async function buildRiderContext(
   addName(profile?.full_name);
   for (const e of entrantRows ?? []) addName(e.full_name);
 
-  const mine =
-    (rooming ?? []).find((r: any) => r.event_entrant_id && entryIds.includes(r.event_entrant_id)) ??
-    (rooming ?? []).find((r: any) => r.entrant_id && entrantIds.includes(r.entrant_id)) ??
-    (rooming ?? []).find((r: any) => r.email && emails.has(String(r.email).toLowerCase())) ??
-    (rooming ?? []).find(
-      (r: any) =>
-        r.full_name &&
-        names.has(String(r.full_name).trim().toLowerCase().replace(/\s+/g, " ")),
-    ) ??
-    null;
+  const isMine = (r: any) =>
+    (r.event_entrant_id && entryIds.includes(r.event_entrant_id)) ||
+    (r.entrant_id && entrantIds.includes(r.entrant_id)) ||
+    (r.email && emails.has(String(r.email).toLowerCase())) ||
+    (r.full_name && names.has(String(r.full_name).trim().toLowerCase().replace(/\s+/g, " ")));
+
+  const mineAll = (rooming ?? []).filter(isMine);
+  const mine = mineAll[0] ?? null;
+
+  // Moving events: the rider sleeps at a different venue each night.
+  if (mineAll.length > 1) {
+    lines.push(
+      "\nThis event moves between venues, so the rider has a different bed each night. Their full stay:",
+    );
+    for (const r of mineAll) {
+      const v: any = Array.isArray(r.venue) ? r.venue[0] : r.venue;
+      const nightStart = r.night_index ?? v?.night_start ?? null;
+      const nightCount = r.night_index ? 1 : (v?.nights ?? null);
+      const when = nightStart
+        ? `Night ${nightStart}${nightCount && nightCount > 1 ? `–${nightStart + nightCount - 1}` : ""}`
+        : "Night not specified";
+      const bits = [
+        v?.name ? `${v.name}${v.address ? ` (${v.address})` : ""}` : "venue TBC",
+        r.tent_number ? `tent/room ${r.tent_number}` : null,
+        r.room_type || null,
+        v?.check_in ? `check-in ${v.check_in}` : null,
+        v?.check_out ? `check-out ${v.check_out}` : null,
+      ].filter(Boolean);
+      lines.push(`- ${when}: ${bits.join(" · ")}`);
+    }
+    lines.push(
+      "Tell them they can see this night-by-night in the app under the Accommodation tab on the event page.",
+    );
+  }
+
+
 
 
   if (mine) {
