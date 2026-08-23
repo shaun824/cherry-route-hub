@@ -57,10 +57,16 @@ export const Route = createFileRoute("/admin/village/$eventId")({
       .select("venue_lat, venue_lng, venue_address")
       .eq("event_id", params.eventId)
       .maybeSingle();
-    return { event: data, info: info ?? null };
+    const { data: venues } = await supabase
+      .from("event_venues")
+      .select("id, name, address, sort_order")
+      .eq("event_id", params.eventId)
+      .order("sort_order", { ascending: true });
+    return { event: data, info: info ?? null, venues: venues ?? [] };
   },
   component: VillageEditor,
 });
+
 
 async function uploadVillageImage(file: File): Promise<string> {
   const ext = file.name.split(".").pop()?.toLowerCase() ?? "png";
