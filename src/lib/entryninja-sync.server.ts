@@ -191,6 +191,15 @@ export async function syncEnEvent(
     }
   }
 
+  // Entry Ninja has no money fields — price each entry from the event price
+  // book so amounts owing / paid are prefilled from the registration itself.
+  try {
+    const { applyPriceBookToEntrants } = await import("./price-book.server");
+    await applyPriceBookToEntrants(supabase as never, eventId);
+  } catch (err) {
+    if (errors.length < 20) errors.push(`pricing: ${(err as Error).message}`);
+  }
+
   return {
     eventId,
     eventName: enEvent.name,

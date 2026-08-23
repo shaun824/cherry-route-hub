@@ -2823,6 +2823,18 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      my_entry_group: {
+        Args: { _event_id: string }
+        Returns: {
+          amount_due_cents: number
+          amount_paid_cents: number
+          category: string
+          full_name: string
+          group_ref: string
+          is_me: boolean
+          paid: boolean
+        }[]
+      }
       my_event_team: {
         Args: { _event_id: string }
         Returns: {
