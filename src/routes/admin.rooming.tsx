@@ -4,7 +4,10 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { BedDouble, FileUp, Link2, MapPin, Plus, RefreshCw, Save, Sparkles, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchRooming, fetchVenues, type RoomingRow, type Venue } from "@/lib/rooming";
+import { eventNights } from "@/lib/accommodation";
+import type { EventDay, ScheduleItem } from "@/lib/mock-data";
 import { fetchVillageMap } from "@/lib/village-map";
+
 import type { VillageZone } from "@/lib/village-zones";
 import {
   labelsMatch,
@@ -52,6 +55,23 @@ function RoomingAdminPage() {
     queryFn: () => fetchVillageMap(eventId),
     enabled: !!eventId,
   });
+
+  const eventDaysQ = useQuery({
+    queryKey: ["admin-event-days", eventId],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("events")
+        .select("days, schedule")
+        .eq("id", eventId)
+        .maybeSingle();
+      return {
+        days: (Array.isArray(data?.days) ? data!.days : []) as unknown as EventDay[],
+        schedule: (Array.isArray(data?.schedule) ? data!.schedule : []) as unknown as ScheduleItem[],
+      };
+    },
+    enabled: !!eventId,
+  });
+
 
   const roomingQ = useQuery({
     queryKey: ["admin-rooming", eventId],
@@ -116,12 +136,22 @@ function RoomingAdminPage() {
     setBusy(true);
     const { error } = await supabase
       .from("event_venues")
-      .update({ name: v.name, address: v.address, notes: v.notes, village_spot_id: v.village_spot_id })
+      .update({
+        name: v.name,
+        address: v.address,
+        notes: v.notes,
+        village_spot_id: v.village_spot_id,
+        night_start: v.night_start,
+        nights: v.nights,
+        check_in: v.check_in,
+        check_out: v.check_out,
+      })
       .eq("id", v.id);
     setBusy(false);
     setMsg(error ? error.message : "Venue saved.");
     void qc.invalidateQueries({ queryKey: ["admin-venues", eventId] });
   }
+
 
   async function deleteVenue(id: string) {
     if (!confirm("Delete this venue? Its rooming rows will become unassigned.")) return;
@@ -357,6 +387,14 @@ function RoomingAdminPage() {
             onDelete={deleteVenue}
           />
 
+          <NightCoverage
+            days={eventDaysQ.data?.days ?? []}
+            schedule={eventDaysQ.data?.schedule ?? []}
+            venues={venues}
+            rows={rows}
+          />
+
+
           {venues.length === 0 ? (
             <p className="rounded-2xl border border-dashed border-border p-4 text-sm text-ink-soft">
               Add a venue first — even single-venue events need one so the rooming list has a home.
@@ -389,7 +427,65 @@ function RoomingAdminPage() {
   );
 }
 
+/** Quick sanity check: which venue hosts each night, and how many beds are placed there. */
+function NightCoverage({
+  days,
+  schedule,
+  venues,
+  rows,
+}: {
+  days: EventDay[];
+  schedule: ScheduleItem[];
+  venues: Venue[];
+  rows: RoomingRow[];
+}) {
+  const nights = eventNights(days, schedule);
+  if (nights.length === 0 || venues.length < 2) return null;
+
+  return (
+    <section className="rounded-2xl bg-card p-4 ring-1 ring-border">
+      <h2 className="font-display text-sm font-bold text-ink">Night-by-night coverage</h2>
+      <p className="mt-1 text-xs text-ink-soft">
+        Riders see this timeline on the event page. Set “first night” and “number of nights” on each
+        venue above so every night below has a home.
+      </p>
+      <ul className="mt-3 space-y-1.5">
+        {nights.map((n) => {
+          const hosts = venues.filter((v) => {
+            const start = v.night_start ?? 1;
+            const count = v.nights ?? Math.max(1, nights.length - start + 1);
+            return n.index >= start && n.index < start + count;
+          });
+          const placed = hosts.reduce(
+            (sum, v) => sum + rows.filter((r) => r.venue_id === v.id).length,
+            0,
+          );
+          return (
+            <li
+              key={n.index}
+              className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-secondary/60 px-3 py-2 text-xs"
+            >
+              <span className="font-bold text-ink">
+                Night {n.index}
+                {n.dayLabel ? <span className="font-medium text-ink-soft"> · after {n.dayLabel}</span> : null}
+              </span>
+              {hosts.length === 0 ? (
+                <span className="font-bold text-cherry">No venue set</span>
+              ) : (
+                <span className="text-ink-soft">
+                  {hosts.map((v) => v.name).join(" + ")} · {placed} placed
+                </span>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+    </section>
+  );
+}
+
 function VenueManager({
+
   spots,
   venues,
   busy,
@@ -418,7 +514,9 @@ function VenueManager({
         {venues.map((v) => {
           const cur = edits[v.id] ?? v;
           return (
-            <div key={v.id} className="grid gap-2 rounded-xl bg-secondary/60 p-3 md:grid-cols-[1fr_1.5fr_1fr_auto]">
+            <div key={v.id} className="space-y-2 rounded-xl bg-secondary/60 p-3">
+            <div className="grid gap-2 md:grid-cols-[1fr_1.5fr_1fr_auto]">
+
               <input
                 value={cur.name}
                 onChange={(e) => setEdits((s) => ({ ...s, [v.id]: { ...cur, name: e.target.value } }))}
@@ -465,8 +563,51 @@ function VenueManager({
                 </button>
               </div>
             </div>
+            <div className="grid gap-2 md:grid-cols-4">
+              <input
+                type="number"
+                min={1}
+                value={cur.night_start ?? ""}
+                onChange={(e) =>
+                  setEdits((s) => ({
+                    ...s,
+                    [v.id]: { ...cur, night_start: e.target.value ? Number(e.target.value) : null },
+                  }))
+                }
+                className="rounded-lg border border-border bg-background px-2 py-1.5 text-sm"
+                placeholder="First night (1 = night of day 1)"
+                title="Which night of the event riders first sleep here"
+              />
+              <input
+                type="number"
+                min={1}
+                value={cur.nights ?? ""}
+                onChange={(e) =>
+                  setEdits((s) => ({
+                    ...s,
+                    [v.id]: { ...cur, nights: e.target.value ? Number(e.target.value) : null },
+                  }))
+                }
+                className="rounded-lg border border-border bg-background px-2 py-1.5 text-sm"
+                placeholder="Number of nights"
+              />
+              <input
+                value={cur.check_in ?? ""}
+                onChange={(e) => setEdits((s) => ({ ...s, [v.id]: { ...cur, check_in: e.target.value || null } }))}
+                className="rounded-lg border border-border bg-background px-2 py-1.5 text-sm"
+                placeholder="Check-in (e.g. from 14:00)"
+              />
+              <input
+                value={cur.check_out ?? ""}
+                onChange={(e) => setEdits((s) => ({ ...s, [v.id]: { ...cur, check_out: e.target.value || null } }))}
+                className="rounded-lg border border-border bg-background px-2 py-1.5 text-sm"
+                placeholder="Check-out (e.g. by 09:00)"
+              />
+            </div>
+            </div>
           );
         })}
+
       </div>
 
       <div className="mt-3 grid gap-2 md:grid-cols-[1fr_1.5fr_auto]">

@@ -1206,6 +1206,7 @@ export type Database = {
           id: string
           location_hint: string | null
           match_source: string
+          night_index: number | null
           notes: string | null
           room_type: string | null
           tent_number: string | null
@@ -1225,6 +1226,7 @@ export type Database = {
           id?: string
           location_hint?: string | null
           match_source?: string
+          night_index?: number | null
           notes?: string | null
           room_type?: string | null
           tent_number?: string | null
@@ -1244,6 +1246,7 @@ export type Database = {
           id?: string
           location_hint?: string | null
           match_source?: string
+          night_index?: number | null
           notes?: string | null
           room_type?: string | null
           tent_number?: string | null
@@ -1381,10 +1384,14 @@ export type Database = {
       event_venues: {
         Row: {
           address: string | null
+          check_in: string | null
+          check_out: string | null
           created_at: string
           event_id: string
           id: string
           name: string
+          night_start: number | null
+          nights: number | null
           notes: string | null
           rooming_sheet_error: string | null
           rooming_sheet_range: string | null
@@ -1397,10 +1404,14 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          check_in?: string | null
+          check_out?: string | null
           created_at?: string
           event_id: string
           id?: string
           name: string
+          night_start?: number | null
+          nights?: number | null
           notes?: string | null
           rooming_sheet_error?: string | null
           rooming_sheet_range?: string | null
@@ -1413,10 +1424,14 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          check_in?: string | null
+          check_out?: string | null
           created_at?: string
           event_id?: string
           id?: string
           name?: string
+          night_start?: number | null
+          nights?: number | null
           notes?: string | null
           rooming_sheet_error?: string | null
           rooming_sheet_range?: string | null
