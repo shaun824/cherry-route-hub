@@ -62,7 +62,6 @@ import { FuelNotice, isFuelCarryEvent } from "@/components/fuel-notice";
 import { useShuffledPromos } from "@/lib/use-shuffled-promos";
 
 import { curatedSponsorsFor } from "@/lib/event-sponsor-overrides";
-import { eventHasTshirt } from "@/lib/apparel";
 import { useAdminStore } from "@/lib/store";
 import { fetchMyEventById, fetchMyTeam, type MyEventRow } from "@/lib/my-events";
 import { Printer, Siren, BedDouble, ExternalLink, Users } from "lucide-react";
@@ -2052,7 +2051,6 @@ function YourEntryCard({ eventId, entryUrl = null }: { eventId: string; entryUrl
     return <div className="h-32 animate-pulse rounded-2xl bg-secondary" />;
   }
   const row: MyEventRow | null = q.data ?? null;
-  const showTshirt = eventHasTshirt(row?.event?.name);
 
 
   if (!row) {
