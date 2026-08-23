@@ -70,14 +70,46 @@ export function VillageMapView({
   focusSpotId,
   focusZoneId,
   focusTentId,
+  venueId: venueIdProp,
 }: {
   eventId: string;
   focusSpotId?: string | null;
   focusZoneId?: string | null;
   focusTentId?: string | null;
+  /** Jump straight to one venue's village (used by crew "find this tent"). */
+  venueId?: string | null;
 }) {
-  const q = useQuery({ queryKey: ["village-map", eventId], queryFn: () => fetchVillageMap(eventId) });
-  const tentsQ = useQuery({ queryKey: ["village-tents", eventId], queryFn: () => fetchVillageTents(eventId) });
+  // Multi-day events run more than one race village — one per venue.
+  const venuesQ = useQuery({
+    queryKey: ["village-venues", eventId],
+    queryFn: async () => {
+      const [{ data: venues }, maps] = await Promise.all([
+        supabase
+          .from("event_venues")
+          .select("id, name, sort_order")
+          .eq("event_id", eventId)
+          .order("sort_order", { ascending: true }),
+        fetchVillageMaps(eventId),
+      ]);
+      const withMaps = new Set(maps.map((m) => m.venue_id).filter(Boolean) as string[]);
+      return (venues ?? []).filter((v) => withMaps.has(v.id));
+    },
+  });
+  const venues = venuesQ.data ?? [];
+  const [venuePick, setVenuePick] = useState<string | null>(venueIdProp ?? null);
+  useEffect(() => {
+    if (venueIdProp) setVenuePick(venueIdProp);
+  }, [venueIdProp]);
+  const venueId = venuePick ?? venues[0]?.id ?? null;
+
+  const q = useQuery({
+    queryKey: ["village-map", eventId, venueId],
+    queryFn: () => fetchVillageMap(eventId, venueId),
+  });
+  const tentsQ = useQuery({
+    queryKey: ["village-tents", eventId, venueId],
+    queryFn: () => fetchVillageTents(eventId, venueId),
+  });
   const tents = tentsQ.data ?? [];
   const mapTents = useMemo(
     () =>
@@ -102,6 +134,7 @@ export function VillageMapView({
   }, [focusSpotId]);
 
   const map = q.data;
+
   // Legacy imports left numeric "tent number" points behind — those live on the
   // tent layer, so keep them out of the facility icons and legend.
   const facilities = useMemo(
