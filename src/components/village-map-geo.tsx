@@ -287,6 +287,8 @@ export default function VillageMapGeo({
   onSelect: (id: string | null) => void;
   highlightZoneId?: string | null;
   highlightTentId?: string | null;
+  flyToSpotId?: string | null;
+  flyToken?: number;
 }) {
 
   const [ratio, setRatio] = useState(0.76); // height / width, refined once the image loads
