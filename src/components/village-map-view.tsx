@@ -167,14 +167,34 @@ export function VillageMapView({
   const focusZone = (map?.zones ?? []).find((z) => z.id === focusZoneId) ?? null;
   const detail = (map?.hotspots ?? []).find((s) => s.id === (selected ?? hovered)) ?? null;
 
+  const venueTabs =
+    venues.length > 1 ? (
+      <div className="flex flex-wrap gap-1.5">
+        {venues.map((v) => (
+          <button
+            key={v.id}
+            onClick={() => setVenuePick(v.id)}
+            className={`rounded-full px-3 py-1.5 text-[11px] font-bold ${
+              venueId === v.id ? "bg-cherry text-white" : "bg-muted text-ink-soft"
+            }`}
+          >
+            {v.name}
+          </button>
+        ))}
+      </div>
+    ) : null;
+
   if (q.isLoading) {
     return <div className="h-56 animate-pulse rounded-2xl bg-muted" />;
   }
 
   if (!map || (!hasImage && !geoReady)) {
     return (
-      <div className="rounded-2xl border border-dashed border-border p-6 text-center text-sm text-ink-soft">
-        The village map for this event hasn't been published yet — check back closer to race week.
+      <div className="space-y-3">
+        {venueTabs}
+        <div className="rounded-2xl border border-dashed border-border p-6 text-center text-sm text-ink-soft">
+          The village map for this venue hasn't been published yet — check back closer to race week.
+        </div>
       </div>
     );
   }
@@ -184,11 +204,14 @@ export function VillageMapView({
 
   return (
     <div className="space-y-3">
+      {venueTabs}
       {focusZone ? (
         <p className="rounded-xl bg-accent px-3 py-2 text-xs font-semibold text-cherry-deep">
           Highlighted in red: {focusZone.name || "your spot"}.
         </p>
       ) : null}
+
+
 
       {map.intro ? <p className="text-sm leading-relaxed text-ink-soft">{map.intro}</p> : null}
 
