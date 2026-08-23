@@ -129,10 +129,12 @@ export function VillageMapView({
   const wrapRef = useRef<HTMLDivElement>(null);
 
   // Crew "find this room" deep-focus: highlight the requested point when it changes.
+  const [flyToken, setFlyToken] = useState(0);
   useEffect(() => {
     if (focusSpotId) {
       setSelected(focusSpotId);
       setFilter(null);
+      setFlyToken((t) => t + 1);
     }
   }, [focusSpotId]);
 
