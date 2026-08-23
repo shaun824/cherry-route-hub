@@ -30,6 +30,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const { isCrew } = useIsCrew();
   const { crewMode, inCrewArea, exitCrewMode } = useCrewMode(pathname);
   const [dismissed, setDismissed] = useState(false);
+  useEntryAutoSync(Boolean(user));
 
   useEffect(() => {
     if (typeof window === "undefined") return;
