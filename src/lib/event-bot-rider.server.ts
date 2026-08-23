@@ -3,6 +3,7 @@
 // their accommodation allocation (tent number + where it sits on the village
 // map). Everything is resolved from the signed-in user's own records only.
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { priceEntry } from "./entry-pricing";
 import { entryNinjaRegistrationUrl } from "@/lib/entry-ninja-link";
 
 type AnyClient = SupabaseClient<any, any, any>;
@@ -93,8 +94,20 @@ export async function buildRiderContext(
       if (e.jacket_size) lines.push(`- Jacket size on entry: ${e.jacket_size}`);
       if (Array.isArray(e.extras) && e.extras.length)
         lines.push(`- Extras ordered: ${e.extras.map((x: any) => x.label ?? x.name ?? x).join(", ")}`);
-      const due = e.amount_due_cents ?? 0;
+      let due = e.amount_due_cents ?? 0;
       const paidAmt = e.amount_paid_cents ?? 0;
+      // No imported amount? Price the entry off the event price book.
+      if (!due) {
+        const { data: priceRows } = await admin
+          .from("event_price_book")
+          .select("id, event_id, kind, label, price_cents, notes")
+          .eq("event_id", eventId);
+        const priced = priceEntry((priceRows ?? []) as any, {
+          category: e.category ?? null,
+          extras: Array.isArray(e.extras) ? (e.extras as any) : [],
+        });
+        if (priced.totalCents) due = priced.totalCents;
+      }
       lines.push(`- Payment status: ${e.paid ? "paid in full" : "outstanding balance"}`);
       if (due) lines.push(`- Entry total: ${money(due)}`);
       if (paidAmt) lines.push(`- Paid so far: ${money(paidAmt)}`);
