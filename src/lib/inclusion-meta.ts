@@ -38,7 +38,7 @@ const RULES: Rule[] = [
     test: /riding top|race fit|jersey|cycling top/i,
     meta: {
       icon: "shirt",
-      blurb: "Your official event riding top in the size you selected.",
+      blurb: "Your official Enjoy riding top in the size you selected.",
       howTo: "Collect it with your race pack at registration — try it on before you leave the desk.",
     },
   },
@@ -46,7 +46,7 @@ const RULES: Rule[] = [
     test: /jacket|softshell|windbreaker/i,
     meta: {
       icon: "jacket",
-      blurb: "Event jacket in your chosen size.",
+      blurb: "Enjoy event jacket in your chosen size.",
       howTo: "Handed over in your rider bag at registration.",
     },
   },
@@ -54,10 +54,11 @@ const RULES: Rule[] = [
     test: /t[\s-]?shirt|tee\b|golf ?shirt|vest|cap|beanie|sock/i,
     meta: {
       icon: "shirt",
-      blurb: "Event apparel in the size you chose on entry.",
-      howTo: "In your race pack at registration. Sizes can be swapped at the merch stand while stock lasts.",
+      blurb: "Enjoy event apparel in the size you chose on entry.",
+      howTo: "In your race pack at registration. Sizes can be swapped at the Enjoy merch stand while stock lasts.",
     },
   },
+
   {
     test: /e[\s-]?bike rental|bike rental|bike hire|rental bike/i,
     meta: {
