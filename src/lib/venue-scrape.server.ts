@@ -138,9 +138,9 @@ Rules:
     .slice(0, 30);
 }
 
-/** Collapse consecutive nights at the same venue into one venue row. */
+/** One row per venue, covering every night riders sleep there. */
 export function toVenueRows(stays: ScrapedStay[]) {
-  const rows: {
+  type Row = {
     name: string;
     address: string | null;
     notes: string | null;
@@ -148,28 +148,46 @@ export function toVenueRows(stays: ScrapedStay[]) {
     nights: number | null;
     check_in: string | null;
     check_out: string | null;
-  }[] = [];
+  };
+  const byName = new Map<string, { row: Row; nights: Set<number> }>();
 
   for (const s of stays) {
     const key = s.venue.trim().toLowerCase();
-    const prev = rows[rows.length - 1];
-    if (prev && prev.name.trim().toLowerCase() === key) {
-      if (prev.nights != null) prev.nights += 1;
-      if (s.checkOut) prev.check_out = s.checkOut;
+    const entry = byName.get(key);
+    if (entry) {
+      if (s.nightIndex != null) entry.nights.add(s.nightIndex);
+      entry.row.address ??= s.address ?? s.town ?? null;
+      entry.row.notes ??= s.notes ?? null;
+      entry.row.check_in ??= s.checkIn ?? null;
+      if (s.checkOut) entry.row.check_out = s.checkOut;
       continue;
     }
-    rows.push({
-      name: s.venue.trim(),
-      address: s.address ?? (s.town ? s.town : null),
-      notes: s.notes ?? null,
-      night_start: s.nightIndex,
-      nights: s.nightIndex != null ? 1 : null,
-      check_in: s.checkIn ?? null,
-      check_out: s.checkOut ?? null,
+    byName.set(key, {
+      row: {
+        name: s.venue.trim(),
+        address: s.address ?? s.town ?? null,
+        notes: s.notes ?? null,
+        night_start: s.nightIndex,
+        nights: null,
+        check_in: s.checkIn ?? null,
+        check_out: s.checkOut ?? null,
+      },
+      nights: new Set(s.nightIndex != null ? [s.nightIndex] : []),
     });
   }
-  return rows;
+
+  return Array.from(byName.values())
+    .map(({ row, nights }) => {
+      const list = Array.from(nights).sort((a, b) => a - b);
+      if (list.length) {
+        row.night_start = list[0]!;
+        row.nights = list[list.length - 1]! - list[0]! + 1;
+      }
+      return row;
+    })
+    .sort((a, b) => (a.night_start ?? 99) - (b.night_start ?? 99));
 }
+
 
 /** Write the scraped venues onto event_venues, matching existing rows by name. */
 export async function applyVenueRows(
