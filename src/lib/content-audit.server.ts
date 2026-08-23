@@ -2,14 +2,31 @@
 // info blocks, rooming, entrants and sponsors. Server-only.
 import type { SupabaseClient } from "@supabase/supabase-js";
 
+/** A change the admin can approve with one tap from the home-page warning card. */
+export type AuditAction =
+  | { kind: "archive_event"; eventId: string; label: string }
+  | { kind: "set_event_distance"; eventId: string; distanceKm: number; label: string }
+  | { kind: "drop_orphan_schedule"; eventId: string; dayId: string; label: string };
+
 export type AuditIssue = {
+  /** Stable identifier so an approved/dismissed warning stays hidden on later runs. */
+  key?: string;
   severity: "high" | "medium" | "low";
   area: string;
   eventId: string | null;
   eventName: string;
   message: string;
   fix?: string;
+  action?: AuditAction;
 };
+
+/** Deterministic key for an issue (same wording + event = same key across runs). */
+export function auditIssueKey(i: Pick<AuditIssue, "area" | "eventId" | "message">): string {
+  const raw = `${i.area}|${i.eventId ?? "-"}|${i.message}`;
+  let h = 5381;
+  for (let n = 0; n < raw.length; n++) h = ((h << 5) + h + raw.charCodeAt(n)) >>> 0;
+  return `${i.area.toLowerCase().replace(/\s+/g, "-")}-${h.toString(36)}`;
+}
 
 export type AuditSummary = {
   eventsChecked: number;
@@ -49,7 +66,7 @@ function dayOnly(d: string | Date): string {
 /** Run all deterministic content checks and return the issues found. */
 export async function runContentAudit(admin: SupabaseClient): Promise<AuditSummary> {
   const issues: AuditIssue[] = [];
-  const push = (i: AuditIssue) => issues.push(i);
+  const push = (i: AuditIssue) => issues.push({ ...i, key: auditIssueKey(i) });
 
   const { data: events, error } = await admin
     .from("events")
@@ -100,6 +117,7 @@ export async function runContentAudit(admin: SupabaseClient): Promise<AuditSumma
         eventName: name,
         message: `Event date has passed (${dayOnly(eventDate!)}) but it is still marked "${ev.status}".`,
         fix: "Archive or complete the event in Admin → Events.",
+        action: { kind: "archive_event", eventId: id, label: "Archive this event" },
       });
     }
 
@@ -155,6 +173,12 @@ export async function runContentAudit(admin: SupabaseClient): Promise<AuditSumma
           eventName: name,
           message: `Event total distance says ${ev.distance_km} km but the day routes add up to ${routeTotal} km.`,
           fix: "Update the event distance or the per-day route distances.",
+          action: {
+            kind: "set_event_distance",
+            eventId: id,
+            distanceKm: routeTotal,
+            label: `Set event distance to ${routeTotal} km`,
+          },
         });
       }
     }
@@ -194,6 +218,12 @@ export async function runContentAudit(admin: SupabaseClient): Promise<AuditSumma
           eventName: name,
           message: `Schedule item "${item.label ?? item.time}" is attached to a day (${key}) that no longer exists.`,
           fix: "Reassign or delete the orphaned schedule item.",
+          action: {
+            kind: "drop_orphan_schedule",
+            eventId: id,
+            dayId: key,
+            label: "Remove the orphaned itinerary items",
+          },
         });
       }
       if (!minutes(item.time)) {
@@ -448,4 +478,42 @@ export async function runAndStoreContentAudit(admin: SupabaseClient) {
     });
     throw err;
   }
+}
+
+/** Apply an approved audit fix. Returns a short human summary of what changed. */
+export async function applyAuditAction(admin: SupabaseClient, action: AuditAction): Promise<string> {
+  if (action.kind === "archive_event") {
+    const { error } = await admin
+      .from("events")
+      .update({ lifecycle: "archived", status: "completed" })
+      .eq("id", action.eventId);
+    if (error) throw new Error(error.message);
+    return "Event archived and marked completed.";
+  }
+
+  if (action.kind === "set_event_distance") {
+    const { error } = await admin
+      .from("events")
+      .update({ distance_km: Math.round(action.distanceKm) })
+      .eq("id", action.eventId);
+    if (error) throw new Error(error.message);
+    return `Event distance set to ${Math.round(action.distanceKm)} km.`;
+  }
+
+  if (action.kind === "drop_orphan_schedule") {
+    const { data, error } = await admin
+      .from("events")
+      .select("schedule")
+      .eq("id", action.eventId)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    const schedule = asArray<ScheduleItem>(data?.schedule);
+    const kept = schedule.filter((i) => (i.dayId ?? "") !== action.dayId);
+    const removed = schedule.length - kept.length;
+    const { error: upErr } = await admin.from("events").update({ schedule: kept }).eq("id", action.eventId);
+    if (upErr) throw new Error(upErr.message);
+    return `${removed} orphaned itinerary item(s) removed.`;
+  }
+
+  throw new Error("Unknown fix");
 }

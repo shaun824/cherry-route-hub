@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { AlertTriangle, CheckCircle2, RefreshCw, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
-import { listContentAudits, runContentAuditNow } from "@/lib/content-audit.functions";
+import { listContentAudits, restoreAuditIssue, runContentAuditNow } from "@/lib/content-audit.functions";
 
 export const Route = createFileRoute("/admin/audit")({
   head: () => ({
@@ -46,7 +46,19 @@ function AuditPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const restore = useServerFn(restoreAuditIssue);
+  const restoreM = useMutation({
+    mutationFn: (issueKey: string) => restore({ data: { issueKey } }),
+    onSuccess: () => {
+      toast.success("Warning restored");
+      qc.invalidateQueries({ queryKey: ["content-audits"] });
+      qc.invalidateQueries({ queryKey: ["home-audit-warnings"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   const runs = (q.data?.runs ?? []) as any[];
+  const resolutions = (q.data?.resolutions ?? []) as any[];
   const latest = runs[0];
   const issues = (latest?.issues ?? []) as Issue[];
 
@@ -61,7 +73,7 @@ function AuditPage() {
         <div>
           <h1 className="font-display text-2xl font-bold">Routine content check</h1>
           <p className="mt-1 text-sm text-ink-soft">
-            Runs automatically every 2 days at 03:00 and cross-checks event dates, itinerary times,
+            Runs automatically every day at 03:00 and cross-checks event dates, itinerary times,
             route distances, packing lists, rosters and rooming against each other.
           </p>
         </div>
@@ -124,6 +136,39 @@ function AuditPage() {
             ))}
           </div>
         </div>
+      )}
+
+      {resolutions.length > 0 && (
+        <section className="mt-6 rounded-2xl bg-card p-5 ring-1 ring-border">
+          <h2 className="font-display text-base font-bold">Approved &amp; dismissed</h2>
+          <p className="mt-1 text-[12px] text-ink-soft">
+            These warnings stay hidden on the home page. Restore one to see it again.
+          </p>
+          <ul className="mt-3 space-y-2">
+            {resolutions.map((r) => (
+              <li
+                key={r.issue_key}
+                className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-secondary/60 px-3 py-2 text-sm"
+              >
+                <div className="min-w-0">
+                  <p className="text-ink">{r.message ?? r.issue_key}</p>
+                  <p className="text-[11px] text-ink-soft">
+                    {r.status === "approved" ? "Approved" : "Dismissed"} ·{" "}
+                    {new Date(r.resolved_at).toLocaleString()}
+                    {r.note ? ` · ${r.note}` : ""}
+                  </p>
+                </div>
+                <button
+                  onClick={() => restoreM.mutate(r.issue_key)}
+                  disabled={restoreM.isPending}
+                  className="rounded-lg bg-card px-3 py-1.5 text-[12px] font-semibold text-ink-soft ring-1 ring-border disabled:opacity-60"
+                >
+                  Restore
+                </button>
+              </li>
+            ))}
+          </ul>
+        </section>
       )}
 
       {runs.length > 1 && (
