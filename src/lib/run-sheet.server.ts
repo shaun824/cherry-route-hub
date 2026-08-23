@@ -88,72 +88,170 @@ async function readRange(id: string, range: string): Promise<unknown[][]> {
 
 const yes = (v: string) => /^(y|yes|true|1|critical)$/i.test(v.trim());
 
-/** Pulls the run sheet, packing and brief tabs and normalises every row. */
+/** Lists the tab titles in a spreadsheet. */
+async function listTabs(id: string): Promise<string[]> {
+  const lovableKey = process.env["LOVABLE_API_KEY"];
+  const connKey = connectorKey();
+  if (!lovableKey || !connKey) {
+    throw new Error("Google Sheets isn't connected yet — link the Google Sheets connection, then try again.");
+  }
+  const res = await fetch(
+    `${GATEWAY_URL}/spreadsheets/${id}?fields=${encodeURIComponent("sheets.properties.title")}`,
+    { headers: { Authorization: `Bearer ${lovableKey}`, "X-Connection-Api-Key": connKey } },
+  );
+  if (!res.ok) {
+    const body = await res.text();
+    console.error(`[run-sheet] tab list ${res.status}: ${body}`);
+    throw new Error(`Couldn't open that Google Sheet [${res.status}]: ${body.slice(0, 200)}`);
+  }
+  const json = (await res.json()) as { sheets?: { properties?: { title?: string } }[] };
+  return (json.sheets ?? []).map((s) => s.properties?.title ?? "").filter(Boolean);
+}
+
+const COLS = {
+  department: ["department", "dept", "area", "team", "crew", "section", "function"],
+  task: ["task", "tasks", "job", "what", "activity", "instruction", "instructions", "action", "item"],
+  day: ["day", "date", "when"],
+  start: ["start", "start time", "time", "from", "begins"],
+  end: ["end", "end time", "to", "until", "finish"],
+  detail: ["detail", "details", "description", "how", "brief"],
+  owner: ["owner", "responsible", "who", "lead", "assigned", "person"],
+  location: ["location", "where", "venue", "place", "site"],
+  notes: ["notes", "note", "comments", "comment", "remarks"],
+  packItem: ["item", "kit", "equipment", "packing", "gear", "asset"],
+  qty: ["qty", "quantity", "amount", "no", "number", "#"],
+  critical: ["critical", "essential", "must have", "priority"],
+  contact: ["contact", "phone", "cell", "number", "mobile"],
+  overview: ["overview", "role", "purpose", "what we do", "description"],
+  safety: ["safety", "safety notes", "risks", "rules"],
+} as const;
+
+const ALL_KNOWN = new Set<string>(Object.values(COLS).flatMap((v) => v as readonly string[]));
+const norm = (v: unknown) => String(v ?? "").trim().toLowerCase();
+
+/** Finds the row that looks most like a header inside the first rows of a tab. */
+function findHeaderRow(values: unknown[][]): number | null {
+  let best: { idx: number; score: number } | null = null;
+  const limit = Math.min(values.length, 15);
+  for (let i = 0; i < limit; i += 1) {
+    const cells = (values[i] ?? []).map(norm).filter(Boolean);
+    if (cells.length < 2) continue;
+    const score = cells.filter((c) => ALL_KNOWN.has(c)).length;
+    if (score >= 2 && (!best || score > best.score)) best = { idx: i, score };
+  }
+  return best ? best.idx : null;
+}
+
+const GENERIC_TAB = /^(sheet\d*|run\s*sheet|master|schedule|programme|program|tasks?|main|overview)$/i;
+
+/** Pulls every tab of the run sheet and normalises the rows it understands. */
 export async function readRunSheet(sheetUrl: string, range?: string | null): Promise<RunSheetParse> {
   const id = spreadsheetIdFromUrl(sheetUrl);
   if (!id) throw new Error("That doesn't look like a Google Sheets link.");
 
-  const mainRange = (range ?? "").trim() || "A1:Z5000";
-  const [mainVals, packVals, briefVals] = await Promise.all([
-    readRange(id, mainRange),
-    readRange(id, "Packing!A1:Z2000"),
-    readRange(id, "Brief!A1:Z500"),
-  ]);
+  const explicit = (range ?? "").trim();
+  const tabNames = explicit ? [] : await listTabs(id);
+  const targets = explicit ? [{ tab: "", range: explicit }] : tabNames.map((t) => ({ tab: t, range: `'${t.replace(/'/g, "''")}'!A1:Z5000` }));
 
-  let skipped = 0;
   const tasks: RunSheetTaskRow[] = [];
-  for (const r of rowsToRecords(mainVals)) {
-    const department = pickField(r, ["department", "Department", "Dept", "Area", "Team"]);
-    const task = pickField(r, ["task", "Task", "Instruction", "Activity", "Item", "What"]);
-    if (!department || !task) {
-      skipped += 1;
+  const packing: RunSheetPackingRow[] = [];
+  const briefs: RunSheetBriefRow[] = [];
+  const tabs: RunSheetTabDiag[] = [];
+  let skipped = 0;
+
+  const sheets = await Promise.all(
+    targets.map(async (t) => ({ tab: t.tab, values: await readRange(id, t.range) })),
+  );
+
+  for (const { tab, values } of sheets) {
+    const headerRow = findHeaderRow(values);
+    if (headerRow === null) {
+      tabs.push({ tab: tab || "Sheet", kind: "ignored", headerRow: null, rows: values.length, used: 0, skipped: values.length, unknownColumns: [] });
       continue;
     }
-    tasks.push({
-      department,
-      day: pickField(r, ["day", "Day", "Date"]),
-      start: pickField(r, ["start", "Start", "Start Time", "Time", "From"]),
-      end: pickField(r, ["end", "End", "End Time", "To", "Until"]),
-      task,
-      detail: pickField(r, ["detail", "Detail", "Details", "Description", "How"]),
-      owner: pickField(r, ["owner", "Owner", "Responsible", "Who", "Lead"]),
-      location: pickField(r, ["location", "Location", "Where", "Venue", "Area"]),
-      notes: pickField(r, ["notes", "Notes", "Comments", "Remarks"]),
-    });
-  }
+    const records = rowsToRecords(values.slice(headerRow));
+    const headerCells = (values[headerRow] ?? []).map(norm).filter(Boolean);
+    const unknownColumns = headerCells.filter((c) => !ALL_KNOWN.has(c));
+    const has = (set: readonly string[]) => headerCells.some((c) => set.includes(c));
 
-  const packing: RunSheetPackingRow[] = [];
-  for (const r of rowsToRecords(packVals)) {
-    const department = pickField(r, ["department", "Department", "Dept", "Team"]);
-    const item = pickField(r, ["item", "Item", "Kit", "Equipment", "Packing"]);
-    if (!department || !item) continue;
-    packing.push({
-      department,
-      item,
-      qty: pickField(r, ["qty", "Qty", "Quantity", "Amount", "No"]),
-      notes: pickField(r, ["notes", "Notes", "Comment", "Detail"]),
-      critical: yes(pickField(r, ["critical", "Critical", "Essential", "Must Have"])),
-    });
-  }
+    const isPacking = /pack|kit|equipment/i.test(tab);
+    const isBrief = /brief|onboard|role|safety/i.test(tab);
+    const tabDept = tab && !GENERIC_TAB.test(tab.trim()) && !isPacking && !isBrief ? tab.trim() : "";
+    const tabDay = /day\s*\d|reg|build|strike|arriv/i.test(tab) ? tab.trim() : "";
 
-  const briefs: RunSheetBriefRow[] = [];
-  for (const r of rowsToRecords(briefVals)) {
-    const department = pickField(r, ["department", "Department", "Dept", "Team"]);
-    if (!department) continue;
-    briefs.push({
-      department,
-      lead: pickField(r, ["lead", "Lead", "Manager", "HOD", "Head"]),
-      contact: pickField(r, ["contact", "Contact", "Phone", "Cell", "Number"]),
-      overview: pickField(r, ["overview", "Overview", "Role", "Purpose", "What we do", "Description"]),
-      safety: pickField(r, ["safety", "Safety", "Safety notes", "Risks", "Rules"]),
-    });
+    let used = 0;
+    let localSkipped = 0;
+
+    if (isBrief) {
+      for (const r of records) {
+        const department = pickField(r, [...COLS.department]) || tab.trim();
+        if (!department) {
+          localSkipped += 1;
+          continue;
+        }
+        briefs.push({
+          department,
+          lead: pickField(r, ["lead", "manager", "hod", "head", ...COLS.owner]),
+          contact: pickField(r, [...COLS.contact]),
+          overview: pickField(r, [...COLS.overview]),
+          safety: pickField(r, [...COLS.safety]),
+        });
+        used += 1;
+      }
+      tabs.push({ tab: tab || "Sheet", kind: "brief", headerRow: headerRow + 1, rows: records.length, used, skipped: localSkipped, unknownColumns });
+      continue;
+    }
+
+    if (isPacking || (has(COLS.packItem) && !has(COLS.task) && !has(COLS.start))) {
+      for (const r of records) {
+        const department = pickField(r, [...COLS.department]) || tabDept;
+        const item = pickField(r, [...COLS.packItem]);
+        if (!department || !item) {
+          localSkipped += 1;
+          continue;
+        }
+        packing.push({
+          department,
+          item,
+          qty: pickField(r, [...COLS.qty]),
+          notes: pickField(r, [...COLS.notes, ...COLS.detail]),
+          critical: yes(pickField(r, [...COLS.critical])),
+        });
+        used += 1;
+      }
+      tabs.push({ tab: tab || "Sheet", kind: "packing", headerRow: headerRow + 1, rows: records.length, used, skipped: localSkipped, unknownColumns });
+      continue;
+    }
+
+    for (const r of records) {
+      const department = pickField(r, [...COLS.department]) || tabDept;
+      const task = pickField(r, [...COLS.task]);
+      if (!department || !task) {
+        localSkipped += 1;
+        continue;
+      }
+      tasks.push({
+        department,
+        day: pickField(r, [...COLS.day]) || tabDay,
+        start: pickField(r, [...COLS.start]),
+        end: pickField(r, [...COLS.end]),
+        task,
+        detail: pickField(r, [...COLS.detail]),
+        owner: pickField(r, [...COLS.owner]),
+        location: pickField(r, [...COLS.location]),
+        notes: pickField(r, [...COLS.notes]),
+      });
+      used += 1;
+    }
+    skipped += localSkipped;
+    tabs.push({ tab: tab || "Sheet", kind: "tasks", headerRow: headerRow + 1, rows: records.length, used, skipped: localSkipped, unknownColumns });
   }
 
   const departments = Array.from(
     new Set([...tasks, ...packing, ...briefs].map((r) => r.department.trim()).filter(Boolean)),
   );
 
-  return { tasks, packing, briefs, departments, skipped };
+  return { tasks, packing, briefs, departments, skipped, tabs };
 }
 
 export function slugify(s: string): string {
