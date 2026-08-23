@@ -1,0 +1,1 @@
+update public.event_entrants set team_name='Cherry Bombers', team_ref='9990001', bib_number='RC01', updated_at=now() where id='c2526680-5ee6-45b2-a443-3c6e4589f089';
