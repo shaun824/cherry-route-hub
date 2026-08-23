@@ -133,8 +133,9 @@ export async function buildRiderContext(
   const { data: rooming } = await admin
     .from("event_rooming")
     .select(
-      "id, full_name, email, tent_number, room_type, notes, location_hint, entrant_id, event_entrant_id, village_zone_id, village_tent_id, venue:event_venues(name, address, notes)",
+      "id, full_name, email, tent_number, room_type, notes, location_hint, entrant_id, event_entrant_id, village_zone_id, village_tent_id, night_index, venue:event_venues(name, address, notes, night_start, nights, check_in, check_out)",
     )
+
     .eq("event_id", eventId);
 
   const names = new Set<string>();
