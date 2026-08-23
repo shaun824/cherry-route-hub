@@ -48,6 +48,7 @@ function AdminRunSheet() {
   });
   const events = eventsQ.data ?? [];
   const event = events.find((e) => e.id === eventId);
+  const otherLinked = events.filter((e) => e.id !== eventId && !!e.run_sheet_url);
 
   useEffect(() => {
     if (!eventId && events.length) setEventId(events[0].id);
@@ -217,9 +218,20 @@ function AdminRunSheet() {
               className="mt-2 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm"
             />
             <p className="mt-2 text-xs text-ink-soft">
-              Tabs read: <strong>Run Sheet</strong>, <strong>Packing</strong>, <strong>Brief</strong>. Share
-              the sheet with anyone-with-link viewer access.
+              Every tab is read. A tab needs a <strong>Task</strong> column, plus either a{" "}
+              <strong>Department</strong> column or a tab named after the department. Tabs named{" "}
+              <strong>Packing</strong> or <strong>Brief</strong> are treated as kit lists and role briefs.
+              Share the sheet with anyone-with-link viewer access.
             </p>
+            <p className="mt-2 text-xs text-ink-soft">
+              Saving links this sheet to <strong>{event?.name ?? "—"}</strong>.
+            </p>
+            {otherLinked.length ? (
+              <p className="mt-1 text-xs text-amber-600">
+                Also linked elsewhere: {otherLinked.map((e) => e.name).join(", ")}.
+              </p>
+            ) : null}
+
             <div className="mt-3 flex flex-wrap gap-2">
               <button
                 type="button"
@@ -271,14 +283,31 @@ function AdminRunSheet() {
               {previewM.data.skipped ? (
                 <p className="mt-1 text-xs text-ink-soft">Skipped rows: {previewM.data.skipped}</p>
               ) : null}
+              <div className="mt-3 space-y-1 text-xs">
+                {(previewM.data.tabs ?? []).map((t: any) => (
+                  <div key={t.tab} className="rounded-lg border border-border px-2 py-1.5">
+                    <p className="font-semibold text-foreground">
+                      {t.tab} · {t.kind}
+                      {t.headerRow ? ` · header row ${t.headerRow}` : " · no header found"}
+                    </p>
+                    <p className="text-ink-soft">
+                      {t.used} used · {t.skipped} skipped
+                      {t.unknownColumns?.length
+                        ? ` · unrecognised columns: ${t.unknownColumns.join(", ")}`
+                        : ""}
+                    </p>
+                  </div>
+                ))}
+              </div>
               <ul className="mt-3 max-h-72 space-y-1 overflow-y-auto text-xs text-ink-soft">
                 {previewM.data.sample.map((t: any, i: number) => (
                   <li key={i}>
-                    <span className="text-foreground">{t.day_label}</span> · {t.start_time ?? "—"} ·{" "}
+                    <span className="text-foreground">{t.day || "—"}</span> · {t.start || "—"} ·{" "}
                     {t.department} · {t.task}
                   </li>
                 ))}
               </ul>
+
             </div>
           ) : null}
 

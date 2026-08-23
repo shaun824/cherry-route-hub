@@ -25,6 +25,7 @@ export const previewRunSheet = createServerFn({ method: "POST" })
       taskCount: parsed.tasks.length,
       packingCount: parsed.packing.length,
       briefCount: parsed.briefs.length,
+      tabs: parsed.tabs,
       sample: parsed.tasks.slice(0, 40),
     };
   });
