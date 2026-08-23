@@ -201,7 +201,7 @@ const RULES: Rule[] = [
     },
   },
   {
-    test: /single\s*(luxury|lux)\s*tent|luxury\s*tent/i,
+    test: /single[^a-z]{0,4}(?:luxury|lux)?\s*tent|luxury\s*tent/i,
     detail: {
       included: [
         "A pitched luxury tent that sleeps 1 person.",
