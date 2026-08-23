@@ -2229,7 +2229,19 @@ function YourEntryCard({ eventId, entryUrl = null }: { eventId: string; entryUrl
             </button>
           ) : null}
         </div>
+      ) : !multiVenue && (venuesQ.data ?? []).length > 0 && !roomingQ.isLoading ? (
+        <div className="mt-3 rounded-xl bg-secondary p-2.5">
+          <p className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-ink-soft">
+            <BedDouble className="h-3 w-3" /> Accommodation
+          </p>
+          <p className="mt-0.5 font-display text-sm font-bold text-ink">Rooming list not loaded yet</p>
+          <p className="text-[11px] text-ink-soft">
+            Tent and room allocations are published within 5 days of the event — we'll show yours here
+            as soon as it's loaded.
+          </p>
+        </div>
       ) : null}
+
 
       {/* Always offer the Entry Ninja hand-off: direct registration link when we
           have the ref, otherwise the event's own Entry Ninja page. */}

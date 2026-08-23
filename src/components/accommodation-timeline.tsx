@@ -101,7 +101,9 @@ function NightRow({ night, variant }: { night: NightStay; variant: "compact" | "
               {a.room_type ? <span className="font-normal text-ink-soft"> · {a.room_type}</span> : null}
             </p>
           ) : (
-            <p className="text-[11px] text-ink-soft">Allocation coming soon</p>
+            <p className="text-[11px] text-ink-soft">
+              Rooming list not loaded yet — allocations are published within 5 days of the event.
+            </p>
           )}
           {variant === "full" ? (
             <div className="mt-1 space-y-0.5 text-[11px] text-ink-soft">
