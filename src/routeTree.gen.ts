@@ -47,6 +47,7 @@ import { Route as AdminNotificationsRouteImport } from './routes/admin.notificat
 import { Route as AdminMessagesRouteImport } from './routes/admin.messages'
 import { Route as AdminMerchandiseRouteImport } from './routes/admin.merchandise'
 import { Route as AdminLoyaltyRouteImport } from './routes/admin.loyalty'
+import { Route as AdminLearnRouteImport } from './routes/admin.learn'
 import { Route as AdminKnowledgeRouteImport } from './routes/admin.knowledge'
 import { Route as AdminFeedRouteImport } from './routes/admin.feed'
 import { Route as AdminEventsRouteImport } from './routes/admin.events'
@@ -282,6 +283,11 @@ const AdminMerchandiseRoute = AdminMerchandiseRouteImport.update({
 const AdminLoyaltyRoute = AdminLoyaltyRouteImport.update({
   id: '/loyalty',
   path: '/loyalty',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminLearnRoute = AdminLearnRouteImport.update({
+  id: '/learn',
+  path: '/learn',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminKnowledgeRoute = AdminKnowledgeRouteImport.update({
@@ -557,6 +563,7 @@ export interface FileRoutesByFullPath {
   '/admin/events': typeof AdminEventsRoute
   '/admin/feed': typeof AdminFeedRoute
   '/admin/knowledge': typeof AdminKnowledgeRoute
+  '/admin/learn': typeof AdminLearnRoute
   '/admin/loyalty': typeof AdminLoyaltyRouteWithChildren
   '/admin/merchandise': typeof AdminMerchandiseRoute
   '/admin/messages': typeof AdminMessagesRoute
@@ -640,6 +647,7 @@ export interface FileRoutesByTo {
   '/admin/events': typeof AdminEventsRoute
   '/admin/feed': typeof AdminFeedRoute
   '/admin/knowledge': typeof AdminKnowledgeRoute
+  '/admin/learn': typeof AdminLearnRoute
   '/admin/loyalty': typeof AdminLoyaltyRouteWithChildren
   '/admin/merchandise': typeof AdminMerchandiseRoute
   '/admin/messages': typeof AdminMessagesRoute
@@ -726,6 +734,7 @@ export interface FileRoutesById {
   '/admin/events': typeof AdminEventsRoute
   '/admin/feed': typeof AdminFeedRoute
   '/admin/knowledge': typeof AdminKnowledgeRoute
+  '/admin/learn': typeof AdminLearnRoute
   '/admin/loyalty': typeof AdminLoyaltyRouteWithChildren
   '/admin/merchandise': typeof AdminMerchandiseRoute
   '/admin/messages': typeof AdminMessagesRoute
@@ -814,6 +823,7 @@ export interface FileRouteTypes {
     | '/admin/events'
     | '/admin/feed'
     | '/admin/knowledge'
+    | '/admin/learn'
     | '/admin/loyalty'
     | '/admin/merchandise'
     | '/admin/messages'
@@ -897,6 +907,7 @@ export interface FileRouteTypes {
     | '/admin/events'
     | '/admin/feed'
     | '/admin/knowledge'
+    | '/admin/learn'
     | '/admin/loyalty'
     | '/admin/merchandise'
     | '/admin/messages'
@@ -982,6 +993,7 @@ export interface FileRouteTypes {
     | '/admin/events'
     | '/admin/feed'
     | '/admin/knowledge'
+    | '/admin/learn'
     | '/admin/loyalty'
     | '/admin/merchandise'
     | '/admin/messages'
@@ -1364,6 +1376,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminLoyaltyRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/learn': {
+      id: '/admin/learn'
+      path: '/learn'
+      fullPath: '/admin/learn'
+      preLoaderRoute: typeof AdminLearnRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/knowledge': {
       id: '/admin/knowledge'
       path: '/knowledge'
@@ -1710,6 +1729,7 @@ interface AdminRouteChildren {
   AdminEventsRoute: typeof AdminEventsRoute
   AdminFeedRoute: typeof AdminFeedRoute
   AdminKnowledgeRoute: typeof AdminKnowledgeRoute
+  AdminLearnRoute: typeof AdminLearnRoute
   AdminLoyaltyRoute: typeof AdminLoyaltyRouteWithChildren
   AdminMerchandiseRoute: typeof AdminMerchandiseRoute
   AdminMessagesRoute: typeof AdminMessagesRoute
@@ -1742,6 +1762,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminEventsRoute: AdminEventsRoute,
   AdminFeedRoute: AdminFeedRoute,
   AdminKnowledgeRoute: AdminKnowledgeRoute,
+  AdminLearnRoute: AdminLearnRoute,
   AdminLoyaltyRoute: AdminLoyaltyRouteWithChildren,
   AdminMerchandiseRoute: AdminMerchandiseRoute,
   AdminMessagesRoute: AdminMessagesRoute,
