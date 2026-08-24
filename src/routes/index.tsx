@@ -210,7 +210,7 @@ function Home() {
 
   const notifications = [pinned, ...feed.filter((p) => !p.pinned)].filter(Boolean).slice(0, 8);
   const hasUnread = notifications.length > 0;
-  const guestUpdates = feed.slice(0, 3);
+  
   // Website news (Red Cherry + PE Plett) shown to everyone on the home screen.
   const latestNews = feed
     .filter((p) => p.type === "news" || Boolean(p.sourceUrl))
