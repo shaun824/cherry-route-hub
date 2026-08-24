@@ -6,6 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import {
   BedDouble,
   CalendarDays,
+  GraduationCap,
   ClipboardList,
   HardHat,
   Map as MapIcon,
@@ -254,6 +255,12 @@ function CrewDashboard() {
 
 
       <section className="grid gap-2 sm:grid-cols-2">
+        <Tile
+          to="/crew/learn"
+          icon={<GraduationCap className="h-5 w-5" />}
+          title="Learn"
+          body="New here? Train on the business, this event and your department — built from our live data."
+        />
         <Tile
           to="/crew/run-sheet"
           icon={<ClipboardList className="h-5 w-5" />}

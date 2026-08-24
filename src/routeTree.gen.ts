@@ -47,6 +47,7 @@ import { Route as AdminNotificationsRouteImport } from './routes/admin.notificat
 import { Route as AdminMessagesRouteImport } from './routes/admin.messages'
 import { Route as AdminMerchandiseRouteImport } from './routes/admin.merchandise'
 import { Route as AdminLoyaltyRouteImport } from './routes/admin.loyalty'
+import { Route as AdminLearnRouteImport } from './routes/admin.learn'
 import { Route as AdminKnowledgeRouteImport } from './routes/admin.knowledge'
 import { Route as AdminFeedRouteImport } from './routes/admin.feed'
 import { Route as AdminEventsRouteImport } from './routes/admin.events'
@@ -58,11 +59,13 @@ import { Route as AdminAnalyticsRouteImport } from './routes/admin.analytics'
 import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
 import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
 import { Route as EventsEventIdIndexRouteImport } from './routes/events.$eventId.index'
+import { Route as CrewLearnIndexRouteImport } from './routes/crew.learn.index'
 import { Route as AdminVillageIndexRouteImport } from './routes/admin.village.index'
 import { Route as AdminEventInfoIndexRouteImport } from './routes/admin.event-info.index'
 import { Route as MyEventsEventIdReportRouteImport } from './routes/my-events_.$eventId_.report'
 import { Route as EventsEventIdMapRouteImport } from './routes/events.$eventId.map'
 import { Route as EventsEventIdEnterRouteImport } from './routes/events.$eventId.enter'
+import { Route as CrewLearnCourseIdRouteImport } from './routes/crew.learn.$courseId'
 import { Route as CrewDepartmentDeptIdRouteImport } from './routes/crew.department.$deptId'
 import { Route as AdminVillageEventIdRouteImport } from './routes/admin.village.$eventId'
 import { Route as AdminRiderUserIdRouteImport } from './routes/admin.rider.$userId'
@@ -282,6 +285,11 @@ const AdminLoyaltyRoute = AdminLoyaltyRouteImport.update({
   path: '/loyalty',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminLearnRoute = AdminLearnRouteImport.update({
+  id: '/learn',
+  path: '/learn',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminKnowledgeRoute = AdminKnowledgeRouteImport.update({
   id: '/knowledge',
   path: '/knowledge',
@@ -339,6 +347,11 @@ const EventsEventIdIndexRoute = EventsEventIdIndexRouteImport.update({
   path: '/',
   getParentRoute: () => EventsEventIdRoute,
 } as any)
+const CrewLearnIndexRoute = CrewLearnIndexRouteImport.update({
+  id: '/crew/learn/',
+  path: '/crew/learn/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminVillageIndexRoute = AdminVillageIndexRouteImport.update({
   id: '/village/',
   path: '/village/',
@@ -363,6 +376,11 @@ const EventsEventIdEnterRoute = EventsEventIdEnterRouteImport.update({
   id: '/enter',
   path: '/enter',
   getParentRoute: () => EventsEventIdRoute,
+} as any)
+const CrewLearnCourseIdRoute = CrewLearnCourseIdRouteImport.update({
+  id: '/crew/learn/$courseId',
+  path: '/crew/learn/$courseId',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const CrewDepartmentDeptIdRoute = CrewDepartmentDeptIdRouteImport.update({
   id: '/crew/department/$deptId',
@@ -545,6 +563,7 @@ export interface FileRoutesByFullPath {
   '/admin/events': typeof AdminEventsRoute
   '/admin/feed': typeof AdminFeedRoute
   '/admin/knowledge': typeof AdminKnowledgeRoute
+  '/admin/learn': typeof AdminLearnRoute
   '/admin/loyalty': typeof AdminLoyaltyRouteWithChildren
   '/admin/merchandise': typeof AdminMerchandiseRoute
   '/admin/messages': typeof AdminMessagesRoute
@@ -577,11 +596,13 @@ export interface FileRoutesByFullPath {
   '/admin/rider/$userId': typeof AdminRiderUserIdRoute
   '/admin/village/$eventId': typeof AdminVillageEventIdRoute
   '/crew/department/$deptId': typeof CrewDepartmentDeptIdRoute
+  '/crew/learn/$courseId': typeof CrewLearnCourseIdRoute
   '/events/$eventId/enter': typeof EventsEventIdEnterRoute
   '/events/$eventId/map': typeof EventsEventIdMapRoute
   '/my-events/$eventId/report': typeof MyEventsEventIdReportRoute
   '/admin/event-info/': typeof AdminEventInfoIndexRoute
   '/admin/village/': typeof AdminVillageIndexRoute
+  '/crew/learn/': typeof CrewLearnIndexRoute
   '/events/$eventId/': typeof EventsEventIdIndexRoute
   '/admin/loyalty/rider/$entrantId': typeof AdminLoyaltyRiderEntrantIdRoute
   '/api/public/hooks/content-audit': typeof ApiPublicHooksContentAuditRoute
@@ -626,6 +647,7 @@ export interface FileRoutesByTo {
   '/admin/events': typeof AdminEventsRoute
   '/admin/feed': typeof AdminFeedRoute
   '/admin/knowledge': typeof AdminKnowledgeRoute
+  '/admin/learn': typeof AdminLearnRoute
   '/admin/loyalty': typeof AdminLoyaltyRouteWithChildren
   '/admin/merchandise': typeof AdminMerchandiseRoute
   '/admin/messages': typeof AdminMessagesRoute
@@ -657,11 +679,13 @@ export interface FileRoutesByTo {
   '/admin/rider/$userId': typeof AdminRiderUserIdRoute
   '/admin/village/$eventId': typeof AdminVillageEventIdRoute
   '/crew/department/$deptId': typeof CrewDepartmentDeptIdRoute
+  '/crew/learn/$courseId': typeof CrewLearnCourseIdRoute
   '/events/$eventId/enter': typeof EventsEventIdEnterRoute
   '/events/$eventId/map': typeof EventsEventIdMapRoute
   '/my-events/$eventId/report': typeof MyEventsEventIdReportRoute
   '/admin/event-info': typeof AdminEventInfoIndexRoute
   '/admin/village': typeof AdminVillageIndexRoute
+  '/crew/learn': typeof CrewLearnIndexRoute
   '/events/$eventId': typeof EventsEventIdIndexRoute
   '/admin/loyalty/rider/$entrantId': typeof AdminLoyaltyRiderEntrantIdRoute
   '/api/public/hooks/content-audit': typeof ApiPublicHooksContentAuditRoute
@@ -710,6 +734,7 @@ export interface FileRoutesById {
   '/admin/events': typeof AdminEventsRoute
   '/admin/feed': typeof AdminFeedRoute
   '/admin/knowledge': typeof AdminKnowledgeRoute
+  '/admin/learn': typeof AdminLearnRoute
   '/admin/loyalty': typeof AdminLoyaltyRouteWithChildren
   '/admin/merchandise': typeof AdminMerchandiseRoute
   '/admin/messages': typeof AdminMessagesRoute
@@ -742,11 +767,13 @@ export interface FileRoutesById {
   '/admin/rider/$userId': typeof AdminRiderUserIdRoute
   '/admin/village/$eventId': typeof AdminVillageEventIdRoute
   '/crew/department/$deptId': typeof CrewDepartmentDeptIdRoute
+  '/crew/learn/$courseId': typeof CrewLearnCourseIdRoute
   '/events/$eventId/enter': typeof EventsEventIdEnterRoute
   '/events/$eventId/map': typeof EventsEventIdMapRoute
   '/my-events_/$eventId_/report': typeof MyEventsEventIdReportRoute
   '/admin/event-info/': typeof AdminEventInfoIndexRoute
   '/admin/village/': typeof AdminVillageIndexRoute
+  '/crew/learn/': typeof CrewLearnIndexRoute
   '/events/$eventId/': typeof EventsEventIdIndexRoute
   '/admin/loyalty/rider/$entrantId': typeof AdminLoyaltyRiderEntrantIdRoute
   '/api/public/hooks/content-audit': typeof ApiPublicHooksContentAuditRoute
@@ -796,6 +823,7 @@ export interface FileRouteTypes {
     | '/admin/events'
     | '/admin/feed'
     | '/admin/knowledge'
+    | '/admin/learn'
     | '/admin/loyalty'
     | '/admin/merchandise'
     | '/admin/messages'
@@ -828,11 +856,13 @@ export interface FileRouteTypes {
     | '/admin/rider/$userId'
     | '/admin/village/$eventId'
     | '/crew/department/$deptId'
+    | '/crew/learn/$courseId'
     | '/events/$eventId/enter'
     | '/events/$eventId/map'
     | '/my-events/$eventId/report'
     | '/admin/event-info/'
     | '/admin/village/'
+    | '/crew/learn/'
     | '/events/$eventId/'
     | '/admin/loyalty/rider/$entrantId'
     | '/api/public/hooks/content-audit'
@@ -877,6 +907,7 @@ export interface FileRouteTypes {
     | '/admin/events'
     | '/admin/feed'
     | '/admin/knowledge'
+    | '/admin/learn'
     | '/admin/loyalty'
     | '/admin/merchandise'
     | '/admin/messages'
@@ -908,11 +939,13 @@ export interface FileRouteTypes {
     | '/admin/rider/$userId'
     | '/admin/village/$eventId'
     | '/crew/department/$deptId'
+    | '/crew/learn/$courseId'
     | '/events/$eventId/enter'
     | '/events/$eventId/map'
     | '/my-events/$eventId/report'
     | '/admin/event-info'
     | '/admin/village'
+    | '/crew/learn'
     | '/events/$eventId'
     | '/admin/loyalty/rider/$entrantId'
     | '/api/public/hooks/content-audit'
@@ -960,6 +993,7 @@ export interface FileRouteTypes {
     | '/admin/events'
     | '/admin/feed'
     | '/admin/knowledge'
+    | '/admin/learn'
     | '/admin/loyalty'
     | '/admin/merchandise'
     | '/admin/messages'
@@ -992,11 +1026,13 @@ export interface FileRouteTypes {
     | '/admin/rider/$userId'
     | '/admin/village/$eventId'
     | '/crew/department/$deptId'
+    | '/crew/learn/$courseId'
     | '/events/$eventId/enter'
     | '/events/$eventId/map'
     | '/my-events_/$eventId_/report'
     | '/admin/event-info/'
     | '/admin/village/'
+    | '/crew/learn/'
     | '/events/$eventId/'
     | '/admin/loyalty/rider/$entrantId'
     | '/api/public/hooks/content-audit'
@@ -1046,7 +1082,9 @@ export interface RootRouteChildren {
   DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
   Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
   CrewDepartmentDeptIdRoute: typeof CrewDepartmentDeptIdRoute
+  CrewLearnCourseIdRoute: typeof CrewLearnCourseIdRoute
   MyEventsEventIdReportRoute: typeof MyEventsEventIdReportRoute
+  CrewLearnIndexRoute: typeof CrewLearnIndexRoute
   ApiPublicHooksContentAuditRoute: typeof ApiPublicHooksContentAuditRoute
   ApiPublicHooksEntryNinjaArchiveRoute: typeof ApiPublicHooksEntryNinjaArchiveRoute
   ApiPublicHooksEntryNinjaSyncRoute: typeof ApiPublicHooksEntryNinjaSyncRoute
@@ -1338,6 +1376,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminLoyaltyRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/learn': {
+      id: '/admin/learn'
+      path: '/learn'
+      fullPath: '/admin/learn'
+      preLoaderRoute: typeof AdminLearnRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/knowledge': {
       id: '/admin/knowledge'
       path: '/knowledge'
@@ -1415,6 +1460,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EventsEventIdIndexRouteImport
       parentRoute: typeof EventsEventIdRoute
     }
+    '/crew/learn/': {
+      id: '/crew/learn/'
+      path: '/crew/learn'
+      fullPath: '/crew/learn/'
+      preLoaderRoute: typeof CrewLearnIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/village/': {
       id: '/admin/village/'
       path: '/village'
@@ -1449,6 +1501,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/events/$eventId/enter'
       preLoaderRoute: typeof EventsEventIdEnterRouteImport
       parentRoute: typeof EventsEventIdRoute
+    }
+    '/crew/learn/$courseId': {
+      id: '/crew/learn/$courseId'
+      path: '/crew/learn/$courseId'
+      fullPath: '/crew/learn/$courseId'
+      preLoaderRoute: typeof CrewLearnCourseIdRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/crew/department/$deptId': {
       id: '/crew/department/$deptId'
@@ -1670,6 +1729,7 @@ interface AdminRouteChildren {
   AdminEventsRoute: typeof AdminEventsRoute
   AdminFeedRoute: typeof AdminFeedRoute
   AdminKnowledgeRoute: typeof AdminKnowledgeRoute
+  AdminLearnRoute: typeof AdminLearnRoute
   AdminLoyaltyRoute: typeof AdminLoyaltyRouteWithChildren
   AdminMerchandiseRoute: typeof AdminMerchandiseRoute
   AdminMessagesRoute: typeof AdminMessagesRoute
@@ -1702,6 +1762,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminEventsRoute: AdminEventsRoute,
   AdminFeedRoute: AdminFeedRoute,
   AdminKnowledgeRoute: AdminKnowledgeRoute,
+  AdminLearnRoute: AdminLearnRoute,
   AdminLoyaltyRoute: AdminLoyaltyRouteWithChildren,
   AdminMerchandiseRoute: AdminMerchandiseRoute,
   AdminMessagesRoute: AdminMessagesRoute,
@@ -1796,7 +1857,9 @@ const rootRouteChildren: RootRouteChildren = {
   DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
   Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
   CrewDepartmentDeptIdRoute: CrewDepartmentDeptIdRoute,
+  CrewLearnCourseIdRoute: CrewLearnCourseIdRoute,
   MyEventsEventIdReportRoute: MyEventsEventIdReportRoute,
+  CrewLearnIndexRoute: CrewLearnIndexRoute,
   ApiPublicHooksContentAuditRoute: ApiPublicHooksContentAuditRoute,
   ApiPublicHooksEntryNinjaArchiveRoute: ApiPublicHooksEntryNinjaArchiveRoute,
   ApiPublicHooksEntryNinjaSyncRoute: ApiPublicHooksEntryNinjaSyncRoute,
