@@ -32,6 +32,7 @@ import { Route as EventsEventIdRouteImport } from './routes/events.$eventId'
 import { Route as CrewRunSheetRouteImport } from './routes/crew.run-sheet'
 import { Route as CrewRoomingRouteImport } from './routes/crew.rooming'
 import { Route as CrewLoginRouteImport } from './routes/crew.login'
+import { Route as CrewLearnRouteImport } from './routes/crew.learn'
 import { Route as AdminSponsorsRouteImport } from './routes/admin.sponsors'
 import { Route as AdminSocialRouteImport } from './routes/admin.social'
 import { Route as AdminSettingsRouteImport } from './routes/admin.settings'
@@ -205,6 +206,11 @@ const CrewRoomingRoute = CrewRoomingRouteImport.update({
 const CrewLoginRoute = CrewLoginRouteImport.update({
   id: '/crew/login',
   path: '/crew/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CrewLearnRoute = CrewLearnRouteImport.update({
+  id: '/crew/learn',
+  path: '/crew/learn',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminSponsorsRoute = AdminSponsorsRouteImport.update({
@@ -560,6 +566,7 @@ export interface FileRoutesByFullPath {
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/social': typeof AdminSocialRoute
   '/admin/sponsors': typeof AdminSponsorsRoute
+  '/crew/learn': typeof CrewLearnRoute
   '/crew/login': typeof CrewLoginRoute
   '/crew/rooming': typeof CrewRoomingRoute
   '/crew/run-sheet': typeof CrewRunSheetRoute
@@ -641,6 +648,7 @@ export interface FileRoutesByTo {
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/social': typeof AdminSocialRoute
   '/admin/sponsors': typeof AdminSponsorsRoute
+  '/crew/learn': typeof CrewLearnRoute
   '/crew/login': typeof CrewLoginRoute
   '/crew/rooming': typeof CrewRoomingRoute
   '/crew/run-sheet': typeof CrewRunSheetRoute
@@ -725,6 +733,7 @@ export interface FileRoutesById {
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/social': typeof AdminSocialRoute
   '/admin/sponsors': typeof AdminSponsorsRoute
+  '/crew/learn': typeof CrewLearnRoute
   '/crew/login': typeof CrewLoginRoute
   '/crew/rooming': typeof CrewRoomingRoute
   '/crew/run-sheet': typeof CrewRunSheetRoute
@@ -811,6 +820,7 @@ export interface FileRouteTypes {
     | '/admin/settings'
     | '/admin/social'
     | '/admin/sponsors'
+    | '/crew/learn'
     | '/crew/login'
     | '/crew/rooming'
     | '/crew/run-sheet'
@@ -892,6 +902,7 @@ export interface FileRouteTypes {
     | '/admin/settings'
     | '/admin/social'
     | '/admin/sponsors'
+    | '/crew/learn'
     | '/crew/login'
     | '/crew/rooming'
     | '/crew/run-sheet'
@@ -975,6 +986,7 @@ export interface FileRouteTypes {
     | '/admin/settings'
     | '/admin/social'
     | '/admin/sponsors'
+    | '/crew/learn'
     | '/crew/login'
     | '/crew/rooming'
     | '/crew/run-sheet'
@@ -1037,6 +1049,7 @@ export interface RootRouteChildren {
   SpectateRoute: typeof SpectateRouteWithChildren
   Char91DotmcpChar93ListToolsRoute: typeof Char91DotmcpChar93ListToolsRoute
   Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
+  CrewLearnRoute: typeof CrewLearnRoute
   CrewLoginRoute: typeof CrewLoginRoute
   CrewRoomingRoute: typeof CrewRoomingRoute
   CrewRunSheetRoute: typeof CrewRunSheetRoute
@@ -1231,6 +1244,13 @@ declare module '@tanstack/react-router' {
       path: '/crew/login'
       fullPath: '/crew/login'
       preLoaderRoute: typeof CrewLoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/crew/learn': {
+      id: '/crew/learn'
+      path: '/crew/learn'
+      fullPath: '/crew/learn'
+      preLoaderRoute: typeof CrewLearnRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/sponsors': {
@@ -1787,6 +1807,7 @@ const rootRouteChildren: RootRouteChildren = {
   Char91DotmcpChar93ListToolsRoute: Char91DotmcpChar93ListToolsRoute,
   Char91DotwellKnownChar93OauthProtectedResourceRoute:
     Char91DotwellKnownChar93OauthProtectedResourceRoute,
+  CrewLearnRoute: CrewLearnRoute,
   CrewLoginRoute: CrewLoginRoute,
   CrewRoomingRoute: CrewRoomingRoute,
   CrewRunSheetRoute: CrewRunSheetRoute,
