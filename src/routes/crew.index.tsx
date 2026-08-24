@@ -6,6 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import {
   BedDouble,
   CalendarDays,
+  GraduationCap,
   ClipboardList,
   HardHat,
   Map as MapIcon,
