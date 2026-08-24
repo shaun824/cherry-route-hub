@@ -32,7 +32,6 @@ import { Route as EventsEventIdRouteImport } from './routes/events.$eventId'
 import { Route as CrewRunSheetRouteImport } from './routes/crew.run-sheet'
 import { Route as CrewRoomingRouteImport } from './routes/crew.rooming'
 import { Route as CrewLoginRouteImport } from './routes/crew.login'
-import { Route as CrewLearnRouteImport } from './routes/crew.learn'
 import { Route as AdminSponsorsRouteImport } from './routes/admin.sponsors'
 import { Route as AdminSocialRouteImport } from './routes/admin.social'
 import { Route as AdminSettingsRouteImport } from './routes/admin.settings'
@@ -59,6 +58,7 @@ import { Route as AdminAnalyticsRouteImport } from './routes/admin.analytics'
 import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
 import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
 import { Route as EventsEventIdIndexRouteImport } from './routes/events.$eventId.index'
+import { Route as CrewLearnIndexRouteImport } from './routes/crew.learn.index'
 import { Route as AdminVillageIndexRouteImport } from './routes/admin.village.index'
 import { Route as AdminEventInfoIndexRouteImport } from './routes/admin.event-info.index'
 import { Route as MyEventsEventIdReportRouteImport } from './routes/my-events_.$eventId_.report'
@@ -208,11 +208,6 @@ const CrewLoginRoute = CrewLoginRouteImport.update({
   path: '/crew/login',
   getParentRoute: () => rootRouteImport,
 } as any)
-const CrewLearnRoute = CrewLearnRouteImport.update({
-  id: '/crew/learn',
-  path: '/crew/learn',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AdminSponsorsRoute = AdminSponsorsRouteImport.update({
   id: '/sponsors',
   path: '/sponsors',
@@ -344,6 +339,11 @@ const EventsEventIdIndexRoute = EventsEventIdIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => EventsEventIdRoute,
+} as any)
+const CrewLearnIndexRoute = CrewLearnIndexRouteImport.update({
+  id: '/crew/learn/',
+  path: '/crew/learn/',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AdminVillageIndexRoute = AdminVillageIndexRouteImport.update({
   id: '/village/',
@@ -566,7 +566,6 @@ export interface FileRoutesByFullPath {
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/social': typeof AdminSocialRoute
   '/admin/sponsors': typeof AdminSponsorsRoute
-  '/crew/learn': typeof CrewLearnRoute
   '/crew/login': typeof CrewLoginRoute
   '/crew/rooming': typeof CrewRoomingRoute
   '/crew/run-sheet': typeof CrewRunSheetRoute
@@ -589,6 +588,7 @@ export interface FileRoutesByFullPath {
   '/my-events/$eventId/report': typeof MyEventsEventIdReportRoute
   '/admin/event-info/': typeof AdminEventInfoIndexRoute
   '/admin/village/': typeof AdminVillageIndexRoute
+  '/crew/learn/': typeof CrewLearnIndexRoute
   '/events/$eventId/': typeof EventsEventIdIndexRoute
   '/admin/loyalty/rider/$entrantId': typeof AdminLoyaltyRiderEntrantIdRoute
   '/api/public/hooks/content-audit': typeof ApiPublicHooksContentAuditRoute
@@ -648,7 +648,6 @@ export interface FileRoutesByTo {
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/social': typeof AdminSocialRoute
   '/admin/sponsors': typeof AdminSponsorsRoute
-  '/crew/learn': typeof CrewLearnRoute
   '/crew/login': typeof CrewLoginRoute
   '/crew/rooming': typeof CrewRoomingRoute
   '/crew/run-sheet': typeof CrewRunSheetRoute
@@ -670,6 +669,7 @@ export interface FileRoutesByTo {
   '/my-events/$eventId/report': typeof MyEventsEventIdReportRoute
   '/admin/event-info': typeof AdminEventInfoIndexRoute
   '/admin/village': typeof AdminVillageIndexRoute
+  '/crew/learn': typeof CrewLearnIndexRoute
   '/events/$eventId': typeof EventsEventIdIndexRoute
   '/admin/loyalty/rider/$entrantId': typeof AdminLoyaltyRiderEntrantIdRoute
   '/api/public/hooks/content-audit': typeof ApiPublicHooksContentAuditRoute
@@ -733,7 +733,6 @@ export interface FileRoutesById {
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/social': typeof AdminSocialRoute
   '/admin/sponsors': typeof AdminSponsorsRoute
-  '/crew/learn': typeof CrewLearnRoute
   '/crew/login': typeof CrewLoginRoute
   '/crew/rooming': typeof CrewRoomingRoute
   '/crew/run-sheet': typeof CrewRunSheetRoute
@@ -756,6 +755,7 @@ export interface FileRoutesById {
   '/my-events_/$eventId_/report': typeof MyEventsEventIdReportRoute
   '/admin/event-info/': typeof AdminEventInfoIndexRoute
   '/admin/village/': typeof AdminVillageIndexRoute
+  '/crew/learn/': typeof CrewLearnIndexRoute
   '/events/$eventId/': typeof EventsEventIdIndexRoute
   '/admin/loyalty/rider/$entrantId': typeof AdminLoyaltyRiderEntrantIdRoute
   '/api/public/hooks/content-audit': typeof ApiPublicHooksContentAuditRoute
@@ -820,7 +820,6 @@ export interface FileRouteTypes {
     | '/admin/settings'
     | '/admin/social'
     | '/admin/sponsors'
-    | '/crew/learn'
     | '/crew/login'
     | '/crew/rooming'
     | '/crew/run-sheet'
@@ -843,6 +842,7 @@ export interface FileRouteTypes {
     | '/my-events/$eventId/report'
     | '/admin/event-info/'
     | '/admin/village/'
+    | '/crew/learn/'
     | '/events/$eventId/'
     | '/admin/loyalty/rider/$entrantId'
     | '/api/public/hooks/content-audit'
@@ -902,7 +902,6 @@ export interface FileRouteTypes {
     | '/admin/settings'
     | '/admin/social'
     | '/admin/sponsors'
-    | '/crew/learn'
     | '/crew/login'
     | '/crew/rooming'
     | '/crew/run-sheet'
@@ -924,6 +923,7 @@ export interface FileRouteTypes {
     | '/my-events/$eventId/report'
     | '/admin/event-info'
     | '/admin/village'
+    | '/crew/learn'
     | '/events/$eventId'
     | '/admin/loyalty/rider/$entrantId'
     | '/api/public/hooks/content-audit'
@@ -986,7 +986,6 @@ export interface FileRouteTypes {
     | '/admin/settings'
     | '/admin/social'
     | '/admin/sponsors'
-    | '/crew/learn'
     | '/crew/login'
     | '/crew/rooming'
     | '/crew/run-sheet'
@@ -1009,6 +1008,7 @@ export interface FileRouteTypes {
     | '/my-events_/$eventId_/report'
     | '/admin/event-info/'
     | '/admin/village/'
+    | '/crew/learn/'
     | '/events/$eventId/'
     | '/admin/loyalty/rider/$entrantId'
     | '/api/public/hooks/content-audit'
@@ -1049,7 +1049,6 @@ export interface RootRouteChildren {
   SpectateRoute: typeof SpectateRouteWithChildren
   Char91DotmcpChar93ListToolsRoute: typeof Char91DotmcpChar93ListToolsRoute
   Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
-  CrewLearnRoute: typeof CrewLearnRoute
   CrewLoginRoute: typeof CrewLoginRoute
   CrewRoomingRoute: typeof CrewRoomingRoute
   CrewRunSheetRoute: typeof CrewRunSheetRoute
@@ -1060,6 +1059,7 @@ export interface RootRouteChildren {
   Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
   CrewDepartmentDeptIdRoute: typeof CrewDepartmentDeptIdRoute
   MyEventsEventIdReportRoute: typeof MyEventsEventIdReportRoute
+  CrewLearnIndexRoute: typeof CrewLearnIndexRoute
   ApiPublicHooksContentAuditRoute: typeof ApiPublicHooksContentAuditRoute
   ApiPublicHooksEntryNinjaArchiveRoute: typeof ApiPublicHooksEntryNinjaArchiveRoute
   ApiPublicHooksEntryNinjaSyncRoute: typeof ApiPublicHooksEntryNinjaSyncRoute
@@ -1246,13 +1246,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CrewLoginRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/crew/learn': {
-      id: '/crew/learn'
-      path: '/crew/learn'
-      fullPath: '/crew/learn'
-      preLoaderRoute: typeof CrewLearnRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/admin/sponsors': {
       id: '/admin/sponsors'
       path: '/sponsors'
@@ -1434,6 +1427,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/events/$eventId/'
       preLoaderRoute: typeof EventsEventIdIndexRouteImport
       parentRoute: typeof EventsEventIdRoute
+    }
+    '/crew/learn/': {
+      id: '/crew/learn/'
+      path: '/crew/learn'
+      fullPath: '/crew/learn/'
+      preLoaderRoute: typeof CrewLearnIndexRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/admin/village/': {
       id: '/admin/village/'
@@ -1807,7 +1807,6 @@ const rootRouteChildren: RootRouteChildren = {
   Char91DotmcpChar93ListToolsRoute: Char91DotmcpChar93ListToolsRoute,
   Char91DotwellKnownChar93OauthProtectedResourceRoute:
     Char91DotwellKnownChar93OauthProtectedResourceRoute,
-  CrewLearnRoute: CrewLearnRoute,
   CrewLoginRoute: CrewLoginRoute,
   CrewRoomingRoute: CrewRoomingRoute,
   CrewRunSheetRoute: CrewRunSheetRoute,
@@ -1818,6 +1817,7 @@ const rootRouteChildren: RootRouteChildren = {
   Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
   CrewDepartmentDeptIdRoute: CrewDepartmentDeptIdRoute,
   MyEventsEventIdReportRoute: MyEventsEventIdReportRoute,
+  CrewLearnIndexRoute: CrewLearnIndexRoute,
   ApiPublicHooksContentAuditRoute: ApiPublicHooksContentAuditRoute,
   ApiPublicHooksEntryNinjaArchiveRoute: ApiPublicHooksEntryNinjaArchiveRoute,
   ApiPublicHooksEntryNinjaSyncRoute: ApiPublicHooksEntryNinjaSyncRoute,

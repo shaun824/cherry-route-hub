@@ -5,7 +5,6 @@ import { useQuery } from "@tanstack/react-query";
 import { GraduationCap, Loader2, Building2, CalendarDays, HardHat, CheckCircle2 } from "lucide-react";
 import { useIsCrew } from "@/lib/auth";
 import { fetchCrewEvents } from "@/lib/crew";
-import { fetchMyDepartmentIds } from "@/lib/run-sheet";
 import {
   COURSE_KIND_BLURB,
   COURSE_KIND_LABEL,
@@ -15,7 +14,7 @@ import {
   type LearnCourseKind,
 } from "@/lib/learn";
 
-export const Route = createFileRoute("/crew/learn")({
+export const Route = createFileRoute("/crew/learn/")({
   head: () => ({
     meta: [
       { title: "Learn · Red Cherry Crew" },
