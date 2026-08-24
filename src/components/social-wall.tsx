@@ -9,6 +9,7 @@ type SocialPost = {
   event_id: string | null;
   post_url: string;
   caption: string | null;
+  eventName?: string | null;
 };
 
 declare global {
@@ -191,9 +192,10 @@ export function SocialWall({
       </div>
 
       {posts.length > 0 ? (
-        <div className="-mx-4 mt-3 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div style={{ touchAction: "pan-y pinch-zoom" }}
+          className="-mx-4 mt-3 flex snap-x gap-3 overflow-x-auto overscroll-x-contain px-4 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {posts.map((p) => (
-            <InstagramCard key={p.id} url={p.post_url} />
+            <InstagramCard key={p.id} url={p.post_url} label={eventId ? null : p.eventName} />
           ))}
         </div>
       ) : instagramUrl ? (
