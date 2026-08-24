@@ -1,3 +1,5 @@
+import type React from "react";
+
 // Tiny markdown renderer for lesson bodies: headings, bullets, bold and paragraphs.
 function inline(text: string) {
   const parts = text.split(/(\*\*[^*]+\*\*)/g);
@@ -14,7 +16,7 @@ function inline(text: string) {
 
 export function LearnBody({ text }: { text: string }) {
   const lines = text.split("\n");
-  const blocks: JSX.Element[] = [];
+  const blocks: React.ReactNode[] = [];
   let bullets: string[] = [];
 
   const flush = (key: string) => {

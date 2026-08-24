@@ -55,7 +55,10 @@ function AdminLearn() {
       (c) => c.kind === kind && (c.event_id ?? undefined) === evId && (c.department_id ?? undefined) === deptId,
     );
 
-  async function run(key: string, input: Parameters<typeof generateLearnCourse>[0]["data"]) {
+  async function run(
+    key: string,
+    input: { kind: "business" | "event" | "department"; eventId?: string; departmentId?: string },
+  ) {
     setBusy(key);
     setMessage(null);
     try {
