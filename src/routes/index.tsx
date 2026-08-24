@@ -210,7 +210,7 @@ function Home() {
 
   const notifications = [pinned, ...feed.filter((p) => !p.pinned)].filter(Boolean).slice(0, 8);
   const hasUnread = notifications.length > 0;
-  const guestUpdates = feed.slice(0, 3);
+  
   // Website news (Red Cherry + PE Plett) shown to everyone on the home screen.
   const latestNews = feed
     .filter((p) => p.type === "news" || Boolean(p.sourceUrl))
@@ -298,28 +298,8 @@ function Home() {
               happeningNow={spotlight.happeningNow}
             />
           </div>
-          {guestUpdates.length > 0 ? (
-            <>
-              <SectionTitle title="Latest updates" action="View all" actionTo="/feed" />
-              <ul className="space-y-2 px-5">
-                {guestUpdates.map((p) => (
-                  <li
-                    key={p.id}
-                    className="rounded-2xl bg-card p-3 shadow-sm ring-1 ring-border"
-                  >
-                    <div className="flex items-center gap-2">
-                      <TypeBadge type={p.type} />
-                      <span className="text-[11px] text-muted-foreground">
-                        {relativeTime(p.postedAt)}
-                      </span>
-                    </div>
-                    <p className="mt-1.5 font-display text-sm font-bold text-ink">{p.title}</p>
-                    <p className="mt-1 line-clamp-2 text-sm text-ink-soft">{p.body}</p>
-                  </li>
-                ))}
-              </ul>
-            </>
-          ) : null}
+          {/* News is shown once, in the "Latest news" section below. */}
+
           <div className="mt-4 px-5">
             <SignedOutCTA />
           </div>
