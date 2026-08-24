@@ -204,7 +204,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         className="fixed inset-x-0 bottom-0 z-30 mx-auto w-full max-w-md border-t border-border/70 bg-card md:hidden"
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       >
-        <ul className={inCrewArea ? "grid grid-cols-3" : "grid grid-cols-4"}>
+        <ul className={inCrewArea ? "grid grid-cols-5" : "grid grid-cols-4"}>
           {tabs.map((t) => {
             const active = t.match(pathname);
             const Icon = t.icon;
