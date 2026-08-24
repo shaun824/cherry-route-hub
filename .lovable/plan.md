@@ -6,7 +6,7 @@ A new **Learn** section inside the crew tools (crew login only) that turns every
 
 Learn opens on a picker with three tracks:
 
-1. **The business** — how Red Cherry runs events end to end: our events and disciplines, the season calendar, entry flow via Entry Ninja, rider communication (app, WhatsApp, push, feed), loyalty, sponsors and partner promos, tone of voice, confidentiality rules.
+1. **The business** — how Red Cherry runs events end to end: our events and disciplines, the season calendar, entry flow via Entry Ninja, rider communication (app, WhatsApp, push, feed), loyalty, sponsors and partner promos, tone of voice, confidentiality rules — plus our marketing side: the retainer clients whose social media and marketing we run, who each client is, what we deliver for them, posting cadence and approval process, and brand tone per client.
 2. **This event** — pick an event and get the full picture: dates and day-by-day schedule (registration day rule applied), venues and night-by-night accommodation, village map and rooming, route profiles and water points, categories and batches, merchandise and inclusions, finish location, key contacts, FAQs.
 3. **Your department** — the run-sheet departments already synced for that event: what the department does, hour-by-hour tasks per day, packing list, safety notes, lead and contacts, and the waiver.
 
