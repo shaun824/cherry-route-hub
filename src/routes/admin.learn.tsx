@@ -168,7 +168,46 @@ function AdminLearn() {
       </section>
 
       <section className="space-y-3">
-        <h2 className="font-display text-lg font-bold">{COURSE_KIND_LABEL.event}</h2>
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <h2 className="font-display text-lg font-bold">{COURSE_KIND_LABEL.event}</h2>
+            <p className="text-xs text-ink-soft">
+              Crew only see courses for the events we're currently open for. This refreshes weekly on its own.
+            </p>
+          </div>
+          <button
+            type="button"
+            disabled={busy !== null}
+            onClick={async () => {
+              setBusy("open-sync");
+              setMessage(null);
+              try {
+                const res = (await syncOpen({ data: { force: true } })) as {
+                  open: number;
+                  built: string[];
+                  hidden: number;
+                  failed: { event: string; error: string }[];
+                };
+                setMessage({
+                  ok: !res.failed.length,
+                  text: `${res.open} open event${res.open === 1 ? "" : "s"} · ${res.built.length} rebuilt · ${res.hidden} hidden${
+                    res.failed.length ? ` · failed: ${res.failed.map((f) => f.event).join(", ")}` : ""
+                  }`,
+                });
+                qc.invalidateQueries({ queryKey: ["learn-courses"] });
+                qc.invalidateQueries({ queryKey: ["learn-modules"] });
+              } catch (e) {
+                setMessage({ ok: false, text: e instanceof Error ? e.message : "Could not refresh open events." });
+              } finally {
+                setBusy(null);
+              }
+            }}
+            className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-line px-3.5 py-2 text-sm font-semibold text-ink disabled:opacity-50"
+          >
+            {busy === "open-sync" ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+            Refresh open events
+          </button>
+        </div>
         <select
           value={eventId}
           onChange={(e) => setEventId(e.target.value)}
