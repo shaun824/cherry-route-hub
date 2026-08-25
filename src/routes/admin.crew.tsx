@@ -99,6 +99,52 @@ function AdminCrewPage() {
       <form
         onSubmit={(e) => {
           e.preventDefault();
+          inviteM.mutate();
+        }}
+        className="space-y-3 rounded-2xl bg-card p-4 shadow-sm ring-1 ring-border"
+      >
+        <p className="text-[11px] font-bold uppercase tracking-widest text-ink-soft">
+          Invite crew by email (with training)
+        </p>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <label className="block">
+            <span className="text-xs font-semibold text-ink-soft">Work email</span>
+            <input
+              type="email"
+              value={inviteEmail}
+              onChange={(e) => setInviteEmail(e.target.value)}
+              required
+              placeholder="name@redcherryevents.co.za"
+              className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm text-ink outline-none focus:border-cherry"
+            />
+          </label>
+          <label className="block">
+            <span className="text-xs font-semibold text-ink-soft">Name</span>
+            <input
+              value={inviteName}
+              onChange={(e) => setInviteName(e.target.value)}
+              className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm text-ink outline-none focus:border-cherry"
+            />
+          </label>
+        </div>
+        <p className="text-[11px] text-ink-soft">
+          Creates their crew portal account and emails them a sign-in plus a link to start the training and tests.
+        </p>
+        <button
+          type="submit"
+          disabled={inviteM.isPending}
+          className="inline-flex items-center gap-1.5 rounded-full bg-cherry px-4 py-2 text-xs font-bold text-white disabled:opacity-60"
+        >
+          {inviteM.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Mail className="h-3.5 w-3.5" />}
+          Send crew invite
+        </button>
+      </form>
+
+
+
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
           createM.mutate();
         }}
         className="space-y-3 rounded-2xl bg-card p-4 shadow-sm ring-1 ring-border"
