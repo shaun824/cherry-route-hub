@@ -7,7 +7,14 @@ import { useServerFn } from "@tanstack/react-start";
 import { AlertTriangle, CheckCircle2, GraduationCap, Loader2, RefreshCw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchDepartments } from "@/lib/run-sheet";
-import { fetchLearnCourses, COURSE_KIND_LABEL, type LearnCourse } from "@/lib/learn";
+import {
+  fetchLearnCourses,
+  fetchLearnResults,
+  COURSE_KIND_LABEL,
+  QUIZ_PASS_RATIO,
+  type LearnCourse,
+  type LearnResultPerson,
+} from "@/lib/learn";
 import { generateLearnCourse, syncOpenEventLearning } from "@/lib/learn.functions";
 
 export const Route = createFileRoute("/admin/learn")({
