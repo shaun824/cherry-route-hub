@@ -6,6 +6,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, CheckCircle2, ChevronDown, Circle, Loader2, Lightbulb, Trophy } from "lucide-react";
 import { useIsCrew } from "@/lib/auth";
 import { LearnBody } from "@/components/learn-body";
+import { Button } from "@/components/ui/button";
 import {
   courseProgress,
   fetchLearnCourse,
@@ -45,12 +46,12 @@ function CoursePage() {
   const progressQ = useQuery({
     queryKey: ["learn-progress", user?.id],
     enabled: isCrew && !!user,
-    queryFn: () => fetchLearnProgress(user!.id),
+    queryFn: () => (user ? fetchLearnProgress(user.id) : Promise.resolve(new Set<string>())),
   });
   const attemptsQ = useQuery({
     queryKey: ["learn-attempts", user?.id],
     enabled: isCrew && !!user,
-    queryFn: () => fetchQuizAttempts(user!.id),
+    queryFn: () => (user ? fetchQuizAttempts(user.id) : Promise.resolve([])),
   });
 
   const modules = modulesQ.data ?? [];
@@ -219,6 +220,11 @@ function ModuleQuiz({ module: m, userId }: { module: LearnModule; userId?: strin
     }
   }
 
+  function chooseAnswer(questionId: string, optionIndex: number) {
+    if (submitted) return;
+    setAnswers((current) => ({ ...current, [questionId]: optionIndex }));
+  }
+
   return (
     <div className="mt-6 rounded-2xl border border-line bg-bg p-4">
       <div className="flex items-center gap-2">
@@ -237,23 +243,30 @@ function ModuleQuiz({ module: m, userId }: { module: LearnModule; userId?: strin
                 const right = submitted && oi === q.correct_index;
                 const wrong = submitted && chosen && oi !== q.correct_index;
                 return (
-                  <button
+                  <label
                     key={oi}
-                    type="button"
-                    disabled={submitted}
-                    onClick={() => setAnswers((a) => ({ ...a, [q.id]: oi }))}
-                    className={`block w-full rounded-xl border px-3 py-2 text-left text-sm transition ${
+                    className={`flex w-full cursor-pointer items-start gap-2 rounded-xl border px-3 py-2 text-left text-sm transition ${
                       right
                         ? "border-green-600 bg-green-50 text-green-900"
                         : wrong
                           ? "border-red-500 bg-red-50 text-red-900"
                           : chosen
-                            ? "border-brand bg-brand/5 text-ink"
-                            : "border-line bg-card text-ink-soft"
+                            ? "border-primary bg-accent text-ink"
+                            : "border-border bg-card text-ink-soft"
                     }`}
                   >
-                    {opt}
-                  </button>
+                    <input
+                      type="radio"
+                      name={`quiz-${m.id}-${q.id}`}
+                      value={oi}
+                      checked={chosen}
+                      disabled={submitted}
+                      onChange={() => chooseAnswer(q.id, oi)}
+                      className="mt-1 h-4 w-4 shrink-0 accent-primary"
+                    />
+                    <span className="min-w-0 flex-1">{opt}</span>
+                    {chosen ? <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" /> : null}
+                  </label>
                 );
               })}
             </div>
@@ -267,26 +280,27 @@ function ModuleQuiz({ module: m, userId }: { module: LearnModule; userId?: strin
           <p className={`text-sm font-semibold ${passed ? "text-green-700" : "text-red-700"}`}>
             {score} / {total} — {passed ? "nicely done" : "have another look and try again"}
           </p>
-          <button
+          <Button
             type="button"
             onClick={() => {
               setAnswers({});
               setSubmitted(false);
             }}
-            className="rounded-full border border-line px-3 py-1.5 text-sm font-semibold text-ink"
+            variant="outline"
+            size="sm"
           >
             Retry
-          </button>
+          </Button>
         </div>
       ) : (
-        <button
+        <Button
           type="button"
           disabled={Object.keys(answers).length < total}
           onClick={submit}
-          className="mt-4 w-full rounded-full bg-brand px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-40"
+          className="mt-4 w-full rounded-full"
         >
           Check answers
-        </button>
+        </Button>
       )}
     </div>
   );
