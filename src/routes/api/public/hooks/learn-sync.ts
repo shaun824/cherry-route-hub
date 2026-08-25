@@ -26,7 +26,8 @@ export const Route = createFileRoute("/api/public/hooks/learn-sync")({
         const { syncOpenEventCourses } = await import("@/lib/learn.server");
 
         try {
-          const summary = await syncOpenEventCourses(supabaseAdmin as never);
+          const body = (await request.json().catch(() => ({}))) as { force?: boolean };
+          const summary = await syncOpenEventCourses(supabaseAdmin as never, { force: !!body.force });
           console.log("[learn-sync]", JSON.stringify(summary));
           return new Response(JSON.stringify({ success: true, ...summary }), {
             headers: { "Content-Type": "application/json" },
