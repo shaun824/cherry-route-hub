@@ -95,7 +95,7 @@ export function SocialWall({
   className?: string;
 }) {
   const { data } = useQuery({
-    queryKey: ["social-wall", eventId ?? "all", limit],
+    queryKey: ["social-wall-v2", eventId ?? "all", instagramUrl ?? "global", limit],
     staleTime: 5 * 60 * 1000,
     queryFn: async () => {
       if (eventId) {
@@ -142,7 +142,7 @@ export function SocialWall({
 
         for (const event of (events ?? []) as EventSocialRow[]) {
           if (seen.has(event.id)) continue;
-          const instagram = instagramFromLinks(event.social_links);
+          const instagram = instagramFromLinks(event.social_links) ?? instagramUrl ?? null;
           if (!instagram) continue;
           seen.add(event.id);
           out.push({
