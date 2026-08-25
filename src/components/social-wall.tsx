@@ -44,9 +44,11 @@ function InstagramCard({ url, caption, label }: { url: string; caption?: string 
         href={url}
         target="_blank"
         rel="noopener noreferrer"
+        draggable={false}
         aria-label="Open this post on Instagram"
-        className="flex h-[185px] flex-col justify-between rounded-2xl bg-card p-4 ring-1 ring-border transition hover:bg-accent/60"
+        className="flex h-[185px] select-none flex-col justify-between rounded-2xl bg-card p-4 ring-1 ring-border transition hover:bg-accent/60"
         style={{ touchAction: "pan-y pinch-zoom" }}
+        onDragStart={(e) => e.preventDefault()}
         onPointerDown={(e) => {
           dragStart.current = { x: e.clientX, y: e.clientY };
         }}
@@ -181,6 +183,7 @@ export function SocialWall({
       moved: false,
       locked: null,
     };
+    el.setPointerCapture(e.pointerId);
   };
 
   const moveDrag = (e: PointerEvent<HTMLDivElement>) => {
@@ -192,7 +195,6 @@ export function SocialWall({
     const dy = e.clientY - drag.startY;
     if (!drag.locked && Math.hypot(dx, dy) > 6) {
       drag.locked = Math.abs(dx) > Math.abs(dy) ? "x" : "y";
-      if (drag.locked === "x") el.setPointerCapture(e.pointerId);
     }
 
     if (drag.locked !== "x") return;
