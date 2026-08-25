@@ -240,6 +240,38 @@ export async function buildEventContext(client: AnyClient, eventId: string): Pro
     out.push(`\nCREW DEPARTMENTS ON THIS EVENT: ${departments.map((d: any) => d.name).join(", ")}`);
   }
 
+  // Sponsors: what's on file in the app plus whatever the event website lists.
+  const [{ data: onFile }, scraped] = await Promise.all([
+    client.from("sponsors").select("name, tier, url, blurb, active").eq("active", true).limit(60),
+    scrapeEventSponsors(event.website_url as string | null).catch(() => []),
+  ]);
+
+  const sponsorLines: string[] = [];
+  if (event.title_sponsor_name) {
+    sponsorLines.push(`- ${event.title_sponsor_name} — TITLE SPONSOR of this event (their name sits in the event name).`);
+  }
+  for (const s of (onFile ?? []) as any[]) {
+    sponsorLines.push(
+      `- ${s.name}${s.tier ? ` (${s.tier})` : ""}${s.url ? ` — ${s.url}` : ""}${s.blurb ? ` — ${s.blurb}` : ""}`,
+    );
+  }
+  for (const s of scraped) {
+    sponsorLines.push(
+      `- ${s.name}${s.tierHint ? ` (${s.tierHint})` : ""}${s.url ? ` — ${s.url}` : ""}${
+        s.context ? ` — from the event website: "${s.context}"` : ""
+      }`,
+    );
+  }
+  if (sponsorLines.length) {
+    out.push(
+      "\nSPONSORS AND PARTNERS ON THIS EVENT (from our records and the event website — the website wording is the raw context around each logo, use it only where it clearly says what that sponsor does):",
+    );
+    out.push(...sponsorLines);
+    out.push(
+      "Known partner roles: Enjoy supplies the branded apparel on every event. Cycle Lab gives riders R150 in store at the event, claimed against a cell number. Rudy Project gives R750, claimed at their stand at the event only.",
+    );
+  }
+
   return { name: event.name as string, text: out.join("\n") };
 }
 
