@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef } from "react";
+import type { MouseEvent, PointerEvent } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ChevronLeft, ChevronRight, ExternalLink, Facebook, Instagram } from "lucide-react";
 
@@ -10,6 +11,15 @@ type SocialPost = {
   post_url: string;
   caption: string | null;
   eventName?: string | null;
+};
+
+type DragState = {
+  pointerId: number;
+  startX: number;
+  startY: number;
+  scrollLeft: number;
+  moved: boolean;
+  locked: "x" | "y" | null;
 };
 
 declare global {
@@ -163,10 +173,59 @@ export function SocialWall({
 
 
   const scrollerRef = useRef<HTMLDivElement>(null);
+  const dragRef = useRef<DragState | null>(null);
+  const suppressClickUntilRef = useRef(0);
   const nudge = (dir: 1 | -1) => {
     const el = scrollerRef.current;
     if (!el) return;
     el.scrollBy({ left: dir * (el.clientWidth * 0.8), behavior: "smooth" });
+  };
+
+  const startDrag = (e: PointerEvent<HTMLDivElement>) => {
+    if (e.pointerType === "mouse" && e.button !== 0) return;
+    const el = scrollerRef.current;
+    if (!el) return;
+    dragRef.current = {
+      pointerId: e.pointerId,
+      startX: e.clientX,
+      startY: e.clientY,
+      scrollLeft: el.scrollLeft,
+      moved: false,
+      locked: null,
+    };
+  };
+
+  const moveDrag = (e: PointerEvent<HTMLDivElement>) => {
+    const drag = dragRef.current;
+    const el = scrollerRef.current;
+    if (!drag || !el || drag.pointerId !== e.pointerId) return;
+
+    const dx = e.clientX - drag.startX;
+    const dy = e.clientY - drag.startY;
+    if (!drag.locked && Math.hypot(dx, dy) > 6) {
+      drag.locked = Math.abs(dx) > Math.abs(dy) ? "x" : "y";
+      if (drag.locked === "x") el.setPointerCapture(e.pointerId);
+    }
+
+    if (drag.locked !== "x") return;
+    e.preventDefault();
+    drag.moved = true;
+    el.scrollLeft = drag.scrollLeft - dx;
+  };
+
+  const endDrag = (e: PointerEvent<HTMLDivElement>) => {
+    const drag = dragRef.current;
+    const el = scrollerRef.current;
+    if (!drag || drag.pointerId !== e.pointerId) return;
+    if (drag.moved) suppressClickUntilRef.current = Date.now() + 350;
+    if (el?.hasPointerCapture(e.pointerId)) el.releasePointerCapture(e.pointerId);
+    dragRef.current = null;
+  };
+
+  const suppressDraggedClick = (e: MouseEvent<HTMLDivElement>) => {
+    if (Date.now() > suppressClickUntilRef.current) return;
+    e.preventDefault();
+    e.stopPropagation();
   };
 
   const posts = useMemo(() => data ?? [], [data]);
@@ -216,7 +275,12 @@ export function SocialWall({
           <div
             ref={scrollerRef}
             style={{ touchAction: "pan-x pan-y pinch-zoom", WebkitOverflowScrolling: "touch" }}
-            className="-mx-4 mt-3 flex snap-x gap-3 overflow-x-auto overscroll-x-contain scroll-smooth px-4 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            onPointerDown={startDrag}
+            onPointerMove={moveDrag}
+            onPointerUp={endDrag}
+            onPointerCancel={endDrag}
+            onClickCapture={suppressDraggedClick}
+            className="-mx-4 mt-3 flex cursor-grab snap-x gap-3 overflow-x-auto overscroll-x-contain scroll-smooth px-4 pb-3 active:cursor-grabbing"
           >
             {posts.map((p) => (
               <InstagramCard key={p.id} url={p.post_url} label={eventId ? null : p.eventName} />
