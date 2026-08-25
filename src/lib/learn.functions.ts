@@ -26,3 +26,13 @@ export const generateLearnCourse = createServerFn({ method: "POST" })
     if (!data.departmentId) throw new Error("Pick a department first.");
     return mod.generateDepartmentCourse(client, data.departmentId);
   });
+
+/** Admin: refresh "This event" for every event we're currently open for. */
+export const syncOpenEventLearning = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => z.object({ force: z.boolean().optional() }).parse(data ?? {}))
+  .handler(async ({ data, context }) => {
+    if (!(await checkIsAdmin(context.supabase as never))) throw new Error("Forbidden");
+    const mod = await import("@/lib/learn.server");
+    return mod.syncOpenEventCourses(context.supabase as never, { force: data.force });
+  });
