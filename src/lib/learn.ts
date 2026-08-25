@@ -208,3 +208,177 @@ export async function fetchOpenEventIds(): Promise<Set<string>> {
       .map((e: any) => e.id as string),
   );
 }
+
+/* ---------------------------------------------------------------------------
+ * Admin: who has done what. Admin RLS policies allow reading every row of
+ * learn_progress / learn_quiz_attempts / learn_completions.
+ * ------------------------------------------------------------------------ */
+
+export type LearnResultCourse = {
+  courseId: string;
+  courseTitle: string;
+  lessonsTotal: number;
+  lessonsDone: number;
+  pct: number;
+  quizzesPassed: number;
+  quizzesTaken: number;
+  scorePct: number | null;
+  completedAt: string | null;
+};
+
+export type LearnResultPerson = {
+  userId: string;
+  name: string;
+  email: string | null;
+  lastActive: string | null;
+  overallPct: number;
+  scorePct: number | null;
+  coursesCompleted: number;
+  courses: LearnResultCourse[];
+};
+
+export async function fetchLearnResults(): Promise<LearnResultPerson[]> {
+  const [{ data: courses }, { data: modules }, { data: lessons }, { data: progress }, { data: attempts }, { data: completions }] =
+    await Promise.all([
+      supabase.from("learn_courses").select("id, title, status"),
+      supabase.from("learn_modules").select("id, course_id, hidden"),
+      supabase.from("learn_lessons").select("id, module_id, hidden"),
+      supabase.from("learn_progress").select("user_id, lesson_id, done, updated_at"),
+      supabase.from("learn_quiz_attempts").select("user_id, module_id, score, total, passed, created_at"),
+      supabase.from("learn_completions").select("user_id, course_id, completed_at"),
+    ]);
+
+  const courseTitle = new Map<string, string>((courses ?? []).map((c) => [c.id as string, c.title as string]));
+  const moduleCourse = new Map<string, string>(
+    (modules ?? []).filter((m) => !m.hidden).map((m) => [m.id as string, m.course_id as string]),
+  );
+  const lessonCourse = new Map<string, string>();
+  const lessonsPerCourse = new Map<string, number>();
+  for (const l of lessons ?? []) {
+    if (l.hidden) continue;
+    const courseId = moduleCourse.get(l.module_id as string);
+    if (!courseId) continue;
+    lessonCourse.set(l.id as string, courseId);
+    lessonsPerCourse.set(courseId, (lessonsPerCourse.get(courseId) ?? 0) + 1);
+  }
+
+  const userIds = new Set<string>();
+  for (const r of progress ?? []) userIds.add(r.user_id as string);
+  for (const r of attempts ?? []) userIds.add(r.user_id as string);
+  for (const r of completions ?? []) userIds.add(r.user_id as string);
+  if (!userIds.size) return [];
+
+  const { data: profiles } = await supabase
+    .from("profiles")
+    .select("id, full_name, email")
+    .in("id", Array.from(userIds));
+  const profile = new Map<string, { full_name: string | null; email: string | null }>(
+    (profiles ?? []).map((p) => [p.id as string, { full_name: p.full_name as string | null, email: p.email as string | null }]),
+  );
+
+  type Acc = {
+    done: Map<string, number>;
+    best: Map<string, { score: number; total: number; passed: boolean }>; // per module
+    completed: Map<string, string>;
+    last: string | null;
+  };
+  const byUser = new Map<string, Acc>();
+  const acc = (id: string): Acc => {
+    let a = byUser.get(id);
+    if (!a) {
+      a = { done: new Map(), best: new Map(), completed: new Map(), last: null };
+      byUser.set(id, a);
+    }
+    return a;
+  };
+  const bump = (a: Acc, ts: string | null | undefined) => {
+    if (ts && (!a.last || ts > a.last)) a.last = ts;
+  };
+
+  for (const r of progress ?? []) {
+    const a = acc(r.user_id as string);
+    bump(a, r.updated_at as string | null);
+    if (!r.done) continue;
+    const courseId = lessonCourse.get(r.lesson_id as string);
+    if (!courseId) continue;
+    a.done.set(courseId, (a.done.get(courseId) ?? 0) + 1);
+  }
+  for (const r of attempts ?? []) {
+    const a = acc(r.user_id as string);
+    bump(a, r.created_at as string | null);
+    const key = r.module_id as string;
+    const prev = a.best.get(key);
+    const ratio = (r.total as number) ? (r.score as number) / (r.total as number) : 0;
+    const prevRatio = prev && prev.total ? prev.score / prev.total : -1;
+    if (!prev || ratio > prevRatio) {
+      a.best.set(key, { score: r.score as number, total: r.total as number, passed: !!r.passed });
+    }
+  }
+  for (const r of completions ?? []) {
+    const a = acc(r.user_id as string);
+    bump(a, r.completed_at as string | null);
+    a.completed.set(r.course_id as string, r.completed_at as string);
+  }
+
+  const rows: LearnResultPerson[] = [];
+  for (const [userId, a] of byUser) {
+    const touched = new Set<string>([...a.done.keys(), ...a.completed.keys()]);
+    for (const moduleId of a.best.keys()) {
+      const courseId = moduleCourse.get(moduleId);
+      if (courseId) touched.add(courseId);
+    }
+
+    const courseRows: LearnResultCourse[] = [];
+    let scoreSum = 0;
+    let scoreTotal = 0;
+    let lessonsDoneAll = 0;
+    let lessonsTotalAll = 0;
+
+    for (const courseId of touched) {
+      const lessonsTotal = lessonsPerCourse.get(courseId) ?? 0;
+      const lessonsDone = Math.min(a.done.get(courseId) ?? 0, lessonsTotal || Number.MAX_SAFE_INTEGER);
+      let s = 0;
+      let t = 0;
+      let taken = 0;
+      let passed = 0;
+      for (const [moduleId, best] of a.best) {
+        if (moduleCourse.get(moduleId) !== courseId) continue;
+        s += best.score;
+        t += best.total;
+        taken += 1;
+        if (best.passed) passed += 1;
+      }
+      scoreSum += s;
+      scoreTotal += t;
+      lessonsDoneAll += lessonsDone;
+      lessonsTotalAll += lessonsTotal;
+      courseRows.push({
+        courseId,
+        courseTitle: courseTitle.get(courseId) ?? "Course",
+        lessonsTotal,
+        lessonsDone,
+        pct: lessonsTotal ? Math.round((lessonsDone / lessonsTotal) * 100) : 0,
+        quizzesPassed: passed,
+        quizzesTaken: taken,
+        scorePct: t ? Math.round((s / t) * 100) : null,
+        completedAt: a.completed.get(courseId) ?? null,
+      });
+    }
+
+    courseRows.sort((x, y) => y.pct - x.pct || x.courseTitle.localeCompare(y.courseTitle));
+    const p = profile.get(userId);
+    rows.push({
+      userId,
+      name: p?.full_name || p?.email || "Unknown user",
+      email: p?.email ?? null,
+      lastActive: a.last,
+      overallPct: lessonsTotalAll ? Math.round((lessonsDoneAll / lessonsTotalAll) * 100) : 0,
+      scorePct: scoreTotal ? Math.round((scoreSum / scoreTotal) * 100) : null,
+      coursesCompleted: a.completed.size,
+      courses: courseRows,
+    });
+  }
+
+  rows.sort((x, y) => (y.lastActive ?? "").localeCompare(x.lastActive ?? ""));
+  return rows;
+}
