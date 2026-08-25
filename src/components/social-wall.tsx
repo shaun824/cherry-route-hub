@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useMemo, useRef } from "react";
 import type { MouseEvent, PointerEvent } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ChevronLeft, ChevronRight, ExternalLink, Facebook, Instagram } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
 
 type SocialPost = {
   id: string;
@@ -22,93 +23,42 @@ type DragState = {
   locked: "x" | "y" | null;
 };
 
-declare global {
-  interface Window {
-    instgrm?: { Embeds: { process: () => void } };
-  }
-}
-
-let embedScriptPromise: Promise<void> | null = null;
-
-function loadInstagramEmbeds(): Promise<void> {
-  if (typeof window === "undefined") return Promise.resolve();
-  if (window.instgrm) {
-    window.instgrm.Embeds.process();
-    return Promise.resolve();
-  }
-  if (!embedScriptPromise) {
-    embedScriptPromise = new Promise<void>((resolve) => {
-      const s = document.createElement("script");
-      s.src = "https://www.instagram.com/embed.js";
-      s.async = true;
-      s.onload = () => resolve();
-      s.onerror = () => resolve();
-      document.body.appendChild(s);
-    });
-  }
-  return embedScriptPromise.then(() => {
-    window.instgrm?.Embeds.process();
-  });
-}
-
-function InstagramCard({ url, label }: { url: string; label?: string | null }) {
-  const ref = useRef<HTMLDivElement>(null);
+function InstagramCard({ url, caption, label }: { url: string; caption?: string | null; label?: string | null }) {
   const dragStart = useRef<{ x: number; y: number } | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    loadInstagramEmbeds().then(() => {
-      if (!cancelled) window.instgrm?.Embeds.process();
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [url]);
+  const displayCaption = caption?.trim() || "Open the latest race-week post on Instagram.";
 
   return (
-    <div className="w-[300px] shrink-0 snap-start sm:w-[330px]">
+    <article className="w-[280px] shrink-0 snap-start sm:w-[320px]">
       {label ? (
         <p className="mb-1.5 truncate text-[11px] font-bold uppercase tracking-wider text-ink-soft">{label}</p>
       ) : null}
-      <div className="relative h-[440px] overflow-hidden rounded-2xl bg-card ring-1 ring-border">
-        <div ref={ref} className="pointer-events-none h-full overflow-hidden">
-          <blockquote
-            className="instagram-media"
-            data-instgrm-captioned=""
-            data-instgrm-permalink={`${url}?utm_source=ig_embed`}
-            data-instgrm-version="14"
-            style={{ margin: 0, width: "100%", minWidth: "unset", border: 0, boxShadow: "none" }}
-          >
-            <a
-              href={url}
-              className="flex h-[360px] flex-col items-center justify-center gap-2 p-6 text-center text-sm font-semibold text-ink-soft"
-            >
-              <Instagram className="h-8 w-8 text-cherry" />
-              View this post on Instagram
-            </a>
-          </blockquote>
-        </div>
-        {/* Transparent layer: lets the page and the carousel scroll over the embed iframe,
-            while still opening the post on a real tap (not a swipe). */}
-        <a
-          href={url}
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label="Open this post on Instagram"
-          className="absolute inset-0"
-          style={{ touchAction: "pan-x pan-y pinch-zoom" }}
-          onPointerDown={(e) => {
-            dragStart.current = { x: e.clientX, y: e.clientY };
-          }}
-          onClick={(e) => {
-            const s = dragStart.current;
-            if (!s) return;
-            const moved = Math.hypot(e.clientX - s.x, e.clientY - s.y);
-            if (moved > 8) e.preventDefault();
-          }}
-        />
-      </div>
-    </div>
+      <a
+        href={url}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Open this post on Instagram"
+        className="flex h-[185px] flex-col justify-between rounded-2xl bg-card p-4 ring-1 ring-border transition hover:bg-accent/60"
+        style={{ touchAction: "pan-x pan-y pinch-zoom" }}
+        onPointerDown={(e) => {
+          dragStart.current = { x: e.clientX, y: e.clientY };
+        }}
+        onClick={(e) => {
+          const s = dragStart.current;
+          if (!s) return;
+          const moved = Math.hypot(e.clientX - s.x, e.clientY - s.y);
+          if (moved > 8) e.preventDefault();
+        }}
+      >
+        <span className="flex items-center justify-between gap-3">
+          <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl cherry-gradient text-white">
+            <Instagram className="h-5 w-5" />
+          </span>
+          <ExternalLink className="h-4 w-4 shrink-0 text-ink-soft" />
+        </span>
+        <span className="line-clamp-4 text-sm font-semibold leading-snug text-ink">{displayCaption}</span>
+        <span className="text-xs font-bold text-cherry">View on Instagram</span>
+      </a>
+    </article>
   );
 }
 
@@ -283,27 +233,31 @@ export function SocialWall({
             className="-mx-4 mt-3 flex cursor-grab snap-x gap-3 overflow-x-auto overscroll-x-contain scroll-smooth px-4 pb-3 active:cursor-grabbing"
           >
             {posts.map((p) => (
-              <InstagramCard key={p.id} url={p.post_url} label={eventId ? null : p.eventName} />
+              <InstagramCard key={p.id} url={p.post_url} caption={p.caption} label={eventId ? null : p.eventName} />
             ))}
           </div>
           {posts.length > 1 ? (
             <>
-              <button
+              <Button
                 type="button"
+                variant="secondary"
+                size="icon"
                 aria-label="Previous post"
                 onClick={() => nudge(-1)}
                 className="absolute left-0 top-1/2 hidden -translate-y-1/2 place-items-center rounded-full bg-card/90 p-2 shadow-md ring-1 ring-border sm:grid"
               >
                 <ChevronLeft className="h-4 w-4 text-ink" />
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
+                variant="secondary"
+                size="icon"
                 aria-label="Next post"
                 onClick={() => nudge(1)}
                 className="absolute right-0 top-1/2 hidden -translate-y-1/2 place-items-center rounded-full bg-card/90 p-2 shadow-md ring-1 ring-border sm:grid"
               >
                 <ChevronRight className="h-4 w-4 text-ink" />
-              </button>
+              </Button>
             </>
           ) : null}
         </div>
