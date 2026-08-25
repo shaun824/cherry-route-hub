@@ -1,8 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { CalendarDays, Newspaper, Tag, Handshake, ArrowUpRight, AlertTriangle } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { CalendarDays, Newspaper, Tag, Handshake, ArrowUpRight, AlertTriangle, X, CheckCheck } from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { useAdminStore } from "@/lib/store";
 import { supabase } from "@/integrations/supabase/client";
+
 
 export const Route = createFileRoute("/admin/")({
   component: AdminDashboard,
@@ -123,6 +125,7 @@ function missingFields(e: StubEvent): string[] {
 }
 
 function NeedsAttentionBanner() {
+  const qc = useQueryClient();
   const q = useQuery({
     queryKey: ["admin-events-needs-attention"],
     queryFn: async () => {
@@ -134,6 +137,19 @@ function NeedsAttentionBanner() {
     },
   });
   const events = q.data ?? [];
+
+  const clear = useMutation({
+    mutationFn: async (ids: string[]) => {
+      const { error } = await supabase.from("events").update({ auto_created: false }).in("id", ids);
+      if (error) throw error;
+    },
+    onSuccess: (_d, ids) => {
+      toast.success(ids.length === 1 ? "Marked as reviewed" : `Cleared ${ids.length} warnings`);
+      void qc.invalidateQueries({ queryKey: ["admin-events-needs-attention"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   if (events.length === 0) return null;
 
   return (
@@ -149,6 +165,18 @@ function NeedsAttentionBanner() {
           <p className="mt-0.5 text-xs text-amber-900/80">
             These were auto-created during a roster import and are still missing details riders will expect to see.
           </p>
+          <button
+            type="button"
+            disabled={clear.isPending}
+            onClick={() => {
+              if (confirm(`Clear all ${events.length} warnings? The events stay, they're just marked as reviewed.`))
+                clear.mutate(events.map((e) => e.id));
+            }}
+            className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-amber-900 px-3 py-1.5 text-xs font-bold text-amber-50 disabled:opacity-50"
+          >
+            <CheckCheck className="h-3.5 w-3.5" />
+            Clear all
+          </button>
           <ul className="mt-3 space-y-1.5">
             {events.map((e) => {
               const missing = missingFields(e);
@@ -156,9 +184,20 @@ function NeedsAttentionBanner() {
                 <li key={e.id} className="rounded-lg bg-white/70 px-3 py-2 text-sm ring-1 ring-amber-200">
                   <div className="flex items-center justify-between gap-2">
                     <span className="font-semibold text-ink">{e.name}</span>
-                    <Link to="/admin/events" className="text-[11px] font-bold text-cherry">
-                      Fix →
-                    </Link>
+                    <span className="flex shrink-0 items-center gap-2">
+                      <Link to="/admin/events" className="text-[11px] font-bold text-cherry">
+                        Fix →
+                      </Link>
+                      <button
+                        type="button"
+                        disabled={clear.isPending}
+                        onClick={() => clear.mutate([e.id])}
+                        aria-label={`Dismiss warning for ${e.name}`}
+                        className="grid h-6 w-6 place-items-center rounded-md text-ink-soft ring-1 ring-amber-200 transition hover:bg-amber-100 hover:text-amber-900 disabled:opacity-50"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    </span>
                   </div>
                   {missing.length > 0 ? (
                     <p className="mt-0.5 text-[11px] text-ink-soft">
@@ -176,3 +215,4 @@ function NeedsAttentionBanner() {
     </div>
   );
 }
+
