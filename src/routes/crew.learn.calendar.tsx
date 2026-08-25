@@ -110,7 +110,10 @@ function dateRange(iso: string, nDays: number) {
 function SeasonCalendar() {
   const { isCrew, loading } = useIsCrew();
   const eventsQ = useQuery({ queryKey: ["crew-season-calendar"], queryFn: fetchCalendarEvents, enabled: isCrew });
+  const coursesQ = useQuery({ queryKey: ["crew-season-courses"], queryFn: fetchEventCourses, enabled: isCrew });
+  const courseByEvent = coursesQ.data ?? {};
   const [year, setYear] = useState<number>(new Date().getFullYear());
+
 
   const events = eventsQ.data ?? [];
   const years = useMemo(() => {
