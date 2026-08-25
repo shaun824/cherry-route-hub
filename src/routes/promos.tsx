@@ -6,7 +6,7 @@ import { useHydratedStore } from "@/lib/use-hydrated-store";
 import { PromoCodeCard } from "@/components/promo-code-card";
 import { PromoCarousel } from "@/components/promo-carousel";
 import { useShuffledPromos } from "@/lib/use-shuffled-promos";
-import type { EventPromo } from "@/lib/event-promos";
+import { isPromoLive, toEventPromo, type EventPromo } from "@/lib/event-promos";
 
 
 export const Route = createFileRoute("/promos")({
