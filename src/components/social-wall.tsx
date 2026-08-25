@@ -46,7 +46,7 @@ function InstagramCard({ url, caption, label }: { url: string; caption?: string 
         rel="noopener noreferrer"
         aria-label="Open this post on Instagram"
         className="flex h-[185px] flex-col justify-between rounded-2xl bg-card p-4 ring-1 ring-border transition hover:bg-accent/60"
-        style={{ touchAction: "pan-x pan-y pinch-zoom" }}
+        style={{ touchAction: "pan-y pinch-zoom" }}
         onPointerDown={(e) => {
           dragStart.current = { x: e.clientX, y: e.clientY };
         }}
@@ -262,7 +262,7 @@ export function SocialWall({
         <div className="relative">
           <div
             ref={scrollerRef}
-            style={{ touchAction: "pan-x pan-y pinch-zoom", WebkitOverflowScrolling: "touch" }}
+            style={{ touchAction: "pan-y pinch-zoom", WebkitOverflowScrolling: "touch" }}
             onPointerDown={startDrag}
             onPointerMove={moveDrag}
             onPointerUp={endDrag}
