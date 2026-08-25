@@ -43,6 +43,7 @@ function loadInstagramEmbeds(): Promise<void> {
 
 function InstagramCard({ url, label }: { url: string; label?: string | null }) {
   const ref = useRef<HTMLDivElement>(null);
+  const dragStart = useRef<{ x: number; y: number } | null>(null);
 
   useEffect(() => {
     let cancelled = false;
