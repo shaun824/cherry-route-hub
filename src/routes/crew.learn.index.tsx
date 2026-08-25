@@ -89,6 +89,21 @@ function LearnIndex() {
         </div>
       </header>
 
+      <Link
+        to="/crew/learn/calendar"
+        className="mt-5 flex items-center gap-3 rounded-2xl border border-line bg-card p-4 transition hover:border-brand/40"
+      >
+        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-brand/10 text-brand">
+          <CalendarDays className="h-4.5 w-4.5" />
+        </span>
+        <span className="min-w-0">
+          <span className="block font-semibold text-ink">Season calendar</span>
+          <span className="block text-sm text-ink-soft">
+            Our full year of events, month by month, so you can see how the schedule runs.
+          </span>
+        </span>
+      </Link>
+
       {coursesQ.isLoading ? (
         <div className="mt-8 flex justify-center">
           <Loader2 className="h-5 w-5 animate-spin text-ink-soft" />
