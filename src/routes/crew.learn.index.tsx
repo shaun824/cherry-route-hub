@@ -44,6 +44,7 @@ function LearnIndex() {
 
   const coursesQ = useQuery({ queryKey: ["learn-courses"], queryFn: fetchLearnCourses, enabled: isCrew });
   const eventsQ = useQuery({ queryKey: ["crew-events"], queryFn: fetchCrewEvents, enabled: isCrew });
+  const openQ = useQuery({ queryKey: ["learn-open-events"], queryFn: fetchOpenEventIds, enabled: isCrew });
   const doneQ = useQuery({
     queryKey: ["learn-completions", user?.id],
     enabled: isCrew && !!user,
