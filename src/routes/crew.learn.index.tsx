@@ -10,6 +10,7 @@ import {
   COURSE_KIND_LABEL,
   fetchCompletions,
   fetchLearnCourses,
+  fetchOpenEventIds,
   type LearnCourse,
   type LearnCourseKind,
 } from "@/lib/learn";
@@ -43,6 +44,7 @@ function LearnIndex() {
 
   const coursesQ = useQuery({ queryKey: ["learn-courses"], queryFn: fetchLearnCourses, enabled: isCrew });
   const eventsQ = useQuery({ queryKey: ["crew-events"], queryFn: fetchCrewEvents, enabled: isCrew });
+  const openQ = useQuery({ queryKey: ["learn-open-events"], queryFn: fetchOpenEventIds, enabled: isCrew });
   const doneQ = useQuery({
     queryKey: ["learn-completions", user?.id],
     enabled: isCrew && !!user,
@@ -58,7 +60,13 @@ function LearnIndex() {
   }
   if (!isCrew) return <Navigate to="/crew/login" />;
 
-  const courses = coursesQ.data ?? [];
+  // Only the events we're currently open for appear in the library.
+  const openIds = openQ.data;
+  const courses = (coursesQ.data ?? []).filter((c) => {
+    if (c.status !== "published") return false;
+    if (!c.event_id) return true;
+    return openIds ? openIds.has(c.event_id) : true;
+  });
   const eventName = new Map((eventsQ.data ?? []).map((e) => [e.id, e.name]));
   const completions = doneQ.data ?? {};
 
