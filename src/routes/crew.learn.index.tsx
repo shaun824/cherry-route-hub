@@ -60,7 +60,13 @@ function LearnIndex() {
   }
   if (!isCrew) return <Navigate to="/crew/login" />;
 
-  const courses = coursesQ.data ?? [];
+  // Only the events we're currently open for appear in the library.
+  const openIds = openQ.data;
+  const courses = (coursesQ.data ?? []).filter((c) => {
+    if (c.status !== "published") return false;
+    if (!c.event_id) return true;
+    return openIds ? openIds.has(c.event_id) : true;
+  });
   const eventName = new Map((eventsQ.data ?? []).map((e) => [e.id, e.name]));
   const completions = doneQ.data ?? {};
 
