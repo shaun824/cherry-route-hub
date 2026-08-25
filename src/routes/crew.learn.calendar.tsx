@@ -158,7 +158,7 @@ function SeasonCalendar() {
           <CalendarDays className="h-5 w-5" />
         </span>
         <div>
-          <h1 className="font-display text-2xl font-bold">Season calendar</h1>
+          <h1 className="font-display text-2xl font-bold">Season calendar {year}</h1>
           <p className="mt-1 text-sm text-ink-soft">
             Every event on our books for {year} — {total} event{total === 1 ? "" : "s"}. This is how our year runs, so
             you know what's coming and when the busy blocks are.
@@ -166,20 +166,26 @@ function SeasonCalendar() {
         </div>
       </header>
 
-      <div className="mt-4 flex flex-wrap gap-2">
-        {years.map((y) => (
-          <button
-            key={y}
-            type="button"
-            onClick={() => setYear(y)}
-            className={`rounded-full px-3.5 py-1.5 text-sm font-semibold ${
-              y === year ? "bg-brand text-white" : "border border-line text-ink"
-            }`}
-          >
-            {y}
-          </button>
-        ))}
+      {/* Sticky so the year you're viewing stays visible as you scroll the months. */}
+      <div className="sticky top-0 z-20 -mx-4 mt-4 border-b border-line bg-background/95 px-4 py-2 backdrop-blur">
+        <div className="flex items-center gap-2 overflow-x-auto">
+          <span className="shrink-0 text-xs font-semibold uppercase tracking-wide text-ink-soft">Year</span>
+          {years.map((y) => (
+            <button
+              key={y}
+              type="button"
+              onClick={() => setYear(y)}
+              aria-pressed={y === year}
+              className={`shrink-0 rounded-full px-3.5 py-1.5 text-sm font-semibold ${
+                y === year ? "bg-brand text-white shadow-sm" : "border border-line text-ink"
+              }`}
+            >
+              {y}
+            </button>
+          ))}
+        </div>
       </div>
+
 
       {eventsQ.isLoading ? (
         <div className="mt-8 flex justify-center">
