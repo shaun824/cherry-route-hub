@@ -53,7 +53,7 @@ const Email = ({
   learnUrl,
   siteName = 'Red Cherry Events',
 }: CrewTrainingInviteProps) => (
-  <EmailShell preview="Your Red Cherry crew portal is ready — start your training">
+  <EmailShell preview="Your Red Cherry crew portal is ready — start your training" siteName={siteName}>
     <Heading style={h1}>Welcome to the crew{firstName ? `, ${firstName}` : ''}</Heading>
     <Text style={text}>
       Your crew portal on the {siteName} rider app is set up. It holds everything you need to get up to
