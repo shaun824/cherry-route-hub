@@ -1,25 +1,17 @@
 import { useMemo, useRef } from "react";
 import type { MouseEvent, PointerEvent } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { ChevronLeft, ChevronRight, ExternalLink, Facebook, Instagram } from "lucide-react";
+import { ChevronLeft, ChevronRight, ExternalLink, Instagram } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 
+const RCE_INSTAGRAM = "https://www.instagram.com/redcherryevents_za/";
+
 type SocialPost = {
   id: string;
-  event_id: string | null;
   post_url: string;
   caption: string | null;
-  eventName?: string | null;
-};
-
-type EventSocialRow = {
-  id: string;
-  name: string;
-  event_date: string | null;
-  status: string | null;
-  social_links: Record<string, string> | null;
 };
 
 type DragState = {
@@ -31,136 +23,51 @@ type DragState = {
   locked: "x" | "y" | null;
 };
 
-function InstagramCard({ url, caption, label }: { url: string; caption?: string | null; label?: string | null }) {
-  const dragStart = useRef<{ x: number; y: number } | null>(null);
-  const displayCaption = caption?.trim() || "Open the latest race-week post on Instagram.";
-
+/** Official Instagram embed for a single post, rendered inside the scroller. */
+function InstagramEmbed({ url }: { url: string }) {
+  const embedUrl = `${url.replace(/\/+$/, "")}/embed`;
   return (
-    <article className="w-[280px] shrink-0 snap-start sm:w-[320px]">
-      {label ? (
-        <p className="mb-1.5 truncate text-[11px] font-bold uppercase tracking-wider text-ink-soft">{label}</p>
-      ) : null}
-      <a
-        href={url}
-        target="_blank"
-        rel="noopener noreferrer"
-        draggable={false}
-        aria-label="Open this post on Instagram"
-        className="flex h-[185px] select-none flex-col justify-between rounded-2xl bg-card p-4 ring-1 ring-border transition hover:bg-accent/60"
-        style={{ touchAction: "pan-y pinch-zoom" }}
-        onDragStart={(e) => e.preventDefault()}
-        onPointerDown={(e) => {
-          dragStart.current = { x: e.clientX, y: e.clientY };
-        }}
-        onClick={(e) => {
-          const s = dragStart.current;
-          if (!s) return;
-          const moved = Math.hypot(e.clientX - s.x, e.clientY - s.y);
-          if (moved > 8) e.preventDefault();
-        }}
-      >
-        <span className="flex items-center justify-between gap-3">
-          <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl cherry-gradient text-white">
-            <Instagram className="h-5 w-5" />
-          </span>
-          <ExternalLink className="h-4 w-4 shrink-0 text-ink-soft" />
-        </span>
-        <span className="line-clamp-4 text-sm font-semibold leading-snug text-ink">{displayCaption}</span>
-        <span className="text-xs font-bold text-cherry">Open Instagram</span>
-      </a>
+    <article className="w-[300px] shrink-0 snap-start sm:w-[340px]">
+      <div className="overflow-hidden rounded-2xl bg-card ring-1 ring-border">
+        <iframe
+          src={embedUrl}
+          title="Instagram post"
+          loading="lazy"
+          scrolling="no"
+          allowTransparency
+          className="pointer-events-auto h-[460px] w-full border-0"
+        />
+      </div>
     </article>
   );
 }
 
-function instagramFromLinks(links: Record<string, string> | null | undefined) {
-  const value = links?.instagram;
-  return typeof value === "string" && value.includes("instagram.com") ? value : null;
-}
-
-
 export function SocialWall({
-  eventId,
-  instagramUrl,
-  facebookUrl,
-  title = "Latest on Instagram",
+  title = "Red Cherry Events on Instagram",
   subtitle,
-  limit = 6,
+  limit = 9,
   className = "",
 }: {
-  /** Show one event's wall, or omit for the newest post from each event. */
-  eventId?: string | null;
-  instagramUrl?: string | null;
-  facebookUrl?: string | null;
   title?: string;
   subtitle?: string;
   limit?: number;
   className?: string;
 }) {
   const { data } = useQuery({
-    queryKey: ["social-wall-v2", eventId ?? "all", instagramUrl ?? "global", limit],
+    queryKey: ["social-wall-rce", limit],
     staleTime: 5 * 60 * 1000,
     queryFn: async () => {
-      if (eventId) {
-        const { data, error } = await supabase
-          .from("event_social_posts")
-          .select("id, event_id, post_url, caption")
-          .eq("active", true)
-          .eq("event_id", eventId)
-          .order("sort_index", { ascending: true })
-          .limit(limit);
-        if (error) throw new Error(error.message);
-        return (data ?? []) as SocialPost[];
-      }
-
-      // Mixed feed: newest post from each event that has a feed.
       const { data, error } = await supabase
         .from("event_social_posts")
-        .select("id, event_id, post_url, caption, posted_at, created_at, sort_index, events(name, status)")
+        .select("id, post_url, caption, posted_at, sort_index")
         .eq("active", true)
         .order("posted_at", { ascending: false, nullsFirst: false })
         .order("sort_index", { ascending: true })
-        .limit(200);
+        .limit(limit);
       if (error) throw new Error(error.message);
-
-      const seen = new Set<string>();
-      const out: SocialPost[] = [];
-      for (const row of (data ?? []) as Array<SocialPost & { events?: { name: string; status: string } | null }>) {
-        const key = row.event_id ?? "global";
-        if (seen.has(key)) continue;
-        if (row.events && row.events.status === "archived") continue;
-        seen.add(key);
-        out.push({ ...row, eventName: row.events?.name ?? null });
-        if (out.length >= limit) break;
-      }
-
-      if (out.length < limit) {
-        const { data: events, error: eventsError } = await supabase
-          .from("events")
-          .select("id, name, event_date, status, social_links")
-          .neq("status", "archived")
-          .order("event_date", { ascending: true })
-          .limit(80);
-        if (eventsError) throw new Error(eventsError.message);
-
-        for (const event of (events ?? []) as EventSocialRow[]) {
-          if (seen.has(event.id)) continue;
-          const instagram = instagramFromLinks(event.social_links) ?? instagramUrl ?? null;
-          if (!instagram) continue;
-          seen.add(event.id);
-          out.push({
-            id: `event-social-${event.id}`,
-            event_id: event.id,
-            post_url: instagram,
-            caption: "See the latest photos, reels and rider updates for this event.",
-            eventName: event.name,
-          });
-          if (out.length >= limit) break;
-        }
-      }
-      return out;
+      return (data ?? []) as SocialPost[];
     },
   });
-
 
   const scrollerRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef<DragState | null>(null);
@@ -183,7 +90,6 @@ export function SocialWall({
       moved: false,
       locked: null,
     };
-    el.setPointerCapture(e.pointerId);
   };
 
   const moveDrag = (e: PointerEvent<HTMLDivElement>) => {
@@ -196,19 +102,15 @@ export function SocialWall({
     if (!drag.locked && Math.hypot(dx, dy) > 6) {
       drag.locked = Math.abs(dx) > Math.abs(dy) ? "x" : "y";
     }
-
     if (drag.locked !== "x") return;
-    e.preventDefault();
     drag.moved = true;
     el.scrollLeft = drag.scrollLeft - dx;
   };
 
   const endDrag = (e: PointerEvent<HTMLDivElement>) => {
     const drag = dragRef.current;
-    const el = scrollerRef.current;
     if (!drag || drag.pointerId !== e.pointerId) return;
     if (drag.moved) suppressClickUntilRef.current = Date.now() + 350;
-    if (el?.hasPointerCapture(e.pointerId)) el.releasePointerCapture(e.pointerId);
     dragRef.current = null;
   };
 
@@ -219,45 +121,23 @@ export function SocialWall({
   };
 
   const posts = useMemo(() => data ?? [], [data]);
-  const handle = useMemo(() => {
-    if (!instagramUrl) return null;
-    const m = instagramUrl.match(/instagram\.com\/([A-Za-z0-9_.]+)/);
-    return m ? `@${m[1]}` : null;
-  }, [instagramUrl]);
-
-  if (posts.length === 0 && !instagramUrl && !facebookUrl) return null;
 
   return (
     <section className={className}>
       <div className="flex items-end justify-between gap-3">
         <div>
           <h2 className="font-display text-lg font-bold text-ink">{title}</h2>
-          <p className="text-xs text-ink-soft">{subtitle ?? (handle ? `Follow ${handle}` : "Straight from the crew")}</p>
+          <p className="text-xs text-ink-soft">{subtitle ?? "Follow @redcherryevents_za"}</p>
         </div>
-        <div className="flex gap-1.5">
-          {instagramUrl ? (
-            <a
-              href={instagramUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="Open Instagram"
-              className="grid h-9 w-9 place-items-center rounded-full bg-accent text-cherry-deep ring-1 ring-border"
-            >
-              <Instagram className="h-4 w-4" />
-            </a>
-          ) : null}
-          {facebookUrl ? (
-            <a
-              href={facebookUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="Open Facebook"
-              className="grid h-9 w-9 place-items-center rounded-full bg-accent text-cherry-deep ring-1 ring-border"
-            >
-              <Facebook className="h-4 w-4" />
-            </a>
-          ) : null}
-        </div>
+        <a
+          href={RCE_INSTAGRAM}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Open Instagram"
+          className="grid h-9 w-9 place-items-center rounded-full bg-accent text-cherry-deep ring-1 ring-border"
+        >
+          <Instagram className="h-4 w-4" />
+        </a>
       </div>
 
       {posts.length > 0 ? (
@@ -270,10 +150,10 @@ export function SocialWall({
             onPointerUp={endDrag}
             onPointerCancel={endDrag}
             onClickCapture={suppressDraggedClick}
-            className="-mx-4 mt-3 flex cursor-grab snap-x gap-3 overflow-x-auto overscroll-x-contain scroll-smooth px-4 pb-3 active:cursor-grabbing"
+            className="-mx-4 mt-3 flex snap-x gap-3 overflow-x-auto overscroll-x-contain scroll-smooth px-4 pb-3"
           >
             {posts.map((p) => (
-              <InstagramCard key={p.id} url={p.post_url} caption={p.caption} label={eventId ? null : p.eventName} />
+              <InstagramEmbed key={p.id} url={p.post_url} />
             ))}
           </div>
           {posts.length > 1 ? (
@@ -301,10 +181,9 @@ export function SocialWall({
             </>
           ) : null}
         </div>
-
-      ) : instagramUrl ? (
+      ) : (
         <a
-          href={instagramUrl}
+          href={RCE_INSTAGRAM}
           target="_blank"
           rel="noopener noreferrer"
           className="mt-3 flex items-center gap-3 rounded-2xl bg-card p-4 ring-1 ring-border"
@@ -313,12 +192,12 @@ export function SocialWall({
             <Instagram className="h-5 w-5" />
           </span>
           <span className="flex-1">
-            <span className="block text-sm font-bold text-ink">{handle ?? "Follow us on Instagram"}</span>
+            <span className="block text-sm font-bold text-ink">@redcherryevents_za</span>
             <span className="block text-xs text-ink-soft">Photos, reels and race-week updates</span>
           </span>
           <ExternalLink className="h-4 w-4 text-ink-soft" />
         </a>
-      ) : null}
+      )}
     </section>
   );
 }
