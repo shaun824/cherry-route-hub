@@ -37,7 +37,7 @@ import { formatDate, relativeTime, type Event } from "@/lib/mock-data";
 import { getEventSport } from "@/lib/event-sport";
 import { useAdminStore } from "@/lib/store";
 import { PromoCarousel } from "@/components/promo-carousel";
-import { eventPromosFor, type EventPromo } from "@/lib/event-promos";
+import { isPromoLive, toEventPromo, type EventPromo } from "@/lib/event-promos";
 import { useHydratedStore } from "@/lib/use-hydrated-store";
 import { useSession } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
