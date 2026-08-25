@@ -10,6 +10,7 @@ import {
   COURSE_KIND_LABEL,
   fetchCompletions,
   fetchLearnCourses,
+  fetchOpenEventIds,
   type LearnCourse,
   type LearnCourseKind,
 } from "@/lib/learn";
