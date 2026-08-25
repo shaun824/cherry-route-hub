@@ -3,7 +3,7 @@
 import { createFileRoute, Link, Navigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Bike, CalendarDays, Loader2, MapPin } from "lucide-react";
+import { ArrowLeft, Bike, CalendarDays, ChevronRight, Loader2, MapPin } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useIsCrew } from "@/lib/auth";
 
