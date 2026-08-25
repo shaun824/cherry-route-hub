@@ -12,6 +12,15 @@ type SocialPost = {
   post_url: string;
   caption: string | null;
   eventName?: string | null;
+  isProfileFallback?: boolean;
+};
+
+type EventSocialRow = {
+  id: string;
+  name: string;
+  event_date: string | null;
+  status: string | null;
+  social_links: Record<string, string> | null;
 };
 
 type DragState = {
@@ -56,10 +65,15 @@ function InstagramCard({ url, caption, label }: { url: string; caption?: string 
           <ExternalLink className="h-4 w-4 shrink-0 text-ink-soft" />
         </span>
         <span className="line-clamp-4 text-sm font-semibold leading-snug text-ink">{displayCaption}</span>
-        <span className="text-xs font-bold text-cherry">View on Instagram</span>
+        <span className="text-xs font-bold text-cherry">Open Instagram</span>
       </a>
     </article>
   );
+}
+
+function instagramFromLinks(links: Record<string, string> | null | undefined) {
+  const value = links?.instagram;
+  return typeof value === "string" && value.includes("instagram.com") ? value : null;
 }
 
 
@@ -116,6 +130,32 @@ export function SocialWall({
         seen.add(key);
         out.push({ ...row, eventName: row.events?.name ?? null });
         if (out.length >= limit) break;
+      }
+
+      if (out.length < limit) {
+        const { data: events, error: eventsError } = await supabase
+          .from("events")
+          .select("id, name, event_date, status, social_links")
+          .neq("status", "archived")
+          .order("event_date", { ascending: true })
+          .limit(80);
+        if (eventsError) throw new Error(eventsError.message);
+
+        for (const event of (events ?? []) as EventSocialRow[]) {
+          if (seen.has(event.id)) continue;
+          const instagram = instagramFromLinks(event.social_links);
+          if (!instagram) continue;
+          seen.add(event.id);
+          out.push({
+            id: `event-social-${event.id}`,
+            event_id: event.id,
+            post_url: instagram,
+            caption: "See the latest photos, reels and rider updates for this event.",
+            eventName: event.name,
+            isProfileFallback: true,
+          });
+          if (out.length >= limit) break;
+        }
       }
       return out;
     },
