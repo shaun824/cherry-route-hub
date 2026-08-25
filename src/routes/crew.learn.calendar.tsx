@@ -3,7 +3,7 @@
 import { createFileRoute, Link, Navigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Bike, CalendarDays, Loader2, MapPin } from "lucide-react";
+import { ArrowLeft, Bike, CalendarDays, ChevronRight, Loader2, MapPin } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useIsCrew } from "@/lib/auth";
 
@@ -50,6 +50,25 @@ async function fetchCalendarEvents(): Promise<CalEvent[]> {
   return (data ?? []) as CalEvent[];
 }
 
+/** Event id -> published training course id, so calendar rows can open Learn. */
+async function fetchEventCourses(): Promise<Record<string, string>> {
+  const { data, error } = await supabase
+    .from("learn_courses")
+    .select("id, event_id, status")
+    .eq("kind", "event")
+    .eq("status", "published");
+  if (error) {
+    console.warn("[crew calendar courses]", error);
+    return {};
+  }
+  const out: Record<string, string> = {};
+  for (const row of data ?? []) {
+    const eid = (row as { event_id: string | null }).event_id;
+    if (eid && !out[eid]) out[eid] = String((row as { id: string }).id);
+  }
+  return out;
+}
+
 const MONTHS = [
   "January",
   "February",
@@ -91,7 +110,10 @@ function dateRange(iso: string, nDays: number) {
 function SeasonCalendar() {
   const { isCrew, loading } = useIsCrew();
   const eventsQ = useQuery({ queryKey: ["crew-season-calendar"], queryFn: fetchCalendarEvents, enabled: isCrew });
+  const coursesQ = useQuery({ queryKey: ["crew-season-courses"], queryFn: fetchEventCourses, enabled: isCrew });
+  const courseByEvent = coursesQ.data ?? {};
   const [year, setYear] = useState<number>(new Date().getFullYear());
+
 
   const events = eventsQ.data ?? [];
   const years = useMemo(() => {
@@ -136,7 +158,7 @@ function SeasonCalendar() {
           <CalendarDays className="h-5 w-5" />
         </span>
         <div>
-          <h1 className="font-display text-2xl font-bold">Season calendar</h1>
+          <h1 className="font-display text-2xl font-bold">Season calendar {year}</h1>
           <p className="mt-1 text-sm text-ink-soft">
             Every event on our books for {year} — {total} event{total === 1 ? "" : "s"}. This is how our year runs, so
             you know what's coming and when the busy blocks are.
@@ -144,20 +166,26 @@ function SeasonCalendar() {
         </div>
       </header>
 
-      <div className="mt-4 flex flex-wrap gap-2">
-        {years.map((y) => (
-          <button
-            key={y}
-            type="button"
-            onClick={() => setYear(y)}
-            className={`rounded-full px-3.5 py-1.5 text-sm font-semibold ${
-              y === year ? "bg-brand text-white" : "border border-line text-ink"
-            }`}
-          >
-            {y}
-          </button>
-        ))}
+      {/* Sticky so the year you're viewing stays visible as you scroll the months. */}
+      <div className="sticky top-0 z-20 -mx-4 mt-4 border-b border-line bg-background/95 px-4 py-2 backdrop-blur">
+        <div className="flex items-center gap-2 overflow-x-auto">
+          <span className="shrink-0 text-xs font-semibold uppercase tracking-wide text-ink-soft">Year</span>
+          {years.map((y) => (
+            <button
+              key={y}
+              type="button"
+              onClick={() => setYear(y)}
+              aria-pressed={y === year}
+              className={`shrink-0 rounded-full px-3.5 py-1.5 text-sm font-semibold ${
+                y === year ? "bg-brand text-white shadow-sm" : "border border-line text-ink"
+              }`}
+            >
+              {y}
+            </button>
+          ))}
+        </div>
       </div>
+
 
       {eventsQ.isLoading ? (
         <div className="mt-8 flex justify-center">
@@ -177,11 +205,9 @@ function SeasonCalendar() {
                   {items.map((e) => {
                     const n = dayCount(e.days);
                     const past = e.event_date < todayIso;
-                    return (
-                      <li
-                        key={e.id}
-                        className={`rounded-2xl border border-line bg-card p-4 ${past ? "opacity-60" : ""}`}
-                      >
+                    const courseId = courseByEvent[e.id];
+                    const body = (
+                      <>
                         <div className="flex items-start justify-between gap-3">
                           <div className="min-w-0">
                             <p className="truncate font-semibold text-ink">{e.name}</p>
@@ -208,6 +234,22 @@ function SeasonCalendar() {
                             ) : null}
                           </div>
                         </div>
+                        <p className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-brand">
+                          {courseId ? "Open event training" : "No training built yet"}
+                          {courseId ? <ChevronRight className="h-3.5 w-3.5" /> : null}
+                        </p>
+                      </>
+                    );
+                    const cls = `block rounded-2xl border border-line bg-card p-4 text-left ${past ? "opacity-60" : ""}`;
+                    return (
+                      <li key={e.id}>
+                        {courseId ? (
+                          <Link to="/crew/learn/$courseId" params={{ courseId }} className={cls}>
+                            {body}
+                          </Link>
+                        ) : (
+                          <div className={cls}>{body}</div>
+                        )}
                       </li>
                     );
                   })}
