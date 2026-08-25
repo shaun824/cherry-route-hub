@@ -3,6 +3,7 @@
 // and writes them into the learn_* tables for crew to work through.
 import { withRegistrationDayLabels } from "@/lib/event-days";
 import type { EventDay, ScheduleItem } from "@/lib/mock-data";
+import { scrapeEventSponsors } from "@/lib/sponsor-scrape.server";
 
 type AnyClient = { from: (table: string) => any };
 
@@ -238,6 +239,38 @@ export async function buildEventContext(client: AnyClient, eventId: string): Pro
 
   if (departments?.length) {
     out.push(`\nCREW DEPARTMENTS ON THIS EVENT: ${departments.map((d: any) => d.name).join(", ")}`);
+  }
+
+  // Sponsors: what's on file in the app plus whatever the event website lists.
+  const [{ data: onFile }, scraped] = await Promise.all([
+    client.from("sponsors").select("name, tier, url, active").eq("active", true).limit(60),
+    scrapeEventSponsors(event.website_url as string | null).catch(() => []),
+  ]);
+
+  const sponsorLines: string[] = [];
+  if (event.title_sponsor_name) {
+    sponsorLines.push(`- ${event.title_sponsor_name} — TITLE SPONSOR of this event (their name sits in the event name).`);
+  }
+  for (const s of (onFile ?? []) as any[]) {
+    sponsorLines.push(
+      `- ${s.name}${s.tier ? ` (${s.tier})` : ""}${s.url ? ` — ${s.url}` : ""}`,
+    );
+  }
+  for (const s of scraped) {
+    sponsorLines.push(
+      `- ${s.name}${s.tierHint ? ` (${s.tierHint})` : ""}${s.url ? ` — ${s.url}` : ""}${
+        s.context ? ` — from the event website: "${s.context}"` : ""
+      }`,
+    );
+  }
+  if (sponsorLines.length) {
+    out.push(
+      "\nSPONSORS AND PARTNERS ON THIS EVENT (from our records and the event website — the website wording is the raw context around each logo, use it only where it clearly says what that sponsor does):",
+    );
+    out.push(...sponsorLines);
+    out.push(
+      "Known partner roles: Enjoy supplies the branded apparel on every event. Cycle Lab gives riders R150 in store at the event, claimed against a cell number. Rudy Project gives R750, claimed at their stand at the event only.",
+    );
   }
 
   return { name: event.name as string, text: out.join("\n") };
@@ -486,7 +519,9 @@ export async function generateEventCourse(client: AnyClient, eventId: string) {
     const course = await draftCourse(
       `You are building the event deep-dive course for a new Red Cherry Events employee, about "${name}".
 
-Cover: what this event is and who rides it; the day-by-day schedule (day 1 is registration day unless the context names it otherwise); registration and check-in (note clearly when the registration venue differs from the riding venue); the race village and what's in it; night-by-night accommodation and how riders are allocated; the routes, distances and cut-offs; categories, batches and seeding; what a rider's entry includes and the extras they can buy; the finish; and the rider journey hour by hour — what a rider sees, needs and asks at each stage.`,
+Cover: what this event is and who rides it; the day-by-day schedule (day 1 is registration day unless the context names it otherwise); registration and check-in (note clearly when the registration venue differs from the riding venue); the race village and what's in it; night-by-night accommodation and how riders are allocated; the routes, distances and cut-offs; categories, batches and seeding; what a rider's entry includes and the extras they can buy; the finish; and the rider journey hour by hour — what a rider sees, needs and asks at each stage.
+
+You MUST also include a dedicated module titled "Sponsors and partners" built from the SPONSORS AND PARTNERS section of the context: name every sponsor and partner listed, say what each one actually does for the event (title sponsor, product, service, prizes, hospitality, rider offer, apparel, etc.) and how crew should treat them on site — where their branding and activation sits, what riders may ask about them, and what staff must never promise on a sponsor's behalf. Where the context does not make a sponsor's role clear, say plainly that the reader must confirm the role with their manager rather than guessing. Give this module a longer quiz (at least 5 questions) that tests the reader on which sponsor is which and what each one provides, including one question on the title sponsor.`,
       text,
     );
     await replaceCourseContent(client, courseId, course);
