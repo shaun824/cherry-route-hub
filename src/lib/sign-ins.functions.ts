@@ -20,7 +20,8 @@ export const listSignIns = createServerFn({ method: "GET" })
     if (!(await checkIsAdmin(context.supabase))) throw new Error("Admins only");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-    const users: Awaited<ReturnType<typeof supabaseAdmin.auth.admin.listUsers>>["data"]["users"] = [];
+    type AuthUser = Awaited<ReturnType<typeof supabaseAdmin.auth.admin.listUsers>>["data"]["users"][number];
+    const users: AuthUser[] = [];
     for (let page = 1; page <= 25; page += 1) {
       const { data, error } = await supabaseAdmin.auth.admin.listUsers({ page, perPage: 1000 });
       if (error) throw error;
