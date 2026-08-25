@@ -73,7 +73,11 @@ export async function deleteFeedCloud(id: string) {
 
 // ---------- PROMOS ----------
 export async function fetchPromos(): Promise<Promo[] | null> {
-  const { data, error } = await supabase.from("promos").select("*").order("created_at", { ascending: false });
+  const { data, error } = await supabase
+    .from("promos")
+    .select("*")
+    .order("sort_order", { ascending: true, nullsFirst: false })
+    .order("created_at", { ascending: false });
   if (error) { log(error, "fetchPromos"); return null; }
   return (data ?? []).map((r: Row) => ({
     id: String(r.id),
@@ -85,6 +89,11 @@ export async function fetchPromos(): Promise<Promo[] | null> {
     accent: String(r.accent ?? "oklch(0.5 0.2 25)"),
     logoUrl: (r.logo_url as string | null) ?? undefined,
     url: (r.url as string | null) ?? undefined,
+    blurb: (r.blurb as string | null) ?? undefined,
+    redeem: (r.redeem as string | null) ?? undefined,
+    eventMatch: (r.event_match as string | null) ?? undefined,
+    active: r.active == null ? true : Boolean(r.active),
+    sortOrder: (r.sort_order as number | null) ?? undefined,
   }));
 }
 export async function upsertPromoCloud(p: Promo) {
@@ -93,12 +102,17 @@ export async function upsertPromoCloud(p: Promo) {
     ...(isUuid ? { id: p.id } : {}),
     brand: p.brand,
     title: p.title,
-    code: p.code,
+    code: p.code || null,
     discount: p.discount,
     expires: p.expires || null,
     accent: p.accent,
     logo_url: p.logoUrl ?? null,
     url: p.url ?? null,
+    blurb: p.blurb ?? null,
+    redeem: p.redeem ?? null,
+    event_match: p.eventMatch ?? null,
+    active: p.active ?? true,
+    sort_order: p.sortOrder ?? null,
   };
   const { data, error } = await supabase.from("promos").upsert(row).select().single();
   log(error, "upsertPromo");

@@ -6,7 +6,7 @@ import { useHydratedStore } from "@/lib/use-hydrated-store";
 import { PromoCodeCard } from "@/components/promo-code-card";
 import { PromoCarousel } from "@/components/promo-carousel";
 import { useShuffledPromos } from "@/lib/use-shuffled-promos";
-import type { EventPromo } from "@/lib/event-promos";
+import { isPromoLive, toEventPromo, type EventPromo } from "@/lib/event-promos";
 
 
 export const Route = createFileRoute("/promos")({
@@ -23,20 +23,7 @@ function Promos() {
   useHydratedStore();
   const storePromos = useAdminStore((s) => s.promos);
 
-  const mapped: EventPromo[] = storePromos.map((p) => ({
-    id: p.id,
-    brand: p.brand,
-    title: p.title,
-    blurb: p.expires
-      ? `Expires ${new Date(p.expires).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" })}`
-      : undefined,
-    code: p.code || undefined,
-    redeem: p.code ? undefined : "Show this offer to the supplier",
-    discount: p.discount,
-    url: p.url || "#",
-    logoUrl: p.logoUrl ?? "",
-    accent: p.accent,
-  }));
+  const mapped: EventPromo[] = storePromos.filter(isPromoLive).map(toEventPromo);
 
   const promos = useShuffledPromos(mapped);
 

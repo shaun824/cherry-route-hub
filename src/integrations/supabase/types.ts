@@ -2815,39 +2815,54 @@ export type Database = {
       promos: {
         Row: {
           accent: string
+          active: boolean
+          blurb: string | null
           brand: string
-          code: string
+          code: string | null
           created_at: string
           discount: string
+          event_match: string | null
           expires: string | null
           id: string
           logo_url: string | null
+          redeem: string | null
+          sort_order: number | null
           title: string
           updated_at: string
           url: string | null
         }
         Insert: {
           accent?: string
+          active?: boolean
+          blurb?: string | null
           brand: string
-          code: string
+          code?: string | null
           created_at?: string
           discount: string
+          event_match?: string | null
           expires?: string | null
           id?: string
           logo_url?: string | null
+          redeem?: string | null
+          sort_order?: number | null
           title: string
           updated_at?: string
           url?: string | null
         }
         Update: {
           accent?: string
+          active?: boolean
+          blurb?: string | null
           brand?: string
-          code?: string
+          code?: string | null
           created_at?: string
           discount?: string
+          event_match?: string | null
           expires?: string | null
           id?: string
           logo_url?: string | null
+          redeem?: string | null
+          sort_order?: number | null
           title?: string
           updated_at?: string
           url?: string | null

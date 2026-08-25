@@ -33,6 +33,10 @@ function blank(): Promo {
     discount: "10% off",
     expires: new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10),
     accent: "oklch(0.55 0.2 25)",
+    blurb: "",
+    redeem: "",
+    eventMatch: "",
+    active: true,
   };
 }
 
@@ -98,12 +102,18 @@ function AdminPromos() {
             </div>
             <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
               <code className="rounded bg-secondary px-2 py-1 font-mono font-bold text-ink">
-                {p.code}
+                {p.code || p.redeem || "In store"}
               </code>
               <span className="rounded bg-accent px-2 py-1 font-bold text-cherry-deep">
                 {p.discount}
               </span>
-              <span className="text-ink-soft">Exp {p.expires}</span>
+              {p.expires ? <span className="text-ink-soft">Exp {p.expires}</span> : null}
+              {p.active === false ? (
+                <span className="rounded bg-secondary px-2 py-1 font-bold text-ink-soft">Hidden</span>
+              ) : null}
+              <span className="text-ink-soft">
+                {p.eventMatch?.trim() ? `Events: ${p.eventMatch}` : "All events"}
+              </span>
             </div>
           </div>
         ))}
@@ -182,8 +192,24 @@ function PromoEditor({
           <L label="Title" className="md:col-span-2">
             <input className={i} value={form.title} onChange={(e) => update("title", e.target.value)} />
           </L>
+          <L label="Description shown to riders" className="md:col-span-2">
+            <textarea
+              className={`${i} min-h-20`}
+              value={form.blurb ?? ""}
+              onChange={(e) => update("blurb", e.target.value)}
+              placeholder="Redeemable at the event only — visit the stand in the village."
+            />
+          </L>
           <L label="Promo code">
             <input className={i} value={form.code} onChange={(e) => update("code", e.target.value)} />
+          </L>
+          <L label="How to redeem (when there is no code)">
+            <input
+              className={i}
+              value={form.redeem ?? ""}
+              onChange={(e) => update("redeem", e.target.value)}
+              placeholder="Claim in store at the stand"
+            />
           </L>
           <L label="Expires">
             <input
@@ -192,6 +218,27 @@ function PromoEditor({
               value={form.expires}
               onChange={(e) => update("expires", e.target.value)}
             />
+          </L>
+          <L label="Show on events (keywords, comma separated)">
+            <input
+              className={i}
+              value={form.eventMatch ?? ""}
+              onChange={(e) => update("eventMatch", e.target.value)}
+              placeholder="weekend warrior, addo, plett"
+            />
+            <span className="mt-1 block text-[11px] text-ink-soft">
+              Leave blank to show this offer on every event.
+            </span>
+          </L>
+          <L label="Visible to riders" className="md:col-span-2">
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={form.active !== false}
+                onChange={(e) => update("active", e.target.checked)}
+              />
+              Show this offer in the app
+            </label>
           </L>
           <L label="Sponsor website (discount link)" className="md:col-span-2">
             <input

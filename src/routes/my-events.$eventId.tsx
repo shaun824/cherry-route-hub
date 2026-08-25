@@ -57,7 +57,7 @@ import { fetchMyRooming, fetchVenues } from "@/lib/rooming";
 import { AccommodationTimeline, useMyNights } from "@/components/accommodation-timeline";
 
 import { SponsorScroller } from "@/components/sponsor-scroller";
-import { eventPromosFor } from "@/lib/event-promos";
+import { useEventPromos } from "@/lib/use-event-promos";
 import { PromoCarousel } from "@/components/promo-carousel";
 import { PromoInline } from "@/components/promo-inline";
 import { FuelNotice, isFuelCarryEvent } from "@/components/fuel-notice";
@@ -583,7 +583,7 @@ function RoutesPanel({
   const isEntrant = !!entryQ.data;
   const downloadsLocked = locked || (!!user && !entryQ.isLoading && !isEntrant);
   // Rider offers live inside the routes — the most-viewed part of the page.
-  const promos = useShuffledPromos(eventPromosFor(eventName ?? event.name ?? ""));
+  const promos = useShuffledPromos(useEventPromos(eventName ?? event.name ?? ""));
   const days: EventDay[] = withRegistrationDayLabels(
     Array.isArray(event.days) ? (event.days as EventDay[]) : [],
     Array.isArray(event.schedule) ? (event.schedule as ScheduleItem[]) : [],
@@ -781,6 +781,7 @@ function InfoPanel({
     daysToEvent !== null && daysToEvent <= 10 && daysToEvent >= -1 && Boolean(event.location);
   const q = useQuery({ queryKey: ["event-info", eventId], queryFn: () => fetchEventInfo(eventId) });
   const info = q.data;
+  const riderOffers = useEventPromos(eventName);
   const schedule: ScheduleItem[] = Array.isArray(event.schedule) ? (event.schedule as ScheduleItem[]) : [];
   const days: EventDay[] = withRegistrationDayLabels(
     Array.isArray(event.days) ? (event.days as EventDay[]) : [],
@@ -833,11 +834,11 @@ function InfoPanel({
       ) : null}
 
 
-      {eventPromosFor(eventName).length > 0 ? (
+      {riderOffers.length > 0 ? (
         <section>
           <SectionTitle>Rider offers</SectionTitle>
           <div className="mt-2">
-            <PromoCarousel promos={eventPromosFor(eventName)} />
+            <PromoCarousel promos={riderOffers} />
           </div>
         </section>
       ) : null}
