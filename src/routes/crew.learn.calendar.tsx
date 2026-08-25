@@ -70,8 +70,14 @@ function dayCount(days: unknown): number {
   return 0;
 }
 
+// event_date may be a plain date ("2026-02-19") or a timestamp — parse both.
+function toDate(value: string): Date {
+  const iso = String(value).slice(0, 10);
+  return new Date(`${iso}T00:00:00`);
+}
+
 function dateRange(iso: string, nDays: number) {
-  const start = new Date(`${iso}T00:00:00`);
+  const start = toDate(iso);
   if (nDays <= 1) return start.toLocaleDateString(undefined, { day: "numeric", month: "short" });
   const end = new Date(start);
   end.setDate(end.getDate() + nDays - 1);
@@ -89,7 +95,9 @@ function SeasonCalendar() {
 
   const events = eventsQ.data ?? [];
   const years = useMemo(() => {
-    const set = new Set<number>(events.map((e) => new Date(`${e.event_date}T00:00:00`).getFullYear()));
+    const set = new Set<number>(
+      events.map((e) => toDate(e.event_date).getFullYear()).filter((y) => Number.isFinite(y)),
+    );
     set.add(new Date().getFullYear());
     return Array.from(set).sort();
   }, [events]);
@@ -97,12 +105,13 @@ function SeasonCalendar() {
   const byMonth = useMemo(() => {
     const out: CalEvent[][] = Array.from({ length: 12 }, () => []);
     for (const e of events) {
-      const d = new Date(`${e.event_date}T00:00:00`);
+      const d = toDate(e.event_date);
       if (d.getFullYear() !== year) continue;
       out[d.getMonth()]!.push(e);
     }
     return out;
   }, [events, year]);
+
 
   if (loading) {
     return (
