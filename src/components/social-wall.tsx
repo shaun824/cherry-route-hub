@@ -205,12 +205,38 @@ export function SocialWall({
       </div>
 
       {posts.length > 0 ? (
-        <div style={{ touchAction: "pan-y pinch-zoom" }}
-          className="-mx-4 mt-3 flex snap-x gap-3 overflow-x-auto overscroll-x-contain px-4 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {posts.map((p) => (
-            <InstagramCard key={p.id} url={p.post_url} label={eventId ? null : p.eventName} />
-          ))}
+        <div className="relative">
+          <div
+            ref={scrollerRef}
+            style={{ touchAction: "pan-x pan-y pinch-zoom", WebkitOverflowScrolling: "touch" }}
+            className="-mx-4 mt-3 flex snap-x gap-3 overflow-x-auto overscroll-x-contain scroll-smooth px-4 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          >
+            {posts.map((p) => (
+              <InstagramCard key={p.id} url={p.post_url} label={eventId ? null : p.eventName} />
+            ))}
+          </div>
+          {posts.length > 1 ? (
+            <>
+              <button
+                type="button"
+                aria-label="Previous post"
+                onClick={() => nudge(-1)}
+                className="absolute left-0 top-1/2 hidden -translate-y-1/2 place-items-center rounded-full bg-card/90 p-2 shadow-md ring-1 ring-border sm:grid"
+              >
+                <ChevronLeft className="h-4 w-4 text-ink" />
+              </button>
+              <button
+                type="button"
+                aria-label="Next post"
+                onClick={() => nudge(1)}
+                className="absolute right-0 top-1/2 hidden -translate-y-1/2 place-items-center rounded-full bg-card/90 p-2 shadow-md ring-1 ring-border sm:grid"
+              >
+                <ChevronRight className="h-4 w-4 text-ink" />
+              </button>
+            </>
+          ) : null}
         </div>
+
       ) : instagramUrl ? (
         <a
           href={instagramUrl}
