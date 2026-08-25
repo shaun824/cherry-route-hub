@@ -102,12 +102,18 @@ function AdminPromos() {
             </div>
             <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
               <code className="rounded bg-secondary px-2 py-1 font-mono font-bold text-ink">
-                {p.code}
+                {p.code || p.redeem || "In store"}
               </code>
               <span className="rounded bg-accent px-2 py-1 font-bold text-cherry-deep">
                 {p.discount}
               </span>
-              <span className="text-ink-soft">Exp {p.expires}</span>
+              {p.expires ? <span className="text-ink-soft">Exp {p.expires}</span> : null}
+              {p.active === false ? (
+                <span className="rounded bg-secondary px-2 py-1 font-bold text-ink-soft">Hidden</span>
+              ) : null}
+              <span className="text-ink-soft">
+                {p.eventMatch?.trim() ? `Events: ${p.eventMatch}` : "All events"}
+              </span>
             </div>
           </div>
         ))}
