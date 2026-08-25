@@ -781,6 +781,7 @@ function InfoPanel({
     daysToEvent !== null && daysToEvent <= 10 && daysToEvent >= -1 && Boolean(event.location);
   const q = useQuery({ queryKey: ["event-info", eventId], queryFn: () => fetchEventInfo(eventId) });
   const info = q.data;
+  const riderOffers = useEventPromos(eventName);
   const schedule: ScheduleItem[] = Array.isArray(event.schedule) ? (event.schedule as ScheduleItem[]) : [];
   const days: EventDay[] = withRegistrationDayLabels(
     Array.isArray(event.days) ? (event.days as EventDay[]) : [],
