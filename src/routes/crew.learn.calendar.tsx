@@ -205,11 +205,9 @@ function SeasonCalendar() {
                   {items.map((e) => {
                     const n = dayCount(e.days);
                     const past = e.event_date < todayIso;
-                    return (
-                      <li
-                        key={e.id}
-                        className={`rounded-2xl border border-line bg-card p-4 ${past ? "opacity-60" : ""}`}
-                      >
+                    const courseId = courseByEvent[e.id];
+                    const body = (
+                      <>
                         <div className="flex items-start justify-between gap-3">
                           <div className="min-w-0">
                             <p className="truncate font-semibold text-ink">{e.name}</p>
@@ -236,6 +234,22 @@ function SeasonCalendar() {
                             ) : null}
                           </div>
                         </div>
+                        <p className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-brand">
+                          {courseId ? "Open event training" : "No training built yet"}
+                          {courseId ? <ChevronRight className="h-3.5 w-3.5" /> : null}
+                        </p>
+                      </>
+                    );
+                    const cls = `block rounded-2xl border border-line bg-card p-4 text-left ${past ? "opacity-60" : ""}`;
+                    return (
+                      <li key={e.id}>
+                        {courseId ? (
+                          <Link to="/crew/learn/$courseId" params={{ courseId }} className={cls}>
+                            {body}
+                          </Link>
+                        ) : (
+                          <div className={cls}>{body}</div>
+                        )}
                       </li>
                     );
                   })}
