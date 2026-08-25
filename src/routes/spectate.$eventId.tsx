@@ -39,7 +39,7 @@ import { fetchVillageMap } from "@/lib/village-map";
 
 import { fetchEventInfo } from "@/lib/event-info";
 import { groupRidersByClass } from "@/lib/rider-classes";
-import { eventPromosFor } from "@/lib/event-promos";
+import { useEventPromos } from "@/lib/use-event-promos";
 import { useShuffledPromos } from "@/lib/use-shuffled-promos";
 import { PromoCodeCard } from "@/components/promo-code-card";
 
@@ -183,7 +183,7 @@ function SpectatorEventPage() {
   }, [info?.faqs]);
 
   const batches = event?.batches ?? [];
-  const basePromos = useMemo(() => eventPromosFor(event?.name), [event?.name]);
+  const basePromos = useEventPromos(event?.name);
   // Rotate sponsor offers on every load (after hydration, so SSR stays stable)
   // so no single partner always gets the first slot, and never repeat the
   // offer this browser led with last time.
