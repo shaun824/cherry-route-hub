@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { ExternalLink, Facebook, Instagram } from "lucide-react";
+import { ChevronLeft, ChevronRight, ExternalLink, Facebook, Instagram } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 
@@ -161,6 +161,13 @@ export function SocialWall({
     },
   });
 
+
+  const scrollerRef = useRef<HTMLDivElement>(null);
+  const nudge = (dir: 1 | -1) => {
+    const el = scrollerRef.current;
+    if (!el) return;
+    el.scrollBy({ left: dir * (el.clientWidth * 0.8), behavior: "smooth" });
+  };
 
   const posts = useMemo(() => data ?? [], [data]);
   const handle = useMemo(() => {
