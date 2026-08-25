@@ -34,6 +34,7 @@ import { Route as CrewRoomingRouteImport } from './routes/crew.rooming'
 import { Route as CrewLoginRouteImport } from './routes/crew.login'
 import { Route as AdminSponsorsRouteImport } from './routes/admin.sponsors'
 import { Route as AdminSocialRouteImport } from './routes/admin.social'
+import { Route as AdminSignInsRouteImport } from './routes/admin.sign-ins'
 import { Route as AdminSettingsRouteImport } from './routes/admin.settings'
 import { Route as AdminScheduleSyncRouteImport } from './routes/admin.schedule-sync'
 import { Route as AdminRunSheetRouteImport } from './routes/admin.run-sheet'
@@ -220,6 +221,11 @@ const AdminSponsorsRoute = AdminSponsorsRouteImport.update({
 const AdminSocialRoute = AdminSocialRouteImport.update({
   id: '/social',
   path: '/social',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminSignInsRoute = AdminSignInsRouteImport.update({
+  id: '/sign-ins',
+  path: '/sign-ins',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminSettingsRoute = AdminSettingsRouteImport.update({
@@ -589,6 +595,7 @@ export interface FileRoutesByFullPath {
   '/admin/run-sheet': typeof AdminRunSheetRoute
   '/admin/schedule-sync': typeof AdminScheduleSyncRoute
   '/admin/settings': typeof AdminSettingsRoute
+  '/admin/sign-ins': typeof AdminSignInsRoute
   '/admin/social': typeof AdminSocialRoute
   '/admin/sponsors': typeof AdminSponsorsRoute
   '/crew/login': typeof CrewLoginRoute
@@ -675,6 +682,7 @@ export interface FileRoutesByTo {
   '/admin/run-sheet': typeof AdminRunSheetRoute
   '/admin/schedule-sync': typeof AdminScheduleSyncRoute
   '/admin/settings': typeof AdminSettingsRoute
+  '/admin/sign-ins': typeof AdminSignInsRoute
   '/admin/social': typeof AdminSocialRoute
   '/admin/sponsors': typeof AdminSponsorsRoute
   '/crew/login': typeof CrewLoginRoute
@@ -764,6 +772,7 @@ export interface FileRoutesById {
   '/admin/run-sheet': typeof AdminRunSheetRoute
   '/admin/schedule-sync': typeof AdminScheduleSyncRoute
   '/admin/settings': typeof AdminSettingsRoute
+  '/admin/sign-ins': typeof AdminSignInsRoute
   '/admin/social': typeof AdminSocialRoute
   '/admin/sponsors': typeof AdminSponsorsRoute
   '/crew/login': typeof CrewLoginRoute
@@ -855,6 +864,7 @@ export interface FileRouteTypes {
     | '/admin/run-sheet'
     | '/admin/schedule-sync'
     | '/admin/settings'
+    | '/admin/sign-ins'
     | '/admin/social'
     | '/admin/sponsors'
     | '/crew/login'
@@ -941,6 +951,7 @@ export interface FileRouteTypes {
     | '/admin/run-sheet'
     | '/admin/schedule-sync'
     | '/admin/settings'
+    | '/admin/sign-ins'
     | '/admin/social'
     | '/admin/sponsors'
     | '/crew/login'
@@ -1029,6 +1040,7 @@ export interface FileRouteTypes {
     | '/admin/run-sheet'
     | '/admin/schedule-sync'
     | '/admin/settings'
+    | '/admin/sign-ins'
     | '/admin/social'
     | '/admin/sponsors'
     | '/crew/login'
@@ -1309,6 +1321,13 @@ declare module '@tanstack/react-router' {
       path: '/social'
       fullPath: '/admin/social'
       preLoaderRoute: typeof AdminSocialRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/sign-ins': {
+      id: '/admin/sign-ins'
+      path: '/sign-ins'
+      fullPath: '/admin/sign-ins'
+      preLoaderRoute: typeof AdminSignInsRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/settings': {
@@ -1783,6 +1802,7 @@ interface AdminRouteChildren {
   AdminRunSheetRoute: typeof AdminRunSheetRoute
   AdminScheduleSyncRoute: typeof AdminScheduleSyncRoute
   AdminSettingsRoute: typeof AdminSettingsRoute
+  AdminSignInsRoute: typeof AdminSignInsRoute
   AdminSocialRoute: typeof AdminSocialRoute
   AdminSponsorsRoute: typeof AdminSponsorsRoute
   AdminIndexRoute: typeof AdminIndexRoute
@@ -1816,6 +1836,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminRunSheetRoute: AdminRunSheetRoute,
   AdminScheduleSyncRoute: AdminScheduleSyncRoute,
   AdminSettingsRoute: AdminSettingsRoute,
+  AdminSignInsRoute: AdminSignInsRoute,
   AdminSocialRoute: AdminSocialRoute,
   AdminSponsorsRoute: AdminSponsorsRoute,
   AdminIndexRoute: AdminIndexRoute,
