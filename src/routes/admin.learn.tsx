@@ -8,7 +8,7 @@ import { AlertTriangle, CheckCircle2, GraduationCap, Loader2, RefreshCw } from "
 import { supabase } from "@/integrations/supabase/client";
 import { fetchDepartments } from "@/lib/run-sheet";
 import { fetchLearnCourses, COURSE_KIND_LABEL, type LearnCourse } from "@/lib/learn";
-import { generateLearnCourse } from "@/lib/learn.functions";
+import { generateLearnCourse, syncOpenEventLearning } from "@/lib/learn.functions";
 
 export const Route = createFileRoute("/admin/learn")({
   head: () => ({
