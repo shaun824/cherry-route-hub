@@ -458,15 +458,9 @@ function Home() {
         </>
       ) : null}
 
-      {/* Social wall — pulled from our event Instagram feeds */}
+      {/* Social wall — Red Cherry Events Instagram */}
       <div className="px-5 pt-4">
-        <SocialWall
-          title="From the start line"
-          subtitle="Latest from our event Instagram feeds"
-          instagramUrl="https://www.instagram.com/redcherryevents_za/"
-          facebookUrl="https://www.facebook.com/redcherryeventsza"
-          limit={6}
-        />
+        <SocialWall title="From the start line" limit={9} />
       </div>
 
 
