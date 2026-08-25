@@ -1,0 +1,213 @@
+// Crew Learn: the season calendar. Every event on our books for the year,
+// straight from the Entry Ninja-synced event list, grouped month by month.
+import { createFileRoute, Link, Navigate } from "@tanstack/react-router";
+import { useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { ArrowLeft, Bike, CalendarDays, Loader2, MapPin } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useIsCrew } from "@/lib/auth";
+
+export const Route = createFileRoute("/crew/learn/calendar")({
+  head: () => ({
+    meta: [
+      { title: "Season calendar · Red Cherry Crew" },
+      {
+        name: "description",
+        content: "Every Red Cherry event for the year, month by month, so crew know how the season runs.",
+      },
+      { property: "og:title", content: "Season calendar · Red Cherry Crew" },
+      { property: "og:description", content: "The full year of Red Cherry events at a glance." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+      { name: "robots", content: "noindex,nofollow" },
+    ],
+  }),
+  component: SeasonCalendar,
+});
+
+type CalEvent = {
+  id: string;
+  name: string;
+  event_date: string;
+  location: string | null;
+  discipline: string | null;
+  lifecycle: string | null;
+  status: string | null;
+  days: unknown;
+  entry_ninja_url: string | null;
+};
+
+async function fetchCalendarEvents(): Promise<CalEvent[]> {
+  const { data, error } = await supabase
+    .from("events")
+    .select("id, name, event_date, location, discipline, lifecycle, status, days, entry_ninja_url")
+    .neq("lifecycle", "draft")
+    .order("event_date", { ascending: true });
+  if (error) {
+    console.warn("[crew calendar]", error);
+    return [];
+  }
+  return (data ?? []) as CalEvent[];
+}
+
+const MONTHS = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+];
+
+function dayCount(days: unknown): number {
+  if (Array.isArray(days)) return days.length;
+  return 0;
+}
+
+function dateRange(iso: string, nDays: number) {
+  const start = new Date(`${iso}T00:00:00`);
+  if (nDays <= 1) return start.toLocaleDateString(undefined, { day: "numeric", month: "short" });
+  const end = new Date(start);
+  end.setDate(end.getDate() + nDays - 1);
+  const sameMonth = start.getMonth() === end.getMonth();
+  return `${start.getDate()}${sameMonth ? "" : ` ${start.toLocaleDateString(undefined, { month: "short" })}`}–${end.getDate()} ${end.toLocaleDateString(
+    undefined,
+    { month: "short" },
+  )}`;
+}
+
+function SeasonCalendar() {
+  const { isCrew, loading } = useIsCrew();
+  const eventsQ = useQuery({ queryKey: ["crew-season-calendar"], queryFn: fetchCalendarEvents, enabled: isCrew });
+  const [year, setYear] = useState<number>(new Date().getFullYear());
+
+  const events = eventsQ.data ?? [];
+  const years = useMemo(() => {
+    const set = new Set<number>(events.map((e) => new Date(`${e.event_date}T00:00:00`).getFullYear()));
+    set.add(new Date().getFullYear());
+    return Array.from(set).sort();
+  }, [events]);
+
+  const byMonth = useMemo(() => {
+    const out: CalEvent[][] = Array.from({ length: 12 }, () => []);
+    for (const e of events) {
+      const d = new Date(`${e.event_date}T00:00:00`);
+      if (d.getFullYear() !== year) continue;
+      out[d.getMonth()]!.push(e);
+    }
+    return out;
+  }, [events, year]);
+
+  if (loading) {
+    return (
+      <div className="flex min-h-[50vh] items-center justify-center">
+        <Loader2 className="h-6 w-6 animate-spin text-ink-soft" />
+      </div>
+    );
+  }
+  if (!isCrew) return <Navigate to="/crew/login" />;
+
+  const total = byMonth.reduce((n, m) => n + m.length, 0);
+  const todayIso = new Date().toISOString().slice(0, 10);
+
+  return (
+    <div className="mx-auto max-w-2xl px-4 pb-24 pt-4">
+      <Link to="/crew/learn" className="inline-flex items-center gap-1.5 text-sm font-semibold text-ink-soft">
+        <ArrowLeft className="h-4 w-4" /> Learn
+      </Link>
+
+      <header className="mt-3 flex items-start gap-3">
+        <span className="grid h-10 w-10 place-items-center rounded-xl bg-brand/10 text-brand">
+          <CalendarDays className="h-5 w-5" />
+        </span>
+        <div>
+          <h1 className="font-display text-2xl font-bold">Season calendar</h1>
+          <p className="mt-1 text-sm text-ink-soft">
+            Every event on our books for {year} — {total} event{total === 1 ? "" : "s"}. This is how our year runs, so
+            you know what's coming and when the busy blocks are.
+          </p>
+        </div>
+      </header>
+
+      <div className="mt-4 flex flex-wrap gap-2">
+        {years.map((y) => (
+          <button
+            key={y}
+            type="button"
+            onClick={() => setYear(y)}
+            className={`rounded-full px-3.5 py-1.5 text-sm font-semibold ${
+              y === year ? "bg-brand text-white" : "border border-line text-ink"
+            }`}
+          >
+            {y}
+          </button>
+        ))}
+      </div>
+
+      {eventsQ.isLoading ? (
+        <div className="mt-8 flex justify-center">
+          <Loader2 className="h-5 w-5 animate-spin text-ink-soft" />
+        </div>
+      ) : !total ? (
+        <p className="mt-8 rounded-2xl border border-dashed border-line p-6 text-center text-sm text-ink-soft">
+          No events on the calendar for {year} yet.
+        </p>
+      ) : (
+        <div className="mt-6 space-y-6">
+          {byMonth.map((items, i) =>
+            items.length ? (
+              <section key={MONTHS[i]}>
+                <h2 className="font-display text-lg font-bold">{MONTHS[i]}</h2>
+                <ul className="mt-2 space-y-2">
+                  {items.map((e) => {
+                    const n = dayCount(e.days);
+                    const past = e.event_date < todayIso;
+                    return (
+                      <li
+                        key={e.id}
+                        className={`rounded-2xl border border-line bg-card p-4 ${past ? "opacity-60" : ""}`}
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <p className="truncate font-semibold text-ink">{e.name}</p>
+                            <p className="mt-0.5 text-sm text-ink-soft">
+                              {dateRange(e.event_date, n)}
+                              {n > 1 ? ` · ${n} days` : ""}
+                            </p>
+                            {e.location ? (
+                              <p className="mt-1 inline-flex items-center gap-1 text-xs text-ink-soft">
+                                <MapPin className="h-3.5 w-3.5" /> {e.location}
+                              </p>
+                            ) : null}
+                          </div>
+                          <div className="flex shrink-0 flex-col items-end gap-1">
+                            {e.discipline ? (
+                              <span className="inline-flex items-center gap-1 rounded-full bg-surface px-2 py-0.5 text-xs text-ink-soft">
+                                <Bike className="h-3.5 w-3.5" /> {e.discipline}
+                              </span>
+                            ) : null}
+                            {e.lifecycle && e.lifecycle !== "archived" && !past ? (
+                              <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-semibold text-green-800">
+                                Entries {e.status === "closed" ? "closed" : "open"}
+                              </span>
+                            ) : null}
+                          </div>
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </section>
+            ) : null,
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
