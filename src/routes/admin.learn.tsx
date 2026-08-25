@@ -7,7 +7,14 @@ import { useServerFn } from "@tanstack/react-start";
 import { AlertTriangle, CheckCircle2, GraduationCap, Loader2, RefreshCw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchDepartments } from "@/lib/run-sheet";
-import { fetchLearnCourses, COURSE_KIND_LABEL, type LearnCourse } from "@/lib/learn";
+import {
+  fetchLearnCourses,
+  fetchLearnResults,
+  COURSE_KIND_LABEL,
+  QUIZ_PASS_RATIO,
+  type LearnCourse,
+  type LearnResultPerson,
+} from "@/lib/learn";
 import { generateLearnCourse, syncOpenEventLearning } from "@/lib/learn.functions";
 
 export const Route = createFileRoute("/admin/learn")({
@@ -27,6 +34,77 @@ async function fetchEvents() {
     .select("id, name, event_date")
     .order("event_date", { ascending: false });
   return (data ?? []) as { id: string; name: string; event_date: string }[];
+}
+
+
+function ScoreBadge({ pct }: { pct: number | null }) {
+  if (pct === null) return <span className="text-xs text-ink-soft">No quiz yet</span>;
+  const pass = pct >= QUIZ_PASS_RATIO * 100;
+  return (
+    <span
+      className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
+        pass ? "bg-green-100 text-green-800" : "bg-amber-100 text-amber-800"
+      }`}
+    >
+      {pct}%
+    </span>
+  );
+}
+
+function StaffResults() {
+  const q = useQuery({ queryKey: ["learn-results"], queryFn: fetchLearnResults });
+  const [open, setOpen] = useState<string | null>(null);
+  const people = (q.data ?? []) as LearnResultPerson[];
+
+  if (q.isLoading) return <Loader2 className="h-5 w-5 animate-spin text-ink-soft" />;
+  if (!people.length) {
+    return <p className="text-sm text-ink-soft">Nobody has started a course yet. Results appear here as crew work through the training.</p>;
+  }
+
+  return (
+    <div className="space-y-2">
+      {people.map((p) => (
+        <div key={p.userId} className="rounded-2xl border border-line bg-card">
+          <button
+            type="button"
+            onClick={() => setOpen(open === p.userId ? null : p.userId)}
+            className="flex w-full items-center justify-between gap-3 p-4 text-left"
+          >
+            <div className="min-w-0">
+              <p className="truncate font-semibold text-ink">{p.name}</p>
+              <p className="truncate text-xs text-ink-soft">
+                {p.overallPct}% of lessons · {p.coursesCompleted} course{p.coursesCompleted === 1 ? "" : "s"} finished
+                {p.lastActive ? ` · last active ${new Date(p.lastActive).toLocaleDateString()}` : ""}
+              </p>
+            </div>
+            <div className="shrink-0">
+              <ScoreBadge pct={p.scorePct} />
+            </div>
+          </button>
+          {open === p.userId ? (
+            <div className="space-y-2 border-t border-line p-4">
+              {p.email ? <p className="text-xs text-ink-soft">{p.email}</p> : null}
+              {p.courses.map((c) => (
+                <div key={c.courseId} className="rounded-xl bg-surface px-3 py-2">
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="truncate text-sm font-semibold text-ink">{c.courseTitle}</p>
+                    <ScoreBadge pct={c.scorePct} />
+                  </div>
+                  <p className="text-xs text-ink-soft">
+                    {c.lessonsDone}/{c.lessonsTotal} lessons · {c.quizzesPassed}/{c.quizzesTaken} quizzes passed
+                    {c.completedAt ? ` · completed ${new Date(c.completedAt).toLocaleDateString()}` : ""}
+                  </p>
+                  <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-line">
+                    <div className="h-full rounded-full bg-brand" style={{ width: `${c.pct}%` }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : null}
+        </div>
+      ))}
+    </div>
+  );
 }
 
 function AdminLearn() {
@@ -252,6 +330,15 @@ function AdminLearn() {
             ))}
           </div>
         )}
+      </section>
+
+      <section className="space-y-2">
+        <h2 className="font-display text-lg font-bold">Staff results</h2>
+        <p className="text-xs text-ink-soft">
+          Every person who has started the training, how far they've got and their best quiz score per course. Tap a
+          name for the breakdown. Pass mark is {Math.round(QUIZ_PASS_RATIO * 100)}%.
+        </p>
+        <StaffResults />
       </section>
     </div>
   );
