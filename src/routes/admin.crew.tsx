@@ -31,11 +31,31 @@ function AdminCrewPage() {
   const reset = useServerFn(resetCrewPassword);
   const remove = useServerFn(deleteCrewLogin);
 
+  const invite = useServerFn(inviteCrewMember);
+
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteName, setInviteName] = useState("");
 
   const q = useQuery({ queryKey: ["crew-logins"], queryFn: () => list() });
+
+  const inviteM = useMutation({
+    mutationFn: () => invite({ data: { email: inviteEmail, full_name: inviteName } }),
+    onSuccess: (r: { emailed: boolean; temp_password: string | null; email: string }) => {
+      toast.success(
+        r.emailed
+          ? `Training invite sent to ${r.email}${r.temp_password ? ` (temp password ${r.temp_password})` : ""}`
+          : `${r.email} is suppressed — no email sent.`,
+        { duration: 12000 },
+      );
+      setInviteEmail("");
+      setInviteName("");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
 
   const createM = useMutation({
     mutationFn: () => create({ data: { username, password, full_name: fullName } }),
