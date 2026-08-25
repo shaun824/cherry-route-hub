@@ -32,6 +32,7 @@ async function fetchEvents() {
 function AdminLearn() {
   const qc = useQueryClient();
   const generate = useServerFn(generateLearnCourse);
+  const syncOpen = useServerFn(syncOpenEventLearning);
   const [eventId, setEventId] = useState("");
   const [busy, setBusy] = useState<string | null>(null);
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
