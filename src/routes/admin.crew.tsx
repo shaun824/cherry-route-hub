@@ -3,9 +3,10 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { HardHat, KeyRound, Loader2, Plus, Trash2 } from "lucide-react";
+import { HardHat, KeyRound, Loader2, Mail, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { createCrewLogin, deleteCrewLogin, listCrewLogins, resetCrewPassword } from "@/lib/crew-accounts.functions";
+import { inviteCrewMember } from "@/lib/crew-invite.functions";
 import { normaliseCrewUsername } from "@/lib/crew-username";
 
 export const Route = createFileRoute("/admin/crew")({
