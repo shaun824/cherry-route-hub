@@ -12,7 +12,6 @@ type SocialPost = {
   post_url: string;
   caption: string | null;
   eventName?: string | null;
-  isProfileFallback?: boolean;
 };
 
 type EventSocialRow = {
@@ -152,7 +151,6 @@ export function SocialWall({
             post_url: instagram,
             caption: "See the latest photos, reels and rider updates for this event.",
             eventName: event.name,
-            isProfileFallback: true,
           });
           if (out.length >= limit) break;
         }
