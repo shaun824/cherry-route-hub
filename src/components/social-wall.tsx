@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { ExternalLink, Facebook, Instagram } from "lucide-react";
+import { ChevronLeft, ChevronRight, ExternalLink, Facebook, Instagram } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 
@@ -43,6 +43,7 @@ function loadInstagramEmbeds(): Promise<void> {
 
 function InstagramCard({ url, label }: { url: string; label?: string | null }) {
   const ref = useRef<HTMLDivElement>(null);
+  const dragStart = useRef<{ x: number; y: number } | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -77,18 +78,30 @@ function InstagramCard({ url, label }: { url: string; label?: string | null }) {
             </a>
           </blockquote>
         </div>
-        {/* Transparent tap layer: keeps page scrolling smooth over the embed iframe */}
+        {/* Transparent layer: lets the page and the carousel scroll over the embed iframe,
+            while still opening the post on a real tap (not a swipe). */}
         <a
           href={url}
           target="_blank"
           rel="noopener noreferrer"
           aria-label="Open this post on Instagram"
           className="absolute inset-0"
+          style={{ touchAction: "pan-x pan-y pinch-zoom" }}
+          onPointerDown={(e) => {
+            dragStart.current = { x: e.clientX, y: e.clientY };
+          }}
+          onClick={(e) => {
+            const s = dragStart.current;
+            if (!s) return;
+            const moved = Math.hypot(e.clientX - s.x, e.clientY - s.y);
+            if (moved > 8) e.preventDefault();
+          }}
         />
       </div>
     </div>
   );
 }
+
 
 export function SocialWall({
   eventId,
@@ -149,6 +162,13 @@ export function SocialWall({
   });
 
 
+  const scrollerRef = useRef<HTMLDivElement>(null);
+  const nudge = (dir: 1 | -1) => {
+    const el = scrollerRef.current;
+    if (!el) return;
+    el.scrollBy({ left: dir * (el.clientWidth * 0.8), behavior: "smooth" });
+  };
+
   const posts = useMemo(() => data ?? [], [data]);
   const handle = useMemo(() => {
     if (!instagramUrl) return null;
@@ -192,12 +212,38 @@ export function SocialWall({
       </div>
 
       {posts.length > 0 ? (
-        <div style={{ touchAction: "pan-y pinch-zoom" }}
-          className="-mx-4 mt-3 flex snap-x gap-3 overflow-x-auto overscroll-x-contain px-4 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {posts.map((p) => (
-            <InstagramCard key={p.id} url={p.post_url} label={eventId ? null : p.eventName} />
-          ))}
+        <div className="relative">
+          <div
+            ref={scrollerRef}
+            style={{ touchAction: "pan-x pan-y pinch-zoom", WebkitOverflowScrolling: "touch" }}
+            className="-mx-4 mt-3 flex snap-x gap-3 overflow-x-auto overscroll-x-contain scroll-smooth px-4 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          >
+            {posts.map((p) => (
+              <InstagramCard key={p.id} url={p.post_url} label={eventId ? null : p.eventName} />
+            ))}
+          </div>
+          {posts.length > 1 ? (
+            <>
+              <button
+                type="button"
+                aria-label="Previous post"
+                onClick={() => nudge(-1)}
+                className="absolute left-0 top-1/2 hidden -translate-y-1/2 place-items-center rounded-full bg-card/90 p-2 shadow-md ring-1 ring-border sm:grid"
+              >
+                <ChevronLeft className="h-4 w-4 text-ink" />
+              </button>
+              <button
+                type="button"
+                aria-label="Next post"
+                onClick={() => nudge(1)}
+                className="absolute right-0 top-1/2 hidden -translate-y-1/2 place-items-center rounded-full bg-card/90 p-2 shadow-md ring-1 ring-border sm:grid"
+              >
+                <ChevronRight className="h-4 w-4 text-ink" />
+              </button>
+            </>
+          ) : null}
         </div>
+
       ) : instagramUrl ? (
         <a
           href={instagramUrl}
