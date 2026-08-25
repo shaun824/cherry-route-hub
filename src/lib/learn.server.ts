@@ -520,3 +520,91 @@ Cover: what this department is responsible for and who leads it; where it sits i
     throw e;
   }
 }
+
+// ---------- keeping "This event" in sync with the events we're open for ----------
+
+/** How long an event course may go without a rebuild before we refresh it. */
+const COURSE_MAX_AGE_MS = 6.5 * 24 * 60 * 60 * 1000;
+
+export type OpenEvent = { id: string; name: string; event_date: string | null };
+
+/**
+ * The events we're currently open for: published, not archived or completed,
+ * and not finished more than a few days ago.
+ */
+export async function listOpenEvents(client: AnyClient): Promise<OpenEvent[]> {
+  const { data } = await client
+    .from("events")
+    .select("id, name, event_date, lifecycle, status")
+    .neq("lifecycle", "archived")
+    .neq("lifecycle", "draft")
+    .order("event_date", { ascending: true });
+
+  const cutoff = Date.now() - 3 * 24 * 60 * 60 * 1000;
+  return ((data ?? []) as any[])
+    .filter((e) => e.status !== "archived" && e.status !== "completed")
+    .filter((e) => !e.event_date || new Date(e.event_date).getTime() >= cutoff)
+    .map((e) => ({ id: e.id as string, name: e.name as string, event_date: (e.event_date ?? null) as string | null }));
+}
+
+/**
+ * Weekly job: make sure there's a fresh "This event" course for every open
+ * event, and hide the courses for events we're no longer open for.
+ */
+export async function syncOpenEventCourses(
+  client: AnyClient,
+  opts: { force?: boolean } = {},
+): Promise<{ open: number; built: string[]; skipped: string[]; hidden: number; failed: { event: string; error: string }[] }> {
+  const open = await listOpenEvents(client);
+  const openIds = new Set(open.map((e) => e.id));
+
+  const { data: existing } = await client
+    .from("learn_courses")
+    .select("id, kind, event_id, status, generated_at, generation_error")
+    .in("kind", ["event", "department"]);
+
+  const rows = (existing ?? []) as any[];
+  const eventCourse = new Map<string, any>();
+  for (const r of rows) if (r.kind === "event" && r.event_id) eventCourse.set(r.event_id, r);
+
+  const built: string[] = [];
+  const skipped: string[] = [];
+  const failed: { event: string; error: string }[] = [];
+
+  for (const ev of open) {
+    const current = eventCourse.get(ev.id);
+    const age = current?.generated_at ? Date.now() - new Date(current.generated_at).getTime() : Infinity;
+    const stale = opts.force || !current || current.generation_error || age > COURSE_MAX_AGE_MS;
+
+    if (!stale) {
+      if (current.status !== "published") {
+        await client.from("learn_courses").update({ status: "published" }).eq("id", current.id);
+      }
+      skipped.push(ev.name);
+      continue;
+    }
+
+    try {
+      await generateEventCourse(client, ev.id);
+      await client.from("learn_courses").update({ status: "published" }).eq("kind", "event").eq("event_id", ev.id);
+      built.push(ev.name);
+    } catch (e) {
+      failed.push({ event: ev.name, error: e instanceof Error ? e.message : String(e) });
+    }
+  }
+
+  // Anything tied to an event we're no longer open for drops out of the library.
+  const staleIds = rows.filter((r) => r.event_id && !openIds.has(r.event_id) && r.status !== "draft").map((r) => r.id);
+  if (staleIds.length) {
+    await client.from("learn_courses").update({ status: "draft" }).in("id", staleIds);
+  }
+  // Department courses for open events come back when they were hidden before.
+  const revive = rows
+    .filter((r) => r.kind === "department" && r.event_id && openIds.has(r.event_id) && r.status !== "published")
+    .map((r) => r.id);
+  if (revive.length) {
+    await client.from("learn_courses").update({ status: "published" }).in("id", revive);
+  }
+
+  return { open: open.length, built, skipped, hidden: staleIds.length, failed };
+}
