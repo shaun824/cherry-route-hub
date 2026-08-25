@@ -77,18 +77,30 @@ function InstagramCard({ url, label }: { url: string; label?: string | null }) {
             </a>
           </blockquote>
         </div>
-        {/* Transparent tap layer: keeps page scrolling smooth over the embed iframe */}
+        {/* Transparent layer: lets the page and the carousel scroll over the embed iframe,
+            while still opening the post on a real tap (not a swipe). */}
         <a
           href={url}
           target="_blank"
           rel="noopener noreferrer"
           aria-label="Open this post on Instagram"
           className="absolute inset-0"
+          style={{ touchAction: "pan-x pan-y pinch-zoom" }}
+          onPointerDown={(e) => {
+            dragStart.current = { x: e.clientX, y: e.clientY };
+          }}
+          onClick={(e) => {
+            const s = dragStart.current;
+            if (!s) return;
+            const moved = Math.hypot(e.clientX - s.x, e.clientY - s.y);
+            if (moved > 8) e.preventDefault();
+          }}
         />
       </div>
     </div>
   );
 }
+
 
 export function SocialWall({
   eventId,
