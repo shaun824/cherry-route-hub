@@ -150,6 +150,14 @@ export type Promo = {
   accent: string;
   logoUrl?: string;
   url?: string;
+  /** Short description shown under the title. */
+  blurb?: string;
+  /** How to redeem, when there is no code. */
+  redeem?: string;
+  /** Comma-separated event-name keywords; blank = show on every event. */
+  eventMatch?: string;
+  active?: boolean;
+  sortOrder?: number;
 };
 
 export type Rider = {
