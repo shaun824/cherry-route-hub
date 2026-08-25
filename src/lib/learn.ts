@@ -188,3 +188,23 @@ export function courseProgress(modules: LearnModule[], done: Set<string>) {
   const doneCount = lessons.filter((l) => done.has(l.id)).length;
   return { total: lessons.length, done: doneCount, pct: lessons.length ? Math.round((doneCount / lessons.length) * 100) : 0 };
 }
+
+/** Events we're currently open for — drives which "This event" courses show. */
+export async function fetchOpenEventIds(): Promise<Set<string>> {
+  const { data, error } = await supabase
+    .from("events")
+    .select("id, event_date, lifecycle, status")
+    .neq("lifecycle", "archived")
+    .neq("lifecycle", "draft");
+  if (error) {
+    console.warn("[learn] open events", error);
+    return new Set();
+  }
+  const cutoff = Date.now() - 3 * 24 * 60 * 60 * 1000;
+  return new Set(
+    (data ?? [])
+      .filter((e: any) => e.status !== "archived" && e.status !== "completed")
+      .filter((e: any) => !e.event_date || new Date(e.event_date).getTime() >= cutoff)
+      .map((e: any) => e.id as string),
+  );
+}
