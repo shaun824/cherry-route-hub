@@ -50,6 +50,25 @@ async function fetchCalendarEvents(): Promise<CalEvent[]> {
   return (data ?? []) as CalEvent[];
 }
 
+/** Event id -> published training course id, so calendar rows can open Learn. */
+async function fetchEventCourses(): Promise<Record<string, string>> {
+  const { data, error } = await supabase
+    .from("learn_courses")
+    .select("id, event_id, status")
+    .eq("kind", "event")
+    .eq("status", "published");
+  if (error) {
+    console.warn("[crew calendar courses]", error);
+    return {};
+  }
+  const out: Record<string, string> = {};
+  for (const row of data ?? []) {
+    const eid = (row as { event_id: string | null }).event_id;
+    if (eid && !out[eid]) out[eid] = String((row as { id: string }).id);
+  }
+  return out;
+}
+
 const MONTHS = [
   "January",
   "February",
