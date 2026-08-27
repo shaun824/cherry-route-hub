@@ -24,6 +24,27 @@ function queueKey(eventId: string) {
   return `rce-track-queue-${eventId}`;
 }
 
+function activeKey(eventId: string) {
+  return `rce-track-active-${eventId}`;
+}
+
+function loadActive(eventId: string) {
+  try {
+    return localStorage.getItem(activeKey(eventId)) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function saveActive(eventId: string, active: boolean) {
+  try {
+    if (active) localStorage.setItem(activeKey(eventId), "1");
+    else localStorage.removeItem(activeKey(eventId));
+  } catch {
+    /* storage unavailable */
+  }
+}
+
 function loadQueue(eventId: string): TrackingPointInput[] {
   try {
     const raw = localStorage.getItem(queueKey(eventId));
@@ -63,6 +84,8 @@ export function TrackerPanel({
   eventName?: string;
 }) {
   const [coords, setCoords] = useState<Coords>(null);
+  // Tracking survives navigation: the active flag lives in localStorage and the
+  // GPS watch is re-attached whenever the panel mounts again.
   const [tracking, setTracking] = useState(false);
   const [sosSent, setSosSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -179,18 +202,27 @@ export function TrackerPanel({
     void flush(); // push the remaining buffer out
   }, [flush]);
 
+  // Resume an in-progress session after navigating back to this page.
+  useEffect(() => {
+    if (!loadActive(eventId) || watchIdRef.current !== null) return;
+    setTracking(true);
+    startTracking();
+  }, [eventId, startTracking]);
+
   // Enforce the window: stop the GPS watch the moment tracking closes.
   useEffect(() => {
     if (!tracking || windowState.open) return;
     stopTracking();
     setTracking(false);
-  }, [tracking, windowState.open, stopTracking]);
+    saveActive(eventId, false);
+  }, [tracking, windowState.open, stopTracking, eventId]);
 
   function toggleTracking() {
-    if (!windowState.open) return;
+    if (!windowState.open && !tracking) return;
     if (tracking) stopTracking();
     else startTracking();
     setTracking((t) => !t);
+    saveActive(eventId, !tracking);
   }
 
   // Periodic flush + flush when the app comes back to the foreground / online.
@@ -283,7 +315,7 @@ export function TrackerPanel({
         <p className="mt-2 text-xs text-ink-soft">{windowState.message}</p>
         <button
           onClick={toggleTracking}
-          disabled={!windowState.open}
+          disabled={!windowState.open && !tracking}
           className={`mt-3 disabled:cursor-not-allowed disabled:opacity-50 flex w-full items-center justify-center gap-2 rounded-xl py-3 text-sm font-bold transition-transform active:scale-[0.99] ${
             tracking
               ? "bg-secondary text-secondary-foreground"
