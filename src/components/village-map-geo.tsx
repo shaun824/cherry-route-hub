@@ -702,6 +702,12 @@ export default function VillageMapGeo({
           {locating ? "Finding you…" : me ? "Recentre on me" : "Show my location"}
         </button>
       </div>
+  );
+
+  return (
+    <div className="space-y-2">
+      {fullscreen ? createPortal(shell, document.body) : shell}
+
 
       {geoError ? <p className="text-xs font-semibold text-cherry">{geoError}</p> : null}
       {me && accuracy ? (
