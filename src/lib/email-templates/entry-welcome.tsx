@@ -18,8 +18,11 @@ export interface EntryWelcomeProps {
   actionUrl: string
   actionLabel?: string
   needsPassword?: boolean
-  /** Absolute URL of the event's own logo, shown at the top so the mail feels event-branded. */
+  /** Absolute URL of the event's own logo (fallback when there's no cover image). */
   eventLogoUrl?: string | null
+  /** Absolute URL of the event's cover/banner image, shown full width at the top. */
+  eventCoverUrl?: string | null
+
   /** Google Maps link for the venue so riders can navigate straight there. */
   venueUrl?: string | null
   /** The rider's own key times, pulled from the event schedule. */
