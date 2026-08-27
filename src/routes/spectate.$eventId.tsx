@@ -36,6 +36,7 @@ import { buildMapEmbedSrc, buildMapLink, resolveVenuePoint } from "@/lib/map-emb
 import { VenueMiniMap } from "@/components/venue-mini-map";
 import { VillageMapView } from "@/components/village-map-view";
 import { fetchVillageMap } from "@/lib/village-map";
+import { LiveTrackingMap } from "@/components/live-tracking-map";
 
 import { fetchEventInfo } from "@/lib/event-info";
 import { groupRidersByClass } from "@/lib/rider-classes";
@@ -378,6 +379,23 @@ function SpectatorEventPage() {
           })}
         </div>
       </div>
+
+      {tab === "live" ? (
+        <div className="px-5 pt-5 pb-8 space-y-3 animate-fade-in">
+          <section>
+            <h2 className="font-display text-[13px] font-bold uppercase tracking-wider text-ink-soft">
+              Live rider tracking
+            </h2>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Riders who have started live tracking in their app appear here. Positions update
+              every 15 seconds.
+            </p>
+            <div className="mt-3">
+              <LiveTrackingMap eventId={eventId} />
+            </div>
+          </section>
+        </div>
+      ) : null}
 
       {tab === "info" ? (
         <div className="px-5 pt-5 pb-8 space-y-4 animate-fade-in">
