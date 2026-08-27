@@ -423,9 +423,10 @@ export async function sendPendingEntryWelcomes(
       result.skipped++;
       continue;
     }
-    // Multi-rider entries share a registration reference; keep them together so
-    // the family/team gets one mail listing everyone.
-    const key = `${event.id}|${row.registration_ref || email}`;
+    // Group by email so every person with their own address on a shared
+    // registration still receives their own welcome email. The party list below
+    // will still include everyone on the same registration reference.
+    const key = `${event.id}|${email}`;
     const existing = groups.get(key);
     if (existing) existing.rows.push(row);
     else groups.set(key, { email, event, rows: [row] });
