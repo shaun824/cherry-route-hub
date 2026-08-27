@@ -32,8 +32,23 @@ function VillageIndex() {
 
       <ul className="space-y-2">
         {(q.data ?? []).map((e: any) => {
-          const row = e.event_village_maps?.[0];
-          const points = Array.isArray(row?.hotspots) ? row.hotspots.length : 0;
+          const rows = e.event_village_maps ?? [];
+          const points = rows.reduce(
+            (n: number, r: any) => n + (Array.isArray(r?.hotspots) ? r.hotspots.length : 0),
+            0,
+          );
+          const zones = rows.reduce(
+            (n: number, r: any) => n + (Array.isArray(r?.zones) ? r.zones.length : 0),
+            0,
+          );
+          const hasImage = rows.some((r: any) => !!r?.image_url);
+          const hasGeo = rows.some((r: any) => Number.isFinite(Number(r?.geo?.lat)));
+          const built = points > 0 || zones > 0 || hasImage || hasGeo;
+          const parts = [
+            points ? `${points} point${points === 1 ? "" : "s"}` : null,
+            zones ? `${zones} area${zones === 1 ? "" : "s"}` : null,
+            hasImage ? "plan image" : null,
+          ].filter(Boolean);
           return (
             <li key={e.id}>
               <Link
@@ -48,10 +63,11 @@ function VillageIndex() {
                   <div>
                     <p className="font-semibold text-ink">{e.name}</p>
                     <p className="text-xs text-ink-soft">
-                      {row?.image_url ? `${points} point${points === 1 ? "" : "s"} placed` : "No map yet"}
+                      {built ? (parts.length ? parts.join(" · ") : "Map placed") : "No map yet"}
                     </p>
                   </div>
                 </div>
+
                 <ChevronRight className="h-4 w-4 text-ink-soft" />
               </Link>
             </li>
