@@ -180,13 +180,25 @@ export type SosAlert = {
   createdAt: string;
 };
 
+/** Throws unless the signed-in user has the admin role (RLS-scoped check). */
+async function assertAdmin(supabase: {
+  from: (t: string) => unknown;
+}, userId: string) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data } = await (supabase.from("user_roles") as any)
+    .select("role")
+    .eq("user_id", userId)
+    .eq("role", "admin")
+    .limit(1);
+  if (!data || data.length === 0) throw new Error("Forbidden");
+}
+
 /** Admin: list SOS alerts, optionally filtered to an event. */
 export const fetchSosAlerts = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input) => z.object({ eventId: z.string().uuid().nullish() }).parse(input))
   .handler(async ({ data, context }) => {
-    const { data: isAdmin } = await context.supabase.rpc("is_admin" as never);
-    if (!isAdmin) throw new Error("Forbidden");
+    await assertAdmin(context.supabase, context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     let q = table(supabaseAdmin, "tracking_sos")
       .select("id, event_id, user_id, lat, lng, message, status, created_at")
