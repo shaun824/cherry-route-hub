@@ -69,7 +69,7 @@ function EnterEvent() {
         <h1 className="font-display text-xl font-bold text-ink">Entries handled on Entry Ninja</h1>
         <p className="text-sm text-ink-soft">
           In-app entries are turned off. Please enter this event on Entry Ninja — once we have
-          your entry on file, your event will appear in <b>Adventure Awaits</b> with all the info you
+          your entry on file, your event will appear in <b>Events Hub</b> with all the info you
           need.
         </p>
         <div className="flex flex-wrap justify-center gap-2 pt-2">

@@ -12,7 +12,7 @@ import { InstallAppPrompt } from "@/components/install-app-prompt";
 const riderTabs = [
   { to: "/", label: "Home", icon: Home, match: (p: string) => p === "/" },
   // Short label keeps the 4-up bottom bar readable; fullLabel is used on desktop + screen readers.
-  { to: "/my-events", label: "Adventure", fullLabel: "Adventure Awaits", icon: Ticket, match: (p: string) => p.startsWith("/my-events") || p.startsWith("/events") },
+  { to: "/my-events", label: "Events", fullLabel: "Events Hub", icon: Ticket, match: (p: string) => p.startsWith("/my-events") || p.startsWith("/events") },
   { to: "/spectate", label: "Track", icon: Binoculars, match: (p: string) => p.startsWith("/spectate") },
   { to: "/profile", label: "Profile", icon: User, match: (p: string) => p.startsWith("/profile") },
 ] as const;
