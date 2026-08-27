@@ -1,7 +1,7 @@
 import { Suspense, lazy, useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ClientOnly } from "@tanstack/react-router";
-import { Minus, Plus, X } from "lucide-react";
+import { Maximize2, Minimize2, Minus, Plus, X } from "lucide-react";
 import {
   categoryMeta,
   fetchVillageMap,
@@ -127,6 +127,58 @@ export function VillageMapView({
   const [scale, setScale] = useState(1);
   const [mode, setMode] = useState<"live" | "plan">("live");
   const wrapRef = useRef<HTMLDivElement>(null);
+  // Plan-view full screen + pinch zoom (the live map handles both natively).
+  const [planFullscreen, setPlanFullscreen] = useState(false);
+  const scaleRef = useRef(1);
+  scaleRef.current = scale;
+
+  useEffect(() => {
+    document.body.style.overflow = planFullscreen ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [planFullscreen]);
+
+  // Two-finger pinch on the plan image: scale follows the finger spread, and
+  // one-finger scrolling keeps panning the zoomed image inside its container.
+  useEffect(() => {
+    const el = wrapRef.current;
+    if (!el) return;
+    const pts = new Map<number, { x: number; y: number }>();
+    let pinch: { d: number; s: number } | null = null;
+    const clamp = (v: number) => Math.min(4, Math.max(1, v));
+    const down = (e: PointerEvent) => {
+      if (e.pointerType !== "touch") return;
+      pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (pts.size === 2) {
+        const [a, b] = [...pts.values()];
+        pinch = { d: Math.hypot(a.x - b.x, a.y - b.y), s: scaleRef.current };
+      }
+    };
+    const move = (e: PointerEvent) => {
+      if (!pts.has(e.pointerId)) return;
+      pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (pinch && pts.size === 2) {
+        const [a, b] = [...pts.values()];
+        const d = Math.hypot(a.x - b.x, a.y - b.y);
+        if (pinch.d > 0) setScale(clamp(+(pinch.s * (d / pinch.d)).toFixed(3)));
+      }
+    };
+    const up = (e: PointerEvent) => {
+      pts.delete(e.pointerId);
+      if (pts.size < 2) pinch = null;
+    };
+    el.addEventListener("pointerdown", down);
+    el.addEventListener("pointermove", move);
+    el.addEventListener("pointerup", up);
+    el.addEventListener("pointercancel", up);
+    return () => {
+      el.removeEventListener("pointerdown", down);
+      el.removeEventListener("pointermove", move);
+      el.removeEventListener("pointerup", up);
+      el.removeEventListener("pointercancel", up);
+    };
+  }, []);
 
   // Crew "find this room" deep-focus: highlight the requested point when it changes.
   const [flyToken, setFlyToken] = useState(0);
