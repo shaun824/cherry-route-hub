@@ -167,11 +167,24 @@ async function loadEntryParty(
   return party;
 }
 
-/** Google Maps directions link for a venue name/address. */
-export function venueMapUrl(venue: string | null | undefined): string | null {
+/**
+ * Google Maps directions link for a venue. Precise coordinates (map_query)
+ * win — a bare name search can land on the wrong place or just show a
+ * results list. Name-only venues get a "South Africa" hint so the search
+ * resolves to the right venue instead of a namesake elsewhere.
+ */
+export function venueMapUrl(
+  venue: string | null | undefined,
+  mapQuery?: string | null | undefined,
+): string | null {
+  const coords = (mapQuery ?? "").trim();
+  if (/^-?\d+(\.\d+)?\s*,\s*-?\d+(\.\d+)?$/.test(coords)) {
+    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(coords)}`;
+  }
   const v = (venue ?? "").trim();
   if (!v) return null;
-  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(v)}`;
+  const q = /south africa/i.test(v) ? v : `${v}, South Africa`;
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`;
 }
 
 const REG_LINE = /(registration|register|check[- ]?in|briefing)/i;
@@ -370,7 +383,7 @@ export async function sendPendingEntryWelcomes(
   let query = admin
     .from("event_entrants")
     .select(
-      "id, event_id, entrant_id, registration_ref, category, bib_number, entrants(full_name, email), events(id, name, event_date, location, lifecycle, days, schedule, logo_url, cover_url)",
+      "id, event_id, entrant_id, registration_ref, category, bib_number, entrants(full_name, email), events(id, name, event_date, location, map_query, lifecycle, days, schedule, logo_url, cover_url)",
     )
     // Archived-roster imports are flagged as skipped; without this filter they
     // fill every batch and brand-new entries never get reached.
@@ -449,7 +462,7 @@ export async function sendPendingEntryWelcomes(
           eventName: event.name,
           eventDate: formatDate(event.event_date),
           venue: event.location ?? null,
-          venueUrl: venueMapUrl(event.location),
+          venueUrl: venueMapUrl(event.location, (event as { map_query?: string | null }).map_query),
           eventLogoUrl: absoluteLogo(event.logo_url),
           eventCoverUrl: absoluteLogo(event.cover_url),
           schedule: riderScheduleForEmail(event, lead.category, { trusted: trustedSchedules.has(event.id) }),
