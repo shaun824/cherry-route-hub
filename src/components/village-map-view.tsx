@@ -375,7 +375,29 @@ export function VillageMapView({
             planFullscreen ? "h-full" : "max-h-[70vh]"
           }`}
         >
-...
+          <div
+            className="relative w-full origin-top-left transition-transform duration-200"
+            style={{ transform: `scale(${scale})`, width: `${100}%` }}
+          >
+            <img
+              src={map.image_url ?? undefined}
+              alt="Event village map"
+              className="block w-full select-none"
+              draggable={false}
+            />
+            {spots.map((s) => (
+              <Pin
+                key={s.id}
+                spot={s}
+                scale={scale}
+                active={(selected ?? hovered) === s.id}
+                onHover={setHovered}
+                onSelect={(id) => setSelected((prev) => (prev === id ? null : id))}
+              />
+            ))}
+          </div>
+        </div>
+
         <div className="absolute bottom-3 right-3 flex flex-col gap-1">
           <button
             onClick={() => setPlanFullscreen((f) => !f)}
