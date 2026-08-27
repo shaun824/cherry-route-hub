@@ -64,6 +64,8 @@ export interface EmailOffer {
   logoUrl?: string | null
   /** Hex brand accent used for the card background, matching the app card. */
   accent?: string | null
+  /** CTA button label; falls back to "Get the code" / "View offer". */
+  ctaLabel?: string | null
 }
 
 
