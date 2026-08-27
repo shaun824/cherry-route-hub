@@ -454,12 +454,14 @@ export default function VillageMapGeo({
     );
   }
 
-  return (
-    <div className="space-y-2">
+  // Full screen renders through a portal on <body>: inside the page tree any
+  // ancestor with a transform/filter turns `fixed` into a normal box, so the
+  // "full screen" map stayed the size of its card.
+  const shell = (
       <div
         className={
           fullscreen
-            ? "fixed inset-0 z-[200] bg-black"
+            ? "fixed inset-0 z-[9999] h-[100dvh] w-screen bg-black"
             : "relative overflow-hidden rounded-2xl ring-1 ring-border"
         }
       >
