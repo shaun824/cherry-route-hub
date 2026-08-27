@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Plus, Pencil, Trash2, X, Upload, Loader2, Image as ImageIcon } from "lucide-react";
 import { useAdminStore, newId } from "@/lib/store";
 import { supabase } from "@/integrations/supabase/client";
@@ -365,7 +365,7 @@ function PromoEditor({
             />
           </L>
         </div>
-        <footer className="flex justify-end gap-2 border-t border-border px-5 py-3">
+        <footer className="flex shrink-0 justify-end gap-2 border-t border-border px-5 py-3">
           <button
             onClick={onCancel}
             className="rounded-lg border border-border bg-background px-4 py-2 text-sm font-semibold"
