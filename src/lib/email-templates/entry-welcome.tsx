@@ -269,6 +269,18 @@ export const template = {
     eventUrl: 'https://riderapp.redcherryevents.co.za/my-events/demo',
     actionUrl: 'https://riderapp.redcherryevents.co.za/reset-password',
     needsPassword: true,
+    offers: [
+      {
+        brand: 'Cycle Lab',
+        title: 'R150 to spend at Cycle Lab',
+        blurb: 'R150 is loaded onto the cell number on your entry.',
+        redeem:
+          'No code — give the cell number on your entry at the Cycle Lab stand or in any Cycle Lab store.',
+        discount: 'R150',
+        url: 'https://www.cyclelab.com',
+      },
+    ],
+
   },
 } satisfies TemplateEntry
 
