@@ -8,6 +8,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useAdminStore } from "@/lib/store";
 import { getEventResults } from "@/lib/results.functions";
 import { trackingWindow } from "@/lib/tracking-window";
+import { useIsAdmin } from "@/lib/auth";
 import {
   sendTrackingSos,
   uploadTrackingPoints,
@@ -83,7 +84,12 @@ export function TrackerPanel({
     return () => window.clearInterval(id);
   }, []);
   const resultsPublished = Boolean(results?.results_published) || (results?.rows?.length ?? 0) > 0;
-  const windowState = trackingWindow(event, { resultsPublished, now: new Date(clock) });
+  const isAdmin = useIsAdmin();
+  const computed = trackingWindow(event, { resultsPublished, now: new Date(clock) });
+  // Admins can test tracking outside the window.
+  const windowState = computed.open || !isAdmin
+    ? computed
+    : { ...computed, open: true, message: `${computed.message} (admin test override)` };
 
   const upload = useServerFn(uploadTrackingPoints);
   const sendSos = useServerFn(sendTrackingSos);
