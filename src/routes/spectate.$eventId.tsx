@@ -355,6 +355,7 @@ function SpectatorEventPage() {
       <div ref={tabNavRef} className="sticky top-0 z-20 -mt-3 px-5">
         <div className="flex gap-1 rounded-2xl bg-card p-1 shadow-lg ring-1 ring-border">
           {([
+            { id: "live", label: "Live", icon: MapPin },
             { id: "riders", label: "Riders", icon: Users },
             { id: "results", label: "Results", icon: Trophy },
             { id: "info", label: "Venue", icon: Info },
