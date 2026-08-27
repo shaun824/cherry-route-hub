@@ -18,8 +18,11 @@ export interface EntryWelcomeProps {
   actionUrl: string
   actionLabel?: string
   needsPassword?: boolean
-  /** Absolute URL of the event's own logo, shown at the top so the mail feels event-branded. */
+  /** Absolute URL of the event's own logo (fallback when there's no cover image). */
   eventLogoUrl?: string | null
+  /** Absolute URL of the event's cover/banner image, shown full width at the top. */
+  eventCoverUrl?: string | null
+
   /** Google Maps link for the venue so riders can navigate straight there. */
   venueUrl?: string | null
   /** The rider's own key times, pulled from the event schedule. */
@@ -66,21 +69,20 @@ export interface EmailOffer {
 
 
 const eventLogoWrap = {
-  backgroundColor: '#ffffff',
-  border: `1px solid ${brand.border}`,
-  borderRadius: '14px',
-  padding: '16px 20px',
   margin: '0 0 20px',
   textAlign: 'center' as const,
+  lineHeight: 0,
 }
 
 const eventLogoImg = {
-  height: '72px',
-  width: 'auto',
-  maxWidth: '260px',
-  display: 'inline-block',
-  objectFit: 'contain' as const,
+  display: 'block',
+  width: '100%',
+  maxWidth: '100%',
+  height: 'auto',
+  borderRadius: '14px',
+  border: `1px solid ${brand.border}`,
 }
+
 
 const card = {
   backgroundColor: '#FAFAFC',
@@ -250,17 +252,24 @@ export const EntryWelcomeEmail = ({
   party = [],
   venueUrl,
   eventLogoUrl,
+  eventCoverUrl,
   schedule = [],
 
   siteName = 'Red Cherry Events',
   siteUrl = 'https://riderapp.redcherryevents.co.za',
 }: EntryWelcomeProps) => (
   <EmailShell preview={`You're entered for ${eventName} — everything you need is in the Rider Hub`} siteName={siteName}>
-    {eventLogoUrl ? (
+    {eventCoverUrl || eventLogoUrl ? (
       <Section style={eventLogoWrap}>
-        <Img src={eventLogoUrl} alt={`${eventName} logo`} height="72" style={eventLogoImg} />
+        <Img
+          src={(eventCoverUrl || eventLogoUrl) as string}
+          alt={eventName}
+          width="600"
+          style={eventLogoImg}
+        />
       </Section>
     ) : null}
+
     <Heading style={h1}>
       {firstName ? `${firstName}, you're in!` : "You're in!"}
     </Heading>
