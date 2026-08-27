@@ -18,6 +18,8 @@ export interface EntryWelcomeProps {
   actionUrl: string
   actionLabel?: string
   needsPassword?: boolean
+  /** Absolute URL of the event's own logo, shown at the top so the mail feels event-branded. */
+  eventLogoUrl?: string | null
   /** Google Maps link for the venue so riders can navigate straight there. */
   venueUrl?: string | null
   /** The rider's own key times, pulled from the event schedule. */
@@ -62,6 +64,23 @@ export interface EmailOffer {
 }
 
 
+
+const eventLogoWrap = {
+  backgroundColor: '#ffffff',
+  border: `1px solid ${brand.border}`,
+  borderRadius: '14px',
+  padding: '16px 20px',
+  margin: '0 0 20px',
+  textAlign: 'center' as const,
+}
+
+const eventLogoImg = {
+  height: '72px',
+  width: 'auto',
+  maxWidth: '260px',
+  display: 'inline-block',
+  objectFit: 'contain' as const,
+}
 
 const card = {
   backgroundColor: '#FAFAFC',
@@ -230,12 +249,18 @@ export const EntryWelcomeEmail = ({
   offers = [],
   party = [],
   venueUrl,
+  eventLogoUrl,
   schedule = [],
 
   siteName = 'Red Cherry Events',
   siteUrl = 'https://riderapp.redcherryevents.co.za',
 }: EntryWelcomeProps) => (
   <EmailShell preview={`You're entered for ${eventName} — everything you need is in the Rider Hub`} siteName={siteName}>
+    {eventLogoUrl ? (
+      <Section style={eventLogoWrap}>
+        <Img src={eventLogoUrl} alt={`${eventName} logo`} height="72" style={eventLogoImg} />
+      </Section>
+    ) : null}
     <Heading style={h1}>
       {firstName ? `${firstName}, you're in!` : "You're in!"}
     </Heading>
