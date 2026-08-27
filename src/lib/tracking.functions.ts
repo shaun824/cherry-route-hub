@@ -237,8 +237,7 @@ export const resolveSosAlert = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input) => z.object({ id: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
-    const { data: isAdmin } = await context.supabase.rpc("is_admin" as never);
-    if (!isAdmin) throw new Error("Forbidden");
+    await assertAdmin(context.supabase, context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await table(supabaseAdmin, "tracking_sos")
       .update({ status: "resolved" })
