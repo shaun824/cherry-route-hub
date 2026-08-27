@@ -228,8 +228,10 @@ export async function sendPendingEntryWelcomes(
 
   const rows = (data ?? []) as any[];
 
+  // One email address gets ONE mail per event, no matter how many riders sit
+  // under that entry — group the pending rows by event + address first.
+  const groups = new Map<string, { email: string; event: any; rows: any[] }>();
   for (const row of rows) {
-    if (result.sent + result.suppressed >= limit) break;
     const email = (row.entrants?.email ?? "").trim().toLowerCase();
     const event = row.events;
     // No email, or the event isn't live in the app yet — leave it pending.
@@ -237,8 +239,28 @@ export async function sendPendingEntryWelcomes(
       result.skipped++;
       continue;
     }
+    const key = `${event.id}|${email}`;
+    const existing = groups.get(key);
+    if (existing) existing.rows.push(row);
+    else groups.set(key, { email, event, rows: [row] });
+  }
+
+  for (const { email, event, rows: groupRows } of groups.values()) {
+    if (result.sent + result.suppressed >= limit) break;
+
+    // Belt and braces: if any entry at this event already mailed this address,
+    // never send again — just stamp the stragglers.
+    const already = await hasWelcomeForEmail(admin, event.id, email);
+    if (already) {
+      await stampRows(admin, groupRows);
+      result.skipped += groupRows.length;
+      continue;
+    }
+
     result.candidates++;
 
+    const party = await loadEntryParty(admin, event.id, email, groupRows);
+    const lead = groupRows[0];
     const eventUrl = `${APP_URL}/my-events/${event.id}`;
     const redirectTo = `${APP_URL}/reset-password?next=${encodeURIComponent(`/my-events/${event.id}`)}`;
 
@@ -246,31 +268,28 @@ export async function sendPendingEntryWelcomes(
       const { url, needsPassword } = await buildActionLink(
         admin,
         email,
-        row.entrants?.full_name ?? null,
+        lead.entrants?.full_name ?? null,
         redirectTo,
       );
 
       const send = await sendTemplateEmail("entry-welcome", email, {
-        idempotencyKey: `entry-welcome-${row.id}`,
+        idempotencyKey: `entry-welcome-${event.id}-${email}`,
         templateData: {
-          firstName: firstName(row.entrants?.full_name),
+          firstName: firstName(lead.entrants?.full_name),
           eventName: event.name,
           eventDate: formatDate(event.event_date),
           venue: event.location ?? null,
-          category: row.category ?? null,
-          bibNumber: row.bib_number ?? null,
+          category: lead.category ?? null,
+          bibNumber: lead.bib_number ?? null,
+          party,
           eventUrl,
           actionUrl: url,
           needsPassword,
           offers: offersForEvent(promoRows, event.name),
-
         },
       });
 
-      await admin
-        .from("event_entrants")
-        .update({ welcome_email_sent_at: new Date().toISOString() })
-        .eq("id", row.id);
+      await stampRows(admin, groupRows);
 
       if (send.sent) result.sent++;
       else result.suppressed++;
@@ -285,6 +304,7 @@ export async function sendPendingEntryWelcomes(
       }
     }
   }
+
 
   return result;
 }
