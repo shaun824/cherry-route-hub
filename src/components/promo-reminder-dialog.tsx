@@ -21,7 +21,21 @@ export function PromoReminderDialog({
   onClose: () => void;
 }) {
   const [copied, setCopied] = useState(false);
+  const [phoneCopied, setPhoneCopied] = useState(false);
   const hasLink = Boolean(promo.url && promo.url !== "#");
+  const phone = useMyEntryPhone();
+
+  function copyPhone() {
+    if (!phone) return;
+    try {
+      navigator.clipboard?.writeText(phone);
+    } catch {
+      /* clipboard blocked — the number is still shown on screen */
+    }
+    setPhoneCopied(true);
+    setTimeout(() => setPhoneCopied(false), 1800);
+  }
+
 
   function copy() {
     if (!promo.code) return;
