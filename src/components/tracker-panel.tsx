@@ -4,6 +4,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Navigation, Play, Siren, Square } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
+import { useQuery } from "@tanstack/react-query";
+import { useAdminStore } from "@/lib/store";
+import { getEventResults } from "@/lib/results.functions";
+import { trackingWindow } from "@/lib/tracking-window";
 import {
   sendTrackingSos,
   uploadTrackingPoints,
@@ -63,6 +67,23 @@ export function TrackerPanel({
   const [error, setError] = useState<string | null>(null);
   const [queued, setQueued] = useState(0);
   const [lastUploadAt, setLastUploadAt] = useState<Date | null>(null);
+
+  const event = useAdminStore((s) => s.events.find((e) => e.id === eventId));
+  const fetchResults = useServerFn(getEventResults);
+  const { data: results } = useQuery({
+    queryKey: ["event-results-published", eventId],
+    queryFn: () => fetchResults({ data: { eventId } }),
+    staleTime: 60_000,
+    refetchInterval: 5 * 60_000,
+  });
+  // Re-evaluate the window every 30s so the panel opens/closes on its own.
+  const [clock, setClock] = useState(() => Date.now());
+  useEffect(() => {
+    const id = window.setInterval(() => setClock(Date.now()), 30_000);
+    return () => window.clearInterval(id);
+  }, []);
+  const resultsPublished = Boolean(results?.results_published) || (results?.rows?.length ?? 0) > 0;
+  const windowState = trackingWindow(event, { resultsPublished, now: new Date(clock) });
 
   const upload = useServerFn(uploadTrackingPoints);
   const sendSos = useServerFn(sendTrackingSos);
@@ -152,7 +173,15 @@ export function TrackerPanel({
     void flush(); // push the remaining buffer out
   }, [flush]);
 
+  // Enforce the window: stop the GPS watch the moment tracking closes.
+  useEffect(() => {
+    if (!tracking || windowState.open) return;
+    stopTracking();
+    setTracking(false);
+  }, [tracking, windowState.open, stopTracking]);
+
   function toggleTracking() {
+    if (!windowState.open) return;
     if (tracking) stopTracking();
     else startTracking();
     setTracking((t) => !t);
@@ -245,16 +274,22 @@ export function TrackerPanel({
                 : "Live · waiting for first GPS fix…"}
           </p>
         ) : null}
+        <p className="mt-2 text-xs text-ink-soft">{windowState.message}</p>
         <button
           onClick={toggleTracking}
-          className={`mt-3 flex w-full items-center justify-center gap-2 rounded-xl py-3 text-sm font-bold transition-transform active:scale-[0.99] ${
+          disabled={!windowState.open}
+          className={`mt-3 disabled:cursor-not-allowed disabled:opacity-50 flex w-full items-center justify-center gap-2 rounded-xl py-3 text-sm font-bold transition-transform active:scale-[0.99] ${
             tracking
               ? "bg-secondary text-secondary-foreground"
               : "cherry-gradient text-white shadow-md shadow-cherry/25"
           }`}
         >
           {tracking ? <Square className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-          {tracking ? "Stop tracking" : "Start live tracking"}
+          {tracking
+            ? "Stop tracking"
+            : windowState.open
+              ? "Start live tracking"
+              : "Tracking unavailable"}
         </button>
       </div>
 
