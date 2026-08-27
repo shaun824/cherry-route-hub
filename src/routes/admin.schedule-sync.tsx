@@ -116,6 +116,15 @@ function ScheduleSyncPage() {
                       {row.scheduleCount} items live
                     </span>
                     <span>Last checked {fmt(sync?.synced_at)}</span>
+                    {sync?.needs_review ? (
+                      <span className="rounded-full bg-amber-100 px-2 py-0.5 font-semibold text-amber-700">
+                        Needs review
+                      </span>
+                    ) : sync?.verified ? (
+                      <span className="rounded-full bg-emerald-100 px-2 py-0.5 font-semibold text-emerald-700">
+                        Verified
+                      </span>
+                    ) : null}
                     {sync?.applied_at ? <span>Applied {fmt(sync.applied_at)}</span> : null}
                     {row.websiteUrl ? (
                       <a
