@@ -18,7 +18,6 @@ import {
   IdCard,
   Package,
   Shirt,
-  ShoppingBag,
   Tent,
   Ticket,
   Truck,
@@ -185,8 +184,9 @@ function AddMoreMerch({
     <div className="border-t border-border bg-secondary/50 px-3 py-3">
       <p className="font-display text-[13px] font-bold text-ink">Want to add more?</p>
       <p className="mt-0.5 text-[11px] leading-snug text-ink-soft">
-        Merchandise and extras are added on your Entry Ninja registration — the link below opens
-        your entry so you can add them, and it syncs straight back here.
+        Merchandise and extras are managed on your Entry Ninja registration — use the
+        “Add or edit my entry” button below to open your entry and add them. They’ll sync
+        straight back here.
       </p>
 
       {available.length ? (
@@ -204,16 +204,6 @@ function AddMoreMerch({
           ))}
         </ul>
       ) : null}
-
-      <a
-        href={addUrl}
-        target="_blank"
-        rel="noreferrer"
-        className="mt-2.5 inline-flex w-full items-center justify-center gap-1.5 rounded-xl bg-cherry px-3 py-2.5 text-xs font-bold text-white"
-      >
-        <ShoppingBag className="h-3.5 w-3.5" /> Add merchandise on Entry Ninja
-        <ExternalLink className="h-3 w-3" />
-      </a>
     </div>
   );
 }
