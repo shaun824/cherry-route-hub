@@ -22,9 +22,14 @@ export function EntrySupportComposer({
     return () => clearTimeout(t);
   }, []);
 
+  const riderName = useMemo(() => {
+    const meta = user?.user_metadata as { full_name?: string; name?: string } | undefined;
+    return meta?.full_name || meta?.name || user?.email || "[your name]";
+  }, [user]);
+
   const subject = `Request to update my entry for ${eventName} (Reg #${regId})`;
-  const bodyIntro = `Hi Entry Ninja Support team,\n\nI would like to request a change to my entry for ${eventName}.\n\nEvent: ${eventName}\nRegistration number: ${regId}\n\nPlease could you assist me with the following change:\n\n`;
-  const bodyOutro = `\n\nI have copied the Red Cherry Events team on this email for visibility.\n\nThank you,\n[your name]`;
+  const bodyIntro = `Hi Entry Ninja Support team, I would like to request a change to my entry for ${eventName} with Registration number: ${regId}.\n\n`;
+  const bodyOutro = `\n\nThank you\n${riderName}`;
 
   const mailtoHref = useMemo(() => {
     const fullBody = `${bodyIntro}${message}${bodyOutro}`;
@@ -56,20 +61,21 @@ export function EntrySupportComposer({
           <span className="w-14 shrink-0 text-[11px] font-semibold text-ink-soft">Subject</span>
           <span className="truncate text-[13px] text-ink">{subject}</span>
         </div>
-        <div className="mt-2 space-y-1 text-[13px] text-ink">
-          <p>Hi Entry Ninja Support team,</p>
-          <p>I would like to request a change to my entry for {eventName}.</p>
-          <p>Event: {eventName}</p>
-          <p>Registration number: {regId}</p>
-          <p>Please could you assist me with the following change:</p>
+        <div className="mt-3 space-y-3 text-[13px] text-ink">
+          <p>
+            Hi Entry Ninja Support team, I would like to request a change to my entry for{" "}
+            {eventName} with Registration number: {regId}.
+          </p>
+          <textarea
+            ref={textareaRef}
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            placeholder="Type your request here…"
+            className="min-h-[120px] w-full resize-y rounded-lg bg-secondary px-3 py-2.5 text-[13px] text-ink placeholder:text-ink-soft/60 focus:outline-none focus:ring-2 focus:ring-cherry"
+          />
+          <p>Thank you</p>
+          <p>{riderName}</p>
         </div>
-        <textarea
-          ref={textareaRef}
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-          placeholder="Type your request here…"
-          className="mt-2 min-h-[96px] w-full resize-y rounded-lg bg-secondary px-3 py-2.5 text-[13px] text-ink placeholder:text-ink-soft/60 focus:outline-none focus:ring-2 focus:ring-cherry"
-        />
       </div>
       <a
         href={mailtoHref}
