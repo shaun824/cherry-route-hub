@@ -129,6 +129,28 @@ export const sendTestEntryWelcome = createServerFn({ method: "POST" })
     if (!event) throw new Error("No event found to build the test email from");
 
     const promos = await loadPromoRows(supabaseAdmin);
+
+    // Show a real multi-rider entry when the event has one, so the test mail
+    // demonstrates the "everyone on this entry" list.
+    const { data: partyRows } = await supabaseAdmin
+      .from("event_entrants")
+      .select("category, bib_number, entrants!inner(full_name, email)")
+      .eq("event_id", event.id)
+      .limit(500);
+    const byEmail = new Map<string, { name: string; category: string | null; bibNumber: string | null }[]>();
+    for (const r of (partyRows ?? []) as any[]) {
+      const em = (r.entrants?.email ?? "").trim().toLowerCase();
+      const name = (r.entrants?.full_name ?? "").trim();
+      if (!em || !name) continue;
+      const list = byEmail.get(em) ?? [];
+      if (!list.some((p) => p.name.toLowerCase() === name.toLowerCase())) {
+        list.push({ name, category: r.category ?? null, bibNumber: r.bib_number ?? null });
+      }
+      byEmail.set(em, list);
+    }
+    let party = [...byEmail.values()].sort((a, b) => b.length - a.length)[0] ?? [];
+    if (party.length < 2) party = [];
+
     const eventUrl = `https://riderapp.redcherryevents.co.za/my-events/${event.id}`;
 
     const send = await sendTemplateEmail("entry-welcome", to, {
@@ -152,6 +174,7 @@ export const sendTestEntryWelcome = createServerFn({ method: "POST" })
         actionUrl: eventUrl,
         needsPassword: false,
         offers: offersForEvent(promos, event.name),
+        party,
       },
     });
 
