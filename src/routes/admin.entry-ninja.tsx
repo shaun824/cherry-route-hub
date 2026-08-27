@@ -328,6 +328,27 @@ function WelcomeEmailsCard({ events }: { events: { id: string; name: string }[] 
     }
   }
 
+  /** Preview copy to the signed-in admin — no entry records are touched. */
+  async function sendTest() {
+    setBusy(true);
+    setErr(null);
+    setNote(null);
+    try {
+      const r = await testFn({ data: eventId ? { eventId } : {} });
+      setNote(
+        r.sent
+          ? `Test email sent to ${r.to} for ${r.eventName} (${r.offers} offer${r.offers === 1 ? "" : "s"} listed).`
+          : `Not sent to ${r.to}: ${r.reason}`,
+      );
+    } catch (e) {
+      setErr((e as Error).message ?? "Test send failed");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+
+
   return (
     <section className="space-y-3 rounded-xl border border-border bg-card p-4">
       <header className="flex items-center gap-2">
