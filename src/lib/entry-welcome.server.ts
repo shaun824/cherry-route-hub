@@ -208,7 +208,10 @@ export async function sendPendingEntryWelcomes(
     .select(
       "id, event_id, entrant_id, category, bib_number, entrants(full_name, email), events(id, name, event_date, location, lifecycle)",
     )
-    .order("created_at", { ascending: true })
+    // Archived-roster imports are flagged as skipped; without this filter they
+    // fill every batch and brand-new entries never get reached.
+    .eq("welcome_email_skipped", false)
+    .order("created_at", { ascending: false })
     .limit(limit * 3);
   query =
     opts.mode === "backfill"
@@ -292,7 +295,10 @@ export async function countPendingEntryWelcomes(
   opts: { eventId?: string } = {},
 ) {
   const base = () => {
-    let q = admin.from("event_entrants").select("id", { count: "exact", head: true });
+    let q = admin
+      .from("event_entrants")
+      .select("id", { count: "exact", head: true })
+      .eq("welcome_email_skipped", false);
     if (opts.eventId) q = q.eq("event_id", opts.eventId);
     return q;
   };

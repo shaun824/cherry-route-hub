@@ -94,6 +94,7 @@ import { Route as ApiPublicHooksKnowledgeEmailRouteImport } from './routes/api/p
 import { Route as ApiPublicHooksInviteRiderRouteImport } from './routes/api/public/hooks/invite-rider'
 import { Route as ApiPublicHooksFaqSuggestRouteImport } from './routes/api/public/hooks/faq-suggest'
 import { Route as ApiPublicHooksEventBotRefreshRouteImport } from './routes/api/public/hooks/event-bot-refresh'
+import { Route as ApiPublicHooksEntryWelcomeRouteImport } from './routes/api/public/hooks/entry-welcome'
 import { Route as ApiPublicHooksEntryNinjaSyncRouteImport } from './routes/api/public/hooks/entry-ninja-sync'
 import { Route as ApiPublicHooksEntryNinjaArchiveRouteImport } from './routes/api/public/hooks/entry-ninja-archive'
 import { Route as ApiPublicHooksContentAuditRouteImport } from './routes/api/public/hooks/content-audit'
@@ -539,6 +540,12 @@ const ApiPublicHooksEventBotRefreshRoute =
     path: '/api/public/hooks/event-bot-refresh',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksEntryWelcomeRoute =
+  ApiPublicHooksEntryWelcomeRouteImport.update({
+    id: '/api/public/hooks/entry-welcome',
+    path: '/api/public/hooks/entry-welcome',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksEntryNinjaSyncRoute =
   ApiPublicHooksEntryNinjaSyncRouteImport.update({
     id: '/api/public/hooks/entry-ninja-sync',
@@ -635,6 +642,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/content-audit': typeof ApiPublicHooksContentAuditRoute
   '/api/public/hooks/entry-ninja-archive': typeof ApiPublicHooksEntryNinjaArchiveRoute
   '/api/public/hooks/entry-ninja-sync': typeof ApiPublicHooksEntryNinjaSyncRoute
+  '/api/public/hooks/entry-welcome': typeof ApiPublicHooksEntryWelcomeRoute
   '/api/public/hooks/event-bot-refresh': typeof ApiPublicHooksEventBotRefreshRoute
   '/api/public/hooks/faq-suggest': typeof ApiPublicHooksFaqSuggestRoute
   '/api/public/hooks/invite-rider': typeof ApiPublicHooksInviteRiderRoute
@@ -722,6 +730,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/content-audit': typeof ApiPublicHooksContentAuditRoute
   '/api/public/hooks/entry-ninja-archive': typeof ApiPublicHooksEntryNinjaArchiveRoute
   '/api/public/hooks/entry-ninja-sync': typeof ApiPublicHooksEntryNinjaSyncRoute
+  '/api/public/hooks/entry-welcome': typeof ApiPublicHooksEntryWelcomeRoute
   '/api/public/hooks/event-bot-refresh': typeof ApiPublicHooksEventBotRefreshRoute
   '/api/public/hooks/faq-suggest': typeof ApiPublicHooksFaqSuggestRoute
   '/api/public/hooks/invite-rider': typeof ApiPublicHooksInviteRiderRoute
@@ -814,6 +823,7 @@ export interface FileRoutesById {
   '/api/public/hooks/content-audit': typeof ApiPublicHooksContentAuditRoute
   '/api/public/hooks/entry-ninja-archive': typeof ApiPublicHooksEntryNinjaArchiveRoute
   '/api/public/hooks/entry-ninja-sync': typeof ApiPublicHooksEntryNinjaSyncRoute
+  '/api/public/hooks/entry-welcome': typeof ApiPublicHooksEntryWelcomeRoute
   '/api/public/hooks/event-bot-refresh': typeof ApiPublicHooksEventBotRefreshRoute
   '/api/public/hooks/faq-suggest': typeof ApiPublicHooksFaqSuggestRoute
   '/api/public/hooks/invite-rider': typeof ApiPublicHooksInviteRiderRoute
@@ -907,6 +917,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/content-audit'
     | '/api/public/hooks/entry-ninja-archive'
     | '/api/public/hooks/entry-ninja-sync'
+    | '/api/public/hooks/entry-welcome'
     | '/api/public/hooks/event-bot-refresh'
     | '/api/public/hooks/faq-suggest'
     | '/api/public/hooks/invite-rider'
@@ -994,6 +1005,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/content-audit'
     | '/api/public/hooks/entry-ninja-archive'
     | '/api/public/hooks/entry-ninja-sync'
+    | '/api/public/hooks/entry-welcome'
     | '/api/public/hooks/event-bot-refresh'
     | '/api/public/hooks/faq-suggest'
     | '/api/public/hooks/invite-rider'
@@ -1085,6 +1097,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/content-audit'
     | '/api/public/hooks/entry-ninja-archive'
     | '/api/public/hooks/entry-ninja-sync'
+    | '/api/public/hooks/entry-welcome'
     | '/api/public/hooks/event-bot-refresh'
     | '/api/public/hooks/faq-suggest'
     | '/api/public/hooks/invite-rider'
@@ -1137,6 +1150,7 @@ export interface RootRouteChildren {
   ApiPublicHooksContentAuditRoute: typeof ApiPublicHooksContentAuditRoute
   ApiPublicHooksEntryNinjaArchiveRoute: typeof ApiPublicHooksEntryNinjaArchiveRoute
   ApiPublicHooksEntryNinjaSyncRoute: typeof ApiPublicHooksEntryNinjaSyncRoute
+  ApiPublicHooksEntryWelcomeRoute: typeof ApiPublicHooksEntryWelcomeRoute
   ApiPublicHooksEventBotRefreshRoute: typeof ApiPublicHooksEventBotRefreshRoute
   ApiPublicHooksFaqSuggestRoute: typeof ApiPublicHooksFaqSuggestRoute
   ApiPublicHooksInviteRiderRoute: typeof ApiPublicHooksInviteRiderRoute
@@ -1755,6 +1769,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksEventBotRefreshRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/entry-welcome': {
+      id: '/api/public/hooks/entry-welcome'
+      path: '/api/public/hooks/entry-welcome'
+      fullPath: '/api/public/hooks/entry-welcome'
+      preLoaderRoute: typeof ApiPublicHooksEntryWelcomeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/entry-ninja-sync': {
       id: '/api/public/hooks/entry-ninja-sync'
       path: '/api/public/hooks/entry-ninja-sync'
@@ -1946,6 +1967,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksContentAuditRoute: ApiPublicHooksContentAuditRoute,
   ApiPublicHooksEntryNinjaArchiveRoute: ApiPublicHooksEntryNinjaArchiveRoute,
   ApiPublicHooksEntryNinjaSyncRoute: ApiPublicHooksEntryNinjaSyncRoute,
+  ApiPublicHooksEntryWelcomeRoute: ApiPublicHooksEntryWelcomeRoute,
   ApiPublicHooksEventBotRefreshRoute: ApiPublicHooksEventBotRefreshRoute,
   ApiPublicHooksFaqSuggestRoute: ApiPublicHooksFaqSuggestRoute,
   ApiPublicHooksInviteRiderRoute: ApiPublicHooksInviteRiderRoute,
