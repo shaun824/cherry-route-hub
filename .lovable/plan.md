@@ -1,41 +1,61 @@
-# Add rider offers to the "You're in!" entry email
+# Fix wrong schedule times in rider emails
 
-Every entry confirmation email will end with a clear list of the rider offers running on that event, including exactly how each one is claimed. You'll also get a "Send me a test" button so you can see the finished mail in your own inbox.
+## What went wrong
 
-## What the rider sees
+Your email said Silver starts 12:30 (Sat) and 08:30 (Sun). The website says Silver starts **12:35** and **08:05**, and there is a whole **Friday 16 October** registration afternoon (13:30–17:30) that the app doesn't have at all.
 
-A new block at the bottom of the email, just above the sign-off. It is built per event at send time from the offers assigned to that event in the admin console, so each event's email lists only its own offers and changes automatically whenever you edit them. The Weekend Warrior example below is just one event's version:
+The email itself is fine — it printed exactly what is stored on the event. The bad data came from the automatic website schedule scrape, which last ran on 27 Aug and stored:
+
+- All three tiers starting at the same time (12:30 Sat, 08:30 Sun) — the real page lists 12:25 / 12:30 / 12:35 / 12:40 and 07:55 / 08:00 / 08:05 / 08:10
+- No Gold E-Bike start
+- No Friday registration day at all (event days start Saturday)
+
+The sources it used were Weekend Warrior pages for **other legs** (Worcester, Grabouw) plus generic FAQ/route pages — not the Lourensford schedule page. So the AI filled in plausible-looking times instead of the real ones.
+
+## The fix
+
+**1. Correct Weekend Warrior Lourensford now**
+
+Rebuild the event days and schedule exactly as the website states:
 
 ```text
-YOUR RIDER OFFERS (this event)
-Cycle Lab — R150 to spend at Cycle Lab
-  R150 is loaded onto the cell number on your entry.
-  How to claim: No code — give the cell number on your entry at
-  the Cycle Lab stand or in any Cycle Lab store.
-
-Rudy Project — R750 off
-  How to claim: at the Rudy Project stand in the race village.
-
-Green Motion — 15% off
-  Code: REDCHERRY15   →  greenmotion.co.za
+Registration Day · Fri 16 Oct   13:30–17:30  Registration, number collection, tented village allocation
+Day 1 · Sat 17 Oct              09:30–11:30  Registration (MTB, Weekend Pass & Day Riders)
+                                12:25        Gold E-Bike start
+                                12:30        Gold start
+                                12:35        Silver start
+                                12:40        Bronze start
+Day 2 · Sun 18 Oct              06:30–08:00  Registration (Day Riders)
+                                07:55        Gold E-Bike start
+                                08:00        Gold start
+                                08:05        Silver start
+                                08:10        Bronze start
+                                12:00        Prize giving (all categories)
 ```
 
+**2. Stop the scraper guessing (so it can't happen on any event)**
 
-Rules it follows:
-- Only offers that are live (active, not expired) and that match the rider's event appear — the same rules the app uses, so the email can never advertise a dead or wrong-event offer.
-- Offers with a code show the code prominently plus the partner link; offers without a code show the redeem instructions instead (this keeps the Cycle Lab cell-number wording identical to the app).
-- If an event has no live offers, the block is simply left out.
-- Offers are managed only in Admin → Supplier promos; editing there changes the emails too, with no code change.
+- Only crawl pages that belong to this event's own leg/edition; drop pages whose URL or heading names a different town or edition.
+- Require every extracted time to appear verbatim in the source text — anything the AI produces that isn't literally on the page gets dropped rather than saved.
+- Preserve time ranges ("13:30 – 17:30") instead of collapsing them to a single time.
+- Never merge separate batch starts into one time: each tier line stays its own item with its own time.
+- Record the exact source URL and quoted line behind every schedule item.
 
-## Test email
+**3. Don't email unverified times**
 
-A "Send test welcome email to me" button on the Entry Ninja admin page. It renders the real template using a chosen upcoming event's details and the offers live on it, and sends it to the signed-in admin's address. It does not touch anyone's entry records or mark any real entry as emailed.
+- Times only appear in rider emails once the schedule has passed the verbatim check and is marked verified.
+- If an event's schedule isn't verified yet, the email shows the day-by-day shape with "Times confirmed closer to the event" instead of guessed times — same standard on every event.
+- Admin gets a "Schedule needs review" flag on any event where the scrape found nothing, found conflicting times, or changed times since last approval.
 
-Once approved I'll run it and send the test mail to shaun@redcherryevents.co.za.
+**4. Re-check every upcoming event**
+
+Re-run the corrected scrape against all upcoming events and list, for each one, which times were confirmed verbatim against the site and which need a human look before they go into emails.
+
+**5. Send you a corrected Weekend Warrior test email** showing Silver at 12:35 / 08:05 and the Friday registration day.
 
 ## Technical notes
 
-- `src/lib/entry-welcome.server.ts`: load active rows from `public.promos` once per batch, and for each entry filter with the existing `isPromoLive` / `promoMatchesEvent` helpers against the event name; pass a compact `offers` array (brand, title, blurb, code, redeem, discount, url) in `templateData`.
-- `src/lib/email-templates/entry-welcome.tsx`: new optional `offers` prop plus an "Your rider offers" card rendered before the footer, styled with the existing `card` / `cardTitle` tokens; added to `previewData` so the dashboard preview shows it.
-- New admin-only server function (`sendTestEntryWelcome`) in the existing Entry Ninja functions file: verifies the caller's admin role, builds template data from the selected event, and calls `sendTemplateEmail("entry-welcome", <admin email>)` with a unique idempotency key.
-- No database changes, no changes to promo matching, and no changes to when entry emails are sent.
+- Data fix on `events.days` (add the Fri 16 Oct day) and `events.schedule` for `2dc4fd8c-c1f0-45b3-b5cd-61a3644f7fa7`.
+- `src/lib/schedule-scrape.server.ts`: leg-aware page filtering in `pickPages`, verbatim time validation after `extractSchedule`, range preservation in `normaliseTime`/`toScheduleItems`, per-item source capture.
+- `event_schedule_sync`: add a verified/needs-review state; the daily cron sets it, admin approves in Admin → Schedule sync.
+- `src/lib/entry-welcome.server.ts`: `riderScheduleForEmail` reads times only from a verified schedule, otherwise falls back to the TBC shape already in place.
