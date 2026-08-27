@@ -178,8 +178,11 @@ export function venueMapUrl(
   mapQuery?: string | null | undefined,
 ): string | null {
   const coords = (mapQuery ?? "").trim();
+  if (/^https?:\/\/(?:www\.)?(?:google\.[^/]+\/maps|maps\.app\.goo\.gl)\//i.test(coords)) {
+    return coords;
+  }
   if (/^-?\d+(\.\d+)?\s*,\s*-?\d+(\.\d+)?$/.test(coords)) {
-    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(coords)}`;
+    return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(coords)}`;
   }
   const v = (venue ?? "").trim();
   if (!v) return null;
