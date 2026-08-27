@@ -227,7 +227,17 @@ export const fetchSosAlerts = createServerFn({ method: "GET" })
     const { data: rows, error } = await q;
     if (error) throw new Error(error.message);
 
-    const userIds = [...new Set((rows ?? []).map((r) => r.user_id))];
+    const sosRows = (rows ?? []) as {
+      id: string;
+      event_id: string;
+      user_id: string;
+      lat: number | null;
+      lng: number | null;
+      message: string | null;
+      status: string;
+      created_at: string;
+    }[];
+    const userIds: string[] = [...new Set(sosRows.map((r) => r.user_id))];
     const names = new Map<string, string>();
     if (userIds.length) {
       const { data: entrants } = await supabaseAdmin
@@ -237,7 +247,7 @@ export const fetchSosAlerts = createServerFn({ method: "GET" })
       for (const e of entrants ?? []) if (e.user_id) names.set(e.user_id, e.full_name);
     }
 
-    const alerts: SosAlert[] = (rows ?? []).map((r) => ({
+    const alerts: SosAlert[] = sosRows.map((r) => ({
       id: r.id,
       eventId: r.event_id,
       userId: r.user_id,
