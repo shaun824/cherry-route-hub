@@ -21,6 +21,14 @@ import { supabase } from "@/integrations/supabase/client";
 
 const VillageMapGeo = lazy(() => import("./village-map-geo"));
 
+// Full screen has to escape the page tree: any ancestor with a transform or
+// filter makes `position: fixed` behave like `absolute`, which is why the
+// "full screen" map stayed card-sized.
+function Portal({ active, children }: { active: boolean; children: ReactNode }) {
+  if (!active || typeof document === "undefined") return <>{children}</>;
+  return createPortal(children, document.body);
+}
+
 function Pin({
   spot,
   active,
