@@ -44,7 +44,7 @@ import {
   Lock as LockIcon,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useSession } from "@/lib/auth";
+import { useSession, useIsAdmin } from "@/lib/auth";
 import { VillageMapView } from "@/components/village-map-view";
 import { OfflinePackCard } from "@/components/offline-pack-card";
 import { buildPackingList, fetchEventInfo, tubelessSanitise, type EventInfoBlock, type PackingItem } from "@/lib/event-info";
@@ -802,11 +802,9 @@ function InfoPanel({
           </div>
         </section>
       ) : (
-        <div className="flex items-start gap-2 rounded-2xl bg-card p-3 text-xs text-ink-soft ring-1 ring-border">
-          <Siren className="mt-0.5 h-4 w-4 shrink-0 text-cherry" />
-          <p>Live tracking and SOS activate on race day, once this event goes live.</p>
-        </div>
+        <LiveTrackingTestGate eventId={eventId} eventName={eventName} />
       )}
+
 
       {showWeather ? (
         <EventWeatherCard
@@ -1764,6 +1762,50 @@ function SignInNudge() {
   );
 }
 
+
+function LiveTrackingTestGate({ eventId, eventName }: { eventId: string; eventName?: string }) {
+  const { isAdmin } = useIsAdmin();
+  const [testing, setTesting] = useState(false);
+
+  if (testing) {
+    return (
+      <section>
+        <SectionTitle>Live tracking & SOS (test mode)</SectionTitle>
+        <div className="mt-2 space-y-2">
+          <p className="rounded-2xl bg-cherry/10 p-3 text-xs text-ink-soft ring-1 ring-cherry/30">
+            Test mode — points and SOS alerts are real, so clear them from Admin → Tracking when you're done.
+          </p>
+          <TrackerPanel eventId={eventId} eventName={eventName} />
+          <button
+            type="button"
+            onClick={() => setTesting(false)}
+            className="text-xs font-semibold text-ink-soft underline"
+          >
+            Exit test mode
+          </button>
+        </div>
+      </section>
+    );
+  }
+
+  return (
+    <div className="space-y-2 rounded-2xl bg-card p-3 ring-1 ring-border">
+      <div className="flex items-start gap-2 text-xs text-ink-soft">
+        <Siren className="mt-0.5 h-4 w-4 shrink-0 text-cherry" />
+        <p>Live tracking and SOS activate on race day, once this event goes live.</p>
+      </div>
+      {isAdmin ? (
+        <button
+          type="button"
+          onClick={() => setTesting(true)}
+          className="w-full rounded-xl bg-cherry px-3 py-2 text-xs font-semibold text-white"
+        >
+          Test live tracking now (admin)
+        </button>
+      ) : null}
+    </div>
+  );
+}
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
