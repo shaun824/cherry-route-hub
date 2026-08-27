@@ -16,6 +16,7 @@ type EventRow = {
   id: string;
   name: string;
   event_date: string | null;
+  location?: string | null;
   website_url: string | null;
   faq_url?: string | null;
   days: EventDay[] | null;
@@ -346,7 +347,13 @@ export async function syncEventSchedule(
     };
   } catch (err) {
     const message = (err as Error).message;
-    await record({ synced_at: new Date().toISOString(), last_error: message });
+    await record({
+      synced_at: new Date().toISOString(),
+      last_error: message,
+      verified: false,
+      needs_review: true,
+      review_note: message,
+    });
     return { eventId: event.id, name: event.name, found: 0, applied: false, error: message };
   }
 }
@@ -355,7 +362,7 @@ export async function syncEventSchedule(
 export async function syncAllEventSchedules(admin: SupabaseClient<any>, opts: { forceApply?: boolean } = {}) {
   const { data: events, error } = await admin
     .from("events")
-    .select("id, name, event_date, website_url, faq_url, days, schedule")
+    .select("id, name, event_date, location, website_url, faq_url, days, schedule")
     .neq("lifecycle", "archived");
   if (error) throw new Error(error.message);
 
