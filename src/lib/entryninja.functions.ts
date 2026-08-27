@@ -115,12 +115,12 @@ export const sendTestEntryWelcome = createServerFn({ method: "POST" })
     if (!to) throw new Error("No admin email address to send to");
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { loadPromoRows, offersForEvent } = await import("./entry-welcome.server");
+    const { loadPromoRows, offersForEvent, venueMapUrl, riderScheduleForEmail } = await import("./entry-welcome.server");
     const { sendTemplateEmail } = await import("./email-templates/send-email");
 
     let eventQuery = supabaseAdmin
       .from("events")
-      .select("id, name, event_date, location")
+      .select("id, name, event_date, location, days, schedule")
       .order("event_date", { ascending: true })
       .limit(1);
     if (data.eventId) eventQuery = eventQuery.eq("id", data.eventId);
@@ -168,6 +168,8 @@ export const sendTestEntryWelcome = createServerFn({ method: "POST" })
             })
           : null,
         venue: event.location ?? null,
+        venueUrl: venueMapUrl(event.location),
+        schedule: riderScheduleForEmail(event, party[0]?.category ?? null),
         category: "Test entry",
         bibNumber: null,
         eventUrl,

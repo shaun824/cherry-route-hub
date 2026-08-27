@@ -18,12 +18,23 @@ export interface EntryWelcomeProps {
   actionUrl: string
   actionLabel?: string
   needsPassword?: boolean
+  /** Google Maps link for the venue so riders can navigate straight there. */
+  venueUrl?: string | null
+  /** The rider's own key times, pulled from the event schedule. */
+  schedule?: EmailScheduleDay[]
   /** Everyone entered under this registration / email for this event. */
   party?: EmailPartyMember[]
   /** Live rider offers for THIS event, built at send time from the admin promo list. */
   offers?: EmailOffer[]
   siteName?: string
   siteUrl?: string
+}
+
+/** One day of the rider's key times. */
+export interface EmailScheduleDay {
+  label: string
+  date?: string | null
+  items: { time: string; label: string; details?: string | null }[]
 }
 
 /** One person entered under the same entry. */
@@ -218,6 +229,8 @@ export const EntryWelcomeEmail = ({
   needsPassword = false,
   offers = [],
   party = [],
+  venueUrl,
+  schedule = [],
 
   siteName = 'Red Cherry Events',
   siteUrl = 'https://riderapp.redcherryevents.co.za',
@@ -239,15 +252,47 @@ export const EntryWelcomeEmail = ({
       <Text style={cardTitle}>Your entry</Text>
       <Text style={eventLine}>{eventName}</Text>
       <Text style={meta}>
-        {[
-          eventDate,
-          venue,
-          category ? `Category: ${category}` : null,
-          bibNumber ? `Race number: ${bibNumber}` : null,
-        ]
+        {[eventDate, category ? `Category: ${category}` : null, bibNumber ? `Race number: ${bibNumber}` : null]
           .filter(Boolean)
           .join(' · ')}
       </Text>
+      {venue ? (
+        <Text style={{ ...meta, margin: '6px 0 0' }}>
+          📍{' '}
+          {venueUrl ? (
+            <Link href={venueUrl} style={link}>
+              {venue}
+            </Link>
+          ) : (
+            venue
+          )}
+          {venueUrl ? <span style={featureNote}> — tap for directions</span> : null}
+        </Text>
+      ) : null}
+      {schedule.length ? (
+        <>
+          <Text style={{ ...cardTitle, margin: '16px 0 8px' }}>Your key times</Text>
+          {schedule.map((d, di) => (
+            <React.Fragment key={`${d.label}-${di}`}>
+              <Text style={{ ...feature, margin: '0 0 4px' }}>
+                <strong>
+                  {d.label}
+                  {d.date ? ` · ${d.date}` : ''}
+                </strong>
+              </Text>
+              {d.items.map((it, ii) => (
+                <Text key={`${it.label}-${ii}`} style={{ ...feature, margin: '0 0 4px' }}>
+                  <strong>{it.time}</strong>{' — '}
+                  <span style={featureNote}>
+                    {it.label}
+                    {it.details ? ` (${it.details})` : ''}
+                  </span>
+                </Text>
+              ))}
+            </React.Fragment>
+          ))}
+        </>
+      ) : null}
       {party.length > 1 ? (
         <>
           <Text style={{ ...cardTitle, margin: '16px 0 8px' }}>Everyone on this entry</Text>
