@@ -192,6 +192,26 @@ async function assertAdmin(supabase: any, userId: string) {
   if (!data || data.length === 0) throw new Error("Forbidden");
 }
 
+/** Admin: events available for the race-control view (newest first). */
+export const fetchTrackingEvents = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context.supabase, context.userId);
+    const { data, error } = await context.supabase
+      .from("events")
+      .select("id, name, event_date, lifecycle")
+      .neq("lifecycle", "archived")
+      .order("event_date", { ascending: false })
+      .limit(50);
+    if (error) throw new Error(error.message);
+    return (data ?? []).map((e) => ({
+      id: e.id,
+      name: e.name,
+      eventDate: e.event_date,
+      lifecycle: e.lifecycle,
+    }));
+  });
+
 /** Admin: list SOS alerts, optionally filtered to an event. */
 export const fetchSosAlerts = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
