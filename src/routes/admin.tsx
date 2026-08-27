@@ -116,7 +116,7 @@ function AdminLayout() {
       <div className="mx-auto flex max-w-7xl gap-6 px-4 py-6 md:px-8">
         {/* Sidebar (desktop) */}
         <aside className="hidden w-56 shrink-0 md:block">
-          <nav className="sticky top-20 space-y-1">
+          <nav className="sticky top-20 max-h-[calc(100vh-6rem)] space-y-1 overflow-y-auto overscroll-contain pr-1">
             {nav.map((n) => {
               const Icon = n.icon;
               const active = n.exact ? pathname === n.to : pathname.startsWith(n.to);
