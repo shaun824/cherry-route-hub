@@ -114,6 +114,56 @@ export function cssColorToHex(color: string | null | undefined): string | null {
  */
 const LEGACY_CUTOFF = "2026-08-17T10:30:00Z";
 
+/** True when someone at this event has already had a welcome mail at this address. */
+async function hasWelcomeForEmail(admin: AnyClient, eventId: string, email: string) {
+  const { data } = await admin
+    .from("event_entrants")
+    .select("id, entrants!inner(email)")
+    .eq("event_id", eventId)
+    .not("welcome_email_sent_at", "is", null)
+    .ilike("entrants.email", email)
+    .limit(1);
+  return (data ?? []).length > 0;
+}
+
+/** Marks every row in the group as mailed so nobody gets a second copy. */
+async function stampRows(admin: AnyClient, rows: any[]) {
+  const ids = rows.map((r) => r.id);
+  if (!ids.length) return;
+  await admin
+    .from("event_entrants")
+    .update({ welcome_email_sent_at: new Date().toISOString() })
+    .in("id", ids);
+}
+
+/** Everyone entered at this event under the same registration (or email). */
+async function loadEntryParty(
+  admin: AnyClient,
+  eventId: string,
+  email: string,
+  registrationRef: string | null,
+  fallbackRows: any[],
+) {
+  let q = admin
+    .from("event_entrants")
+    .select("category, bib_number, entrants!inner(full_name, email)")
+    .eq("event_id", eventId);
+  q = registrationRef
+    ? q.eq("registration_ref", registrationRef)
+    : q.ilike("entrants.email", email);
+  const { data } = await q;
+  const rows = (data ?? []).length ? (data as any[]) : fallbackRows;
+  const seen = new Set<string>();
+  const party: { name: string; category: string | null; bibNumber: string | null }[] = [];
+  for (const r of rows) {
+    const name = (r.entrants?.full_name ?? "").trim();
+    if (!name || seen.has(name.toLowerCase())) continue;
+    seen.add(name.toLowerCase());
+    party.push({ name, category: r.category ?? null, bibNumber: r.bib_number ?? null });
+  }
+  return party;
+}
+
 export type WelcomeBatchResult = {
   candidates: number;
   sent: number;
@@ -206,7 +256,7 @@ export async function sendPendingEntryWelcomes(
   let query = admin
     .from("event_entrants")
     .select(
-      "id, event_id, entrant_id, category, bib_number, entrants(full_name, email), events(id, name, event_date, location, lifecycle)",
+      "id, event_id, entrant_id, registration_ref, category, bib_number, entrants(full_name, email), events(id, name, event_date, location, lifecycle)",
     )
     // Archived-roster imports are flagged as skipped; without this filter they
     // fill every batch and brand-new entries never get reached.
@@ -228,8 +278,10 @@ export async function sendPendingEntryWelcomes(
 
   const rows = (data ?? []) as any[];
 
+  // One email address gets ONE mail per event, no matter how many riders sit
+  // under that entry — group the pending rows by event + address first.
+  const groups = new Map<string, { email: string; event: any; rows: any[] }>();
   for (const row of rows) {
-    if (result.sent + result.suppressed >= limit) break;
     const email = (row.entrants?.email ?? "").trim().toLowerCase();
     const event = row.events;
     // No email, or the event isn't live in the app yet — leave it pending.
@@ -237,8 +289,30 @@ export async function sendPendingEntryWelcomes(
       result.skipped++;
       continue;
     }
+    // Multi-rider entries share a registration reference; keep them together so
+    // the family/team gets one mail listing everyone.
+    const key = `${event.id}|${row.registration_ref || email}`;
+    const existing = groups.get(key);
+    if (existing) existing.rows.push(row);
+    else groups.set(key, { email, event, rows: [row] });
+  }
+
+  for (const { email, event, rows: groupRows } of groups.values()) {
+    if (result.sent + result.suppressed >= limit) break;
+
+    // Belt and braces: if any entry at this event already mailed this address,
+    // never send again — just stamp the stragglers.
+    const already = await hasWelcomeForEmail(admin, event.id, email);
+    if (already) {
+      await stampRows(admin, groupRows);
+      result.skipped += groupRows.length;
+      continue;
+    }
+
     result.candidates++;
 
+    const party = await loadEntryParty(admin, event.id, email, groupRows[0]?.registration_ref ?? null, groupRows);
+    const lead = groupRows[0];
     const eventUrl = `${APP_URL}/my-events/${event.id}`;
     const redirectTo = `${APP_URL}/reset-password?next=${encodeURIComponent(`/my-events/${event.id}`)}`;
 
@@ -246,31 +320,28 @@ export async function sendPendingEntryWelcomes(
       const { url, needsPassword } = await buildActionLink(
         admin,
         email,
-        row.entrants?.full_name ?? null,
+        lead.entrants?.full_name ?? null,
         redirectTo,
       );
 
       const send = await sendTemplateEmail("entry-welcome", email, {
-        idempotencyKey: `entry-welcome-${row.id}`,
+        idempotencyKey: `entry-welcome-${event.id}-${email}`,
         templateData: {
-          firstName: firstName(row.entrants?.full_name),
+          firstName: firstName(lead.entrants?.full_name),
           eventName: event.name,
           eventDate: formatDate(event.event_date),
           venue: event.location ?? null,
-          category: row.category ?? null,
-          bibNumber: row.bib_number ?? null,
+          category: lead.category ?? null,
+          bibNumber: lead.bib_number ?? null,
+          party,
           eventUrl,
           actionUrl: url,
           needsPassword,
           offers: offersForEvent(promoRows, event.name),
-
         },
       });
 
-      await admin
-        .from("event_entrants")
-        .update({ welcome_email_sent_at: new Date().toISOString() })
-        .eq("id", row.id);
+      await stampRows(admin, groupRows);
 
       if (send.sent) result.sent++;
       else result.suppressed++;
@@ -285,6 +356,7 @@ export async function sendPendingEntryWelcomes(
       }
     }
   }
+
 
   return result;
 }
