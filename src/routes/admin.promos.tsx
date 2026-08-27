@@ -148,12 +148,39 @@ function PromoEditor({
   onCancel: () => void;
 }) {
   const [form, setForm] = useState<Promo>(value);
+  const events = useAdminStore((s) => s.events);
+  const openEvents = useMemo(() => {
+    const today = new Date().toISOString().slice(0, 10);
+    return events
+      .filter(
+        (e) =>
+          e.lifecycle !== "archived" &&
+          (e.status === "open" || e.status === "live" || (e.date ?? "").slice(0, 10) >= today),
+      )
+      .sort((a, b) => (a.date ?? "").localeCompare(b.date ?? ""));
+  }, [events]);
+  const selected = useMemo(
+    () =>
+      (form.eventMatch ?? "")
+        .split(",")
+        .map((s) => s.trim().toLowerCase())
+        .filter(Boolean),
+    [form.eventMatch],
+  );
+  function toggleEvent(name: string) {
+    const key = name.toLowerCase();
+    const next = selected.includes(key)
+      ? selected.filter((s) => s !== key)
+      : [...selected, key];
+    setForm((f) => ({ ...f, eventMatch: next.join(", ") }));
+  }
   const fileRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadErr, setUploadErr] = useState<string | null>(null);
   function update<K extends keyof Promo>(k: K, v: Promo[K]) {
     setForm((f) => ({ ...f, [k]: v }));
   }
+
   async function onPick(file?: File) {
     if (!file) return;
     setUploading(true);
