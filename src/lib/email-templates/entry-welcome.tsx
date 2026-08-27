@@ -18,9 +18,25 @@ export interface EntryWelcomeProps {
   actionUrl: string
   actionLabel?: string
   needsPassword?: boolean
+  /** Live rider offers for THIS event, built at send time from the admin promo list. */
+  offers?: EmailOffer[]
   siteName?: string
   siteUrl?: string
 }
+
+/** One rider offer as it appears in the email. */
+export interface EmailOffer {
+  brand: string
+  title: string
+  blurb?: string | null
+  /** Discount code, when the offer uses one. */
+  code?: string | null
+  /** How to claim, when there is no code. */
+  redeem?: string | null
+  discount?: string | null
+  url?: string | null
+}
+
 
 const card = {
   backgroundColor: '#FAFAFC',
@@ -63,6 +79,47 @@ const feature = {
 
 const featureNote = { color: brand.muted, fontWeight: 400 as const }
 
+const offerRow = {
+  borderTop: `1px solid ${brand.border}`,
+  padding: '12px 0 0',
+  margin: '12px 0 0',
+}
+
+const offerBrand = {
+  fontSize: '11px',
+  fontWeight: 700 as const,
+  letterSpacing: '1.2px',
+  textTransform: 'uppercase' as const,
+  color: brand.muted,
+  margin: '0 0 2px',
+}
+
+const offerTitle = {
+  fontSize: '15px',
+  fontWeight: 700 as const,
+  color: brand.ink,
+  lineHeight: '1.4',
+  margin: '0 0 4px',
+}
+
+const offerClaim = {
+  fontSize: '13px',
+  color: brand.ink,
+  lineHeight: '1.6',
+  margin: '0',
+}
+
+const offerNote = { ...offerClaim, color: brand.muted, margin: '0 0 4px' }
+
+const offerCode = {
+  fontFamily: 'Courier New, Courier, monospace',
+  fontSize: '16px',
+  fontWeight: 700 as const,
+  color: brand.ink,
+  letterSpacing: '1px',
+}
+
+
 const FEATURES: { icon: string; title: string; note: string }[] = [
   { icon: '🗺️', title: 'Routes & elevation', note: 'every distance mapped, with water points, cut-offs and hover-linked climb profiles.' },
   { icon: '🕒', title: 'Day-by-day schedule', note: 'registration, briefings and start times, kept in sync with the event website.' },
@@ -84,6 +141,8 @@ export const EntryWelcomeEmail = ({
   actionUrl,
   actionLabel,
   needsPassword = false,
+  offers = [],
+
   siteName = 'Red Cherry Events',
   siteUrl = 'https://riderapp.redcherryevents.co.za',
 }: EntryWelcomeProps) => (
@@ -142,7 +201,54 @@ export const EntryWelcomeEmail = ({
       </Link>
     </Text>
 
+    {offers.length > 0 ? (
+      <Section style={card}>
+        <Text style={cardTitle}>Your rider offers for {eventName}</Text>
+        {offers.map((o, i) => (
+          <Section key={`${o.brand}-${i}`} style={i === 0 ? undefined : offerRow}>
+            <Text style={offerBrand}>
+              {o.brand}
+              {o.discount ? ` · ${o.discount}` : ''}
+            </Text>
+            <Text style={offerTitle}>{o.title}</Text>
+            {o.blurb ? <Text style={offerNote}>{o.blurb}</Text> : null}
+            {o.code ? (
+              <Text style={offerClaim}>
+                How to claim: use code <span style={offerCode}>{o.code}</span>
+                {o.url ? (
+                  <>
+                    {' '}
+                    at{' '}
+                    <Link href={o.url} style={link}>
+                      {o.brand}
+                    </Link>
+                  </>
+                ) : null}
+                .
+              </Text>
+            ) : (
+              <Text style={offerClaim}>
+                How to claim: {o.redeem}
+                {o.url ? (
+                  <>
+                    {' '}
+                    <Link href={o.url} style={link}>
+                      More about {o.brand}
+                    </Link>
+                  </>
+                ) : null}
+              </Text>
+            )}
+          </Section>
+        ))}
+        <Text style={{ ...offerNote, margin: '12px 0 0' }}>
+          Offers can change — the latest ones are always in the app under Promos.
+        </Text>
+      </Section>
+    ) : null}
+
     <Text style={footer}>
+
       You&apos;re receiving this because you entered {eventName} with Red Cherry Events.
       See you on the start line.
     </Text>
@@ -163,6 +269,18 @@ export const template = {
     eventUrl: 'https://riderapp.redcherryevents.co.za/my-events/demo',
     actionUrl: 'https://riderapp.redcherryevents.co.za/reset-password',
     needsPassword: true,
+    offers: [
+      {
+        brand: 'Cycle Lab',
+        title: 'R150 to spend at Cycle Lab',
+        blurb: 'R150 is loaded onto the cell number on your entry.',
+        redeem:
+          'No code — give the cell number on your entry at the Cycle Lab stand or in any Cycle Lab store.',
+        discount: 'R150',
+        url: 'https://www.cyclelab.com',
+      },
+    ],
+
   },
 } satisfies TemplateEntry
 

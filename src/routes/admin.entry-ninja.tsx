@@ -13,6 +13,8 @@ import {
   syncEntryNinjaEvent,
   countEntryWelcomes,
   sendEntryWelcomeBatch,
+  sendTestEntryWelcome,
+
 } from "@/lib/entryninja.functions";
 
 export const Route = createFileRoute("/admin/entry-ninja")({
@@ -292,6 +294,8 @@ function ArchiveBackfillCard() {
 function WelcomeEmailsCard({ events }: { events: { id: string; name: string }[] }) {
   const countFn = useServerFn(countEntryWelcomes);
   const sendFn = useServerFn(sendEntryWelcomeBatch);
+  const testFn = useServerFn(sendTestEntryWelcome);
+
   const [eventId, setEventId] = useState<string>("");
   const [batch, setBatch] = useState(50);
   const [busy, setBusy] = useState(false);
@@ -323,6 +327,27 @@ function WelcomeEmailsCard({ events }: { events: { id: string; name: string }[] 
       setBusy(false);
     }
   }
+
+  /** Preview copy to the signed-in admin — no entry records are touched. */
+  async function sendTest() {
+    setBusy(true);
+    setErr(null);
+    setNote(null);
+    try {
+      const r = await testFn({ data: eventId ? { eventId } : {} });
+      setNote(
+        r.sent
+          ? `Test email sent to ${r.to} for ${r.eventName} (${r.offers} offer${r.offers === 1 ? "" : "s"} listed).`
+          : `Not sent to ${r.to}: ${r.reason}`,
+      );
+    } catch (e) {
+      setErr((e as Error).message ?? "Test send failed");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+
 
   return (
     <section className="space-y-3 rounded-xl border border-border bg-card p-4">
@@ -374,7 +399,15 @@ function WelcomeEmailsCard({ events }: { events: { id: string; name: string }[] 
         >
           {busy ? "Sending…" : `Backfill existing (${counts.data?.historic ?? "…"})`}
         </button>
+        <button
+          onClick={() => void sendTest()}
+          disabled={busy}
+          className="rounded-lg border border-border px-3 py-2 text-xs font-semibold disabled:opacity-60"
+        >
+          Send test to me
+        </button>
       </div>
+
 
       {note && <p className="text-xs font-semibold text-emerald-700">{note}</p>}
       {err && <p className="text-xs text-destructive">{err}</p>}
