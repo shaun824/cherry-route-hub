@@ -31,3 +31,23 @@ export const previewEmailTemplate = createServerFn({ method: "POST" })
     const { renderTemplateHtml } = await import("./email-logs.server");
     return renderTemplateHtml(data.name);
   });
+
+export type { SentEmailRow, SentEmailDetail } from "./email-logs.server";
+
+export const listSentEmails = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { recipient?: string; template?: string; limit?: number }) => input ?? {})
+  .handler(async ({ data, context }) => {
+    if (!(await checkIsAdmin(context.supabase))) throw new Error("Admins only");
+    const { fetchSentEmails } = await import("./email-logs.server");
+    return fetchSentEmails(data ?? {});
+  });
+
+export const getSentEmail = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { id: string }) => input)
+  .handler(async ({ data, context }) => {
+    if (!(await checkIsAdmin(context.supabase))) throw new Error("Admins only");
+    const { fetchSentEmail } = await import("./email-logs.server");
+    return fetchSentEmail(data.id);
+  });

@@ -70,3 +70,49 @@ export async function renderTemplateHtml(name: string): Promise<{ html: string; 
   const subject = typeof template.subject === 'function' ? template.subject(data) : template.subject
   return { html, subject }
 }
+
+export type SentEmailRow = {
+  id: string
+  recipient: string
+  template: string
+  subject: string
+  sent_at: string
+  suppressed: boolean
+  opened_at: string | null
+  last_opened_at: string | null
+  open_count: number
+  click_count: number
+}
+
+export type SentEmailDetail = SentEmailRow & {
+  html: string
+  clicks: { url: string; clicked_at: string }[]
+}
+
+export async function fetchSentEmails(input: { recipient?: string; template?: string; limit?: number }) {
+  const { supabaseAdmin } = await import('@/integrations/supabase/client.server')
+  const admin = supabaseAdmin as any
+  let q = admin
+    .from('email_sends')
+    .select('id, recipient, template, subject, sent_at, suppressed, opened_at, last_opened_at, open_count, click_count')
+    .order('sent_at', { ascending: false })
+    .limit(Math.min(Math.max(input.limit ?? 100, 1), 200))
+  if (input.recipient) q = q.ilike('recipient', `%${input.recipient}%`)
+  if (input.template) q = q.eq('template', input.template)
+  const { data, error } = await q
+  if (error) throw error
+  return (data ?? []) as SentEmailRow[]
+}
+
+export async function fetchSentEmail(id: string): Promise<SentEmailDetail> {
+  const { supabaseAdmin } = await import('@/integrations/supabase/client.server')
+  const admin = supabaseAdmin as any
+  const { data, error } = await admin.from('email_sends').select('*').eq('id', id).single()
+  if (error) throw error
+  const { data: clicks } = await admin
+    .from('email_send_clicks')
+    .select('url, clicked_at')
+    .eq('send_id', id)
+    .order('clicked_at', { ascending: false })
+  return { ...(data as SentEmailRow & { html: string }), clicks: (clicks ?? []) as { url: string; clicked_at: string }[] }
+}
