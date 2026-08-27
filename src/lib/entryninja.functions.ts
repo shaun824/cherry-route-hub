@@ -120,7 +120,7 @@ export const sendTestEntryWelcome = createServerFn({ method: "POST" })
 
     let eventQuery = supabaseAdmin
       .from("events")
-      .select("id, name, event_date, location, days, schedule, logo_url")
+      .select("id, name, event_date, location, days, schedule, logo_url, cover_url")
       .order("event_date", { ascending: true })
       .limit(1);
     if (data.eventId) eventQuery = eventQuery.eq("id", data.eventId);
@@ -170,6 +170,7 @@ export const sendTestEntryWelcome = createServerFn({ method: "POST" })
         venue: event.location ?? null,
         venueUrl: venueMapUrl(event.location),
         eventLogoUrl: absoluteLogo((event as any).logo_url),
+        eventCoverUrl: absoluteLogo((event as any).cover_url),
         schedule: riderScheduleForEmail(event, party[0]?.category ?? null),
         category: "Test entry",
         bibNumber: null,
