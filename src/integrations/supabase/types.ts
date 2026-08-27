@@ -1372,9 +1372,13 @@ export type Database = {
           event_id: string
           items: Json
           last_error: string | null
+          needs_review: boolean
+          review_note: string | null
           sources: Json
           synced_at: string | null
           updated_at: string
+          verified: boolean
+          verified_at: string | null
         }
         Insert: {
           applied_at?: string | null
@@ -1383,9 +1387,13 @@ export type Database = {
           event_id: string
           items?: Json
           last_error?: string | null
+          needs_review?: boolean
+          review_note?: string | null
           sources?: Json
           synced_at?: string | null
           updated_at?: string
+          verified?: boolean
+          verified_at?: string | null
         }
         Update: {
           applied_at?: string | null
@@ -1394,9 +1402,13 @@ export type Database = {
           event_id?: string
           items?: Json
           last_error?: string | null
+          needs_review?: boolean
+          review_note?: string | null
           sources?: Json
           synced_at?: string | null
           updated_at?: string
+          verified?: boolean
+          verified_at?: string | null
         }
         Relationships: [
           {
