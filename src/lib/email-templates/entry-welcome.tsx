@@ -249,17 +249,24 @@ export const EntryWelcomeEmail = ({
   party = [],
   venueUrl,
   eventLogoUrl,
+  eventCoverUrl,
   schedule = [],
 
   siteName = 'Red Cherry Events',
   siteUrl = 'https://riderapp.redcherryevents.co.za',
 }: EntryWelcomeProps) => (
   <EmailShell preview={`You're entered for ${eventName} — everything you need is in the Rider Hub`} siteName={siteName}>
-    {eventLogoUrl ? (
+    {eventCoverUrl || eventLogoUrl ? (
       <Section style={eventLogoWrap}>
-        <Img src={eventLogoUrl} alt={`${eventName} logo`} height="72" style={eventLogoImg} />
+        <Img
+          src={(eventCoverUrl || eventLogoUrl) as string}
+          alt={eventName}
+          width="600"
+          style={eventLogoImg}
+        />
       </Section>
     ) : null}
+
     <Heading style={h1}>
       {firstName ? `${firstName}, you're in!` : "You're in!"}
     </Heading>
