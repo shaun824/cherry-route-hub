@@ -273,7 +273,7 @@ export const EntryWelcomeEmail = ({
         {offers.map((o, i) => (
           <Section
             key={`${o.brand}-${i}`}
-            style={{ ...offerCard, backgroundColor: o.accent || brand.cherry }}
+            style={{ ...offerCard, backgroundColor: o.accent || brand.orange }}
           >
             <Row>
               {o.logoUrl ? (
@@ -350,6 +350,7 @@ export const template = {
           'No code — give the cell number on your entry at the Cycle Lab stand or in any Cycle Lab store.',
         discount: 'R150',
         url: 'https://www.cyclelab.com',
+        accent: '#2F5FA8',
       },
     ],
 
