@@ -94,3 +94,66 @@ export const sendEntryWelcomeBatch = createServerFn({ method: "POST" })
       mode: data.mode ?? "new",
     });
   });
+
+const testWelcomeSchema = z.object({
+  eventId: z.string().uuid().optional(),
+  email: z.string().trim().email().optional(),
+});
+
+/**
+ * Sends one preview copy of the welcome email to an admin, using a real event
+ * and that event's live rider offers. Never touches entry records.
+ */
+export const sendTestEntryWelcome = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => testWelcomeSchema.parse(data ?? {}))
+  .handler(async ({ data, context }) => {
+    const isAdmin = await checkIsAdmin(context.supabase as never);
+    if (!isAdmin) throw new Error("Forbidden");
+
+    const to = (data.email || (context.claims as any)?.email || "").trim().toLowerCase();
+    if (!to) throw new Error("No admin email address to send to");
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { loadPromoRows, offersForEvent } = await import("./entry-welcome.server");
+    const { sendTemplateEmail } = await import("./email-templates/send-email");
+
+    let eventQuery = supabaseAdmin
+      .from("events")
+      .select("id, name, event_date, location")
+      .order("event_date", { ascending: true })
+      .limit(1);
+    if (data.eventId) eventQuery = eventQuery.eq("id", data.eventId);
+    const { data: events } = await eventQuery;
+    const event = events?.[0];
+    if (!event) throw new Error("No event found to build the test email from");
+
+    const promos = await loadPromoRows(supabaseAdmin);
+    const eventUrl = `https://riderapp.redcherryevents.co.za/my-events/${event.id}`;
+
+    const send = await sendTemplateEmail("entry-welcome", to, {
+      idempotencyKey: `entry-welcome-test-${event.id}-${Date.now()}`,
+      templateData: {
+        firstName: "Shaun",
+        eventName: event.name,
+        eventDate: event.event_date
+          ? new Date(event.event_date).toLocaleDateString("en-ZA", {
+              weekday: "long",
+              day: "numeric",
+              month: "long",
+              year: "numeric",
+              timeZone: "Africa/Johannesburg",
+            })
+          : null,
+        venue: event.location ?? null,
+        category: "Test entry",
+        bibNumber: null,
+        eventUrl,
+        actionUrl: eventUrl,
+        needsPassword: false,
+        offers: offersForEvent(promos, event.name),
+      },
+    });
+
+    return { to, eventName: event.name, offers: offersForEvent(promos, event.name).length, ...send };
+  });
