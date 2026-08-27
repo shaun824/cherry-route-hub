@@ -1,4 +1,4 @@
-import { entryNinjaRegistrationUrl } from "@/lib/entry-ninja-link";
+import { entryNinjaRegistrationUrl, entryNinjaRegistrationId } from "@/lib/entry-ninja-link";
 import { SocialWall } from "@/components/social-wall";
 import { WhatsappButton } from "@/components/whatsapp-button";
 import { isBotMiss } from "@/lib/bot-handoff";
