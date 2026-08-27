@@ -127,6 +127,31 @@ const feature = {
 
 const featureNote = { color: brand.muted, fontWeight: 400 as const }
 
+const scheduleDay = {
+  borderTop: `2px solid ${brand.border}`,
+  padding: '16px 0 10px',
+}
+
+const scheduleDayFirst = {
+  ...scheduleDay,
+  borderTop: `3px solid ${brand.orange}`,
+}
+
+const scheduleDayTitle = {
+  fontSize: '17px',
+  fontWeight: 700 as const,
+  color: brand.ink,
+  lineHeight: '1.4',
+  margin: '0 0 10px',
+}
+
+const scheduleItem = {
+  fontSize: '15px',
+  color: brand.ink,
+  lineHeight: '1.55',
+  margin: '0 0 8px',
+}
+
 const offersHeading = {
   fontSize: '12px',
   fontWeight: 700 as const,
@@ -309,15 +334,15 @@ export const EntryWelcomeEmail = ({
         <>
           <Text style={{ ...cardTitle, margin: '16px 0 8px' }}>Your key times</Text>
           {schedule.map((d, di) => (
-            <React.Fragment key={`${d.label}-${di}`}>
-              <Text style={{ ...feature, margin: '0 0 4px' }}>
+            <Section key={`${d.label}-${di}`} style={di === 0 ? scheduleDayFirst : scheduleDay}>
+              <Text style={scheduleDayTitle}>
                 <strong>
                   {d.label}
                   {d.date ? ` · ${d.date}` : ''}
                 </strong>
               </Text>
               {d.items.map((it, ii) => (
-                <Text key={`${it.label}-${ii}`} style={{ ...feature, margin: '0 0 4px' }}>
+                <Text key={`${it.label}-${ii}`} style={scheduleItem}>
                   <strong>{it.time}</strong>{' — '}
                   <span style={featureNote}>
                     {it.label}
@@ -325,7 +350,7 @@ export const EntryWelcomeEmail = ({
                   </span>
                 </Text>
               ))}
-            </React.Fragment>
+            </Section>
           ))}
         </>
       ) : null}

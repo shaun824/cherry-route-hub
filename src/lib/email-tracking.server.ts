@@ -38,12 +38,22 @@ export async function recordEmailSend(input: {
 
 const SKIP_PROTOCOLS = /^(mailto:|tel:|sms:|#|\{)/i;
 
+function decodeHref(rawUrl: string): string {
+  // React Email correctly escapes query separators as &amp; in the HTML. The
+  // tracking redirect must store the actual URL, otherwise Google receives a
+  // parameter named "amp;destination" and opens Maps without the venue.
+  return rawUrl
+    .replace(/&amp;/gi, "&")
+    .replace(/&#38;/g, "&")
+    .replace(/&quot;/gi, '"');
+}
+
 /** Rewrites links through the click tracker and appends an open pixel. */
 export function instrumentEmailHtml(html: string, sendId: string): string {
   const base = trackingBaseUrl();
 
   const withLinks = html.replace(/href="([^"]+)"/gi, (match, rawUrl: string) => {
-    const url = rawUrl.trim();
+    const url = decodeHref(rawUrl.trim());
     if (SKIP_PROTOCOLS.test(url)) return match;
     if (!/^https?:\/\//i.test(url)) return match;
     if (url.includes("/api/public/e/")) return match;
