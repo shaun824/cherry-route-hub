@@ -2259,14 +2259,9 @@ function YourEntryCard({ eventId, entryUrl = null }: { eventId: string; entryUrl
         Sizes, merchandise and rider details are managed on Entry Ninja — changes sync back here.
       </p>
 
-      <a
-        href={entrySupportMailto(row.event.name, row.registration_ref)}
-        className="mt-2 inline-flex w-full items-center justify-center gap-1.5 rounded-xl bg-secondary px-3 py-2.5 text-xs font-bold text-ink ring-1 ring-border"
-      >
-        <Mail className="h-3.5 w-3.5" /> Need to change something? Email Entry Ninja support
-      </a>
-      <p className="mt-1 text-[11px] text-ink-soft">
-        Opens your email app with the event, registration number and Red Cherry copied in.
+      <EntrySupportComposer eventName={row.event.name} registrationRef={row.registration_ref} />
+      <p className="mt-1.5 text-[11px] text-ink-soft">
+        We’ll open your email app with everything filled in — just hit send.
       </p>
 
       {row.notes ? (
