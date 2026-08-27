@@ -152,28 +152,22 @@ export const fetchLiveTracking = createServerFn({ method: "GET" })
     }
 
     // Public-safe identity: same roster data the spectate page already publishes.
+    // RLS blocks direct roster reads for spectators, so resolve via the
+    // security-definer helper that only exposes riders who are tracking.
     if (entrantIds.size > 0) {
-      const { data: roster } = await supabase
-        .from("entrants")
-        .select("id, full_name")
-        .in("id", [...entrantIds]);
-      const names = new Map((roster ?? []).map((r) => [r.id, r.full_name]));
-      // bib/category come from the event roster (public on the spectate page)
-      const { data: ee } = await supabase
-        .from("event_entrants")
-        .select("entrant_id, bib_number, category")
-        .eq("event_id", data.eventId)
-        .in("entrant_id", [...entrantIds]);
-      const extras = new Map((ee ?? []).map((r) => [r.entrant_id, r]));
+      const { data: identity } = await supabase.rpc("live_tracking_identity", {
+        _event_id: data.eventId,
+      });
+      type IdentityRow = { entrant_id: string; full_name: string | null; bib_number: string | null; category: string | null };
+      const info = new Map((identity ?? []).map((r: IdentityRow) => [r.entrant_id, r]));
       for (const p of points ?? []) {
         const pos = latest.get(p.user_id);
-        if (!pos || pos.riderName) continue;
-        if (p.entrant_id) {
-          pos.riderName = names.get(p.entrant_id) ?? null;
-          const ex = extras.get(p.entrant_id);
-          pos.bib = ex?.bib_number ?? null;
-          pos.category = ex?.category ?? null;
-        }
+        if (!pos || pos.riderName || !p.entrant_id) continue;
+        const ex = info.get(p.entrant_id);
+        if (!ex) continue;
+        pos.riderName = ex.full_name ?? null;
+        pos.bib = ex.bib_number ?? null;
+        pos.category = ex.category ?? null;
       }
     }
 

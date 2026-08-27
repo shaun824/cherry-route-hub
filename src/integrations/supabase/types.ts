@@ -3366,6 +3366,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      live_tracking_identity: {
+        Args: { _event_id: string }
+        Returns: {
+          bib_number: string
+          category: string
+          entrant_id: string
+          full_name: string
+        }[]
+      }
       my_entry_group: {
         Args: { _event_id: string }
         Returns: {
