@@ -1,6 +1,7 @@
-import { entryNinjaRegistrationUrl, entryNinjaRegistrationId } from "@/lib/entry-ninja-link";
+import { entryNinjaRegistrationUrl } from "@/lib/entry-ninja-link";
 import { SocialWall } from "@/components/social-wall";
 import { WhatsappButton } from "@/components/whatsapp-button";
+import { EntrySupportComposer } from "@/components/entry-support-composer";
 import { isBotMiss } from "@/lib/bot-handoff";
 import { splitFollowUps } from "@/lib/bot-followups";
 import ReactMarkdown from "react-markdown";
