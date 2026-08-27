@@ -66,21 +66,20 @@ export interface EmailOffer {
 
 
 const eventLogoWrap = {
-  backgroundColor: '#ffffff',
-  border: `1px solid ${brand.border}`,
-  borderRadius: '14px',
-  padding: '16px 20px',
   margin: '0 0 20px',
   textAlign: 'center' as const,
+  lineHeight: 0,
 }
 
 const eventLogoImg = {
-  height: '72px',
-  width: 'auto',
-  maxWidth: '260px',
-  display: 'inline-block',
-  objectFit: 'contain' as const,
+  display: 'block',
+  width: '100%',
+  maxWidth: '100%',
+  height: 'auto',
+  borderRadius: '14px',
+  border: `1px solid ${brand.border}`,
 }
+
 
 const card = {
   backgroundColor: '#FAFAFC',
