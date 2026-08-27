@@ -348,6 +348,17 @@ export default function VillageMapGeo({
     if (watchRef.current !== null) navigator.geolocation.clearWatch(watchRef.current);
   }, []);
 
+  // Full-screen: freeze the page behind the map and tell Leaflet its container
+  // changed size, otherwise tiles/markers keep the old dimensions.
+  useEffect(() => {
+    document.body.style.overflow = fullscreen ? "hidden" : "";
+    const t = window.setTimeout(() => mapRef.current?.invalidateSize(), 80);
+    return () => {
+      document.body.style.overflow = "";
+      window.clearTimeout(t);
+    };
+  }, [fullscreen]);
+
   const showOverlay = !!imageUrl && (geo.widthM ?? 0) > 0;
   const heightM = (geo.widthM || 300) * ratio;
   const bounds = useMemo<L.LatLngBoundsExpression>(() => {
@@ -445,8 +456,15 @@ export default function VillageMapGeo({
 
   return (
     <div className="space-y-2">
-      <div className="relative overflow-hidden rounded-2xl ring-1 ring-border">
+      <div
+        className={
+          fullscreen
+            ? "fixed inset-0 z-[200] bg-black"
+            : "relative overflow-hidden rounded-2xl ring-1 ring-border"
+        }
+      >
         <MapContainer
+          ref={mapRef}
           center={[geo.lat, geo.lng]}
           zoom={17}
           maxZoom={24}
