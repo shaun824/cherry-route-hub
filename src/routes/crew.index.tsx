@@ -11,6 +11,7 @@ import {
   HardHat,
   Map as MapIcon,
   Search,
+  Siren,
   Users,
 } from "lucide-react";
 import { useIsCrew } from "@/lib/auth";
@@ -280,6 +281,13 @@ function CrewDashboard() {
           title="Rooming lists"
           body="Every tent and room for the event, grouped and searchable."
         />
+        <Tile
+          to="/crew/tracking"
+          icon={<Siren className="h-5 w-5" />}
+          title="Race control"
+          body="Live rider positions and SOS alerts — crew only, riders never see these."
+        />
+
         {event ? (
           <Tile
             to="/spectate/$eventId"
