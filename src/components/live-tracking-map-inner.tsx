@@ -288,6 +288,22 @@ export default function LiveTrackingMapInner({ eventId }: { eventId: string }) {
         ref={containerRef}
         className="h-96 w-full overflow-hidden rounded-2xl ring-1 ring-border"
       />
+      {(matchedRoutes.length > 0 ? matchedRoutes : candidates).length > 0 ? (
+        <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+          <RouteIcon className="h-3.5 w-3.5 text-cherry" />
+          <span>{matchedRoutes.length > 0 ? "Your route" : "Event routes"}:</span>
+          {(matchedRoutes.length > 0 ? matchedRoutes : candidates).map((c) => (
+            <span key={c.route.id} className="inline-flex items-center gap-1.5 font-medium text-ink">
+              <span
+                className="inline-block h-2.5 w-6 rounded-full"
+                style={{ backgroundColor: c.color }}
+              />
+              {c.route.name} · {c.dayLabel}
+            </span>
+          ))}
+        </div>
+      ) : null}
+
       <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
         <MapPin className="h-3.5 w-3.5 text-cherry" />
         {riders.length > 0
