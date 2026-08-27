@@ -168,9 +168,9 @@ function PromoEditor({
     }
   }
   return (
-    <div className="fixed inset-0 z-50 grid place-items-center bg-black/50 p-4">
-      <div className="w-full max-w-lg overflow-hidden rounded-2xl bg-card shadow-xl">
-        <header className="flex items-center justify-between border-b border-border px-5 py-3">
+    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto overscroll-contain bg-black/50 p-4 sm:items-center">
+      <div className="my-auto flex max-h-[92dvh] w-full max-w-lg flex-col overflow-hidden rounded-2xl bg-card shadow-xl">
+        <header className="flex shrink-0 items-center justify-between border-b border-border px-5 py-3">
           <h3 className="font-display text-lg font-bold">
             {value.title ? "Edit promo" : "New promo"}
           </h3>
@@ -178,7 +178,8 @@ function PromoEditor({
             <X className="h-5 w-5" />
           </button>
         </header>
-        <div className="grid gap-4 p-5 md:grid-cols-2">
+        <div className="grid flex-1 gap-4 overflow-y-auto overscroll-contain p-5 md:grid-cols-2">
+
           <L label="Brand">
             <input className={i} value={form.brand} onChange={(e) => update("brand", e.target.value)} />
           </L>
