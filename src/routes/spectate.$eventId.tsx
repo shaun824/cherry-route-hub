@@ -37,8 +37,10 @@ import { VenueMiniMap } from "@/components/venue-mini-map";
 import { VillageMapView } from "@/components/village-map-view";
 import { fetchVillageMap } from "@/lib/village-map";
 import { LiveTrackingMap } from "@/components/live-tracking-map";
+import { TrackerPanel } from "@/components/tracker-panel";
 
 import { fetchEventInfo } from "@/lib/event-info";
+import { fetchMyEventById } from "@/lib/my-events";
 import { groupRidersByClass } from "@/lib/rider-classes";
 import { useEventPromos } from "@/lib/use-event-promos";
 import { useShuffledPromos } from "@/lib/use-shuffled-promos";
@@ -156,6 +158,14 @@ function SpectatorEventPage() {
     queryFn: () => fetchVillageMap(eventId),
     staleTime: 300_000,
   });
+
+  const myEntryQ = useQuery({
+    queryKey: ["my-event-entry", eventId, user?.id ?? "guest"],
+    queryFn: () => fetchMyEventById(eventId),
+    enabled: Boolean(user),
+    staleTime: 60_000,
+  });
+  const myEntry = myEntryQ.data;
 
 
   const spectatorSchedule = useMemo(() => {
@@ -382,6 +392,20 @@ function SpectatorEventPage() {
 
       {tab === "live" ? (
         <div className="px-5 pt-5 pb-8 space-y-3 animate-fade-in">
+          {myEntry ? (
+            <section>
+              <h2 className="font-display text-[13px] font-bold uppercase tracking-wider text-ink-soft">
+                You are entered
+              </h2>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Share your position with race control and spectators, or send an SOS in an
+                emergency.
+              </p>
+              <div className="mt-3">
+                <TrackerPanel eventId={eventId} eventName={event.name} />
+              </div>
+            </section>
+          ) : null}
           <section>
             <h2 className="font-display text-[13px] font-bold uppercase tracking-wider text-ink-soft">
               Live rider tracking
