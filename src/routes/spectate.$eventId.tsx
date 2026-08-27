@@ -64,7 +64,7 @@ export const Route = createFileRoute("/spectate/$eventId")({
   component: SpectatorEventPage,
 });
 
-type Tab = "info" | "riders" | "results";
+type Tab = "info" | "riders" | "results" | "live";
 type GroupBy = "class" | "start" | "bib" | "category" | "name";
 
 function riderResultUrl(template: string | null, bib: string | null) {
