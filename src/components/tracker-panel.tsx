@@ -95,6 +95,7 @@ export function TrackerPanel({
       bufferRef.current = [];
       saveQueue(eventId, pending);
       setQueued(pending.length);
+      setError("Couldn't reach race control — points saved on your phone and will retry.");
     } finally {
       flushingRef.current = false;
     }
@@ -119,10 +120,14 @@ export function TrackerPanel({
           recordedAt: new Date(now).toISOString(),
         });
         setQueued(loadQueue(eventId).length + bufferRef.current.length);
+        // Upload straight away so the rider shows on the live map within seconds
+        // of starting, not only after the first minute-long flush window.
+        void flush();
       });
     },
-    [eventId],
+    [eventId, flush],
   );
+
 
   const startTracking = useCallback(() => {
     if (!("geolocation" in navigator)) {
@@ -170,13 +175,19 @@ export function TrackerPanel({
     };
   }, [tracking, flush]);
 
-  // Stop the GPS watch when the component unmounts.
+  // Stop the GPS watch when the component unmounts, and never lose buffered
+  // points — park them in the offline queue so the next flush sends them.
   useEffect(
     () => () => {
       if (watchIdRef.current !== null) navigator.geolocation.clearWatch(watchIdRef.current);
+      if (bufferRef.current.length > 0) {
+        saveQueue(eventId, [...loadQueue(eventId), ...bufferRef.current]);
+        bufferRef.current = [];
+      }
     },
-    [],
+    [eventId],
   );
+
 
   function triggerSos() {
     setError(null);
