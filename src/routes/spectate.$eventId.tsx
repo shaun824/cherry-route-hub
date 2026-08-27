@@ -13,7 +13,7 @@ import {
   Info,
   Lock,
   MapPin,
-
+  Navigation,
   Search,
   Toilet,
   Trophy,
