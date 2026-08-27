@@ -100,6 +100,7 @@ import { Route as ApiPublicHooksEntryNinjaArchiveRouteImport } from './routes/ap
 import { Route as ApiPublicHooksContentAuditRouteImport } from './routes/api/public/hooks/content-audit'
 import { Route as AdminLoyaltyRiderEntrantIdRouteImport } from './routes/admin.loyalty.rider.$entrantId'
 import { Route as ApiPublicEOIdRouteImport } from './routes/api/public/e/o/$id'
+import { Route as ApiPublicECIdRouteImport } from './routes/api/public/e/c/$id'
 
 const SpectateRoute = SpectateRouteImport.update({
   id: '/spectate',
@@ -576,6 +577,11 @@ const ApiPublicEOIdRoute = ApiPublicEOIdRouteImport.update({
   path: '/api/public/e/o/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicECIdRoute = ApiPublicECIdRouteImport.update({
+  id: '/api/public/e/c/$id',
+  path: '/api/public/e/c/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -668,6 +674,7 @@ export interface FileRoutesByFullPath {
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/spectate/$eventId/rider/$entrantId': typeof SpectateEventIdRiderEntrantIdRoute
+  '/api/public/e/c/$id': typeof ApiPublicECIdRoute
   '/api/public/e/o/$id': typeof ApiPublicEOIdRoute
 }
 export interface FileRoutesByTo {
@@ -757,6 +764,7 @@ export interface FileRoutesByTo {
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/spectate/$eventId/rider/$entrantId': typeof SpectateEventIdRiderEntrantIdRoute
+  '/api/public/e/c/$id': typeof ApiPublicECIdRoute
   '/api/public/e/o/$id': typeof ApiPublicEOIdRoute
 }
 export interface FileRoutesById {
@@ -851,6 +859,7 @@ export interface FileRoutesById {
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/spectate_/$eventId_/rider/$entrantId': typeof SpectateEventIdRiderEntrantIdRoute
+  '/api/public/e/c/$id': typeof ApiPublicECIdRoute
   '/api/public/e/o/$id': typeof ApiPublicEOIdRoute
 }
 export interface FileRouteTypes {
@@ -946,6 +955,7 @@ export interface FileRouteTypes {
     | '/lovable/email/auth/webhook'
     | '/lovable/email/transactional/preview'
     | '/spectate/$eventId/rider/$entrantId'
+    | '/api/public/e/c/$id'
     | '/api/public/e/o/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -1035,6 +1045,7 @@ export interface FileRouteTypes {
     | '/lovable/email/auth/webhook'
     | '/lovable/email/transactional/preview'
     | '/spectate/$eventId/rider/$entrantId'
+    | '/api/public/e/c/$id'
     | '/api/public/e/o/$id'
   id:
     | '__root__'
@@ -1128,6 +1139,7 @@ export interface FileRouteTypes {
     | '/lovable/email/auth/webhook'
     | '/lovable/email/transactional/preview'
     | '/spectate_/$eventId_/rider/$entrantId'
+    | '/api/public/e/c/$id'
     | '/api/public/e/o/$id'
   fileRoutesById: FileRoutesById
 }
@@ -1182,6 +1194,7 @@ export interface RootRouteChildren {
   LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
   LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
   SpectateEventIdRiderEntrantIdRoute: typeof SpectateEventIdRiderEntrantIdRoute
+  ApiPublicECIdRoute: typeof ApiPublicECIdRoute
   ApiPublicEOIdRoute: typeof ApiPublicEOIdRoute
 }
 
@@ -1824,6 +1837,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicEOIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/e/c/$id': {
+      id: '/api/public/e/c/$id'
+      path: '/api/public/e/c/$id'
+      fullPath: '/api/public/e/c/$id'
+      preLoaderRoute: typeof ApiPublicECIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -2007,6 +2027,7 @@ const rootRouteChildren: RootRouteChildren = {
   LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
   LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
   SpectateEventIdRiderEntrantIdRoute: SpectateEventIdRiderEntrantIdRoute,
+  ApiPublicECIdRoute: ApiPublicECIdRoute,
   ApiPublicEOIdRoute: ApiPublicEOIdRoute,
 }
 export const routeTree = rootRouteImport
