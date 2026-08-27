@@ -1,4 +1,5 @@
-import { Suspense, lazy, useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, lazy, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { useQuery } from "@tanstack/react-query";
 import { ClientOnly } from "@tanstack/react-router";
 import { Maximize2, Minimize2, Minus, Plus, X } from "lucide-react";
@@ -20,6 +21,14 @@ import { supabase } from "@/integrations/supabase/client";
 
 
 const VillageMapGeo = lazy(() => import("./village-map-geo"));
+
+// Full screen has to escape the page tree: any ancestor with a transform or
+// filter makes `position: fixed` behave like `absolute`, which is why the
+// "full screen" map stayed card-sized.
+function Portal({ active, children }: { active: boolean; children: ReactNode }) {
+  if (!active || typeof document === "undefined") return <>{children}</>;
+  return createPortal(children, document.body);
+}
 
 function Pin({
   spot,
@@ -362,10 +371,11 @@ export function VillageMapView({
           </Suspense>
         </ClientOnly>
       ) : (
+      <Portal active={planFullscreen}>
       <div
         className={
           planFullscreen
-            ? "fixed inset-0 z-[200] bg-black"
+            ? "fixed inset-0 z-[9999] h-[100dvh] w-screen bg-black"
             : "relative overflow-hidden rounded-2xl ring-1 ring-border"
         }
       >
@@ -422,7 +432,9 @@ export function VillageMapView({
           </button>
         </div>
       </div>
+      </Portal>
       )}
+
 
       {detail ? (
         <div className="rounded-2xl bg-card p-4 ring-1 ring-border">

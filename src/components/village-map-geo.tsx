@@ -2,6 +2,7 @@
 // a satellite basemap at its real-world position, hotspots become map markers
 // and the rider's live GPS position is shown as a pulsing dot.
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { MapContainer, TileLayer, ImageOverlay, useMap, CircleMarker, Polygon, Popup, Marker } from "react-leaflet";
 import { Maximize2, Minimize2 } from "lucide-react";
 import L from "leaflet";
@@ -454,12 +455,14 @@ export default function VillageMapGeo({
     );
   }
 
-  return (
-    <div className="space-y-2">
+  // Full screen renders through a portal on <body>: inside the page tree any
+  // ancestor with a transform/filter turns `fixed` into a normal box, so the
+  // "full screen" map stayed the size of its card.
+  const shell = (
       <div
         className={
           fullscreen
-            ? "fixed inset-0 z-[200] bg-black"
+            ? "fixed inset-0 z-[9999] h-[100dvh] w-screen bg-black"
             : "relative overflow-hidden rounded-2xl ring-1 ring-border"
         }
       >
@@ -700,6 +703,12 @@ export default function VillageMapGeo({
           {locating ? "Finding you…" : me ? "Recentre on me" : "Show my location"}
         </button>
       </div>
+  );
+
+  return (
+    <div className="space-y-2">
+      {fullscreen ? createPortal(shell, document.body) : shell}
+
 
       {geoError ? <p className="text-xs font-semibold text-cherry">{geoError}</p> : null}
       {me && accuracy ? (
