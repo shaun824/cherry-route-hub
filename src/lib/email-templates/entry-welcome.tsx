@@ -201,7 +201,54 @@ export const EntryWelcomeEmail = ({
       </Link>
     </Text>
 
+    {offers.length > 0 ? (
+      <Section style={card}>
+        <Text style={cardTitle}>Your rider offers for {eventName}</Text>
+        {offers.map((o, i) => (
+          <Section key={`${o.brand}-${i}`} style={i === 0 ? undefined : offerRow}>
+            <Text style={offerBrand}>
+              {o.brand}
+              {o.discount ? ` · ${o.discount}` : ''}
+            </Text>
+            <Text style={offerTitle}>{o.title}</Text>
+            {o.blurb ? <Text style={offerNote}>{o.blurb}</Text> : null}
+            {o.code ? (
+              <Text style={offerClaim}>
+                How to claim: use code <span style={offerCode}>{o.code}</span>
+                {o.url ? (
+                  <>
+                    {' '}
+                    at{' '}
+                    <Link href={o.url} style={link}>
+                      {o.brand}
+                    </Link>
+                  </>
+                ) : null}
+                .
+              </Text>
+            ) : (
+              <Text style={offerClaim}>
+                How to claim: {o.redeem}
+                {o.url ? (
+                  <>
+                    {' '}
+                    <Link href={o.url} style={link}>
+                      More about {o.brand}
+                    </Link>
+                  </>
+                ) : null}
+              </Text>
+            )}
+          </Section>
+        ))}
+        <Text style={{ ...offerNote, margin: '12px 0 0' }}>
+          Offers can change — the latest ones are always in the app under Promos.
+        </Text>
+      </Section>
+    ) : null}
+
     <Text style={footer}>
+
       You&apos;re receiving this because you entered {eventName} with Red Cherry Events.
       See you on the start line.
     </Text>
