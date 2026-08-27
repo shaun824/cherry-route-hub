@@ -3,6 +3,7 @@
 // and the rider's live GPS position is shown as a pulsing dot.
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { MapContainer, TileLayer, ImageOverlay, useMap, CircleMarker, Polygon, Popup, Marker } from "react-leaflet";
+import { Maximize2, Minimize2 } from "lucide-react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 // Adds bearing support to Leaflet so riders can spin the village map to match
@@ -299,6 +300,11 @@ export default function VillageMapGeo({
   const [recenterToken, setRecenterToken] = useState(0);
   const [satellite, setSatellite] = useState(true);
   const [bearing, setBearing] = useState(0);
+  // Full-screen expand: the same live map instance just fills the viewport, so
+  // the rider's current zoom/position is kept. Works on every device (unlike
+  // the native Fullscreen API, which iPhone Safari refuses for divs).
+  const [fullscreen, setFullscreen] = useState(false);
+  const mapRef = useRef<L.Map | null>(null);
 
   const [zoom, setZoom] = useState(17);
   const [view, setView] = useState<L.LatLngBounds | null>(null);
@@ -341,6 +347,17 @@ export default function VillageMapGeo({
   useEffect(() => () => {
     if (watchRef.current !== null) navigator.geolocation.clearWatch(watchRef.current);
   }, []);
+
+  // Full-screen: freeze the page behind the map and tell Leaflet its container
+  // changed size, otherwise tiles/markers keep the old dimensions.
+  useEffect(() => {
+    document.body.style.overflow = fullscreen ? "hidden" : "";
+    const t = window.setTimeout(() => mapRef.current?.invalidateSize(), 80);
+    return () => {
+      document.body.style.overflow = "";
+      window.clearTimeout(t);
+    };
+  }, [fullscreen]);
 
   const showOverlay = !!imageUrl && (geo.widthM ?? 0) > 0;
   const heightM = (geo.widthM || 300) * ratio;
@@ -439,8 +456,15 @@ export default function VillageMapGeo({
 
   return (
     <div className="space-y-2">
-      <div className="relative overflow-hidden rounded-2xl ring-1 ring-border">
+      <div
+        className={
+          fullscreen
+            ? "fixed inset-0 z-[200] bg-black"
+            : "relative overflow-hidden rounded-2xl ring-1 ring-border"
+        }
+      >
         <MapContainer
+          ref={mapRef}
           center={[geo.lat, geo.lng]}
           zoom={17}
           maxZoom={24}
@@ -459,7 +483,7 @@ export default function VillageMapGeo({
           touchZoom
           doubleClickZoom
           {...({ rotate: true, touchRotate: true, rotateControl: false, bearing: 0 } as object)}
-          className="h-[65vh] min-h-[340px] w-full"
+          className={fullscreen ? "h-full w-full" : "h-[65vh] min-h-[340px] w-full"}
 
         >
           {satellite ? (
@@ -620,6 +644,14 @@ export default function VillageMapGeo({
 
 
         <div className="pointer-events-none absolute right-3 top-3 z-[500] flex gap-2">
+          <button
+            type="button"
+            onClick={() => setFullscreen((f) => !f)}
+            aria-label={fullscreen ? "Exit full screen" : "View full screen"}
+            className="pointer-events-auto grid h-8 w-8 place-items-center rounded-full bg-card/95 text-ink shadow ring-1 ring-border"
+          >
+            {fullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+          </button>
           <button
             type="button"
             onClick={() => setSatellite((s) => !s)}
