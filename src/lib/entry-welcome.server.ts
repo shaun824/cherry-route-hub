@@ -136,18 +136,22 @@ async function stampRows(admin: AnyClient, rows: any[]) {
     .in("id", ids);
 }
 
-/** Everyone entered at this event under the same email address. */
+/** Everyone entered at this event under the same registration (or email). */
 async function loadEntryParty(
   admin: AnyClient,
   eventId: string,
   email: string,
+  registrationRef: string | null,
   fallbackRows: any[],
 ) {
-  const { data } = await admin
+  let q = admin
     .from("event_entrants")
     .select("category, bib_number, entrants!inner(full_name, email)")
-    .eq("event_id", eventId)
-    .ilike("entrants.email", email);
+    .eq("event_id", eventId);
+  q = registrationRef
+    ? q.eq("registration_ref", registrationRef)
+    : q.ilike("entrants.email", email);
+  const { data } = await q;
   const rows = (data ?? []).length ? (data as any[]) : fallbackRows;
   const seen = new Set<string>();
   const party: { name: string; category: string | null; bibNumber: string | null }[] = [];
@@ -252,7 +256,7 @@ export async function sendPendingEntryWelcomes(
   let query = admin
     .from("event_entrants")
     .select(
-      "id, event_id, entrant_id, category, bib_number, entrants(full_name, email), events(id, name, event_date, location, lifecycle)",
+      "id, event_id, entrant_id, registration_ref, category, bib_number, entrants(full_name, email), events(id, name, event_date, location, lifecycle)",
     )
     // Archived-roster imports are flagged as skipped; without this filter they
     // fill every batch and brand-new entries never get reached.
@@ -285,7 +289,9 @@ export async function sendPendingEntryWelcomes(
       result.skipped++;
       continue;
     }
-    const key = `${event.id}|${email}`;
+    // Multi-rider entries share a registration reference; keep them together so
+    // the family/team gets one mail listing everyone.
+    const key = `${event.id}|${row.registration_ref || email}`;
     const existing = groups.get(key);
     if (existing) existing.rows.push(row);
     else groups.set(key, { email, event, rows: [row] });
@@ -305,7 +311,7 @@ export async function sendPendingEntryWelcomes(
 
     result.candidates++;
 
-    const party = await loadEntryParty(admin, event.id, email, groupRows);
+    const party = await loadEntryParty(admin, event.id, email, groupRows[0]?.registration_ref ?? null, groupRows);
     const lead = groupRows[0];
     const eventUrl = `${APP_URL}/my-events/${event.id}`;
     const redirectTo = `${APP_URL}/reset-password?next=${encodeURIComponent(`/my-events/${event.id}`)}`;
