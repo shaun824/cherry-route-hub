@@ -35,10 +35,13 @@ export function UpcomingBySport({
   excludeIds = [],
   heading = "More events coming up",
   limit = 6,
+  preferSport = null,
 }: {
   excludeIds?: string[];
   heading?: string | null;
   limit?: number;
+  /** Rider's preferred sport — that group is listed first. */
+  preferSport?: "moto" | "mtb" | null;
 }) {
   useHydratedStore();
   const allEvents = useAdminStore((s) => s.events);
@@ -55,6 +58,12 @@ export function UpcomingBySport({
 
   if (moto.length === 0 && mtb.length === 0) return null;
 
+  const groups = [
+    { title: "Motorbike events", icon: Motorbike, sport: "moto" as const, events: moto },
+    { title: "Bicycle events", icon: Bike, sport: "mtb" as const, events: mtb },
+  ];
+  if (preferSport) groups.sort((a, b) => (a.sport === preferSport ? -1 : b.sport === preferSport ? 1 : 0));
+
   return (
     <div>
       {heading ? (
@@ -62,8 +71,9 @@ export function UpcomingBySport({
           {heading}
         </h2>
       ) : null}
-      <SportGroup title="Motorbike events" icon={Motorbike} sport="moto" events={moto} />
-      <SportGroup title="Bicycle events" icon={Bike} sport="mtb" events={mtb} />
+      {groups.map((g) => (
+        <SportGroup key={g.sport} title={g.title} icon={g.icon} sport={g.sport} events={g.events} />
+      ))}
     </div>
   );
 }
