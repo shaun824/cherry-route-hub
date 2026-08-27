@@ -3,6 +3,7 @@
 // and the rider's live GPS position is shown as a pulsing dot.
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { MapContainer, TileLayer, ImageOverlay, useMap, CircleMarker, Polygon, Popup, Marker } from "react-leaflet";
+import { Maximize2, Minimize2 } from "lucide-react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 // Adds bearing support to Leaflet so riders can spin the village map to match
@@ -299,6 +300,11 @@ export default function VillageMapGeo({
   const [recenterToken, setRecenterToken] = useState(0);
   const [satellite, setSatellite] = useState(true);
   const [bearing, setBearing] = useState(0);
+  // Full-screen expand: the same live map instance just fills the viewport, so
+  // the rider's current zoom/position is kept. Works on every device (unlike
+  // the native Fullscreen API, which iPhone Safari refuses for divs).
+  const [fullscreen, setFullscreen] = useState(false);
+  const mapRef = useRef<L.Map | null>(null);
 
   const [zoom, setZoom] = useState(17);
   const [view, setView] = useState<L.LatLngBounds | null>(null);
