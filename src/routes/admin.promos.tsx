@@ -220,7 +220,30 @@ function PromoEditor({
               onChange={(e) => update("expires", e.target.value)}
             />
           </L>
-          <L label="Show on events (keywords, comma separated)">
+          <L label="Show on events" className="md:col-span-2">
+            <div className="mb-2 flex flex-wrap gap-1.5">
+              {openEvents.length === 0 ? (
+                <span className="text-[11px] text-ink-soft">No open events found.</span>
+              ) : (
+                openEvents.map((ev) => {
+                  const on = selected.includes(ev.name.toLowerCase());
+                  return (
+                    <button
+                      key={ev.id}
+                      type="button"
+                      onClick={() => toggleEvent(ev.name)}
+                      className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold ${
+                        on
+                          ? "border-cherry bg-cherry text-white"
+                          : "border-border bg-background text-ink-soft"
+                      }`}
+                    >
+                      {ev.name}
+                    </button>
+                  );
+                })
+              )}
+            </div>
             <input
               className={i}
               value={form.eventMatch ?? ""}
@@ -228,9 +251,10 @@ function PromoEditor({
               placeholder="weekend warrior, addo, plett"
             />
             <span className="mt-1 block text-[11px] text-ink-soft">
-              Leave blank to show this offer on every event.
+              Tap events above, or type keywords. Leave blank to show this offer on every event.
             </span>
           </L>
+
           <L label="Visible to riders" className="md:col-span-2">
             <label className="flex items-center gap-2 text-sm">
               <input
