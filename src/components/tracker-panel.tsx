@@ -95,6 +95,7 @@ export function TrackerPanel({
       bufferRef.current = [];
       saveQueue(eventId, pending);
       setQueued(pending.length);
+      setError("Couldn't reach race control — points saved on your phone and will retry.");
     } finally {
       flushingRef.current = false;
     }
@@ -119,10 +120,14 @@ export function TrackerPanel({
           recordedAt: new Date(now).toISOString(),
         });
         setQueued(loadQueue(eventId).length + bufferRef.current.length);
+        // Upload straight away so the rider shows on the live map within seconds
+        // of starting, not only after the first minute-long flush window.
+        void flush();
       });
     },
-    [eventId],
+    [eventId, flush],
   );
+
 
   const startTracking = useCallback(() => {
     if (!("geolocation" in navigator)) {
