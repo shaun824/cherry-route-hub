@@ -84,45 +84,106 @@ const feature = {
 
 const featureNote = { color: brand.muted, fontWeight: 400 as const }
 
-const offerRow = {
-  borderTop: `1px solid ${brand.border}`,
-  padding: '12px 0 0',
-  margin: '12px 0 0',
-}
-
-const offerBrand = {
-  fontSize: '11px',
+const offersHeading = {
+  fontSize: '12px',
   fontWeight: 700 as const,
-  letterSpacing: '1.2px',
+  letterSpacing: '1.4px',
   textTransform: 'uppercase' as const,
   color: brand.muted,
-  margin: '0 0 2px',
+  margin: '0 0 10px',
 }
 
-const offerTitle = {
-  fontSize: '15px',
+/** Mirrors the app's rider-offer strip: brand-accent card, white logo tile. */
+const offerCard = {
+  borderRadius: '14px',
+  padding: '16px 18px',
+  margin: '0 0 12px',
+}
+
+const logoCell = { width: '64px', verticalAlign: 'top' as const }
+
+const logoImg = {
+  backgroundColor: '#ffffff',
+  borderRadius: '10px',
+  padding: '4px',
+  objectFit: 'contain' as const,
+}
+
+const discountCell = { width: '92px', textAlign: 'right' as const, verticalAlign: 'top' as const }
+
+const discountPill = {
+  backgroundColor: '#ffffff',
+  color: brand.ink,
+  borderRadius: '8px',
+  padding: '5px 9px',
+  fontSize: '12px',
   fontWeight: 700 as const,
-  color: brand.ink,
-  lineHeight: '1.4',
-  margin: '0 0 4px',
+  letterSpacing: '0.5px',
+  textTransform: 'uppercase' as const,
+  whiteSpace: 'nowrap' as const,
 }
 
-const offerClaim = {
-  fontSize: '13px',
-  color: brand.ink,
-  lineHeight: '1.6',
+const offerEyebrow = {
+  fontSize: '10px',
+  fontWeight: 700 as const,
+  letterSpacing: '1.4px',
+  textTransform: 'uppercase' as const,
+  color: '#ffffff',
+  opacity: 0.9,
+  margin: '0 0 3px',
+}
+
+const offerCardTitle = {
+  fontSize: '16px',
+  fontWeight: 700 as const,
+  color: '#ffffff',
+  lineHeight: '1.35',
   margin: '0',
 }
 
-const offerNote = { ...offerClaim, color: brand.muted, margin: '0 0 4px' }
+const offerCardBlurb = {
+  fontSize: '13px',
+  color: '#ffffff',
+  opacity: 0.9,
+  lineHeight: '1.5',
+  margin: '6px 0 0',
+}
+
+const offerClaimLine = {
+  fontSize: '13px',
+  color: '#ffffff',
+  lineHeight: '1.6',
+  margin: '12px 0 0',
+}
+
+const offerNote = {
+  fontSize: '12px',
+  color: brand.muted,
+  lineHeight: '1.6',
+  margin: '0',
+}
 
 const offerCode = {
   fontFamily: 'Courier New, Courier, monospace',
   fontSize: '16px',
   fontWeight: 700 as const,
-  color: brand.ink,
+  color: '#ffffff',
   letterSpacing: '1px',
 }
+
+const offerCta = {
+  display: 'inline-block',
+  backgroundColor: '#ffffff',
+  color: brand.ink,
+  textDecoration: 'none',
+  borderRadius: '8px',
+  padding: '8px 14px',
+  fontSize: '12px',
+  fontWeight: 700 as const,
+  letterSpacing: '0.6px',
+  textTransform: 'uppercase' as const,
+}
+
 
 
 const FEATURES: { icon: string; title: string; note: string }[] = [
