@@ -169,7 +169,11 @@ export async function sendPendingEntryWelcomes(
   const { data, error } = await query;
   if (error) throw error;
 
+  // One promo read per batch; each email then gets only its own event's offers.
+  const promoRows = await loadPromoRows(admin);
+
   const rows = (data ?? []) as any[];
+
   for (const row of rows) {
     if (result.sent + result.suppressed >= limit) break;
     const email = (row.entrants?.email ?? "").trim().toLowerCase();
