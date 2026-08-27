@@ -1064,7 +1064,7 @@ function NoEventsCard({ hasAnyLinked }: { hasAnyLinked: boolean }) {
         to="/my-events"
         className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl cherry-gradient px-5 py-2.5 text-sm font-bold text-white"
       >
-        Open Adventure Awaits <ChevronRight className="h-4 w-4" />
+        Open Events Hub <ChevronRight className="h-4 w-4" />
       </Link>
     </div>
   );

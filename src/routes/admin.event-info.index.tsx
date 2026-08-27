@@ -25,7 +25,7 @@ function EventInfoIndex() {
         <h1 className="font-display text-2xl font-bold text-ink">Rider info</h1>
         <p className="text-sm text-ink-soft">
           Pick an event to edit the venue, packing list, route, rules, FAQs, and emergency
-          contacts riders see in Adventure Awaits.
+          contacts riders see in Events Hub.
         </p>
       </header>
 
