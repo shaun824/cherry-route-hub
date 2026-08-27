@@ -483,7 +483,7 @@ export default function VillageMapGeo({
           touchZoom
           doubleClickZoom
           {...({ rotate: true, touchRotate: true, rotateControl: false, bearing: 0 } as object)}
-          className="h-[65vh] min-h-[340px] w-full"
+          className={fullscreen ? "h-full w-full" : "h-[65vh] min-h-[340px] w-full"}
 
         >
           {satellite ? (
@@ -644,6 +644,14 @@ export default function VillageMapGeo({
 
 
         <div className="pointer-events-none absolute right-3 top-3 z-[500] flex gap-2">
+          <button
+            type="button"
+            onClick={() => setFullscreen((f) => !f)}
+            aria-label={fullscreen ? "Exit full screen" : "View full screen"}
+            className="pointer-events-auto grid h-8 w-8 place-items-center rounded-full bg-card/95 text-ink shadow ring-1 ring-border"
+          >
+            {fullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+          </button>
           <button
             type="button"
             onClick={() => setSatellite((s) => !s)}
