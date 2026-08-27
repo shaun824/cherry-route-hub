@@ -1,6 +1,6 @@
 import * as React from 'react'
 
-import { Button, Heading, Link, Section, Text } from '@react-email/components'
+import { Button, Column, Heading, Img, Link, Row, Section, Text } from '@react-email/components'
 
 import type { TemplateEntry } from './registry'
 import { EmailShell, brand, button, footer, h1, link, text } from './theme'
