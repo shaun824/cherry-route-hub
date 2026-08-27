@@ -134,12 +134,12 @@ export const sendTestEntryWelcome = createServerFn({ method: "POST" })
     // demonstrates the "everyone on this entry" list.
     const { data: partyRows } = await supabaseAdmin
       .from("event_entrants")
-      .select("category, bib_number, entrants!inner(full_name, email)")
+      .select("registration_ref, category, bib_number, entrants!inner(full_name, email)")
       .eq("event_id", event.id)
       .limit(500);
     const byEmail = new Map<string, { name: string; category: string | null; bibNumber: string | null }[]>();
     for (const r of (partyRows ?? []) as any[]) {
-      const em = (r.entrants?.email ?? "").trim().toLowerCase();
+      const em = r.registration_ref || (r.entrants?.email ?? "").trim().toLowerCase();
       const name = (r.entrants?.full_name ?? "").trim();
       if (!em || !name) continue;
       const list = byEmail.get(em) ?? [];
