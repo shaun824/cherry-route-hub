@@ -275,8 +275,8 @@ function EmailsAdmin() {
 
       {logs.data ? (
         <p className="text-[11px] text-ink-soft">
-          History visible from {when(logs.data.history_starts_at)}. Open and click tracking isn't recorded on our email
-          platform — we log sends, bounces, complaints, unsubscribes and blocked sends.
+          History visible from {when(logs.data.history_starts_at)}. This platform log covers sends, bounces, complaints, unsubscribes and blocked
+          sends; opens and link clicks are tracked by us in "Mail we've sent" above.
         </p>
       ) : null}
 
@@ -299,6 +299,62 @@ function EmailsAdmin() {
               <iframe title="Email preview" srcDoc={previewQuery.data.html} className="h-full w-full flex-1 bg-white" />
             ) : (
               <p className="p-4 text-sm text-ink-soft">Rendering the mail…</p>
+            )}
+          </div>
+        </div>
+      ) : null}
+
+      {sentId ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-3" onClick={() => setSentId(null)}>
+          <div
+            className="flex h-[88vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl bg-white"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-2 border-b border-border p-3">
+              <div className="min-w-0 flex-1">
+                <div className="truncate text-sm font-semibold">{sentDetail.data?.subject ?? "Loading…"}</div>
+                <div className="truncate text-[11px] text-ink-soft">
+                  {sentDetail.data ? `To ${sentDetail.data.recipient} · ${when(sentDetail.data.sent_at)}` : ""}
+                </div>
+              </div>
+              <button onClick={() => setSentId(null)} className="rounded-lg border border-border p-1.5">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            {sentDetail.data ? (
+              <div className="border-b border-border bg-secondary/30 p-3 text-xs">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="font-semibold">
+                    {sentDetail.data.opened_at
+                      ? `Opened ${sentDetail.data.open_count}× · first ${when(sentDetail.data.opened_at)}`
+                      : "Not opened yet"}
+                  </span>
+                  <span className="text-ink-soft">·</span>
+                  <span className="font-semibold">
+                    {sentDetail.data.click_count > 0 ? `${sentDetail.data.click_count} link clicks` : "No link clicks"}
+                  </span>
+                </div>
+                {sentDetail.data.clicks.length > 0 ? (
+                  <ul className="mt-2 space-y-1">
+                    {sentDetail.data.clicks.map((c, i) => (
+                      <li key={`${c.url}-${i}`} className="flex items-center gap-2">
+                        <MousePointerClick className="h-3 w-3 shrink-0 text-sky-600" />
+                        <a href={c.url} target="_blank" rel="noreferrer" className="min-w-0 flex-1 truncate underline">
+                          {c.url}
+                        </a>
+                        <span className="shrink-0 text-ink-soft">{when(c.clicked_at)}</span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
+              </div>
+            ) : null}
+
+            {sentDetail.data ? (
+              <iframe title="Sent email" srcDoc={sentDetail.data.html} className="h-full w-full flex-1 bg-white" />
+            ) : (
+              <p className="p-4 text-sm text-ink-soft">Loading the mail…</p>
             )}
           </div>
         </div>
