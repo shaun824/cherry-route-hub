@@ -746,11 +746,6 @@ function SpectatorEventPage() {
                                 <span className="block truncate font-medium text-ink">
                                   {r.full_name}
                                 </span>
-                                {groupBy !== "category" && r.category ? (
-                                  <span className="block truncate text-[11px] text-ink-soft">
-                                    {r.category}
-                                  </span>
-                                ) : null}
                               </span>
                               {link ? <ExternalLink className="h-3.5 w-3.5 shrink-0 text-ink-soft" /> : null}
                               <ChevronRight className="h-4 w-4 shrink-0 text-cherry" />
