@@ -79,6 +79,47 @@ const feature = {
 
 const featureNote = { color: brand.muted, fontWeight: 400 as const }
 
+const offerRow = {
+  borderTop: `1px solid ${brand.border}`,
+  padding: '12px 0 0',
+  margin: '12px 0 0',
+}
+
+const offerBrand = {
+  fontSize: '11px',
+  fontWeight: 700 as const,
+  letterSpacing: '1.2px',
+  textTransform: 'uppercase' as const,
+  color: brand.muted,
+  margin: '0 0 2px',
+}
+
+const offerTitle = {
+  fontSize: '15px',
+  fontWeight: 700 as const,
+  color: brand.ink,
+  lineHeight: '1.4',
+  margin: '0 0 4px',
+}
+
+const offerClaim = {
+  fontSize: '13px',
+  color: brand.ink,
+  lineHeight: '1.6',
+  margin: '0',
+}
+
+const offerNote = { ...offerClaim, color: brand.muted, margin: '0 0 4px' }
+
+const offerCode = {
+  fontFamily: 'Courier New, Courier, monospace',
+  fontSize: '16px',
+  fontWeight: 700 as const,
+  color: brand.ink,
+  letterSpacing: '1px',
+}
+
+
 const FEATURES: { icon: string; title: string; note: string }[] = [
   { icon: '🗺️', title: 'Routes & elevation', note: 'every distance mapped, with water points, cut-offs and hover-linked climb profiles.' },
   { icon: '🕒', title: 'Day-by-day schedule', note: 'registration, briefings and start times, kept in sync with the event website.' },
