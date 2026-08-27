@@ -203,7 +203,19 @@ function dayDate(iso: string | null | undefined) {
  */
 export function riderScheduleForEmail(event: any, category: string | null | undefined): EmailScheduleDay[] {
   const schedule: any[] = Array.isArray(event?.schedule) ? event.schedule : [];
-  if (!schedule.length) return [];
+  const rawDays: any[] = Array.isArray(event?.days) ? event.days : [];
+  // No published schedule yet: still give riders the day-by-day shape of the
+  // event so every event email carries the same standard.
+  if (!schedule.length) {
+    const fallback = withRegistrationDayLabels(rawDays as any, [] as any);
+    return fallback
+      .map((d: any) => ({
+        label: String(d.label ?? ""),
+        date: dayDate(d.date),
+        items: [{ time: "TBC", label: "Times confirmed closer to the event", details: null }],
+      }))
+      .filter((d) => d.label);
+  }
   const days = withRegistrationDayLabels(
     (Array.isArray(event?.days) ? event.days : []) as any,
     schedule as any,
