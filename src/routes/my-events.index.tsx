@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { CalendarDays, ChevronRight, KeyRound, LogIn, MapPin } from "lucide-react";
+import { CalendarDays, ChevronRight, History, KeyRound, LogIn, MapPin } from "lucide-react";
 import { PageHeader } from "@/components/ui-bits";
 import { useSession } from "@/lib/auth";
 import { fetchMyEvents } from "@/lib/my-events";
