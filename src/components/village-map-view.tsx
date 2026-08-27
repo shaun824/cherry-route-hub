@@ -362,34 +362,30 @@ export function VillageMapView({
           </Suspense>
         </ClientOnly>
       ) : (
-      <div className="relative overflow-hidden rounded-2xl ring-1 ring-border">
-        <div ref={wrapRef} className="max-h-[70vh] overflow-auto bg-muted">
-          <div
-            className="relative w-full origin-top-left transition-transform duration-200"
-            style={{ transform: `scale(${scale})`, width: `${100}%` }}
-          >
-            <img
-              src={map.image_url ?? undefined}
-              alt="Event village map"
-              className="block w-full select-none"
-              draggable={false}
-            />
-            {spots.map((s) => (
-              <Pin
-                key={s.id}
-                spot={s}
-                scale={scale}
-                active={(selected ?? hovered) === s.id}
-                onHover={setHovered}
-                onSelect={(id) => setSelected((prev) => (prev === id ? null : id))}
-              />
-            ))}
-          </div>
-        </div>
-
+      <div
+        className={
+          planFullscreen
+            ? "fixed inset-0 z-[200] bg-black"
+            : "relative overflow-hidden rounded-2xl ring-1 ring-border"
+        }
+      >
+        <div
+          ref={wrapRef}
+          className={`overflow-auto bg-muted [touch-action:pan-x_pan-y] ${
+            planFullscreen ? "h-full" : "max-h-[70vh]"
+          }`}
+        >
+...
         <div className="absolute bottom-3 right-3 flex flex-col gap-1">
           <button
-            onClick={() => setScale((s) => Math.min(3, +(s + 0.25).toFixed(2)))}
+            onClick={() => setPlanFullscreen((f) => !f)}
+            className="grid h-8 w-8 place-items-center rounded-full bg-card/95 shadow ring-1 ring-border"
+            aria-label={planFullscreen ? "Exit full screen" : "View full screen"}
+          >
+            {planFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+          </button>
+          <button
+            onClick={() => setScale((s) => Math.min(4, +(s + 0.25).toFixed(2)))}
             className="grid h-8 w-8 place-items-center rounded-full bg-card/95 shadow ring-1 ring-border"
             aria-label="Zoom in"
           >
