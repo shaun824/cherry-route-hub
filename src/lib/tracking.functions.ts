@@ -180,14 +180,17 @@ export type SosAlert = {
   createdAt: string;
 };
 
-/** Throws unless the signed-in user has the admin role (RLS-scoped check). */
+/**
+ * Throws unless the signed-in user is crew or admin (RLS-scoped check).
+ * Riders never reach SOS alerts or the full field view.
+ */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function assertAdmin(supabase: any, userId: string) {
   const { data } = await supabase
     .from("user_roles")
     .select("role")
     .eq("user_id", userId)
-    .eq("role", "admin")
+    .in("role", ["admin", "crew"])
     .limit(1);
   if (!data || data.length === 0) throw new Error("Forbidden");
 }

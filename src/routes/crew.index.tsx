@@ -11,6 +11,7 @@ import {
   HardHat,
   Map as MapIcon,
   Search,
+  Siren,
   Users,
 } from "lucide-react";
 import { useIsCrew } from "@/lib/auth";
