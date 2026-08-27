@@ -2,13 +2,17 @@ import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Mail, Search, RefreshCw, Eye, X } from "lucide-react";
+import { Mail, Search, RefreshCw, Eye, X, MailOpen, MousePointerClick } from "lucide-react";
 import {
   listEmailDeliveryLogs,
   listEmailTemplates,
   previewEmailTemplate,
+  listSentEmails,
+  getSentEmail,
   type EmailLogResult,
   type EmailTemplateInfo,
+  type SentEmailRow,
+  type SentEmailDetail,
 } from "@/lib/email-logs.functions";
 
 export const Route = createFileRoute("/admin/emails")({
