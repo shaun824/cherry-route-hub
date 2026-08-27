@@ -60,6 +60,23 @@ function EmailsAdmin() {
   const [type, setType] = useState<string>("");
   const [q, setQ] = useState("");
   const [preview, setPreview] = useState<string | null>(null);
+  const [sentId, setSentId] = useState<string | null>(null);
+  const [sentSearch, setSentSearch] = useState("");
+
+  const fetchSent = useServerFn(listSentEmails);
+  const fetchSentOne = useServerFn(getSentEmail);
+
+  const sent = useQuery({
+    queryKey: ["admin", "sent-emails", sentSearch],
+    queryFn: () =>
+      fetchSent({ data: { recipient: sentSearch.trim() || undefined, limit: 100 } }) as Promise<SentEmailRow[]>,
+  });
+
+  const sentDetail = useQuery({
+    queryKey: ["admin", "sent-email", sentId],
+    enabled: Boolean(sentId),
+    queryFn: () => fetchSentOne({ data: { id: sentId as string } }) as Promise<SentEmailDetail>,
+  });
 
   const logs = useQuery({
     queryKey: ["admin", "email-logs", type],
