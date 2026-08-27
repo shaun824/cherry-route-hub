@@ -8,6 +8,7 @@ import { fetchMyEvents } from "@/lib/my-events";
 import { linkMyEntry, getMyEntrant } from "@/lib/roster.functions";
 import { useServerFn } from "@tanstack/react-start";
 import { UpcomingBySport } from "@/components/upcoming-by-sport";
+import { getEventSport } from "@/lib/event-sport";
 import { brandHeader } from "@/lib/event-brand";
 import { EventLogo } from "@/components/event-logo";
 import { SyncMyEntryButton } from "@/components/sync-my-entry";
@@ -144,7 +145,7 @@ function SignedInState() {
         </div>
       )}
 
-      <UpcomingBySport excludeIds={rows.map((r) => r.event_id)} />
+      <UpcomingBySport excludeIds={rows.map((r) => r.event_id)} preferSport={preferredSport} />
       <div className="pb-6" />
     </div>
   );
