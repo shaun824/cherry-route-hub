@@ -170,6 +170,13 @@ function ScheduleSyncPage() {
                 </div>
               </div>
 
+              {sync?.review_note ? (
+                <p className="mt-2 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-700">
+                  Not applied automatically — {sync.review_note}. Rider emails show “times confirmed
+                  closer to the event” until you check the site and press Apply.
+                </p>
+              ) : null}
+
               {sync?.last_error ? (
                 <p className="mt-2 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-700">
                   {sync.last_error}
