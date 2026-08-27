@@ -13,6 +13,8 @@ import {
   syncEntryNinjaEvent,
   countEntryWelcomes,
   sendEntryWelcomeBatch,
+  sendTestEntryWelcome,
+
 } from "@/lib/entryninja.functions";
 
 export const Route = createFileRoute("/admin/entry-ninja")({
