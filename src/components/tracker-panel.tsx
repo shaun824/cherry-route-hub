@@ -6,10 +6,10 @@ import { Navigation, Play, Siren, Square } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { useAdminStore } from "@/lib/store";
-import { getEventResults } from "@/lib/results.functions";
 import { trackingWindow } from "@/lib/tracking-window";
 import { useIsAdmin } from "@/lib/auth";
 import {
+  getMyResultStatus,
   sendTrackingSos,
   uploadTrackingPoints,
   type TrackingPointInput,
@@ -93,12 +93,14 @@ export function TrackerPanel({
   const [lastUploadAt, setLastUploadAt] = useState<Date | null>(null);
 
   const event = useAdminStore((s) => s.events.find((e) => e.id === eventId));
-  const fetchResults = useServerFn(getEventResults);
-  const { data: results } = useQuery({
-    queryKey: ["event-results-published", eventId],
-    queryFn: () => fetchResults({ data: { eventId } }),
+  // Only this rider's own finish stops their tracking — not published results
+  // for the field in general.
+  const fetchMyResult = useServerFn(getMyResultStatus);
+  const { data: myResult } = useQuery({
+    queryKey: ["my-result-status", eventId],
+    queryFn: () => fetchMyResult({ data: { eventId } }),
     staleTime: 60_000,
-    refetchInterval: 5 * 60_000,
+    refetchInterval: 2 * 60_000,
   });
   // Re-evaluate the window every 30s so the panel opens/closes on its own.
   const [clock, setClock] = useState(() => Date.now());
@@ -106,7 +108,7 @@ export function TrackerPanel({
     const id = window.setInterval(() => setClock(Date.now()), 30_000);
     return () => window.clearInterval(id);
   }, []);
-  const resultsPublished = Boolean(results?.results_published) || (results?.rows?.length ?? 0) > 0;
+  const resultsPublished = Boolean(myResult?.finished);
   const isAdmin = useIsAdmin();
   const computed = trackingWindow(event, { resultsPublished, now: new Date(clock) });
   // Admins can test tracking outside the window.

@@ -66,6 +66,49 @@ export const uploadTrackingPoints = createServerFn({ method: "POST" })
   });
 
 
+/**
+ * Has the signed-in rider finished this event?
+ * A rider is "done" once their own entry has a finish time or their own row
+ * appears in the imported results with a time — not when results in general
+ * are published.
+ */
+export const getMyResultStatus = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({ eventId: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { data: mine } = await context.supabase
+      .from("entrants")
+      .select("id, full_name")
+      .eq("user_id", context.userId)
+      .limit(1);
+    const entrant = mine?.[0];
+    if (!entrant) return { finished: false as const };
+
+    const { data: ee } = await context.supabase
+      .from("event_entrants")
+      .select("bib_number, finished_at")
+      .eq("event_id", data.eventId)
+      .eq("entrant_id", entrant.id)
+      .maybeSingle();
+    if (ee?.finished_at) return { finished: true as const };
+
+    const bib = ee?.bib_number ?? null;
+    const name = (entrant.full_name ?? "").trim();
+    let query = context.supabase
+      .from("event_results")
+      .select("time_text, time_ms, status")
+      .eq("event_id", data.eventId)
+      .limit(10);
+    query = bib ? query.eq("bib_number", bib) : query.ilike("full_name", name || "\u0000");
+    const { data: rows } = await query;
+    const finished = (rows ?? []).some(
+      (r: { time_text: string | null; time_ms: number | null; status: string | null }) =>
+        r.time_ms != null || (r.time_text != null && r.time_text.trim() !== "") ||
+        /finish|fin\b/i.test(r.status ?? ""),
+    );
+    return { finished };
+  });
+
 /** Rider triggers an SOS with their last known position. */
 export const sendTrackingSos = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
