@@ -4,10 +4,10 @@ Every entry confirmation email will end with a clear list of the rider offers ru
 
 ## What the rider sees
 
-A new block at the bottom of the email, just above the sign-off:
+A new block at the bottom of the email, just above the sign-off. It is built per event at send time from the offers assigned to that event in the admin console, so each event's email lists only its own offers and changes automatically whenever you edit them. The Weekend Warrior example below is just one event's version:
 
 ```text
-YOUR RIDER OFFERS
+YOUR RIDER OFFERS (this event)
 Cycle Lab — R150 to spend at Cycle Lab
   R150 is loaded onto the cell number on your entry.
   How to claim: No code — give the cell number on your entry at
@@ -19,6 +19,7 @@ Rudy Project — R750 off
 Green Motion — 15% off
   Code: REDCHERRY15   →  greenmotion.co.za
 ```
+
 
 Rules it follows:
 - Only offers that are live (active, not expired) and that match the rider's event appear — the same rules the app uses, so the email can never advertise a dead or wrong-event offer.
