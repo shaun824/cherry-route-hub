@@ -13,10 +13,11 @@ function VillageIndex() {
     queryFn: async () => {
       const { data } = await supabase
         .from("events")
-        .select("id, name, event_date, event_village_maps:event_village_maps(event_id, image_url, hotspots)")
+        .select("id, name, event_date, event_village_maps:event_village_maps(event_id, image_url, hotspots, zones, geo)")
         .order("event_date", { ascending: true });
       return data ?? [];
     },
+
   });
 
   return (
