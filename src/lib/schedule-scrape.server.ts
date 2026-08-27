@@ -251,7 +251,16 @@ export async function syncEventSchedule(
   admin: SupabaseClient<any>,
   event: EventRow,
   opts: { forceApply?: boolean } = {},
-): Promise<{ eventId: string; name: string; found: number; applied: boolean; error?: string }> {
+): Promise<{
+  eventId: string;
+  name: string;
+  found: number;
+  applied: boolean;
+  verified?: boolean;
+  needsReview?: boolean;
+  reviewNote?: string | null;
+  error?: string;
+}> {
   const seeds = [event.website_url, event.faq_url].filter(
     (u): u is string => Boolean(u && /^https?:\/\//i.test(u)),
   );
