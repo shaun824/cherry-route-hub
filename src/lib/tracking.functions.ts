@@ -181,11 +181,10 @@ export type SosAlert = {
 };
 
 /** Throws unless the signed-in user has the admin role (RLS-scoped check). */
-async function assertAdmin(supabase: {
-  from: (t: string) => unknown;
-}, userId: string) {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data } = await (supabase.from("user_roles") as any)
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function assertAdmin(supabase: any, userId: string) {
+  const { data } = await supabase
+    .from("user_roles")
     .select("role")
     .eq("user_id", userId)
     .eq("role", "admin")
