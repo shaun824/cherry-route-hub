@@ -277,14 +277,30 @@ export async function syncEventSchedule(
   }
 
   try {
-    const pages = pickPages(await crawlSite(seeds, 25));
+    const pages = pickPages(await crawlSite(seeds, 25), legTokens(event));
     if (!pages.length) {
-      await record({ synced_at: new Date().toISOString(), last_error: "No schedule-like pages found" });
+      await record({
+        synced_at: new Date().toISOString(),
+        last_error: "No schedule-like pages found",
+        verified: false,
+        needs_review: true,
+        review_note: "No page on this event's own site looked like a running order",
+      });
       return { eventId: event.id, name: event.name, found: 0, applied: false, error: "No schedule-like pages found" };
     }
 
     const days = (event.days ?? []) as EventDay[];
-    const items = await extractSchedule(event.name, event.event_date, days, pages);
+    const raw = await extractSchedule(event.name, event.event_date, days, pages);
+    // Nothing goes near a rider unless the exact time is printed on the page.
+    const { kept: items, dropped } = keepVerbatimTimes(raw, pages);
+    const merged = suspiciousMergedStarts(items);
+
+    const notes: string[] = [];
+    if (dropped.length) notes.push(`${dropped.length} time(s) were not printed on the site and were discarded`);
+    if (merged.length) notes.push(`different batches share the same start time (${merged.join(", ")})`);
+    if (!items.length) notes.push("no times found on the site");
+    const verified = items.length > 0 && dropped.length === 0 && merged.length === 0;
+    const reviewNote = notes.length ? notes.join("; ") : null;
 
     const { data: existing } = await admin
       .from("event_schedule_sync")
@@ -297,7 +313,8 @@ export async function syncEventSchedule(
     const autoApply = existing?.auto_apply ?? !hasSchedule;
 
     let applied = false;
-    if (items.length && (opts.forceApply || autoApply)) {
+    // Only a clean, verbatim-checked scrape is ever written onto the event.
+    if (verified && (opts.forceApply || autoApply)) {
       const scheduleItems = toScheduleItems(items, days);
       if (!sameSchedule(scheduleItems, event.schedule)) {
         const { error } = await admin.from("events").update({ schedule: scheduleItems }).eq("id", event.id);
@@ -312,9 +329,21 @@ export async function syncEventSchedule(
       synced_at: new Date().toISOString(),
       applied_at: applied ? new Date().toISOString() : undefined,
       last_error: items.length ? null : "No schedule found on the website",
+      verified: applied ? true : false,
+      verified_at: applied ? new Date().toISOString() : null,
+      needs_review: !applied,
+      review_note: reviewNote,
     });
 
-    return { eventId: event.id, name: event.name, found: items.length, applied };
+    return {
+      eventId: event.id,
+      name: event.name,
+      found: items.length,
+      applied,
+      verified: applied,
+      needsReview: !applied,
+      reviewNote,
+    };
   } catch (err) {
     const message = (err as Error).message;
     await record({ synced_at: new Date().toISOString(), last_error: message });
