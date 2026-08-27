@@ -25,8 +25,41 @@ type EventRow = {
 const SCHEDULE_HINTS =
   /(schedule|programme|program|itinerary|timetable|race-?day|event-?info|the-?event|info|details|day-?1|day-?2)/i;
 
-/** Keep the pages most likely to hold a running order, plus a few fallbacks. */
-function pickPages(pages: { url: string; text: string }[]): { url: string; text: string }[] {
+const GENERIC_PATH = /(schedule|programme|program|itinerary|timetable|event-?info|race-?day|faq|day-?1|day-?2)/i;
+
+const STOP_WORDS = new Set([
+  "the","and","for","with","event","events","ride","race","tour","weekend","warrior","classic","challenge",
+  "cycle","cycling","mtb","bike","enduro","festival","series","presented","sponsored","by","of","de","red",
+  "cherry","2024","2025","2026","2027","2028","best","north","south","edition","day","days",
+]);
+
+/**
+ * Words that identify THIS leg / edition (venue, town, farm name). Multi-leg
+ * series such as Weekend Warrior publish a separate schedule page per town, so
+ * we must never read another town's page as if it were this event's.
+ */
+export function legTokens(event: { name: string; location?: string | null }): string[] {
+  const raw = `${event.name} ${event.location ?? ""}`.toLowerCase();
+  return Array.from(
+    new Set(
+      raw
+        .split(/[^a-z0-9]+/)
+        .filter((w) => w.length > 3 && !STOP_WORDS.has(w)),
+    ),
+  );
+}
+
+/** Keep the pages most likely to hold THIS event's running order. */
+function pickPages(
+  pages: { url: string; text: string }[],
+  tokens: string[] = [],
+): { url: string; text: string }[] {
+  const hasToken = (p: { url: string; text: string }) => {
+    const hay = `${p.url} ${p.text.slice(0, 1200)}`.toLowerCase();
+    return tokens.some((t) => hay.includes(t));
+  };
+  const anyLegPage = tokens.length > 0 && pages.some(hasToken);
+
   const scored = pages
     .map((p) => {
       let score = 0;
@@ -34,27 +67,90 @@ function pickPages(pages: { url: string; text: string }[]): { url: string; text:
       const timeHits = (p.text.match(/\b([01]?\d|2[0-3])[:h][0-5]\d\b/g) ?? []).length;
       score += Math.min(timeHits, 12) / 2;
       if (/registration|briefing|prize giving|prizegiving|start|finish/i.test(p.text)) score += 2;
-      return { p, score };
+      const own = hasToken(p);
+      if (own) score += 6;
+      // Another leg of the same series: no mention of this event, not a generic
+      // schedule page, but full of times. Those are the pages that poisoned us.
+      const otherLeg = anyLegPage && !own && !GENERIC_PATH.test(p.url);
+      return { p, score, drop: otherLeg };
     })
-    .filter((x) => x.score > 1)
+    .filter((x) => !x.drop && x.score > 1)
     .sort((a, b) => b.score - a.score)
     .slice(0, 8)
     .map((x) => x.p);
   return scored;
 }
 
+const RANGE_SPLIT = /\s*(?:–|—|-|to|until|till)\s*/i;
+
+function normaliseClock(t: string): string | null {
+  const m = t.trim().match(/^(\d{1,2})[:h.](\d{2})\s*(am|pm)?$/i);
+  if (!m) return null;
+  let hour = Number(m[1]);
+  const min = m[2];
+  const ampm = m[3]?.toLowerCase();
+  if (ampm === "pm" && hour < 12) hour += 12;
+  if (ampm === "am" && hour === 12) hour = 0;
+  return `${String(hour).padStart(2, "0")}:${min}`;
+}
+
+/** Keep real ranges ("13:30 – 17:30") intact instead of collapsing them. */
 function normaliseTime(raw: string): string {
   const t = raw.trim();
-  const m = t.match(/^(\d{1,2})[:h.](\d{2})\s*(am|pm)?$/i);
-  if (m) {
-    let hour = Number(m[1]);
-    const min = m[2];
-    const ampm = m[3]?.toLowerCase();
-    if (ampm === "pm" && hour < 12) hour += 12;
-    if (ampm === "am" && hour === 12) hour = 0;
-    return `${String(hour).padStart(2, "0")}:${min}`;
+  const single = normaliseClock(t);
+  if (single) return single;
+  const parts = t.split(RANGE_SPLIT);
+  if (parts.length === 2) {
+    const a = normaliseClock(parts[0] ?? "");
+    const b = normaliseClock(parts[1] ?? "");
+    if (a && b) return `${a} – ${b}`;
   }
   return t.slice(0, 24);
+}
+
+/** Every clock time the source pages actually print, in HH:MM form. */
+function sourceTimes(pages: { text: string }[]): Set<string> {
+  const found = new Set<string>();
+  for (const p of pages) {
+    for (const m of p.text.matchAll(/\b(\d{1,2})[:h.](\d{2})\s*(am|pm)?\b/gi)) {
+      const norm = normaliseClock(`${m[1]}:${m[2]}${m[3] ? m[3] : ""}`);
+      if (norm) found.add(norm);
+    }
+  }
+  return found;
+}
+
+/**
+ * Throw away anything the model produced that is not printed verbatim on the
+ * scraped pages. This is what stops "plausible" invented start times.
+ */
+export function keepVerbatimTimes(
+  items: ScrapedScheduleItem[],
+  pages: { text: string }[],
+): { kept: ScrapedScheduleItem[]; dropped: ScrapedScheduleItem[] } {
+  const times = sourceTimes(pages);
+  const kept: ScrapedScheduleItem[] = [];
+  const dropped: ScrapedScheduleItem[] = [];
+  for (const i of items) {
+    const clocks = String(i.time).match(/\d{2}:\d{2}/g) ?? [];
+    const ok = clocks.length === 0 || clocks.every((c) => times.has(c));
+    (ok ? kept : dropped).push(i);
+  }
+  return { kept, dropped };
+}
+
+/** Separate batch/tier starts sharing one time usually means the model merged them. */
+export function suspiciousMergedStarts(items: ScrapedScheduleItem[]): string[] {
+  const byTime = new Map<string, Set<string>>();
+  for (const i of items) {
+    if (!/start/i.test(i.label)) continue;
+    const set = byTime.get(i.time) ?? new Set<string>();
+    set.add(i.label.toLowerCase());
+    byTime.set(i.time, set);
+  }
+  return Array.from(byTime.entries())
+    .filter(([, labels]) => labels.size > 1)
+    .map(([time]) => time);
 }
 
 /** Ask the AI gateway to pull a structured running order out of the scraped text. */
