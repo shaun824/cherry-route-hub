@@ -415,7 +415,7 @@ export const EntryWelcomeEmail = ({
             {o.url ? (
               <Text style={{ margin: '10px 0 0' }}>
                 <Link href={o.url} style={offerCta}>
-                  {o.code ? 'Get the code' : 'View offer'}
+                  {o.ctaLabel || (o.code ? 'Get the code' : 'View offer')}
                 </Link>
               </Text>
             ) : null}
