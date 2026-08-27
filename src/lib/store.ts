@@ -30,12 +30,8 @@ export type Sponsor = {
   active: boolean;
 };
 
-const seedSponsors: Sponsor[] = [
-  { id: "sp_torq", name: "Torq Nutrition", tier: "Platinum", logoText: "TORQ", accent: "oklch(0.6 0.18 25)", url: "https://torq.example", active: true },
-  { id: "sp_oakley", name: "Oakley SA", tier: "Gold", logoText: "OAKLEY", accent: "oklch(0.3 0.02 260)", url: "https://oakley.example", active: true },
-  { id: "sp_ccs", name: "Cape Cycle Systems", tier: "Gold", logoText: "CCS", accent: "oklch(0.5 0.12 240)", active: true },
-  { id: "sp_giant", name: "Giant Bicycles", tier: "Platinum", logoText: "GIANT", accent: "oklch(0.55 0.2 20)", active: true },
-];
+// Sponsors are managed in Lovable Cloud — no demo seed data.
+const seedSponsors: Sponsor[] = [];
 
 type AdminState = {
   events: Event[];
