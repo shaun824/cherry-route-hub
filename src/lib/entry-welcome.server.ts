@@ -4,10 +4,56 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { EmailAPIError } from "@lovable.dev/email-js";
 import { sendTemplateEmail } from "./email-templates/send-email";
+import { isPromoLive, promoMatchesEvent } from "./event-promos";
+import type { Promo } from "./mock-data";
+import type { EmailOffer } from "./email-templates/entry-welcome";
 
 type AnyClient = SupabaseClient<any, any, any>;
 
 const APP_URL = "https://riderapp.redcherryevents.co.za";
+
+/**
+ * Rider offers, straight from the admin-managed promo list. Each event's email
+ * lists only the offers assigned to that event, so editing Admin → Supplier
+ * promos changes what future emails advertise with no code change.
+ */
+export async function loadPromoRows(admin: AnyClient): Promise<Promo[]> {
+  const { data } = await admin
+    .from("promos")
+    .select("*")
+    .order("sort_order", { ascending: true, nullsFirst: false });
+  return (data ?? []).map((r: any) => ({
+    id: String(r.id),
+    brand: String(r.brand ?? ""),
+    title: String(r.title ?? ""),
+    code: String(r.code ?? ""),
+    discount: String(r.discount ?? ""),
+    expires: (r.expires as string | null) ?? "",
+    accent: String(r.accent ?? ""),
+    logoUrl: r.logo_url ?? undefined,
+    url: r.url ?? undefined,
+    blurb: r.blurb ?? undefined,
+    redeem: r.redeem ?? undefined,
+    eventMatch: r.event_match ?? undefined,
+    active: r.active == null ? true : Boolean(r.active),
+  }));
+}
+
+/** The live offers for one event, in the shape the email template renders. */
+export function offersForEvent(promos: Promo[], eventName: string | null | undefined): EmailOffer[] {
+  return promos
+    .filter((p) => isPromoLive(p) && promoMatchesEvent(p, eventName))
+    .map((p) => ({
+      brand: p.brand,
+      title: p.title,
+      blurb: p.blurb ?? null,
+      code: p.code || null,
+      redeem: p.code ? null : p.redeem || "Show this offer to the supplier",
+      discount: p.discount ?? null,
+      url: p.url && p.url !== "#" ? p.url : null,
+    }));
+}
+
 
 /**
  * Entries that existed when welcome emails launched were stamped as "sent" by
