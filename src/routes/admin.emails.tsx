@@ -2,13 +2,17 @@ import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Mail, Search, RefreshCw, Eye, X } from "lucide-react";
+import { Mail, Search, RefreshCw, Eye, X, MailOpen, MousePointerClick } from "lucide-react";
 import {
   listEmailDeliveryLogs,
   listEmailTemplates,
   previewEmailTemplate,
+  listSentEmails,
+  getSentEmail,
   type EmailLogResult,
   type EmailTemplateInfo,
+  type SentEmailRow,
+  type SentEmailDetail,
 } from "@/lib/email-logs.functions";
 
 export const Route = createFileRoute("/admin/emails")({
@@ -56,6 +60,23 @@ function EmailsAdmin() {
   const [type, setType] = useState<string>("");
   const [q, setQ] = useState("");
   const [preview, setPreview] = useState<string | null>(null);
+  const [sentId, setSentId] = useState<string | null>(null);
+  const [sentSearch, setSentSearch] = useState("");
+
+  const fetchSent = useServerFn(listSentEmails);
+  const fetchSentOne = useServerFn(getSentEmail);
+
+  const sent = useQuery({
+    queryKey: ["admin", "sent-emails", sentSearch],
+    queryFn: () =>
+      fetchSent({ data: { recipient: sentSearch.trim() || undefined, limit: 100 } }) as Promise<SentEmailRow[]>,
+  });
+
+  const sentDetail = useQuery({
+    queryKey: ["admin", "sent-email", sentId],
+    enabled: Boolean(sentId),
+    queryFn: () => fetchSentOne({ data: { id: sentId as string } }) as Promise<SentEmailDetail>,
+  });
 
   const logs = useQuery({
     queryKey: ["admin", "email-logs", type],
@@ -137,6 +158,71 @@ function EmailsAdmin() {
         </div>
       </section>
 
+      <section className="rounded-xl border border-border bg-card p-4">
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="min-w-0">
+            <h2 className="text-sm font-semibold">Mail we've sent</h2>
+            <p className="mt-1 text-xs text-ink-soft">
+              Open any row to read the exact mail that person got, whether they opened it, and every link they clicked.
+            </p>
+          </div>
+          <div className="relative ml-auto">
+            <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-ink-soft" />
+            <input
+              value={sentSearch}
+              onChange={(e) => setSentSearch(e.target.value)}
+              placeholder="Search recipient"
+              className="w-56 rounded-lg border border-border bg-card py-1.5 pl-8 pr-3 text-xs"
+            />
+          </div>
+        </div>
+
+        <div className="mt-3 overflow-hidden rounded-lg border border-border">
+          {sent.isLoading ? (
+            <p className="p-3 text-sm text-ink-soft">Loading sent mail…</p>
+          ) : sent.isError ? (
+            <p className="p-3 text-sm text-red-600">Couldn't load sent mail: {(sent.error as Error).message}</p>
+          ) : (sent.data ?? []).length === 0 ? (
+            <p className="p-3 text-sm text-ink-soft">
+              No stored mail yet — every mail sent from now on is recorded here with open and click tracking.
+            </p>
+          ) : (
+            <ul className="divide-y divide-border">
+              {(sent.data ?? []).map((s) => (
+                <li key={s.id}>
+                  <button
+                    onClick={() => setSentId(s.id)}
+                    className="flex w-full flex-wrap items-center gap-2 p-3 text-left hover:bg-secondary/40"
+                  >
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-sm font-medium">{s.recipient}</span>
+                      <span className="block truncate text-[11px] text-ink-soft">{s.subject}</span>
+                    </span>
+                    {s.opened_at ? (
+                      <span className="flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">
+                        <MailOpen className="h-3 w-3" /> Opened {s.open_count > 1 ? `${s.open_count}×` : ""}
+                      </span>
+                    ) : (
+                      <span className="rounded-full border border-border bg-secondary/50 px-2 py-0.5 text-[11px] text-ink-soft">
+                        Not opened
+                      </span>
+                    )}
+                    {s.click_count > 0 ? (
+                      <span className="flex items-center gap-1 rounded-full border border-sky-200 bg-sky-50 px-2 py-0.5 text-[11px] font-semibold text-sky-700">
+                        <MousePointerClick className="h-3 w-3" /> {s.click_count} click
+                        {s.click_count === 1 ? "" : "s"}
+                      </span>
+                    ) : null}
+                    <span className="text-[11px] text-ink-soft">{when(s.sent_at)}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </section>
+
+
       <div className="flex flex-wrap items-center gap-2">
         {TYPES.map((t) => (
           <button
@@ -189,8 +275,8 @@ function EmailsAdmin() {
 
       {logs.data ? (
         <p className="text-[11px] text-ink-soft">
-          History visible from {when(logs.data.history_starts_at)}. Open and click tracking isn't recorded on our email
-          platform — we log sends, bounces, complaints, unsubscribes and blocked sends.
+          History visible from {when(logs.data.history_starts_at)}. This platform log covers sends, bounces, complaints, unsubscribes and blocked
+          sends; opens and link clicks are tracked by us in "Mail we've sent" above.
         </p>
       ) : null}
 
@@ -213,6 +299,62 @@ function EmailsAdmin() {
               <iframe title="Email preview" srcDoc={previewQuery.data.html} className="h-full w-full flex-1 bg-white" />
             ) : (
               <p className="p-4 text-sm text-ink-soft">Rendering the mail…</p>
+            )}
+          </div>
+        </div>
+      ) : null}
+
+      {sentId ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-3" onClick={() => setSentId(null)}>
+          <div
+            className="flex h-[88vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl bg-white"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-2 border-b border-border p-3">
+              <div className="min-w-0 flex-1">
+                <div className="truncate text-sm font-semibold">{sentDetail.data?.subject ?? "Loading…"}</div>
+                <div className="truncate text-[11px] text-ink-soft">
+                  {sentDetail.data ? `To ${sentDetail.data.recipient} · ${when(sentDetail.data.sent_at)}` : ""}
+                </div>
+              </div>
+              <button onClick={() => setSentId(null)} className="rounded-lg border border-border p-1.5">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            {sentDetail.data ? (
+              <div className="border-b border-border bg-secondary/30 p-3 text-xs">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="font-semibold">
+                    {sentDetail.data.opened_at
+                      ? `Opened ${sentDetail.data.open_count}× · first ${when(sentDetail.data.opened_at)}`
+                      : "Not opened yet"}
+                  </span>
+                  <span className="text-ink-soft">·</span>
+                  <span className="font-semibold">
+                    {sentDetail.data.click_count > 0 ? `${sentDetail.data.click_count} link clicks` : "No link clicks"}
+                  </span>
+                </div>
+                {sentDetail.data.clicks.length > 0 ? (
+                  <ul className="mt-2 space-y-1">
+                    {sentDetail.data.clicks.map((c, i) => (
+                      <li key={`${c.url}-${i}`} className="flex items-center gap-2">
+                        <MousePointerClick className="h-3 w-3 shrink-0 text-sky-600" />
+                        <a href={c.url} target="_blank" rel="noreferrer" className="min-w-0 flex-1 truncate underline">
+                          {c.url}
+                        </a>
+                        <span className="shrink-0 text-ink-soft">{when(c.clicked_at)}</span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
+              </div>
+            ) : null}
+
+            {sentDetail.data ? (
+              <iframe title="Sent email" srcDoc={sentDetail.data.html} className="h-full w-full flex-1 bg-white" />
+            ) : (
+              <p className="p-4 text-sm text-ink-soft">Loading the mail…</p>
             )}
           </div>
         </div>

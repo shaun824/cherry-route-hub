@@ -65,6 +65,13 @@ export async function sendTemplateEmail(
       ? template.subject(templateData)
       : template.subject
 
+  // Keep an admin-viewable copy of the exact message, and add open/click tracking.
+  const { recordEmailSend, instrumentEmailHtml, markEmailSuppressed } = await import(
+    '@/lib/email-tracking.server'
+  )
+  const sendId = await recordEmailSend({ recipient, template: templateName, subject, html })
+  const outboundHtml = sendId ? instrumentEmailHtml(html, sendId) : html
+
   try {
     await sendLovableEmail(
       {
@@ -72,7 +79,7 @@ export async function sendTemplateEmail(
         from: `${SITE_NAME} <noreply@${FROM_DOMAIN}>`,
         sender_domain: SENDER_DOMAIN,
         subject,
-        html,
+        html: outboundHtml,
         text,
         purpose: 'transactional',
         label: templateName,
@@ -83,6 +90,7 @@ export async function sendTemplateEmail(
     )
   } catch (error) {
     if (error instanceof EmailAPIError && error.code === 'recipient_suppressed') {
+      if (sendId) await markEmailSuppressed(sendId)
       return { sent: false, reason: 'recipient_suppressed' }
     }
     throw error

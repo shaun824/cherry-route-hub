@@ -468,6 +468,80 @@ export type Database = {
           },
         ]
       }
+      email_send_clicks: {
+        Row: {
+          clicked_at: string
+          id: string
+          send_id: string
+          url: string
+        }
+        Insert: {
+          clicked_at?: string
+          id?: string
+          send_id: string
+          url: string
+        }
+        Update: {
+          clicked_at?: string
+          id?: string
+          send_id?: string
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_send_clicks_send_id_fkey"
+            columns: ["send_id"]
+            isOneToOne: false
+            referencedRelation: "email_sends"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      email_sends: {
+        Row: {
+          click_count: number
+          event_id: string | null
+          html: string
+          id: string
+          last_opened_at: string | null
+          open_count: number
+          opened_at: string | null
+          recipient: string
+          sent_at: string
+          subject: string
+          suppressed: boolean
+          template: string
+        }
+        Insert: {
+          click_count?: number
+          event_id?: string | null
+          html: string
+          id?: string
+          last_opened_at?: string | null
+          open_count?: number
+          opened_at?: string | null
+          recipient: string
+          sent_at?: string
+          subject: string
+          suppressed?: boolean
+          template: string
+        }
+        Update: {
+          click_count?: number
+          event_id?: string | null
+          html?: string
+          id?: string
+          last_opened_at?: string | null
+          open_count?: number
+          opened_at?: string | null
+          recipient?: string
+          sent_at?: string
+          subject?: string
+          suppressed?: boolean
+          template?: string
+        }
+        Relationships: []
+      }
       entrants: {
         Row: {
           created_at: string
