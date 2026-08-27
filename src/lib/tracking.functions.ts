@@ -39,10 +39,21 @@ export const uploadTrackingPoints = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data, context }) => {
+    // Resolve the rider's entrant row so the live map can label the pin with
+    // their name/bib instead of showing an anonymous dot.
+    let entrantId = data.entrantId ?? null;
+    if (!entrantId) {
+      const { data: mine } = await context.supabase
+        .from("entrants")
+        .select("id")
+        .eq("user_id", context.userId)
+        .limit(1);
+      entrantId = mine?.[0]?.id ?? null;
+    }
     const rows = data.points.map((p) => ({
       event_id: data.eventId,
       user_id: context.userId,
-      entrant_id: data.entrantId ?? null,
+      entrant_id: entrantId,
       lat: p.lat,
       lng: p.lng,
       accuracy_m: p.accuracyM ?? null,
@@ -53,6 +64,7 @@ export const uploadTrackingPoints = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true as const, uploaded: rows.length };
   });
+
 
 /** Rider triggers an SOS with their last known position. */
 export const sendTrackingSos = createServerFn({ method: "POST" })
