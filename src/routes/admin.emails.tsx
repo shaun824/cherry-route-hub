@@ -158,6 +158,71 @@ function EmailsAdmin() {
         </div>
       </section>
 
+      <section className="rounded-xl border border-border bg-card p-4">
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="min-w-0">
+            <h2 className="text-sm font-semibold">Mail we've sent</h2>
+            <p className="mt-1 text-xs text-ink-soft">
+              Open any row to read the exact mail that person got, whether they opened it, and every link they clicked.
+            </p>
+          </div>
+          <div className="relative ml-auto">
+            <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-ink-soft" />
+            <input
+              value={sentSearch}
+              onChange={(e) => setSentSearch(e.target.value)}
+              placeholder="Search recipient"
+              className="w-56 rounded-lg border border-border bg-card py-1.5 pl-8 pr-3 text-xs"
+            />
+          </div>
+        </div>
+
+        <div className="mt-3 overflow-hidden rounded-lg border border-border">
+          {sent.isLoading ? (
+            <p className="p-3 text-sm text-ink-soft">Loading sent mail…</p>
+          ) : sent.isError ? (
+            <p className="p-3 text-sm text-red-600">Couldn't load sent mail: {(sent.error as Error).message}</p>
+          ) : (sent.data ?? []).length === 0 ? (
+            <p className="p-3 text-sm text-ink-soft">
+              No stored mail yet — every mail sent from now on is recorded here with open and click tracking.
+            </p>
+          ) : (
+            <ul className="divide-y divide-border">
+              {(sent.data ?? []).map((s) => (
+                <li key={s.id}>
+                  <button
+                    onClick={() => setSentId(s.id)}
+                    className="flex w-full flex-wrap items-center gap-2 p-3 text-left hover:bg-secondary/40"
+                  >
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-sm font-medium">{s.recipient}</span>
+                      <span className="block truncate text-[11px] text-ink-soft">{s.subject}</span>
+                    </span>
+                    {s.opened_at ? (
+                      <span className="flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">
+                        <MailOpen className="h-3 w-3" /> Opened {s.open_count > 1 ? `${s.open_count}×` : ""}
+                      </span>
+                    ) : (
+                      <span className="rounded-full border border-border bg-secondary/50 px-2 py-0.5 text-[11px] text-ink-soft">
+                        Not opened
+                      </span>
+                    )}
+                    {s.click_count > 0 ? (
+                      <span className="flex items-center gap-1 rounded-full border border-sky-200 bg-sky-50 px-2 py-0.5 text-[11px] font-semibold text-sky-700">
+                        <MousePointerClick className="h-3 w-3" /> {s.click_count} click
+                        {s.click_count === 1 ? "" : "s"}
+                      </span>
+                    ) : null}
+                    <span className="text-[11px] text-ink-soft">{when(s.sent_at)}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </section>
+
+
       <div className="flex flex-wrap items-center gap-2">
         {TYPES.map((t) => (
           <button
