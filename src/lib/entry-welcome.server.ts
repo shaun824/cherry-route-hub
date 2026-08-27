@@ -208,6 +208,8 @@ export async function sendPendingEntryWelcomes(
           eventUrl,
           actionUrl: url,
           needsPassword,
+          offers: offersForEvent(promoRows, event.name),
+
         },
       });
 
