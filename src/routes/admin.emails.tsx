@@ -79,8 +79,9 @@ function EmailsAdmin() {
   });
 
   const logs = useQuery({
-    queryKey: ["admin", "email-logs", type],
-    queryFn: () => fetchLogs({ data: { eventType: type || undefined, limit: 100 } }) as Promise<EmailLogResult>,
+    queryKey: ["admin", "email-logs", type, q],
+    queryFn: () =>
+      fetchLogs({ data: { recipient: q.trim() || undefined, eventType: type || undefined, limit: 100 } }) as Promise<EmailLogResult>,
   });
 
   const templates = useQuery({
@@ -95,12 +96,6 @@ function EmailsAdmin() {
   });
 
   const rows = logs.data?.rows ?? [];
-  const filtered = useMemo(() => {
-    const term = q.trim().toLowerCase();
-    if (!term) return rows;
-    return rows.filter((r) => r.recipient.toLowerCase().includes(term) || (r.status ?? "").toLowerCase().includes(term));
-  }, [rows, q]);
-
   const stats = useMemo(() => {
     const count = (t: string) => rows.filter((r) => r.event_type === t).length;
     return {
@@ -251,11 +246,11 @@ function EmailsAdmin() {
           <p className="p-4 text-sm text-ink-soft">Loading email history…</p>
         ) : logs.isError ? (
           <p className="p-4 text-sm text-red-600">Couldn't load the email log: {(logs.error as Error).message}</p>
-        ) : filtered.length === 0 ? (
+        ) : rows.length === 0 ? (
           <p className="p-4 text-sm text-ink-soft">No email events in this window.</p>
         ) : (
           <ul className="divide-y divide-border">
-            {filtered.map((r, i) => (
+            {rows.map((r, i) => (
               <li key={`${r.message_id ?? i}-${r.timestamp}`} className="flex flex-wrap items-center gap-2 p-3">
                 <span
                   className={`rounded-full border px-2 py-0.5 text-[11px] font-semibold ${

@@ -35,13 +35,37 @@ export async function fetchEmailLogs(input: {
   if (!apiKey) throw new Error('Email logs are not configured')
 
   const filters: Record<string, unknown> = { limit: Math.min(Math.max(input.limit ?? 100, 1), 100) }
-  if (input.recipient) filters['recipient'] = input.recipient
   if (input.eventType) filters['event_type'] = input.eventType
   if (input.since) filters['since'] = input.since
 
-  const res = await listEmailLogs(filters, { apiKey })
+  let recipients: string[] = []
+  if (input.recipient) {
+    const term = input.recipient.trim()
+    if (term.includes('@')) {
+      recipients = [term]
+    } else {
+      const { supabaseAdmin } = await import('@/integrations/supabase/client.server')
+      const { data } = await (supabaseAdmin as any)
+        .from('entrants')
+        .select('email')
+        .ilike('full_name', `%${term}%`)
+        .not('email', 'is', null)
+        .limit(20)
+      recipients = [...new Set((data ?? []).map((row: { email: string }) => row.email).filter(Boolean))] as string[]
+    }
+  }
+
+  const searches = recipients.length > 0
+    ? recipients.map((recipient) => listEmailLogs({ ...filters, recipient }, { apiKey }))
+    : [listEmailLogs(input.recipient ? { ...filters, recipient: input.recipient } : filters, { apiKey })]
+  const results = await Promise.all(searches)
+  const events = results
+    .flatMap((res) => res.data ?? [])
+    .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+    .slice(0, Number(filters['limit']))
+  const historyStarts = results.map((res) => res.history_starts_at).filter(Boolean).sort()
   return {
-    rows: (res.data ?? []).map((e) => ({
+    rows: events.map((e) => ({
       timestamp: e.timestamp,
       recipient: e.recipient,
       event_type: e.event_type,
@@ -49,8 +73,8 @@ export async function fetchEmailLogs(input: {
       message_id: e.message_id ?? null,
       tags: e.tags ?? [],
     })),
-    history_starts_at: res.history_starts_at,
-    has_more: Boolean(res.pagination?.has_more),
+    history_starts_at: historyStarts[0] ?? new Date().toISOString(),
+    has_more: results.some((res) => Boolean(res.pagination?.has_more)),
   }
 }
 
