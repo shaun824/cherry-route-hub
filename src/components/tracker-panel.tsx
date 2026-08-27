@@ -1,42 +1,208 @@
 // Rider tracker + SOS panel. Rendered inside a My Event page when the event is live.
-import { useState } from "react";
+// Captures GPS every ~30s while tracking, buffers points locally (offline-safe),
+// and uploads batches once a minute when there's signal.
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Navigation, Play, Siren, Square } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
+import {
+  sendTrackingSos,
+  uploadTrackingPoints,
+  type TrackingPointInput,
+} from "@/lib/tracking.functions";
 
 type Coords = { lat: number; lng: number; accuracy: number } | null;
 
-export function TrackerPanel({ eventName }: { eventName?: string }) {
+const FLUSH_INTERVAL_MS = 60_000;
+const MIN_POINT_GAP_MS = 25_000;
+
+function queueKey(eventId: string) {
+  return `rce-track-queue-${eventId}`;
+}
+
+function loadQueue(eventId: string): TrackingPointInput[] {
+  try {
+    const raw = localStorage.getItem(queueKey(eventId));
+    return raw ? (JSON.parse(raw) as TrackingPointInput[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveQueue(eventId: string, points: TrackingPointInput[]) {
+  try {
+    if (points.length === 0) localStorage.removeItem(queueKey(eventId));
+    else localStorage.setItem(queueKey(eventId), JSON.stringify(points.slice(-500)));
+  } catch {
+    /* storage full/unavailable — points stay in memory */
+  }
+}
+
+async function batteryPct(): Promise<number | null> {
+  try {
+    const nav = navigator as Navigator & {
+      getBattery?: () => Promise<{ level: number }>;
+    };
+    if (!nav.getBattery) return null;
+    const b = await nav.getBattery();
+    return Math.round(b.level * 100);
+  } catch {
+    return null;
+  }
+}
+
+export function TrackerPanel({
+  eventId,
+  eventName,
+}: {
+  eventId: string;
+  eventName?: string;
+}) {
   const [coords, setCoords] = useState<Coords>(null);
   const [tracking, setTracking] = useState(false);
   const [sosSent, setSosSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [queued, setQueued] = useState(0);
+  const [lastUploadAt, setLastUploadAt] = useState<Date | null>(null);
 
-  function locate() {
-    setError(null);
+  const upload = useServerFn(uploadTrackingPoints);
+  const sendSos = useServerFn(sendTrackingSos);
+
+  const bufferRef = useRef<TrackingPointInput[]>([]);
+  const lastPointAtRef = useRef(0);
+  const watchIdRef = useRef<number | null>(null);
+  const flushingRef = useRef(false);
+
+  const flush = useCallback(async () => {
+    if (flushingRef.current) return;
+    const pending = [...loadQueue(eventId), ...bufferRef.current];
+    if (pending.length === 0) return;
+    flushingRef.current = true;
+    try {
+      // Upload in chunks of 100; remove from the offline queue only on success.
+      const remaining = [...pending];
+      while (remaining.length > 0) {
+        const batch = remaining.slice(0, 100);
+        await upload({ data: { eventId, points: batch } });
+        remaining.splice(0, batch.length);
+      }
+      bufferRef.current = [];
+      saveQueue(eventId, []);
+      setQueued(0);
+      setLastUploadAt(new Date());
+      setError(null);
+    } catch {
+      // No signal — park everything in the offline queue for the next flush.
+      bufferRef.current = [];
+      saveQueue(eventId, pending);
+      setQueued(pending.length);
+    } finally {
+      flushingRef.current = false;
+    }
+  }, [eventId, upload]);
+
+  const addPoint = useCallback(
+    (pos: GeolocationPosition) => {
+      const now = Date.now();
+      if (now - lastPointAtRef.current < MIN_POINT_GAP_MS) return;
+      lastPointAtRef.current = now;
+      setCoords({
+        lat: pos.coords.latitude,
+        lng: pos.coords.longitude,
+        accuracy: pos.coords.accuracy,
+      });
+      void batteryPct().then((pct) => {
+        bufferRef.current.push({
+          lat: pos.coords.latitude,
+          lng: pos.coords.longitude,
+          accuracyM: Math.round(pos.coords.accuracy),
+          batteryPct: pct,
+          recordedAt: new Date(now).toISOString(),
+        });
+        setQueued(loadQueue(eventId).length + bufferRef.current.length);
+      });
+    },
+    [eventId],
+  );
+
+  const startTracking = useCallback(() => {
     if (!("geolocation" in navigator)) {
       setError("Geolocation not supported on this device.");
       return;
     }
-    navigator.geolocation.getCurrentPosition(
-      (pos) =>
-        setCoords({
-          lat: pos.coords.latitude,
-          lng: pos.coords.longitude,
-          accuracy: pos.coords.accuracy,
-        }),
-      (e) => setError(e.message),
-      { enableHighAccuracy: true, timeout: 8000 },
-    );
-  }
+    setError(null);
+    watchIdRef.current = navigator.geolocation.watchPosition(addPoint, (e) => setError(e.message), {
+      enableHighAccuracy: true,
+      maximumAge: 10_000,
+      timeout: 15_000,
+    });
+    // Upload any points queued from a previous patchy-signal stretch.
+    void flush();
+  }, [addPoint, flush]);
+
+  const stopTracking = useCallback(() => {
+    if (watchIdRef.current !== null) {
+      navigator.geolocation.clearWatch(watchIdRef.current);
+      watchIdRef.current = null;
+    }
+    void flush(); // push the remaining buffer out
+  }, [flush]);
 
   function toggleTracking() {
+    if (tracking) stopTracking();
+    else startTracking();
     setTracking((t) => !t);
-    if (!tracking) locate();
   }
 
+  // Periodic flush + flush when the app comes back to the foreground / online.
+  useEffect(() => {
+    if (!tracking) return;
+    const interval = window.setInterval(() => void flush(), FLUSH_INTERVAL_MS);
+    const onOnline = () => void flush();
+    const onVisible = () => {
+      if (document.visibilityState === "visible") void flush();
+    };
+    window.addEventListener("online", onOnline);
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      window.clearInterval(interval);
+      window.removeEventListener("online", onOnline);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, [tracking, flush]);
+
+  // Stop the GPS watch when the component unmounts.
+  useEffect(
+    () => () => {
+      if (watchIdRef.current !== null) navigator.geolocation.clearWatch(watchIdRef.current);
+    },
+    [],
+  );
+
   function triggerSos() {
-    locate();
-    setSosSent(true);
-    setTimeout(() => setSosSent(false), 6000);
+    setError(null);
+    const send = (pos: GeolocationPosition | null) => {
+      void sendSos({
+        data: {
+          eventId,
+          lat: pos?.coords.latitude ?? null,
+          lng: pos?.coords.longitude ?? null,
+          accuracyM: pos ? Math.round(pos.coords.accuracy) : null,
+        },
+      })
+        .then(() => {
+          setSosSent(true);
+          setTimeout(() => setSosSent(false), 8000);
+        })
+        .catch(() => setError("Could not send SOS — please call race control directly."));
+    };
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(send, () => send(null), {
+        enableHighAccuracy: true,
+        timeout: 8000,
+      });
+    } else {
+      send(null);
+    }
   }
 
   return (
@@ -59,6 +225,15 @@ export function TrackerPanel({ eventName }: { eventName?: string }) {
             {error ?? "Location not requested yet. Start tracking to share your position."}
           </p>
         )}
+        {tracking ? (
+          <p className="mt-2 text-xs text-ink-soft">
+            {queued > 0
+              ? `${queued} point${queued === 1 ? "" : "s"} saved on your phone — will upload when there's signal.`
+              : lastUploadAt
+                ? `Live · last upload ${lastUploadAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`
+                : "Live · waiting for first GPS fix…"}
+          </p>
+        ) : null}
         <button
           onClick={toggleTracking}
           className={`mt-3 flex w-full items-center justify-center gap-2 rounded-xl py-3 text-sm font-bold transition-transform active:scale-[0.99] ${

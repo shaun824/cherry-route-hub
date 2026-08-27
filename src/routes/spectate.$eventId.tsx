@@ -36,6 +36,7 @@ import { buildMapEmbedSrc, buildMapLink, resolveVenuePoint } from "@/lib/map-emb
 import { VenueMiniMap } from "@/components/venue-mini-map";
 import { VillageMapView } from "@/components/village-map-view";
 import { fetchVillageMap } from "@/lib/village-map";
+import { LiveTrackingMap } from "@/components/live-tracking-map";
 
 import { fetchEventInfo } from "@/lib/event-info";
 import { groupRidersByClass } from "@/lib/rider-classes";
@@ -64,7 +65,7 @@ export const Route = createFileRoute("/spectate/$eventId")({
   component: SpectatorEventPage,
 });
 
-type Tab = "info" | "riders" | "results";
+type Tab = "info" | "riders" | "results" | "live";
 type GroupBy = "class" | "start" | "bib" | "category" | "name";
 
 function riderResultUrl(template: string | null, bib: string | null) {
@@ -355,6 +356,7 @@ function SpectatorEventPage() {
       <div ref={tabNavRef} className="sticky top-0 z-20 -mt-3 px-5">
         <div className="flex gap-1 rounded-2xl bg-card p-1 shadow-lg ring-1 ring-border">
           {([
+            { id: "live", label: "Live", icon: MapPin },
             { id: "riders", label: "Riders", icon: Users },
             { id: "results", label: "Results", icon: Trophy },
             { id: "info", label: "Venue", icon: Info },
@@ -377,6 +379,23 @@ function SpectatorEventPage() {
           })}
         </div>
       </div>
+
+      {tab === "live" ? (
+        <div className="px-5 pt-5 pb-8 space-y-3 animate-fade-in">
+          <section>
+            <h2 className="font-display text-[13px] font-bold uppercase tracking-wider text-ink-soft">
+              Live rider tracking
+            </h2>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Riders who have started live tracking in their app appear here. Positions update
+              every 15 seconds.
+            </p>
+            <div className="mt-3">
+              <LiveTrackingMap eventId={eventId} />
+            </div>
+          </section>
+        </div>
+      ) : null}
 
       {tab === "info" ? (
         <div className="px-5 pt-5 pb-8 space-y-4 animate-fade-in">

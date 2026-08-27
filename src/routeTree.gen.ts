@@ -32,6 +32,7 @@ import { Route as EventsEventIdRouteImport } from './routes/events.$eventId'
 import { Route as CrewRunSheetRouteImport } from './routes/crew.run-sheet'
 import { Route as CrewRoomingRouteImport } from './routes/crew.rooming'
 import { Route as CrewLoginRouteImport } from './routes/crew.login'
+import { Route as AdminTrackingRouteImport } from './routes/admin.tracking'
 import { Route as AdminSponsorsRouteImport } from './routes/admin.sponsors'
 import { Route as AdminSocialRouteImport } from './routes/admin.social'
 import { Route as AdminSignInsRouteImport } from './routes/admin.sign-ins'
@@ -216,6 +217,11 @@ const CrewLoginRoute = CrewLoginRouteImport.update({
   id: '/crew/login',
   path: '/crew/login',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AdminTrackingRoute = AdminTrackingRouteImport.update({
+  id: '/tracking',
+  path: '/tracking',
+  getParentRoute: () => AdminRoute,
 } as any)
 const AdminSponsorsRoute = AdminSponsorsRouteImport.update({
   id: '/sponsors',
@@ -624,6 +630,7 @@ export interface FileRoutesByFullPath {
   '/admin/sign-ins': typeof AdminSignInsRoute
   '/admin/social': typeof AdminSocialRoute
   '/admin/sponsors': typeof AdminSponsorsRoute
+  '/admin/tracking': typeof AdminTrackingRoute
   '/crew/login': typeof CrewLoginRoute
   '/crew/rooming': typeof CrewRoomingRoute
   '/crew/run-sheet': typeof CrewRunSheetRoute
@@ -715,6 +722,7 @@ export interface FileRoutesByTo {
   '/admin/sign-ins': typeof AdminSignInsRoute
   '/admin/social': typeof AdminSocialRoute
   '/admin/sponsors': typeof AdminSponsorsRoute
+  '/admin/tracking': typeof AdminTrackingRoute
   '/crew/login': typeof CrewLoginRoute
   '/crew/rooming': typeof CrewRoomingRoute
   '/crew/run-sheet': typeof CrewRunSheetRoute
@@ -809,6 +817,7 @@ export interface FileRoutesById {
   '/admin/sign-ins': typeof AdminSignInsRoute
   '/admin/social': typeof AdminSocialRoute
   '/admin/sponsors': typeof AdminSponsorsRoute
+  '/admin/tracking': typeof AdminTrackingRoute
   '/crew/login': typeof CrewLoginRoute
   '/crew/rooming': typeof CrewRoomingRoute
   '/crew/run-sheet': typeof CrewRunSheetRoute
@@ -905,6 +914,7 @@ export interface FileRouteTypes {
     | '/admin/sign-ins'
     | '/admin/social'
     | '/admin/sponsors'
+    | '/admin/tracking'
     | '/crew/login'
     | '/crew/rooming'
     | '/crew/run-sheet'
@@ -996,6 +1006,7 @@ export interface FileRouteTypes {
     | '/admin/sign-ins'
     | '/admin/social'
     | '/admin/sponsors'
+    | '/admin/tracking'
     | '/crew/login'
     | '/crew/rooming'
     | '/crew/run-sheet'
@@ -1089,6 +1100,7 @@ export interface FileRouteTypes {
     | '/admin/sign-ins'
     | '/admin/social'
     | '/admin/sponsors'
+    | '/admin/tracking'
     | '/crew/login'
     | '/crew/rooming'
     | '/crew/run-sheet'
@@ -1360,6 +1372,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/crew/login'
       preLoaderRoute: typeof CrewLoginRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/admin/tracking': {
+      id: '/admin/tracking'
+      path: '/tracking'
+      fullPath: '/admin/tracking'
+      preLoaderRoute: typeof AdminTrackingRouteImport
+      parentRoute: typeof AdminRoute
     }
     '/admin/sponsors': {
       id: '/admin/sponsors'
@@ -1886,6 +1905,7 @@ interface AdminRouteChildren {
   AdminSignInsRoute: typeof AdminSignInsRoute
   AdminSocialRoute: typeof AdminSocialRoute
   AdminSponsorsRoute: typeof AdminSponsorsRoute
+  AdminTrackingRoute: typeof AdminTrackingRoute
   AdminIndexRoute: typeof AdminIndexRoute
   AdminEventInfoEventIdRoute: typeof AdminEventInfoEventIdRoute
   AdminRiderUserIdRoute: typeof AdminRiderUserIdRoute
@@ -1921,6 +1941,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminSignInsRoute: AdminSignInsRoute,
   AdminSocialRoute: AdminSocialRoute,
   AdminSponsorsRoute: AdminSponsorsRoute,
+  AdminTrackingRoute: AdminTrackingRoute,
   AdminIndexRoute: AdminIndexRoute,
   AdminEventInfoEventIdRoute: AdminEventInfoEventIdRoute,
   AdminRiderUserIdRoute: AdminRiderUserIdRoute,

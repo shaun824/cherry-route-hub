@@ -806,7 +806,7 @@ function InfoPanel({
         <section>
           <SectionTitle>Live tracking & SOS</SectionTitle>
           <div className="mt-2">
-            <TrackerPanel eventName={eventName} />
+            <TrackerPanel eventId={eventId} eventName={eventName} />
           </div>
         </section>
       ) : (
