@@ -13,7 +13,7 @@ import {
   Info,
   Lock,
   MapPin,
-
+  Navigation,
   Search,
   Toilet,
   Trophy,
@@ -391,21 +391,7 @@ function SpectatorEventPage() {
       </div>
 
       {tab === "live" ? (
-        <div className="px-5 pt-5 pb-8 space-y-3 animate-fade-in">
-          {myEntry ? (
-            <section>
-              <h2 className="font-display text-[13px] font-bold uppercase tracking-wider text-ink-soft">
-                You are entered
-              </h2>
-              <p className="mt-1 text-xs text-muted-foreground">
-                Share your position with race control and spectators, or send an SOS in an
-                emergency.
-              </p>
-              <div className="mt-3">
-                <TrackerPanel eventId={eventId} eventName={event.name} />
-              </div>
-            </section>
-          ) : null}
+        <div className="px-5 pt-5 pb-8 space-y-4 animate-fade-in">
           <section>
             <h2 className="font-display text-[13px] font-bold uppercase tracking-wider text-ink-soft">
               Live rider tracking
@@ -414,7 +400,28 @@ function SpectatorEventPage() {
               Riders who have started live tracking in their app appear here. Positions update
               every 15 seconds.
             </p>
-            <div className="mt-3">
+
+            {myEntry ? (
+              <div className="mt-4 rounded-2xl bg-gradient-to-br from-cherry/10 to-accent p-4 ring-1 ring-cherry/20">
+                <div className="flex items-start gap-3">
+                  <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-cherry text-white">
+                    <Navigation className="h-5 w-5" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-display text-sm font-bold text-ink">You are entered</p>
+                    <p className="text-xs text-muted-foreground">
+                      Share your position with race control and spectators, or send an SOS in an
+                      emergency.
+                    </p>
+                  </div>
+                </div>
+                <div className="mt-4">
+                  <TrackerPanel eventId={eventId} eventName={event.name} />
+                </div>
+              </div>
+            ) : null}
+
+            <div className="mt-4">
               <LiveTrackingMap eventId={eventId} />
             </div>
           </section>
