@@ -18,10 +18,19 @@ export interface EntryWelcomeProps {
   actionUrl: string
   actionLabel?: string
   needsPassword?: boolean
+  /** Everyone entered under this registration / email for this event. */
+  party?: EmailPartyMember[]
   /** Live rider offers for THIS event, built at send time from the admin promo list. */
   offers?: EmailOffer[]
   siteName?: string
   siteUrl?: string
+}
+
+/** One person entered under the same entry. */
+export interface EmailPartyMember {
+  name: string
+  category?: string | null
+  bibNumber?: string | null
 }
 
 /** One rider offer as it appears in the email. */
@@ -208,6 +217,7 @@ export const EntryWelcomeEmail = ({
   actionLabel,
   needsPassword = false,
   offers = [],
+  party = [],
 
   siteName = 'Red Cherry Events',
   siteUrl = 'https://riderapp.redcherryevents.co.za',
@@ -238,6 +248,24 @@ export const EntryWelcomeEmail = ({
           .filter(Boolean)
           .join(' · ')}
       </Text>
+      {party.length > 1 ? (
+        <>
+          <Text style={{ ...cardTitle, margin: '16px 0 8px' }}>Everyone on this entry</Text>
+          {party.map((p, i) => (
+            <Text key={`${p.name}-${i}`} style={feature}>
+              <strong>{p.name}</strong>
+              {[p.category, p.bibNumber ? `Race number: ${p.bibNumber}` : null].filter(Boolean).length ? (
+                <span style={featureNote}>
+                  {' — '}
+                  {[p.category, p.bibNumber ? `Race number: ${p.bibNumber}` : null]
+                    .filter(Boolean)
+                    .join(' · ')}
+                </span>
+              ) : null}
+            </Text>
+          ))}
+        </>
+      ) : null}
     </Section>
 
     <Button style={button} href={actionUrl}>
