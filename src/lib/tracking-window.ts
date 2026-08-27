@@ -91,7 +91,7 @@ export function trackingWindow(
       reason: "closed-results",
       opensAt,
       closesAt,
-      message: "Results are in — tracking has stopped for this event.",
+      message: "Your finish time is in — tracking has stopped.",
     };
   }
   if (now < opensAt) {
