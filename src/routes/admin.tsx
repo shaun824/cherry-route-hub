@@ -44,6 +44,7 @@ const nav: { to: string; label: string; icon: typeof LayoutDashboard; exact?: bo
   { to: "/admin/social", label: "Social feeds", icon: Instagram },
   { to: "/admin/riders", label: "Riders", icon: Users },
   { to: "/admin/sign-ins", label: "Sign-in activity", icon: LogIn },
+  { to: "/admin/emails", label: "Email log", icon: Mail },
   { to: "/admin/crew", label: "Crew logins", icon: KeyRound },
   { to: "/admin/schedule-sync", label: "Schedule sync", icon: CalendarClock },
   { to: "/admin/audit", label: "Content check", icon: ShieldCheck },
