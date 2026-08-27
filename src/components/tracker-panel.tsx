@@ -175,13 +175,19 @@ export function TrackerPanel({
     };
   }, [tracking, flush]);
 
-  // Stop the GPS watch when the component unmounts.
+  // Stop the GPS watch when the component unmounts, and never lose buffered
+  // points — park them in the offline queue so the next flush sends them.
   useEffect(
     () => () => {
       if (watchIdRef.current !== null) navigator.geolocation.clearWatch(watchIdRef.current);
+      if (bufferRef.current.length > 0) {
+        saveQueue(eventId, [...loadQueue(eventId), ...bufferRef.current]);
+        bufferRef.current = [];
+      }
     },
-    [],
+    [eventId],
   );
+
 
   function triggerSos() {
     setError(null);
