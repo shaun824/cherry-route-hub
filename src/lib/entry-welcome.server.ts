@@ -218,6 +218,12 @@ export async function scheduleTrustedEventIds(admin: any, eventIds: string[]): P
   return trusted;
 }
 
+/** Only absolute https logos work in email clients. */
+export function absoluteLogo(url: string | null | undefined): string | null {
+  const u = (url ?? "").trim();
+  return /^https:\/\//i.test(u) ? u : null;
+}
+
 export function riderScheduleForEmail(
   event: any,
   category: string | null | undefined,
@@ -362,7 +368,7 @@ export async function sendPendingEntryWelcomes(
   let query = admin
     .from("event_entrants")
     .select(
-      "id, event_id, entrant_id, registration_ref, category, bib_number, entrants(full_name, email), events(id, name, event_date, location, lifecycle, days, schedule)",
+      "id, event_id, entrant_id, registration_ref, category, bib_number, entrants(full_name, email), events(id, name, event_date, location, lifecycle, days, schedule, logo_url)",
     )
     // Archived-roster imports are flagged as skipped; without this filter they
     // fill every batch and brand-new entries never get reached.
@@ -442,6 +448,7 @@ export async function sendPendingEntryWelcomes(
           eventDate: formatDate(event.event_date),
           venue: event.location ?? null,
           venueUrl: venueMapUrl(event.location),
+          eventLogoUrl: absoluteLogo(event.logo_url),
           schedule: riderScheduleForEmail(event, lead.category, { trusted: trustedSchedules.has(event.id) }),
           category: lead.category ?? null,
           bibNumber: lead.bib_number ?? null,
