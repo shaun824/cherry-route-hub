@@ -81,6 +81,120 @@ export default function LiveTrackingMapInner({ eventId }: { eventId: string }) {
     };
   }, []);
 
+  // ---- Course overlay -------------------------------------------------
+  const event = useAdminStore((s) => s.events.find((e) => e.id === eventId));
+  const [candidates, setCandidates] = useState<RouteCandidate[]>([]);
+  const routeLayersRef = useRef<Map<string, L.Polyline[]>>(new Map());
+
+  // Routes that could apply today (falls back to every day of the event).
+  const routeSpecs = useMemo(() => {
+    if (!event) return [] as { route: any; dayId: string; dayLabel: string }[];
+    const only = candidateDayIds(event);
+    const days = withRegistrationDayLabels(event.days ?? [], (event.schedule as any) ?? []);
+    const out: { route: any; dayId: string; dayLabel: string }[] = [];
+    for (const day of days) {
+      if (only && !only.includes(day.id)) continue;
+      const dayLabel =
+        day.label ||
+        new Date(day.date).toLocaleDateString("en-ZA", { day: "numeric", month: "short" });
+      for (const r of day.routes ?? []) {
+        if ((r.kmlUrls ?? []).length > 0) out.push({ route: r, dayId: day.id, dayLabel });
+      }
+    }
+    return out;
+  }, [event]);
+
+  const specKey = routeSpecs.map((s) => s.route.id).join(",");
+
+  // Fetch + parse the KMLs for the candidate routes.
+  useEffect(() => {
+    let cancelled = false;
+    if (routeSpecs.length === 0) {
+      setCandidates([]);
+      return;
+    }
+    (async () => {
+      const out: RouteCandidate[] = [];
+      for (const spec of routeSpecs) {
+        const lines: LatLngAlt[][] = [];
+        for (const url of spec.route.kmlUrls ?? []) {
+          try {
+            const res = await fetch(url);
+            if (!res.ok) continue;
+            const layer = parseKml(await res.text());
+            for (const line of layer.lines) {
+              lines.push(capPolyline(simplifyPolyline(line, 8), 1500));
+            }
+          } catch (err) {
+            console.warn("[live-map] failed to load KML", url, err);
+          }
+        }
+        if (lines.length === 0) continue;
+        out.push({
+          route: spec.route,
+          dayId: spec.dayId,
+          dayLabel: spec.dayLabel,
+          color: spec.route.color || TIER_COLORS[spec.route.tier] || TIER_COLORS.Custom,
+          lines,
+        });
+      }
+      if (!cancelled) setCandidates(out);
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [specKey]);
+
+  // Cross-reference riders against the routes to decide what to highlight.
+  const matchedIds = useMemo(
+    () => matchRoutesForRiders(candidates, riders.map((r) => ({ lat: r.lat, lng: r.lng, category: r.category }))),
+    [candidates, riders],
+  );
+
+  const matchedRoutes = useMemo(
+    () => candidates.filter((c) => matchedIds.includes(c.route.id)),
+    [candidates, matchedIds],
+  );
+
+  // Draw the course underneath the rider markers.
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    for (const [, polys] of routeLayersRef.current) polys.forEach((p) => p.remove());
+    routeLayersRef.current.clear();
+
+    const show = matchedRoutes.length > 0 ? matchedRoutes : candidates;
+    const bounds: [number, number][] = [];
+    for (const c of show) {
+      const active = matchedRoutes.length === 0 || matchedIds.includes(c.route.id);
+      const polys = c.lines.map((line) => {
+        const latlngs = line.map(([lng, lat]) => [lat, lng] as [number, number]);
+        for (const ll of latlngs) bounds.push(ll);
+        return L.polyline(latlngs, {
+          color: c.color,
+          weight: active ? 5 : 3,
+          opacity: active ? 0.85 : 0.35,
+        })
+          .addTo(map)
+          .bindTooltip(`${c.route.name} · ${c.dayLabel}`, { sticky: true });
+      });
+      routeLayersRef.current.set(c.route.id, polys);
+      polys.forEach((p) => p.bringToBack());
+    }
+
+    if (!fittedRef.current && bounds.length > 0) {
+      map.fitBounds(L.latLngBounds(bounds).pad(0.1));
+    }
+
+    return () => {
+      for (const [, polys] of routeLayersRef.current) polys.forEach((p) => p.remove());
+      routeLayersRef.current.clear();
+    };
+  }, [candidates, matchedRoutes, matchedIds]);
+
+
+
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
