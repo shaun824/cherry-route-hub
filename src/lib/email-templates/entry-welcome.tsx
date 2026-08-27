@@ -18,9 +18,25 @@ export interface EntryWelcomeProps {
   actionUrl: string
   actionLabel?: string
   needsPassword?: boolean
+  /** Live rider offers for THIS event, built at send time from the admin promo list. */
+  offers?: EmailOffer[]
   siteName?: string
   siteUrl?: string
 }
+
+/** One rider offer as it appears in the email. */
+export interface EmailOffer {
+  brand: string
+  title: string
+  blurb?: string | null
+  /** Discount code, when the offer uses one. */
+  code?: string | null
+  /** How to claim, when there is no code. */
+  redeem?: string | null
+  discount?: string | null
+  url?: string | null
+}
+
 
 const card = {
   backgroundColor: '#FAFAFC',
