@@ -378,7 +378,15 @@ function WelcomeEmailsCard({ events }: { events: { id: string; name: string }[] 
         >
           {busy ? "Sending…" : `Backfill existing (${counts.data?.historic ?? "…"})`}
         </button>
+        <button
+          onClick={() => void sendTest()}
+          disabled={busy}
+          className="rounded-lg border border-border px-3 py-2 text-xs font-semibold disabled:opacity-60"
+        >
+          Send test to me
+        </button>
       </div>
+
 
       {note && <p className="text-xs font-semibold text-emerald-700">{note}</p>}
       {err && <p className="text-xs text-destructive">{err}</p>}
