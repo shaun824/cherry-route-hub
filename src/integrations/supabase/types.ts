@@ -3182,6 +3182,107 @@ export type Database = {
         }
         Relationships: []
       }
+      tracking_points: {
+        Row: {
+          accuracy_m: number | null
+          battery_pct: number | null
+          created_at: string
+          entrant_id: string | null
+          event_id: string
+          id: string
+          lat: number
+          lng: number
+          recorded_at: string
+          user_id: string
+        }
+        Insert: {
+          accuracy_m?: number | null
+          battery_pct?: number | null
+          created_at?: string
+          entrant_id?: string | null
+          event_id: string
+          id?: string
+          lat: number
+          lng: number
+          recorded_at?: string
+          user_id: string
+        }
+        Update: {
+          accuracy_m?: number | null
+          battery_pct?: number | null
+          created_at?: string
+          entrant_id?: string | null
+          event_id?: string
+          id?: string
+          lat?: number
+          lng?: number
+          recorded_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tracking_points_entrant_id_fkey"
+            columns: ["entrant_id"]
+            isOneToOne: false
+            referencedRelation: "entrants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tracking_points_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tracking_sos: {
+        Row: {
+          accuracy_m: number | null
+          created_at: string
+          event_id: string
+          id: string
+          lat: number | null
+          lng: number | null
+          message: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          accuracy_m?: number | null
+          created_at?: string
+          event_id: string
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          message?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          accuracy_m?: number | null
+          created_at?: string
+          event_id?: string
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          message?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tracking_sos_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
