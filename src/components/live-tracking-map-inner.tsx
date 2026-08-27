@@ -1,14 +1,32 @@
 // Live spectator map: polls for the latest rider positions every 15s and plots
 // them on a Leaflet map. Public — uses the same read path as the spectate page.
+// The event's KML course is overlaid underneath, picked by cross-referencing the
+// riders' entry category / position against the event's routes.
 import { useEffect, useMemo, useRef, useState } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { useQuery } from "@tanstack/react-query";
 import { fetchLiveTracking } from "@/lib/tracking.functions";
-import { MapPin } from "lucide-react";
+import { MapPin, Route as RouteIcon } from "lucide-react";
+import { useAdminStore } from "@/lib/store";
+import { withRegistrationDayLabels } from "@/lib/event-days";
+import { parseKml, simplifyPolyline, capPolyline, type LatLngAlt } from "@/lib/geo";
+import {
+  candidateDayIds,
+  matchRoutesForRiders,
+  type RouteCandidate,
+} from "@/lib/tracking-route-overlay";
+
+const TIER_COLORS: Record<string, string> = {
+  Gold: "#d4a017",
+  Silver: "#64748b",
+  Bronze: "#a0522d",
+  Custom: "#e11d48",
+};
 
 const POLL_MS = 15_000;
 const STALE_AFTER_MS = 5 * 60_000;
+
 
 function markerIcon(stale: boolean) {
   return L.divIcon({
