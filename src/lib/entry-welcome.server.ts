@@ -114,6 +114,52 @@ export function cssColorToHex(color: string | null | undefined): string | null {
  */
 const LEGACY_CUTOFF = "2026-08-17T10:30:00Z";
 
+/** True when someone at this event has already had a welcome mail at this address. */
+async function hasWelcomeForEmail(admin: AnyClient, eventId: string, email: string) {
+  const { data } = await admin
+    .from("event_entrants")
+    .select("id, entrants!inner(email)")
+    .eq("event_id", eventId)
+    .not("welcome_email_sent_at", "is", null)
+    .ilike("entrants.email", email)
+    .limit(1);
+  return (data ?? []).length > 0;
+}
+
+/** Marks every row in the group as mailed so nobody gets a second copy. */
+async function stampRows(admin: AnyClient, rows: any[]) {
+  const ids = rows.map((r) => r.id);
+  if (!ids.length) return;
+  await admin
+    .from("event_entrants")
+    .update({ welcome_email_sent_at: new Date().toISOString() })
+    .in("id", ids);
+}
+
+/** Everyone entered at this event under the same email address. */
+async function loadEntryParty(
+  admin: AnyClient,
+  eventId: string,
+  email: string,
+  fallbackRows: any[],
+) {
+  const { data } = await admin
+    .from("event_entrants")
+    .select("category, bib_number, entrants!inner(full_name, email)")
+    .eq("event_id", eventId)
+    .ilike("entrants.email", email);
+  const rows = (data ?? []).length ? (data as any[]) : fallbackRows;
+  const seen = new Set<string>();
+  const party: { name: string; category: string | null; bibNumber: string | null }[] = [];
+  for (const r of rows) {
+    const name = (r.entrants?.full_name ?? "").trim();
+    if (!name || seen.has(name.toLowerCase())) continue;
+    seen.add(name.toLowerCase());
+    party.push({ name, category: r.category ?? null, bibNumber: r.bib_number ?? null });
+  }
+  return party;
+}
+
 export type WelcomeBatchResult = {
   candidates: number;
   sent: number;
