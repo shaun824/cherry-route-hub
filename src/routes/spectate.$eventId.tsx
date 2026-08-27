@@ -159,6 +159,14 @@ function SpectatorEventPage() {
     staleTime: 300_000,
   });
 
+  const myEntryQ = useQuery({
+    queryKey: ["my-event-entry", eventId, user?.id ?? "guest"],
+    queryFn: () => fetchMyEventById(eventId),
+    enabled: Boolean(user),
+    staleTime: 60_000,
+  });
+  const myEntry = myEntryQ.data;
+
 
   const spectatorSchedule = useMemo(() => {
     const items = event?.schedule ?? [];
