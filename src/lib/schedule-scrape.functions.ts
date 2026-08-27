@@ -25,7 +25,7 @@ export const listScheduleSyncs = createServerFn({ method: "POST" })
 
     const { data: syncs } = await context.supabase
       .from("event_schedule_sync")
-      .select("event_id, items, sources, auto_apply, synced_at, applied_at, last_error");
+      .select("event_id, items, sources, auto_apply, synced_at, applied_at, last_error, verified, verified_at, needs_review, review_note");
 
     const byEvent = new Map((syncs ?? []).map((s: any) => [s.event_id, s]));
     return {
@@ -52,7 +52,7 @@ export const runScheduleSync = createServerFn({ method: "POST" })
     if (data.eventId) {
       const { data: event, error } = await supabaseAdmin
         .from("events")
-        .select("id, name, event_date, website_url, faq_url, days, schedule")
+        .select("id, name, event_date, location, website_url, faq_url, days, schedule")
         .eq("id", data.eventId)
         .maybeSingle();
       if (error || !event) throw new Error(error?.message ?? "Event not found");
@@ -92,7 +92,13 @@ export const applyScrapedSchedule = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     await supabaseAdmin
       .from("event_schedule_sync")
-      .update({ applied_at: new Date().toISOString(), updated_at: new Date().toISOString() })
+      .update({
+        applied_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        verified: true,
+        verified_at: new Date().toISOString(),
+        needs_review: false,
+      })
       .eq("event_id", data.eventId);
     return { applied: schedule.length };
   });
