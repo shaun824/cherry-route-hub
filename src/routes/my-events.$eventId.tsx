@@ -1,6 +1,7 @@
-import { entryNinjaRegistrationUrl, entryNinjaRegistrationId } from "@/lib/entry-ninja-link";
+import { entryNinjaRegistrationUrl } from "@/lib/entry-ninja-link";
 import { SocialWall } from "@/components/social-wall";
 import { WhatsappButton } from "@/components/whatsapp-button";
+import { EntrySupportComposer } from "@/components/entry-support-composer";
 import { isBotMiss } from "@/lib/bot-handoff";
 import { splitFollowUps } from "@/lib/bot-followups";
 import ReactMarkdown from "react-markdown";
@@ -41,8 +42,6 @@ import {
   Mountain,
   Route as RouteIcon,
   Lock as LockIcon,
-  Mail,
-
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/lib/auth";
@@ -92,13 +91,6 @@ import { SyncMyEntryButton } from "@/components/sync-my-entry";
 
 import { Image as ImageIcon } from "lucide-react";
 
-function entrySupportMailto(eventName: string, registrationRef: string | null) {
-  const regId = entryNinjaRegistrationId(registrationRef) ?? "unknown";
-  const subject = `Request to update my entry for ${eventName} (Reg #${regId})`;
-  const body = `Hi Entry Ninja Support team,\n\nI would like to request a change to my entry for ${eventName}.\n\nEvent: ${eventName}\nRegistration number: ${regId}\n\nPlease could you assist me with the following change:\n\n[please describe what needs to be updated on your entry]\n\nI have copied the Red Cherry Events team on this email for visibility.\n\nThank you,\n[your name]`;
-  const enc = (v: string) => encodeURIComponent(v);
-  return `mailto:Support@entryninja.com?cc=${enc("team@redcherryevents.co.za")}&subject=${enc(subject)}&body=${enc(body)}`;
-}
 
 export const Route = createFileRoute("/my-events/$eventId")({
   loader: async ({ params }) => {
@@ -2265,14 +2257,9 @@ function YourEntryCard({ eventId, entryUrl = null }: { eventId: string; entryUrl
         Sizes, merchandise and rider details are managed on Entry Ninja — changes sync back here.
       </p>
 
-      <a
-        href={entrySupportMailto(row.event.name, row.registration_ref)}
-        className="mt-2 inline-flex w-full items-center justify-center gap-1.5 rounded-xl bg-secondary px-3 py-2.5 text-xs font-bold text-ink ring-1 ring-border"
-      >
-        <Mail className="h-3.5 w-3.5" /> Need to change something? Email Entry Ninja support
-      </a>
-      <p className="mt-1 text-[11px] text-ink-soft">
-        Opens your email app with the event, registration number and Red Cherry copied in.
+      <EntrySupportComposer eventName={row.event.name} registrationRef={row.registration_ref} />
+      <p className="mt-1.5 text-[11px] text-ink-soft">
+        We’ll open your email app with everything filled in — just hit send.
       </p>
 
       {row.notes ? (
