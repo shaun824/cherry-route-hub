@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { CalendarDays, ChevronRight, KeyRound, LogIn, MapPin } from "lucide-react";
+import { CalendarDays, ChevronRight, History, KeyRound, LogIn, MapPin } from "lucide-react";
 import { PageHeader } from "@/components/ui-bits";
 import { useSession } from "@/lib/auth";
 import { fetchMyEvents } from "@/lib/my-events";
@@ -60,6 +60,7 @@ function SignedOutState() {
 
 function SignedInState() {
   const qc = useQueryClient();
+  const [showPast, setShowPast] = useState(false);
   const entrantQuery = useQuery({
     queryKey: ["my-entrant"],
     queryFn: () => getMyEntrant(),
@@ -78,83 +79,118 @@ function SignedInState() {
   }
 
   const rows = eventsQuery.data ?? [];
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const upcoming = rows.filter((r) => new Date(r.event.event_date).getTime() >= today.getTime());
+  const past = rows.filter((r) => new Date(r.event.event_date).getTime() < today.getTime());
+
   return (
     <div>
-      <PageHeader title="Events Hub" subtitle={`${rows.length} event${rows.length === 1 ? "" : "s"} on file`} />
-      {rows.length === 0 ? (
+      <PageHeader
+        title="Events Hub"
+        subtitle={`${upcoming.length} upcoming event${upcoming.length === 1 ? "" : "s"}`}
+      />
+      {upcoming.length === 0 ? (
         <div className="mx-5 mt-4 rounded-2xl border border-dashed border-border p-8 text-center">
           <CalendarDays className="mx-auto h-6 w-6 text-muted-foreground" />
           <p className="mt-2 text-sm text-ink-soft">
-            You're linked, but there aren't any events assigned to you yet. Just entered? Tap below
-            to pull it through straight away.
+            No upcoming events on file. Just entered? Tap below to pull your latest Entry Ninja
+            entries through.
           </p>
           <SyncMyEntryButton className="mt-4" />
         </div>
       ) : (
         <ul className="space-y-3 px-5 py-4">
-          {rows.map((r) => (
-            <li key={r.event_entrant_id}>
-              <Link
-                to="/my-events/$eventId"
-                params={{ eventId: r.event_id }}
-                className="block overflow-hidden rounded-2xl bg-card ring-1 ring-border active:scale-[0.99] transition-transform"
-              >
-                <div
-                  style={brandHeader(r.event.hero_color).style}
-                  className={`${brandHeader(r.event.hero_color).className} px-4 py-4 text-white`}
-                >
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="text-[11px] font-semibold uppercase tracking-widest opacity-85">
-                        {r.event.discipline}
-                      </p>
-                      <p className="font-display text-lg font-bold leading-tight">{r.event.name}</p>
-                    </div>
-                    <EventLogo src={r.event.logo_url} name={r.event.name} size="md" onBrand />
-                  </div>
-                </div>
-                <div className="flex items-center justify-between px-4 py-3">
-                  <div className="min-w-0">
-                    <p className="text-sm font-semibold text-ink">
-                      {new Date(r.event.event_date).toLocaleString("en-ZA", {
-                        weekday: "short",
-                        day: "numeric",
-                        month: "short",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </p>
-                    <p className="mt-0.5 flex items-center gap-1 truncate text-xs text-muted-foreground">
-                      <MapPin className="h-3.5 w-3.5" /> {r.event.location}
-                    </p>
-                    <div className="mt-1 flex flex-wrap gap-1 text-[10px] font-semibold">
-                      {r.category ? (
-                        <span className="rounded bg-accent px-1.5 py-0.5 text-cherry-deep">
-                          {r.category}
-                        </span>
-                      ) : null}
-                      {r.batch ? (
-                        <span className="rounded bg-secondary px-1.5 py-0.5 text-ink">
-                          Batch {r.batch}
-                        </span>
-                      ) : null}
-                      {r.bib_number ? (
-                        <span className="rounded bg-ink px-1.5 py-0.5 text-white">
-                          #{r.bib_number}
-                        </span>
-                      ) : null}
-                    </div>
-                  </div>
-                  <ChevronRight className="h-5 w-5 text-muted-foreground" />
-                </div>
-              </Link>
-            </li>
+          {upcoming.map((r) => (
+            <EventRow key={r.event_entrant_id} r={r} />
           ))}
         </ul>
       )}
+
+      {past.length > 0 && (
+        <div className="px-5 pb-2">
+          <button
+            type="button"
+            onClick={() => setShowPast((s) => !s)}
+            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-card py-3 text-sm font-semibold text-ink ring-1 ring-border"
+          >
+            <History className="h-4 w-4 text-cherry" />
+            {showPast ? "Hide past events" : `View past events (${past.length})`}
+          </button>
+        </div>
+      )}
+
+      {showPast && past.length > 0 && (
+        <div className="px-5 pb-4">
+          <p className="mb-2 text-xs font-bold uppercase tracking-wider text-ink-soft">
+            Events you've done
+          </p>
+          <ul className="space-y-3">
+            {past.map((r) => (
+              <EventRow key={r.event_entrant_id} r={r} />
+            ))}
+          </ul>
+        </div>
+      )}
+
       <UpcomingBySport excludeIds={rows.map((r) => r.event_id)} />
       <div className="pb-6" />
     </div>
+  );
+}
+
+function EventRow({ r }: { r: any }) {
+  return (
+    <li>
+      <Link
+        to="/my-events/$eventId"
+        params={{ eventId: r.event_id }}
+        className="block overflow-hidden rounded-2xl bg-card ring-1 ring-border active:scale-[0.99] transition-transform"
+      >
+        <div
+          style={brandHeader(r.event.hero_color).style}
+          className={`${brandHeader(r.event.hero_color).className} px-4 py-4 text-white`}
+        >
+          <div className="flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-[11px] font-semibold uppercase tracking-widest opacity-85">
+                {r.event.discipline}
+              </p>
+              <p className="font-display text-lg font-bold leading-tight">{r.event.name}</p>
+            </div>
+            <EventLogo src={r.event.logo_url} name={r.event.name} size="md" onBrand />
+          </div>
+        </div>
+        <div className="flex items-center justify-between px-4 py-3">
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-ink">
+              {new Date(r.event.event_date).toLocaleString("en-ZA", {
+                weekday: "short",
+                day: "numeric",
+                month: "short",
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
+            </p>
+            <p className="mt-0.5 flex items-center gap-1 truncate text-xs text-muted-foreground">
+              <MapPin className="h-3.5 w-3.5" /> {r.event.location}
+            </p>
+            <div className="mt-1 flex flex-wrap gap-1 text-[10px] font-semibold">
+              {r.category ? (
+                <span className="rounded bg-accent px-1.5 py-0.5 text-cherry-deep">{r.category}</span>
+              ) : null}
+              {r.batch ? (
+                <span className="rounded bg-secondary px-1.5 py-0.5 text-ink">Batch {r.batch}</span>
+              ) : null}
+              {r.bib_number ? (
+                <span className="rounded bg-ink px-1.5 py-0.5 text-white">#{r.bib_number}</span>
+              ) : null}
+            </div>
+          </div>
+          <ChevronRight className="h-5 w-5 text-muted-foreground" />
+        </div>
+      </Link>
+    </li>
   );
 }
 
