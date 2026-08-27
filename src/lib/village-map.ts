@@ -239,7 +239,21 @@ async function fetchVillageMapLive(eventId: string, venueId: string | null): Pro
     console.warn("[village-map:fetch]", error);
     return null;
   }
-  if (!data) return null;
+  if (!data) {
+    // Legacy villages were saved before venues existed (venue_id null). If a
+    // venue-scoped village has no row yet, fall back to that legacy map so the
+    // editor shows the points that riders already see.
+    if (venueId) {
+      const { data: legacy } = await supabase
+        .from("event_village_maps")
+        .select(MAP_COLUMNS)
+        .eq("event_id", eventId)
+        .is("venue_id", null)
+        .maybeSingle();
+      if (legacy) return normaliseMapRow(legacy as unknown as Record<string, unknown>);
+    }
+    return null;
+  }
   return normaliseMapRow(data as unknown as Record<string, unknown>);
 }
 
