@@ -116,6 +116,15 @@ function ScheduleSyncPage() {
                       {row.scheduleCount} items live
                     </span>
                     <span>Last checked {fmt(sync?.synced_at)}</span>
+                    {sync?.needs_review ? (
+                      <span className="rounded-full bg-amber-100 px-2 py-0.5 font-semibold text-amber-700">
+                        Needs review
+                      </span>
+                    ) : sync?.verified ? (
+                      <span className="rounded-full bg-emerald-100 px-2 py-0.5 font-semibold text-emerald-700">
+                        Verified
+                      </span>
+                    ) : null}
                     {sync?.applied_at ? <span>Applied {fmt(sync.applied_at)}</span> : null}
                     {row.websiteUrl ? (
                       <a
@@ -160,6 +169,13 @@ function ScheduleSyncPage() {
                   )}
                 </div>
               </div>
+
+              {sync?.review_note ? (
+                <p className="mt-2 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-700">
+                  Not applied automatically — {sync.review_note}. Rider emails show “times confirmed
+                  closer to the event” until you check the site and press Apply.
+                </p>
+              ) : null}
 
               {sync?.last_error ? (
                 <p className="mt-2 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-700">

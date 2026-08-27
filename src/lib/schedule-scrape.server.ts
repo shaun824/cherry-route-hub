@@ -16,6 +16,7 @@ type EventRow = {
   id: string;
   name: string;
   event_date: string | null;
+  location?: string | null;
   website_url: string | null;
   faq_url?: string | null;
   days: EventDay[] | null;
@@ -25,8 +26,41 @@ type EventRow = {
 const SCHEDULE_HINTS =
   /(schedule|programme|program|itinerary|timetable|race-?day|event-?info|the-?event|info|details|day-?1|day-?2)/i;
 
-/** Keep the pages most likely to hold a running order, plus a few fallbacks. */
-function pickPages(pages: { url: string; text: string }[]): { url: string; text: string }[] {
+const GENERIC_PATH = /(schedule|programme|program|itinerary|timetable|event-?info|race-?day|faq|day-?1|day-?2)/i;
+
+const STOP_WORDS = new Set([
+  "the","and","for","with","event","events","ride","race","tour","weekend","warrior","classic","challenge",
+  "cycle","cycling","mtb","bike","enduro","festival","series","presented","sponsored","by","of","de","red",
+  "cherry","2024","2025","2026","2027","2028","best","north","south","edition","day","days",
+]);
+
+/**
+ * Words that identify THIS leg / edition (venue, town, farm name). Multi-leg
+ * series such as Weekend Warrior publish a separate schedule page per town, so
+ * we must never read another town's page as if it were this event's.
+ */
+export function legTokens(event: { name: string; location?: string | null }): string[] {
+  const raw = `${event.name} ${event.location ?? ""}`.toLowerCase();
+  return Array.from(
+    new Set(
+      raw
+        .split(/[^a-z0-9]+/)
+        .filter((w) => w.length > 3 && !STOP_WORDS.has(w)),
+    ),
+  );
+}
+
+/** Keep the pages most likely to hold THIS event's running order. */
+function pickPages(
+  pages: { url: string; text: string }[],
+  tokens: string[] = [],
+): { url: string; text: string }[] {
+  const hasToken = (p: { url: string; text: string }) => {
+    const hay = `${p.url} ${p.text.slice(0, 1200)}`.toLowerCase();
+    return tokens.some((t) => hay.includes(t));
+  };
+  const anyLegPage = tokens.length > 0 && pages.some(hasToken);
+
   const scored = pages
     .map((p) => {
       let score = 0;
@@ -34,27 +68,90 @@ function pickPages(pages: { url: string; text: string }[]): { url: string; text:
       const timeHits = (p.text.match(/\b([01]?\d|2[0-3])[:h][0-5]\d\b/g) ?? []).length;
       score += Math.min(timeHits, 12) / 2;
       if (/registration|briefing|prize giving|prizegiving|start|finish/i.test(p.text)) score += 2;
-      return { p, score };
+      const own = hasToken(p);
+      if (own) score += 6;
+      // Another leg of the same series: no mention of this event, not a generic
+      // schedule page, but full of times. Those are the pages that poisoned us.
+      const otherLeg = anyLegPage && !own && !GENERIC_PATH.test(p.url);
+      return { p, score, drop: otherLeg };
     })
-    .filter((x) => x.score > 1)
+    .filter((x) => !x.drop && x.score > 1)
     .sort((a, b) => b.score - a.score)
     .slice(0, 8)
     .map((x) => x.p);
   return scored;
 }
 
+const RANGE_SPLIT = /\s*(?:–|—|-|to|until|till)\s*/i;
+
+function normaliseClock(t: string): string | null {
+  const m = t.trim().match(/^(\d{1,2})[:h.](\d{2})\s*(am|pm)?$/i);
+  if (!m) return null;
+  let hour = Number(m[1]);
+  const min = m[2];
+  const ampm = m[3]?.toLowerCase();
+  if (ampm === "pm" && hour < 12) hour += 12;
+  if (ampm === "am" && hour === 12) hour = 0;
+  return `${String(hour).padStart(2, "0")}:${min}`;
+}
+
+/** Keep real ranges ("13:30 – 17:30") intact instead of collapsing them. */
 function normaliseTime(raw: string): string {
   const t = raw.trim();
-  const m = t.match(/^(\d{1,2})[:h.](\d{2})\s*(am|pm)?$/i);
-  if (m) {
-    let hour = Number(m[1]);
-    const min = m[2];
-    const ampm = m[3]?.toLowerCase();
-    if (ampm === "pm" && hour < 12) hour += 12;
-    if (ampm === "am" && hour === 12) hour = 0;
-    return `${String(hour).padStart(2, "0")}:${min}`;
+  const single = normaliseClock(t);
+  if (single) return single;
+  const parts = t.split(RANGE_SPLIT);
+  if (parts.length === 2) {
+    const a = normaliseClock(parts[0] ?? "");
+    const b = normaliseClock(parts[1] ?? "");
+    if (a && b) return `${a} – ${b}`;
   }
   return t.slice(0, 24);
+}
+
+/** Every clock time the source pages actually print, in HH:MM form. */
+function sourceTimes(pages: { text: string }[]): Set<string> {
+  const found = new Set<string>();
+  for (const p of pages) {
+    for (const m of p.text.matchAll(/\b(\d{1,2})[:h.](\d{2})\s*(am|pm)?\b/gi)) {
+      const norm = normaliseClock(`${m[1]}:${m[2]}${m[3] ? m[3] : ""}`);
+      if (norm) found.add(norm);
+    }
+  }
+  return found;
+}
+
+/**
+ * Throw away anything the model produced that is not printed verbatim on the
+ * scraped pages. This is what stops "plausible" invented start times.
+ */
+export function keepVerbatimTimes(
+  items: ScrapedScheduleItem[],
+  pages: { text: string }[],
+): { kept: ScrapedScheduleItem[]; dropped: ScrapedScheduleItem[] } {
+  const times = sourceTimes(pages);
+  const kept: ScrapedScheduleItem[] = [];
+  const dropped: ScrapedScheduleItem[] = [];
+  for (const i of items) {
+    const clocks = String(i.time).match(/\d{2}:\d{2}/g) ?? [];
+    const ok = clocks.length === 0 || clocks.every((c) => times.has(c));
+    (ok ? kept : dropped).push(i);
+  }
+  return { kept, dropped };
+}
+
+/** Separate batch/tier starts sharing one time usually means the model merged them. */
+export function suspiciousMergedStarts(items: ScrapedScheduleItem[]): string[] {
+  const byTime = new Map<string, Set<string>>();
+  for (const i of items) {
+    if (!/start/i.test(i.label)) continue;
+    const set = byTime.get(i.time) ?? new Set<string>();
+    set.add(i.label.toLowerCase());
+    byTime.set(i.time, set);
+  }
+  return Array.from(byTime.entries())
+    .filter(([, labels]) => labels.size > 1)
+    .map(([time]) => time);
 }
 
 /** Ask the AI gateway to pull a structured running order out of the scraped text. */
@@ -155,7 +252,16 @@ export async function syncEventSchedule(
   admin: SupabaseClient<any>,
   event: EventRow,
   opts: { forceApply?: boolean } = {},
-): Promise<{ eventId: string; name: string; found: number; applied: boolean; error?: string }> {
+): Promise<{
+  eventId: string;
+  name: string;
+  found: number;
+  applied: boolean;
+  verified?: boolean;
+  needsReview?: boolean;
+  reviewNote?: string | null;
+  error?: string;
+}> {
   const seeds = [event.website_url, event.faq_url].filter(
     (u): u is string => Boolean(u && /^https?:\/\//i.test(u)),
   );
@@ -172,14 +278,30 @@ export async function syncEventSchedule(
   }
 
   try {
-    const pages = pickPages(await crawlSite(seeds, 25));
+    const pages = pickPages(await crawlSite(seeds, 25), legTokens(event));
     if (!pages.length) {
-      await record({ synced_at: new Date().toISOString(), last_error: "No schedule-like pages found" });
+      await record({
+        synced_at: new Date().toISOString(),
+        last_error: "No schedule-like pages found",
+        verified: false,
+        needs_review: true,
+        review_note: "No page on this event's own site looked like a running order",
+      });
       return { eventId: event.id, name: event.name, found: 0, applied: false, error: "No schedule-like pages found" };
     }
 
     const days = (event.days ?? []) as EventDay[];
-    const items = await extractSchedule(event.name, event.event_date, days, pages);
+    const raw = await extractSchedule(event.name, event.event_date, days, pages);
+    // Nothing goes near a rider unless the exact time is printed on the page.
+    const { kept: items, dropped } = keepVerbatimTimes(raw, pages);
+    const merged = suspiciousMergedStarts(items);
+
+    const notes: string[] = [];
+    if (dropped.length) notes.push(`${dropped.length} time(s) were not printed on the site and were discarded`);
+    if (merged.length) notes.push(`different batches share the same start time (${merged.join(", ")})`);
+    if (!items.length) notes.push("no times found on the site");
+    const verified = items.length > 0 && dropped.length === 0 && merged.length === 0;
+    const reviewNote = notes.length ? notes.join("; ") : null;
 
     const { data: existing } = await admin
       .from("event_schedule_sync")
@@ -192,7 +314,8 @@ export async function syncEventSchedule(
     const autoApply = existing?.auto_apply ?? !hasSchedule;
 
     let applied = false;
-    if (items.length && (opts.forceApply || autoApply)) {
+    // Only a clean, verbatim-checked scrape is ever written onto the event.
+    if (verified && (opts.forceApply || autoApply)) {
       const scheduleItems = toScheduleItems(items, days);
       if (!sameSchedule(scheduleItems, event.schedule)) {
         const { error } = await admin.from("events").update({ schedule: scheduleItems }).eq("id", event.id);
@@ -207,12 +330,30 @@ export async function syncEventSchedule(
       synced_at: new Date().toISOString(),
       applied_at: applied ? new Date().toISOString() : undefined,
       last_error: items.length ? null : "No schedule found on the website",
+      verified: applied ? true : false,
+      verified_at: applied ? new Date().toISOString() : null,
+      needs_review: !applied,
+      review_note: reviewNote,
     });
 
-    return { eventId: event.id, name: event.name, found: items.length, applied };
+    return {
+      eventId: event.id,
+      name: event.name,
+      found: items.length,
+      applied,
+      verified: applied,
+      needsReview: !applied,
+      reviewNote,
+    };
   } catch (err) {
     const message = (err as Error).message;
-    await record({ synced_at: new Date().toISOString(), last_error: message });
+    await record({
+      synced_at: new Date().toISOString(),
+      last_error: message,
+      verified: false,
+      needs_review: true,
+      review_note: message,
+    });
     return { eventId: event.id, name: event.name, found: 0, applied: false, error: message };
   }
 }
@@ -221,7 +362,7 @@ export async function syncEventSchedule(
 export async function syncAllEventSchedules(admin: SupabaseClient<any>, opts: { forceApply?: boolean } = {}) {
   const { data: events, error } = await admin
     .from("events")
-    .select("id, name, event_date, website_url, faq_url, days, schedule")
+    .select("id, name, event_date, location, website_url, faq_url, days, schedule")
     .neq("lifecycle", "archived");
   if (error) throw new Error(error.message);
 

@@ -201,11 +201,32 @@ function dayDate(iso: string | null | undefined) {
  * prize giving, day by day, straight off the event schedule we sync from the
  * event website.
  */
-export function riderScheduleForEmail(event: any, category: string | null | undefined): EmailScheduleDay[] {
-  const schedule: any[] = Array.isArray(event?.schedule) ? event.schedule : [];
+/**
+ * True unless a scrape for this event is sitting in "needs review". Rider
+ * emails must never quote times we could not verify against the website.
+ */
+export async function scheduleTrustedEventIds(admin: any, eventIds: string[]): Promise<Set<string>> {
+  const trusted = new Set(eventIds);
+  if (!eventIds.length) return trusted;
+  const { data } = await admin
+    .from("event_schedule_sync")
+    .select("event_id, needs_review")
+    .in("event_id", eventIds);
+  for (const row of (data ?? []) as any[]) {
+    if (row.needs_review) trusted.delete(row.event_id as string);
+  }
+  return trusted;
+}
+
+export function riderScheduleForEmail(
+  event: any,
+  category: string | null | undefined,
+  opts: { trusted?: boolean } = {},
+): EmailScheduleDay[] {
+  const schedule: any[] = opts.trusted === false ? [] : Array.isArray(event?.schedule) ? event.schedule : [];
   const rawDays: any[] = Array.isArray(event?.days) ? event.days : [];
-  // No published schedule yet: still give riders the day-by-day shape of the
-  // event so every event email carries the same standard.
+  // No published (or no verified) schedule yet: still give riders the day-by-day
+  // shape of the event so every event email carries the same standard.
   if (!schedule.length) {
     const fallback = withRegistrationDayLabels(rawDays as any, [] as any);
     return fallback
@@ -362,6 +383,10 @@ export async function sendPendingEntryWelcomes(
   const promoRows = await loadPromoRows(admin);
 
   const rows = (data ?? []) as any[];
+  const trustedSchedules = await scheduleTrustedEventIds(
+    admin,
+    Array.from(new Set(rows.map((r: any) => r.events?.id).filter(Boolean))) as string[],
+  );
 
   // One email address gets ONE mail per event, no matter how many riders sit
   // under that entry — group the pending rows by event + address first.
@@ -417,7 +442,7 @@ export async function sendPendingEntryWelcomes(
           eventDate: formatDate(event.event_date),
           venue: event.location ?? null,
           venueUrl: venueMapUrl(event.location),
-          schedule: riderScheduleForEmail(event, lead.category),
+          schedule: riderScheduleForEmail(event, lead.category, { trusted: trustedSchedules.has(event.id) }),
           category: lead.category ?? null,
           bibNumber: lead.bib_number ?? null,
           party,
