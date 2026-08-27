@@ -1,6 +1,6 @@
 import * as React from 'react'
 
-import { Button, Heading, Link, Section, Text } from '@react-email/components'
+import { Button, Column, Heading, Img, Link, Row, Section, Text } from '@react-email/components'
 
 import type { TemplateEntry } from './registry'
 import { EmailShell, brand, button, footer, h1, link, text } from './theme'
@@ -35,7 +35,12 @@ export interface EmailOffer {
   redeem?: string | null
   discount?: string | null
   url?: string | null
+  /** Absolute URL of the supplier logo, shown on a white tile like the app. */
+  logoUrl?: string | null
+  /** Hex brand accent used for the card background, matching the app card. */
+  accent?: string | null
 }
+
 
 
 const card = {
@@ -79,45 +84,106 @@ const feature = {
 
 const featureNote = { color: brand.muted, fontWeight: 400 as const }
 
-const offerRow = {
-  borderTop: `1px solid ${brand.border}`,
-  padding: '12px 0 0',
-  margin: '12px 0 0',
-}
-
-const offerBrand = {
-  fontSize: '11px',
+const offersHeading = {
+  fontSize: '12px',
   fontWeight: 700 as const,
-  letterSpacing: '1.2px',
+  letterSpacing: '1.4px',
   textTransform: 'uppercase' as const,
   color: brand.muted,
-  margin: '0 0 2px',
+  margin: '0 0 10px',
 }
 
-const offerTitle = {
-  fontSize: '15px',
+/** Mirrors the app's rider-offer strip: brand-accent card, white logo tile. */
+const offerCard = {
+  borderRadius: '14px',
+  padding: '16px 18px',
+  margin: '0 0 12px',
+}
+
+const logoCell = { width: '64px', verticalAlign: 'top' as const }
+
+const logoImg = {
+  backgroundColor: '#ffffff',
+  borderRadius: '10px',
+  padding: '4px',
+  objectFit: 'contain' as const,
+}
+
+const discountCell = { width: '92px', textAlign: 'right' as const, verticalAlign: 'top' as const }
+
+const discountPill = {
+  backgroundColor: '#ffffff',
+  color: brand.ink,
+  borderRadius: '8px',
+  padding: '5px 9px',
+  fontSize: '12px',
   fontWeight: 700 as const,
-  color: brand.ink,
-  lineHeight: '1.4',
-  margin: '0 0 4px',
+  letterSpacing: '0.5px',
+  textTransform: 'uppercase' as const,
+  whiteSpace: 'nowrap' as const,
 }
 
-const offerClaim = {
-  fontSize: '13px',
-  color: brand.ink,
-  lineHeight: '1.6',
+const offerEyebrow = {
+  fontSize: '10px',
+  fontWeight: 700 as const,
+  letterSpacing: '1.4px',
+  textTransform: 'uppercase' as const,
+  color: '#ffffff',
+  opacity: 0.9,
+  margin: '0 0 3px',
+}
+
+const offerCardTitle = {
+  fontSize: '16px',
+  fontWeight: 700 as const,
+  color: '#ffffff',
+  lineHeight: '1.35',
   margin: '0',
 }
 
-const offerNote = { ...offerClaim, color: brand.muted, margin: '0 0 4px' }
+const offerCardBlurb = {
+  fontSize: '13px',
+  color: '#ffffff',
+  opacity: 0.9,
+  lineHeight: '1.5',
+  margin: '6px 0 0',
+}
+
+const offerClaimLine = {
+  fontSize: '13px',
+  color: '#ffffff',
+  lineHeight: '1.6',
+  margin: '12px 0 0',
+}
+
+const offerNote = {
+  fontSize: '12px',
+  color: brand.muted,
+  lineHeight: '1.6',
+  margin: '0',
+}
 
 const offerCode = {
   fontFamily: 'Courier New, Courier, monospace',
   fontSize: '16px',
   fontWeight: 700 as const,
-  color: brand.ink,
+  color: '#ffffff',
   letterSpacing: '1px',
 }
+
+const offerCta = {
+  display: 'inline-block',
+  backgroundColor: '#ffffff',
+  color: brand.ink,
+  textDecoration: 'none',
+  borderRadius: '8px',
+  padding: '8px 14px',
+  fontSize: '12px',
+  fontWeight: 700 as const,
+  letterSpacing: '0.6px',
+  textTransform: 'uppercase' as const,
+}
+
 
 
 const FEATURES: { icon: string; title: string; note: string }[] = [
@@ -202,50 +268,56 @@ export const EntryWelcomeEmail = ({
     </Text>
 
     {offers.length > 0 ? (
-      <Section style={card}>
-        <Text style={cardTitle}>Your rider offers for {eventName}</Text>
+      <Section style={{ margin: '0 0 24px' }}>
+        <Text style={offersHeading}>Your rider offers for {eventName}</Text>
         {offers.map((o, i) => (
-          <Section key={`${o.brand}-${i}`} style={i === 0 ? undefined : offerRow}>
-            <Text style={offerBrand}>
-              {o.brand}
-              {o.discount ? ` · ${o.discount}` : ''}
+          <Section
+            key={`${o.brand}-${i}`}
+            style={{ ...offerCard, backgroundColor: o.accent || brand.orange }}
+          >
+            <Row>
+              {o.logoUrl ? (
+                <Column style={logoCell}>
+                  <Img src={o.logoUrl} alt={`${o.brand} logo`} width="48" height="48" style={logoImg} />
+                </Column>
+              ) : null}
+              <Column>
+                <Text style={offerEyebrow}>Rider offer · {o.brand}</Text>
+                <Text style={offerCardTitle}>{o.title}</Text>
+                {o.blurb ? <Text style={offerCardBlurb}>{o.blurb}</Text> : null}
+              </Column>
+              {o.discount ? (
+                <Column style={discountCell}>
+                  <span style={discountPill}>{o.discount}</span>
+                </Column>
+              ) : null}
+            </Row>
+
+            <Text style={offerClaimLine}>
+              {o.code ? (
+                <>
+                  How to claim: use code <span style={offerCode}>{o.code}</span>
+                </>
+              ) : (
+                <>How to claim: {o.redeem}</>
+              )}
             </Text>
-            <Text style={offerTitle}>{o.title}</Text>
-            {o.blurb ? <Text style={offerNote}>{o.blurb}</Text> : null}
-            {o.code ? (
-              <Text style={offerClaim}>
-                How to claim: use code <span style={offerCode}>{o.code}</span>
-                {o.url ? (
-                  <>
-                    {' '}
-                    at{' '}
-                    <Link href={o.url} style={link}>
-                      {o.brand}
-                    </Link>
-                  </>
-                ) : null}
-                .
+
+            {o.url ? (
+              <Text style={{ margin: '10px 0 0' }}>
+                <Link href={o.url} style={offerCta}>
+                  {o.code ? 'Get the code' : 'View offer'}
+                </Link>
               </Text>
-            ) : (
-              <Text style={offerClaim}>
-                How to claim: {o.redeem}
-                {o.url ? (
-                  <>
-                    {' '}
-                    <Link href={o.url} style={link}>
-                      More about {o.brand}
-                    </Link>
-                  </>
-                ) : null}
-              </Text>
-            )}
+            ) : null}
           </Section>
         ))}
-        <Text style={{ ...offerNote, margin: '12px 0 0' }}>
+        <Text style={{ ...offerNote, margin: '10px 0 0' }}>
           Offers can change — the latest ones are always in the app under Promos.
         </Text>
       </Section>
     ) : null}
+
 
     <Text style={footer}>
 
@@ -278,6 +350,7 @@ export const template = {
           'No code — give the cell number on your entry at the Cycle Lab stand or in any Cycle Lab store.',
         discount: 'R150',
         url: 'https://www.cyclelab.com',
+        accent: '#2F5FA8',
       },
     ],
 
