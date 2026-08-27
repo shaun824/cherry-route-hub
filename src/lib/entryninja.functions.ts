@@ -120,7 +120,7 @@ export const sendTestEntryWelcome = createServerFn({ method: "POST" })
 
     let eventQuery = supabaseAdmin
       .from("events")
-      .select("id, name, event_date, location, days, schedule, logo_url, cover_url")
+      .select("id, name, event_date, location, map_query, days, schedule, logo_url, cover_url")
       .order("event_date", { ascending: true })
       .limit(1);
     if (data.eventId) eventQuery = eventQuery.eq("id", data.eventId);

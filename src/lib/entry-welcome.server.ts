@@ -383,7 +383,7 @@ export async function sendPendingEntryWelcomes(
   let query = admin
     .from("event_entrants")
     .select(
-      "id, event_id, entrant_id, registration_ref, category, bib_number, entrants(full_name, email), events(id, name, event_date, location, lifecycle, days, schedule, logo_url, cover_url)",
+      "id, event_id, entrant_id, registration_ref, category, bib_number, entrants(full_name, email), events(id, name, event_date, location, map_query, lifecycle, days, schedule, logo_url, cover_url)",
     )
     // Archived-roster imports are flagged as skipped; without this filter they
     // fill every batch and brand-new entries never get reached.
