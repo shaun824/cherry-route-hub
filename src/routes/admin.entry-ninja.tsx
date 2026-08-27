@@ -294,6 +294,8 @@ function ArchiveBackfillCard() {
 function WelcomeEmailsCard({ events }: { events: { id: string; name: string }[] }) {
   const countFn = useServerFn(countEntryWelcomes);
   const sendFn = useServerFn(sendEntryWelcomeBatch);
+  const testFn = useServerFn(sendTestEntryWelcome);
+
   const [eventId, setEventId] = useState<string>("");
   const [batch, setBatch] = useState(50);
   const [busy, setBusy] = useState(false);
