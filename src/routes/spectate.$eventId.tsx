@@ -392,6 +392,20 @@ function SpectatorEventPage() {
 
       {tab === "live" ? (
         <div className="px-5 pt-5 pb-8 space-y-3 animate-fade-in">
+          {myEntry ? (
+            <section>
+              <h2 className="font-display text-[13px] font-bold uppercase tracking-wider text-ink-soft">
+                You are entered
+              </h2>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Share your position with race control and spectators, or send an SOS in an
+                emergency.
+              </p>
+              <div className="mt-3">
+                <TrackerPanel eventId={eventId} eventName={event.name} />
+              </div>
+            </section>
+          ) : null}
           <section>
             <h2 className="font-display text-[13px] font-bold uppercase tracking-wider text-ink-soft">
               Live rider tracking
