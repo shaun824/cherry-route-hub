@@ -90,6 +90,7 @@ export async function sendTemplateEmail(
     )
   } catch (error) {
     if (error instanceof EmailAPIError && error.code === 'recipient_suppressed') {
+      if (sendId) await markEmailSuppressed(sendId)
       return { sent: false, reason: 'recipient_suppressed' }
     }
     throw error
