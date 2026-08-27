@@ -92,6 +92,13 @@ import { SyncMyEntryButton } from "@/components/sync-my-entry";
 
 import { Image as ImageIcon } from "lucide-react";
 
+function entrySupportMailto(eventName: string, registrationRef: string | null) {
+  const regId = entryNinjaRegistrationId(registrationRef) ?? "unknown";
+  const subject = `Request to update my entry for ${eventName} (Reg #${regId})`;
+  const body = `Hi Entry Ninja Support team,\n\nI would like to request a change to my entry for ${eventName}.\n\nEvent: ${eventName}\nRegistration number: ${regId}\n\nPlease could you assist me with the following change:\n\n[please describe what needs to be updated on your entry]\n\nI have copied the Red Cherry Events team on this email for visibility.\n\nThank you,\n[your name]`;
+  const params = new URLSearchParams({ subject, cc: "team@redcherryevents.co.za", body });
+  return `mailto:Support@entryninja.com?${params.toString()}`;
+}
 
 export const Route = createFileRoute("/my-events/$eventId")({
   loader: async ({ params }) => {
