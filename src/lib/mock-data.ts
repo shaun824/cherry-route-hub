@@ -306,35 +306,8 @@ export const media: MediaPost[] = [
   },
 ];
 
-export const promos: Promo[] = [
-  {
-    id: "promo_1",
-    brand: "Torq Nutrition",
-    title: "20% off race day fuel",
-    code: "CHERRY20",
-    discount: "20%",
-    expires: "2026-08-31",
-    accent: "oklch(0.6 0.18 25)",
-  },
-  {
-    id: "promo_2",
-    brand: "Cape Cycle Systems",
-    title: "Free race-day bike check",
-    code: "RCE-TUNE",
-    discount: "Free",
-    expires: "2026-09-15",
-    accent: "oklch(0.5 0.12 240)",
-  },
-  {
-    id: "promo_3",
-    brand: "Oakley SA",
-    title: "R500 off Sutro / Radar EV",
-    code: "RIDECHERRY",
-    discount: "R500",
-    expires: "2026-10-01",
-    accent: "oklch(0.4 0.08 260)",
-  },
-];
+// Rider offers are admin-managed in Lovable Cloud (public.promos) — no seed data.
+export const promos: Promo[] = [];
 
 // ─── Event entry / merchandise ──────────────────────────────────────────────
 export type MerchItem = {
