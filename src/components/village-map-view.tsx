@@ -362,10 +362,11 @@ export function VillageMapView({
           </Suspense>
         </ClientOnly>
       ) : (
+      <Portal active={planFullscreen}>
       <div
         className={
           planFullscreen
-            ? "fixed inset-0 z-[200] bg-black"
+            ? "fixed inset-0 z-[9999] h-[100dvh] w-screen bg-black"
             : "relative overflow-hidden rounded-2xl ring-1 ring-border"
         }
       >
