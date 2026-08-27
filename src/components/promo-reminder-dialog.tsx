@@ -125,8 +125,39 @@ export function PromoReminderDialog({
             </button>
           </>
         ) : (
-          <p className="mt-4 text-sm text-muted-foreground">{promo.redeem}</p>
+          <div className="mt-4 rounded-xl bg-muted/60 p-4 text-left ring-1 ring-border">
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+              How to redeem
+            </p>
+            <p className="mt-1 text-sm font-semibold leading-snug text-ink">{promo.redeem}</p>
+            {phone ? (
+              <div className="mt-3 flex items-center justify-between gap-3 rounded-lg bg-card px-3 py-2 ring-1 ring-border">
+                <div className="min-w-0">
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    The number on your entry
+                  </p>
+                  <p className="truncate font-mono text-base font-bold text-ink">{phone}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={copyPhone}
+                  className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-ink px-3 py-2 text-xs font-bold text-white"
+                >
+                  {phoneCopied ? (
+                    <>
+                      <Check className="h-3.5 w-3.5" /> Copied
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="h-3.5 w-3.5" /> Copy
+                    </>
+                  )}
+                </button>
+              </div>
+            ) : null}
+          </div>
         )}
+
 
         {hasLink ? (
           <a
