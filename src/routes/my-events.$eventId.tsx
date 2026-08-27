@@ -802,11 +802,9 @@ function InfoPanel({
           </div>
         </section>
       ) : (
-        <div className="flex items-start gap-2 rounded-2xl bg-card p-3 text-xs text-ink-soft ring-1 ring-border">
-          <Siren className="mt-0.5 h-4 w-4 shrink-0 text-cherry" />
-          <p>Live tracking and SOS activate on race day, once this event goes live.</p>
-        </div>
+        <LiveTrackingTestGate eventId={eventId} eventName={eventName} />
       )}
+
 
       {showWeather ? (
         <EventWeatherCard
