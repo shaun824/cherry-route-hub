@@ -171,7 +171,9 @@ export const sendTestEntryWelcome = createServerFn({ method: "POST" })
         venueUrl: venueMapUrl(event.location, (event as { map_query?: string | null }).map_query),
         eventLogoUrl: absoluteLogo((event as any).logo_url),
         eventCoverUrl: absoluteLogo((event as any).cover_url),
-        schedule: riderScheduleForEmail(event, party[0]?.category ?? null),
+        schedule: riderScheduleForEmail(event, party[0]?.category ?? null, {
+          trusted: (await scheduleTrustedEventIds(supabaseAdmin, [event.id])).has(event.id),
+        }),
         category: "Test entry",
         bibNumber: null,
         eventUrl,
