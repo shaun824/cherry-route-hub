@@ -54,6 +54,8 @@ export function offersForEvent(promos: Promo[], eventName: string | null | undef
       url: p.url && p.url !== "#" ? p.url : null,
       logoUrl: absoluteUrl(p.logoUrl),
       accent: cssColorToHex(p.accent) ?? "#B21E2B",
+      // Green Motion is a car-rental booking — "Get the code" doesn't fit.
+      ctaLabel: /green\s*motion/i.test(p.brand) ? "Book your car" : null,
     }));
 }
 

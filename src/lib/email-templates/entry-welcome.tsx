@@ -64,6 +64,8 @@ export interface EmailOffer {
   logoUrl?: string | null
   /** Hex brand accent used for the card background, matching the app card. */
   accent?: string | null
+  /** CTA button label; falls back to "Get the code" / "View offer". */
+  ctaLabel?: string | null
 }
 
 
@@ -413,7 +415,7 @@ export const EntryWelcomeEmail = ({
             {o.url ? (
               <Text style={{ margin: '10px 0 0' }}>
                 <Link href={o.url} style={offerCta}>
-                  {o.code ? 'Get the code' : 'View offer'}
+                  {o.ctaLabel || (o.code ? 'Get the code' : 'View offer')}
                 </Link>
               </Text>
             ) : null}
