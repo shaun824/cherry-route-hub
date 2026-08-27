@@ -6,7 +6,8 @@ import { EmailAPIError } from "@lovable.dev/email-js";
 import { sendTemplateEmail } from "./email-templates/send-email";
 import { isPromoLive, promoMatchesEvent } from "./event-promos";
 import type { Promo } from "./mock-data";
-import type { EmailOffer } from "./email-templates/entry-welcome";
+import type { EmailOffer, EmailScheduleDay } from "./email-templates/entry-welcome";
+import { withRegistrationDayLabels } from "./event-days";
 
 type AnyClient = SupabaseClient<any, any, any>;
 
@@ -164,6 +165,78 @@ async function loadEntryParty(
   return party;
 }
 
+/** Google Maps directions link for a venue name/address. */
+export function venueMapUrl(venue: string | null | undefined): string | null {
+  const v = (venue ?? "").trim();
+  if (!v) return null;
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(v)}`;
+}
+
+const REG_LINE = /(registration|register|check[- ]?in|briefing)/i;
+const KEY_LINE = /(start|briefing|registration|check[- ]?in|prize)/i;
+const TIERS = ["gold", "silver", "bronze"];
+
+/** The tier word on a rider's category, e.g. "Silver - U/14 …" -> "silver". */
+function tierOf(category: string | null | undefined) {
+  const c = (category ?? "").toLowerCase();
+  return TIERS.find((t) => c.includes(t)) ?? null;
+}
+
+function dayDate(iso: string | null | undefined) {
+  if (!iso) return null;
+  try {
+    return new Date(`${iso}T00:00:00Z`).toLocaleDateString("en-ZA", {
+      weekday: "short",
+      day: "numeric",
+      month: "short",
+      timeZone: "UTC",
+    });
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * The times this rider actually needs: registration, their own batch start and
+ * prize giving, day by day, straight off the event schedule we sync from the
+ * event website.
+ */
+export function riderScheduleForEmail(event: any, category: string | null | undefined): EmailScheduleDay[] {
+  const schedule: any[] = Array.isArray(event?.schedule) ? event.schedule : [];
+  if (!schedule.length) return [];
+  const days = withRegistrationDayLabels(
+    (Array.isArray(event?.days) ? event.days : []) as any,
+    schedule as any,
+  );
+  const tier = tierOf(category);
+
+  const build = (items: any[]): EmailScheduleDay["items"] =>
+    items
+      .filter((i) => {
+        const text = `${i.label ?? ""} ${i.details ?? ""}`;
+        if (!i.time || !KEY_LINE.test(text)) return false;
+        // Only their own batch when the schedule splits starts by tier.
+        const mentioned = TIERS.filter((t) => text.toLowerCase().includes(t));
+        if (mentioned.length && tier) return mentioned.includes(tier);
+        return true;
+      })
+      .map((i) => ({ time: String(i.time), label: String(i.label ?? ""), details: i.details ?? null }))
+      .sort((a, b) => a.time.localeCompare(b.time));
+
+  if (days.length) {
+    return days
+      .map((d: any) => ({
+        label: String(d.label ?? ""),
+        date: dayDate(d.date),
+        items: build(schedule.filter((i) => i.dayId === d.id)),
+      }))
+      .filter((d) => d.items.length);
+  }
+
+  const items = build(schedule);
+  return items.length ? [{ label: "Event day", date: null, items }] : [];
+}
+
 export type WelcomeBatchResult = {
   candidates: number;
   sent: number;
@@ -256,7 +329,7 @@ export async function sendPendingEntryWelcomes(
   let query = admin
     .from("event_entrants")
     .select(
-      "id, event_id, entrant_id, registration_ref, category, bib_number, entrants(full_name, email), events(id, name, event_date, location, lifecycle)",
+      "id, event_id, entrant_id, registration_ref, category, bib_number, entrants(full_name, email), events(id, name, event_date, location, lifecycle, days, schedule)",
     )
     // Archived-roster imports are flagged as skipped; without this filter they
     // fill every batch and brand-new entries never get reached.
@@ -331,6 +404,8 @@ export async function sendPendingEntryWelcomes(
           eventName: event.name,
           eventDate: formatDate(event.event_date),
           venue: event.location ?? null,
+          venueUrl: venueMapUrl(event.location),
+          schedule: riderScheduleForEmail(event, lead.category),
           category: lead.category ?? null,
           bibNumber: lead.bib_number ?? null,
           party,
