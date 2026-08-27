@@ -3,6 +3,8 @@ import { createPortal } from "react-dom";
 import { Copy, Check, ExternalLink, X } from "lucide-react";
 
 import type { EventPromo } from "@/lib/event-promos";
+import { useMyEntryPhone } from "@/lib/use-my-phone";
+
 
 /**
  * The approved rider-offer reminder pop-up. Shown wherever an offer is tapped
