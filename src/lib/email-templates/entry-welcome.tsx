@@ -35,7 +35,12 @@ export interface EmailOffer {
   redeem?: string | null
   discount?: string | null
   url?: string | null
+  /** Absolute URL of the supplier logo, shown on a white tile like the app. */
+  logoUrl?: string | null
+  /** Hex brand accent used for the card background, matching the app card. */
+  accent?: string | null
 }
+
 
 
 const card = {
