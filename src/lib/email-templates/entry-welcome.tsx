@@ -141,6 +141,8 @@ export const EntryWelcomeEmail = ({
   actionUrl,
   actionLabel,
   needsPassword = false,
+  offers = [],
+
   siteName = 'Red Cherry Events',
   siteUrl = 'https://riderapp.redcherryevents.co.za',
 }: EntryWelcomeProps) => (
