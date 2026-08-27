@@ -37,8 +37,10 @@ import { VenueMiniMap } from "@/components/venue-mini-map";
 import { VillageMapView } from "@/components/village-map-view";
 import { fetchVillageMap } from "@/lib/village-map";
 import { LiveTrackingMap } from "@/components/live-tracking-map";
+import { TrackerPanel } from "@/components/tracker-panel";
 
 import { fetchEventInfo } from "@/lib/event-info";
+import { fetchMyEventById } from "@/lib/my-events";
 import { groupRidersByClass } from "@/lib/rider-classes";
 import { useEventPromos } from "@/lib/use-event-promos";
 import { useShuffledPromos } from "@/lib/use-shuffled-promos";
