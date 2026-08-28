@@ -720,7 +720,7 @@ export default function VillageMapGeo({
           onClick={locate}
           className="absolute bottom-3 right-3 z-[500] rounded-full cherry-gradient px-4 py-2 text-xs font-bold text-white shadow-lg"
         >
-          {locating ? "Finding you…" : me ? "Recentre on me" : "Show my location"}
+          {locating ? "Finding you…" : me ? "Hide my location" : "Show my location"}
         </button>
       </div>
   );
