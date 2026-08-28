@@ -29,6 +29,11 @@ export interface EntryWelcomeProps {
   schedule?: EmailScheduleDay[]
   /** Everyone entered under this registration / email for this event. */
   party?: EmailPartyMember[]
+  /**
+   * Per-person key times when riders on one entry are in different
+   * categories/trips — so the entry holder sees everyone's start times.
+   */
+  partySchedules?: { name: string; category?: string | null; days: EmailScheduleDay[] }[]
   /** Live rider offers for THIS event, built at send time from the admin promo list. */
   offers?: EmailOffer[]
   siteName?: string
