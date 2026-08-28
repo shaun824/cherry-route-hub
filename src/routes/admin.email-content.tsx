@@ -51,6 +51,13 @@ function EmailContentPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  // One copy of every email the app sends — rider, crew and account mails.
+  const samples = useMutation({
+    mutationFn: () => allSamples({ data: {} }),
+    onSuccess: (r: any) => toast.success(`${r.sent} emails sent to ${r.to}`),
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   return (
     <div>
       <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
