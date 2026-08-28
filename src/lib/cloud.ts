@@ -213,10 +213,17 @@ export async function fetchEvents(): Promise<Event[] | null> {
   return (data ?? []).map((r: Row) => eventFromRow(r));
 }
 
+/** House rule: every Tour de Addo carries its title sponsor in front of the name. */
+export function brandedEventName(name: string) {
+  const n = (name || "").trim();
+  if (/tour de addo/i.test(n) && !/m&g\s+investments/i.test(n)) return `M&G Investments ${n}`;
+  return n;
+}
+
 export async function upsertEventCloud(e: Event): Promise<string | null> {
   const row = {
     ...(isUuid(e.id) ? { id: e.id } : {}),
-    name: e.name || "Untitled event",
+    name: brandedEventName(e.name) || "Untitled event",
     discipline: e.discipline,
     event_date: e.date,
     location: e.location || "",

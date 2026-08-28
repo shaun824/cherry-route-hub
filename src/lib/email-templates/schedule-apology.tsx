@@ -1,6 +1,6 @@
 import * as React from 'react'
 
-import { Button, Heading, Link, Section, Text } from '@react-email/components'
+import { Button, Heading, Img, Link, Section, Text } from '@react-email/components'
 
 import type { TemplateEntry } from './registry'
 import { EmailShell, brand, button, h1, link, text } from './theme'
@@ -21,6 +21,10 @@ export interface ScheduleApologyProps {
   venue?: string | null
   venueUrl?: string | null
   eventUrl: string
+  /** Absolute URL of the event's cover/banner image, shown full width at the top. */
+  eventCoverUrl?: string | null
+  /** Absolute URL of the event's logo (fallback when there's no cover image). */
+  eventLogoUrl?: string | null
   schedule?: ApologyScheduleDay[]
   siteName?: string
   siteUrl?: string
@@ -67,6 +71,16 @@ const scheduleDayTitle = {
 const scheduleItem = { fontSize: '15px', color: brand.ink, lineHeight: '1.55', margin: '0 0 8px' }
 const muted = { color: brand.muted, fontWeight: 400 as const }
 
+const eventLogoWrap = { margin: '0 0 20px', textAlign: 'center' as const, lineHeight: 0 }
+const eventLogoImg = {
+  display: 'block',
+  width: '100%',
+  maxWidth: '100%',
+  height: 'auto',
+  borderRadius: '14px',
+  border: `1px solid ${brand.border}`,
+}
+
 export const ScheduleApologyEmail = ({
   firstName,
   eventName,
@@ -75,6 +89,8 @@ export const ScheduleApologyEmail = ({
   venue,
   venueUrl,
   eventUrl,
+  eventCoverUrl,
+  eventLogoUrl,
   schedule = [],
   siteName = 'Red Cherry Events',
   siteUrl = 'https://riderapp.redcherryevents.co.za',
@@ -83,6 +99,12 @@ export const ScheduleApologyEmail = ({
     preview={`Your confirmed times for ${tripName ? `${eventName} — ${tripName}` : eventName}`}
     siteName={siteName}
   >
+    {eventCoverUrl || eventLogoUrl ? (
+      <Section style={eventLogoWrap}>
+        <Img src={(eventCoverUrl || eventLogoUrl) as string} alt={eventName} width="600" style={eventLogoImg} />
+      </Section>
+    ) : null}
+
     <Heading style={h1}>{firstName ? `${firstName}, here are your real times` : 'Here are your real times'}</Heading>
 
     <Text style={text}>

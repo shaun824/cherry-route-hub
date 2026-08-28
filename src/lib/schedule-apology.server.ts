@@ -51,6 +51,7 @@ export async function buildApologyData(
     venueUrl: venueMapUrl(event.location, event.map_query),
     eventUrl: `https://riderapp.redcherryevents.co.za/my-events/${event.id}`,
     eventCoverUrl: absoluteLogo(event.cover_url),
+    eventLogoUrl: absoluteLogo(event.logo_url),
     schedule: riderScheduleForEmail(event, opts.category ?? null, { trusted }),
   };
 }
