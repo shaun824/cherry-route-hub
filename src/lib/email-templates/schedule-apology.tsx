@@ -165,8 +165,8 @@ export const ScheduleApologyEmail = ({
       <Link href={siteUrl} style={link}>
         <strong>Red Cherry Rider Hub</strong>
       </Link>
-      , and we keep it in step with the event website. Thanks for your patience — see you in
-      the park.
+      , and we keep it in step with the event website. Thanks for your patience — see you at the
+      start.
     </Text>
   </EmailShell>
 )
