@@ -1,0 +1,1 @@
+ALTER TABLE public.event_entrants ADD COLUMN IF NOT EXISTS schedule_apology_sent_at timestamptz;

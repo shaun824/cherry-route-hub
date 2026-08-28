@@ -200,6 +200,23 @@ function tierOf(category: string | null | undefined) {
   return TIERS.find((t) => c.includes(t)) ?? null;
 }
 
+/**
+ * Multi-trip events (Tour de Addo runs two back-to-back Darlington trips) label
+ * their days "Trip 1 · Day 1" and sell them as separate categories. A rider
+ * must only ever see the itinerary for the trip they actually entered.
+ */
+export function tripNumberOf(text: string | null | undefined): string | null {
+  const m = /trip\s*#?\s*(\d+)/i.exec(String(text ?? ""));
+  return m ? m[1] : null;
+}
+
+function daysForTrip<T extends { label?: unknown }>(days: T[], category: string | null | undefined): T[] {
+  const trip = tripNumberOf(category);
+  if (!trip) return days;
+  const mine = days.filter((d) => tripNumberOf(String((d as any).label ?? "")) === trip);
+  return mine.length ? mine : days;
+}
+
 function dayDate(iso: string | null | undefined) {
   if (!iso) return null;
   try {
@@ -252,7 +269,7 @@ export function riderScheduleForEmail(
   // No published (or no verified) schedule yet: still give riders the day-by-day
   // shape of the event so every event email carries the same standard.
   if (!schedule.length) {
-    const fallback = withRegistrationDayLabels(rawDays as any, [] as any);
+    const fallback = daysForTrip(withRegistrationDayLabels(rawDays as any, [] as any) as any[], category);
     return fallback
       .map((d: any) => ({
         label: String(d.label ?? ""),
@@ -261,9 +278,12 @@ export function riderScheduleForEmail(
       }))
       .filter((d) => d.label);
   }
-  const days = withRegistrationDayLabels(
-    (Array.isArray(event?.days) ? event.days : []) as any,
-    schedule as any,
+  const days = daysForTrip(
+    withRegistrationDayLabels(
+      (Array.isArray(event?.days) ? event.days : []) as any,
+      schedule as any,
+    ) as any[],
+    category,
   );
   const tier = tierOf(category);
 
