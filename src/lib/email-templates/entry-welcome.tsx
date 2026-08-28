@@ -29,6 +29,11 @@ export interface EntryWelcomeProps {
   schedule?: EmailScheduleDay[]
   /** Everyone entered under this registration / email for this event. */
   party?: EmailPartyMember[]
+  /**
+   * Per-person key times when riders on one entry are in different
+   * categories/trips — so the entry holder sees everyone's start times.
+   */
+  partySchedules?: { name: string; category?: string | null; days: EmailScheduleDay[] }[]
   /** Live rider offers for THIS event, built at send time from the admin promo list. */
   offers?: EmailOffer[]
   siteName?: string
@@ -277,6 +282,8 @@ export const EntryWelcomeEmail = ({
   needsPassword = false,
   offers = [],
   party = [],
+  partySchedules = [],
+
   venueUrl,
   eventLogoUrl,
   eventCoverUrl,
@@ -369,6 +376,32 @@ export const EntryWelcomeEmail = ({
                 </span>
               ) : null}
             </Text>
+          ))}
+        </>
+      ) : null}
+      {partySchedules.length > 1 ? (
+        <>
+          <Text style={{ ...cardTitle, margin: '16px 0 8px' }}>Start times for everyone on your entry</Text>
+          {partySchedules.map((ps, i) => (
+            <Section key={`${ps.name}-${i}`} style={i === 0 ? scheduleDayFirst : scheduleDay}>
+              <Text style={scheduleDayTitle}>
+                <strong>
+                  {ps.name}
+                  {ps.category ? ` · ${ps.category}` : ''}
+                </strong>
+              </Text>
+              {ps.days.map((d) =>
+                d.items.map((it, ii) => (
+                  <Text key={`${d.label}-${it.label}-${ii}`} style={scheduleItem}>
+                    <strong>{it.time}</strong>{' — '}
+                    <span style={featureNote}>
+                      {d.label}
+                      {d.date ? ` (${d.date})` : ''}: {it.label}
+                    </span>
+                  </Text>
+                )),
+              )}
+            </Section>
           ))}
         </>
       ) : null}
