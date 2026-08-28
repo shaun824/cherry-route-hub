@@ -392,12 +392,18 @@ export async function syncEventSchedule(
   }
 }
 
-/** Sync every non-archived event (used by the scheduled job and the admin button). */
+/**
+ * Sync every event that is open and selling entries (published, upcoming, and
+ * linked to Entry Ninja). Past/closed events are skipped — their schedules no
+ * longer matter and scraping them just creates noise.
+ */
 export async function syncAllEventSchedules(admin: SupabaseClient<any>, opts: { forceApply?: boolean } = {}) {
   const { data: events, error } = await admin
     .from("events")
     .select("id, name, event_date, location, website_url, faq_url, days, schedule")
-    .neq("lifecycle", "archived");
+    .eq("lifecycle", "published")
+    .gte("event_date", new Date().toISOString())
+    .not("entry_ninja_url", "is", null);
   if (error) throw new Error(error.message);
 
   const results = [];

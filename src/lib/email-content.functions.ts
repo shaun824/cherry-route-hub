@@ -20,11 +20,14 @@ export const listEmailContent = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { riderScheduleForEmail, scheduleTrustedEventIds } = await import("./entry-welcome.server");
 
+    // Only events that are open and selling entries matter here — past or
+    // closed events no longer send schedule emails, so checking them is noise.
     const { data: events, error } = await supabaseAdmin
       .from("events")
       .select("id, name, event_date, days, schedule, website_url")
-      .neq("lifecycle", "archived")
-      .neq("lifecycle", "draft")
+      .eq("lifecycle", "published")
+      .gte("event_date", new Date().toISOString())
+      .not("entry_ninja_url", "is", null)
       .order("event_date", { ascending: true });
     if (error) throw new Error(error.message);
 
