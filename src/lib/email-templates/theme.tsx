@@ -7,10 +7,16 @@ import {
   Heading,
   Hr,
   Html,
+  Img,
   Preview,
   Section,
   Text,
 } from '@react-email/components'
+
+import rceLogo from '@/assets/rce-logo.png.asset.json'
+
+/** Absolute URL for the Red Cherry logo — emails can't use relative paths. */
+export const RCE_LOGO_URL = `https://riderapp.redcherryevents.co.za${rceLogo.url}`
 
 export const brand = {
   orange: '#F58220',
@@ -119,7 +125,15 @@ export const EmailShell = ({
           <Text style={brandName}>{siteName}</Text>
           {children}
           <Hr style={{ borderColor: brand.border, margin: '28px 0 0' }} />
-          <Text style={footer}>
+          <Section style={{ textAlign: 'center' as const, padding: '20px 0 0' }}>
+            <Img
+              src={RCE_LOGO_URL}
+              alt="Red Cherry Events"
+              width="132"
+              style={{ display: 'inline-block', height: 'auto' }}
+            />
+          </Section>
+          <Text style={{ ...footer, textAlign: 'center' as const, margin: '12px 0 0' }}>
             Red Cherry Events Rider Hub — ride info, schedules and event updates
             in one place.
           </Text>
