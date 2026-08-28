@@ -30,7 +30,7 @@ import {
 
 import { BrandMark, SectionTitle, TypeBadge } from "@/components/ui-bits";
 import { SponsorScroller } from "@/components/sponsor-scroller";
-import { SocialWall } from "@/components/social-wall";
+import { RedCherrySocials } from "@/components/social-links-card";
 import { InstallPrompt, PushOptIn } from "@/components/push-optin";
 import { AdminAuditWarnings } from "@/components/admin-audit-warnings";
 import { formatDate, relativeTime, type Event } from "@/lib/mock-data";
@@ -441,9 +441,9 @@ function Home() {
         </>
       ) : null}
 
-      {/* Social wall — Red Cherry Events Instagram */}
+      {/* Links out to the Red Cherry Events social channels */}
       <div className="px-5 pt-4">
-        <SocialWall title="From the start line" limit={9} />
+        <RedCherrySocials />
       </div>
 
 
