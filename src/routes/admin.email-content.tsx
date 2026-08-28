@@ -5,6 +5,7 @@ import { Check, ExternalLink, Mail, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { listEmailContent, markScheduleVerified } from "@/lib/email-content.functions";
 import { sendTestEntryWelcome } from "@/lib/entryninja.functions";
+import { sendAllEmailSamples } from "@/lib/email-samples.functions";
 
 export const Route = createFileRoute("/admin/email-content")({
   head: () => ({
@@ -29,6 +30,7 @@ function EmailContentPage() {
   const list = useServerFn(listEmailContent);
   const verify = useServerFn(markScheduleVerified);
   const test = useServerFn(sendTestEntryWelcome);
+  const allSamples = useServerFn(sendAllEmailSamples);
   const qc = useQueryClient();
 
   const q = useQuery({ queryKey: ["email-content"], queryFn: () => list() });
@@ -51,6 +53,13 @@ function EmailContentPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  // One copy of every email the app sends — rider, crew and account mails.
+  const samples = useMutation({
+    mutationFn: () => allSamples({ data: {} }),
+    onSuccess: (r: any) => toast.success(`${r.sent} emails sent to ${r.to}`),
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   return (
     <div>
       <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
@@ -61,12 +70,22 @@ function EmailContentPage() {
             code path as the real mailer. Anything showing “TBC” is going out without times.
           </p>
         </div>
-        <button
-          onClick={() => refresh()}
-          className="inline-flex items-center gap-2 rounded-xl bg-ink px-4 py-2 text-sm font-semibold text-white"
-        >
-          <RefreshCw className={`h-4 w-4 ${q.isFetching ? "animate-spin" : ""}`} /> Refresh
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            onClick={() => samples.mutate()}
+            disabled={samples.isPending}
+            className="inline-flex items-center gap-2 rounded-xl bg-cherry px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
+          >
+            <Mail className="h-4 w-4" />
+            {samples.isPending ? "Sending…" : "Send me every email"}
+          </button>
+          <button
+            onClick={() => refresh()}
+            className="inline-flex items-center gap-2 rounded-xl bg-ink px-4 py-2 text-sm font-semibold text-white"
+          >
+            <RefreshCw className={`h-4 w-4 ${q.isFetching ? "animate-spin" : ""}`} /> Refresh
+          </button>
+        </div>
       </div>
 
       {q.isLoading && <p className="text-sm text-ink-soft">Loading…</p>}
