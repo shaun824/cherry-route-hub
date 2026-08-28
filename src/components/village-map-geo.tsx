@@ -94,19 +94,21 @@ function TwoFingerPanGate({ onTouch }: { onTouch: () => void }) {
 
 
 
-function FitBounds({ bounds }: { bounds: L.LatLngBoundsExpression }) {
+function FitBounds({ bounds, refitToken }: { bounds: L.LatLngBoundsExpression; refitToken?: number }) {
   const map = useMap();
   const done = useRef(false);
+  const lastToken = useRef(0);
   useEffect(() => {
     // Frame the village once, on first mount only. Re-fitting on later renders
     // (zoom changes, new marker arrays) fought the rider's own pinch/scroll
     // gesture and snapped the map straight back to the opening view.
-    if (done.current) return;
+    if (done.current && refitToken === lastToken.current) return;
     done.current = true;
+    lastToken.current = refitToken ?? 0;
     // Cap at the highest zoom the satellite imagery actually covers, otherwise
     // the map opens on upscaled/blank tiles.
     map.fitBounds(bounds, { padding: [20, 20], maxZoom: 19 });
-  }, [map, bounds]);
+  }, [map, bounds, refitToken]);
   return null;
 }
 
