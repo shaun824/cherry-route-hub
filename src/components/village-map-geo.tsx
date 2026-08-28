@@ -601,7 +601,7 @@ export default function VillageMapGeo({
           />
 
 
-          <FitBounds bounds={bounds} />
+          <FitBounds bounds={bounds} refitToken={viewBoundsToken} />
           <Recenter position={me} token={recenterToken} />
 
           {/* Facility points (toilets, chill zone, food…) show as clean icon pucks.
