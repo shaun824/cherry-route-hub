@@ -247,6 +247,22 @@ function sameSchedule(a: unknown, b: unknown) {
   return JSON.stringify(a ?? []) === JSON.stringify(b ?? []);
 }
 
+/** Plain-English summary of how the website's programme differs from the live one. */
+export function scheduleDiffNote(current: unknown, scraped: { time: string; label: string }[]) {
+  const key = (i: any) => `${String(i?.time ?? "")} ${String(i?.label ?? "").trim().toLowerCase()}`;
+  const before = new Set((Array.isArray(current) ? current : []).map(key));
+  const after = new Set(scraped.map(key));
+  const added = scraped.filter((i) => !before.has(key(i))).map((i) => `${i.time} ${i.label}`);
+  const removed = (Array.isArray(current) ? current : [])
+    .filter((i: any) => !after.has(key(i)))
+    .map((i: any) => `${i.time} ${i.label}`);
+  const parts: string[] = [];
+  if (added.length) parts.push(`website now shows: ${added.slice(0, 6).join(", ")}`);
+  if (removed.length) parts.push(`no longer on the website: ${removed.slice(0, 6).join(", ")}`);
+  return parts.length ? parts.join("; ") : "website programme differs from the live schedule";
+}
+
+
 /** Scrape one event's website and (optionally) apply the schedule it finds. */
 export async function syncEventSchedule(
   admin: SupabaseClient<any>,
