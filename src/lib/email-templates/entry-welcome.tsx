@@ -282,6 +282,8 @@ export const EntryWelcomeEmail = ({
   needsPassword = false,
   offers = [],
   party = [],
+  partySchedules = [],
+
   venueUrl,
   eventLogoUrl,
   eventCoverUrl,
