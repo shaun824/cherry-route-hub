@@ -94,19 +94,21 @@ function TwoFingerPanGate({ onTouch }: { onTouch: () => void }) {
 
 
 
-function FitBounds({ bounds }: { bounds: L.LatLngBoundsExpression }) {
+function FitBounds({ bounds, refitToken }: { bounds: L.LatLngBoundsExpression; refitToken?: number }) {
   const map = useMap();
   const done = useRef(false);
+  const lastToken = useRef(0);
   useEffect(() => {
     // Frame the village once, on first mount only. Re-fitting on later renders
     // (zoom changes, new marker arrays) fought the rider's own pinch/scroll
     // gesture and snapped the map straight back to the opening view.
-    if (done.current) return;
+    if (done.current && refitToken === lastToken.current) return;
     done.current = true;
+    lastToken.current = refitToken ?? 0;
     // Cap at the highest zoom the satellite imagery actually covers, otherwise
     // the map opens on upscaled/blank tiles.
     map.fitBounds(bounds, { padding: [20, 20], maxZoom: 19 });
-  }, [map, bounds]);
+  }, [map, bounds, refitToken]);
   return null;
 }
 
@@ -299,6 +301,7 @@ export default function VillageMapGeo({
   const [locating, setLocating] = useState(false);
   const [geoError, setGeoError] = useState<string | null>(null);
   const [recenterToken, setRecenterToken] = useState(0);
+  const [viewBoundsToken, setViewBoundsToken] = useState(0);
   const [satellite, setSatellite] = useState(true);
   const [bearing, setBearing] = useState(0);
   // Full-screen expand: the same live map instance just fills the viewport, so
@@ -428,9 +431,26 @@ export default function VillageMapGeo({
   );
 
 
+  function clearLocation() {
+    if (watchRef.current !== null) {
+      navigator.geolocation.clearWatch(watchRef.current);
+      watchRef.current = null;
+    }
+    setMe(null);
+    setAccuracy(null);
+    setLocating(false);
+    // Fly back to the village so the rider isn't stranded on their location.
+    setViewBoundsToken((t) => t + 1);
+  }
+
   function locate() {
     if (!("geolocation" in navigator)) {
       setGeoError("Location isn't available on this device.");
+      return;
+    }
+    // Already showing the rider: turn it off and return to the village view.
+    if (me) {
+      clearLocation();
       return;
     }
     setLocating(true);
@@ -581,7 +601,7 @@ export default function VillageMapGeo({
           />
 
 
-          <FitBounds bounds={bounds} />
+          <FitBounds bounds={bounds} refitToken={viewBoundsToken} />
           <Recenter position={me} token={recenterToken} />
 
           {/* Facility points (toilets, chill zone, food…) show as clean icon pucks.
@@ -700,7 +720,7 @@ export default function VillageMapGeo({
           onClick={locate}
           className="absolute bottom-3 right-3 z-[500] rounded-full cherry-gradient px-4 py-2 text-xs font-bold text-white shadow-lg"
         >
-          {locating ? "Finding you…" : me ? "Recentre on me" : "Show my location"}
+          {locating ? "Finding you…" : me ? "Hide my location" : "Show my location"}
         </button>
       </div>
   );
