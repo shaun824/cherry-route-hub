@@ -183,6 +183,9 @@ export const sendTestEntryWelcome = createServerFn({ method: "POST" })
         needsPassword: false,
         offers: offersForEvent(promos, event.name),
         party,
+        partySchedules: partySchedulesForEmail(event, party, {
+          trusted: (await scheduleTrustedEventIds(supabaseAdmin, [event.id])).has(event.id),
+        }),
       },
     });
 
