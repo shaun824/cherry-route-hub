@@ -431,9 +431,26 @@ export default function VillageMapGeo({
   );
 
 
+  function clearLocation() {
+    if (watchRef.current !== null) {
+      navigator.geolocation.clearWatch(watchRef.current);
+      watchRef.current = null;
+    }
+    setMe(null);
+    setAccuracy(null);
+    setLocating(false);
+    // Fly back to the village so the rider isn't stranded on their location.
+    setViewBoundsToken((t) => t + 1);
+  }
+
   function locate() {
     if (!("geolocation" in navigator)) {
       setGeoError("Location isn't available on this device.");
+      return;
+    }
+    // Already showing the rider: turn it off and return to the village view.
+    if (me) {
+      clearLocation();
       return;
     }
     setLocating(true);
