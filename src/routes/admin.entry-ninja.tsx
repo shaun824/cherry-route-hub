@@ -428,6 +428,12 @@ function WelcomeEmailsCard({ events }: { events: { id: string; name: string }[] 
           placeholder="Test as category (optional)"
           className="w-56 rounded-lg border border-border bg-background px-2.5 py-2 text-xs"
         />
+        <input
+          value={onlyEmails}
+          onChange={(e) => setOnlyEmails(e.target.value)}
+          placeholder="Only these emails (optional)"
+          className="w-64 rounded-lg border border-border bg-background px-2.5 py-2 text-xs"
+        />
         <button
           onClick={() => void sendTest()}
           disabled={busy}
@@ -454,6 +460,7 @@ function ScheduleApologyCard({ events }: { events: { id: string; name: string }[
 
   const [eventId, setEventId] = useState<string>("");
   const [category, setCategory] = useState<string>("");
+  const [onlyEmails, setOnlyEmails] = useState<string>("");
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
@@ -477,7 +484,11 @@ function ScheduleApologyCard({ events }: { events: { id: string; name: string }[
             : `Not sent to ${r.to}: ${r.reason}`,
         );
       } else {
-        const r = await sendFn({ data: { eventId } });
+        const emails = onlyEmails
+          .split(/[,\s]+/)
+          .map((e) => e.trim())
+          .filter(Boolean);
+        const r = await sendFn({ data: { eventId, ...(emails.length ? { emails } : {}) } });
         setNote(
           `${r.sent} sent · ${r.suppressed} suppressed · ${r.skipped} skipped` +
             (r.errors.length ? ` · ${r.errors[0]}` : ""),
@@ -520,6 +531,12 @@ function ScheduleApologyCard({ events }: { events: { id: string; name: string }[
           placeholder="Test as category (optional)"
           className="w-56 rounded-lg border border-border bg-background px-2.5 py-2 text-xs"
         />
+        <input
+          value={onlyEmails}
+          onChange={(e) => setOnlyEmails(e.target.value)}
+          placeholder="Only these emails (optional)"
+          className="w-64 rounded-lg border border-border bg-background px-2.5 py-2 text-xs"
+        />
         <button
           onClick={() => void run("test")}
           disabled={busy}
@@ -532,7 +549,7 @@ function ScheduleApologyCard({ events }: { events: { id: string; name: string }[
           disabled={busy}
           className="rounded-lg bg-cherry px-3 py-2 text-xs font-semibold text-white disabled:opacity-60"
         >
-          {busy ? "Sending…" : "Send to everyone entered"}
+          {busy ? "Sending…" : onlyEmails.trim() ? "Send to listed riders" : "Send to everyone entered"}
         </button>
       </div>
 
