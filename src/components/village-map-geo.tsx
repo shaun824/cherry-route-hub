@@ -301,6 +301,7 @@ export default function VillageMapGeo({
   const [locating, setLocating] = useState(false);
   const [geoError, setGeoError] = useState<string | null>(null);
   const [recenterToken, setRecenterToken] = useState(0);
+  const [viewBoundsToken, setViewBoundsToken] = useState(0);
   const [satellite, setSatellite] = useState(true);
   const [bearing, setBearing] = useState(0);
   // Full-screen expand: the same live map instance just fills the viewport, so
