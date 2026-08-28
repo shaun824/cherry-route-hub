@@ -1,6 +1,6 @@
 import * as React from 'react'
 
-import { Button, Heading, Link, Section, Text } from '@react-email/components'
+import { Button, Heading, Img, Link, Section, Text } from '@react-email/components'
 
 import type { TemplateEntry } from './registry'
 import { EmailShell, brand, button, h1, link, text } from './theme'
@@ -21,6 +21,10 @@ export interface ScheduleApologyProps {
   venue?: string | null
   venueUrl?: string | null
   eventUrl: string
+  /** Absolute URL of the event's cover/banner image, shown full width at the top. */
+  eventCoverUrl?: string | null
+  /** Absolute URL of the event's logo (fallback when there's no cover image). */
+  eventLogoUrl?: string | null
   schedule?: ApologyScheduleDay[]
   siteName?: string
   siteUrl?: string
