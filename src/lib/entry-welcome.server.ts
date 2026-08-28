@@ -191,7 +191,7 @@ export function venueMapUrl(
 }
 
 const REG_LINE = /(registration|register|check[- ]?in|briefing)/i;
-const KEY_LINE = /(start|briefing|registration|check[- ]?in|prize)/i;
+const KEY_LINE = /(start|briefing|registration|check[- ]?in|prize|batch)/i;
 const TIERS = ["gold", "silver", "bronze"];
 
 /** The tier word on a rider's category, e.g. "Silver - U/14 …" -> "silver". */
@@ -199,6 +199,20 @@ function tierOf(category: string | null | undefined) {
   const c = (category ?? "").toLowerCase();
   return TIERS.find((t) => c.includes(t)) ?? null;
 }
+
+/**
+ * Some events split their starts by field rather than by tier (PE Plett runs
+ * "The Ride", its e-bike field and "The Tour" off different times). Riders must
+ * see their own field's start time, not somebody else's.
+ */
+function fieldOf(text: string | null | undefined) {
+  const t = (text ?? "").toLowerCase();
+  if (/e-?\s?bike/.test(t)) return "ebike";
+  if (/\btour\b/.test(t)) return "tour";
+  if (/\bride\b/.test(t)) return "ride";
+  return null;
+}
+
 
 /**
  * Multi-trip events (Tour de Addo runs two back-to-back Darlington trips) label
