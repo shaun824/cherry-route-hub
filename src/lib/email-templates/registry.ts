@@ -33,4 +33,37 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'entry-welcome': entryWelcome,
   'crew-training-invite': crewTrainingInvite,
   'schedule-apology': scheduleApology,
+  // Auth emails are sent live by the Supabase auth webhook (see
+  // src/routes/lovable/email/auth/webhook.ts). They are registered here only so
+  // admins can send themselves an exact copy of what riders receive.
+  'auth-signup': {
+    component: SignupEmail,
+    subject: 'Confirm your email',
+    displayName: 'Account: confirm your email',
+  },
+  'auth-invite': {
+    component: InviteEmail,
+    subject: 'Your Red Cherry Events Rider Hub account is ready',
+    displayName: 'Account: invite',
+  },
+  'auth-magic-link': {
+    component: MagicLinkEmail,
+    subject: 'Your login link',
+    displayName: 'Account: login link',
+  },
+  'auth-recovery': {
+    component: RecoveryEmail,
+    subject: 'Reset your password',
+    displayName: 'Account: reset your password',
+  },
+  'auth-email-change': {
+    component: EmailChangeEmail,
+    subject: 'Confirm your new email',
+    displayName: 'Account: confirm new email',
+  },
+  'auth-reauthentication': {
+    component: ReauthenticationEmail,
+    subject: 'Your verification code',
+    displayName: 'Account: verification code',
+  },
 }
