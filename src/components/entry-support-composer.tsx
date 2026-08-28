@@ -2,8 +2,37 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Mail } from "lucide-react";
 import { useSession } from "@/lib/auth";
 import { entryNinjaRegistrationId } from "@/lib/entry-ninja-link";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 export function EntrySupportComposer({
+  eventName,
+  registrationRef,
+}: {
+  eventName: string;
+  registrationRef: string | null;
+}) {
+  const [open, setOpen] = useState(false);
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <button
+          type="button"
+          className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl bg-card px-3 py-3 text-sm font-bold text-cherry ring-1 ring-border transition hover:bg-secondary/60"
+        >
+          <Mail className="h-4 w-4" /> Email Entry Ninja support
+        </button>
+      </DialogTrigger>
+      <DialogContent className="max-h-[85vh] overflow-y-auto p-0">
+        <DialogHeader className="sr-only">
+          <DialogTitle>Email Entry Ninja support</DialogTitle>
+        </DialogHeader>
+        <ComposerBody eventName={eventName} registrationRef={registrationRef} />
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function ComposerBody({
   eventName,
   registrationRef,
 }: {
@@ -38,7 +67,7 @@ export function EntrySupportComposer({
   }, [message, subject, bodyIntro, bodyOutro]);
 
   return (
-    <div className="mt-3 overflow-hidden rounded-2xl bg-card ring-1 ring-border">
+    <div className="overflow-hidden bg-card">
       <div className="border-b border-border bg-secondary/40 px-3 py-2">
         <p className="text-[10px] font-bold uppercase tracking-wider text-ink-soft">
           Email Entry Ninja support
