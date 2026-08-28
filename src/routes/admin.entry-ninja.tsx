@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { supabase } from "@/integrations/supabase/client";
 import { useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -37,6 +38,20 @@ function EntryNinjaPage() {
   const events = useQuery({
     queryKey: ["entry-ninja-events"],
     queryFn: () => listFn({}),
+    staleTime: 60_000,
+  });
+
+  /** Mailer pickers list every event in the hub, not only Entry Ninja matches. */
+  const allEvents = useQuery({
+    queryKey: ["admin-all-events"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("events")
+        .select("id, name, date")
+        .order("date", { ascending: false });
+      if (error) throw error;
+      return (data ?? []).map((e) => ({ id: e.id as string, name: e.name as string }));
+    },
     staleTime: 60_000,
   });
 
@@ -145,17 +160,9 @@ function EntryNinjaPage() {
 
       <ArchiveBackfillCard />
 
-      <WelcomeEmailsCard
-        events={(events.data ?? [])
-          .filter((e) => e.matchedEventId)
-          .map((e) => ({ id: e.matchedEventId as string, name: e.matchedEventName ?? e.name }))}
-      />
+      <WelcomeEmailsCard events={allEvents.data ?? []} />
 
-      <ScheduleApologyCard
-        events={(events.data ?? [])
-          .filter((e) => e.matchedEventId)
-          .map((e) => ({ id: e.matchedEventId as string, name: e.matchedEventName ?? e.name }))}
-      />
+      <ScheduleApologyCard events={allEvents.data ?? []} />
     </div>
   );
 }
