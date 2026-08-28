@@ -247,6 +247,22 @@ function sameSchedule(a: unknown, b: unknown) {
   return JSON.stringify(a ?? []) === JSON.stringify(b ?? []);
 }
 
+/** Plain-English summary of how the website's programme differs from the live one. */
+export function scheduleDiffNote(current: unknown, scraped: { time: string; label: string }[]) {
+  const key = (i: any) => `${String(i?.time ?? "")} ${String(i?.label ?? "").trim().toLowerCase()}`;
+  const before = new Set((Array.isArray(current) ? current : []).map(key));
+  const after = new Set(scraped.map(key));
+  const added = scraped.filter((i) => !before.has(key(i))).map((i) => `${i.time} ${i.label}`);
+  const removed = (Array.isArray(current) ? current : [])
+    .filter((i: any) => !after.has(key(i)))
+    .map((i: any) => `${i.time} ${i.label}`);
+  const parts: string[] = [];
+  if (added.length) parts.push(`website now shows: ${added.slice(0, 6).join(", ")}`);
+  if (removed.length) parts.push(`no longer on the website: ${removed.slice(0, 6).join(", ")}`);
+  return parts.length ? parts.join("; ") : "website programme differs from the live schedule";
+}
+
+
 /** Scrape one event's website and (optionally) apply the schedule it finds. */
 export async function syncEventSchedule(
   admin: SupabaseClient<any>,
@@ -305,7 +321,7 @@ export async function syncEventSchedule(
 
     const { data: existing } = await admin
       .from("event_schedule_sync")
-      .select("auto_apply")
+      .select("auto_apply, verified, verified_at, needs_review")
       .eq("event_id", event.id)
       .maybeSingle();
     // Default: only auto-apply when the event has no hand-built schedule yet.
@@ -313,10 +329,15 @@ export async function syncEventSchedule(
     const hasSchedule = Array.isArray(event.schedule) && event.schedule.length > 0;
     const autoApply = existing?.auto_apply ?? !hasSchedule;
 
+    const scheduleItems = toScheduleItems(items, days);
+    // Nightly re-scrapes of an unchanged website must not un-verify a schedule an
+    // admin already signed off — otherwise rider mails silently fall back to TBC.
+    const unchanged = items.length > 0 && sameSchedule(scheduleItems, event.schedule);
+    const wasVerified = Boolean(existing?.verified);
+
     let applied = false;
     // Only a clean, verbatim-checked scrape is ever written onto the event.
     if (verified && (opts.forceApply || autoApply)) {
-      const scheduleItems = toScheduleItems(items, days);
       if (!sameSchedule(scheduleItems, event.schedule)) {
         const { error } = await admin.from("events").update({ schedule: scheduleItems }).eq("id", event.id);
         if (error) throw new Error(error.message);
@@ -324,16 +345,28 @@ export async function syncEventSchedule(
       applied = true;
     }
 
+    const stickyVerified = applied || (unchanged && wasVerified);
+    const changeNote = unchanged
+      ? null
+      : items.length
+        ? scheduleDiffNote(event.schedule, scheduleItems)
+        : null;
+    const finalNote = [reviewNote, stickyVerified ? null : changeNote].filter(Boolean).join("; ") || null;
+
     await record({
       items,
       sources: pages.map((p) => p.url),
       synced_at: new Date().toISOString(),
       applied_at: applied ? new Date().toISOString() : undefined,
       last_error: items.length ? null : "No schedule found on the website",
-      verified: applied ? true : false,
-      verified_at: applied ? new Date().toISOString() : null,
-      needs_review: !applied,
-      review_note: reviewNote,
+      verified: stickyVerified,
+      verified_at: applied
+        ? new Date().toISOString()
+        : stickyVerified
+          ? (existing?.verified_at ?? new Date().toISOString())
+          : null,
+      needs_review: !stickyVerified,
+      review_note: finalNote,
     });
 
     return {
@@ -341,10 +374,11 @@ export async function syncEventSchedule(
       name: event.name,
       found: items.length,
       applied,
-      verified: applied,
-      needsReview: !applied,
-      reviewNote,
+      verified: stickyVerified,
+      needsReview: !stickyVerified,
+      reviewNote: finalNote,
     };
+
   } catch (err) {
     const message = (err as Error).message;
     await record({

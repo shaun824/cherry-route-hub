@@ -56,6 +56,7 @@ import { Route as AdminFeedRouteImport } from './routes/admin.feed'
 import { Route as AdminEventsRouteImport } from './routes/admin.events'
 import { Route as AdminEntryNinjaRouteImport } from './routes/admin.entry-ninja'
 import { Route as AdminEmailsRouteImport } from './routes/admin.emails'
+import { Route as AdminEmailContentRouteImport } from './routes/admin.email-content'
 import { Route as AdminCrewRouteImport } from './routes/admin.crew'
 import { Route as AdminBotLogRouteImport } from './routes/admin.bot-log'
 import { Route as AdminAuditRouteImport } from './routes/admin.audit'
@@ -339,6 +340,11 @@ const AdminEmailsRoute = AdminEmailsRouteImport.update({
   path: '/emails',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminEmailContentRoute = AdminEmailContentRouteImport.update({
+  id: '/email-content',
+  path: '/email-content',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminCrewRoute = AdminCrewRouteImport.update({
   id: '/crew',
   path: '/crew',
@@ -614,6 +620,7 @@ export interface FileRoutesByFullPath {
   '/admin/audit': typeof AdminAuditRoute
   '/admin/bot-log': typeof AdminBotLogRoute
   '/admin/crew': typeof AdminCrewRoute
+  '/admin/email-content': typeof AdminEmailContentRoute
   '/admin/emails': typeof AdminEmailsRoute
   '/admin/entry-ninja': typeof AdminEntryNinjaRoute
   '/admin/events': typeof AdminEventsRoute
@@ -707,6 +714,7 @@ export interface FileRoutesByTo {
   '/admin/audit': typeof AdminAuditRoute
   '/admin/bot-log': typeof AdminBotLogRoute
   '/admin/crew': typeof AdminCrewRoute
+  '/admin/email-content': typeof AdminEmailContentRoute
   '/admin/emails': typeof AdminEmailsRoute
   '/admin/entry-ninja': typeof AdminEntryNinjaRoute
   '/admin/events': typeof AdminEventsRoute
@@ -803,6 +811,7 @@ export interface FileRoutesById {
   '/admin/audit': typeof AdminAuditRoute
   '/admin/bot-log': typeof AdminBotLogRoute
   '/admin/crew': typeof AdminCrewRoute
+  '/admin/email-content': typeof AdminEmailContentRoute
   '/admin/emails': typeof AdminEmailsRoute
   '/admin/entry-ninja': typeof AdminEntryNinjaRoute
   '/admin/events': typeof AdminEventsRoute
@@ -901,6 +910,7 @@ export interface FileRouteTypes {
     | '/admin/audit'
     | '/admin/bot-log'
     | '/admin/crew'
+    | '/admin/email-content'
     | '/admin/emails'
     | '/admin/entry-ninja'
     | '/admin/events'
@@ -994,6 +1004,7 @@ export interface FileRouteTypes {
     | '/admin/audit'
     | '/admin/bot-log'
     | '/admin/crew'
+    | '/admin/email-content'
     | '/admin/emails'
     | '/admin/entry-ninja'
     | '/admin/events'
@@ -1089,6 +1100,7 @@ export interface FileRouteTypes {
     | '/admin/audit'
     | '/admin/bot-log'
     | '/admin/crew'
+    | '/admin/email-content'
     | '/admin/emails'
     | '/admin/entry-ninja'
     | '/admin/events'
@@ -1554,6 +1566,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminEmailsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/email-content': {
+      id: '/admin/email-content'
+      path: '/email-content'
+      fullPath: '/admin/email-content'
+      preLoaderRoute: typeof AdminEmailContentRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/crew': {
       id: '/admin/crew'
       path: '/crew'
@@ -1903,6 +1922,7 @@ interface AdminRouteChildren {
   AdminAuditRoute: typeof AdminAuditRoute
   AdminBotLogRoute: typeof AdminBotLogRoute
   AdminCrewRoute: typeof AdminCrewRoute
+  AdminEmailContentRoute: typeof AdminEmailContentRoute
   AdminEmailsRoute: typeof AdminEmailsRoute
   AdminEntryNinjaRoute: typeof AdminEntryNinjaRoute
   AdminEventsRoute: typeof AdminEventsRoute
@@ -1939,6 +1959,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminAuditRoute: AdminAuditRoute,
   AdminBotLogRoute: AdminBotLogRoute,
   AdminCrewRoute: AdminCrewRoute,
+  AdminEmailContentRoute: AdminEmailContentRoute,
   AdminEmailsRoute: AdminEmailsRoute,
   AdminEntryNinjaRoute: AdminEntryNinjaRoute,
   AdminEventsRoute: AdminEventsRoute,
