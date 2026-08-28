@@ -86,10 +86,14 @@ export async function sendApologyTest(
  */
 export async function sendScheduleApologies(
   admin: AnyClient,
-  opts: { eventId: string; limit?: number },
+  opts: { eventId: string; limit?: number; emails?: string[] },
 ): Promise<ApologyBatchResult> {
   const limit = Math.min(Math.max(opts.limit ?? 100, 1), 200);
   const result: ApologyBatchResult = { candidates: 0, sent: 0, skipped: 0, suppressed: 0, errors: [] };
+
+  const only = new Set(
+    (opts.emails ?? []).map((e) => e.trim().toLowerCase()).filter(Boolean),
+  );
 
   const { data: event } = await admin
     .from("events")
@@ -98,13 +102,16 @@ export async function sendScheduleApologies(
     .maybeSingle();
   if (!event) throw new Error("Event not found");
 
-  const { data, error } = await admin
+  const query = admin
     .from("event_entrants")
     .select("id, category, entrants(full_name, email)")
     .eq("event_id", opts.eventId)
     .eq("welcome_email_skipped", false)
-    .is("schedule_apology_sent_at", null)
     .limit(500);
+  // When specific addresses are given we re-send to exactly those, even if they
+  // already had an apology; otherwise only riders who never got one.
+  if (only.size === 0) query.is("schedule_apology_sent_at", null);
+  const { data, error } = await query;
   if (error) throw error;
 
   // One mail per address per trip; everyone else on the entry is stamped too.
@@ -112,6 +119,10 @@ export async function sendScheduleApologies(
   for (const row of (data ?? []) as any[]) {
     const email = (row.entrants?.email ?? "").trim().toLowerCase();
     if (!email) {
+      result.skipped++;
+      continue;
+    }
+    if (only.size > 0 && !only.has(email)) {
       result.skipped++;
       continue;
     }
@@ -138,7 +149,7 @@ export async function sendScheduleApologies(
         category: g.category,
       });
       const send = await sendTemplateEmail("schedule-apology", g.email, {
-        idempotencyKey: `schedule-apology-${event.id}-${g.email}-${tripNumberOf(g.category) ?? "x"}`,
+        idempotencyKey: `schedule-apology-${event.id}-${g.email}-${tripNumberOf(g.category) ?? "x"}${only.size > 0 ? `-${Date.now()}` : ""}`,
         templateData,
       });
       await admin

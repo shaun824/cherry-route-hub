@@ -174,7 +174,7 @@ export const ScheduleApologyEmail = ({
 export const template = {
   component: ScheduleApologyEmail,
   subject: (data: Record<string, any>) =>
-    `Sorry about the TBC times — your confirmed ${data?.tripName ? String(data.tripName) : 'trip'} schedule`,
+    `Sorry about the TBC times — your confirmed ${data?.tripName ? `${String(data.tripName)} ` : ''}schedule`,
   displayName: 'Schedule correction & apology',
   previewData: {
     firstName: 'Shaun',

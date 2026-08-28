@@ -33,6 +33,8 @@ export const sendTestScheduleApology = createServerFn({ method: "POST" })
 const batchSchema = z.object({
   eventId: z.string().uuid(),
   limit: z.number().int().min(1).max(200).optional(),
+  /** Restrict the send to these addresses (re-sends even if already apologised). */
+  emails: z.array(z.string().trim().email()).max(200).optional(),
 });
 
 /** Sends the apology to every entered rider who hasn't had it yet. */
@@ -48,5 +50,6 @@ export const sendScheduleApologyBatch = createServerFn({ method: "POST" })
     return sendScheduleApologies(supabaseAdmin, {
       eventId: data.eventId,
       ...(data.limit ? { limit: data.limit } : {}),
+      ...(data.emails?.length ? { emails: data.emails } : {}),
     });
   });
