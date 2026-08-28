@@ -1,5 +1,5 @@
 import { entryNinjaRegistrationUrl } from "@/lib/entry-ninja-link";
-import { SocialWall } from "@/components/social-wall";
+import { RedCherrySocials } from "@/components/social-links-card";
 import { WhatsappButton } from "@/components/whatsapp-button";
 import { EntrySupportComposer } from "@/components/entry-support-composer";
 import { isBotMiss } from "@/lib/bot-handoff";
@@ -1011,7 +1011,6 @@ function InfoPanel({
 
       <FollowSection links={(event.social_links as SocialLinks | null) ?? undefined} />
 
-      <SocialWall limit={9} />
 
 
       <SponsorsBlock eventName={eventName} />
@@ -1896,7 +1895,9 @@ const SOCIAL_META: {
 
 function FollowSection({ links }: { links?: SocialLinks }) {
   const entries = SOCIAL_META.filter((m) => Boolean(links?.[m.key]));
-  if (entries.length === 0) return null;
+  if (entries.length === 0) {
+    return <RedCherrySocials title="Follow Red Cherry Events" />;
+  }
   return (
     <section>
       <SectionTitle>Follow this event</SectionTitle>
