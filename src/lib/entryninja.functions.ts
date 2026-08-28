@@ -117,7 +117,7 @@ export const sendTestEntryWelcome = createServerFn({ method: "POST" })
     if (!to) throw new Error("No admin email address to send to");
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { loadPromoRows, offersForEvent, venueMapUrl, riderScheduleForEmail, absoluteLogo, scheduleTrustedEventIds } = await import("./entry-welcome.server");
+    const { loadPromoRows, offersForEvent, venueMapUrl, riderScheduleForEmail, partySchedulesForEmail, absoluteLogo, scheduleTrustedEventIds } = await import("./entry-welcome.server");
     const { sendTemplateEmail } = await import("./email-templates/send-email");
 
     let eventQuery = supabaseAdmin
