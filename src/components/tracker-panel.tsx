@@ -109,7 +109,7 @@ export function TrackerPanel({
     return () => window.clearInterval(id);
   }, []);
   const resultsPublished = Boolean(myResult?.finished);
-  const isAdmin = useIsAdmin();
+  const { isAdmin } = useIsAdmin();
   const computed = trackingWindow(event, { resultsPublished, now: new Date(clock) });
   // Admins can test tracking outside the window.
   const windowState = computed.open || !isAdmin
