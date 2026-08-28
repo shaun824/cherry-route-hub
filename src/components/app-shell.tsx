@@ -62,6 +62,29 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="min-h-screen bg-secondary/30 md:flex">
+      {/* Pull-to-refresh indicator (mobile) */}
+      {pull > 0 || refreshing ? (
+        <div
+          className="pointer-events-none fixed inset-x-0 top-0 z-50 flex justify-center md:hidden"
+          style={{ paddingTop: "calc(env(safe-area-inset-top) + 8px)" }}
+          aria-live="polite"
+        >
+          <div
+            className="flex items-center gap-2 rounded-full bg-card px-3 py-1.5 text-xs font-semibold text-ink-soft shadow-md ring-1 ring-border transition-opacity"
+            style={{
+              opacity: refreshing ? 1 : Math.min(1, pull / 60),
+              transform: `translateY(${refreshing ? 0 : Math.min(pull, 48) - 12}px)`,
+            }}
+          >
+            <RefreshCw
+              className={`h-3.5 w-3.5 text-cherry ${refreshing ? "animate-spin" : ""}`}
+              style={refreshing ? undefined : { transform: `rotate(${pull * 3}deg)` }}
+            />
+            {refreshing ? "Refreshing…" : pull >= 80 ? "Release to refresh" : "Pull to refresh"}
+          </div>
+        </div>
+      ) : null}
+
       {/* Tablet / desktop side navigation */}
       <aside className="sticky top-0 hidden h-screen w-[15rem] shrink-0 flex-col border-r border-border bg-card px-4 py-6 md:flex lg:w-[17rem]">
         <Link to={inCrewArea ? "/crew" : "/"} className="flex items-center gap-3">
