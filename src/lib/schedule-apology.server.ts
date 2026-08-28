@@ -149,7 +149,7 @@ export async function sendScheduleApologies(
         category: g.category,
       });
       const send = await sendTemplateEmail("schedule-apology", g.email, {
-        idempotencyKey: `schedule-apology-${event.id}-${g.email}-${tripNumberOf(g.category) ?? "x"}`,
+        idempotencyKey: `schedule-apology-${event.id}-${g.email}-${tripNumberOf(g.category) ?? "x"}${only.size > 0 ? `-${Date.now()}` : ""}`,
         templateData,
       });
       await admin
