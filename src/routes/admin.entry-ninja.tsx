@@ -16,6 +16,10 @@ import {
   sendTestEntryWelcome,
 
 } from "@/lib/entryninja.functions";
+import {
+  sendScheduleApologyBatch,
+  sendTestScheduleApology,
+} from "@/lib/schedule-apology.functions";
 
 export const Route = createFileRoute("/admin/entry-ninja")({
   component: EntryNinjaPage,
@@ -142,6 +146,12 @@ function EntryNinjaPage() {
       <ArchiveBackfillCard />
 
       <WelcomeEmailsCard
+        events={(events.data ?? [])
+          .filter((e) => e.matchedEventId)
+          .map((e) => ({ id: e.matchedEventId as string, name: e.matchedEventName ?? e.name }))}
+      />
+
+      <ScheduleApologyCard
         events={(events.data ?? [])
           .filter((e) => e.matchedEventId)
           .map((e) => ({ id: e.matchedEventId as string, name: e.matchedEventName ?? e.name }))}
@@ -408,6 +418,104 @@ function WelcomeEmailsCard({ events }: { events: { id: string; name: string }[] 
         </button>
       </div>
 
+
+      {note && <p className="text-xs font-semibold text-emerald-700">{note}</p>}
+      {err && <p className="text-xs text-destructive">{err}</p>}
+    </section>
+  );
+}
+
+/**
+ * One-off correction mail: riders who got "TBC" times before the itinerary was
+ * verified get their real, trip-specific schedule with an apology.
+ */
+function ScheduleApologyCard({ events }: { events: { id: string; name: string }[] }) {
+  const testFn = useServerFn(sendTestScheduleApology);
+  const sendFn = useServerFn(sendScheduleApologyBatch);
+
+  const [eventId, setEventId] = useState<string>("");
+  const [category, setCategory] = useState<string>("");
+  const [busy, setBusy] = useState(false);
+  const [note, setNote] = useState<string | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+
+  async function run(kind: "test" | "send") {
+    if (!eventId) {
+      setErr("Pick an event first");
+      return;
+    }
+    setBusy(true);
+    setErr(null);
+    setNote(null);
+    try {
+      if (kind === "test") {
+        const r = await testFn({
+          data: { eventId, ...(category ? { category } : {}) },
+        });
+        setNote(
+          r.sent
+            ? `Test apology sent to ${r.to} for ${r.eventName} (${r.days} day${r.days === 1 ? "" : "s"} listed).`
+            : `Not sent to ${r.to}: ${r.reason}`,
+        );
+      } else {
+        const r = await sendFn({ data: { eventId } });
+        setNote(
+          `${r.sent} sent · ${r.suppressed} suppressed · ${r.skipped} skipped` +
+            (r.errors.length ? ` · ${r.errors[0]}` : ""),
+        );
+      }
+    } catch (e) {
+      setErr((e as Error).message ?? "Send failed");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <section className="space-y-3 rounded-xl border border-border bg-card p-4">
+      <header className="flex items-center gap-2">
+        <Mail className="h-4 w-4 text-cherry" />
+        <h2 className="font-display text-sm font-bold">Schedule correction &amp; apology</h2>
+      </header>
+      <p className="text-xs text-ink-soft">
+        Sends the &ldquo;sorry about the TBC times&rdquo; mail with the rider&rsquo;s real, verified
+        schedule. Each rider only sees the trip they are entered for, and nobody is mailed twice.
+      </p>
+
+      <div className="flex flex-wrap items-center gap-2">
+        <select
+          value={eventId}
+          onChange={(e) => setEventId(e.target.value)}
+          className="rounded-lg border border-border bg-background px-2.5 py-2 text-xs"
+        >
+          <option value="">Pick an event</option>
+          {events.map((e) => (
+            <option key={e.id} value={e.id}>
+              {e.name}
+            </option>
+          ))}
+        </select>
+        <input
+          value={category}
+          onChange={(e) => setCategory(e.target.value)}
+          placeholder="Test as category (optional)"
+          className="w-56 rounded-lg border border-border bg-background px-2.5 py-2 text-xs"
+        />
+        <button
+          onClick={() => void run("test")}
+          disabled={busy}
+          className="rounded-lg border border-border px-3 py-2 text-xs font-semibold disabled:opacity-60"
+        >
+          Send test to me
+        </button>
+        <button
+          onClick={() => void run("send")}
+          disabled={busy}
+          className="rounded-lg bg-cherry px-3 py-2 text-xs font-semibold text-white disabled:opacity-60"
+        >
+          {busy ? "Sending…" : "Send to everyone entered"}
+        </button>
+      </div>
 
       {note && <p className="text-xs font-semibold text-emerald-700">{note}</p>}
       {err && <p className="text-xs text-destructive">{err}</p>}
