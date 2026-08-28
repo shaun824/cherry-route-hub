@@ -122,6 +122,10 @@ export async function sendScheduleApologies(
       result.skipped++;
       continue;
     }
+    if (only.size > 0 && !only.has(email)) {
+      result.skipped++;
+      continue;
+    }
     const key = `${email}|${tripNumberOf(row.category) ?? "-"}`;
     const g = groups.get(key);
     if (g) g.ids.push(row.id);
