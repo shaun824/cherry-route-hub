@@ -377,6 +377,32 @@ export const EntryWelcomeEmail = ({
           ))}
         </>
       ) : null}
+      {partySchedules.length > 1 ? (
+        <>
+          <Text style={{ ...cardTitle, margin: '16px 0 8px' }}>Start times for everyone on your entry</Text>
+          {partySchedules.map((ps, i) => (
+            <Section key={`${ps.name}-${i}`} style={i === 0 ? scheduleDayFirst : scheduleDay}>
+              <Text style={scheduleDayTitle}>
+                <strong>
+                  {ps.name}
+                  {ps.category ? ` · ${ps.category}` : ''}
+                </strong>
+              </Text>
+              {ps.days.map((d) =>
+                d.items.map((it, ii) => (
+                  <Text key={`${d.label}-${it.label}-${ii}`} style={scheduleItem}>
+                    <strong>{it.time}</strong>{' — '}
+                    <span style={featureNote}>
+                      {d.label}
+                      {d.date ? ` (${d.date})` : ''}: {it.label}
+                    </span>
+                  </Text>
+                )),
+              )}
+            </Section>
+          ))}
+        </>
+      ) : null}
     </Section>
 
     <Button style={button} href={actionUrl}>
