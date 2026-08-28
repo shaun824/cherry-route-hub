@@ -61,12 +61,22 @@ function EmailContentPage() {
             code path as the real mailer. Anything showing “TBC” is going out without times.
           </p>
         </div>
-        <button
-          onClick={() => refresh()}
-          className="inline-flex items-center gap-2 rounded-xl bg-ink px-4 py-2 text-sm font-semibold text-white"
-        >
-          <RefreshCw className={`h-4 w-4 ${q.isFetching ? "animate-spin" : ""}`} /> Refresh
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            onClick={() => samples.mutate()}
+            disabled={samples.isPending}
+            className="inline-flex items-center gap-2 rounded-xl bg-cherry px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
+          >
+            <Mail className="h-4 w-4" />
+            {samples.isPending ? "Sending…" : "Send me every email"}
+          </button>
+          <button
+            onClick={() => refresh()}
+            className="inline-flex items-center gap-2 rounded-xl bg-ink px-4 py-2 text-sm font-semibold text-white"
+          >
+            <RefreshCw className={`h-4 w-4 ${q.isFetching ? "animate-spin" : ""}`} /> Refresh
+          </button>
+        </div>
       </div>
 
       {q.isLoading && <p className="text-sm text-ink-soft">Loading…</p>}
