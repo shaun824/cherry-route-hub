@@ -300,6 +300,7 @@ export function riderScheduleForEmail(
     category,
   );
   const tier = tierOf(category);
+  const field = fieldOf(category);
 
   const build = (items: any[]): EmailScheduleDay["items"] =>
     items
@@ -309,8 +310,12 @@ export function riderScheduleForEmail(
         // Only their own batch when the schedule splits starts by tier.
         const mentioned = TIERS.filter((t) => text.toLowerCase().includes(t));
         if (mentioned.length && tier) return mentioned.includes(tier);
+        // Same for events that split starts by field (The Ride / e-bike / The Tour).
+        const lineField = fieldOf(text);
+        if (lineField && field) return lineField === field;
         return true;
       })
+
       .map((i) => ({ time: String(i.time), label: String(i.label ?? ""), details: i.details ?? null }))
       .sort((a, b) => a.time.localeCompare(b.time));
 
