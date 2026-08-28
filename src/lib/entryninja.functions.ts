@@ -98,6 +98,8 @@ export const sendEntryWelcomeBatch = createServerFn({ method: "POST" })
 const testWelcomeSchema = z.object({
   eventId: z.string().uuid().optional(),
   email: z.string().trim().email().optional(),
+  /** Preview the mail as a rider in this category (multi-trip events). */
+  category: z.string().trim().optional(),
 });
 
 /**
@@ -171,10 +173,10 @@ export const sendTestEntryWelcome = createServerFn({ method: "POST" })
         venueUrl: venueMapUrl(event.location, (event as { map_query?: string | null }).map_query),
         eventLogoUrl: absoluteLogo((event as any).logo_url),
         eventCoverUrl: absoluteLogo((event as any).cover_url),
-        schedule: riderScheduleForEmail(event, party[0]?.category ?? null, {
+        schedule: riderScheduleForEmail(event, data.category ?? party[0]?.category ?? null, {
           trusted: (await scheduleTrustedEventIds(supabaseAdmin, [event.id])).has(event.id),
         }),
-        category: "Test entry",
+        category: data.category ?? "Test entry",
         bibNumber: null,
         eventUrl,
         actionUrl: eventUrl,

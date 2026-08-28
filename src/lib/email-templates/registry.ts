@@ -3,6 +3,7 @@ import type { ComponentType } from 'react'
 import { template as feedbackNotification } from './feedback-notification'
 import { template as entryWelcome } from './entry-welcome'
 import { template as crewTrainingInvite } from './crew-training-invite'
+import { template as scheduleApology } from './schedule-apology'
 
 export interface TemplateEntry {
   component: ComponentType<any>
@@ -25,4 +26,5 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'feedback-notification': feedbackNotification,
   'entry-welcome': entryWelcome,
   'crew-training-invite': crewTrainingInvite,
+  'schedule-apology': scheduleApology,
 }

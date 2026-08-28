@@ -776,6 +776,7 @@ export type Database = {
           paid: boolean | null
           payment_synced_at: string | null
           registration_ref: string | null
+          schedule_apology_sent_at: string | null
           started_at: string | null
           team_name: string | null
           team_ref: string | null
@@ -802,6 +803,7 @@ export type Database = {
           paid?: boolean | null
           payment_synced_at?: string | null
           registration_ref?: string | null
+          schedule_apology_sent_at?: string | null
           started_at?: string | null
           team_name?: string | null
           team_ref?: string | null
@@ -828,6 +830,7 @@ export type Database = {
           paid?: boolean | null
           payment_synced_at?: string | null
           registration_ref?: string | null
+          schedule_apology_sent_at?: string | null
           started_at?: string | null
           team_name?: string | null
           team_ref?: string | null
