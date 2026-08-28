@@ -47,8 +47,8 @@ function EntryNinjaPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("events")
-        .select("id, name, start_date")
-        .order("start_date", { ascending: false });
+        .select("id, name, event_date")
+        .order("event_date", { ascending: false });
       if (error) throw error;
       return (data ?? []).map((e) => ({ id: e.id as string, name: e.name as string }));
     },
