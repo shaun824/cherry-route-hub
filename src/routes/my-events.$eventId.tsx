@@ -1256,15 +1256,17 @@ function ScheduleView({ schedule, days: rawDays }: { schedule: ScheduleItem[]; d
     return { orderedDays: [...orderedDays, ...extras], orphaned };
   }, [schedule, days]);
 
+  // Every tab shows its calendar date so riders know exactly which day is which.
+  const dayDate = (d: EventDay) => {
+    if (!d.date) return "";
+    const dt = new Date(d.date);
+    if (Number.isNaN(dt.getTime())) return "";
+    return dt.toLocaleDateString("en-ZA", { weekday: "short", day: "numeric", month: "short" });
+  };
   const dayLabel = (d: EventDay, index: number) => {
-    if (d.label) return d.label;
-    if (d.date) {
-      const dt = new Date(d.date);
-      if (!Number.isNaN(dt.getTime())) {
-        return `Day ${index + 1} · ${dt.toLocaleDateString("en-ZA", { weekday: "short", day: "numeric", month: "short" })}`;
-      }
-    }
-    return `Day ${index + 1}`;
+    const base = d.label?.trim() || `Day ${index + 1}`;
+    const date = dayDate(d);
+    return date ? `${base} · ${date}` : base;
   };
 
   const tabs = useMemo(() => {
