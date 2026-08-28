@@ -5,6 +5,7 @@ import { Check, ExternalLink, Mail, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { listEmailContent, markScheduleVerified } from "@/lib/email-content.functions";
 import { sendTestEntryWelcome } from "@/lib/entryninja.functions";
+import { sendAllEmailSamples } from "@/lib/email-samples.functions";
 
 export const Route = createFileRoute("/admin/email-content")({
   head: () => ({
@@ -29,6 +30,7 @@ function EmailContentPage() {
   const list = useServerFn(listEmailContent);
   const verify = useServerFn(markScheduleVerified);
   const test = useServerFn(sendTestEntryWelcome);
+  const allSamples = useServerFn(sendAllEmailSamples);
   const qc = useQueryClient();
 
   const q = useQuery({ queryKey: ["email-content"], queryFn: () => list() });
