@@ -307,6 +307,7 @@ function WelcomeEmailsCard({ events }: { events: { id: string; name: string }[] 
   const testFn = useServerFn(sendTestEntryWelcome);
 
   const [eventId, setEventId] = useState<string>("");
+  const [testCategory, setTestCategory] = useState<string>("");
   const [batch, setBatch] = useState(50);
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<string | null>(null);
@@ -344,7 +345,12 @@ function WelcomeEmailsCard({ events }: { events: { id: string; name: string }[] 
     setErr(null);
     setNote(null);
     try {
-      const r = await testFn({ data: eventId ? { eventId } : {} });
+      const r = await testFn({
+        data: {
+          ...(eventId ? { eventId } : {}),
+          ...(testCategory ? { category: testCategory } : {}),
+        },
+      });
       setNote(
         r.sent
           ? `Test email sent to ${r.to} for ${r.eventName} (${r.offers} offer${r.offers === 1 ? "" : "s"} listed).`
@@ -409,6 +415,12 @@ function WelcomeEmailsCard({ events }: { events: { id: string; name: string }[] 
         >
           {busy ? "Sending…" : `Backfill existing (${counts.data?.historic ?? "…"})`}
         </button>
+        <input
+          value={testCategory}
+          onChange={(e) => setTestCategory(e.target.value)}
+          placeholder="Test as category (optional)"
+          className="w-56 rounded-lg border border-border bg-background px-2.5 py-2 text-xs"
+        />
         <button
           onClick={() => void sendTest()}
           disabled={busy}
