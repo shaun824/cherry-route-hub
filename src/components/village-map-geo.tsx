@@ -616,6 +616,8 @@ export default function VillageMapGeo({
 
         >
           <VillageMapTrackpadZoom />
+          <VectorMoveSync />
+
           {satellite ? (
             <TileLayer
               crossOrigin="anonymous"
