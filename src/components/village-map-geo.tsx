@@ -3,7 +3,7 @@
 // and the rider's live GPS position is shown as a pulsing dot.
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { MapContainer, TileLayer, ImageOverlay, useMap, CircleMarker, Polygon, Popup, Marker } from "react-leaflet";
+import { MapContainer, TileLayer, ImageOverlay, useMap, CircleMarker, Polygon, Popup, Marker, Rectangle } from "react-leaflet";
 import { Maximize2, Minimize2 } from "lucide-react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -18,6 +18,7 @@ await import("leaflet-rotate");
 import type { VillageGeo, VillageHotspot } from "@/lib/village-map";
 import { spotColor, spotIcon } from "@/lib/village-map";
 import { villageIconSvg } from "@/lib/village-icons";
+import { tentFootprintBounds, tentTypeMeta } from "@/lib/village-tents";
 import { hasBuildDetail, zoneCentroid, zoneColor, zoneKindLabel, type VillageZone } from "@/lib/village-zones";
 
 
