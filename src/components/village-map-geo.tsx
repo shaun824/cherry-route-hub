@@ -292,6 +292,8 @@ export default function VillageMapGeo({
   tents = [],
   selected,
   onSelect,
+  zonesInteractive = false,
+  onZoneSelect,
 
   highlightZoneId = null,
   highlightTentId = null,
@@ -303,9 +305,13 @@ export default function VillageMapGeo({
   tents?: MapTent[];
   selected: string | null;
   onSelect: (id: string | null) => void;
+  /** crew view: areas can be tapped to open their build detail */
+  zonesInteractive?: boolean;
+  onZoneSelect?: (id: string | null) => void;
   highlightZoneId?: string | null;
   highlightTentId?: string | null;
 }) {
+
 
   const [ratio, setRatio] = useState(0.76); // height / width, refined once the image loads
   const [me, setMe] = useState<[number, number] | null>(null);
