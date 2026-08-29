@@ -190,10 +190,16 @@ function VillageEditor() {
   }
 
   async function deleteTent(id: string) {
-    await supabase.from("event_village_tents").delete().eq("id", id);
+    const { error } = await supabase.from("event_village_tents").delete().eq("id", id);
+    if (error) {
+      toast.error(`Could not delete that pin: ${error.message}`);
+      return;
+    }
     setSelectedTent(null);
     await qc.invalidateQueries({ queryKey: ["village-tents", event.id, venueId] });
+    toast.success("Pin deleted");
   }
+
   const fileRef = useRef<HTMLInputElement>(null);
   const dragRef = useRef<string | null>(null);
   const imgWrapRef = useRef<HTMLDivElement>(null);
