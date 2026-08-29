@@ -190,12 +190,10 @@ export function VillageMapView({
   }, []);
 
   // Crew "find this room" deep-focus: highlight the requested point when it changes.
-  const [flyToken, setFlyToken] = useState(0);
   useEffect(() => {
     if (focusSpotId) {
       setSelected(focusSpotId);
       setFilter(null);
-      setFlyToken((t) => t + 1);
     }
   }, [focusSpotId]);
 
@@ -247,6 +245,34 @@ export function VillageMapView({
       </div>
     ) : null;
 
+  const showLive = geoReady && (mode === "live" || !hasImage);
+
+  // Plan view: tapping a chip or a pin zooms in and centres the chosen facility.
+  useEffect(() => {
+    if (showLive || !selected || !wrapRef.current) return;
+    const spot = facilities.find((s) => s.id === selected);
+    if (!spot) return;
+    const wrap = wrapRef.current;
+    const img = wrap.querySelector("img");
+    if (!img) return;
+    const targetScale = 3;
+    setScale(targetScale);
+    const center = () => {
+      const rect = wrap.getBoundingClientRect();
+      const scaledWidth = rect.width * targetScale;
+      const scaledHeight = img.offsetHeight * targetScale;
+      const x = (spot.x / 100) * scaledWidth;
+      const y = (spot.y / 100) * scaledHeight;
+      wrap.scrollTo({
+        left: Math.max(0, x - rect.width / 2),
+        top: Math.max(0, y - rect.height / 2),
+        behavior: "smooth",
+      });
+    };
+    const t = window.setTimeout(center, 220);
+    return () => window.clearTimeout(t);
+  }, [selected, showLive, facilities]);
+
   if (q.isLoading) {
     return <div className="h-56 animate-pulse rounded-2xl bg-muted" />;
   }
@@ -263,7 +289,6 @@ export function VillageMapView({
   }
 
 
-  const showLive = geoReady && (mode === "live" || !hasImage);
 
   return (
     <div className="space-y-3">
@@ -365,8 +390,6 @@ export function VillageMapView({
               tents={mapTents}
               highlightZoneId={focusZoneId ?? null}
               highlightTentId={focusTentId ?? null}
-              flyToSpotId={focusSpotId ?? null}
-              flyToken={flyToken}
             />
           </Suspense>
         </ClientOnly>
