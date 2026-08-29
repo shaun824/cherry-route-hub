@@ -592,14 +592,13 @@ export default function VillageMapGeo({
             </>
           ) : null}
 
-          {visibleZones.map((z) => {
+          {visibleZones.map(({ zone: z, positions, centre }) => {
             const hot = highlightZoneId === z.id;
             const crewTap = zonesInteractive && hasBuildDetail(z);
-            const centre = crewTap ? zoneCentroid(z) : null;
             return (
               <Fragment key={z.id}>
                 <Polygon
-                  positions={z.points.map((p) => [p.lat, p.lng]) as [number, number][]}
+                  positions={positions}
                   interactive={crewTap}
                   eventHandlers={crewTap ? { click: () => onZoneSelect?.(z.id) } : undefined}
                   pathOptions={{
