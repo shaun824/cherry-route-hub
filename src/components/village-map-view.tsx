@@ -87,6 +87,7 @@ export function VillageMapView({
   focusZoneId,
   focusTentId,
   venueId: venueIdProp,
+  defaultLayers,
 }: {
   eventId: string;
   focusSpotId?: string | null;
@@ -94,6 +95,8 @@ export function VillageMapView({
   focusTentId?: string | null;
   /** Jump straight to one venue's village (used by crew "find this tent"). */
   venueId?: string | null;
+  /** Crew build map opens with the build layers already switched on. */
+  defaultLayers?: VillageLayer[];
 }) {
   // Multi-day events run more than one race village — one per venue.
   const venuesQ = useQuery({
@@ -142,7 +145,7 @@ export function VillageMapView({
   // Build layers (infrastructure + branding) are crew/admin only — riders never
   // see generators, cable runs or banner positions.
   const { isCrew } = useIsCrew();
-  const [layers, setLayers] = useState<VillageLayer[]>(["rider"]);
+  const [layers, setLayers] = useState<VillageLayer[]>(defaultLayers ?? ["rider"]);
   const visibleLayers = useMemo<VillageLayer[]>(() => (isCrew ? layers : ["rider"]), [isCrew, layers]);
   const wrapRef = useRef<HTMLDivElement>(null);
   // Plan-view full screen + pinch zoom (the live map handles both natively).
