@@ -138,13 +138,33 @@ function FlyToZone({ zone }: { zone: VillageZone | null }) {
   return null;
 }
 
-/** Flies to a facility pin when a rider taps "show me on the map" elsewhere. */
-function FlyToSpot({ position, token }: { position: [number, number] | null; token: number }) {
+/** When a facility is selected (marker tap or chip tap), fly close enough that
+    tightly-packed icons separate and the chosen one sits in the centre. */
+function FlyToSelected({
+  selected,
+  hotspots,
+  geo,
+  heightM,
+}: {
+  selected: string | null;
+  hotspots: VillageHotspot[];
+  geo: VillageGeo;
+  heightM: number;
+}) {
   const map = useMap();
+  const last = useRef<string | null>(null);
   useEffect(() => {
-    if (!position || !token) return;
-    map.flyTo(position, Math.max(map.getZoom(), 19), { duration: 0.8 });
-  }, [map, position?.[0], position?.[1], token]);
+    if (selected === last.current) return;
+    last.current = selected;
+    if (!selected) return;
+    const spot = hotspots.find((h) => h.id === selected);
+    if (!spot) return;
+    const pos = hotspotLatLng(geo, spot, heightM);
+    // Zoom in close: many village icons are clustered, so a high zoom is
+    // needed to tell them apart. 21 keeps satellite tiles usable while
+    // making each pin clearly distinct.
+    map.flyTo(pos, 21, { duration: 0.7 });
+  }, [map, selected, hotspots, geo, heightM]);
   return null;
 }
 
@@ -187,11 +207,6 @@ function facilityIcon(spot: VillageHotspot, active: boolean) {
 
 
 
-/** Selecting a point must never move the map — the view stays exactly where the
-    user put it. Kept as a no-op component so callers stay unchanged. */
-function KeepPointInView(_props: { position: [number, number] | null }) {
-  return null;
-}
 
 
 
@@ -279,8 +294,6 @@ export default function VillageMapGeo({
 
   highlightZoneId = null,
   highlightTentId = null,
-  flyToSpotId = null,
-  flyToken = 0,
 }: {
   imageUrl?: string | null;
   geo: VillageGeo;
@@ -291,8 +304,6 @@ export default function VillageMapGeo({
   onSelect: (id: string | null) => void;
   highlightZoneId?: string | null;
   highlightTentId?: string | null;
-  flyToSpotId?: string | null;
-  flyToken?: number;
 }) {
 
   const [ratio, setRatio] = useState(0.76); // height / width, refined once the image loads
@@ -394,12 +405,6 @@ export default function VillageMapGeo({
     [hotspots, selected],
   );
 
-  const flySpotPos = useMemo(() => {
-    const spot = hotspots.find((h) => h.id === flyToSpotId) ?? null;
-    if (!spot) return null;
-    const ll = hotspotLatLng(geo, spot, heightM);
-    return ll ? ([ll[0], ll[1]] as [number, number]) : null;
-  }, [hotspots, flyToSpotId, geo, heightM]);
 
   // Real facility points only — legacy imports left numeric "tent" points behind,
   // and those belong to the tent layer, not the icon layer.
@@ -598,7 +603,7 @@ export default function VillageMapGeo({
           })}
 
           <FlyToTent tent={droppedTents.find((t) => t.id === highlightTentId) ?? null} />
-          <FlyToSpot position={flySpotPos} token={flyToken} />
+          <FlyToSelected selected={selected} hotspots={hotspots} geo={geo} heightM={heightM} />
           <FlyToZone
             zone={highlightTentId ? null : zones.find((z) => z.id === highlightZoneId) ?? null}
           />
@@ -628,9 +633,6 @@ export default function VillageMapGeo({
           })}
 
 
-          <KeepPointInView
-            position={selectedSpot ? hotspotLatLng(geo, selectedSpot, heightM) : null}
-          />
 
           <ClearOnMapClick onClear={() => onSelect(null)} />
 
