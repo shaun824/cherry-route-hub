@@ -636,28 +636,76 @@ export default function VillageMapEditorGeo({
         </div>
       ) : activeZone && !locked ? (
         <div className="pointer-events-none absolute inset-x-0 top-3 z-[500] flex justify-center px-3">
-          <div className="pointer-events-auto flex max-w-full flex-wrap items-center gap-2 rounded-xl bg-card/95 px-3 py-2 shadow-lg ring-1 ring-border backdrop-blur">
+          <div className="pointer-events-auto w-full max-w-md space-y-2 rounded-xl bg-card/95 p-3 shadow-lg ring-1 ring-border backdrop-blur">
+            <div className="flex items-center gap-2">
+              <input
+                value={activeZone.name}
+                onChange={(e) => onRenameZone?.(activeZone.id, e.target.value)}
+                placeholder="Area name"
+                className="min-w-0 flex-1 rounded-lg border border-border bg-background px-2 py-1 text-xs font-semibold"
+              />
+              <input
+                type="color"
+                value={zoneColor(activeZone)}
+                onChange={(e) => onPatchZone?.(activeZone.id, { color: e.target.value })}
+                className="h-7 w-9 shrink-0 cursor-pointer rounded border border-border bg-background p-0.5"
+                aria-label="Area colour"
+              />
+              <button
+                onClick={() => onDuplicateZone?.(activeZone.id)}
+                className="shrink-0 rounded-lg cherry-gradient px-2 py-1 text-[11px] font-bold text-white"
+              >
+                Copy
+              </button>
+              <button
+                onClick={() => onSelectZone(null)}
+                className="shrink-0 rounded-lg bg-muted px-2 py-1 text-[11px] font-bold"
+              >
+                Done
+              </button>
+            </div>
+            <p className="text-[11px] font-semibold text-ink-soft">
+              {(() => {
+                const s = zoneSizeM(activeZone);
+                return `${Math.round(s.w)}m × ${Math.round(s.h)}m · ${formatArea(zoneAreaM2(activeZone))} · ${formatLength(zonePerimeterM(activeZone))} perimeter · drag ✥ to move, white dots reshape`;
+              })()}
+            </p>
+            <select
+              value={activeZone.kind ?? ""}
+              onChange={(e) => {
+                const kind = (e.target.value || undefined) as ZoneKind | undefined;
+                const preset = ZONE_KINDS.find((k) => k.id === kind);
+                onPatchZone?.(activeZone.id, preset ? { kind, color: preset.color } : { kind });
+              }}
+              className="w-full rounded-lg border border-border bg-background px-2 py-1.5 text-xs font-semibold"
+            >
+              <option value="">Area type…</option>
+              {ZONE_KINDS.map((k) => (
+                <option key={k.id} value={k.id}>
+                  {k.label}
+                </option>
+              ))}
+            </select>
             <input
-              value={activeZone.name}
-              onChange={(e) => onRenameZone?.(activeZone.id, e.target.value)}
-              placeholder="Area name"
-              className="w-40 rounded-lg border border-border bg-background px-2 py-1 text-xs font-semibold"
+              value={activeZone.spec ?? ""}
+              onChange={(e) => onPatchZone?.(activeZone.id, { spec: e.target.value })}
+              placeholder="What it contains (e.g. 10× gazebos, 2× 45kVA generators)"
+              className="w-full rounded-lg border border-border bg-background px-2 py-1.5 text-xs"
             />
-            <button
-              onClick={() => onDuplicateZone?.(activeZone.id)}
-              className="rounded-lg cherry-gradient px-2 py-1 text-[11px] font-bold text-white"
-            >
-              Copy area
-            </button>
-            <button
-              onClick={() => onSelectZone(null)}
-              className="rounded-lg bg-muted px-2 py-1 text-[11px] font-bold"
-            >
-              Done
-            </button>
-            <span className="text-[11px] font-semibold text-ink-soft">
-              Drag ✥ to move · white dots reshape · {formatLength(zonePerimeterM(activeZone))} perimeter
-            </span>
+            <textarea
+              value={activeZone.notes ?? ""}
+              onChange={(e) => onPatchZone?.(activeZone.id, { notes: e.target.value })}
+              placeholder="Description — visible on the area detail"
+              rows={2}
+              className="w-full resize-y rounded-lg border border-border bg-background px-2 py-1.5 text-xs"
+            />
+            <textarea
+              value={activeZone.crewNotes ?? ""}
+              onChange={(e) => onPatchZone?.(activeZone.id, { crewNotes: e.target.value })}
+              placeholder="Crew notes — exactly what must go here (build / strike instructions)"
+              rows={3}
+              className="w-full resize-y rounded-lg border border-border bg-background px-2 py-1.5 text-xs"
+            />
           </div>
         </div>
       ) : null}
