@@ -30,6 +30,7 @@ import {
 
 import { fetchVillageTents } from "@/lib/village-tents";
 import { useIsCrew } from "@/lib/auth";
+import { useLockPageZoom } from "@/lib/use-lock-page-zoom";
 import { supabase } from "@/integrations/supabase/client";
 
 
@@ -115,6 +116,8 @@ export function VillageMapView({
    */
   riderOnly?: boolean;
 }) {
+  // Pinch on the village map must zoom the map only — never the page itself.
+  useLockPageZoom();
   // Multi-day events run more than one race village — one per venue.
   const venuesQ = useQuery({
     queryKey: ["village-venues", eventId],
