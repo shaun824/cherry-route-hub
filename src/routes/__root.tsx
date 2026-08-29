@@ -173,6 +173,13 @@ function RootComponent() {
   // Register the caching/push service worker so saved maps work with no signal.
   useEffect(() => {
     void ensureOfflineWorker();
+    // The app booted fine — reset the one-shot chunk-reload guard so a future
+    // publish can self-heal with an automatic reload again.
+    try {
+      window.sessionStorage.removeItem("rce:chunk-reload");
+    } catch {
+      /* ignore */
+    }
   }, []);
 
 
