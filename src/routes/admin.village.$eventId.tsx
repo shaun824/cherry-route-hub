@@ -198,11 +198,12 @@ function VillageEditor() {
   useEffect(() => {
     if (!q.data) return;
     const loaded = { ...q.data, venue_id: venueId };
-    if (!hasVenueCentre(loaded.geo) && info?.venue_lat && info?.venue_lng) {
-      setMap({ ...loaded, geo: { lat: info.venue_lat, lng: info.venue_lng, widthM: 0 } });
-    } else {
-      setMap(loaded);
-    }
+    const next =
+      !hasVenueCentre(loaded.geo) && info?.venue_lat && info?.venue_lng
+        ? { ...loaded, geo: { lat: info.venue_lat, lng: info.venue_lng, widthM: 0 } }
+        : loaded;
+    setMap(next);
+    savedSnapshotRef.current = JSON.stringify(next);
   }, [q.data, venueId, info?.venue_lat, info?.venue_lng]);
 
 
