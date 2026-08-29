@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ClientOnly } from "@tanstack/react-router";
 import { Maximize2, Minimize2, Minus, Plus, X } from "lucide-react";
 import {
+  VILLAGE_LAYERS,
   categoryMeta,
   fetchVillageMap,
   fetchVillageMaps,
@@ -12,10 +13,13 @@ import {
   isPlacedGeo,
   spotColor,
   spotIcon,
+  spotLayer,
   type VillageHotspot,
+  type VillageLayer,
 } from "@/lib/village-map";
 import { villageIcon } from "@/lib/village-icons";
 import { fetchVillageTents } from "@/lib/village-tents";
+import { useIsCrew } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 
 
