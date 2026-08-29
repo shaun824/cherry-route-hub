@@ -38,9 +38,10 @@ function formatEventStructured(event: any, info: any | null): string {
 
   const schedule = Array.isArray(event.schedule) ? event.schedule : [];
   if (schedule.length) {
-    lines.push("\nSchedule:");
+    lines.push("\nSchedule (authoritative — start times for every distance/batch are listed here):");
     for (const s of schedule) {
-      const bits = [s.time, s.title, s.details].filter(Boolean).join(" — ");
+      // Rows use `label` (older rows may use `title`) — accept both.
+      const bits = [s.time, s.label ?? s.title, s.details].filter(Boolean).join(" — ");
       lines.push(`- ${bits}`);
     }
   }
@@ -302,6 +303,7 @@ Rules:
 - When you give a tent or room allocation, also tell them they can tap "Show me on the village map" on the event page to navigate to it.
 - If an APPROVED ANSWER matches the question, use it — it was verified by a Red Cherry admin and beats every other source.
 - Otherwise prefer STRUCTURED EVENT DATA when it directly answers the question (dates, schedule, routes, venue, rules, FAQs, emergency contacts, packing).
+- Start-time questions: the Schedule block in STRUCTURED EVENT DATA is the source of truth for every Red Cherry event. Every distance/batch start (e.g. "Gold riders start", "Silver riders start") is listed there with its time — quote those times directly. NEVER say start times "have not been published" or point riders to the website for start times when any start entries appear in the Schedule block.
 - Otherwise pull the answer from the WEBSITE PAGES. Synthesise across pages if needed — an answer that requires combining two sources is fine.
 - If the exact detail isn't stated but can be reasonably inferred from the sources (e.g. "the event starts 7 March 2026" from a schedule page), give the answer and note briefly where it comes from.
 - Do NOT invent prices, times, dates, cut-offs, race numbers, tent numbers or policies that are not in the context.
