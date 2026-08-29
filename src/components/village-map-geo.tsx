@@ -270,10 +270,15 @@ function ViewportWatcher({ onView }: { onView: (b: L.LatLngBounds) => void }) {
       frame = requestAnimationFrame(() => onView(map.getBounds().pad(0.35)));
     };
     update();
-    map.on("moveend zoomend", update);
+    // Do not push React state on every drag release. Re-rendering the complete
+    // Leaflet layer tree at exactly the moment its drag transform is committed
+    // can expose a blank compositor frame on mobile Safari. The padded bounds
+    // established at mount and refreshed after zoom are deliberately generous;
+    // panning itself remains entirely inside Leaflet's imperative renderer.
+    map.on("zoomend", update);
     return () => {
       cancelAnimationFrame(frame);
-      map.off("moveend zoomend", update);
+      map.off("zoomend", update);
     };
   }, [map, onView]);
   return null;
@@ -574,6 +579,8 @@ export default function VillageMapGeo({
               url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
               maxZoom={24}
               maxNativeZoom={18}
+              keepBuffer={8}
+              updateWhenIdle={false}
             />
           ) : (
             <TileLayer
@@ -582,6 +589,8 @@ export default function VillageMapGeo({
               url="https://a.tile.openstreetmap.org/{z}/{x}/{y}.png"
               maxZoom={24}
               maxNativeZoom={19}
+              keepBuffer={8}
+              updateWhenIdle={false}
             />
           )}
 
