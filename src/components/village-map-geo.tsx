@@ -557,20 +557,35 @@ export default function VillageMapGeo({
 
           {visibleZones.map((z) => {
             const hot = highlightZoneId === z.id;
+            const crewTap = zonesInteractive && hasBuildDetail(z);
+            const centre = crewTap ? zoneCentroid(z) : null;
             return (
-              <Polygon
-                key={z.id}
-                positions={z.points.map((p) => [p.lat, p.lng]) as [number, number][]}
-                interactive={false}
-                pathOptions={{
-                  color: hot ? "#c8102e" : zoneColor(z),
-                  weight: hot ? 4 : 2,
-                  fillColor: hot ? "#c8102e" : zoneColor(z),
-                  fillOpacity: hot ? 0.45 : 0.18,
-                }}
-              />
+              <Fragment key={z.id}>
+                <Polygon
+                  positions={z.points.map((p) => [p.lat, p.lng]) as [number, number][]}
+                  interactive={crewTap}
+                  eventHandlers={crewTap ? { click: () => onZoneSelect?.(z.id) } : undefined}
+                  pathOptions={{
+                    color: hot ? "#c8102e" : zoneColor(z),
+                    weight: hot ? 4 : 2,
+                    fillColor: hot ? "#c8102e" : zoneColor(z),
+                    fillOpacity: hot ? 0.45 : 0.18,
+                  }}
+                />
+                {centre ? (
+                  <Marker
+                    keyboard={false}
+                    autoPanOnFocus={false}
+                    position={[centre.lat, centre.lng]}
+                    icon={zoneLabelIcon(z, hot)}
+                    zIndexOffset={hot ? 800 : 250}
+                    eventHandlers={{ click: () => onZoneSelect?.(z.id) }}
+                  />
+                ) : null}
+              </Fragment>
             );
           })}
+
 
           <ZoomWatcher onZoom={setZoom} />
           <ViewportWatcher onView={setView} />
