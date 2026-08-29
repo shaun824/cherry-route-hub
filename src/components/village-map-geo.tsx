@@ -20,9 +20,8 @@ import { spotColor, spotIcon } from "@/lib/village-map";
 import { villageIconSvg } from "@/lib/village-icons";
 import { hasBuildDetail, zoneCentroid, zoneColor, zoneKindLabel, type VillageZone } from "@/lib/village-zones";
 
-function escapeHtml(value: string) {
-  return value.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c] as string));
-}
+
+
 
 /** Crew-only label puck sitting at the centre of a drawn build area. */
 function zoneLabelIcon(z: VillageZone, hot: boolean) {
