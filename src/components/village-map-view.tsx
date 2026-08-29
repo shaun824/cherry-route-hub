@@ -21,6 +21,7 @@ import { villageIcon } from "@/lib/village-icons";
 import {
   formatArea,
   hasBuildDetail,
+  riderSeesZone,
   zoneAreaM2,
   zoneColor,
   zoneKindLabel,
