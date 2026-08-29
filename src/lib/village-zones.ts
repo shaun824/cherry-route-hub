@@ -53,7 +53,7 @@ export function zoneKindLabel(kind?: ZoneKind): string {
 
 /** True when the area carries crew build detail worth showing. */
 export function hasBuildDetail(z: VillageZone): boolean {
-  return !!(z.kind || z.spec?.trim() || z.crewNotes?.trim());
+  return !!(z.kind || z.spec?.trim() || z.crewNotes?.trim() || z.notes?.trim());
 }
 
 
