@@ -63,8 +63,11 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
     reportLovableError(error, { boundary: "tanstack_root_error_component" });
     if (isChunkLoadError(error)) {
       try {
-        if (!window.sessionStorage.getItem("rce:chunk-reload")) {
-          window.sessionStorage.setItem("rce:chunk-reload", "1");
+        // At most one auto-reload per minute, so a genuinely broken deploy
+        // shows the error UI instead of looping forever.
+        const last = Number(window.sessionStorage.getItem("rce:chunk-reload") ?? 0);
+        if (Date.now() - last > 60_000) {
+          window.sessionStorage.setItem("rce:chunk-reload", String(Date.now()));
           window.location.reload();
           return;
         }
