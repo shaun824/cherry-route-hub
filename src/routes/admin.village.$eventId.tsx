@@ -819,6 +819,7 @@ function VillageEditor() {
               onSelectZone={setSelectedZone}
               onRenameZone={(id, name) => updateZone(id, { name })}
               onDuplicateZone={duplicateZone}
+              onPatchZone={updateZone}
               tents={tents.map((t) => ({
                 id: t.id,
                 label: t.label,
