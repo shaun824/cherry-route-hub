@@ -74,8 +74,41 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
       } catch {
         // sessionStorage unavailable — fall through to the error UI
       }
+      return;
     }
-  }, [error]);
+
+    // Any other first-navigation failure (a loader that raced a cold start, a
+    // dropped request on mobile data) recovers on a manual refresh, so do that
+    // refresh automatically instead of dead-ending the rider. One silent retry
+    // per route per minute, then a hard reload, then the error UI.
+    let cancelled = false;
+    const key = `rce:auto-retry:${window.location.pathname}`;
+    let attempt = 0;
+    try {
+      const raw = window.sessionStorage.getItem(key);
+      const parsed = raw ? (JSON.parse(raw) as { at: number; n: number }) : null;
+      attempt = parsed && Date.now() - parsed.at < 60_000 ? parsed.n : 0;
+      window.sessionStorage.setItem(key, JSON.stringify({ at: Date.now(), n: attempt + 1 }));
+    } catch {
+      attempt = 0;
+    }
+
+    if (attempt === 0) {
+      const t = window.setTimeout(() => {
+        if (cancelled) return;
+        router.invalidate();
+        reset();
+      }, 350);
+      return () => {
+        cancelled = true;
+        window.clearTimeout(t);
+      };
+    }
+    if (attempt === 1) {
+      window.location.reload();
+    }
+  }, [error, router, reset]);
+
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
