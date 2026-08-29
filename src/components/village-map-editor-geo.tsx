@@ -119,7 +119,7 @@ function MapDeleteBubble({
   isMarker,
 }: {
   label: string;
-  onDelete: () => Promise<void>;
+  onDelete: () => void | Promise<void>;
   onToggleKind?: () => void;
   isMarker?: boolean;
 }) {
