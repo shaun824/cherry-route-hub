@@ -1,4 +1,4 @@
-import { createFileRoute, ClientOnly, Link, notFound, useRouter } from "@tanstack/react-router";
+import { createFileRoute, ClientOnly, Link, notFound, useBlocker, useRouter } from "@tanstack/react-router";
 import { Suspense, lazy, useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Loader2, MapPin, PencilRuler, Save, Sparkles, Square, Tent, Trash2, Upload, X } from "lucide-react";
@@ -123,10 +123,27 @@ function VillageEditor() {
   });
   const tents = tentsQ.data ?? [];
 
+  // Unsaved-changes guard: the snapshot of the last loaded/saved map. Any edit
+  // makes `dirty` true and blocks navigation until the admin saves or confirms
+  // they want to discard.
+  const savedSnapshotRef = useRef<string | null>(null);
+  const mapJson = useMemo(() => JSON.stringify(map), [map]);
+  const dirty = savedSnapshotRef.current !== null && mapJson !== savedSnapshotRef.current;
+  const dirtyRef = useRef(false);
+  dirtyRef.current = dirty;
+  useBlocker({
+    shouldBlockFn: async () => {
+      if (!dirtyRef.current) return false;
+      return !window.confirm("You have unsaved village map changes. Leave and lose them?");
+    },
+    enableBeforeUnload: () => dirtyRef.current,
+  });
+
   // Switching village: clear the editor immediately so nothing from the previous
   // village can be saved onto the new one.
   useEffect(() => {
     setMap(emptyVillageMap(event.id, venueId));
+    savedSnapshotRef.current = null;
     setSelected(null);
     setSelectedZone(null);
     setSelectedTent(null);
@@ -181,11 +198,12 @@ function VillageEditor() {
   useEffect(() => {
     if (!q.data) return;
     const loaded = { ...q.data, venue_id: venueId };
-    if (!hasVenueCentre(loaded.geo) && info?.venue_lat && info?.venue_lng) {
-      setMap({ ...loaded, geo: { lat: info.venue_lat, lng: info.venue_lng, widthM: 0 } });
-    } else {
-      setMap(loaded);
-    }
+    const next =
+      !hasVenueCentre(loaded.geo) && info?.venue_lat && info?.venue_lng
+        ? { ...loaded, geo: { lat: info.venue_lat, lng: info.venue_lng, widthM: 0 } }
+        : loaded;
+    setMap(next);
+    savedSnapshotRef.current = JSON.stringify(next);
   }, [q.data, venueId, info?.venue_lat, info?.venue_lng]);
 
 
@@ -362,7 +380,10 @@ function VillageEditor() {
     const ok = await saveVillageMap(map);
     setSaving(false);
     setSaved(ok);
-    if (ok) setTimeout(() => setSaved(false), 2000);
+    if (ok) {
+      savedSnapshotRef.current = JSON.stringify(map);
+      setTimeout(() => setSaved(false), 2000);
+    }
   }
 
   async function addVenue() {
@@ -397,10 +418,10 @@ function VillageEditor() {
         <button
           onClick={() => void save()}
           disabled={saving}
-          className="inline-flex items-center gap-1.5 rounded-lg cherry-gradient px-3 py-1.5 text-xs font-bold text-white disabled:opacity-60"
+          className={`inline-flex items-center gap-1.5 rounded-lg cherry-gradient px-3 py-1.5 text-xs font-bold text-white disabled:opacity-60 ${dirty ? "ring-2 ring-amber-300 ring-offset-1" : ""}`}
         >
           <Save className="h-3.5 w-3.5" />
-          {saving ? "Saving…" : saved ? "Saved!" : "Save"}
+          {saving ? "Saving…" : saved ? "Saved!" : dirty ? "Save (unsaved changes)" : "Save"}
         </button>
       </div>
 
