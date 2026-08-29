@@ -563,6 +563,7 @@ export default function VillageMapGeo({
           zoomSnap={0}
           zoomDelta={1}
           zoomAnimation={false}
+          fadeAnimation={false}
           markerZoomAnimation={false}
           bounceAtZoomLimits={false}
           touchZoom
@@ -570,7 +571,7 @@ export default function VillageMapGeo({
           // Two-finger twist rotates the map (intuitive on mobile); the ↺ ↻
           // buttons remain as the precise fallback.
           {...({ rotate: true, touchRotate: true, rotateControl: false, bearing: 0 } as object)}
-          className={fullscreen ? "h-full w-full" : "h-[65vh] min-h-[340px] w-full"}
+          className={`rce-live-map ${fullscreen ? "h-full w-full" : "h-[65vh] min-h-[340px] w-full"}`}
 
         >
           <VillageMapTrackpadZoom />
@@ -582,7 +583,7 @@ export default function VillageMapGeo({
               maxZoom={24}
               maxNativeZoom={18}
               keepBuffer={8}
-              updateWhenIdle
+              updateWhenIdle={false}
             />
           ) : (
             <TileLayer
@@ -592,7 +593,7 @@ export default function VillageMapGeo({
               maxZoom={24}
               maxNativeZoom={19}
               keepBuffer={8}
-              updateWhenIdle
+              updateWhenIdle={false}
             />
           )}
 
