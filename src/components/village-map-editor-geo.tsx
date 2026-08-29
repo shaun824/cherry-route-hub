@@ -215,6 +215,7 @@ export default function VillageMapEditorGeo({
   onSelectZone,
   onRenameZone,
   onDuplicateZone,
+  onPatchZone,
   tents = [],
   tentMode = false,
   onPlaceTent,
