@@ -239,6 +239,30 @@ export function formatBytes(bytes: number) {
 export async function ensureOfflineWorker() {
   if (typeof window === "undefined" || !("serviceWorker" in navigator)) return null;
   try {
+    const host = window.location.hostname;
+    const blocked =
+      !import.meta.env.PROD ||
+      window.self !== window.top ||
+      host.startsWith("id-preview--") ||
+      host.startsWith("preview--") ||
+      host === "lovableproject.com" ||
+      host.endsWith(".lovableproject.com") ||
+      host === "lovableproject-dev.com" ||
+      host.endsWith(".lovableproject-dev.com") ||
+      host === "beta.lovable.dev" ||
+      host.endsWith(".beta.lovable.dev") ||
+      new URLSearchParams(window.location.search).get("sw") === "off";
+
+    if (blocked) {
+      const registrations = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(
+        registrations
+          .filter((registration) => registration.active?.scriptURL.endsWith("/push-sw.js"))
+          .map((registration) => registration.unregister()),
+      );
+      return null;
+    }
+
     const existing = await navigator.serviceWorker.getRegistration("/push-sw.js");
     if (existing) {
       // Check immediately rather than waiting for the browser's periodic update,
