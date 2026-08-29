@@ -21,6 +21,7 @@ import { villageIcon } from "@/lib/village-icons";
 import {
   formatArea,
   hasBuildDetail,
+  riderSeesZone,
   zoneAreaM2,
   zoneColor,
   zoneKindLabel,
@@ -461,7 +462,11 @@ export function VillageMapView({
               imageUrl={map.image_url}
               geo={map.geo!}
               hotspots={spots}
-              zones={isCrew ? (map.zones ?? []) : []}
+              zones={
+                isCrew
+                  ? (map.zones ?? [])
+                  : (map.zones ?? []).filter(riderSeesZone)
+              }
               selected={selected}
               onSelect={setSelected}
               tents={mapTents}

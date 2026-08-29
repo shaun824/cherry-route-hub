@@ -670,6 +670,25 @@ export default function VillageMapEditorGeo({
                 return `${Math.round(s.w)}m × ${Math.round(s.h)}m · ${formatArea(zoneAreaM2(activeZone))} · ${formatLength(zonePerimeterM(activeZone))} perimeter · drag ✥ to move, white dots reshape`;
               })()}
             </p>
+            <div className="flex items-center gap-1.5">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-ink-soft">
+                Show on
+              </span>
+              {(["crew", "rider"] as const).map((a) => {
+                const on = (activeZone.audience ?? "crew") === a;
+                return (
+                  <button
+                    key={a}
+                    onClick={() => onPatchZone?.(activeZone.id, { audience: a })}
+                    className={`rounded-full px-2.5 py-1 text-[11px] font-bold ${
+                      on ? "cherry-gradient text-white" : "bg-muted text-ink-soft"
+                    }`}
+                  >
+                    {a === "crew" ? "Crew only" : "Riders + crew"}
+                  </button>
+                );
+              })}
+            </div>
             <select
               value={activeZone.kind ?? ""}
               onChange={(e) => {
