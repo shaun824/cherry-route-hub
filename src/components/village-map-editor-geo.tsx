@@ -12,12 +12,17 @@ import VillageMapTrackpadZoom from "@/components/village-map-trackpad-zoom";
 import { Button } from "@/components/ui/button";
 import {
   distanceM,
+  formatArea,
   formatLength,
   moveZone,
+  zoneAreaM2,
   zoneCentroid,
   zoneColor,
   zonePerimeterM,
+  zoneSizeM,
+  ZONE_KINDS,
   type VillageZone,
+  type ZoneKind,
   type ZonePoint,
 } from "@/lib/village-zones";
 
@@ -239,6 +244,7 @@ export default function VillageMapEditorGeo({
   onSelectZone: (id: string | null) => void;
   onRenameZone?: (id: string, name: string) => void;
   onDuplicateZone?: (id: string) => void;
+  onPatchZone?: (id: string, patch: Partial<VillageZone>) => void;
   tents?: { id: string; label: string; lat: number; lng: number; kind?: "tent" | "marker" | null; tent_type?: string | null }[];
   tentMode?: boolean;
   onPlaceTent?: (lat: number, lng: number) => void;
