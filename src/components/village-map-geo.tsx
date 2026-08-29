@@ -19,6 +19,7 @@ import type { VillageGeo, VillageHotspot } from "@/lib/village-map";
 import { spotColor, spotIcon } from "@/lib/village-map";
 import { villageIconSvg } from "@/lib/village-icons";
 import { zoneCentroid, zoneColor, type VillageZone } from "@/lib/village-zones";
+import VillageMapTrackpadZoom from "@/components/village-map-trackpad-zoom";
 
 const M_PER_DEG_LAT = 111320;
 
@@ -496,7 +497,7 @@ export default function VillageMapGeo({
           center={[geo.lat, geo.lng]}
           zoom={17}
           maxZoom={24}
-          scrollWheelZoom
+          scrollWheelZoom={false}
           // Leaflet's keyboard support makes the map container focusable; on
           // mobile that focus makes the browser jump the page when you tap the
           // map. Riders never keyboard-drive it, so switch it off.
@@ -504,11 +505,6 @@ export default function VillageMapGeo({
 
           zoomSnap={0}
           zoomDelta={1}
-          // Trackpad pinch/two-finger scroll arrives as many very small wheel
-          // deltas. Leaflet also divides those deltas by devicePixelRatio, so
-          // use a low threshold and one-frame debounce for a direct response.
-          wheelDebounceTime={16}
-          wheelPxPerZoomLevel={20}
           zoomAnimation
           markerZoomAnimation
           bounceAtZoomLimits={false}
@@ -521,6 +517,7 @@ export default function VillageMapGeo({
           className={fullscreen ? "h-full w-full" : "h-[65vh] min-h-[340px] w-full"}
 
         >
+          <VillageMapTrackpadZoom />
           {satellite ? (
             <TileLayer
               crossOrigin="anonymous"

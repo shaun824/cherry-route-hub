@@ -7,6 +7,7 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { spotColor, spotIcon, type VillageHotspot } from "@/lib/village-map";
 import { villageIconSvg } from "@/lib/village-icons";
+import VillageMapTrackpadZoom from "@/components/village-map-trackpad-zoom";
 import {
   distanceM,
   formatLength,
@@ -248,15 +249,11 @@ export default function VillageMapEditorGeo({
           center={[centre.lat, centre.lng]}
           zoom={17}
           maxZoom={24}
-          scrollWheelZoom
+          scrollWheelZoom={false}
           // Focusable map containers make the browser jump the page on tap.
           keyboard={false}
           zoomSnap={0}
           zoomDelta={1}
-          // Match the rider village map: laptop trackpads emit tiny wheel
-          // deltas, so keep the threshold low and update once per frame.
-          wheelDebounceTime={16}
-          wheelPxPerZoomLevel={20}
           zoomAnimation
           markerZoomAnimation
           bounceAtZoomLimits={false}
@@ -264,6 +261,7 @@ export default function VillageMapEditorGeo({
           doubleClickZoom
           className="h-[65vh] min-h-[360px] w-full"
         >
+          <VillageMapTrackpadZoom />
           <TileLayer
             attribution="Tiles &copy; Esri"
             url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
