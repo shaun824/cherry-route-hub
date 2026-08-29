@@ -569,7 +569,85 @@ export function VillageMapView({
         </p>
       )}
 
+      {zoneDetail ? (
+        <div className="rounded-2xl bg-card p-4 ring-1 ring-border">
+          <div className="flex items-start gap-2">
+            <span
+              className="mt-1 h-4 w-4 shrink-0 rounded"
+              style={{ backgroundColor: zoneColor(zoneDetail) }}
+            />
+            <div className="min-w-0 flex-1">
+              <p className="font-display text-base font-bold text-ink">{zoneDetail.name}</p>
+              <p className="text-[11px] font-semibold uppercase tracking-widest text-ink-soft">
+                Crew only · {zoneKindLabel(zoneDetail.kind)}
+              </p>
+              <p className="mt-1 text-xs text-ink-soft">
+                {(() => {
+                  const s = zoneSizeM(zoneDetail);
+                  return `${Math.round(s.w)}m × ${Math.round(s.h)}m · ${formatArea(zoneAreaM2(zoneDetail))}`;
+                })()}
+              </p>
+              {zoneDetail.spec ? (
+                <p className="mt-2 text-sm font-semibold text-ink">{zoneDetail.spec}</p>
+              ) : null}
+              {zoneDetail.crewNotes ? (
+                <p className="mt-1 whitespace-pre-line text-sm leading-relaxed text-ink-soft">
+                  {zoneDetail.crewNotes}
+                </p>
+              ) : null}
+            </div>
+            <button onClick={() => setSelectedZone(null)} aria-label="Close">
+              <X className="h-4 w-4 text-ink-soft" />
+            </button>
+          </div>
+        </div>
+      ) : null}
+
+      {isCrew && buildZones.length > 0 ? (
+        <div className="rounded-2xl bg-card p-4 ring-1 ring-border">
+          <p className="font-display text-sm font-bold text-ink">Build areas</p>
+          <p className="text-[11px] text-ink-soft">
+            Crew only — tap an area to zoom to it and see what it should contain.
+          </p>
+          <div className="mt-3 space-y-3">
+            {Array.from(new Set(buildZones.map((z) => zoneKindLabel(z.kind)))).map((kindLabel) => (
+              <div key={kindLabel}>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-ink-soft">
+                  {kindLabel}
+                </p>
+                <ul className="mt-1 space-y-1">
+                  {buildZones
+                    .filter((z) => zoneKindLabel(z.kind) === kindLabel)
+                    .map((z) => {
+                      const s = zoneSizeM(z);
+                      return (
+                        <li key={z.id}>
+                          <button
+                            onClick={() => setSelectedZone((prev) => (prev === z.id ? null : z.id))}
+                            className="w-full rounded-lg px-2 py-1 text-left hover:bg-muted"
+                          >
+                            <span className="flex items-baseline justify-between gap-3">
+                              <span className="text-sm font-semibold text-ink">{z.name}</span>
+                              <span className="shrink-0 text-[11px] font-semibold text-ink-soft">
+                                {Math.round(s.w)}m × {Math.round(s.h)}m
+                              </span>
+                            </span>
+                            {z.spec ? (
+                              <span className="block text-[11px] text-ink-soft">{z.spec}</span>
+                            ) : null}
+                          </button>
+                        </li>
+                      );
+                    })}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : null}
+
       {isCrew && buildItems.length > 0 ? (
+
         <div className="rounded-2xl bg-card p-4 ring-1 ring-border">
           <p className="font-display text-sm font-bold text-ink">Build list</p>
           <p className="text-[11px] text-ink-soft">
