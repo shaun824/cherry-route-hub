@@ -322,6 +322,7 @@ function MyEventDetail() {
               focusSpotId={villageFocus.spotId ?? null}
               focusTentId={villageFocus.tentId ?? null}
               venueId={villageFocus.venueId ?? null}
+              riderOnly
             />
             <OfflinePackCard event={event as never} />
           </section>
