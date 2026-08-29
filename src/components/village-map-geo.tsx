@@ -628,14 +628,14 @@ export default function VillageMapGeo({
 
           {/* Dropped tent pins are shown exactly where they were placed. Only
               exact duplicates of the same number are collapsed. */}
-          {droppedTents.filter((t, i, all) => {
+          {droppedTents.filter(({ tent: t }, i, all) => {
             const number = normalizedNumber(t.label);
             if (!number || t.id === highlightTentId) return true;
             const firstIdx = all.findIndex(
-              (o) => normalizedNumber(o.label) === number && o.id !== highlightTentId,
+              ({ tent: o }) => normalizedNumber(o.label) === number && o.id !== highlightTentId,
             );
             return firstIdx === i;
-          }).map((t) => {
+          }).map(({ tent: t, meta, footprint }) => {
             const hot = highlightTentId === t.id;
             // Clean-map rule (Weekend Warrior standard): the fitted Tour de Addo
             // view lands at zoom 19, so ordinary tent pins must stay hidden until
@@ -646,11 +646,10 @@ export default function VillageMapGeo({
             // pins are never mounted.
             if (!hot && !inView(t.lat, t.lng)) return null;
 
-            const meta = tentTypeMeta(t.tent_type);
             return (
               <Fragment key={t.id}>
               <Rectangle
-                bounds={tentFootprintBounds(t.lat, t.lng, meta.sizeM)}
+                bounds={footprint}
                 pathOptions={{
                   color: hot ? "#c8102e" : meta.id === "luxury" ? "#f59e0b" : "#38bdf8",
                   weight: 1.5,
