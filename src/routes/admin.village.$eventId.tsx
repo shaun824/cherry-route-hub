@@ -212,6 +212,12 @@ function VillageEditor() {
     patch({ geo: { ...base, ...next } });
   }
 
+  function layerSpots(all: VillageHotspot[]) {
+    // Rider points stay visible as context while building, but only the active
+    // layer is added to; on a build layer we hide the other build layer.
+    return all.filter((s) => spotLayer(s) === layer || spotLayer(s) === "rider");
+  }
+
   function updateSpot(id: string, next: Partial<VillageHotspot>) {
     patch({ hotspots: map.hotspots.map((s) => (s.id === id ? { ...s, ...next } : s)) });
   }
@@ -571,6 +577,32 @@ function VillageEditor() {
         >
           <Square className="h-3.5 w-3.5" /> Add area by size
         </button>
+        <div className="inline-flex overflow-hidden rounded-lg ring-1 ring-border">
+          {VILLAGE_LAYERS.map((l) => (
+            <button
+              key={l.id}
+              onClick={() => {
+                setLayer(l.id);
+                setSelected(null);
+              }}
+              title={l.blurb}
+              className={`px-2.5 py-1.5 text-[11px] font-bold ${
+                layer === l.id ? "bg-cherry text-white" : "bg-muted text-ink-soft"
+              }`}
+            >
+              {l.label}
+            </button>
+          ))}
+        </div>
+        {layer !== "rider" ? (
+          <button
+            onClick={loadBuildKit}
+            disabled={usingImage || !centre}
+            className="inline-flex items-center gap-1.5 rounded-lg bg-muted px-3 py-1.5 text-xs font-bold text-ink disabled:opacity-50"
+          >
+            <Sparkles className="h-3.5 w-3.5" /> Load build kit
+          </button>
+        ) : null}
         <button
           onClick={loadMasterLayout}
           disabled={usingImage || !centre}
@@ -680,7 +712,7 @@ function VillageEditor() {
             <VillageMapEditorGeo
               centre={centre}
               centreToken={centreToken}
-              hotspots={map.hotspots}
+              hotspots={layerSpots(map.hotspots)}
               selected={selected}
               placing={placing}
               drawing={drawing}
