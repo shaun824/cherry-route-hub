@@ -48,6 +48,8 @@ import {
 
 } from "@/lib/village-zones";
 import ZoneDuplicator from "@/components/zone-duplicator";
+import { toast } from "sonner";
+
 import { fetchVillageTents } from "@/lib/village-tents";
 
 const VillageMapEditorGeo = lazy(() => import("@/components/village-map-editor-geo"));
