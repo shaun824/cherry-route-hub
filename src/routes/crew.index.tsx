@@ -3,17 +3,7 @@
 import { createFileRoute, Link, Navigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import {
-  BedDouble,
-  CalendarDays,
-  GraduationCap,
-  ClipboardList,
-  HardHat,
-  Map as MapIcon,
-  Search,
-  Siren,
-  Users,
-} from "lucide-react";
+import { BedDouble, CalendarDays, ClipboardList, GraduationCap, HardHat, Map as MapIcon, MapPin, Search, Siren, Users } from "lucide-react";
 import { useIsCrew } from "@/lib/auth";
 import { fetchCrewEvents, fetchCrewRooming, normaliseTent } from "@/lib/crew";
 import { buildCrewTimeline, groupScheduleByDay, pickCurrentDay } from "@/lib/crew-plan";
