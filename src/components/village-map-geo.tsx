@@ -246,9 +246,12 @@ function ZoomWatcher({ onZoom }: { onZoom: (z: number) => void }) {
   useEffect(() => {
     const update = () => onZoom(map.getZoom());
     update();
-    map.on("zoom zoomend", update);
+    // Updating React state during every fractional zoom frame remounts large
+    // marker collections and is the main source of trackpad lag. Visibility
+    // only needs recalculating when the gesture settles.
+    map.on("zoomend", update);
     return () => {
-      map.off("zoom zoomend", update);
+      map.off("zoomend", update);
     };
   }, [map, onZoom]);
   return null;
@@ -528,8 +531,9 @@ export default function VillageMapGeo({
 
           zoomSnap={0}
           zoomDelta={1}
-          zoomAnimation
-          markerZoomAnimation
+          zoomAnimation={false}
+          markerZoomAnimation={false}
+          preferCanvas
           bounceAtZoomLimits={false}
           touchZoom
           doubleClickZoom

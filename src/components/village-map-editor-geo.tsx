@@ -1,7 +1,7 @@
 // Client-only Leaflet editor: place and drag village points straight onto a
 // satellite map of the venue — no plan image required. Also supports drawing
 // measured areas (zones) so the field layout can be planned to the metre.
-import { Fragment, useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { MapContainer, TileLayer, Marker, Polygon, Polyline, Popup, Rectangle, Tooltip, useMap, useMapEvents } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -226,12 +226,16 @@ export default function VillageMapEditorGeo({
   const [fitToken, setFitToken] = useState(0);
   const activeZone = zones.find((z) => z.id === selectedZone) ?? null;
 
-  const contentPoints: ZonePoint[] = [
-    ...zones.flatMap((z) => z.points),
-    ...hotspots
-      .filter((s) => Number.isFinite(s.lat) && Number.isFinite(s.lng))
-      .map((s) => ({ lat: s.lat as number, lng: s.lng as number })),
-  ];
+  const contentPoints = useMemo<ZonePoint[]>(
+    () => [
+      ...zones.flatMap((z) => z.points),
+      ...hotspots
+        .filter((s) => Number.isFinite(s.lat) && Number.isFinite(s.lng))
+        .map((s) => ({ lat: s.lat as number, lng: s.lng as number })),
+      ...tents.map((t) => ({ lat: t.lat, lng: t.lng })),
+    ],
+    [zones, hotspots, tents],
+  );
 
   useEffect(() => {
     if (!drawing) {
@@ -269,8 +273,11 @@ export default function VillageMapEditorGeo({
           keyboard={false}
           zoomSnap={0}
           zoomDelta={1}
-          zoomAnimation
-          markerZoomAnimation
+          // Dense tent layouts are much more responsive when Leaflet does not
+          // animate every individual DOM marker during fractional pinch zoom.
+          zoomAnimation={false}
+          markerZoomAnimation={false}
+          preferCanvas
           bounceAtZoomLimits={false}
           touchZoom
           doubleClickZoom
