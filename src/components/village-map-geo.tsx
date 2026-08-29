@@ -641,7 +641,7 @@ export default function VillageMapGeo({
               ({ tent: o }) => normalizedNumber(o.label) === number && o.id !== highlightTentId,
             );
             return firstIdx === i;
-          }).map(({ tent: t, meta, footprint }) => {
+          }).map(({ tent: t, meta, footprint, pos, icon }) => {
             const hot = highlightTentId === t.id;
             // Clean-map rule (Weekend Warrior standard): the fitted Tour de Addo
             // view lands at zoom 19, so ordinary tent pins must stay hidden until
