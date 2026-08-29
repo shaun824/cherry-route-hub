@@ -9,6 +9,7 @@ import { spotColor, spotIcon, type VillageHotspot } from "@/lib/village-map";
 import { villageIconSvg } from "@/lib/village-icons";
 import { tentFootprintBounds, tentTypeMeta } from "@/lib/village-tents";
 import VillageMapTrackpadZoom from "@/components/village-map-trackpad-zoom";
+import { Button } from "@/components/ui/button";
 import {
   distanceM,
   formatLength,
@@ -118,44 +119,72 @@ function MapDeleteBubble({
   isMarker,
 }: {
   label: string;
-  onDelete: () => void;
+  onDelete: () => Promise<void>;
   onToggleKind?: () => void;
   isMarker?: boolean;
 }) {
   // Native confirm() is blocked inside the editor preview iframe, which made
   // Delete look like it did nothing. Two-tap inline confirmation instead.
   const [armed, setArmed] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const bubbleRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const element = bubbleRef.current;
+    if (!element) return;
+    L.DomEvent.disableClickPropagation(element);
+    L.DomEvent.disableScrollPropagation(element);
+  }, []);
+
+  async function confirmDelete() {
+    if (!armed || deleting) {
+      setArmed(true);
+      return;
+    }
+    setDeleting(true);
+    try {
+      await onDelete();
+    } finally {
+      setDeleting(false);
+    }
+  }
+
   return (
-    <div className="flex items-center gap-2">
+    <div ref={bubbleRef} className="flex items-center gap-2">
       <span className="text-[11px] font-bold text-ink">{label}</span>
       {onToggleKind && !armed ? (
-        <button
+        <Button
           type="button"
           onClick={onToggleKind}
-          className="rounded-lg bg-muted px-2 py-1 text-[11px] font-bold text-ink"
+          variant="secondary"
+          size="sm"
+          className="h-7 px-2 text-[11px] font-bold"
         >
           {isMarker ? "Make tent number" : "Make area marker"}
-        </button>
+        </Button>
       ) : null}
       {armed ? (
-        <button
+        <Button
           type="button"
           onClick={() => setArmed(false)}
-          className="rounded-lg bg-muted px-2 py-1 text-[11px] font-bold text-ink"
+          disabled={deleting}
+          variant="secondary"
+          size="sm"
+          className="h-7 px-2 text-[11px] font-bold"
         >
           Cancel
-        </button>
+        </Button>
       ) : null}
-      <button
+      <Button
         type="button"
-        onClick={() => {
-          if (armed) onDelete();
-          else setArmed(true);
-        }}
-        className="rounded-lg bg-red-600 px-2 py-1 text-[11px] font-bold text-white"
+        onClick={() => void confirmDelete()}
+        disabled={deleting}
+        variant="destructive"
+        size="sm"
+        className="h-7 px-2 text-[11px] font-bold"
       >
-        {armed ? "Confirm delete" : "Delete"}
-      </button>
+        {deleting ? "Deleting…" : armed ? "Confirm delete" : "Delete"}
+      </Button>
     </div>
   );
 }
@@ -216,7 +245,7 @@ export default function VillageMapEditorGeo({
   onMoveTent?: (id: string, lat: number, lng: number) => void;
   onSelectTent?: (id: string | null) => void;
   selectedTent?: string | null;
-  onDeleteTent?: (id: string) => void;
+  onDeleteTent?: (id: string) => Promise<void>;
   onToggleTentKind?: (id: string) => void;
   onDeleteHotspot?: (id: string) => void;
 }) {

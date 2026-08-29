@@ -221,12 +221,26 @@ function VillageEditor() {
   }
 
   async function deleteTent(id: string) {
-    const { error } = await supabase.from("event_village_tents").delete().eq("id", id);
+    const { data: deleted, error } = await supabase
+      .from("event_village_tents")
+      .delete()
+      .eq("id", id)
+      .select("id")
+      .maybeSingle();
     if (error) {
       toast.error(`Could not delete that pin: ${error.message}`);
-      return;
+      throw error;
+    }
+    if (!deleted) {
+      const denied = new Error("The pin was not deleted. Please refresh your sign-in and try again.");
+      toast.error(denied.message);
+      throw denied;
     }
     setSelectedTent(null);
+    qc.setQueryData(
+      ["village-tents", event.id, venueId],
+      (current: typeof tents | undefined) => current?.filter((tent) => tent.id !== id) ?? [],
+    );
     await qc.invalidateQueries({ queryKey: ["village-tents", event.id, venueId] });
     toast.success("Pin deleted");
   }
@@ -818,7 +832,7 @@ function VillageEditor() {
               onMoveTent={moveTent}
               onSelectTent={setSelectedTent}
               selectedTent={selectedTent}
-              onDeleteTent={(id) => void deleteTent(id)}
+              onDeleteTent={deleteTent}
               onToggleTentKind={(id) => void toggleTentKind(id)}
               onDeleteHotspot={(id) => {
                 patch({ hotspots: map.hotspots.filter((h) => h.id !== id) });
