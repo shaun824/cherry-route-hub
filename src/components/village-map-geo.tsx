@@ -537,10 +537,9 @@ export default function VillageMapGeo({
           bounceAtZoomLimits={false}
           touchZoom
           doubleClickZoom
-          // Two-finger rotate is OFF on purpose: it fights the pinch gesture
-          // (every pinch also twists the map), which is what made zooming feel
-          // jumpy. Rotation stays available via the ↺ ↻ buttons.
-          {...({ rotate: true, touchRotate: false, rotateControl: false, bearing: 0 } as object)}
+          // Two-finger twist rotates the map (intuitive on mobile); the ↺ ↻
+          // buttons remain as the precise fallback.
+          {...({ rotate: true, touchRotate: true, rotateControl: false, bearing: 0 } as object)}
           className={fullscreen ? "h-full w-full" : "h-[65vh] min-h-[340px] w-full"}
 
         >
@@ -796,7 +795,7 @@ export default function VillageMapGeo({
         <p className="text-xs text-ink-soft">Live location on · accurate to about {Math.round(accuracy)} m.</p>
       ) : (
         <p className="text-xs text-ink-soft">
-          Use two fingers to move or pinch to zoom the map, ↺ ↻ to rotate, and tap any marker for details.
+          Use two fingers to move, pinch to zoom or twist to rotate the map, and tap any marker for details.
         </p>
       )}
     </div>
