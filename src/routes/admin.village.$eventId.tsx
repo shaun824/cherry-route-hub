@@ -123,10 +123,27 @@ function VillageEditor() {
   });
   const tents = tentsQ.data ?? [];
 
+  // Unsaved-changes guard: the snapshot of the last loaded/saved map. Any edit
+  // makes `dirty` true and blocks navigation until the admin saves or confirms
+  // they want to discard.
+  const savedSnapshotRef = useRef<string | null>(null);
+  const mapJson = useMemo(() => JSON.stringify(map), [map]);
+  const dirty = savedSnapshotRef.current !== null && mapJson !== savedSnapshotRef.current;
+  const dirtyRef = useRef(false);
+  dirtyRef.current = dirty;
+  useBlocker({
+    shouldBlockFn: async () => {
+      if (!dirtyRef.current) return false;
+      return !window.confirm("You have unsaved village map changes. Leave and lose them?");
+    },
+    enableBeforeUnload: () => dirtyRef.current,
+  });
+
   // Switching village: clear the editor immediately so nothing from the previous
   // village can be saved onto the new one.
   useEffect(() => {
     setMap(emptyVillageMap(event.id, venueId));
+    savedSnapshotRef.current = null;
     setSelected(null);
     setSelectedZone(null);
     setSelectedTent(null);
