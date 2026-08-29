@@ -148,6 +148,8 @@ export function VillageMapView({
   );
   const [hovered, setHovered] = useState<string | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
+  const [selectedZone, setSelectedZone] = useState<string | null>(null);
+
   const [filter, setFilter] = useState<string | null>(null);
   const [scale, setScale] = useState(1);
   const [mode, setMode] = useState<"live" | "plan">("live");
