@@ -418,10 +418,10 @@ function VillageEditor() {
         <button
           onClick={() => void save()}
           disabled={saving}
-          className="inline-flex items-center gap-1.5 rounded-lg cherry-gradient px-3 py-1.5 text-xs font-bold text-white disabled:opacity-60"
+          className={`inline-flex items-center gap-1.5 rounded-lg cherry-gradient px-3 py-1.5 text-xs font-bold text-white disabled:opacity-60 ${dirty ? "ring-2 ring-amber-300 ring-offset-1" : ""}`}
         >
           <Save className="h-3.5 w-3.5" />
-          {saving ? "Saving…" : saved ? "Saved!" : "Save"}
+          {saving ? "Saving…" : saved ? "Saved!" : dirty ? "Save (unsaved changes)" : "Save"}
         </button>
       </div>
 
