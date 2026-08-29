@@ -592,9 +592,21 @@ export function VillageMapView({
               {zoneDetail.spec ? (
                 <p className="mt-2 text-sm font-semibold text-ink">{zoneDetail.spec}</p>
               ) : null}
+              {zoneDetail.notes?.trim() ? (
+                <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-ink-soft">
+                  {zoneDetail.notes}
+                </p>
+              ) : null}
               {zoneDetail.crewNotes ? (
-                <p className="mt-1 whitespace-pre-line text-sm leading-relaxed text-ink-soft">
+                <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-ink-soft">
                   {zoneDetail.crewNotes}
+                </p>
+              ) : null}
+              {!zoneDetail.spec?.trim() &&
+              !zoneDetail.notes?.trim() &&
+              !zoneDetail.crewNotes?.trim() ? (
+                <p className="mt-2 text-sm italic text-ink-soft">
+                  No requirements captured for this area yet.
                 </p>
               ) : null}
             </div>
