@@ -41,8 +41,11 @@ import {
   pointInZone,
   translateZone,
   zoneSizeM as zoneSizeMetres,
+  ZONE_KINDS,
+  type ZoneKind,
   type VillageZone,
   type ZonePoint,
+
 } from "@/lib/village-zones";
 import ZoneDuplicator from "@/components/zone-duplicator";
 import { fetchVillageTents } from "@/lib/village-tents";
