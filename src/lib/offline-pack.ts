@@ -7,6 +7,7 @@
 //     fetchers fall back to it when Supabase is unreachable.
 
 export const TILE_CACHE = "rce-tiles-v1";
+const OFFLINE_ASSET_CACHE = "rce-offline-assets-v2";
 const SNAP_PREFIX = "rce:offline:snap:";
 const META_PREFIX = "rce:offline:meta:";
 
@@ -211,7 +212,7 @@ export async function downloadOfflinePack(
 
   const tiles = await cacheUrls(TILE_CACHE, unique, (p) => onProgress({ ...p, total: unique.length + files.length }), signal);
   const withFiles = await cacheUrls(
-    "rce-assets-v1",
+    OFFLINE_ASSET_CACHE,
     files,
     (p) => onProgress({ done: tiles.done + p.done, total: unique.length + files.length, bytes: p.bytes }),
     signal,
@@ -239,7 +240,12 @@ export async function ensureOfflineWorker() {
   if (typeof window === "undefined" || !("serviceWorker" in navigator)) return null;
   try {
     const existing = await navigator.serviceWorker.getRegistration("/push-sw.js");
-    if (existing) return existing;
+    if (existing) {
+      // Check immediately rather than waiting for the browser's periodic update,
+      // so a corrected worker can evict stale app-code caches on the next visit.
+      await existing.update();
+      return existing;
+    }
     return await navigator.serviceWorker.register("/push-sw.js", { scope: "/" });
   } catch {
     return null;
