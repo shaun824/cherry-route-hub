@@ -4,7 +4,10 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Loader2, MapPin, PencilRuler, Save, Sparkles, Square, Tent, Trash2, Upload, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import {
+  BUILD_CATEGORIES,
   VILLAGE_CATEGORIES,
+  VILLAGE_LAYERS,
+  buildTemplateSpots,
   categoryMeta,
   spotColor,
   spotIcon,
@@ -14,8 +17,10 @@ import {
   parseLatLngFromUrl,
   saveVillageMap,
   templateSpots,
+  spotLayer,
   type VillageCategory,
   type VillageHotspot,
+  type VillageLayer,
   type VillageGeo,
   type VillageMap,
 } from "@/lib/village-map";
@@ -98,6 +103,9 @@ function VillageEditor() {
   const [saved, setSaved] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [placing, setPlacing] = useState(false);
+  // Which layer we are working on: new points land here and only this layer
+  // (plus rider points as context) is shown on the editor map.
+  const [layer, setLayer] = useState<VillageLayer>("rider");
   const [selected, setSelected] = useState<string | null>(null);
   const [centreToken, setCentreToken] = useState(0);
   const [drawing, setDrawing] = useState(false);
@@ -279,11 +287,21 @@ function VillageEditor() {
       lat: +lat.toFixed(6),
       lng: +lng.toFixed(6),
       title: "New point",
-      category: "other",
+      category: BUILD_CATEGORIES[layer][0] ?? "other",
+      layer,
     };
     patch({ hotspots: [...map.hotspots, spot] });
     setSelected(spot.id);
     setPlacing(false);
+  }
+
+  function loadBuildKit() {
+    if (!centre) {
+      alert("Set the venue location first, then load the build kit.");
+      return;
+    }
+    patch({ hotspots: [...map.hotspots, ...buildTemplateSpots(centre, layer)] });
+    setCentreToken((t) => t + 1);
   }
 
   // ---- image-mode helpers (kept for events that still use a plan image) ----
@@ -305,7 +323,8 @@ function VillageEditor() {
       x: c.x,
       y: c.y,
       title: "New point",
-      category: "other",
+      category: BUILD_CATEGORIES[layer][0] ?? "other",
+      layer,
     };
     patch({ hotspots: [...map.hotspots, spot] });
     setSelected(spot.id);
