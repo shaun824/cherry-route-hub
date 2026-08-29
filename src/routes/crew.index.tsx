@@ -282,6 +282,12 @@ function CrewDashboard() {
           body="Every tent and room for the event, grouped and searchable."
         />
         <Tile
+          to="/crew/build"
+          icon={<MapPin className="h-5 w-5" />}
+          title="Field build map"
+          body="Generators, water, fencing, gazebos, flags and signage — where each goes, with quantities."
+        />
+        <Tile
           to="/crew/tracking"
           icon={<Siren className="h-5 w-5" />}
           title="Race control"
