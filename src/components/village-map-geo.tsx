@@ -69,9 +69,12 @@ function RotateOverlay({ rotation }: { rotation: number }) {
       }
     };
     apply();
-    map.on("zoomend moveend", apply);
+    // Panning translates Leaflet's parent pane, so the image's own rotation
+    // does not need to be rewritten when a drag ends. That style write could
+    // force a final compositor repaint and expose a blank frame on iOS.
+    map.on("zoomend", apply);
     return () => {
-      map.off("zoomend moveend", apply);
+      map.off("zoomend", apply);
     };
   }, [map, rotation]);
   return null;
