@@ -666,8 +666,8 @@ export default function VillageMapGeo({
               <Marker
                 keyboard={false}
                 autoPanOnFocus={false}
-                position={[t.lat, t.lng]}
-                icon={tentIcon(t.label, hot)}
+                position={pos}
+                icon={hot ? tentIcon(t.label, true) : icon}
                 zIndexOffset={hot ? 900 : 300}
               >
                 <Popup autoPan={false} keepInView={false}>
