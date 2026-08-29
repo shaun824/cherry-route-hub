@@ -248,6 +248,14 @@ export function VillageMapView({
     ((hasImage && isPlacedGeo(map?.geo)) || pinnedCount > 0 || zoneCount > 0 || tents.length > 0);
   const focusZone = (map?.zones ?? []).find((z) => z.id === focusZoneId) ?? null;
   const detail = facilities.find((s) => s.id === (selected ?? hovered)) ?? null;
+  // Crew-only: drawn areas that carry build detail (Bedouin tents, speed
+  // fencing, candy-taped cordons…). Riders never see any of this.
+  const buildZones = useMemo(
+    () => (isCrew ? (map?.zones ?? []).filter(hasBuildDetail) : []),
+    [isCrew, map?.zones],
+  );
+  const zoneDetail = buildZones.find((z) => z.id === selectedZone) ?? null;
+
 
   const venueTabs =
     venues.length > 1 ? (
