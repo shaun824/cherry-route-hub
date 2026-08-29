@@ -162,7 +162,8 @@ export function VillageMapView({
   const [mode, setMode] = useState<"live" | "plan">("live");
   // Build layers (infrastructure + branding) are crew/admin only — riders never
   // see generators, cable runs or banner positions.
-  const { isCrew } = useIsCrew();
+  const { isCrew: signedInCrew } = useIsCrew();
+  const isCrew = signedInCrew && !riderOnly;
   const [layers, setLayers] = useState<VillageLayer[]>(defaultLayers ?? ["rider"]);
   const visibleLayers = useMemo<VillageLayer[]>(() => (isCrew ? layers : ["rider"]), [isCrew, layers]);
   const wrapRef = useRef<HTMLDivElement>(null);
