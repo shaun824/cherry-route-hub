@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ClientOnly } from "@tanstack/react-router";
 import { Maximize2, Minimize2, Minus, Plus, X } from "lucide-react";
 import {
+  VILLAGE_LAYERS,
   categoryMeta,
   fetchVillageMap,
   fetchVillageMaps,
@@ -12,10 +13,13 @@ import {
   isPlacedGeo,
   spotColor,
   spotIcon,
+  spotLayer,
   type VillageHotspot,
+  type VillageLayer,
 } from "@/lib/village-map";
 import { villageIcon } from "@/lib/village-icons";
 import { fetchVillageTents } from "@/lib/village-tents";
+import { useIsCrew } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 
 
@@ -83,6 +87,7 @@ export function VillageMapView({
   focusZoneId,
   focusTentId,
   venueId: venueIdProp,
+  defaultLayers,
 }: {
   eventId: string;
   focusSpotId?: string | null;
@@ -90,6 +95,8 @@ export function VillageMapView({
   focusTentId?: string | null;
   /** Jump straight to one venue's village (used by crew "find this tent"). */
   venueId?: string | null;
+  /** Crew build map opens with the build layers already switched on. */
+  defaultLayers?: VillageLayer[];
 }) {
   // Multi-day events run more than one race village — one per venue.
   const venuesQ = useQuery({
@@ -135,6 +142,11 @@ export function VillageMapView({
   const [filter, setFilter] = useState<string | null>(null);
   const [scale, setScale] = useState(1);
   const [mode, setMode] = useState<"live" | "plan">("live");
+  // Build layers (infrastructure + branding) are crew/admin only — riders never
+  // see generators, cable runs or banner positions.
+  const { isCrew } = useIsCrew();
+  const [layers, setLayers] = useState<VillageLayer[]>(defaultLayers ?? ["rider"]);
+  const visibleLayers = useMemo<VillageLayer[]>(() => (isCrew ? layers : ["rider"]), [isCrew, layers]);
   const wrapRef = useRef<HTMLDivElement>(null);
   // Plan-view full screen + pinch zoom (the live map handles both natively).
   const [planFullscreen, setPlanFullscreen] = useState(false);
@@ -204,9 +216,18 @@ export function VillageMapView({
   const facilities = useMemo(
     () =>
       (map?.hotspots ?? []).filter(
-        (s) => s.title?.trim() && !/^(?:tent\s*)?\d+$/i.test(s.title.trim()),
+        (s) =>
+          s.title?.trim() &&
+          !/^(?:tent\s*)?\d+$/i.test(s.title.trim()) &&
+          visibleLayers.includes(spotLayer(s)),
       ),
-    [map],
+    [map, visibleLayers],
+  );
+
+  // Crew build list: every infrastructure / branding item currently shown.
+  const buildItems = useMemo(
+    () => facilities.filter((s) => spotLayer(s) !== "rider"),
+    [facilities],
   );
   const spots = useMemo(
     () => facilities.filter((s) => !filter || s.category === filter),
@@ -226,7 +247,7 @@ export function VillageMapView({
     hasVenueCentre(map?.geo) &&
     ((hasImage && isPlacedGeo(map?.geo)) || pinnedCount > 0 || zoneCount > 0 || tents.length > 0);
   const focusZone = (map?.zones ?? []).find((z) => z.id === focusZoneId) ?? null;
-  const detail = (map?.hotspots ?? []).find((s) => s.id === (selected ?? hovered)) ?? null;
+  const detail = facilities.find((s) => s.id === (selected ?? hovered)) ?? null;
 
   const venueTabs =
     venues.length > 1 ? (
@@ -317,6 +338,33 @@ export function VillageMapView({
               {m === "live" ? "Live map" : "Plan view"}
             </button>
           ))}
+        </div>
+      ) : null}
+
+      {isCrew ? (
+        <div className="flex flex-wrap items-center gap-1.5">
+          <span className="text-[10px] font-bold uppercase tracking-widest text-ink-soft">
+            Layers
+          </span>
+          {VILLAGE_LAYERS.map((l) => {
+            const on = layers.includes(l.id);
+            return (
+              <button
+                key={l.id}
+                title={l.blurb}
+                onClick={() =>
+                  setLayers((prev) =>
+                    prev.includes(l.id) ? prev.filter((p) => p !== l.id) : [...prev, l.id],
+                  )
+                }
+                className={`rounded-full px-2.5 py-1 text-[11px] font-bold ${
+                  on ? "bg-cherry text-white" : "bg-muted text-ink-soft"
+                }`}
+              >
+                {l.label}
+              </button>
+            );
+          })}
         </div>
       ) : null}
 
@@ -479,6 +527,9 @@ export function VillageMapView({
                 {categoryMeta(detail.category).label}
                 {detail.hours ? ` · ${detail.hours}` : ""}
               </p>
+              {detail.spec ? (
+                <p className="mt-1 text-sm font-semibold text-ink">{detail.spec}</p>
+              ) : null}
               {detail.description ? (
                 <p className="mt-2 text-sm leading-relaxed text-ink-soft">{detail.description}</p>
               ) : null}
@@ -495,6 +546,46 @@ export function VillageMapView({
           Hover or tap a marker to see what's there.
         </p>
       )}
+
+      {isCrew && buildItems.length > 0 ? (
+        <div className="rounded-2xl bg-card p-4 ring-1 ring-border">
+          <p className="font-display text-sm font-bold text-ink">Build list</p>
+          <p className="text-[11px] text-ink-soft">
+            Everything on the layers you have switched on — tap an item to zoom to it.
+          </p>
+          <div className="mt-3 space-y-3">
+            {Array.from(new Set(buildItems.map((s) => s.category))).map((cat) => {
+              const meta = categoryMeta(cat);
+              const rows = buildItems.filter((s) => s.category === cat);
+              return (
+                <div key={cat}>
+                  <p
+                    className="text-[10px] font-bold uppercase tracking-widest"
+                    style={{ color: meta.color }}
+                  >
+                    {meta.label}
+                  </p>
+                  <ul className="mt-1 space-y-1">
+                    {rows.map((s) => (
+                      <li key={s.id}>
+                        <button
+                          onClick={() => setSelected((prev) => (prev === s.id ? null : s.id))}
+                          className="flex w-full items-baseline justify-between gap-3 rounded-lg px-2 py-1 text-left text-sm hover:bg-muted"
+                        >
+                          <span className="font-semibold text-ink">{s.title}</span>
+                          <span className="shrink-0 text-[11px] font-semibold text-ink-soft">
+                            {s.spec || "—"}
+                          </span>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      ) : null}
 
     </div>
   );

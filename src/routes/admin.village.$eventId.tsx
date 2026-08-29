@@ -4,7 +4,10 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Loader2, MapPin, PencilRuler, Save, Sparkles, Square, Tent, Trash2, Upload, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import {
+  BUILD_CATEGORIES,
   VILLAGE_CATEGORIES,
+  VILLAGE_LAYERS,
+  buildTemplateSpots,
   categoryMeta,
   spotColor,
   spotIcon,
@@ -14,8 +17,10 @@ import {
   parseLatLngFromUrl,
   saveVillageMap,
   templateSpots,
+  spotLayer,
   type VillageCategory,
   type VillageHotspot,
+  type VillageLayer,
   type VillageGeo,
   type VillageMap,
 } from "@/lib/village-map";
@@ -98,6 +103,9 @@ function VillageEditor() {
   const [saved, setSaved] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [placing, setPlacing] = useState(false);
+  // Which layer we are working on: new points land here and only this layer
+  // (plus rider points as context) is shown on the editor map.
+  const [layer, setLayer] = useState<VillageLayer>("rider");
   const [selected, setSelected] = useState<string | null>(null);
   const [centreToken, setCentreToken] = useState(0);
   const [drawing, setDrawing] = useState(false);
@@ -204,6 +212,12 @@ function VillageEditor() {
     patch({ geo: { ...base, ...next } });
   }
 
+  function layerSpots(all: VillageHotspot[]) {
+    // Rider points stay visible as context while building, but only the active
+    // layer is added to; on a build layer we hide the other build layer.
+    return all.filter((s) => spotLayer(s) === layer || spotLayer(s) === "rider");
+  }
+
   function updateSpot(id: string, next: Partial<VillageHotspot>) {
     patch({ hotspots: map.hotspots.map((s) => (s.id === id ? { ...s, ...next } : s)) });
   }
@@ -279,11 +293,21 @@ function VillageEditor() {
       lat: +lat.toFixed(6),
       lng: +lng.toFixed(6),
       title: "New point",
-      category: "other",
+      category: BUILD_CATEGORIES[layer][0] ?? "other",
+      layer,
     };
     patch({ hotspots: [...map.hotspots, spot] });
     setSelected(spot.id);
     setPlacing(false);
+  }
+
+  function loadBuildKit() {
+    if (!centre) {
+      alert("Set the venue location first, then load the build kit.");
+      return;
+    }
+    patch({ hotspots: [...map.hotspots, ...buildTemplateSpots(centre, layer)] });
+    setCentreToken((t) => t + 1);
   }
 
   // ---- image-mode helpers (kept for events that still use a plan image) ----
@@ -305,7 +329,8 @@ function VillageEditor() {
       x: c.x,
       y: c.y,
       title: "New point",
-      category: "other",
+      category: BUILD_CATEGORIES[layer][0] ?? "other",
+      layer,
     };
     patch({ hotspots: [...map.hotspots, spot] });
     setSelected(spot.id);
@@ -552,6 +577,32 @@ function VillageEditor() {
         >
           <Square className="h-3.5 w-3.5" /> Add area by size
         </button>
+        <div className="inline-flex overflow-hidden rounded-lg ring-1 ring-border">
+          {VILLAGE_LAYERS.map((l) => (
+            <button
+              key={l.id}
+              onClick={() => {
+                setLayer(l.id);
+                setSelected(null);
+              }}
+              title={l.blurb}
+              className={`px-2.5 py-1.5 text-[11px] font-bold ${
+                layer === l.id ? "bg-cherry text-white" : "bg-muted text-ink-soft"
+              }`}
+            >
+              {l.label}
+            </button>
+          ))}
+        </div>
+        {layer !== "rider" ? (
+          <button
+            onClick={loadBuildKit}
+            disabled={usingImage || !centre}
+            className="inline-flex items-center gap-1.5 rounded-lg bg-muted px-3 py-1.5 text-xs font-bold text-ink disabled:opacity-50"
+          >
+            <Sparkles className="h-3.5 w-3.5" /> Load build kit
+          </button>
+        ) : null}
         <button
           onClick={loadMasterLayout}
           disabled={usingImage || !centre}
@@ -630,7 +681,7 @@ function VillageEditor() {
             className={`relative overflow-hidden rounded-2xl ring-1 ring-border ${placing ? "cursor-crosshair" : ""}`}
           >
             <img src={map.image_url!} alt="Village map" className="block w-full select-none" draggable={false} />
-            {map.hotspots.map((s) => {
+            {layerSpots(map.hotspots).map((s) => {
               const PinIcon = villageIcon(spotIcon(s)).Comp;
               return (
                 <button
@@ -661,7 +712,7 @@ function VillageEditor() {
             <VillageMapEditorGeo
               centre={centre}
               centreToken={centreToken}
-              hotspots={map.hotspots}
+              hotspots={layerSpots(map.hotspots)}
               selected={selected}
               placing={placing}
               drawing={drawing}
@@ -729,22 +780,53 @@ function VillageEditor() {
             </div>
             <div className="mt-2 grid gap-2 sm:grid-cols-2">
               <select
+                value={spotLayer(selectedSpot)}
+                onChange={(e) => {
+                  const next = e.target.value as VillageLayer;
+                  const cats = BUILD_CATEGORIES[next];
+                  updateSpot(selectedSpot.id, {
+                    layer: next,
+                    category: cats.includes(selectedSpot.category)
+                      ? selectedSpot.category
+                      : (cats[0] ?? "other"),
+                  });
+                }}
+                className="rounded-lg border border-border bg-background px-3 py-2 text-sm"
+              >
+                {VILLAGE_LAYERS.map((l) => (
+                  <option key={l.id} value={l.id}>
+                    {l.label}
+                  </option>
+                ))}
+              </select>
+              <select
                 value={selectedSpot.category}
                 onChange={(e) => updateSpot(selectedSpot.id, { category: e.target.value as VillageCategory })}
                 className="rounded-lg border border-border bg-background px-3 py-2 text-sm"
               >
-                {VILLAGE_CATEGORIES.map((c) => (
+                {VILLAGE_CATEGORIES.filter((c) =>
+                  BUILD_CATEGORIES[spotLayer(selectedSpot)].includes(c.id),
+                ).map((c) => (
                   <option key={c.id} value={c.id}>
                     {c.label}
                   </option>
                 ))}
               </select>
-              <input
-                value={selectedSpot.hours ?? ""}
-                onChange={(e) => updateSpot(selectedSpot.id, { hours: e.target.value || undefined })}
-                className="rounded-lg border border-border bg-background px-3 py-2 text-sm"
-                placeholder="Open hours e.g. 07:00 – 18:00"
-              />
+              {spotLayer(selectedSpot) === "rider" ? (
+                <input
+                  value={selectedSpot.hours ?? ""}
+                  onChange={(e) => updateSpot(selectedSpot.id, { hours: e.target.value || undefined })}
+                  className="rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                  placeholder="Open hours e.g. 07:00 – 18:00"
+                />
+              ) : (
+                <input
+                  value={selectedSpot.spec ?? ""}
+                  onChange={(e) => updateSpot(selectedSpot.id, { spec: e.target.value || undefined })}
+                  className="rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                  placeholder="Quantity + size e.g. 3 × 3m gazebo"
+                />
+              )}
             </div>
             <div className="mt-2 space-y-2">
               <div>
@@ -956,7 +1038,7 @@ function VillageEditor() {
 
 
       <div className="space-y-3">
-        {map.hotspots.map((s) => (
+        {layerSpots(map.hotspots).map((s) => (
           <div
             key={s.id}
             className={`rounded-2xl bg-card p-4 ring-1 ${selected === s.id ? "ring-cherry" : "ring-border"}`}
@@ -978,22 +1060,49 @@ function VillageEditor() {
             </div>
             <div className="mt-2 grid gap-2 sm:grid-cols-2">
               <select
+                value={spotLayer(s)}
+                onChange={(e) => {
+                  const next = e.target.value as VillageLayer;
+                  const cats = BUILD_CATEGORIES[next];
+                  updateSpot(s.id, {
+                    layer: next,
+                    category: cats.includes(s.category) ? s.category : (cats[0] ?? "other"),
+                  });
+                }}
+                className="rounded-lg border border-border bg-background px-3 py-2 text-sm"
+              >
+                {VILLAGE_LAYERS.map((l) => (
+                  <option key={l.id} value={l.id}>
+                    {l.label}
+                  </option>
+                ))}
+              </select>
+              <select
                 value={s.category}
                 onChange={(e) => updateSpot(s.id, { category: e.target.value as VillageCategory })}
                 className="rounded-lg border border-border bg-background px-3 py-2 text-sm"
               >
-                {VILLAGE_CATEGORIES.map((c) => (
+                {VILLAGE_CATEGORIES.filter((c) => BUILD_CATEGORIES[spotLayer(s)].includes(c.id)).map((c) => (
                   <option key={c.id} value={c.id}>
                     {c.label}
                   </option>
                 ))}
               </select>
-              <input
-                value={s.hours ?? ""}
-                onChange={(e) => updateSpot(s.id, { hours: e.target.value || undefined })}
-                className="rounded-lg border border-border bg-background px-3 py-2 text-sm"
-                placeholder="Open hours e.g. 07:00 – 18:00"
-              />
+              {spotLayer(s) === "rider" ? (
+                <input
+                  value={s.hours ?? ""}
+                  onChange={(e) => updateSpot(s.id, { hours: e.target.value || undefined })}
+                  className="rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                  placeholder="Open hours e.g. 07:00 – 18:00"
+                />
+              ) : (
+                <input
+                  value={s.spec ?? ""}
+                  onChange={(e) => updateSpot(s.id, { spec: e.target.value || undefined })}
+                  className="rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                  placeholder="Quantity + size e.g. 60kVA"
+                />
+              )}
             </div>
             <textarea
               value={s.description ?? ""}

@@ -98,6 +98,12 @@ const CATEGORY_ICON: Record<string, VillageIconId> = {
   stage: "music",
   toilets: "toilet",
   shop: "shopping-bag",
+  power: "plug-zap",
+  water: "droplets",
+  fencing: "land-plot",
+  structure: "tent",
+  signage: "megaphone",
+  branding: "flag",
   other: "map-pin",
 };
 
