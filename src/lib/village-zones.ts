@@ -11,7 +11,51 @@ export type VillageZone = {
   /** outline vertices, in order */
   points: ZonePoint[];
   notes?: string;
+  /** crew-only: what kind of structure/area this outline is */
+  kind?: ZoneKind;
+  /** crew-only: what the area contains (kit list / spec) */
+  spec?: string;
+  /** crew-only: build and strike instructions */
+  crewNotes?: string;
 };
+
+/** Crew-only classification of a drawn area. */
+export type ZoneKind =
+  | "bedouin"
+  | "marquee"
+  | "gazebo"
+  | "speed_fence"
+  | "candy_tape"
+  | "barrier"
+  | "parking"
+  | "camping"
+  | "branding"
+  | "plant"
+  | "other";
+
+export const ZONE_KINDS: { id: ZoneKind; label: string; color: string }[] = [
+  { id: "bedouin", label: "Bedouin tent", color: "#a855f7" },
+  { id: "marquee", label: "Marquee", color: "#2563eb" },
+  { id: "gazebo", label: "Gazebo row", color: "#0ea5e9" },
+  { id: "speed_fence", label: "Speed fencing", color: "#f97316" },
+  { id: "candy_tape", label: "Candy tape / cordon", color: "#ca8a04" },
+  { id: "barrier", label: "Barrier line", color: "#e11d48" },
+  { id: "parking", label: "Parking block", color: "#475569" },
+  { id: "camping", label: "Camping block", color: "#16a34a" },
+  { id: "branding", label: "Signage / branding area", color: "#0d9488" },
+  { id: "plant", label: "Vehicle / plant", color: "#7c3aed" },
+  { id: "other", label: "Other", color: "#0ea5e9" },
+];
+
+export function zoneKindLabel(kind?: ZoneKind): string {
+  return ZONE_KINDS.find((k) => k.id === kind)?.label ?? "Untyped area";
+}
+
+/** True when the area carries crew build detail worth showing. */
+export function hasBuildDetail(z: VillageZone): boolean {
+  return !!(z.kind || z.spec?.trim() || z.crewNotes?.trim());
+}
+
 
 const M_PER_DEG_LAT = 111320;
 
