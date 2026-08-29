@@ -245,22 +245,6 @@ export function VillageMapView({
       </div>
     ) : null;
 
-  if (q.isLoading) {
-    return <div className="h-56 animate-pulse rounded-2xl bg-muted" />;
-  }
-
-  if (!map || (!hasImage && !geoReady)) {
-    return (
-      <div className="space-y-3">
-        {venueTabs}
-        <div className="rounded-2xl border border-dashed border-border p-6 text-center text-sm text-ink-soft">
-          The village map for this venue hasn't been published yet — check back closer to race week.
-        </div>
-      </div>
-    );
-  }
-
-
   const showLive = geoReady && (mode === "live" || !hasImage);
 
   // Plan view: tapping a chip or a pin zooms in and centres the chosen facility.
@@ -288,6 +272,23 @@ export function VillageMapView({
     const t = window.setTimeout(center, 220);
     return () => window.clearTimeout(t);
   }, [selected, showLive, facilities]);
+
+  if (q.isLoading) {
+    return <div className="h-56 animate-pulse rounded-2xl bg-muted" />;
+  }
+
+  if (!map || (!hasImage && !geoReady)) {
+    return (
+      <div className="space-y-3">
+        {venueTabs}
+        <div className="rounded-2xl border border-dashed border-border p-6 text-center text-sm text-ink-soft">
+          The village map for this venue hasn't been published yet — check back closer to race week.
+        </div>
+      </div>
+    );
+  }
+
+
 
   return (
     <div className="space-y-3">
