@@ -18,7 +18,33 @@ export type VillageCategory =
   | "shop"
   | "start"
   | "finish"
-  | "other";
+  | "other"
+  // build layers (crew + admin only)
+  | "power"
+  | "water"
+  | "fencing"
+  | "structure"
+  | "signage"
+  | "branding";
+
+/** Which audience a point belongs to. Absent = rider-facing (legacy data). */
+export type VillageLayer = "rider" | "infra" | "branding";
+
+export const VILLAGE_LAYERS: { id: VillageLayer; label: string; blurb: string }[] = [
+  { id: "rider", label: "Rider points", blurb: "What riders and spectators see." },
+  { id: "infra", label: "Infrastructure", blurb: "Power, water, fencing, structures." },
+  { id: "branding", label: "Branding", blurb: "Flags, banners, signage, arches." },
+];
+
+/** Categories that only make sense on a build layer. */
+export const BUILD_CATEGORIES: Record<VillageLayer, VillageCategory[]> = {
+  rider: [
+    "registration", "start", "finish", "food", "bar", "camping", "parking",
+    "medical", "bike", "stage", "toilets", "shop", "other",
+  ],
+  infra: ["power", "water", "fencing", "structure", "other"],
+  branding: ["branding", "signage", "other"],
+};
 
 export type VillageHotspot = {
   id: string;
@@ -37,7 +63,21 @@ export type VillageHotspot = {
   icon?: string;
   /** hex colour override for the pin */
   color?: string;
+  /** rider / infrastructure / branding — absent means rider-facing */
+  layer?: VillageLayer;
+  /** quantity + size for build items, e.g. "3 × 3m gazebo", "60kVA" */
+  spec?: string;
 };
+
+/** Layer a point belongs to, defaulting legacy points to the rider layer. */
+export function spotLayer(s: VillageHotspot): VillageLayer {
+  return s.layer ?? "rider";
+}
+
+export function isBuildSpot(s: VillageHotspot): boolean {
+  return spotLayer(s) !== "rider";
+}
+
 
 /** Real-world placement of the plan image, so live GPS can be shown on it. */
 export type VillageGeo = {
