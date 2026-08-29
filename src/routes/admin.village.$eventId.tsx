@@ -681,7 +681,7 @@ function VillageEditor() {
             className={`relative overflow-hidden rounded-2xl ring-1 ring-border ${placing ? "cursor-crosshair" : ""}`}
           >
             <img src={map.image_url!} alt="Village map" className="block w-full select-none" draggable={false} />
-            {map.hotspots.map((s) => {
+            {layerSpots(map.hotspots).map((s) => {
               const PinIcon = villageIcon(spotIcon(s)).Comp;
               return (
                 <button
@@ -780,22 +780,53 @@ function VillageEditor() {
             </div>
             <div className="mt-2 grid gap-2 sm:grid-cols-2">
               <select
+                value={spotLayer(selectedSpot)}
+                onChange={(e) => {
+                  const next = e.target.value as VillageLayer;
+                  const cats = BUILD_CATEGORIES[next];
+                  updateSpot(selectedSpot.id, {
+                    layer: next,
+                    category: cats.includes(selectedSpot.category)
+                      ? selectedSpot.category
+                      : (cats[0] ?? "other"),
+                  });
+                }}
+                className="rounded-lg border border-border bg-background px-3 py-2 text-sm"
+              >
+                {VILLAGE_LAYERS.map((l) => (
+                  <option key={l.id} value={l.id}>
+                    {l.label}
+                  </option>
+                ))}
+              </select>
+              <select
                 value={selectedSpot.category}
                 onChange={(e) => updateSpot(selectedSpot.id, { category: e.target.value as VillageCategory })}
                 className="rounded-lg border border-border bg-background px-3 py-2 text-sm"
               >
-                {VILLAGE_CATEGORIES.map((c) => (
+                {VILLAGE_CATEGORIES.filter((c) =>
+                  BUILD_CATEGORIES[spotLayer(selectedSpot)].includes(c.id),
+                ).map((c) => (
                   <option key={c.id} value={c.id}>
                     {c.label}
                   </option>
                 ))}
               </select>
-              <input
-                value={selectedSpot.hours ?? ""}
-                onChange={(e) => updateSpot(selectedSpot.id, { hours: e.target.value || undefined })}
-                className="rounded-lg border border-border bg-background px-3 py-2 text-sm"
-                placeholder="Open hours e.g. 07:00 – 18:00"
-              />
+              {spotLayer(selectedSpot) === "rider" ? (
+                <input
+                  value={selectedSpot.hours ?? ""}
+                  onChange={(e) => updateSpot(selectedSpot.id, { hours: e.target.value || undefined })}
+                  className="rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                  placeholder="Open hours e.g. 07:00 – 18:00"
+                />
+              ) : (
+                <input
+                  value={selectedSpot.spec ?? ""}
+                  onChange={(e) => updateSpot(selectedSpot.id, { spec: e.target.value || undefined })}
+                  className="rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                  placeholder="Quantity + size e.g. 3 × 3m gazebo"
+                />
+              )}
             </div>
             <div className="mt-2 space-y-2">
               <div>
@@ -1007,7 +1038,7 @@ function VillageEditor() {
 
 
       <div className="space-y-3">
-        {map.hotspots.map((s) => (
+        {layerSpots(map.hotspots).map((s) => (
           <div
             key={s.id}
             className={`rounded-2xl bg-card p-4 ring-1 ${selected === s.id ? "ring-cherry" : "ring-border"}`}
@@ -1029,22 +1060,49 @@ function VillageEditor() {
             </div>
             <div className="mt-2 grid gap-2 sm:grid-cols-2">
               <select
+                value={spotLayer(s)}
+                onChange={(e) => {
+                  const next = e.target.value as VillageLayer;
+                  const cats = BUILD_CATEGORIES[next];
+                  updateSpot(s.id, {
+                    layer: next,
+                    category: cats.includes(s.category) ? s.category : (cats[0] ?? "other"),
+                  });
+                }}
+                className="rounded-lg border border-border bg-background px-3 py-2 text-sm"
+              >
+                {VILLAGE_LAYERS.map((l) => (
+                  <option key={l.id} value={l.id}>
+                    {l.label}
+                  </option>
+                ))}
+              </select>
+              <select
                 value={s.category}
                 onChange={(e) => updateSpot(s.id, { category: e.target.value as VillageCategory })}
                 className="rounded-lg border border-border bg-background px-3 py-2 text-sm"
               >
-                {VILLAGE_CATEGORIES.map((c) => (
+                {VILLAGE_CATEGORIES.filter((c) => BUILD_CATEGORIES[spotLayer(s)].includes(c.id)).map((c) => (
                   <option key={c.id} value={c.id}>
                     {c.label}
                   </option>
                 ))}
               </select>
-              <input
-                value={s.hours ?? ""}
-                onChange={(e) => updateSpot(s.id, { hours: e.target.value || undefined })}
-                className="rounded-lg border border-border bg-background px-3 py-2 text-sm"
-                placeholder="Open hours e.g. 07:00 – 18:00"
-              />
+              {spotLayer(s) === "rider" ? (
+                <input
+                  value={s.hours ?? ""}
+                  onChange={(e) => updateSpot(s.id, { hours: e.target.value || undefined })}
+                  className="rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                  placeholder="Open hours e.g. 07:00 – 18:00"
+                />
+              ) : (
+                <input
+                  value={s.spec ?? ""}
+                  onChange={(e) => updateSpot(s.id, { spec: e.target.value || undefined })}
+                  className="rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                  placeholder="Quantity + size e.g. 60kVA"
+                />
+              )}
             </div>
             <textarea
               value={s.description ?? ""}
