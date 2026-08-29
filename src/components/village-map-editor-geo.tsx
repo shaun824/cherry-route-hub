@@ -121,10 +121,13 @@ function MapDeleteBubble({
   onToggleKind?: () => void;
   isMarker?: boolean;
 }) {
+  // Native confirm() is blocked inside the editor preview iframe, which made
+  // Delete look like it did nothing. Two-tap inline confirmation instead.
+  const [armed, setArmed] = useState(false);
   return (
     <div className="flex items-center gap-2">
       <span className="text-[11px] font-bold text-ink">{label}</span>
-      {onToggleKind ? (
+      {onToggleKind && !armed ? (
         <button
           type="button"
           onClick={onToggleKind}
@@ -133,18 +136,29 @@ function MapDeleteBubble({
           {isMarker ? "Make tent number" : "Make area marker"}
         </button>
       ) : null}
+      {armed ? (
+        <button
+          type="button"
+          onClick={() => setArmed(false)}
+          className="rounded-lg bg-muted px-2 py-1 text-[11px] font-bold text-ink"
+        >
+          Cancel
+        </button>
+      ) : null}
       <button
         type="button"
         onClick={() => {
-          if (confirm(`Delete ${label} from the map?`)) onDelete();
+          if (armed) onDelete();
+          else setArmed(true);
         }}
         className="rounded-lg bg-red-600 px-2 py-1 text-[11px] font-bold text-white"
       >
-        Delete
+        {armed ? "Confirm delete" : "Delete"}
       </button>
     </div>
   );
 }
+
 
 export default function VillageMapEditorGeo({
   centre,
