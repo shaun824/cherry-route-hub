@@ -265,7 +265,9 @@ export function VillageMapView({
     () => (isCrew ? (map?.zones ?? []).filter(hasBuildDetail) : []),
     [isCrew, map?.zones],
   );
-  const zoneDetail = buildZones.find((z) => z.id === selectedZone) ?? null;
+  // Any tapped area shows its detail to crew, even before build fields are filled in.
+  const zoneDetail =
+    (isCrew ? (map?.zones ?? []).find((z) => z.id === selectedZone) : null) ?? null;
 
 
   const venueTabs =
