@@ -97,6 +97,7 @@ export function VillageMapView({
   focusTentId,
   venueId: venueIdProp,
   defaultLayers,
+  riderOnly = false,
 }: {
   eventId: string;
   focusSpotId?: string | null;
@@ -106,6 +107,12 @@ export function VillageMapView({
   venueId?: string | null;
   /** Crew build map opens with the build layers already switched on. */
   defaultLayers?: VillageLayer[];
+  /**
+   * Force the exact rider view — no crew layers, labels or build cards — even
+   * when the signed-in user is crew. Used on the rider event page so crew can
+   * validate precisely what riders see.
+   */
+  riderOnly?: boolean;
 }) {
   // Multi-day events run more than one race village — one per venue.
   const venuesQ = useQuery({
@@ -155,7 +162,8 @@ export function VillageMapView({
   const [mode, setMode] = useState<"live" | "plan">("live");
   // Build layers (infrastructure + branding) are crew/admin only — riders never
   // see generators, cable runs or banner positions.
-  const { isCrew } = useIsCrew();
+  const { isCrew: signedInCrew } = useIsCrew();
+  const isCrew = signedInCrew && !riderOnly;
   const [layers, setLayers] = useState<VillageLayer[]>(defaultLayers ?? ["rider"]);
   const visibleLayers = useMemo<VillageLayer[]>(() => (isCrew ? layers : ["rider"]), [isCrew, layers]);
   const wrapRef = useRef<HTMLDivElement>(null);
