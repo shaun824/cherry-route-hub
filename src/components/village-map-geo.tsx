@@ -564,7 +564,6 @@ export default function VillageMapGeo({
           zoomDelta={1}
           zoomAnimation={false}
           markerZoomAnimation={false}
-          preferCanvas
           bounceAtZoomLimits={false}
           touchZoom
           doubleClickZoom
@@ -583,7 +582,7 @@ export default function VillageMapGeo({
               maxZoom={24}
               maxNativeZoom={18}
               keepBuffer={8}
-              updateWhenIdle={false}
+              updateWhenIdle
             />
           ) : (
             <TileLayer
@@ -593,7 +592,7 @@ export default function VillageMapGeo({
               maxZoom={24}
               maxNativeZoom={19}
               keepBuffer={8}
-              updateWhenIdle={false}
+              updateWhenIdle
             />
           )}
 

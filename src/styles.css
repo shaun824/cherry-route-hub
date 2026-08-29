@@ -271,10 +271,11 @@
 
 /* Leaflet continuously translates tile images while a drag settles. The
    global image paint optimisation is useful for page content but can briefly
-   cull transformed map tiles on mobile Safari, exposing a white frame. */
+   cull transformed map tiles on mobile Safari, exposing a blank frame. */
 .leaflet-container,
 .leaflet-map-pane,
-.leaflet-tile-pane {
+.leaflet-tile-pane,
+.leaflet-overlay-pane {
   background-color: var(--color-ink);
 }
 .leaflet-container img,
@@ -283,8 +284,17 @@
   content-visibility: visible;
   backface-visibility: hidden;
 }
-.leaflet-tile-pane {
+
+/* Do not promote the entire tile pane into a separate compositing layer.
+   Mobile Safari can drop that layer for one frame when Leaflet commits its
+   drag transform. Promote each tile instead so the pane remains continuously
+   painted, and remove Leaflet's opacity fade that can expose the backdrop. */
+.leaflet-tile {
   transform: translateZ(0);
+  will-change: transform;
+}
+.leaflet-fade-anim .leaflet-tile {
+  transition: none;
 }
 
 @keyframes rce-pulse {
