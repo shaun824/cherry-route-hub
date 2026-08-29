@@ -269,6 +269,24 @@
   pointer-events: none !important;
 }
 
+/* Leaflet continuously translates tile images while a drag settles. The
+   global image paint optimisation is useful for page content but can briefly
+   cull transformed map tiles on mobile Safari, exposing a white frame. */
+.leaflet-container,
+.leaflet-map-pane,
+.leaflet-tile-pane {
+  background-color: var(--color-ink);
+}
+.leaflet-container img,
+.leaflet-tile,
+.leaflet-image-layer {
+  content-visibility: visible;
+  backface-visibility: hidden;
+}
+.leaflet-tile-pane {
+  transform: translateZ(0);
+}
+
 @keyframes rce-pulse {
   0%, 100% { transform: scale(1); }
   50% { transform: scale(1.12); }
