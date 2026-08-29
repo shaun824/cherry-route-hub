@@ -461,7 +461,7 @@ export function VillageMapView({
               imageUrl={map.image_url}
               geo={map.geo!}
               hotspots={spots}
-              zones={map.zones ?? []}
+              zones={isCrew ? (map.zones ?? []) : []}
               selected={selected}
               onSelect={setSelected}
               tents={mapTents}
