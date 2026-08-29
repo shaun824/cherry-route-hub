@@ -503,11 +503,12 @@ export default function VillageMapGeo({
           keyboard={false}
 
           zoomSnap={0}
-          zoomDelta={0.75}
-          // Leaflet's default is 60; the old value of 220 made laptop pinch
-          // (which arrives as wheel events) crawl. 80 keeps it smooth with
-          // zoomSnap=0 fractional zoom but fast enough to feel responsive.
-          wheelPxPerZoomLevel={80}
+          zoomDelta={1}
+          // Trackpad pinch/two-finger scroll arrives as many very small wheel
+          // deltas. Leaflet also divides those deltas by devicePixelRatio, so
+          // use a low threshold and one-frame debounce for a direct response.
+          wheelDebounceTime={16}
+          wheelPxPerZoomLevel={20}
           zoomAnimation
           markerZoomAnimation
           bounceAtZoomLimits={false}

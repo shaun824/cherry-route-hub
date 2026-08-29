@@ -252,8 +252,11 @@ export default function VillageMapEditorGeo({
           // Focusable map containers make the browser jump the page on tap.
           keyboard={false}
           zoomSnap={0}
-          zoomDelta={0.35}
-          wheelPxPerZoomLevel={220}
+          zoomDelta={1}
+          // Match the rider village map: laptop trackpads emit tiny wheel
+          // deltas, so keep the threshold low and update once per frame.
+          wheelDebounceTime={16}
+          wheelPxPerZoomLevel={20}
           zoomAnimation
           markerZoomAnimation
           bounceAtZoomLimits={false}
