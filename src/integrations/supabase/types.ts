@@ -1698,6 +1698,7 @@ export type Database = {
           lat: number
           lng: number
           notes: string | null
+          tent_type: string
           updated_at: string
           venue_id: string | null
           zone_id: string | null
@@ -1712,6 +1713,7 @@ export type Database = {
           lat: number
           lng: number
           notes?: string | null
+          tent_type?: string
           updated_at?: string
           venue_id?: string | null
           zone_id?: string | null
@@ -1726,6 +1728,7 @@ export type Database = {
           lat?: number
           lng?: number
           notes?: string | null
+          tent_type?: string
           updated_at?: string
           venue_id?: string | null
           zone_id?: string | null
