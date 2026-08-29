@@ -143,7 +143,7 @@ export function VillageMapView({
   // see generators, cable runs or banner positions.
   const { isCrew } = useIsCrew();
   const [layers, setLayers] = useState<VillageLayer[]>(["rider"]);
-  const visibleLayers = isCrew ? layers : (["rider"] as VillageLayer[]);
+  const visibleLayers = useMemo<VillageLayer[]>(() => (isCrew ? layers : ["rider"]), [isCrew, layers]);
   const wrapRef = useRef<HTMLDivElement>(null);
   // Plan-view full screen + pinch zoom (the live map handles both natively).
   const [planFullscreen, setPlanFullscreen] = useState(false);
@@ -524,6 +524,9 @@ export function VillageMapView({
                 {categoryMeta(detail.category).label}
                 {detail.hours ? ` · ${detail.hours}` : ""}
               </p>
+              {detail.spec ? (
+                <p className="mt-1 text-sm font-semibold text-ink">{detail.spec}</p>
+              ) : null}
               {detail.description ? (
                 <p className="mt-2 text-sm leading-relaxed text-ink-soft">{detail.description}</p>
               ) : null}
