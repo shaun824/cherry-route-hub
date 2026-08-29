@@ -1,7 +1,7 @@
 // Client-only Leaflet view of the event village: the plan image is placed over
 // a satellite basemap at its real-world position, hotspots become map markers
 // and the rider's live GPS position is shown as a pulsing dot.
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { MapContainer, TileLayer, ImageOverlay, useMap, CircleMarker, Polygon, Popup, Marker } from "react-leaflet";
 import { Maximize2, Minimize2 } from "lucide-react";
@@ -18,7 +18,23 @@ await import("leaflet-rotate");
 import type { VillageGeo, VillageHotspot } from "@/lib/village-map";
 import { spotColor, spotIcon } from "@/lib/village-map";
 import { villageIconSvg } from "@/lib/village-icons";
-import { zoneCentroid, zoneColor, type VillageZone } from "@/lib/village-zones";
+import { hasBuildDetail, zoneCentroid, zoneColor, zoneKindLabel, type VillageZone } from "@/lib/village-zones";
+
+
+
+
+/** Crew-only label puck sitting at the centre of a drawn build area. */
+function zoneLabelIcon(z: VillageZone, hot: boolean) {
+  const label = escapeHtml((z.name || zoneKindLabel(z.kind)).trim());
+  const color = hot ? "#c8102e" : zoneColor(z);
+  return L.divIcon({
+    className: "",
+    html: `<span style="display:inline-block;white-space:nowrap;padding:2px 8px;border-radius:9999px;background:${color};color:#fff;font-size:11px;font-weight:700;box-shadow:0 1px 4px rgba(0,0,0,.35)">${label}</span>`,
+    iconSize: [0, 0],
+    iconAnchor: [0, 0],
+  });
+}
+
 import VillageMapTrackpadZoom from "@/components/village-map-trackpad-zoom";
 
 const M_PER_DEG_LAT = 111320;
@@ -292,6 +308,8 @@ export default function VillageMapGeo({
   tents = [],
   selected,
   onSelect,
+  zonesInteractive = false,
+  onZoneSelect,
 
   highlightZoneId = null,
   highlightTentId = null,
@@ -303,9 +321,13 @@ export default function VillageMapGeo({
   tents?: MapTent[];
   selected: string | null;
   onSelect: (id: string | null) => void;
+  /** crew view: areas can be tapped to open their build detail */
+  zonesInteractive?: boolean;
+  onZoneSelect?: (id: string | null) => void;
   highlightZoneId?: string | null;
   highlightTentId?: string | null;
 }) {
+
 
   const [ratio, setRatio] = useState(0.76); // height / width, refined once the image loads
   const [me, setMe] = useState<[number, number] | null>(null);
@@ -551,20 +573,35 @@ export default function VillageMapGeo({
 
           {visibleZones.map((z) => {
             const hot = highlightZoneId === z.id;
+            const crewTap = zonesInteractive && hasBuildDetail(z);
+            const centre = crewTap ? zoneCentroid(z) : null;
             return (
-              <Polygon
-                key={z.id}
-                positions={z.points.map((p) => [p.lat, p.lng]) as [number, number][]}
-                interactive={false}
-                pathOptions={{
-                  color: hot ? "#c8102e" : zoneColor(z),
-                  weight: hot ? 4 : 2,
-                  fillColor: hot ? "#c8102e" : zoneColor(z),
-                  fillOpacity: hot ? 0.45 : 0.18,
-                }}
-              />
+              <Fragment key={z.id}>
+                <Polygon
+                  positions={z.points.map((p) => [p.lat, p.lng]) as [number, number][]}
+                  interactive={crewTap}
+                  eventHandlers={crewTap ? { click: () => onZoneSelect?.(z.id) } : undefined}
+                  pathOptions={{
+                    color: hot ? "#c8102e" : zoneColor(z),
+                    weight: hot ? 4 : 2,
+                    fillColor: hot ? "#c8102e" : zoneColor(z),
+                    fillOpacity: hot ? 0.45 : 0.18,
+                  }}
+                />
+                {centre ? (
+                  <Marker
+                    keyboard={false}
+                    autoPanOnFocus={false}
+                    position={[centre.lat, centre.lng]}
+                    icon={zoneLabelIcon(z, hot)}
+                    zIndexOffset={hot ? 800 : 250}
+                    eventHandlers={{ click: () => onZoneSelect?.(z.id) }}
+                  />
+                ) : null}
+              </Fragment>
             );
           })}
+
 
           <ZoomWatcher onZoom={setZoom} />
           <ViewportWatcher onView={setView} />

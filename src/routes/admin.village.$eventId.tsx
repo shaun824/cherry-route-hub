@@ -41,8 +41,11 @@ import {
   pointInZone,
   translateZone,
   zoneSizeM as zoneSizeMetres,
+  ZONE_KINDS,
+  type ZoneKind,
   type VillageZone,
   type ZonePoint,
+
 } from "@/lib/village-zones";
 import ZoneDuplicator from "@/components/zone-duplicator";
 import { fetchVillageTents } from "@/lib/village-tents";
@@ -1041,6 +1044,55 @@ function VillageEditor() {
                   {formatArea(zoneAreaM2(z))} · {z.points.length} corners · {formatLength(zonePerimeterM(z))} perimeter
                   {clash ? " · overlaps another area" : ""}
                 </p>
+                <div className="mt-3 rounded-xl bg-muted/50 p-3">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-ink-soft">
+                    Crew-only build detail
+                  </p>
+                  <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                    <label className="text-xs font-semibold text-ink-soft">
+                      Area type
+                      <select
+                        value={z.kind ?? ""}
+                        onChange={(e) => {
+                          const kind = (e.target.value || undefined) as ZoneKind | undefined;
+                          const preset = ZONE_KINDS.find((k) => k.id === kind);
+                          updateZone(z.id, preset ? { kind, color: preset.color } : { kind });
+                        }}
+                        className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                      >
+                        <option value="">Untyped area</option>
+                        {ZONE_KINDS.map((k) => (
+                          <option key={k.id} value={k.id}>
+                            {k.label}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <label className="text-xs font-semibold text-ink-soft">
+                      Contains (kit list)
+                      <input
+                        value={z.spec ?? ""}
+                        onChange={(e) => updateZone(z.id, { spec: e.target.value })}
+                        placeholder="e.g. 9×12 Bedouin, 20 trestles, 2 light towers"
+                        className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                      />
+                    </label>
+                  </div>
+                  <label className="mt-2 block text-xs font-semibold text-ink-soft">
+                    Build / strike notes
+                    <textarea
+                      value={z.crewNotes ?? ""}
+                      onChange={(e) => updateZone(z.id, { crewNotes: e.target.value })}
+                      rows={2}
+                      placeholder="Anchor points, power feed, who builds it, strike order…"
+                      className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                    />
+                  </label>
+                  <p className="mt-1 text-[10px] text-ink-soft">
+                    Riders never see these fields — crew and admins only.
+                  </p>
+                </div>
+
                 <ZoneDuplicator
                   zone={z}
                   zones={zones}

@@ -18,6 +18,15 @@ import {
   type VillageLayer,
 } from "@/lib/village-map";
 import { villageIcon } from "@/lib/village-icons";
+import {
+  formatArea,
+  hasBuildDetail,
+  zoneAreaM2,
+  zoneColor,
+  zoneKindLabel,
+  zoneSizeM,
+} from "@/lib/village-zones";
+
 import { fetchVillageTents } from "@/lib/village-tents";
 import { useIsCrew } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
@@ -139,6 +148,8 @@ export function VillageMapView({
   );
   const [hovered, setHovered] = useState<string | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
+  const [selectedZone, setSelectedZone] = useState<string | null>(null);
+
   const [filter, setFilter] = useState<string | null>(null);
   const [scale, setScale] = useState(1);
   const [mode, setMode] = useState<"live" | "plan">("live");
@@ -248,6 +259,14 @@ export function VillageMapView({
     ((hasImage && isPlacedGeo(map?.geo)) || pinnedCount > 0 || zoneCount > 0 || tents.length > 0);
   const focusZone = (map?.zones ?? []).find((z) => z.id === focusZoneId) ?? null;
   const detail = facilities.find((s) => s.id === (selected ?? hovered)) ?? null;
+  // Crew-only: drawn areas that carry build detail (Bedouin tents, speed
+  // fencing, candy-taped cordons…). Riders never see any of this.
+  const buildZones = useMemo(
+    () => (isCrew ? (map?.zones ?? []).filter(hasBuildDetail) : []),
+    [isCrew, map?.zones],
+  );
+  const zoneDetail = buildZones.find((z) => z.id === selectedZone) ?? null;
+
 
   const venueTabs =
     venues.length > 1 ? (
@@ -436,8 +455,11 @@ export function VillageMapView({
               selected={selected}
               onSelect={setSelected}
               tents={mapTents}
-              highlightZoneId={focusZoneId ?? null}
+              zonesInteractive={isCrew}
+              onZoneSelect={(id) => setSelectedZone((prev) => (prev === id ? null : id))}
+              highlightZoneId={selectedZone ?? focusZoneId ?? null}
               highlightTentId={focusTentId ?? null}
+
             />
           </Suspense>
         </ClientOnly>
@@ -547,7 +569,85 @@ export function VillageMapView({
         </p>
       )}
 
+      {zoneDetail ? (
+        <div className="rounded-2xl bg-card p-4 ring-1 ring-border">
+          <div className="flex items-start gap-2">
+            <span
+              className="mt-1 h-4 w-4 shrink-0 rounded"
+              style={{ backgroundColor: zoneColor(zoneDetail) }}
+            />
+            <div className="min-w-0 flex-1">
+              <p className="font-display text-base font-bold text-ink">{zoneDetail.name}</p>
+              <p className="text-[11px] font-semibold uppercase tracking-widest text-ink-soft">
+                Crew only · {zoneKindLabel(zoneDetail.kind)}
+              </p>
+              <p className="mt-1 text-xs text-ink-soft">
+                {(() => {
+                  const s = zoneSizeM(zoneDetail);
+                  return `${Math.round(s.w)}m × ${Math.round(s.h)}m · ${formatArea(zoneAreaM2(zoneDetail))}`;
+                })()}
+              </p>
+              {zoneDetail.spec ? (
+                <p className="mt-2 text-sm font-semibold text-ink">{zoneDetail.spec}</p>
+              ) : null}
+              {zoneDetail.crewNotes ? (
+                <p className="mt-1 whitespace-pre-line text-sm leading-relaxed text-ink-soft">
+                  {zoneDetail.crewNotes}
+                </p>
+              ) : null}
+            </div>
+            <button onClick={() => setSelectedZone(null)} aria-label="Close">
+              <X className="h-4 w-4 text-ink-soft" />
+            </button>
+          </div>
+        </div>
+      ) : null}
+
+      {isCrew && buildZones.length > 0 ? (
+        <div className="rounded-2xl bg-card p-4 ring-1 ring-border">
+          <p className="font-display text-sm font-bold text-ink">Build areas</p>
+          <p className="text-[11px] text-ink-soft">
+            Crew only — tap an area to zoom to it and see what it should contain.
+          </p>
+          <div className="mt-3 space-y-3">
+            {Array.from(new Set(buildZones.map((z) => zoneKindLabel(z.kind)))).map((kindLabel) => (
+              <div key={kindLabel}>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-ink-soft">
+                  {kindLabel}
+                </p>
+                <ul className="mt-1 space-y-1">
+                  {buildZones
+                    .filter((z) => zoneKindLabel(z.kind) === kindLabel)
+                    .map((z) => {
+                      const s = zoneSizeM(z);
+                      return (
+                        <li key={z.id}>
+                          <button
+                            onClick={() => setSelectedZone((prev) => (prev === z.id ? null : z.id))}
+                            className="w-full rounded-lg px-2 py-1 text-left hover:bg-muted"
+                          >
+                            <span className="flex items-baseline justify-between gap-3">
+                              <span className="text-sm font-semibold text-ink">{z.name}</span>
+                              <span className="shrink-0 text-[11px] font-semibold text-ink-soft">
+                                {Math.round(s.w)}m × {Math.round(s.h)}m
+                              </span>
+                            </span>
+                            {z.spec ? (
+                              <span className="block text-[11px] text-ink-soft">{z.spec}</span>
+                            ) : null}
+                          </button>
+                        </li>
+                      );
+                    })}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : null}
+
       {isCrew && buildItems.length > 0 ? (
+
         <div className="rounded-2xl bg-card p-4 ring-1 ring-border">
           <p className="font-display text-sm font-bold text-ink">Build list</p>
           <p className="text-[11px] text-ink-soft">
