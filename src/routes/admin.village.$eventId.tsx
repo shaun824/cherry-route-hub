@@ -50,7 +50,7 @@ import {
 import ZoneDuplicator from "@/components/zone-duplicator";
 import { toast } from "sonner";
 
-import { fetchVillageTents, TENT_TYPES, tentTypeMeta, type TentType } from "@/lib/village-tents";
+import { fetchVillageTents, TENT_TYPES, type TentType } from "@/lib/village-tents";
 
 const VillageMapEditorGeo = lazy(() => import("@/components/village-map-editor-geo"));
 
