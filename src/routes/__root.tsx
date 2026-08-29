@@ -42,11 +42,39 @@ function NotFoundComponent() {
   );
 }
 
+// After a new app version is published, an already-open (or installed-PWA)
+// session still references the previous build's hashed JS chunks. Navigating
+// to a page it hasn't cached then fails with a dynamic-import error. The only
+// correct recovery is a full reload to pick up the new build.
+function isChunkLoadError(error: unknown): boolean {
+  const msg = error instanceof Error ? error.message : String(error);
+  return (
+    /dynamically imported module/i.test(msg) ||
+    /Importing a module script failed/i.test(msg) ||
+    /error loading chunk/i.test(msg) ||
+    /ChunkLoadError/i.test(msg)
+  );
+}
+
 function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   console.error(error);
   const router = useRouter();
   useEffect(() => {
     reportLovableError(error, { boundary: "tanstack_root_error_component" });
+    if (isChunkLoadError(error)) {
+      try {
+        // At most one auto-reload per minute, so a genuinely broken deploy
+        // shows the error UI instead of looping forever.
+        const last = Number(window.sessionStorage.getItem("rce:chunk-reload") ?? 0);
+        if (Date.now() - last > 60_000) {
+          window.sessionStorage.setItem("rce:chunk-reload", String(Date.now()));
+          window.location.reload();
+          return;
+        }
+      } catch {
+        // sessionStorage unavailable — fall through to the error UI
+      }
+    }
   }, [error]);
 
   return (
