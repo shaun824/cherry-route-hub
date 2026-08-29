@@ -455,8 +455,11 @@ export function VillageMapView({
               selected={selected}
               onSelect={setSelected}
               tents={mapTents}
-              highlightZoneId={focusZoneId ?? null}
+              zonesInteractive={isCrew}
+              onZoneSelect={(id) => setSelectedZone((prev) => (prev === id ? null : id))}
+              highlightZoneId={selectedZone ?? focusZoneId ?? null}
               highlightTentId={focusTentId ?? null}
+
             />
           </Suspense>
         </ClientOnly>
