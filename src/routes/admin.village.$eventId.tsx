@@ -380,7 +380,10 @@ function VillageEditor() {
     const ok = await saveVillageMap(map);
     setSaving(false);
     setSaved(ok);
-    if (ok) setTimeout(() => setSaved(false), 2000);
+    if (ok) {
+      savedSnapshotRef.current = JSON.stringify(map);
+      setTimeout(() => setSaved(false), 2000);
+    }
   }
 
   async function addVenue() {
