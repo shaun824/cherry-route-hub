@@ -562,9 +562,12 @@ export default function VillageMapGeo({
 
           zoomSnap={0}
           zoomDelta={1}
-          zoomAnimation={false}
+          // Keep Leaflet's zoom transform active during a two-finger gesture.
+          // Without it, SVG area outlines hold their old screen position while
+          // tiles move, then jump into place only when the fingers are lifted.
+          zoomAnimation
           fadeAnimation={false}
-          markerZoomAnimation={false}
+          markerZoomAnimation
           bounceAtZoomLimits={false}
           touchZoom
           doubleClickZoom
