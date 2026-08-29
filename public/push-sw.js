@@ -24,6 +24,22 @@ self.addEventListener("activate", (event) =>
           .filter((k) => k.startsWith("rce-") && ![TILE_CACHE, OFFLINE_ASSET_CACHE].includes(k))
           .map((k) => caches.delete(k)),
       );
+
+      const host = new URL(self.registration.scope).hostname;
+      const isPreview =
+        host.startsWith("id-preview--") ||
+        host.startsWith("preview--") ||
+        host === "lovableproject.com" ||
+        host.endsWith(".lovableproject.com") ||
+        host === "lovableproject-dev.com" ||
+        host.endsWith(".lovableproject-dev.com") ||
+        host === "beta.lovable.dev" ||
+        host.endsWith(".beta.lovable.dev");
+      if (isPreview) {
+        await self.registration.unregister();
+        return;
+      }
+
       await self.clients.claim();
     })(),
   ),
