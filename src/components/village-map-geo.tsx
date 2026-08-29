@@ -90,9 +90,47 @@ function BearingSync({ bearing }: { bearing: number }) {
 }
 
 /**
+ * With the rotation plugin active, two-finger pan/pinch sets the map view on
+ * every frame instead of sliding the panes, so vector layers (area outlines,
+ * tent footprints) keep their old screen position until the gesture ends and
+ * then snap into place. Re-position the renderers and markers on every `move`
+ * frame so the geometry travels with the imagery.
+ */
+function VectorMoveSync() {
+  const map = useMap();
+  useEffect(() => {
+    let raf = 0;
+    const sync = () => {
+      raf = 0;
+      const renderers = new Set<{ _reset?: () => void }>();
+      map.eachLayer((layer) => {
+        const l = layer as unknown as {
+          _renderer?: { _reset?: () => void };
+          _icon?: HTMLElement;
+          update?: () => void;
+        };
+        if (l._renderer) renderers.add(l._renderer);
+        if (l._icon && typeof l.update === "function") l.update();
+      });
+      renderers.forEach((r) => r._reset?.());
+    };
+    const onMove = () => {
+      if (!raf) raf = requestAnimationFrame(sync);
+    };
+    map.on("move zoom", onMove);
+    return () => {
+      map.off("move zoom", onMove);
+      if (raf) cancelAnimationFrame(raf);
+    };
+  }, [map]);
+  return null;
+}
+
+/**
  * On touch devices the map only pans with two fingers, so scrolling the page
  * over the map never gets trapped. A one-finger drag surfaces a hint instead.
  */
+
 function TwoFingerPanGate({ onTouch }: { onTouch: () => void }) {
   const map = useMap();
   const cbRef = useRef(onTouch);
