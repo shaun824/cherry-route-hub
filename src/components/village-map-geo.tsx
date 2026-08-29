@@ -444,21 +444,38 @@ export default function VillageMapGeo({
   // visible as a clean polygon, but hide the old per-tent footprint polygons
   // whose names are only a tent number. Polygon vertices and area names are
   // never rendered on the customer map.
+  // Geometry (positions, centroid, footprint bounds) is precomputed inside
+  // these memos: after a pan, ViewportWatcher re-renders the tree, and handing
+  // react-leaflet fresh arrays makes it redraw every vector layer on the
+  // canvas pane — which is the white flash seen on drag release. Stable
+  // references mean react-leaflet skips the layers entirely.
   const visibleZones = useMemo(
     () =>
-      zones.filter((z) => {
-        const name = (z.name ?? "").trim();
-        const tentFootprint = /^(?:tent\s*)?\d+$/i.test(name);
-        if (z.id === highlightZoneId) return !highlightTentId && !tentFootprint;
-        return !tentFootprint;
-      }),
-    [zones, highlightZoneId, highlightTentId],
+      zones
+        .filter((z) => {
+          const name = (z.name ?? "").trim();
+          const tentFootprint = /^(?:tent\s*)?\d+$/i.test(name);
+          if (z.id === highlightZoneId) return !highlightTentId && !tentFootprint;
+          return !tentFootprint;
+        })
+        .map((z) => ({
+          zone: z,
+          positions: z.points.map((p) => [p.lat, p.lng]) as [number, number][],
+          centre: zonesInteractive && hasBuildDetail(z) ? zoneCentroid(z) : null,
+        })),
+    [zones, highlightZoneId, highlightTentId, zonesInteractive],
   );
 
   // Only real tent pins reach the rider map. Points flagged as drawing markers
   // (the handles used to shape an area) are never rendered, at any zoom.
   const droppedTents = useMemo(
-    () => tents.filter((tent) => (tent.kind ?? "tent") !== "marker"),
+    () =>
+      tents
+        .filter((tent) => (tent.kind ?? "tent") !== "marker")
+        .map((tent) => {
+          const meta = tentTypeMeta(tent.tent_type);
+          return { tent, meta, footprint: tentFootprintBounds(tent.lat, tent.lng, meta.sizeM) };
+        }),
     [tents],
   );
 
