@@ -18,7 +18,24 @@ await import("leaflet-rotate");
 import type { VillageGeo, VillageHotspot } from "@/lib/village-map";
 import { spotColor, spotIcon } from "@/lib/village-map";
 import { villageIconSvg } from "@/lib/village-icons";
-import { zoneCentroid, zoneColor, type VillageZone } from "@/lib/village-zones";
+import { hasBuildDetail, zoneCentroid, zoneColor, zoneKindLabel, type VillageZone } from "@/lib/village-zones";
+
+function escapeHtml(value: string) {
+  return value.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c] as string));
+}
+
+/** Crew-only label puck sitting at the centre of a drawn build area. */
+function zoneLabelIcon(z: VillageZone, hot: boolean) {
+  const label = escapeHtml((z.name || zoneKindLabel(z.kind)).trim());
+  const color = hot ? "#c8102e" : zoneColor(z);
+  return L.divIcon({
+    className: "",
+    html: `<span style="display:inline-block;white-space:nowrap;padding:2px 8px;border-radius:9999px;background:${color};color:#fff;font-size:11px;font-weight:700;box-shadow:0 1px 4px rgba(0,0,0,.35)">${label}</span>`,
+    iconSize: [0, 0],
+    iconAnchor: [0, 0],
+  });
+}
+
 import VillageMapTrackpadZoom from "@/components/village-map-trackpad-zoom";
 
 const M_PER_DEG_LAT = 111320;
