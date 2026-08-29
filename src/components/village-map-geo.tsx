@@ -474,7 +474,13 @@ export default function VillageMapGeo({
         .filter((tent) => (tent.kind ?? "tent") !== "marker")
         .map((tent) => {
           const meta = tentTypeMeta(tent.tent_type);
-          return { tent, meta, footprint: tentFootprintBounds(tent.lat, tent.lng, meta.sizeM) };
+          return {
+            tent,
+            meta,
+            footprint: tentFootprintBounds(tent.lat, tent.lng, meta.sizeM),
+            pos: [tent.lat, tent.lng] as [number, number],
+            icon: tentIcon(tent.label, false),
+          };
         }),
     [tents],
   );
