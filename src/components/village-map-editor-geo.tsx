@@ -209,7 +209,7 @@ export default function VillageMapEditorGeo({
   onSelectZone: (id: string | null) => void;
   onRenameZone?: (id: string, name: string) => void;
   onDuplicateZone?: (id: string) => void;
-  tents?: { id: string; label: string; lat: number; lng: number; kind?: "tent" | "marker" | null }[];
+  tents?: { id: string; label: string; lat: number; lng: number; kind?: "tent" | "marker" | null; tent_type?: string | null }[];
   tentMode?: boolean;
   onPlaceTent?: (lat: number, lng: number) => void;
   onMoveTent?: (id: string, lat: number, lng: number) => void;
@@ -288,6 +288,24 @@ export default function VillageMapEditorGeo({
           {placing ? <ClickCatcher onClick={onPlace} /> : null}
           {tentMode && onPlaceTent ? <ClickCatcher onClick={onPlaceTent} /> : null}
 
+          {tents
+            .filter((t) => (t.kind ?? "tent") !== "marker")
+            .map((t) => {
+              const meta = tentTypeMeta(t.tent_type);
+              return (
+                <Rectangle
+                  key={`fp-${t.id}`}
+                  bounds={tentFootprintBounds(t.lat, t.lng, meta.sizeM)}
+                  pathOptions={{
+                    color: selectedTent === t.id ? "#c8102e" : meta.id === "luxury" ? "#f59e0b" : "#38bdf8",
+                    weight: 1.5,
+                    fillOpacity: 0.18,
+                    interactive: false,
+                  }}
+                />
+              );
+            })}
+
           {tents.map((t) => (
             <Marker
               keyboard={false}
@@ -307,7 +325,11 @@ export default function VillageMapEditorGeo({
               {onDeleteTent && !locked ? (
                 <Popup autoPan={false} closeButton={false}>
                   <MapDeleteBubble
-                    label={t.kind === "marker" ? `Area marker ${t.label}` : `Tent ${t.label}`}
+                    label={
+                      t.kind === "marker"
+                        ? `Area marker ${t.label}`
+                        : `Tent ${t.label} · ${tentTypeMeta(t.tent_type).name} ${tentTypeMeta(t.tent_type).sizeM}x${tentTypeMeta(t.tent_type).sizeM}m`
+                    }
                     isMarker={t.kind === "marker"}
                     onToggleKind={onToggleTentKind ? () => onToggleTentKind(t.id) : undefined}
                     onDelete={() => onDeleteTent(t.id)}

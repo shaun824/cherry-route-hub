@@ -195,7 +195,7 @@ function FlyToTent({ tent }: { tent: MapTent | null }) {
   return null;
 }
 
-export type MapTent = { id: string; label: string; lat: number; lng: number; kind?: "tent" | "marker" | null };
+export type MapTent = { id: string; label: string; lat: number; lng: number; kind?: "tent" | "marker" | null; tent_type?: string | null };
 
 
 /** Facility marker: a clean coloured icon puck, with its name shown once tapped. */
@@ -626,17 +626,30 @@ export default function VillageMapGeo({
             // pins are never mounted.
             if (!hot && !inView(t.lat, t.lng)) return null;
 
+            const meta = tentTypeMeta(t.tent_type);
             return (
+              <Fragment key={t.id}>
+              <Rectangle
+                bounds={tentFootprintBounds(t.lat, t.lng, meta.sizeM)}
+                pathOptions={{
+                  color: hot ? "#c8102e" : meta.id === "luxury" ? "#f59e0b" : "#38bdf8",
+                  weight: 1.5,
+                  fillOpacity: 0.18,
+                  interactive: false,
+                }}
+              />
               <Marker
                 keyboard={false}
                 autoPanOnFocus={false}
-                key={t.id}
                 position={[t.lat, t.lng]}
                 icon={tentIcon(t.label, hot)}
                 zIndexOffset={hot ? 900 : 300}
               >
-                <Popup autoPan={false} keepInView={false}>{hot ? `${t.label} — this is you` : t.label}</Popup>
+                <Popup autoPan={false} keepInView={false}>
+                  {hot ? `${t.label} — this is you` : t.label} · {meta.name} {meta.sizeM}x{meta.sizeM}m
+                </Popup>
               </Marker>
+              </Fragment>
             );
           })}
 
