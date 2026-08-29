@@ -185,6 +185,63 @@ export function templateSpots(centre: { lat: number; lng: number }): VillageHots
   });
 }
 
+/** Standard Red Cherry build kit — infrastructure and branding items crews place. */
+export const BUILD_TEMPLATE: {
+  title: string;
+  category: VillageCategory;
+  layer: VillageLayer;
+  spec?: string;
+  icon?: string;
+}[] = [
+  { title: "Main generator", category: "power", layer: "infra", spec: "1 × 60kVA", icon: "fuel" },
+  { title: "Backup generator", category: "power", layer: "infra", spec: "1 × 20kVA", icon: "fuel" },
+  { title: "Distro board", category: "power", layer: "infra", spec: "2 × 63A distro", icon: "plug-zap" },
+  { title: "Lighting tower", category: "power", layer: "infra", spec: "2 × 4-head tower", icon: "sun" },
+  { title: "Cable run", category: "power", layer: "infra", spec: "100m armoured + ramps", icon: "zap" },
+  { title: "Water point", category: "water", layer: "infra", spec: "1 × 5 000L jojo", icon: "droplets" },
+  { title: "Fence line", category: "fencing", layer: "infra", spec: "50m crowd barrier", icon: "land-plot" },
+  { title: "Marquee", category: "structure", layer: "infra", spec: "1 × 9m × 12m", icon: "tent" },
+  { title: "Gazebo", category: "structure", layer: "infra", spec: "4 × 3m × 3m", icon: "tent" },
+  { title: "Skip / waste point", category: "structure", layer: "infra", spec: "2 × 6m³ skip", icon: "package" },
+  { title: "Start arch", category: "branding", layer: "branding", spec: "1 × 8m inflatable arch", icon: "trophy" },
+  { title: "Finish arch", category: "branding", layer: "branding", spec: "1 × 8m inflatable arch", icon: "trophy" },
+  { title: "Feather flags", category: "branding", layer: "branding", spec: "6 × 4m feather flag", icon: "flag" },
+  { title: "Sponsor boards", category: "branding", layer: "branding", spec: "4 × 2.4m × 1.2m board", icon: "star" },
+  { title: "Banner wall", category: "branding", layer: "branding", spec: "1 × 6m step & repeat", icon: "camera" },
+  { title: "Directional signage", category: "signage", layer: "branding", spec: "8 × A1 board on stake", icon: "megaphone" },
+  { title: "Parking signage", category: "signage", layer: "branding", spec: "6 × A1 board", icon: "circle-parking" },
+];
+
+/** Lays the build kit out on a grid around the venue centre, ready to drag into place. */
+export function buildTemplateSpots(
+  centre: { lat: number; lng: number },
+  layer: VillageLayer,
+): VillageHotspot[] {
+  const items = BUILD_TEMPLATE.filter((t) => t.layer === layer);
+  const cols = 4;
+  const stepM = 35;
+  return items.map((t, i) => {
+    const col = i % cols;
+    const row = Math.floor(i / cols);
+    const east = (col - (cols - 1) / 2) * stepM;
+    const north = ((Math.ceil(items.length / cols) - 1) / 2 - row) * stepM;
+    const lat = centre.lat + north / 111320;
+    const lng = centre.lng + east / (111320 * Math.cos((centre.lat * Math.PI) / 180));
+    return {
+      id: crypto.randomUUID(),
+      x: 50,
+      y: 50,
+      lat: +lat.toFixed(6),
+      lng: +lng.toFixed(6),
+      title: t.title,
+      category: t.category,
+      layer: t.layer,
+      spec: t.spec,
+      icon: t.icon ?? guessVillageIcon(t.title, t.category),
+    };
+  });
+}
+
 
 export const VILLAGE_CATEGORIES: { id: VillageCategory; label: string; color: string }[] = [
   { id: "registration", label: "Registration", color: "#e11d48" },
@@ -199,6 +256,12 @@ export const VILLAGE_CATEGORIES: { id: VillageCategory; label: string; color: st
   { id: "stage", label: "Stage / expo", color: "#d946ef" },
   { id: "toilets", label: "Ablutions", color: "#0284c7" },
   { id: "shop", label: "Merch / shop", color: "#ca8a04" },
+  { id: "power", label: "Power", color: "#f59e0b" },
+  { id: "water", label: "Water", color: "#38bdf8" },
+  { id: "fencing", label: "Fencing", color: "#78716c" },
+  { id: "structure", label: "Structures", color: "#7c3aed" },
+  { id: "signage", label: "Signage", color: "#059669" },
+  { id: "branding", label: "Branding", color: "#be123c" },
   { id: "other", label: "Other", color: "#334155" },
 ];
 
