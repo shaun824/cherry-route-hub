@@ -18,6 +18,15 @@ import {
   type VillageLayer,
 } from "@/lib/village-map";
 import { villageIcon } from "@/lib/village-icons";
+import {
+  formatArea,
+  hasBuildDetail,
+  zoneAreaM2,
+  zoneColor,
+  zoneKindLabel,
+  zoneSizeM,
+} from "@/lib/village-zones";
+
 import { fetchVillageTents } from "@/lib/village-tents";
 import { useIsCrew } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
