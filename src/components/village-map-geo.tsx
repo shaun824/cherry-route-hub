@@ -444,21 +444,44 @@ export default function VillageMapGeo({
   // visible as a clean polygon, but hide the old per-tent footprint polygons
   // whose names are only a tent number. Polygon vertices and area names are
   // never rendered on the customer map.
+  // Geometry (positions, centroid, footprint bounds) is precomputed inside
+  // these memos: after a pan, ViewportWatcher re-renders the tree, and handing
+  // react-leaflet fresh arrays makes it redraw every vector layer on the
+  // canvas pane — which is the white flash seen on drag release. Stable
+  // references mean react-leaflet skips the layers entirely.
   const visibleZones = useMemo(
     () =>
-      zones.filter((z) => {
-        const name = (z.name ?? "").trim();
-        const tentFootprint = /^(?:tent\s*)?\d+$/i.test(name);
-        if (z.id === highlightZoneId) return !highlightTentId && !tentFootprint;
-        return !tentFootprint;
-      }),
-    [zones, highlightZoneId, highlightTentId],
+      zones
+        .filter((z) => {
+          const name = (z.name ?? "").trim();
+          const tentFootprint = /^(?:tent\s*)?\d+$/i.test(name);
+          if (z.id === highlightZoneId) return !highlightTentId && !tentFootprint;
+          return !tentFootprint;
+        })
+        .map((z) => ({
+          zone: z,
+          positions: z.points.map((p) => [p.lat, p.lng]) as [number, number][],
+          centre: zonesInteractive && hasBuildDetail(z) ? zoneCentroid(z) : null,
+        })),
+    [zones, highlightZoneId, highlightTentId, zonesInteractive],
   );
 
   // Only real tent pins reach the rider map. Points flagged as drawing markers
   // (the handles used to shape an area) are never rendered, at any zoom.
   const droppedTents = useMemo(
-    () => tents.filter((tent) => (tent.kind ?? "tent") !== "marker"),
+    () =>
+      tents
+        .filter((tent) => (tent.kind ?? "tent") !== "marker")
+        .map((tent) => {
+          const meta = tentTypeMeta(tent.tent_type);
+          return {
+            tent,
+            meta,
+            footprint: tentFootprintBounds(tent.lat, tent.lng, meta.sizeM),
+            pos: [tent.lat, tent.lng] as [number, number],
+            icon: tentIcon(tent.label, false),
+          };
+        }),
     [tents],
   );
 
@@ -575,14 +598,13 @@ export default function VillageMapGeo({
             </>
           ) : null}
 
-          {visibleZones.map((z) => {
+          {visibleZones.map(({ zone: z, positions, centre }) => {
             const hot = highlightZoneId === z.id;
             const crewTap = zonesInteractive && hasBuildDetail(z);
-            const centre = crewTap ? zoneCentroid(z) : null;
             return (
               <Fragment key={z.id}>
                 <Polygon
-                  positions={z.points.map((p) => [p.lat, p.lng]) as [number, number][]}
+                  positions={positions}
                   interactive={crewTap}
                   eventHandlers={crewTap ? { click: () => onZoneSelect?.(z.id) } : undefined}
                   pathOptions={{
@@ -612,14 +634,14 @@ export default function VillageMapGeo({
 
           {/* Dropped tent pins are shown exactly where they were placed. Only
               exact duplicates of the same number are collapsed. */}
-          {droppedTents.filter((t, i, all) => {
+          {droppedTents.filter(({ tent: t }, i, all) => {
             const number = normalizedNumber(t.label);
             if (!number || t.id === highlightTentId) return true;
             const firstIdx = all.findIndex(
-              (o) => normalizedNumber(o.label) === number && o.id !== highlightTentId,
+              ({ tent: o }) => normalizedNumber(o.label) === number && o.id !== highlightTentId,
             );
             return firstIdx === i;
-          }).map((t) => {
+          }).map(({ tent: t, meta, footprint, pos, icon }) => {
             const hot = highlightTentId === t.id;
             // Clean-map rule (Weekend Warrior standard): the fitted Tour de Addo
             // view lands at zoom 19, so ordinary tent pins must stay hidden until
@@ -630,11 +652,10 @@ export default function VillageMapGeo({
             // pins are never mounted.
             if (!hot && !inView(t.lat, t.lng)) return null;
 
-            const meta = tentTypeMeta(t.tent_type);
             return (
               <Fragment key={t.id}>
               <Rectangle
-                bounds={tentFootprintBounds(t.lat, t.lng, meta.sizeM)}
+                bounds={footprint}
                 pathOptions={{
                   color: hot ? "#c8102e" : meta.id === "luxury" ? "#f59e0b" : "#38bdf8",
                   weight: 1.5,
@@ -645,8 +666,8 @@ export default function VillageMapGeo({
               <Marker
                 keyboard={false}
                 autoPanOnFocus={false}
-                position={[t.lat, t.lng]}
-                icon={tentIcon(t.label, hot)}
+                position={pos}
+                icon={hot ? tentIcon(t.label, true) : icon}
                 zIndexOffset={hot ? 900 : 300}
               >
                 <Popup autoPan={false} keepInView={false}>
@@ -657,7 +678,7 @@ export default function VillageMapGeo({
             );
           })}
 
-          <FlyToTent tent={droppedTents.find((t) => t.id === highlightTentId) ?? null} />
+          <FlyToTent tent={droppedTents.find(({ tent: t }) => t.id === highlightTentId)?.tent ?? null} />
           <FlyToSelected selected={selected} hotspots={hotspots} geo={geo} heightM={heightM} />
           <FlyToZone
             zone={highlightTentId ? null : zones.find((z) => z.id === highlightZoneId) ?? null}
