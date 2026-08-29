@@ -17,7 +17,35 @@ export type VillageTent = {
   /** 'tent' = a real tent number pin shown to riders.
    *  'marker' = a helper point used only to draw an area — never rendered publicly. */
   kind: "tent" | "marker";
+  /** Tent product placed on the field. Luxury tents are 4m x 4m, RCE tents 2m x 2m. */
+  tent_type: TentType;
 };
+
+export type TentType = "rce" | "luxury";
+
+export const TENT_TYPES: { id: TentType; name: string; sizeM: number }[] = [
+  { id: "rce", name: "RCE tent", sizeM: 2 },
+  { id: "luxury", name: "Luxury tent", sizeM: 4 },
+];
+
+export function tentTypeMeta(type: string | null | undefined) {
+  return TENT_TYPES.find((t) => t.id === type) ?? TENT_TYPES[0];
+}
+
+/** Square footprint (SW/NE corners) of a tent of this type, centred on the pin. */
+export function tentFootprintBounds(
+  lat: number,
+  lng: number,
+  sizeM: number,
+): [[number, number], [number, number]] {
+  const half = sizeM / 2;
+  const dLat = half / 111_320;
+  const dLng = half / (111_320 * Math.max(Math.cos((lat * Math.PI) / 180), 0.01));
+  return [
+    [lat - dLat, lng - dLng],
+    [lat + dLat, lng + dLng],
+  ];
+}
 
 export type TentRule = {
   id: string;
@@ -40,7 +68,7 @@ export async function fetchVillageTents(eventId: string, venueId: string | null 
 async function fetchVillageTentsLive(eventId: string, venueId: string | null): Promise<VillageTent[]> {
   let query = supabase
     .from("event_village_tents")
-    .select("id, event_id, venue_id, label, lat, lng, zone_id, capacity, notes, kind")
+    .select("id, event_id, venue_id, label, lat, lng, zone_id, capacity, notes, kind, tent_type")
     .eq("event_id", eventId);
   query = venueId ? query.eq("venue_id", venueId) : query.is("venue_id", null);
   const { data, error } = await query.order("label", { ascending: true });
@@ -48,7 +76,11 @@ async function fetchVillageTentsLive(eventId: string, venueId: string | null): P
     console.warn("[village] tents", error);
     return [];
   }
-  return ((data ?? []) as VillageTent[]).map((t) => ({ ...t, kind: t.kind === "marker" ? "marker" : "tent" }));
+  return ((data ?? []) as VillageTent[]).map((t) => ({
+    ...t,
+    kind: t.kind === "marker" ? "marker" : "tent",
+    tent_type: t.tent_type === "luxury" ? "luxury" : "rce",
+  }));
 }
 
 /** Only real tent pins — drawing markers are excluded everywhere rider-facing. */

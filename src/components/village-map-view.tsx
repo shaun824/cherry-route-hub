@@ -143,7 +143,7 @@ export function VillageMapView({
     () =>
       tents
         .filter((t) => t.kind !== "marker")
-        .map((t) => ({ id: t.id, label: t.label, lat: t.lat, lng: t.lng, kind: t.kind })),
+        .map((t) => ({ id: t.id, label: t.label, lat: t.lat, lng: t.lng, kind: t.kind, tent_type: t.tent_type })),
     [tents],
   );
   const [hovered, setHovered] = useState<string | null>(null);

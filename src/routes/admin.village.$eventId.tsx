@@ -50,7 +50,7 @@ import {
 import ZoneDuplicator from "@/components/zone-duplicator";
 import { toast } from "sonner";
 
-import { fetchVillageTents } from "@/lib/village-tents";
+import { fetchVillageTents, TENT_TYPES, type TentType } from "@/lib/village-tents";
 
 const VillageMapEditorGeo = lazy(() => import("@/components/village-map-editor-geo"));
 
@@ -121,6 +121,8 @@ function VillageEditor() {
   // 'tent' drops a real tent number (shown to riders); 'marker' drops a helper
   // point used only for drawing areas — never rendered on rider-facing maps.
   const [tentKind, setTentKind] = useState<"tent" | "marker">("tent");
+  // Luxury (4x4m) and RCE (2x2m) tents share ONE number sequence — no duplicates.
+  const [tentType, setTentType] = useState<TentType>("rce");
   const qc = useQueryClient();
   const tentsQ = useQuery({
     queryKey: ["village-tents", event.id, venueId],
@@ -155,6 +157,19 @@ function VillageEditor() {
   }, [venueId, event.id]);
 
 
+  /** Lowest unused number across BOTH tent types. */
+  function nextFreeTentNumber() {
+    const used = new Set(
+      tents
+        .filter((t) => t.kind !== "marker")
+        .map((t) => Number(t.label.match(/\d+/)?.[0] ?? NaN))
+        .filter((n) => Number.isFinite(n)),
+    );
+    let n = 1;
+    while (used.has(n)) n += 1;
+    return String(n);
+  }
+
   function bumpLabel(label: string) {
     const n = Number(label.match(/\d+$/)?.[0] ?? NaN);
     if (!Number.isFinite(n)) return label;
@@ -162,13 +177,27 @@ function VillageEditor() {
   }
 
   async function placeTent(lat: number, lng: number) {
-    const label = nextTentLabel.trim() || String(tents.length + 1);
+    const label = nextTentLabel.trim() || nextFreeTentNumber();
+    if (
+      tentKind === "tent" &&
+      tents.some((t) => t.kind !== "marker" && t.label.trim().toLowerCase() === label.toLowerCase())
+    ) {
+      toast.error(`Tent ${label} already exists — numbers can't repeat across Luxury and RCE tents.`);
+      return;
+    }
     const zone = zones.find((z) => pointInZone({ lat, lng }, z)) ?? null;
-    const { error } = await supabase
-      .from("event_village_tents")
-      .insert({ event_id: event.id, venue_id: venueId, label, lat, lng, zone_id: zone?.id ?? null, kind: tentKind });
+    const { error } = await supabase.from("event_village_tents").insert({
+      event_id: event.id,
+      venue_id: venueId,
+      label,
+      lat,
+      lng,
+      zone_id: zone?.id ?? null,
+      kind: tentKind,
+      tent_type: tentKind === "tent" ? tentType : "rce",
+    });
     if (error) {
-      alert(error.message);
+      toast.error(error.message);
       return;
     }
     if (tentKind === "tent") setNextTentLabel(bumpLabel(label));
@@ -584,6 +613,21 @@ function VillageEditor() {
             ))}
           </div>
         ) : null}
+        {tentMode && tentKind === "tent" ? (
+          <div className="inline-flex overflow-hidden rounded-lg ring-1 ring-border">
+            {TENT_TYPES.map((t) => (
+              <button
+                key={t.id}
+                onClick={() => setTentType(t.id)}
+                className={`px-2.5 py-1.5 text-[11px] font-bold ${
+                  tentType === t.id ? "bg-cherry text-white" : "bg-muted text-ink-soft"
+                }`}
+              >
+                {t.name} {t.sizeM}x{t.sizeM}m
+              </button>
+            ))}
+          </div>
+        ) : null}
         {tentMode ? (
           <label className="inline-flex items-center gap-1.5 rounded-lg bg-secondary px-2 py-1 text-[11px] font-bold text-ink-soft">
             {tentKind === "tent" ? "Next tent" : "Marker label"}
@@ -761,7 +805,14 @@ function VillageEditor() {
               onSelectZone={setSelectedZone}
               onRenameZone={(id, name) => updateZone(id, { name })}
               onDuplicateZone={duplicateZone}
-              tents={tents.map((t) => ({ id: t.id, label: t.label, lat: t.lat, lng: t.lng, kind: t.kind }))}
+              tents={tents.map((t) => ({
+                id: t.id,
+                label: t.label,
+                lat: t.lat,
+                lng: t.lng,
+                kind: t.kind,
+                tent_type: t.tent_type,
+              }))}
               tentMode={tentMode}
               onPlaceTent={placeTent}
               onMoveTent={moveTent}
