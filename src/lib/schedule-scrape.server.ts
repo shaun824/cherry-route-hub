@@ -264,6 +264,38 @@ function sameTimes(a: unknown, b: unknown) {
   return ka.length > 0 && ka === key(b);
 }
 
+/**
+ * Does the website actually contradict a schedule an admin signed off?
+ * Only a *different time for the same item* counts. Extra lines, missing
+ * lines, reworded labels and "TBC" placeholders are not contradictions —
+ * treating them as such is what silently turned rider emails into "TBC".
+ */
+function contradictsStored(
+  scraped: { time: string; label: string; dayId?: string }[],
+  stored: unknown,
+): string[] {
+  const norm = (s: string) =>
+    s.toLowerCase().replace(/[^a-z0-9]+/g, " ").replace(/\b(riders?|start[s]?|the)\b/g, " ").trim();
+  const clean = (t: string) => String(t ?? "").replace(/\s/g, "");
+  const rows = (Array.isArray(stored) ? stored : []) as any[];
+  const clashes: string[] = [];
+  for (const item of scraped) {
+    const time = clean(item.time);
+    if (!time || /tbc/i.test(time)) continue;
+    const match = rows.find(
+      (r) =>
+        norm(String(r?.label ?? "")) === norm(item.label) &&
+        (!item.dayId || !r?.dayId || r.dayId === item.dayId),
+    );
+    if (match && clean(match.time) && clean(match.time) !== time) {
+      clashes.push(`${item.label}: app ${match.time} vs site ${item.time}`);
+    }
+  }
+  return clashes;
+}
+
+
+
 
 /** Plain-English summary of how the website's programme differs from the live one. */
 export function scheduleDiffNote(current: unknown, scraped: { time: string; label: string }[]) {
@@ -366,13 +398,26 @@ export async function syncEventSchedule(
       applied = true;
     }
 
-    const stickyVerified = applied || (unchanged && wasVerified);
+    // A signed-off schedule only loses its verified status when the site
+    // genuinely disagrees about a time. Wording changes, extra or missing
+    // lines never demote it — they are flagged as an advisory note instead.
+    const clashes = contradictsStored(scheduleItems, event.schedule);
+    const stickyVerified = applied || (wasVerified && clashes.length === 0);
     const changeNote = unchanged
       ? null
       : items.length
         ? scheduleDiffNote(event.schedule, scheduleItems)
         : null;
-    const finalNote = [reviewNote, stickyVerified ? null : changeNote].filter(Boolean).join("; ") || null;
+    const finalNote =
+      [
+        clashes.length ? `Website disagrees on: ${clashes.slice(0, 6).join("; ")}` : null,
+        stickyVerified ? null : reviewNote,
+        stickyVerified ? null : changeNote,
+        stickyVerified && changeNote ? `FYI (times unchanged): ${changeNote}` : null,
+      ]
+        .filter(Boolean)
+        .join("; ") || null;
+
 
     await record({
       items,
