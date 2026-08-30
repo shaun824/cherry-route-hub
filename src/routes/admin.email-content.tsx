@@ -31,6 +31,7 @@ function EmailContentPage() {
   const verify = useServerFn(markScheduleVerified);
   const test = useServerFn(sendTestEntryWelcome);
   const allSamples = useServerFn(sendAllEmailSamples);
+  const allScheduleMails = useServerFn(sendScheduleEmailsForAllEvents);
   const qc = useQueryClient();
 
   const q = useQuery({ queryKey: ["email-content"], queryFn: () => list() });
