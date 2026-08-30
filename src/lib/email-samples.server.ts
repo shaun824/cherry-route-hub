@@ -175,3 +175,80 @@ export async function sendEmailSamples(opts: { to: string; eventId?: string | nu
     results,
   };
 }
+
+/**
+ * Sends the admin one schedule email (the rider entry-welcome mail, which
+ * carries the event schedule) for every upcoming published event.
+ */
+export async function sendScheduleSamplesForAllEvents(opts: { to: string }) {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { sendTemplateEmail } = await import("./email-templates/send-email");
+  const {
+    loadPromoRows,
+    offersForEvent,
+    venueMapUrl,
+    riderScheduleForEmail,
+    absoluteLogo,
+    scheduleTrustedEventIds,
+  } = await import("./entry-welcome.server");
+
+  const { data: events } = await supabaseAdmin
+    .from("events")
+    .select("id, name, event_date, location, map_query, days, schedule, logo_url, cover_url")
+    .eq("lifecycle", "published")
+    .gte("event_date", new Date().toISOString())
+    .order("event_date", { ascending: true });
+
+  const rows = (events ?? []) as any[];
+  const trusted = await scheduleTrustedEventIds(
+    supabaseAdmin,
+    rows.map((e) => e.id),
+  );
+  const promos = await loadPromoRows(supabaseAdmin);
+  const stamp = Date.now();
+  const results: SampleResult[] = [];
+
+  for (const event of rows) {
+    const eventUrl = `${SITE_URL}/my-events/${event.id}`;
+    const eventDate = event.event_date
+      ? new Date(event.event_date).toLocaleDateString("en-ZA", {
+          weekday: "long",
+          day: "numeric",
+          month: "long",
+          year: "numeric",
+          timeZone: "Africa/Johannesburg",
+        })
+      : null;
+    try {
+      const res = await sendTemplateEmail("entry-welcome", opts.to, {
+        idempotencyKey: `schedule-sample-${event.id}-${stamp}`,
+        templateData: {
+          firstName: "Shaun",
+          eventName: event.name,
+          eventDate,
+          venue: event.location ?? null,
+          venueUrl: venueMapUrl(event.location, event.map_query),
+          eventLogoUrl: absoluteLogo(event.logo_url),
+          eventCoverUrl: absoluteLogo(event.cover_url),
+          schedule: riderScheduleForEmail(event, null, { trusted: trusted.has(event.id) }),
+          category: null,
+          bibNumber: null,
+          eventUrl,
+          actionUrl: eventUrl,
+          needsPassword: false,
+          offers: offersForEvent(promos, event.name),
+        },
+      });
+      results.push({ template: "entry-welcome", label: event.name, sent: res.sent });
+    } catch (err) {
+      results.push({
+        template: "entry-welcome",
+        label: event.name,
+        sent: false,
+        error: err instanceof Error ? err.message : String(err),
+      });
+    }
+  }
+
+  return { to: opts.to, sent: results.filter((r) => r.sent).length, results };
+}
