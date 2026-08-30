@@ -350,7 +350,10 @@ export async function syncEventSchedule(
     const scheduleItems = toScheduleItems(items, days);
     // Nightly re-scrapes of an unchanged website must not un-verify a schedule an
     // admin already signed off — otherwise rider mails silently fall back to TBC.
-    const unchanged = items.length > 0 && sameSchedule(scheduleItems, event.schedule);
+    const unchanged =
+      items.length > 0 &&
+      (sameSchedule(scheduleItems, event.schedule) || sameTimes(scheduleItems, event.schedule));
+
     const wasVerified = Boolean(existing?.verified);
 
     let applied = false;
