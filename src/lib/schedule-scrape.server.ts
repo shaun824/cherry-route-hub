@@ -398,13 +398,26 @@ export async function syncEventSchedule(
       applied = true;
     }
 
-    const stickyVerified = applied || (unchanged && wasVerified);
+    // A signed-off schedule only loses its verified status when the site
+    // genuinely disagrees about a time. Wording changes, extra or missing
+    // lines never demote it — they are flagged as an advisory note instead.
+    const clashes = contradictsStored(scheduleItems, event.schedule);
+    const stickyVerified = applied || (wasVerified && clashes.length === 0);
     const changeNote = unchanged
       ? null
       : items.length
         ? scheduleDiffNote(event.schedule, scheduleItems)
         : null;
-    const finalNote = [reviewNote, stickyVerified ? null : changeNote].filter(Boolean).join("; ") || null;
+    const finalNote =
+      [
+        clashes.length ? `Website disagrees on: ${clashes.slice(0, 6).join("; ")}` : null,
+        stickyVerified ? null : reviewNote,
+        stickyVerified ? null : changeNote,
+        stickyVerified && changeNote ? `FYI (times unchanged): ${changeNote}` : null,
+      ]
+        .filter(Boolean)
+        .join("; ") || null;
+
 
     await record({
       items,
