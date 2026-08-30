@@ -5,7 +5,7 @@ import { Check, ExternalLink, Mail, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { listEmailContent, markScheduleVerified } from "@/lib/email-content.functions";
 import { sendTestEntryWelcome } from "@/lib/entryninja.functions";
-import { sendAllEmailSamples } from "@/lib/email-samples.functions";
+import { sendAllEmailSamples, sendScheduleEmailsForAllEvents } from "@/lib/email-samples.functions";
 
 export const Route = createFileRoute("/admin/email-content")({
   head: () => ({
@@ -31,6 +31,7 @@ function EmailContentPage() {
   const verify = useServerFn(markScheduleVerified);
   const test = useServerFn(sendTestEntryWelcome);
   const allSamples = useServerFn(sendAllEmailSamples);
+  const allScheduleMails = useServerFn(sendScheduleEmailsForAllEvents);
   const qc = useQueryClient();
 
   const q = useQuery({ queryKey: ["email-content"], queryFn: () => list() });
@@ -60,6 +61,12 @@ function EmailContentPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const scheduleMails = useMutation({
+    mutationFn: () => allScheduleMails({ data: {} }),
+    onSuccess: (r: any) => toast.success(`${r.sent} schedule emails sent to ${r.to}`),
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   return (
     <div>
       <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
@@ -71,6 +78,14 @@ function EmailContentPage() {
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
+          <button
+            onClick={() => scheduleMails.mutate()}
+            disabled={scheduleMails.isPending}
+            className="inline-flex items-center gap-2 rounded-xl bg-ink px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
+          >
+            <Mail className="h-4 w-4" />
+            {scheduleMails.isPending ? "Sending…" : "Send me every event schedule email"}
+          </button>
           <button
             onClick={() => samples.mutate()}
             disabled={samples.isPending}
