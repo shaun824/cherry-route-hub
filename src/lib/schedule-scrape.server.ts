@@ -247,6 +247,24 @@ function sameSchedule(a: unknown, b: unknown) {
   return JSON.stringify(a ?? []) === JSON.stringify(b ?? []);
 }
 
+/**
+ * Same clock times per day, regardless of how the site words the labels.
+ * A re-scrape that only renames "Gold riders start" to "Start" must not
+ * un-verify a schedule an admin signed off — that silently turns rider
+ * emails into "TBC".
+ */
+function sameTimes(a: unknown, b: unknown) {
+  const key = (v: unknown) =>
+    (Array.isArray(v) ? v : [])
+      .map((i: any) => `${String(i?.dayId ?? "")}|${String(i?.time ?? "").replace(/\s/g, "")}`)
+      .filter((s) => !s.endsWith("|"))
+      .sort()
+      .join(",");
+  const ka = key(a);
+  return ka.length > 0 && ka === key(b);
+}
+
+
 /** Plain-English summary of how the website's programme differs from the live one. */
 export function scheduleDiffNote(current: unknown, scraped: { time: string; label: string }[]) {
   const key = (i: any) => `${String(i?.time ?? "")} ${String(i?.label ?? "").trim().toLowerCase()}`;
@@ -332,7 +350,10 @@ export async function syncEventSchedule(
     const scheduleItems = toScheduleItems(items, days);
     // Nightly re-scrapes of an unchanged website must not un-verify a schedule an
     // admin already signed off — otherwise rider mails silently fall back to TBC.
-    const unchanged = items.length > 0 && sameSchedule(scheduleItems, event.schedule);
+    const unchanged =
+      items.length > 0 &&
+      (sameSchedule(scheduleItems, event.schedule) || sameTimes(scheduleItems, event.schedule));
+
     const wasVerified = Boolean(existing?.verified);
 
     let applied = false;
