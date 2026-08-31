@@ -38,8 +38,10 @@ export const listEntryNinjaEvents = createServerFn({ method: "POST" })
           location: [e.venue?.city, e.venue?.province].filter(Boolean).join(", ") || null,
           matchedEventId: match?.id ?? null,
           matchedEventName: match?.name ?? null,
+          archived: match?.lifecycle === "archived",
         };
       })
+      .filter((e) => (data.includeClosed ? true : !e.archived))
       .sort((a, b) => (a.date ?? "").localeCompare(b.date ?? ""));
   });
 
