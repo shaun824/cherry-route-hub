@@ -389,6 +389,29 @@ function VillageEditor() {
     setPlacing(false);
   }
 
+  /** Drops a branding pin for a crew booking; returns the new point id. */
+  function placeBookingPin(b: { name: string; qty: number; size_spec: string | null; placement: string | null }) {
+    if (!centre) {
+      alert("Set the venue location first, then place branding.");
+      return null;
+    }
+    const spot: VillageHotspot = {
+      id: crypto.randomUUID(),
+      x: 50,
+      y: 50,
+      lat: +centre.lat.toFixed(6),
+      lng: +centre.lng.toFixed(6),
+      title: b.name,
+      category: "branding",
+      layer: "branding",
+      spec: [b.qty > 1 ? `${b.qty} ×` : null, b.size_spec, b.placement].filter(Boolean).join(" · ") || undefined,
+    };
+    patch({ hotspots: [...map.hotspots, spot] });
+    setSelected(spot.id);
+    setCentreToken((t) => t + 1);
+    return spot.id;
+  }
+
   function loadBuildKit() {
     if (!centre) {
       alert("Set the venue location first, then load the build kit.");
@@ -1207,6 +1230,10 @@ function VillageEditor() {
         </div>
       ) : null}
 
+
+      {layer === "branding" ? (
+        <BrandingToPlace eventId={event.id} onPlace={(b) => placeBookingPin(b)} />
+      ) : null}
 
       <div className="space-y-3">
         {layerSpots(map.hotspots).map((s) => (
