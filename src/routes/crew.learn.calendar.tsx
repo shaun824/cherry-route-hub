@@ -34,7 +34,7 @@ type CalEvent = {
   discipline: string | null;
   lifecycle: string | null;
   status: string | null;
-  days: unknown;
+  days: unknown[] | null;
   entry_ninja_url: string | null;
 };
 
