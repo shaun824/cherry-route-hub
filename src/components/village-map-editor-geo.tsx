@@ -283,6 +283,34 @@ export default function VillageMapEditorGeo({
 
   const frame = useRef<number | null>(null);
   const pending = useRef<{ id: string; points: ZonePoint[] } | null>(null);
+  const tentFrame = useRef<number | null>(null);
+  const tentPending = useRef<{ id: string; lat: number; lng: number } | null>(null);
+
+  function paintTent(id: string, lat: number, lng: number) {
+    tentPending.current = { id, lat, lng };
+    if (tentFrame.current != null) return;
+    tentFrame.current = requestAnimationFrame(() => {
+      tentFrame.current = null;
+      if (tentPending.current) setTentLive(tentPending.current);
+    });
+  }
+
+  function commitTent(id: string) {
+    if (tentFrame.current != null) {
+      cancelAnimationFrame(tentFrame.current);
+      tentFrame.current = null;
+    }
+    const next = tentPending.current;
+    tentPending.current = null;
+    if (next && next.id === id) {
+      // Keep the footprint at the dropped spot until the parent state confirms
+      // the save — otherwise the square snaps back and the move looks lost.
+      setTentLive(next);
+      onMoveTent?.(id, next.lat, next.lng);
+    } else {
+      setTentLive(null);
+    }
+  }
 
   function paint(id: string, points: ZonePoint[]) {
     pending.current = { id, points };
