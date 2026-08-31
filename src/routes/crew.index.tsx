@@ -3,7 +3,7 @@
 import { createFileRoute, Link, Navigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { BedDouble, CalendarDays, ClipboardList, GraduationCap, HardHat, Map as MapIcon, MapPin, Search, Siren, Users } from "lucide-react";
+import { BedDouble, Boxes, CalendarDays, ClipboardList, GraduationCap, HardHat, Map as MapIcon, MapPin, Search, Siren, Users } from "lucide-react";
 import { useIsCrew } from "@/lib/auth";
 import { fetchCrewEvents, fetchCrewRooming, normaliseTent } from "@/lib/crew";
 import { buildCrewTimeline, groupScheduleByDay, pickCurrentDay } from "@/lib/crew-plan";
@@ -253,6 +253,12 @@ function CrewDashboard() {
           icon={<BedDouble className="h-5 w-5" />}
           title="Rooming lists"
           body="Every tent and room for the event, grouped and searchable."
+        />
+        <Tile
+          to="/crew/inventory"
+          icon={<Boxes className="h-5 w-5" />}
+          title="Inventory management"
+          body="Book branding into this event — it flows to the build map and the packing list."
         />
         <Tile
           to="/crew/build"
