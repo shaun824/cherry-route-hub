@@ -147,6 +147,45 @@ export type Database = {
         }
         Relationships: []
       }
+      branding_inventory: {
+        Row: {
+          active: boolean
+          created_at: string
+          id: string
+          kind: string
+          name: string
+          notes: string | null
+          qty_owned: number
+          size_spec: string | null
+          sponsor: string | null
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          kind?: string
+          name: string
+          notes?: string | null
+          qty_owned?: number
+          size_spec?: string | null
+          sponsor?: string | null
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          kind?: string
+          name?: string
+          notes?: string | null
+          qty_owned?: number
+          size_spec?: string | null
+          sponsor?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       business_knowledge: {
         Row: {
           approved_at: string | null
@@ -671,6 +710,85 @@ export type Database = {
             columns: ["event_id"]
             isOneToOne: true
             referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_branding_bookings: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          department_id: string | null
+          event_id: string
+          id: string
+          item_id: string | null
+          kind: string
+          name: string
+          notes: string | null
+          placement: string | null
+          qty: number
+          size_spec: string | null
+          sponsor: string | null
+          status: string
+          updated_at: string
+          village_spot_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          department_id?: string | null
+          event_id: string
+          id?: string
+          item_id?: string | null
+          kind?: string
+          name: string
+          notes?: string | null
+          placement?: string | null
+          qty?: number
+          size_spec?: string | null
+          sponsor?: string | null
+          status?: string
+          updated_at?: string
+          village_spot_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          department_id?: string | null
+          event_id?: string
+          id?: string
+          item_id?: string | null
+          kind?: string
+          name?: string
+          notes?: string | null
+          placement?: string | null
+          qty?: number
+          size_spec?: string | null
+          sponsor?: string | null
+          status?: string
+          updated_at?: string
+          village_spot_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_branding_bookings_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "event_departments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_branding_bookings_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_branding_bookings_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "branding_inventory"
             referencedColumns: ["id"]
           },
         ]
