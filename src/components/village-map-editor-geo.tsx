@@ -649,7 +649,7 @@ export default function VillageMapEditorGeo({
                 autoPanOnFocus={false}
                 key={s.id}
                 position={[s.lat as number, s.lng as number]}
-                draggable
+                draggable={!locked}
                 icon={pinIcon(spotColor(s), s.title, selected === s.id, spotIcon(s))}
                 eventHandlers={{
                   click: () => onSelect(s.id),
