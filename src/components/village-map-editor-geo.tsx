@@ -495,7 +495,9 @@ export default function VillageMapEditorGeo({
                 ) : null}
                 <Polygon
                   positions={positions}
-                  interactive={!placing && !drawing}
+                  // While adding a pin / tent the area must not swallow the
+                  // click — objects are meant to be dropped inside areas.
+                  interactive={!locked}
                   bubblingMouseEvents={false}
                   pathOptions={{
                     color: clash ? "#dc2626" : active ? "#111827" : zoneColor(z),
@@ -507,9 +509,10 @@ export default function VillageMapEditorGeo({
                   }}
                   eventHandlers={{
                     click: (e) => {
+                      if (locked) return;
                       L.DomEvent.stopPropagation(e as unknown as Event);
-                      if (placing || drawing) return;
                       onSelectZone(z.id);
+
                     },
                   }}
                 >
@@ -646,7 +649,7 @@ export default function VillageMapEditorGeo({
                 autoPanOnFocus={false}
                 key={s.id}
                 position={[s.lat as number, s.lng as number]}
-                draggable
+                draggable={!locked}
                 icon={pinIcon(spotColor(s), s.title, selected === s.id, spotIcon(s))}
                 eventHandlers={{
                   click: () => onSelect(s.id),
