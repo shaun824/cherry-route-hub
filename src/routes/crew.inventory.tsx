@@ -199,7 +199,7 @@ function InventoryPage() {
         </select>
         <button
           type="button"
-          onClick={() => setShowPast((v) => !v)}
+          onClick={() => setShowPast(!showPast)}
           className={`shrink-0 rounded-xl px-3 py-2.5 text-xs font-bold ring-1 ring-border ${
             showPast ? "bg-cherry text-white" : "bg-surface text-ink-soft"
           }`}
