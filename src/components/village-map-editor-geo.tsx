@@ -260,7 +260,41 @@ export default function VillageMapEditorGeo({
   const [cursor, setCursor] = useState<ZonePoint | null>(null);
   const [showLabels, setShowLabels] = useState(true);
   const [fitToken, setFitToken] = useState(0);
+  // While an area is being dragged we keep its shape in local state and paint
+  // it every animation frame, so the outline tracks the finger instead of
+  // pushing a re-render of the whole editor on every pointer move.
+  const [live, setLive] = useState<{ id: string; points: ZonePoint[] } | null>(null);
+  const frame = useRef<number | null>(null);
+  const pending = useRef<{ id: string; points: ZonePoint[] } | null>(null);
+
+  function paint(id: string, points: ZonePoint[]) {
+    pending.current = { id, points };
+    if (frame.current != null) return;
+    frame.current = requestAnimationFrame(() => {
+      frame.current = null;
+      if (pending.current) setLive(pending.current);
+    });
+  }
+
+  function commit(id: string) {
+    if (frame.current != null) {
+      cancelAnimationFrame(frame.current);
+      frame.current = null;
+    }
+    const next = pending.current;
+    pending.current = null;
+    setLive(null);
+    if (next && next.id === id) onZoneChange(id, next.points);
+  }
+
+  useEffect(() => () => {
+    if (frame.current != null) cancelAnimationFrame(frame.current);
+  }, []);
+
+  const zonePoints = (z: VillageZone) => (live && live.id === z.id ? live.points : z.points);
+
   const activeZone = zones.find((z) => z.id === selectedZone) ?? null;
+
 
   const contentPoints = useMemo<ZonePoint[]>(
     () => [
