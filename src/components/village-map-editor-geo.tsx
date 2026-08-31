@@ -49,14 +49,24 @@ function handleIcon(color: string, size = 12) {
   });
 }
 
+function addIcon(color: string) {
+  return L.divIcon({
+    className: "rce-zone-add",
+    html: `<span style="display:grid;place-items:center;width:18px;height:18px;border-radius:999px;background:#fff;color:${color};border:2px solid ${color};box-shadow:0 1px 4px rgba(0,0,0,.35);font-size:12px;font-weight:900;line-height:1">+</span>`,
+    iconSize: [18, 18],
+    iconAnchor: [9, 9],
+  });
+}
+
 function moveIcon(color: string) {
   return L.divIcon({
     className: "rce-zone-move",
-    html: `<span style="display:grid;place-items:center;width:22px;height:22px;border-radius:999px;background:${color};color:#fff;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.4);font-size:12px;font-weight:900">✥</span>`,
-    iconSize: [22, 22],
-    iconAnchor: [11, 11],
+    html: `<span style="display:grid;place-items:center;width:34px;height:34px;border-radius:999px;background:${color};color:#fff;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.45);font-size:16px;font-weight:900">✥</span>`,
+    iconSize: [34, 34],
+    iconAnchor: [17, 17],
   });
 }
+
 
 function ClickCatcher({ onClick }: { onClick: (lat: number, lng: number) => void }) {
   useMapEvents({
