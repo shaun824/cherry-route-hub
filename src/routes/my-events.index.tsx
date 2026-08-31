@@ -62,6 +62,7 @@ function SignedOutState() {
 function SignedInState() {
   const qc = useQueryClient();
   const [showPast, setShowPast] = useState(false);
+  const [showLinkForm, setShowLinkForm] = useState(false);
   const entrantQuery = useQuery({
     queryKey: ["my-entrant"],
     queryFn: () => getMyEntrant(),
@@ -143,6 +144,28 @@ function SignedInState() {
             ))}
           </ul>
         </div>
+      )}
+
+      <div className="px-5 pb-2">
+        <button
+          type="button"
+          onClick={() => setShowLinkForm((s) => !s)}
+          className="flex w-full items-center justify-center gap-2 rounded-2xl bg-card py-3 text-sm font-semibold text-ink ring-1 ring-border"
+        >
+          <KeyRound className="h-4 w-4 text-cherry" />
+          {showLinkForm ? "Close entry linking" : "Missing an entry? Link it with your ID number"}
+        </button>
+      </div>
+
+      {showLinkForm && (
+        <LinkEntrantForm
+          embedded
+          onLinked={() => {
+            setShowLinkForm(false);
+            qc.invalidateQueries({ queryKey: ["my-entrant"] });
+            qc.invalidateQueries({ queryKey: ["my-events"] });
+          }}
+        />
       )}
 
       <UpcomingBySport excludeIds={rows.map((r) => r.event_id)} preferSport={preferredSport} />
