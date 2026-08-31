@@ -7,6 +7,7 @@ import { BedDouble, CalendarDays, ClipboardList, GraduationCap, HardHat, Map as 
 import { useIsCrew } from "@/lib/auth";
 import { fetchCrewEvents, fetchCrewRooming, normaliseTent } from "@/lib/crew";
 import { buildCrewTimeline, groupScheduleByDay, pickCurrentDay } from "@/lib/crew-plan";
+import { useCrewEvent } from "@/lib/crew-event";
 import { supabase } from "@/integrations/supabase/client";
 import type { EventDay, ScheduleItem } from "@/lib/mock-data";
 
@@ -33,31 +34,13 @@ export const Route = createFileRoute("/crew/")({
   component: CrewDashboard,
 });
 
-const EVENT_KEY = "rce:crew-event";
-
 function CrewDashboard() {
   const { isCrew, loading, user } = useIsCrew();
-  const [eventId, setEventId] = useState("");
 
   const eventsQ = useQuery({ queryKey: ["crew-events"], queryFn: fetchCrewEvents, enabled: isCrew });
   const events = eventsQ.data ?? [];
+  const [eventId, pickEvent] = useCrewEvent(events);
 
-  useEffect(() => {
-    if (eventId || !events.length) return;
-    const saved = typeof window !== "undefined" ? window.localStorage.getItem(EVENT_KEY) : null;
-    if (saved && events.some((e) => e.id === saved)) {
-      setEventId(saved);
-      return;
-    }
-    const now = Date.now();
-    const next = events.find((e) => new Date(e.event_date).getTime() >= now) ?? events[events.length - 1];
-    setEventId(next.id);
-  }, [events, eventId]);
-
-  function pickEvent(id: string) {
-    setEventId(id);
-    if (typeof window !== "undefined") window.localStorage.setItem(EVENT_KEY, id);
-  }
 
   const detailQ = useQuery({
     queryKey: ["crew-event-detail", eventId],

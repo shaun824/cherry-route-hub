@@ -1,9 +1,9 @@
 import { createFileRoute, Navigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { HardHat } from "lucide-react";
 import { useIsCrew } from "@/lib/auth";
 import { fetchCrewEvents } from "@/lib/crew";
+import { useCrewEvent } from "@/lib/crew-event";
 import { VillageMapView } from "@/components/village-map-view";
 import { OfflinePackCard } from "@/components/offline-pack-card";
 
@@ -31,18 +31,9 @@ export const Route = createFileRoute("/crew/build")({
 
 function CrewBuildPage() {
   const { isCrew, loading } = useIsCrew();
-  const [eventId, setEventId] = useState("");
   const eventsQ = useQuery({ queryKey: ["crew-events"], queryFn: fetchCrewEvents, enabled: isCrew });
   const events = eventsQ.data ?? [];
-
-  useEffect(() => {
-    if (!eventId && events.length) {
-      const now = Date.now();
-      const next =
-        events.find((e) => new Date(e.event_date).getTime() >= now) ?? events[events.length - 1];
-      setEventId(next.id);
-    }
-  }, [events, eventId]);
+  const [eventId, setEventId] = useCrewEvent(events);
 
   if (loading) return <div className="p-4"><div className="h-40 animate-pulse rounded-2xl bg-muted" /></div>;
   if (!isCrew) return <Navigate to="/crew/login" />;
