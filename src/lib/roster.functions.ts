@@ -456,3 +456,60 @@ export const getMyEntrant = createServerFn({ method: "GET" })
     if (error) throw error;
     return data;
   });
+
+/**
+ * Instant link on sign-in: attach every unlinked entrant whose roster email
+ * matches the caller's account email. The sync job does this too, but only
+ * runs a few times a day — this closes the gap for brand-new sign-ins.
+ */
+export const linkMyEntrants = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const email = (context.claims.email as string | undefined)?.trim().toLowerCase();
+    if (!email) return { linked: 0 };
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data, error } = await supabaseAdmin
+      .from("entrants")
+      .update({ user_id: context.userId })
+      .is("user_id", null)
+      .ilike("email", email)
+      .select("id");
+    if (error) throw error;
+    return { linked: data?.length ?? 0 };
+  });
+
+/**
+ * Admin: entrants imported from Entry Ninja that no app account has claimed
+ * yet — riders who never signed in, or signed in with a different email.
+ */
+export const listUnlinkedEntrants = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const isAdmin = await checkIsAdmin(context.supabase as never);
+    if (!isAdmin) throw new Error("Forbidden");
+
+    const { data, error } = await context.supabase
+      .from("entrants")
+      .select("id, full_name, email, created_at, event_entrants(events(name, event_date))")
+      .is("user_id", null)
+      .order("created_at", { ascending: false })
+      .limit(300);
+    if (error) throw error;
+
+    return (data ?? []).map((e) => {
+      const rows = (e as unknown as {
+        event_entrants: { events: { name: string | null; event_date: string | null } | null }[];
+      }).event_entrants ?? [];
+      const names = Array.from(
+        new Set(rows.map((r) => r.events?.name).filter((n): n is string => Boolean(n))),
+      );
+      return {
+        id: e.id,
+        fullName: e.full_name,
+        email: e.email,
+        createdAt: e.created_at,
+        events: names,
+      };
+    });
+  });
