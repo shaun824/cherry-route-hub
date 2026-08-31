@@ -2,6 +2,7 @@
 // who shares each tent/room, and where that room sits on the village map.
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { visibleInBackend } from "./event-window";
 
 export type CrewRoomingRow = {
   id: string;
@@ -41,9 +42,9 @@ export async function checkIsCrew(client: SupabaseClient<any, any, any>): Promis
 export async function fetchCrewEvents(): Promise<CrewEvent[]> {
   const { data } = await supabase
     .from("events")
-    .select("id, name, event_date")
+    .select("id, name, event_date, days")
     .order("event_date", { ascending: true });
-  return (data ?? []) as CrewEvent[];
+  return visibleInBackend((data ?? []) as (CrewEvent & { days?: unknown[] })[]);
 }
 
 export async function fetchCrewRooming(eventId: string): Promise<CrewRoomingRow[]> {

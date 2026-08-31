@@ -1,5 +1,6 @@
 // Crew Learn: the season calendar. Every event on our books for the year,
 // straight from the Entry Ninja-synced event list, grouped month by month.
+import { visibleInBackend } from "@/lib/event-window";
 import { createFileRoute, Link, Navigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -33,7 +34,7 @@ type CalEvent = {
   discipline: string | null;
   lifecycle: string | null;
   status: string | null;
-  days: unknown;
+  days: unknown[] | null;
   entry_ninja_url: string | null;
 };
 
@@ -47,7 +48,7 @@ async function fetchCalendarEvents(): Promise<CalEvent[]> {
     console.warn("[crew calendar]", error);
     return [];
   }
-  return (data ?? []) as CalEvent[];
+  return visibleInBackend((data ?? []) as CalEvent[]);
 }
 
 /** Event id -> published training course id, so calendar rows can open Learn. */

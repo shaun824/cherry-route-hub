@@ -1,3 +1,4 @@
+import { visibleInBackend } from "@/lib/event-window";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -63,9 +64,9 @@ function ResultsAdminPage() {
     queryFn: async () => {
       const { data } = await supabase
         .from("events")
-        .select("id, name, event_date")
+        .select("id, name, event_date, days")
         .order("event_date", { ascending: false });
-      return data ?? [];
+      return visibleInBackend((data ?? []) as { id: string; name: string; event_date: string; days?: unknown[] }[]);
     },
   });
 

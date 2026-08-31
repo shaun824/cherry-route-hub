@@ -1,5 +1,6 @@
 // Admin API for event email workflows — create a sequence of emails per event,
 // set the delay between them, preview one, and run the queue on demand.
+import { visibleInBackend } from "@/lib/event-window";
 import { createServerFn } from "@tanstack/react-start";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
@@ -20,11 +21,12 @@ export const listEmailWorkflows = createServerFn({ method: "POST" })
     await assertAdmin(context as any);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-    const { data: events } = await supabaseAdmin
+    const { data: rawEvents } = await supabaseAdmin
       .from("events")
-      .select("id, name, event_date")
+      .select("id, name, event_date, days")
       .neq("lifecycle", "archived")
       .order("event_date", { ascending: true });
+    const events = visibleInBackend(rawEvents ?? []);
 
     const { data: campaigns, error } = await supabaseAdmin
       .from("event_email_campaigns")

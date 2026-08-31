@@ -1,6 +1,7 @@
 // Admin: link an event's master run sheet (Google Sheet), sync departments,
 // daily instructions and packing lists, assign crew and review suggestions.
 import { createFileRoute } from "@tanstack/react-router";
+import { visibleInBackend } from "@/lib/event-window";
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -35,15 +36,17 @@ function AdminRunSheet() {
     queryFn: async () => {
       const { data } = await supabase
         .from("events")
-        .select("id, name, run_sheet_url, run_sheet_synced_at, run_sheet_error")
+        .select("id, name, event_date, days, run_sheet_url, run_sheet_synced_at, run_sheet_error")
         .order("event_date", { ascending: false });
-      return (data ?? []) as {
+      return visibleInBackend((data ?? []) as {
         id: string;
         name: string;
+        event_date: string;
+        days?: unknown[];
         run_sheet_url: string | null;
         run_sheet_synced_at: string | null;
         run_sheet_error: string | null;
-      }[];
+      }[]);
     },
   });
   const events = eventsQ.data ?? [];

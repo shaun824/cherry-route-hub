@@ -1,3 +1,4 @@
+import { visibleInBackend } from "@/lib/event-window";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { ChevronRight, Tent } from "lucide-react";
@@ -13,9 +14,9 @@ function VillageIndex() {
     queryFn: async () => {
       const { data } = await supabase
         .from("events")
-        .select("id, name, event_date, event_village_maps:event_village_maps(event_id, image_url, hotspots, zones, geo)")
+        .select("id, name, event_date, days, event_village_maps:event_village_maps(event_id, image_url, hotspots, zones, geo)")
         .order("event_date", { ascending: true });
-      return data ?? [];
+      return visibleInBackend((data ?? []) as { id: string; name: string; event_date: string; days?: unknown[] }[]);
     },
 
   });

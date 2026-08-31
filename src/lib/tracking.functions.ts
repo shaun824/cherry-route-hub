@@ -1,5 +1,6 @@
 // Live rider tracking — server functions.
 // Riders upload batched GPS points; spectators read the latest position per rider.
+import { visibleInBackend } from "@/lib/event-window";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { createClient } from "@supabase/supabase-js";
@@ -251,12 +252,12 @@ export const fetchTrackingEvents = createServerFn({ method: "GET" })
     await assertAdmin(context.supabase, context.userId);
     const { data, error } = await context.supabase
       .from("events")
-      .select("id, name, event_date, lifecycle")
+      .select("id, name, event_date, lifecycle, days")
       .neq("lifecycle", "archived")
       .order("event_date", { ascending: false })
       .limit(50);
     if (error) throw new Error(error.message);
-    return (data ?? []).map((e) => ({
+    return visibleInBackend(data ?? []).map((e) => ({
       id: e.id,
       name: e.name,
       eventDate: e.event_date,

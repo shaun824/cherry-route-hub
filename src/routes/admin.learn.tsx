@@ -1,3 +1,4 @@
+import { visibleInBackend } from "@/lib/event-window";
 // Admin: build and refresh the crew training courses. Content is generated
 // from the app's own data (events, schedules, venues, run sheets, knowledge).
 import { createFileRoute } from "@tanstack/react-router";
@@ -31,9 +32,9 @@ export const Route = createFileRoute("/admin/learn")({
 async function fetchEvents() {
   const { data } = await supabase
     .from("events")
-    .select("id, name, event_date")
+    .select("id, name, event_date, days")
     .order("event_date", { ascending: false });
-  return (data ?? []) as { id: string; name: string; event_date: string }[];
+  return visibleInBackend((data ?? []) as { id: string; name: string; event_date: string; days?: unknown[] }[]);
 }
 
 

@@ -1,3 +1,4 @@
+import { visibleInBackend } from "@/lib/event-window";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
@@ -45,10 +46,10 @@ function AdminNotifications() {
     queryFn: async () => {
       const { data } = await supabase
         .from("events")
-        .select("id, name, event_date")
+        .select("id, name, event_date, days")
         .neq("status", "archived")
         .order("event_date", { ascending: true });
-      return data ?? [];
+      return visibleInBackend((data ?? []) as { id: string; name: string; event_date: string; days?: unknown[] }[]);
     },
   });
 
