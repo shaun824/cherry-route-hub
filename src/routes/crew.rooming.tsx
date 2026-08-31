@@ -49,14 +49,14 @@ function CrewPage() {
   const mapRef = useRef<HTMLDivElement>(null);
 
   const eventsQ = useQuery({ queryKey: ["crew-events"], queryFn: fetchCrewEvents, enabled: isCrew });
+  const events = eventsQ.data ?? [];
+  const [eventId, setEventId] = useCrewEvent(events);
   const roomingQ = useQuery({
     queryKey: ["crew-rooming", eventId],
     queryFn: () => fetchCrewRooming(eventId),
     enabled: isCrew && !!eventId,
   });
 
-  const events = eventsQ.data ?? [];
-  const [eventId, setEventId] = useCrewEvent(events);
 
   const rows = roomingQ.data ?? [];
   const results = useMemo(() => rows.filter((r) => matchesSearch(r, term)), [rows, term]);
