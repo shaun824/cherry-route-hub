@@ -1,5 +1,6 @@
 // Admin API for event email workflows — create a sequence of emails per event,
 // set the delay between them, preview one, and run the queue on demand.
+import { visibleInBackend } from "@/lib/event-window";
 import { createServerFn } from "@tanstack/react-start";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";

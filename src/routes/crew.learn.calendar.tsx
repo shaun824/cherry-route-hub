@@ -1,5 +1,6 @@
 // Crew Learn: the season calendar. Every event on our books for the year,
 // straight from the Entry Ninja-synced event list, grouped month by month.
+import { visibleInBackend } from "@/lib/event-window";
 import { createFileRoute, Link, Navigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";

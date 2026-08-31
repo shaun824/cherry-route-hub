@@ -414,18 +414,28 @@ function AdminEvents() {
   const [editing, setEditing] = useState<Event | null>(null);
   const [filter, setFilter] = useState<Lifecycle | "all">("all");
 
+  // Events that ended more than a week ago are clutter in day-to-day admin —
+  // hide them everywhere except the explicit "archived" view.
+  const visible = useMemo(
+    () =>
+      events.filter(
+        (e) => lifecycleOf(e) === "archived" || !isHiddenFromBackend({ event_date: e.date, days: e.days }),
+      ),
+    [events],
+  );
+
   const counts = useMemo(() => {
     const c: Record<Lifecycle | "all", number> = {
-      all: events.length,
+      all: visible.length,
       draft: 0,
       published: 0,
       archived: 0,
     };
-    for (const e of events) c[lifecycleOf(e)]++;
+    for (const e of visible) c[lifecycleOf(e)]++;
     return c;
-  }, [events]);
+  }, [visible]);
 
-  const filtered = filter === "all" ? events : events.filter((e) => lifecycleOf(e) === filter);
+  const filtered = filter === "all" ? visible : visible.filter((e) => lifecycleOf(e) === filter);
 
   const setLifecycle = (e: Event, next: Lifecycle) => upsert({ ...e, lifecycle: next });
   const duplicate = (e: Event) =>

@@ -1,5 +1,6 @@
 // Live rider tracking — server functions.
 // Riders upload batched GPS points; spectators read the latest position per rider.
+import { visibleInBackend } from "@/lib/event-window";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { createClient } from "@supabase/supabase-js";
