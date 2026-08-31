@@ -8,6 +8,7 @@ import { isPromoLive, promoMatchesEvent } from "./event-promos";
 import type { Promo } from "./mock-data";
 import type { EmailOffer, EmailScheduleDay } from "./email-templates/entry-welcome";
 import { withRegistrationDayLabels } from "./event-days";
+import { isDayPass } from "./rider-classes";
 
 type AnyClient = SupabaseClient<any, any, any>;
 
