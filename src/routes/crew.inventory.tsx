@@ -68,10 +68,10 @@ function InventoryPage() {
   const { isAdmin } = useIsAdmin();
   const qc = useQueryClient();
   const [tab, setTab] = useState<"load" | "runs" | "catalogue">("load");
-  const [showPast, setShowPast] = useState(false);
+  const [showPast, setShowPast] = useCrewShowPast();
 
   const eventsQ = useQuery({
-    queryKey: ["crew-events", showPast ? "all" : "current"],
+    queryKey: ["crew-events", showPast ? "all" : "visible"],
     queryFn: showPast ? fetchAllCrewEvents : fetchCrewEvents,
     enabled: isCrew,
   });
