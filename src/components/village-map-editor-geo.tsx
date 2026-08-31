@@ -5,6 +5,10 @@ import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { MapContainer, TileLayer, Marker, Polygon, Polyline, Popup, Rectangle, Tooltip, useMap, useMapEvents } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+// Bearing support so the build can be laid out "the right way round" — the
+// plugin patches the global `L`. This module only loads lazily in the browser.
+(globalThis as unknown as { L: typeof L }).L = L;
+await import("leaflet-rotate");
 import { spotColor, spotIcon, type VillageHotspot } from "@/lib/village-map";
 import { villageIconSvg } from "@/lib/village-icons";
 import { tentFootprintBounds, tentTypeMeta } from "@/lib/village-tents";
