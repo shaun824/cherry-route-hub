@@ -206,7 +206,7 @@ function EventRow({ r }: { r: any }) {
   );
 }
 
-function LinkEntrantForm({ onLinked }: { onLinked: () => void }) {
+function LinkEntrantForm({ onLinked, embedded }: { onLinked: () => void; embedded?: boolean }) {
   const linkFn = useServerFn(linkMyEntry);
   const [idNumber, setIdNumber] = useState("");
   const [surname, setSurname] = useState("");
@@ -220,6 +220,7 @@ function LinkEntrantForm({ onLinked }: { onLinked: () => void }) {
     try {
       const res = await linkFn({ data: { id_number: idNumber, surname } });
       if (res.ok) {
+        setStatus("Linked! Pulling your events through…");
         onLinked();
       } else if (res.reason === "no_match") {
         setStatus(
