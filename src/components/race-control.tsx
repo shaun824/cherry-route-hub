@@ -6,10 +6,20 @@ import { useServerFn } from "@tanstack/react-start";
 import { Radar, RefreshCw, Siren } from "lucide-react";
 import { LiveTrackingMap } from "@/components/live-tracking-map";
 import { fetchSosAlerts, fetchTrackingEvents, resolveSosAlert } from "@/lib/tracking.functions";
+import { readCrewEventId, writeCrewEventId } from "@/lib/crew-event";
 
-export function RaceControlPanel({ title = "Live tracking" }: { title?: string }) {
+export function RaceControlPanel({
+  title = "Live tracking",
+  shareCrewEvent = false,
+}: {
+  title?: string;
+  /** Crew portal: open on (and remember) the event picked on the crew dashboard. */
+  shareCrewEvent?: boolean;
+}) {
   const queryClient = useQueryClient();
-  const [eventId, setEventId] = useState<string | null>(null);
+  const [eventId, setEventId] = useState<string | null>(() =>
+    shareCrewEvent ? readCrewEventId() : null,
+  );
   const resolve = useServerFn(resolveSosAlert);
 
   const eventsQ = useQuery({
@@ -17,7 +27,8 @@ export function RaceControlPanel({ title = "Live tracking" }: { title?: string }
     queryFn: () => fetchTrackingEvents(),
   });
   const events = eventsQ.data ?? [];
-  const selected = eventId ?? events[0]?.id ?? null;
+  const selected =
+    (eventId && events.some((e) => e.id === eventId) ? eventId : null) ?? events[0]?.id ?? null;
 
   const sosQ = useQuery({
     queryKey: ["tracking-sos", selected],
@@ -49,7 +60,11 @@ export function RaceControlPanel({ title = "Live tracking" }: { title?: string }
 
       <select
         value={selected ?? ""}
-        onChange={(e) => setEventId(e.target.value || null)}
+        onChange={(e) => {
+          const next = e.target.value || null;
+          setEventId(next);
+          if (shareCrewEvent && next) writeCrewEventId(next);
+        }}
         className="w-full rounded-xl bg-card px-3 py-2.5 text-sm text-ink ring-1 ring-border focus:outline-none focus:ring-2 focus:ring-cherry"
       >
         {events.length === 0 ? <option value="">Loading events…</option> : null}

@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { GraduationCap, Loader2, Building2, CalendarDays, HardHat, CheckCircle2 } from "lucide-react";
 import { useIsCrew } from "@/lib/auth";
 import { fetchCrewEvents } from "@/lib/crew";
+import { useCrewEvent } from "@/lib/crew-event";
 import {
   COURSE_KIND_BLURB,
   COURSE_KIND_LABEL,
@@ -45,6 +46,8 @@ function LearnIndex() {
   const coursesQ = useQuery({ queryKey: ["learn-courses"], queryFn: fetchLearnCourses, enabled: isCrew });
   const eventsQ = useQuery({ queryKey: ["crew-events"], queryFn: fetchCrewEvents, enabled: isCrew });
   const openQ = useQuery({ queryKey: ["learn-open-events"], queryFn: fetchOpenEventIds, enabled: isCrew });
+  const crewEvents = eventsQ.data ?? [];
+  const [crewEventId] = useCrewEvent(crewEvents);
   const doneQ = useQuery({
     queryKey: ["learn-completions", user?.id],
     enabled: isCrew && !!user,
@@ -70,9 +73,18 @@ function LearnIndex() {
   const eventName = new Map((eventsQ.data ?? []).map((e) => [e.id, e.name]));
   const completions = doneQ.data ?? {};
 
+  // Your event first, then everything else so you can widen your knowledge.
+  const byChosenEventFirst = (a: LearnCourse, b: LearnCourse) => {
+    const rank = (c: LearnCourse) => (crewEventId && c.event_id === crewEventId ? 0 : 1);
+    return rank(a) - rank(b);
+  };
   const groups: { kind: LearnCourseKind; items: LearnCourse[] }[] = (
     ["business", "event", "department"] as LearnCourseKind[]
-  ).map((kind) => ({ kind, items: courses.filter((c) => c.kind === kind) }));
+  ).map((kind) => ({
+    kind,
+    items: courses.filter((c) => c.kind === kind).sort(byChosenEventFirst),
+  }));
+  const chosenEventName = crewEventId ? eventName.get(crewEventId) : null;
 
   return (
     <div className="mx-auto max-w-2xl px-4 pb-24 pt-4">
@@ -86,6 +98,12 @@ function LearnIndex() {
           <p className="mt-1 text-sm text-ink-soft">
             Everything a new team member needs, built from the real event data in this app.
           </p>
+          {chosenEventName ? (
+            <p className="mt-1 text-xs text-ink-soft">
+              Starting with <span className="font-semibold text-ink">{chosenEventName}</span> — the event you
+              picked on the crew dashboard.
+            </p>
+          ) : null}
         </div>
       </header>
 
@@ -138,7 +156,14 @@ function LearnIndex() {
                             <p className="font-semibold text-ink">{c.title}</p>
                             {c.summary ? <p className="mt-0.5 text-sm text-ink-soft">{c.summary}</p> : null}
                             {c.event_id && eventName.get(c.event_id) ? (
-                              <p className="mt-1 text-xs text-ink-soft">{eventName.get(c.event_id)}</p>
+                              <p className="mt-1 text-xs text-ink-soft">
+                                {eventName.get(c.event_id)}
+                                {crewEventId && c.event_id === crewEventId ? (
+                                  <span className="ml-1.5 rounded-full bg-brand/10 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-brand">
+                                    Your event
+                                  </span>
+                                ) : null}
+                              </p>
                             ) : null}
                           </div>
                           {completions[c.id] ? (
