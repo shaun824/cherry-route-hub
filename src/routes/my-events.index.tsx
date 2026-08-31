@@ -238,9 +238,7 @@ function LinkEntrantForm({ onLinked, embedded }: { onLinked: () => void; embedde
     }
   }
 
-  return (
-    <div>
-      <PageHeader title="Events Hub" subtitle="Link your entry to see your events" />
+  const form = (
       <form onSubmit={submit} className="mx-5 mt-4 space-y-3 rounded-2xl bg-card p-5 ring-1 ring-border">
         <div className="flex items-center gap-2">
           <KeyRound className="h-5 w-5 text-cherry" />
