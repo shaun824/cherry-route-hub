@@ -309,6 +309,7 @@ export default function VillageMapEditorGeo({
   // While a tent is being dragged, its footprint square tracks the marker via
   // this live position instead of waiting for the save to come back.
   const [tentLive, setTentLive] = useState<{ id: string; lat: number; lng: number } | null>(null);
+  const [bearing, setBearing] = useState(0);
   const [panelMin, setPanelMin] = useState(false);
 
   const frame = useRef<number | null>(null);
@@ -466,6 +467,9 @@ export default function VillageMapEditorGeo({
           bounceAtZoomLimits={false}
           touchZoom
           doubleClickZoom
+          // Two-finger twist rotates the map so the build can be planned the
+          // right way round; the ↺ ↻ controls do the same on desktop.
+          {...({ rotate: true, touchRotate: true, rotateControl: false, bearing: 0 } as object)}
           className="h-[65vh] min-h-[360px] w-full"
         >
           <VillageMapTrackpadZoom />
