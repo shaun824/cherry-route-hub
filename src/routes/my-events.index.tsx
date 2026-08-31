@@ -73,13 +73,6 @@ function SignedInState() {
     enabled: Boolean(entrantQuery.data),
   });
 
-  if (entrantQuery.isLoading) {
-    return <div className="grid min-h-[30vh] place-items-center text-sm text-ink-soft">Loading…</div>;
-  }
-  if (!entrantQuery.data) {
-    return <LinkEntrantForm onLinked={() => qc.invalidateQueries({ queryKey: ["my-entrant"] })} />;
-  }
-
   const rows = eventsQuery.data ?? [];
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -96,6 +89,13 @@ function SignedInState() {
     const mtbCount = rows.filter((r) => sportOf(r) === "mtb").length;
     return mtbCount * 2 >= rows.length ? "mtb" : "moto";
   }, [rows, upcoming]);
+
+  if (entrantQuery.isLoading) {
+    return <div className="grid min-h-[30vh] place-items-center text-sm text-ink-soft">Loading…</div>;
+  }
+  if (!entrantQuery.data) {
+    return <LinkEntrantForm onLinked={() => qc.invalidateQueries({ queryKey: ["my-entrant"] })} />;
+  }
 
   return (
     <div>
