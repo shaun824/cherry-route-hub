@@ -473,6 +473,8 @@ export default function VillageMapEditorGeo({
           className="h-[65vh] min-h-[360px] w-full"
         >
           <VillageMapTrackpadZoom />
+          <BearingSync bearing={bearing} />
+          <BearingWatch onBearing={setBearing} />
           <TileLayer
             attribution="Tiles &copy; Esri"
             url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
@@ -747,6 +749,36 @@ export default function VillageMapEditorGeo({
               </Marker>
             ))}
         </MapContainer>
+      </div>
+
+      {/* Rotate the map so the build can be laid out the right way round. */}
+      <div className="pointer-events-none absolute bottom-3 left-3 z-[500] flex items-center gap-1.5">
+        <button
+          type="button"
+          aria-label="Rotate map anti-clockwise"
+          onClick={() => setBearing((b) => (((b + 345) % 360) + 360) % 360)}
+          className="pointer-events-auto h-9 w-9 rounded-full bg-card/95 text-sm font-bold text-ink shadow ring-1 ring-border backdrop-blur"
+        >
+          ↺
+        </button>
+        <button
+          type="button"
+          aria-label="Rotate map clockwise"
+          onClick={() => setBearing((b) => (b + 15) % 360)}
+          className="pointer-events-auto h-9 w-9 rounded-full bg-card/95 text-sm font-bold text-ink shadow ring-1 ring-border backdrop-blur"
+        >
+          ↻
+        </button>
+        {bearing !== 0 ? (
+          <button
+            type="button"
+            aria-label="Reset map to north"
+            onClick={() => setBearing(0)}
+            className="pointer-events-auto rounded-full bg-card/95 px-3 py-1.5 text-[11px] font-bold text-ink shadow ring-1 ring-border backdrop-blur"
+          >
+            North ↑ {Math.round(bearing)}°
+          </button>
+        ) : null}
       </div>
 
       <div className="absolute bottom-3 right-3 z-[500] flex gap-2">
