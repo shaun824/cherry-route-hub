@@ -277,5 +277,5 @@ export async function syncAllLinkedEvents(supabase: AnyClient) {
     }
   }
 
-  return { events: results.length, results };
+  return { events: results.length, archived, results };
 }
