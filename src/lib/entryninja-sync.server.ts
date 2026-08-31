@@ -255,7 +255,7 @@ export async function syncAllLinkedEvents(supabase: AnyClient) {
     const eventId = byExternal.get(String(en.id)) ?? byName.get(en.name.trim().toLowerCase());
     if (!eventId) continue; // only refresh events already linked in the app
     try {
-      const r = await syncEnEvent(supabase, { enEventId: en.id, eventId });
+      const r = await syncEnEvent(supabase, { enEventId: en.id, eventId, enEvent: en });
       results.push({
         ok: true,
         eventName: r.eventName,
