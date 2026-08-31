@@ -245,22 +245,24 @@ function UnlinkedEntrantsCard() {
               Every imported entrant is linked to an account.
             </p>
           ) : (
-            {rows.length >= 300 && (
-              <p className="py-2 text-[11px] font-semibold text-ink-soft">
-                Showing the 300 most recent — the rest are riders who never signed in.
-              </p>
-            )}
-            <ul className="divide-y divide-border">
-              {rows.map((e) => (
-                <li key={e.id} className="py-2.5">
-                  <p className="text-sm font-semibold text-ink">{e.fullName ?? "—"}</p>
-                  <p className="text-xs text-ink-soft">{e.email ?? "no email on file"}</p>
-                  {e.events.length > 0 && (
-                    <p className="mt-0.5 text-[11px] text-ink-soft">{e.events.join(" · ")}</p>
-                  )}
-                </li>
-              ))}
-            </ul>
+            <>
+              {rows.length >= 300 && (
+                <p className="py-2 text-[11px] font-semibold text-ink-soft">
+                  Showing the 300 most recent — the rest are riders who never signed in.
+                </p>
+              )}
+              <ul className="divide-y divide-border">
+                {rows.map((e) => (
+                  <li key={e.id} className="py-2.5">
+                    <p className="text-sm font-semibold text-ink">{e.fullName ?? "—"}</p>
+                    <p className="text-xs text-ink-soft">{e.email ?? "no email on file"}</p>
+                    {e.events.length > 0 && (
+                      <p className="mt-0.5 text-[11px] text-ink-soft">{e.events.join(" · ")}</p>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </>
           )}
         </div>
       )}
