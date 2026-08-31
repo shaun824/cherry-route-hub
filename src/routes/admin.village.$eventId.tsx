@@ -48,6 +48,7 @@ import {
 
 } from "@/lib/village-zones";
 import ZoneDuplicator from "@/components/zone-duplicator";
+import { BrandingToPlace } from "@/components/branding-to-place";
 import { toast } from "sonner";
 
 import { fetchVillageTents, TENT_TYPES, type TentType } from "@/lib/village-tents";
