@@ -49,6 +49,7 @@ const nav: { to: string; label: string; icon: typeof LayoutDashboard; exact?: bo
   { to: "/admin/crew", label: "Crew logins", icon: KeyRound },
   { to: "/admin/schedule-sync", label: "Schedule sync", icon: CalendarClock },
   { to: "/admin/email-content", label: "Email content", icon: Mail },
+  { to: "/admin/email-workflows", label: "Email workflows", icon: Mail },
 
   { to: "/admin/audit", label: "Content check", icon: ShieldCheck },
   { to: "/admin/settings", label: "Settings", icon: Settings },

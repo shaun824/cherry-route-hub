@@ -57,6 +57,7 @@ import { Route as AdminFeedRouteImport } from './routes/admin.feed'
 import { Route as AdminEventsRouteImport } from './routes/admin.events'
 import { Route as AdminEntryNinjaRouteImport } from './routes/admin.entry-ninja'
 import { Route as AdminEmailsRouteImport } from './routes/admin.emails'
+import { Route as AdminEmailWorkflowsRouteImport } from './routes/admin.email-workflows'
 import { Route as AdminEmailContentRouteImport } from './routes/admin.email-content'
 import { Route as AdminCrewRouteImport } from './routes/admin.crew'
 import { Route as AdminBotLogRouteImport } from './routes/admin.bot-log'
@@ -101,6 +102,7 @@ import { Route as ApiPublicHooksEventBotRefreshRouteImport } from './routes/api/
 import { Route as ApiPublicHooksEntryWelcomeRouteImport } from './routes/api/public/hooks/entry-welcome'
 import { Route as ApiPublicHooksEntryNinjaSyncRouteImport } from './routes/api/public/hooks/entry-ninja-sync'
 import { Route as ApiPublicHooksEntryNinjaArchiveRouteImport } from './routes/api/public/hooks/entry-ninja-archive'
+import { Route as ApiPublicHooksEmailWorkflowRouteImport } from './routes/api/public/hooks/email-workflow'
 import { Route as ApiPublicHooksContentAuditRouteImport } from './routes/api/public/hooks/content-audit'
 import { Route as AdminLoyaltyRiderEntrantIdRouteImport } from './routes/admin.loyalty.rider.$entrantId'
 import { Route as ApiPublicEOIdRouteImport } from './routes/api/public/e/o/$id'
@@ -346,6 +348,11 @@ const AdminEmailsRoute = AdminEmailsRouteImport.update({
   path: '/emails',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminEmailWorkflowsRoute = AdminEmailWorkflowsRouteImport.update({
+  id: '/email-workflows',
+  path: '/email-workflows',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminEmailContentRoute = AdminEmailContentRouteImport.update({
   id: '/email-content',
   path: '/email-content',
@@ -584,6 +591,12 @@ const ApiPublicHooksEntryNinjaArchiveRoute =
     path: '/api/public/hooks/entry-ninja-archive',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksEmailWorkflowRoute =
+  ApiPublicHooksEmailWorkflowRouteImport.update({
+    id: '/api/public/hooks/email-workflow',
+    path: '/api/public/hooks/email-workflow',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksContentAuditRoute =
   ApiPublicHooksContentAuditRouteImport.update({
     id: '/api/public/hooks/content-audit',
@@ -627,6 +640,7 @@ export interface FileRoutesByFullPath {
   '/admin/bot-log': typeof AdminBotLogRoute
   '/admin/crew': typeof AdminCrewRoute
   '/admin/email-content': typeof AdminEmailContentRoute
+  '/admin/email-workflows': typeof AdminEmailWorkflowsRoute
   '/admin/emails': typeof AdminEmailsRoute
   '/admin/entry-ninja': typeof AdminEntryNinjaRoute
   '/admin/events': typeof AdminEventsRoute
@@ -680,6 +694,7 @@ export interface FileRoutesByFullPath {
   '/events/$eventId/': typeof EventsEventIdIndexRoute
   '/admin/loyalty/rider/$entrantId': typeof AdminLoyaltyRiderEntrantIdRoute
   '/api/public/hooks/content-audit': typeof ApiPublicHooksContentAuditRoute
+  '/api/public/hooks/email-workflow': typeof ApiPublicHooksEmailWorkflowRoute
   '/api/public/hooks/entry-ninja-archive': typeof ApiPublicHooksEntryNinjaArchiveRoute
   '/api/public/hooks/entry-ninja-sync': typeof ApiPublicHooksEntryNinjaSyncRoute
   '/api/public/hooks/entry-welcome': typeof ApiPublicHooksEntryWelcomeRoute
@@ -722,6 +737,7 @@ export interface FileRoutesByTo {
   '/admin/bot-log': typeof AdminBotLogRoute
   '/admin/crew': typeof AdminCrewRoute
   '/admin/email-content': typeof AdminEmailContentRoute
+  '/admin/email-workflows': typeof AdminEmailWorkflowsRoute
   '/admin/emails': typeof AdminEmailsRoute
   '/admin/entry-ninja': typeof AdminEntryNinjaRoute
   '/admin/events': typeof AdminEventsRoute
@@ -774,6 +790,7 @@ export interface FileRoutesByTo {
   '/events/$eventId': typeof EventsEventIdIndexRoute
   '/admin/loyalty/rider/$entrantId': typeof AdminLoyaltyRiderEntrantIdRoute
   '/api/public/hooks/content-audit': typeof ApiPublicHooksContentAuditRoute
+  '/api/public/hooks/email-workflow': typeof ApiPublicHooksEmailWorkflowRoute
   '/api/public/hooks/entry-ninja-archive': typeof ApiPublicHooksEntryNinjaArchiveRoute
   '/api/public/hooks/entry-ninja-sync': typeof ApiPublicHooksEntryNinjaSyncRoute
   '/api/public/hooks/entry-welcome': typeof ApiPublicHooksEntryWelcomeRoute
@@ -820,6 +837,7 @@ export interface FileRoutesById {
   '/admin/bot-log': typeof AdminBotLogRoute
   '/admin/crew': typeof AdminCrewRoute
   '/admin/email-content': typeof AdminEmailContentRoute
+  '/admin/email-workflows': typeof AdminEmailWorkflowsRoute
   '/admin/emails': typeof AdminEmailsRoute
   '/admin/entry-ninja': typeof AdminEntryNinjaRoute
   '/admin/events': typeof AdminEventsRoute
@@ -873,6 +891,7 @@ export interface FileRoutesById {
   '/events/$eventId/': typeof EventsEventIdIndexRoute
   '/admin/loyalty/rider/$entrantId': typeof AdminLoyaltyRiderEntrantIdRoute
   '/api/public/hooks/content-audit': typeof ApiPublicHooksContentAuditRoute
+  '/api/public/hooks/email-workflow': typeof ApiPublicHooksEmailWorkflowRoute
   '/api/public/hooks/entry-ninja-archive': typeof ApiPublicHooksEntryNinjaArchiveRoute
   '/api/public/hooks/entry-ninja-sync': typeof ApiPublicHooksEntryNinjaSyncRoute
   '/api/public/hooks/entry-welcome': typeof ApiPublicHooksEntryWelcomeRoute
@@ -920,6 +939,7 @@ export interface FileRouteTypes {
     | '/admin/bot-log'
     | '/admin/crew'
     | '/admin/email-content'
+    | '/admin/email-workflows'
     | '/admin/emails'
     | '/admin/entry-ninja'
     | '/admin/events'
@@ -973,6 +993,7 @@ export interface FileRouteTypes {
     | '/events/$eventId/'
     | '/admin/loyalty/rider/$entrantId'
     | '/api/public/hooks/content-audit'
+    | '/api/public/hooks/email-workflow'
     | '/api/public/hooks/entry-ninja-archive'
     | '/api/public/hooks/entry-ninja-sync'
     | '/api/public/hooks/entry-welcome'
@@ -1015,6 +1036,7 @@ export interface FileRouteTypes {
     | '/admin/bot-log'
     | '/admin/crew'
     | '/admin/email-content'
+    | '/admin/email-workflows'
     | '/admin/emails'
     | '/admin/entry-ninja'
     | '/admin/events'
@@ -1067,6 +1089,7 @@ export interface FileRouteTypes {
     | '/events/$eventId'
     | '/admin/loyalty/rider/$entrantId'
     | '/api/public/hooks/content-audit'
+    | '/api/public/hooks/email-workflow'
     | '/api/public/hooks/entry-ninja-archive'
     | '/api/public/hooks/entry-ninja-sync'
     | '/api/public/hooks/entry-welcome'
@@ -1112,6 +1135,7 @@ export interface FileRouteTypes {
     | '/admin/bot-log'
     | '/admin/crew'
     | '/admin/email-content'
+    | '/admin/email-workflows'
     | '/admin/emails'
     | '/admin/entry-ninja'
     | '/admin/events'
@@ -1165,6 +1189,7 @@ export interface FileRouteTypes {
     | '/events/$eventId/'
     | '/admin/loyalty/rider/$entrantId'
     | '/api/public/hooks/content-audit'
+    | '/api/public/hooks/email-workflow'
     | '/api/public/hooks/entry-ninja-archive'
     | '/api/public/hooks/entry-ninja-sync'
     | '/api/public/hooks/entry-welcome'
@@ -1222,6 +1247,7 @@ export interface RootRouteChildren {
   MyEventsEventIdReportRoute: typeof MyEventsEventIdReportRoute
   CrewLearnIndexRoute: typeof CrewLearnIndexRoute
   ApiPublicHooksContentAuditRoute: typeof ApiPublicHooksContentAuditRoute
+  ApiPublicHooksEmailWorkflowRoute: typeof ApiPublicHooksEmailWorkflowRoute
   ApiPublicHooksEntryNinjaArchiveRoute: typeof ApiPublicHooksEntryNinjaArchiveRoute
   ApiPublicHooksEntryNinjaSyncRoute: typeof ApiPublicHooksEntryNinjaSyncRoute
   ApiPublicHooksEntryWelcomeRoute: typeof ApiPublicHooksEntryWelcomeRoute
@@ -1586,6 +1612,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminEmailsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/email-workflows': {
+      id: '/admin/email-workflows'
+      path: '/email-workflows'
+      fullPath: '/admin/email-workflows'
+      preLoaderRoute: typeof AdminEmailWorkflowsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/email-content': {
       id: '/admin/email-content'
       path: '/email-content'
@@ -1894,6 +1927,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksEntryNinjaArchiveRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/email-workflow': {
+      id: '/api/public/hooks/email-workflow'
+      path: '/api/public/hooks/email-workflow'
+      fullPath: '/api/public/hooks/email-workflow'
+      preLoaderRoute: typeof ApiPublicHooksEmailWorkflowRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/content-audit': {
       id: '/api/public/hooks/content-audit'
       path: '/api/public/hooks/content-audit'
@@ -1943,6 +1983,7 @@ interface AdminRouteChildren {
   AdminBotLogRoute: typeof AdminBotLogRoute
   AdminCrewRoute: typeof AdminCrewRoute
   AdminEmailContentRoute: typeof AdminEmailContentRoute
+  AdminEmailWorkflowsRoute: typeof AdminEmailWorkflowsRoute
   AdminEmailsRoute: typeof AdminEmailsRoute
   AdminEntryNinjaRoute: typeof AdminEntryNinjaRoute
   AdminEventsRoute: typeof AdminEventsRoute
@@ -1980,6 +2021,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminBotLogRoute: AdminBotLogRoute,
   AdminCrewRoute: AdminCrewRoute,
   AdminEmailContentRoute: AdminEmailContentRoute,
+  AdminEmailWorkflowsRoute: AdminEmailWorkflowsRoute,
   AdminEmailsRoute: AdminEmailsRoute,
   AdminEntryNinjaRoute: AdminEntryNinjaRoute,
   AdminEventsRoute: AdminEventsRoute,
@@ -2089,6 +2131,7 @@ const rootRouteChildren: RootRouteChildren = {
   MyEventsEventIdReportRoute: MyEventsEventIdReportRoute,
   CrewLearnIndexRoute: CrewLearnIndexRoute,
   ApiPublicHooksContentAuditRoute: ApiPublicHooksContentAuditRoute,
+  ApiPublicHooksEmailWorkflowRoute: ApiPublicHooksEmailWorkflowRoute,
   ApiPublicHooksEntryNinjaArchiveRoute: ApiPublicHooksEntryNinjaArchiveRoute,
   ApiPublicHooksEntryNinjaSyncRoute: ApiPublicHooksEntryNinjaSyncRoute,
   ApiPublicHooksEntryWelcomeRoute: ApiPublicHooksEntryWelcomeRoute,
