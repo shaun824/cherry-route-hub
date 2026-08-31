@@ -388,6 +388,10 @@ export default function VillageMapEditorGeo({
           zoomAnimation={false}
           markerZoomAnimation={false}
           preferCanvas
+          // Big off-screen buffer so heavily detailed builds keep every shape
+          // drawn while panning instead of re-rasterising at each frame.
+          renderer={L.canvas({ padding: 1.5, tolerance: 8 })}
+
           bounceAtZoomLimits={false}
           touchZoom
           doubleClickZoom
