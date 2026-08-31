@@ -1,7 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { ShieldCheck, ShieldOff, Eye, HardHat } from "lucide-react";
+import { ShieldCheck, ShieldOff, Eye, HardHat, UserX } from "lucide-react";
+import { listUnlinkedEntrants } from "@/lib/roster.functions";
 
 import { toast } from "sonner";
 
@@ -189,6 +191,81 @@ function RidersAdmin() {
           </tbody>
         </table>
       </div>
+
+      <UnlinkedEntrantsCard />
+    </div>
+  );
+}
+
+type UnlinkedEntrant = {
+  id: string;
+  fullName: string | null;
+  email: string | null;
+  createdAt: string;
+  events: string[];
+};
+
+function UnlinkedEntrantsCard() {
+  const [open, setOpen] = useState(false);
+  const unlinkedQ = useQuery({
+    queryKey: ["admin", "unlinked-entrants"],
+    queryFn: () => listUnlinkedEntrants({}),
+  });
+
+  const rows = (unlinkedQ.data ?? []) as UnlinkedEntrant[];
+
+  return (
+    <div className="rounded-2xl bg-card ring-1 ring-border">
+      <button
+        type="button"
+        onClick={() => setOpen((s) => !s)}
+        className="flex w-full items-center gap-3 px-4 py-3 text-left"
+      >
+        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-cherry/10">
+          <UserX className="h-4 w-4 text-cherry" />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block text-sm font-bold text-ink">
+            Unlinked entrants ({unlinkedQ.isLoading ? "…" : rows.length})
+          </span>
+          <span className="block text-xs text-ink-soft">
+            Imported from Entry Ninja but not connected to an app account — usually riders who
+            haven't signed in yet, or signed in with a different email.
+          </span>
+        </span>
+        <span className="text-xs font-semibold text-cherry">{open ? "Hide" : "Show"}</span>
+      </button>
+
+      {open && (
+        <div className="border-t border-border px-4 py-2">
+          {unlinkedQ.isLoading ? (
+            <p className="py-4 text-center text-sm text-ink-soft">Loading…</p>
+          ) : rows.length === 0 ? (
+            <p className="py-4 text-center text-sm text-ink-soft">
+              Every imported entrant is linked to an account.
+            </p>
+          ) : (
+            <>
+              {rows.length >= 300 && (
+                <p className="py-2 text-[11px] font-semibold text-ink-soft">
+                  Showing the 300 most recent — the rest are riders who never signed in.
+                </p>
+              )}
+              <ul className="divide-y divide-border">
+                {rows.map((e) => (
+                  <li key={e.id} className="py-2.5">
+                    <p className="text-sm font-semibold text-ink">{e.fullName ?? "—"}</p>
+                    <p className="text-xs text-ink-soft">{e.email ?? "no email on file"}</p>
+                    {e.events.length > 0 && (
+                      <p className="mt-0.5 text-[11px] text-ink-soft">{e.events.join(" · ")}</p>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
+        </div>
+      )}
     </div>
   );
 }

@@ -62,6 +62,7 @@ function SignedOutState() {
 function SignedInState() {
   const qc = useQueryClient();
   const [showPast, setShowPast] = useState(false);
+  const [showLinkForm, setShowLinkForm] = useState(false);
   const entrantQuery = useQuery({
     queryKey: ["my-entrant"],
     queryFn: () => getMyEntrant(),
@@ -145,6 +146,28 @@ function SignedInState() {
         </div>
       )}
 
+      <div className="px-5 pb-2">
+        <button
+          type="button"
+          onClick={() => setShowLinkForm((s) => !s)}
+          className="flex w-full items-center justify-center gap-2 rounded-2xl bg-card py-3 text-sm font-semibold text-ink ring-1 ring-border"
+        >
+          <KeyRound className="h-4 w-4 text-cherry" />
+          {showLinkForm ? "Close entry linking" : "Missing an entry? Link it with your ID number"}
+        </button>
+      </div>
+
+      {showLinkForm && (
+        <LinkEntrantForm
+          embedded
+          onLinked={() => {
+            setShowLinkForm(false);
+            qc.invalidateQueries({ queryKey: ["my-entrant"] });
+            qc.invalidateQueries({ queryKey: ["my-events"] });
+          }}
+        />
+      )}
+
       <UpcomingBySport excludeIds={rows.map((r) => r.event_id)} preferSport={preferredSport} />
       <div className="pb-6" />
     </div>
@@ -206,7 +229,7 @@ function EventRow({ r }: { r: any }) {
   );
 }
 
-function LinkEntrantForm({ onLinked }: { onLinked: () => void }) {
+function LinkEntrantForm({ onLinked, embedded }: { onLinked: () => void; embedded?: boolean }) {
   const linkFn = useServerFn(linkMyEntry);
   const [idNumber, setIdNumber] = useState("");
   const [surname, setSurname] = useState("");
@@ -220,6 +243,7 @@ function LinkEntrantForm({ onLinked }: { onLinked: () => void }) {
     try {
       const res = await linkFn({ data: { id_number: idNumber, surname } });
       if (res.ok) {
+        setStatus("Linked! Pulling your events through…");
         onLinked();
       } else if (res.reason === "no_match") {
         setStatus(
@@ -237,9 +261,7 @@ function LinkEntrantForm({ onLinked }: { onLinked: () => void }) {
     }
   }
 
-  return (
-    <div>
-      <PageHeader title="Events Hub" subtitle="Link your entry to see your events" />
+  const form = (
       <form onSubmit={submit} className="mx-5 mt-4 space-y-3 rounded-2xl bg-card p-5 ring-1 ring-border">
         <div className="flex items-center gap-2">
           <KeyRound className="h-5 w-5 text-cherry" />
@@ -285,6 +307,14 @@ function LinkEntrantForm({ onLinked }: { onLinked: () => void }) {
           {busy ? "Checking…" : "Link my entry"}
         </button>
       </form>
+  );
+
+  if (embedded) return form;
+
+  return (
+    <div>
+      <PageHeader title="Events Hub" subtitle="Link your entry to see your events" />
+      {form}
       <UpcomingBySport heading="Events coming up" />
       <div className="pb-6" />
     </div>
