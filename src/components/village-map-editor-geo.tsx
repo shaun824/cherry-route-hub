@@ -560,12 +560,13 @@ export default function VillageMapEditorGeo({
                         dragend: () => commit(z.id),
                       }}
                     />
-                    {pts.map((p, i) => (
+                    {z.points.map((p, i) => (
                       <Marker
                         keyboard={false}
                         autoPanOnFocus={false}
                         key={`${z.id}-v${i}`}
                         position={[p.lat, p.lng]}
+
                         icon={handleIcon(zoneColor(z))}
                         draggable
                         eventHandlers={{
