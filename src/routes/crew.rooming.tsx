@@ -3,8 +3,9 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { BedDouble, MapPin, Search, Users, Copy, Check } from "lucide-react";
 import { useIsCrew } from "@/lib/auth";
-import { useCrewEvent } from "@/lib/crew-event";
+import { useCrewEvent, useCrewShowPast } from "@/lib/crew-event";
 import {
+  fetchAllCrewEvents,
   fetchCrewEvents,
   fetchCrewRooming,
   matchesSearch,
@@ -48,7 +49,12 @@ function CrewPage() {
   const [copied, setCopied] = useState<string | null>(null);
   const mapRef = useRef<HTMLDivElement>(null);
 
-  const eventsQ = useQuery({ queryKey: ["crew-events"], queryFn: fetchCrewEvents, enabled: isCrew });
+  const [showPast] = useCrewShowPast();
+  const eventsQ = useQuery({
+    queryKey: ["crew-events", showPast ? "all" : "visible"],
+    queryFn: showPast ? fetchAllCrewEvents : fetchCrewEvents,
+    enabled: isCrew,
+  });
   const events = eventsQ.data ?? [];
   const [eventId, setEventId] = useCrewEvent(events);
   const roomingQ = useQuery({

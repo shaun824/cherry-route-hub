@@ -7,7 +7,7 @@ import { BedDouble, Boxes, CalendarDays, ClipboardList, GraduationCap, HardHat, 
 import { useIsCrew } from "@/lib/auth";
 import { fetchAllCrewEvents, fetchCrewEvents, fetchCrewRooming, normaliseTent } from "@/lib/crew";
 import { buildCrewTimeline, groupScheduleByDay, pickCurrentDay } from "@/lib/crew-plan";
-import { useCrewEvent } from "@/lib/crew-event";
+import { useCrewEvent, useCrewShowPast } from "@/lib/crew-event";
 import { supabase } from "@/integrations/supabase/client";
 import type { EventDay, ScheduleItem } from "@/lib/mock-data";
 
@@ -37,7 +37,7 @@ export const Route = createFileRoute("/crew/")({
 function CrewDashboard() {
   const { isCrew, loading, user } = useIsCrew();
 
-  const [showPast, setShowPast] = useState(false);
+  const [showPast, setShowPast] = useCrewShowPast();
   const eventsQ = useQuery({
     queryKey: ["crew-events", showPast ? "all" : "visible"],
     queryFn: showPast ? fetchAllCrewEvents : fetchCrewEvents,

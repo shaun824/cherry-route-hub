@@ -5,8 +5,8 @@ import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ClipboardList, HardHat, Loader2 } from "lucide-react";
 import { useIsCrew } from "@/lib/auth";
-import { useCrewEvent } from "@/lib/crew-event";
-import { fetchCrewEvents } from "@/lib/crew";
+import { useCrewEvent, useCrewShowPast } from "@/lib/crew-event";
+import { fetchAllCrewEvents, fetchCrewEvents } from "@/lib/crew";
 import {
   fetchDepartments,
   fetchMyDepartmentIds,
@@ -44,7 +44,12 @@ function RunSheetPage() {
   const [dayKey, setDayKey] = useState("");
   const [mineOnly, setMineOnly] = useState(true);
 
-  const eventsQ = useQuery({ queryKey: ["crew-events"], queryFn: fetchCrewEvents, enabled: isCrew });
+  const [showPast] = useCrewShowPast();
+  const eventsQ = useQuery({
+    queryKey: ["crew-events", showPast ? "all" : "visible"],
+    queryFn: showPast ? fetchAllCrewEvents : fetchCrewEvents,
+    enabled: isCrew,
+  });
   const events = eventsQ.data ?? [];
   const [eventId, setEventId] = useCrewEvent(events);
 
