@@ -1,6 +1,7 @@
 // Admin: link an event's master run sheet (Google Sheet), sync departments,
 // daily instructions and packing lists, assign crew and review suggestions.
 import { createFileRoute } from "@tanstack/react-router";
+import { visibleInBackend } from "@/lib/event-window";
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";

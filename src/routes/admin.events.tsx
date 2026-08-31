@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { isHiddenFromBackend } from "@/lib/event-window";
 import { useMemo, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import {
