@@ -240,7 +240,7 @@ export async function setStage(line: LoadLine, stage: LoadStage, on: boolean, us
   if (stage === "setup" && on) patch['status'] = "installed";
   const { error } = await supabase
     .from("event_branding_bookings")
-    .update(patch)
+    .update(patch as never)
     .eq("id", line.id);
   if (error) throw error;
 }
