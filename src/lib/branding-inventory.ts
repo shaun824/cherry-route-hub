@@ -104,12 +104,14 @@ export async function deleteBrandingItem(id: string) {
   if (error) throw error;
 }
 
+/** Branding-only slice of the event load list (the master list lives in inventory.ts). */
 export async function fetchBrandingBookings(eventId: string): Promise<BrandingBooking[]> {
   if (!eventId) return [];
   const { data } = await supabase
     .from("event_branding_bookings")
     .select(BOOKING_COLS)
     .eq("event_id", eventId)
+    .eq("category", "branding")
     .order("created_at");
   return (data ?? []) as BrandingBooking[];
 }
