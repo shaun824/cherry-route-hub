@@ -35,9 +35,9 @@ function AdminRunSheet() {
     queryFn: async () => {
       const { data } = await supabase
         .from("events")
-        .select("id, name, run_sheet_url, run_sheet_synced_at, run_sheet_error")
+        .select("id, name, event_date, days, run_sheet_url, run_sheet_synced_at, run_sheet_error")
         .order("event_date", { ascending: false });
-      return (data ?? []) as {
+      return visibleInBackend((data ?? []) as {
         id: string;
         name: string;
         run_sheet_url: string | null;
