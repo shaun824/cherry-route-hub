@@ -40,10 +40,12 @@ function AdminRunSheet() {
       return visibleInBackend((data ?? []) as {
         id: string;
         name: string;
+        event_date: string;
+        days?: unknown[];
         run_sheet_url: string | null;
         run_sheet_synced_at: string | null;
         run_sheet_error: string | null;
-      }[];
+      }[]);
     },
   });
   const events = eventsQ.data ?? [];

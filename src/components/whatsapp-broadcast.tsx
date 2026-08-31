@@ -1,3 +1,4 @@
+import { visibleInBackend } from "@/lib/event-window";
 // Admin WhatsApp broadcast panel: readiness, approved templates and sending.
 import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";

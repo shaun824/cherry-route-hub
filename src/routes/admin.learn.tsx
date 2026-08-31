@@ -1,3 +1,4 @@
+import { visibleInBackend } from "@/lib/event-window";
 // Admin: build and refresh the crew training courses. Content is generated
 // from the app's own data (events, schedules, venues, run sheets, knowledge).
 import { createFileRoute } from "@tanstack/react-router";
