@@ -47,7 +47,7 @@ async function fetchCalendarEvents(): Promise<CalEvent[]> {
     console.warn("[crew calendar]", error);
     return [];
   }
-  return (data ?? []) as CalEvent[];
+  return visibleInBackend((data ?? []) as CalEvent[]);
 }
 
 /** Event id -> published training course id, so calendar rows can open Learn. */
