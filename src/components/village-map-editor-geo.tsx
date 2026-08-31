@@ -455,10 +455,11 @@ export default function VillageMapEditorGeo({
             .filter((t) => (t.kind ?? "tent") !== "marker")
             .map((t) => {
               const meta = tentTypeMeta(t.tent_type);
+              const pos = tentLive && tentLive.id === t.id ? tentLive : t;
               return (
                 <Rectangle
                   key={`fp-${t.id}`}
-                  bounds={tentFootprintBounds(t.lat, t.lng, meta.sizeM)}
+                  bounds={tentFootprintBounds(pos.lat, pos.lng, meta.sizeM)}
                   pathOptions={{
                     color: selectedTent === t.id ? "#c8102e" : meta.id === "luxury" ? "#f59e0b" : "#38bdf8",
                     weight: 1.5,
