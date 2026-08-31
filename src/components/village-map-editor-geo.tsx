@@ -848,7 +848,10 @@ export default function VillageMapEditorGeo({
               rows={3}
               className="w-full resize-y rounded-lg border border-border bg-background px-2 py-1.5 text-xs"
             />
+            </>
+            ) : null}
           </div>
+
         </div>
       ) : null}
     </div>
