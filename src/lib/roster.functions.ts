@@ -281,13 +281,15 @@ export const linkMyEntry = createServerFn({ method: "POST" })
     // email match doesn't need the surname second factor.
     let emailProven = false;
     if (email) {
+      // Prefer an unlinked row; duplicate emails can exist across imports.
       const { data: byEmail } = await supabaseAdmin
         .from("entrants")
         .select(cols)
         .ilike("email", email)
-        .maybeSingle();
-      if (byEmail) {
-        match = byEmail as Match;
+        .order("user_id", { ascending: true, nullsFirst: true })
+        .limit(1);
+      if (byEmail?.[0]) {
+        match = byEmail[0] as Match;
         emailProven = true;
       }
     }
@@ -296,8 +298,9 @@ export const linkMyEntry = createServerFn({ method: "POST" })
         .from("entrants")
         .select(cols)
         .eq("id_number_hash", idHash)
-        .maybeSingle();
-      if (byId) match = byId as Match;
+        .order("user_id", { ascending: true, nullsFirst: true })
+        .limit(1);
+      if (byId?.[0]) match = byId[0] as Match;
     }
 
     if (!match) return { ok: false as const, reason: "no_match" as const };
