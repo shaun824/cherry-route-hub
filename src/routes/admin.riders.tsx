@@ -245,6 +245,11 @@ function UnlinkedEntrantsCard() {
               Every imported entrant is linked to an account.
             </p>
           ) : (
+            {rows.length >= 300 && (
+              <p className="py-2 text-[11px] font-semibold text-ink-soft">
+                Showing the 300 most recent — the rest are riders who never signed in.
+              </p>
+            )}
             <ul className="divide-y divide-border">
               {rows.map((e) => (
                 <li key={e.id} className="py-2.5">
