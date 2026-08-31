@@ -7,7 +7,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Boxes, Check, Loader2, MapPin, Package, Plus, Trash2, Truck } from "lucide-react";
 import { toast } from "sonner";
 import { useIsAdmin, useIsCrew } from "@/lib/auth";
-import { useCrewEvent } from "@/lib/crew-event";
+import { useCrewEvent, useCrewShowPast } from "@/lib/crew-event";
 import { fetchAllCrewEvents, fetchCrewEvents } from "@/lib/crew";
 import { fetchDepartments } from "@/lib/run-sheet";
 import { supabase } from "@/integrations/supabase/client";
