@@ -284,6 +284,14 @@ function LinkEntrantForm({ onLinked, embedded }: { onLinked: () => void; embedde
           {busy ? "Checking…" : "Link my entry"}
         </button>
       </form>
+  );
+
+  if (embedded) return form;
+
+  return (
+    <div>
+      <PageHeader title="Events Hub" subtitle="Link your entry to see your events" />
+      {form}
       <UpcomingBySport heading="Events coming up" />
       <div className="pb-6" />
     </div>
