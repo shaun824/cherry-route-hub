@@ -276,10 +276,41 @@ export default function VillageMapEditorGeo({
   // it every animation frame, so the outline tracks the finger instead of
   // pushing a re-render of the whole editor on every pointer move.
   const [live, setLive] = useState<{ id: string; points: ZonePoint[] } | null>(null);
+  // While a tent is being dragged, its footprint square tracks the marker via
+  // this live position instead of waiting for the save to come back.
+  const [tentLive, setTentLive] = useState<{ id: string; lat: number; lng: number } | null>(null);
   const [panelMin, setPanelMin] = useState(false);
 
   const frame = useRef<number | null>(null);
   const pending = useRef<{ id: string; points: ZonePoint[] } | null>(null);
+  const tentFrame = useRef<number | null>(null);
+  const tentPending = useRef<{ id: string; lat: number; lng: number } | null>(null);
+
+  function paintTent(id: string, lat: number, lng: number) {
+    tentPending.current = { id, lat, lng };
+    if (tentFrame.current != null) return;
+    tentFrame.current = requestAnimationFrame(() => {
+      tentFrame.current = null;
+      if (tentPending.current) setTentLive(tentPending.current);
+    });
+  }
+
+  function commitTent(id: string) {
+    if (tentFrame.current != null) {
+      cancelAnimationFrame(tentFrame.current);
+      tentFrame.current = null;
+    }
+    const next = tentPending.current;
+    tentPending.current = null;
+    if (next && next.id === id) {
+      // Keep the footprint at the dropped spot until the parent state confirms
+      // the save — otherwise the square snaps back and the move looks lost.
+      setTentLive(next);
+      onMoveTent?.(id, next.lat, next.lng);
+    } else {
+      setTentLive(null);
+    }
+  }
 
   function paint(id: string, points: ZonePoint[]) {
     pending.current = { id, points };
@@ -310,7 +341,17 @@ export default function VillageMapEditorGeo({
 
   useEffect(() => () => {
     if (frame.current != null) cancelAnimationFrame(frame.current);
+    if (tentFrame.current != null) cancelAnimationFrame(tentFrame.current);
   }, []);
+
+  // Drop the live tent position once the stored tent matches what we painted.
+  useEffect(() => {
+    if (!tentLive || tentPending.current) return;
+    const t = tents.find((x) => x.id === tentLive.id);
+    if (!t || (Math.abs(t.lat - tentLive.lat) < 1e-7 && Math.abs(t.lng - tentLive.lng) < 1e-7)) {
+      setTentLive(null);
+    }
+  }, [tents, tentLive]);
 
   // Drop the live overlay once the stored zone matches what we painted.
   useEffect(() => {
@@ -414,10 +455,11 @@ export default function VillageMapEditorGeo({
             .filter((t) => (t.kind ?? "tent") !== "marker")
             .map((t) => {
               const meta = tentTypeMeta(t.tent_type);
+              const pos = tentLive && tentLive.id === t.id ? tentLive : t;
               return (
                 <Rectangle
                   key={`fp-${t.id}`}
-                  bounds={tentFootprintBounds(t.lat, t.lng, meta.sizeM)}
+                  bounds={tentFootprintBounds(pos.lat, pos.lng, meta.sizeM)}
                   pathOptions={{
                     color: selectedTent === t.id ? "#c8102e" : meta.id === "luxury" ? "#f59e0b" : "#38bdf8",
                     weight: 1.5,
@@ -438,10 +480,11 @@ export default function VillageMapEditorGeo({
               icon={tentPinIcon(t.label, selectedTent === t.id, t.kind === "marker")}
               eventHandlers={{
                 click: () => onSelectTent?.(selectedTent === t.id ? null : t.id),
-                dragend: (e) => {
+                drag: (e) => {
                   const ll = (e.target as L.Marker).getLatLng();
-                  onMoveTent?.(t.id, ll.lat, ll.lng);
+                  paintTent(t.id, ll.lat, ll.lng);
                 },
+                dragend: () => commitTent(t.id),
               }}
             >
               {onDeleteTent && !locked ? (
