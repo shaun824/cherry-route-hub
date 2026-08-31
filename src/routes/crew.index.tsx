@@ -258,7 +258,7 @@ function CrewDashboard() {
           to="/crew/inventory"
           icon={<Boxes className="h-5 w-5" />}
           title="Inventory management"
-          body="Book branding into this event — it flows to the build map and the packing list."
+          body="The full event load-out: what to pack, who is driving it, and packed / on site / setup / returned ticks."
         />
         <Tile
           to="/crew/build"
