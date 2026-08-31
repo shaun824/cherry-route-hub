@@ -37,7 +37,12 @@ export const Route = createFileRoute("/crew/")({
 function CrewDashboard() {
   const { isCrew, loading, user } = useIsCrew();
 
-  const eventsQ = useQuery({ queryKey: ["crew-events"], queryFn: fetchCrewEvents, enabled: isCrew });
+  const [showPast, setShowPast] = useState(false);
+  const eventsQ = useQuery({
+    queryKey: ["crew-events", showPast ? "all" : "visible"],
+    queryFn: showPast ? fetchAllCrewEvents : fetchCrewEvents,
+    enabled: isCrew,
+  });
   const events = eventsQ.data ?? [];
   const [eventId, pickEvent] = useCrewEvent(events);
 
