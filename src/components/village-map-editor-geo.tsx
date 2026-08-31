@@ -467,7 +467,11 @@ export default function VillageMapEditorGeo({
             const clash = overlapping.has(z.id);
             const pts = zonePoints(z);
             const positions = pts.map((p) => [p.lat, p.lng]) as [number, number][];
-            const c = zoneCentroid({ ...z, points: pts });
+            // Handles are positioned from the stored geometry only: Leaflet
+            // moves them itself while dragging, so re-feeding live coords every
+            // frame just fights the gesture and makes dragging feel sluggish.
+            const c = zoneCentroid(z);
+
             return (
               <Fragment key={z.id}>
                 {active ? (
