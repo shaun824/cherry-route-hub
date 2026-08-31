@@ -5,6 +5,10 @@ import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { MapContainer, TileLayer, Marker, Polygon, Polyline, Popup, Rectangle, Tooltip, useMap, useMapEvents } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+// Bearing support so the build can be laid out "the right way round" — the
+// plugin patches the global `L`. This module only loads lazily in the browser.
+(globalThis as unknown as { L: typeof L }).L = L;
+await import("leaflet-rotate");
 import { spotColor, spotIcon, type VillageHotspot } from "@/lib/village-map";
 import { villageIconSvg } from "@/lib/village-icons";
 import { tentFootprintBounds, tentTypeMeta } from "@/lib/village-tents";
@@ -109,7 +113,33 @@ function FitToContent({ points, token }: { points: ZonePoint[]; token: number })
   return null;
 }
 
+/** Keeps the Leaflet map bearing in sync with the editor's rotate controls. */
+function BearingSync({ bearing }: { bearing: number }) {
+  const map = useMap();
+  useEffect(() => {
+    (map as unknown as { setBearing?: (b: number) => void }).setBearing?.(bearing);
+  }, [map, bearing]);
+  return null;
+}
 
+/** Tracks two-finger twist so the on-screen readout stays accurate. */
+function BearingWatch({ onBearing }: { onBearing: (b: number) => void }) {
+  const map = useMap();
+  useEffect(() => {
+    const m = map as unknown as {
+      getBearing?: () => number;
+      on: (t: string, fn: () => void) => void;
+      off: (t: string, fn: () => void) => void;
+    };
+    const update = () => {
+      const b = m.getBearing?.();
+      if (typeof b === "number") onBearing(((b % 360) + 360) % 360);
+    };
+    m.on("rotate", update);
+    return () => m.off("rotate", update);
+  }, [map, onBearing]);
+  return null;
+}
 
 function tentPinIcon(label: string, active: boolean, marker = false) {
   const bg = active ? "#c8102e" : marker ? "#64748b" : "#111827";
@@ -279,6 +309,7 @@ export default function VillageMapEditorGeo({
   // While a tent is being dragged, its footprint square tracks the marker via
   // this live position instead of waiting for the save to come back.
   const [tentLive, setTentLive] = useState<{ id: string; lat: number; lng: number } | null>(null);
+  const [bearing, setBearing] = useState(0);
   const [panelMin, setPanelMin] = useState(false);
 
   const frame = useRef<number | null>(null);
@@ -436,9 +467,14 @@ export default function VillageMapEditorGeo({
           bounceAtZoomLimits={false}
           touchZoom
           doubleClickZoom
+          // Two-finger twist rotates the map so the build can be planned the
+          // right way round; the ↺ ↻ controls do the same on desktop.
+          {...({ rotate: true, touchRotate: true, rotateControl: false, bearing: 0 } as object)}
           className="h-[65vh] min-h-[360px] w-full"
         >
           <VillageMapTrackpadZoom />
+          <BearingSync bearing={bearing} />
+          <BearingWatch onBearing={setBearing} />
           <TileLayer
             attribution="Tiles &copy; Esri"
             url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
@@ -713,6 +749,36 @@ export default function VillageMapEditorGeo({
               </Marker>
             ))}
         </MapContainer>
+      </div>
+
+      {/* Rotate the map so the build can be laid out the right way round. */}
+      <div className="pointer-events-none absolute bottom-3 left-3 z-[500] flex items-center gap-1.5">
+        <button
+          type="button"
+          aria-label="Rotate map anti-clockwise"
+          onClick={() => setBearing((b) => (((b + 345) % 360) + 360) % 360)}
+          className="pointer-events-auto h-9 w-9 rounded-full bg-card/95 text-sm font-bold text-ink shadow ring-1 ring-border backdrop-blur"
+        >
+          ↺
+        </button>
+        <button
+          type="button"
+          aria-label="Rotate map clockwise"
+          onClick={() => setBearing((b) => (b + 15) % 360)}
+          className="pointer-events-auto h-9 w-9 rounded-full bg-card/95 text-sm font-bold text-ink shadow ring-1 ring-border backdrop-blur"
+        >
+          ↻
+        </button>
+        {bearing !== 0 ? (
+          <button
+            type="button"
+            aria-label="Reset map to north"
+            onClick={() => setBearing(0)}
+            className="pointer-events-auto rounded-full bg-card/95 px-3 py-1.5 text-[11px] font-bold text-ink shadow ring-1 ring-border backdrop-blur"
+          >
+            North ↑ {Math.round(bearing)}°
+          </button>
+        ) : null}
       </div>
 
       <div className="absolute bottom-3 right-3 z-[500] flex gap-2">
