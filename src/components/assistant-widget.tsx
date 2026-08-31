@@ -45,7 +45,7 @@ export function AssistantWidget() {
   useEffect(() => {
     let seen = true;
     try {
-      seen = sessionStorage.getItem(NUDGE_KEY) === "1";
+      seen = localStorage.getItem(NUDGE_KEY) === "1";
     } catch {
       seen = true;
     }
@@ -147,7 +147,7 @@ export function AssistantWidget() {
   function dismissNudge() {
     setNudge(false);
     try {
-      sessionStorage.setItem(NUDGE_KEY, "1");
+      localStorage.setItem(NUDGE_KEY, "1");
     } catch {
       /* ignore */
     }
