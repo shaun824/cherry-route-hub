@@ -480,10 +480,11 @@ export default function VillageMapEditorGeo({
               icon={tentPinIcon(t.label, selectedTent === t.id, t.kind === "marker")}
               eventHandlers={{
                 click: () => onSelectTent?.(selectedTent === t.id ? null : t.id),
-                dragend: (e) => {
+                drag: (e) => {
                   const ll = (e.target as L.Marker).getLatLng();
-                  onMoveTent?.(t.id, ll.lat, ll.lng);
+                  paintTent(t.id, ll.lat, ll.lng);
                 },
+                dragend: () => commitTent(t.id),
               }}
             >
               {onDeleteTent && !locked ? (
