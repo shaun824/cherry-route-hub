@@ -295,15 +295,41 @@ export default function VillageMapEditorGeo({
     }
     const next = pending.current;
     pending.current = null;
-    setLive(null);
-    if (next && next.id === id) onZoneChange(id, next.points);
+    if (next && next.id === id) {
+      // Keep painting the dragged shape until the parent state comes back with
+      // the saved geometry — otherwise the outline snaps back on release and
+      // looks like the edit was lost.
+      setLive(next);
+      onZoneChange(id, next.points);
+    } else {
+      setLive(null);
+    }
   }
 
   useEffect(() => () => {
     if (frame.current != null) cancelAnimationFrame(frame.current);
   }, []);
 
+  // Drop the live overlay once the stored zone matches what we painted.
+  useEffect(() => {
+    if (!live || pending.current) return;
+    const stored = zones.find((z) => z.id === live.id);
+    if (!stored) {
+      setLive(null);
+      return;
+    }
+    const same =
+      stored.points.length === live.points.length &&
+      stored.points.every(
+        (p, i) =>
+          Math.abs(p.lat - live.points[i].lat) < 1e-7 &&
+          Math.abs(p.lng - live.points[i].lng) < 1e-7,
+      );
+    if (same) setLive(null);
+  }, [zones, live]);
+
   const zonePoints = (z: VillageZone) => (live && live.id === z.id ? live.points : z.points);
+
 
   const activeZone = zones.find((z) => z.id === selectedZone) ?? null;
 
