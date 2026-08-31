@@ -276,6 +276,8 @@ export default function VillageMapEditorGeo({
   // it every animation frame, so the outline tracks the finger instead of
   // pushing a re-render of the whole editor on every pointer move.
   const [live, setLive] = useState<{ id: string; points: ZonePoint[] } | null>(null);
+  const [panelMin, setPanelMin] = useState(false);
+
   const frame = useRef<number | null>(null);
   const pending = useRef<{ id: string; points: ZonePoint[] } | null>(null);
 
