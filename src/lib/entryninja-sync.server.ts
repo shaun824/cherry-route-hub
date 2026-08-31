@@ -213,15 +213,37 @@ export async function syncEnEvent(
   };
 }
 
-// Syncs every Entry Ninja event that is already linked to a local event.
+// Syncs every Entry Ninja event that is still OPEN for entry and already
+// linked to a local (non-archived) event. Closed events can't gain entries, so
+// we skip the API call entirely and archive their local record.
 export async function syncAllLinkedEvents(supabase: AnyClient) {
-  const enEvents = await fetchEnEvents();
-  const { data: local } = await supabase.from("events").select("id, name, entry_ninja_id");
+  const { fetchOpenEnEvents } = await import("./entryninja.server");
+  const enEvents = await fetchOpenEnEvents();
+  const openIds = new Set(enEvents.map((e) => String(e.id)));
+  const { data: local } = await supabase.from("events").select("id, name, entry_ninja_id, lifecycle, event_date");
   const byExternal = new Map<string, string>();
   const byName = new Map<string, string>();
+  const staleIds: string[] = [];
+  const cutoff = Date.now() - 24 * 60 * 60 * 1000;
   for (const e of (local ?? []) as any[]) {
-    if (e.entry_ninja_id) byExternal.set(String(e.entry_ninja_id), e.id);
+    if (e.lifecycle === "archived") continue;
+    if (e.entry_ninja_id) {
+      byExternal.set(String(e.entry_ninja_id), e.id);
+      const past = e.event_date ? new Date(e.event_date).getTime() < cutoff : false;
+      if (!openIds.has(String(e.entry_ninja_id)) && past) staleIds.push(e.id);
+    }
     if (e.name) byName.set(String(e.name).trim().toLowerCase(), e.id);
+  }
+
+  // Entries closed + the event date has passed → archive so it drops off the
+  // admin lists and out of every future sync.
+  let archived = 0;
+  if (staleIds.length) {
+    const { error } = await supabase
+      .from("events")
+      .update({ lifecycle: "archived", status: "completed" })
+      .in("id", staleIds);
+    if (!error) archived = staleIds.length;
   }
 
   const results: (Pick<SyncResult, "eventName" | "totalEntries" | "created" | "updated" | "linked"> & {
@@ -233,7 +255,7 @@ export async function syncAllLinkedEvents(supabase: AnyClient) {
     const eventId = byExternal.get(String(en.id)) ?? byName.get(en.name.trim().toLowerCase());
     if (!eventId) continue; // only refresh events already linked in the app
     try {
-      const r = await syncEnEvent(supabase, { enEventId: en.id, eventId });
+      const r = await syncEnEvent(supabase, { enEventId: en.id, eventId, enEvent: en });
       results.push({
         ok: true,
         eventName: r.eventName,
@@ -255,5 +277,5 @@ export async function syncAllLinkedEvents(supabase: AnyClient) {
     }
   }
 
-  return { events: results.length, results };
+  return { events: results.length, archived, results };
 }

@@ -6,21 +6,25 @@ import { checkIsAdmin } from "./is-admin";
 
 export const listEntryNinjaEvents = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
+  .inputValidator((data: unknown) => z.object({ includeClosed: z.boolean().optional() }).parse(data ?? {}))
+  .handler(async ({ data, context }) => {
     const isAdmin = await checkIsAdmin(context.supabase as never);
     if (!isAdmin) throw new Error("Forbidden");
 
-    const { fetchEnEvents } = await import("./entryninja.server");
+    const { fetchEnEvents, fetchOpenEnEvents } = await import("./entryninja.server");
+    // Default view = events still open for entry. Closed events never change,
+    // so we don't call Entry Ninja for them unless an admin asks.
     const [enEvents, local] = await Promise.all([
-      fetchEnEvents(),
-      context.supabase.from("events").select("id, name, entry_ninja_id"),
+      data.includeClosed ? fetchEnEvents() : fetchOpenEnEvents(),
+      context.supabase.from("events").select("id, name, entry_ninja_id, lifecycle"),
     ]);
 
-    const byExternal = new Map<string, { id: string; name: string }>();
-    const byName = new Map<string, { id: string; name: string }>();
+    const byExternal = new Map<string, { id: string; name: string; lifecycle: string | null }>();
+    const byName = new Map<string, { id: string; name: string; lifecycle: string | null }>();
     for (const e of local.data ?? []) {
-      if (e.entry_ninja_id) byExternal.set(String(e.entry_ninja_id), { id: e.id, name: e.name });
-      if (e.name) byName.set(e.name.trim().toLowerCase(), { id: e.id, name: e.name });
+      const rec = { id: e.id, name: e.name, lifecycle: (e as { lifecycle?: string | null }).lifecycle ?? null };
+      if (e.entry_ninja_id) byExternal.set(String(e.entry_ninja_id), rec);
+      if (e.name) byName.set(e.name.trim().toLowerCase(), rec);
     }
 
     return enEvents
@@ -34,8 +38,10 @@ export const listEntryNinjaEvents = createServerFn({ method: "POST" })
           location: [e.venue?.city, e.venue?.province].filter(Boolean).join(", ") || null,
           matchedEventId: match?.id ?? null,
           matchedEventName: match?.name ?? null,
+          archived: match?.lifecycle === "archived",
         };
       })
+      .filter((e) => (data.includeClosed ? true : !e.archived))
       .sort((a, b) => (a.date ?? "").localeCompare(b.date ?? ""));
   });
 

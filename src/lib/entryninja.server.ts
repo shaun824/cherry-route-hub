@@ -75,6 +75,14 @@ export async function fetchEnEvents(maxPages = 40): Promise<EnEvent[]> {
 }
 
 
+/**
+ * Only the events still OPEN for entry on Entry Ninja (page 1 of the feed).
+ * Closed events never gain new entries, so we don't call the API for them.
+ */
+export async function fetchOpenEnEvents(): Promise<EnEvent[]> {
+  return fetchEnEvents(1);
+}
+
 export async function fetchEnEntries(eventId: number, maxPages = 40): Promise<EnEntry[]> {
   const out: EnEntry[] = [];
   for (let page = 1; page <= maxPages; page++) {
