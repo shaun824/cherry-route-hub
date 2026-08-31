@@ -254,7 +254,7 @@ export const fetchTrackingEvents = createServerFn({ method: "GET" })
       .from("events")
       .select("id, name, event_date, lifecycle, days")
       .neq("lifecycle", "archived")
-      .order("event_date", { ascending: false })
+      .order("event_date", { ascending: true })
       .limit(50);
     if (error) throw new Error(error.message);
     return visibleInBackend(data ?? []).map((e) => ({

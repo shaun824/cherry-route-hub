@@ -57,6 +57,7 @@ export function useCrewEvent(events: EventLike[]): [string, (id: string) => void
     });
     if (next) {
       setEventId(next.id);
+      writeCrewEventId(next.id);
       return;
     }
     const saved = readCrewEventId();
@@ -65,7 +66,10 @@ export function useCrewEvent(events: EventLike[]): [string, (id: string) => void
       return;
     }
     const last = events[events.length - 1];
-    if (last) setEventId(last.id);
+    if (last) {
+      setEventId(last.id);
+      writeCrewEventId(last.id);
+    }
   }, [events, eventId]);
 
   const pick = useCallback((id: string) => {
