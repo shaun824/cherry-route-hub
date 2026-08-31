@@ -781,13 +781,23 @@ export default function VillageMapEditorGeo({
                 Delete
               </button>
               <button
+                onClick={() => setPanelMin((v) => !v)}
+                className="shrink-0 rounded-lg bg-muted px-2 py-1 text-[11px] font-bold"
+                aria-label={panelMin ? "Expand area panel" : "Minimise area panel"}
+              >
+                {panelMin ? "▼" : "▲"}
+              </button>
+              <button
                 onClick={() => onSelectZone(null)}
                 className="shrink-0 rounded-lg bg-muted px-2 py-1 text-[11px] font-bold"
               >
                 Done
               </button>
             </div>
+            {!panelMin ? (
+            <>
             <p className="text-[11px] font-semibold text-ink-soft">
+
               {(() => {
                 const s = zoneSizeM(activeZone);
                 return `${Math.round(s.w)}m × ${Math.round(s.h)}m · ${formatArea(zoneAreaM2(activeZone))} · ${formatLength(zonePerimeterM(activeZone))} perimeter · drag ✥ to move, white dots reshape, tap + to add a corner, tap a dot to remove it`;
