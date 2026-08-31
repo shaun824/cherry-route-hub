@@ -757,6 +757,158 @@ export type Database = {
           },
         ]
       }
+      event_email_campaigns: {
+        Row: {
+          activated_at: string | null
+          anchor: string
+          created_at: string
+          created_by: string | null
+          event_id: string
+          id: string
+          name: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          activated_at?: string | null
+          anchor?: string
+          created_at?: string
+          created_by?: string | null
+          event_id: string
+          id?: string
+          name: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          activated_at?: string | null
+          anchor?: string
+          created_at?: string
+          created_by?: string | null
+          event_id?: string
+          id?: string
+          name?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_email_campaigns_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_email_sends: {
+        Row: {
+          campaign_id: string
+          email: string
+          error_message: string | null
+          event_id: string
+          id: string
+          sent_at: string
+          status: string
+          step_id: string
+        }
+        Insert: {
+          campaign_id: string
+          email: string
+          error_message?: string | null
+          event_id: string
+          id?: string
+          sent_at?: string
+          status?: string
+          step_id: string
+        }
+        Update: {
+          campaign_id?: string
+          email?: string
+          error_message?: string | null
+          event_id?: string
+          id?: string
+          sent_at?: string
+          status?: string
+          step_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_email_sends_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "event_email_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_email_sends_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_email_sends_step_id_fkey"
+            columns: ["step_id"]
+            isOneToOne: false
+            referencedRelation: "event_email_steps"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_email_steps: {
+        Row: {
+          body: string
+          campaign_id: string
+          created_at: string
+          cta_label: string | null
+          cta_url: string | null
+          delay_hours: number
+          enabled: boolean
+          heading: string | null
+          id: string
+          position: number
+          subject: string
+          updated_at: string
+        }
+        Insert: {
+          body?: string
+          campaign_id: string
+          created_at?: string
+          cta_label?: string | null
+          cta_url?: string | null
+          delay_hours?: number
+          enabled?: boolean
+          heading?: string | null
+          id?: string
+          position?: number
+          subject: string
+          updated_at?: string
+        }
+        Update: {
+          body?: string
+          campaign_id?: string
+          created_at?: string
+          cta_label?: string | null
+          cta_url?: string | null
+          delay_hours?: number
+          enabled?: boolean
+          heading?: string | null
+          id?: string
+          position?: number
+          subject?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_email_steps_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "event_email_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       event_entrants: {
         Row: {
           amount_due_cents: number | null
