@@ -113,7 +113,33 @@ function FitToContent({ points, token }: { points: ZonePoint[]; token: number })
   return null;
 }
 
+/** Keeps the Leaflet map bearing in sync with the editor's rotate controls. */
+function BearingSync({ bearing }: { bearing: number }) {
+  const map = useMap();
+  useEffect(() => {
+    (map as unknown as { setBearing?: (b: number) => void }).setBearing?.(bearing);
+  }, [map, bearing]);
+  return null;
+}
 
+/** Tracks two-finger twist so the on-screen readout stays accurate. */
+function BearingWatch({ onBearing }: { onBearing: (b: number) => void }) {
+  const map = useMap();
+  useEffect(() => {
+    const m = map as unknown as {
+      getBearing?: () => number;
+      on: (t: string, fn: () => void) => void;
+      off: (t: string, fn: () => void) => void;
+    };
+    const update = () => {
+      const b = m.getBearing?.();
+      if (typeof b === "number") onBearing(((b % 360) + 360) % 360);
+    };
+    m.on("rotate", update);
+    return () => m.off("rotate", update);
+  }, [map, onBearing]);
+  return null;
+}
 
 function tentPinIcon(label: string, active: boolean, marker = false) {
   const bg = active ? "#c8102e" : marker ? "#64748b" : "#111827";
