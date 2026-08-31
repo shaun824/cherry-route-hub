@@ -748,7 +748,7 @@ export default function VillageMapEditorGeo({
         </div>
       ) : activeZone && !locked ? (
         <div className="pointer-events-none absolute inset-x-0 top-3 z-[500] flex justify-center px-3">
-          <div className="pointer-events-auto w-full max-w-md space-y-2 rounded-xl bg-card/95 p-3 shadow-lg ring-1 ring-border backdrop-blur">
+          <div className="pointer-events-auto max-h-[70vh] w-full max-w-md space-y-2 overflow-y-auto rounded-xl bg-card/95 p-3 shadow-lg ring-1 ring-border backdrop-blur">
             <div className="flex items-center gap-2">
               <input
                 value={activeZone.name}
