@@ -42,11 +42,11 @@ function SocialAdminPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("events")
-        .select("id, name, event_date, website_url, social_links")
+        .select("id, name, event_date, website_url, social_links, days")
         .neq("lifecycle", "archived")
         .order("event_date", { ascending: true });
       if (error) throw new Error(error.message);
-      return (data ?? []) as EventRow[];
+      return visibleInBackend((data ?? []) as (EventRow & { days?: unknown[] })[]);
     },
   });
 

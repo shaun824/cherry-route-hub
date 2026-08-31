@@ -39,8 +39,8 @@ function AdminKnowledge() {
   const eventsQ = useQuery({
     queryKey: ["events-min"],
     queryFn: async () => {
-      const { data } = await supabase.from("events").select("id, name").order("event_date");
-      return data ?? [];
+      const { data } = await supabase.from("events").select("id, name, event_date, days").order("event_date");
+      return visibleInBackend((data ?? []) as { id: string; name: string; event_date: string; days?: unknown[] }[]);
     },
     staleTime: 5 * 60 * 1000,
   });

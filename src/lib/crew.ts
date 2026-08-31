@@ -2,6 +2,7 @@
 // who shares each tent/room, and where that room sits on the village map.
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { visibleInBackend } from "./event-window";
 
 export type CrewRoomingRow = {
   id: string;

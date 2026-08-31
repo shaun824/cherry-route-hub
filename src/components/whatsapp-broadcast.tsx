@@ -39,10 +39,10 @@ export function WhatsappBroadcastPanel() {
     queryFn: async () => {
       const { data } = await supabase
         .from("events")
-        .select("id, name, event_date")
+        .select("id, name, event_date, days")
         .neq("status", "archived")
         .order("event_date", { ascending: true });
-      return data ?? [];
+      return visibleInBackend((data ?? []) as { id: string; name: string; event_date: string; days?: unknown[] }[]);
     },
   });
 

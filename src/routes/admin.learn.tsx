@@ -31,9 +31,9 @@ export const Route = createFileRoute("/admin/learn")({
 async function fetchEvents() {
   const { data } = await supabase
     .from("events")
-    .select("id, name, event_date")
+    .select("id, name, event_date, days")
     .order("event_date", { ascending: false });
-  return (data ?? []) as { id: string; name: string; event_date: string }[];
+  return visibleInBackend((data ?? []) as { id: string; name: string; event_date: string; days?: unknown[] }[]);
 }
 
 
