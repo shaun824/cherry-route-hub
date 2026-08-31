@@ -76,8 +76,13 @@ function RiderProfile() {
         .maybeSingle();
       if (pErr) throw pErr;
 
-      const { data: entrants } = await supabase.from("entrants").select("id").eq("user_id", userId);
-      const entrantIds = (entrants ?? []).map((e) => e.id as string);
+      // Entrants imported from Entry Ninja may not be linked to the auth user yet,
+      // so also match on the profile email.
+      const email = (profile?.email ?? "").trim();
+      const orFilter = email ? `user_id.eq.${userId},email.ilike.${email}` : `user_id.eq.${userId}`;
+      const { data: entrants } = await supabase.from("entrants").select("id").or(orFilter);
+      const entrantIds = Array.from(new Set((entrants ?? []).map((e) => e.id as string)));
+
 
       let entries: Entry[] = [];
       let rooming: Rooming[] = [];
