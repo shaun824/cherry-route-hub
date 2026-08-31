@@ -57,6 +57,7 @@ import { Route as AdminFeedRouteImport } from './routes/admin.feed'
 import { Route as AdminEventsRouteImport } from './routes/admin.events'
 import { Route as AdminEntryNinjaRouteImport } from './routes/admin.entry-ninja'
 import { Route as AdminEmailsRouteImport } from './routes/admin.emails'
+import { Route as AdminEmailWorkflowsRouteImport } from './routes/admin.email-workflows'
 import { Route as AdminEmailContentRouteImport } from './routes/admin.email-content'
 import { Route as AdminCrewRouteImport } from './routes/admin.crew'
 import { Route as AdminBotLogRouteImport } from './routes/admin.bot-log'
@@ -347,6 +348,11 @@ const AdminEmailsRoute = AdminEmailsRouteImport.update({
   path: '/emails',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminEmailWorkflowsRoute = AdminEmailWorkflowsRouteImport.update({
+  id: '/email-workflows',
+  path: '/email-workflows',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminEmailContentRoute = AdminEmailContentRouteImport.update({
   id: '/email-content',
   path: '/email-content',
@@ -634,6 +640,7 @@ export interface FileRoutesByFullPath {
   '/admin/bot-log': typeof AdminBotLogRoute
   '/admin/crew': typeof AdminCrewRoute
   '/admin/email-content': typeof AdminEmailContentRoute
+  '/admin/email-workflows': typeof AdminEmailWorkflowsRoute
   '/admin/emails': typeof AdminEmailsRoute
   '/admin/entry-ninja': typeof AdminEntryNinjaRoute
   '/admin/events': typeof AdminEventsRoute
@@ -730,6 +737,7 @@ export interface FileRoutesByTo {
   '/admin/bot-log': typeof AdminBotLogRoute
   '/admin/crew': typeof AdminCrewRoute
   '/admin/email-content': typeof AdminEmailContentRoute
+  '/admin/email-workflows': typeof AdminEmailWorkflowsRoute
   '/admin/emails': typeof AdminEmailsRoute
   '/admin/entry-ninja': typeof AdminEntryNinjaRoute
   '/admin/events': typeof AdminEventsRoute
@@ -829,6 +837,7 @@ export interface FileRoutesById {
   '/admin/bot-log': typeof AdminBotLogRoute
   '/admin/crew': typeof AdminCrewRoute
   '/admin/email-content': typeof AdminEmailContentRoute
+  '/admin/email-workflows': typeof AdminEmailWorkflowsRoute
   '/admin/emails': typeof AdminEmailsRoute
   '/admin/entry-ninja': typeof AdminEntryNinjaRoute
   '/admin/events': typeof AdminEventsRoute
@@ -930,6 +939,7 @@ export interface FileRouteTypes {
     | '/admin/bot-log'
     | '/admin/crew'
     | '/admin/email-content'
+    | '/admin/email-workflows'
     | '/admin/emails'
     | '/admin/entry-ninja'
     | '/admin/events'
@@ -1026,6 +1036,7 @@ export interface FileRouteTypes {
     | '/admin/bot-log'
     | '/admin/crew'
     | '/admin/email-content'
+    | '/admin/email-workflows'
     | '/admin/emails'
     | '/admin/entry-ninja'
     | '/admin/events'
@@ -1124,6 +1135,7 @@ export interface FileRouteTypes {
     | '/admin/bot-log'
     | '/admin/crew'
     | '/admin/email-content'
+    | '/admin/email-workflows'
     | '/admin/emails'
     | '/admin/entry-ninja'
     | '/admin/events'
@@ -1600,6 +1612,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminEmailsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/email-workflows': {
+      id: '/admin/email-workflows'
+      path: '/email-workflows'
+      fullPath: '/admin/email-workflows'
+      preLoaderRoute: typeof AdminEmailWorkflowsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/email-content': {
       id: '/admin/email-content'
       path: '/email-content'
@@ -1964,6 +1983,7 @@ interface AdminRouteChildren {
   AdminBotLogRoute: typeof AdminBotLogRoute
   AdminCrewRoute: typeof AdminCrewRoute
   AdminEmailContentRoute: typeof AdminEmailContentRoute
+  AdminEmailWorkflowsRoute: typeof AdminEmailWorkflowsRoute
   AdminEmailsRoute: typeof AdminEmailsRoute
   AdminEntryNinjaRoute: typeof AdminEntryNinjaRoute
   AdminEventsRoute: typeof AdminEventsRoute
@@ -2001,6 +2021,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminBotLogRoute: AdminBotLogRoute,
   AdminCrewRoute: AdminCrewRoute,
   AdminEmailContentRoute: AdminEmailContentRoute,
+  AdminEmailWorkflowsRoute: AdminEmailWorkflowsRoute,
   AdminEmailsRoute: AdminEmailsRoute,
   AdminEntryNinjaRoute: AdminEntryNinjaRoute,
   AdminEventsRoute: AdminEventsRoute,
