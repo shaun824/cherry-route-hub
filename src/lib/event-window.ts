@@ -8,7 +8,7 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 
 export const BACKEND_HIDE_AFTER_DAYS = 7;
 
-type EventLike = { event_date?: string | null; date?: string | null; days?: unknown[] | null };
+type EventLike = { event_date?: string | null; date?: string | null; days?: unknown };
 
 /** When the event ends (start date + extra days for multi-day events). */
 export function eventEndMs(ev: EventLike): number {
