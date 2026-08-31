@@ -276,6 +276,8 @@ export default function VillageMapEditorGeo({
   // it every animation frame, so the outline tracks the finger instead of
   // pushing a re-render of the whole editor on every pointer move.
   const [live, setLive] = useState<{ id: string; points: ZonePoint[] } | null>(null);
+  const [panelMin, setPanelMin] = useState(false);
+
   const frame = useRef<number | null>(null);
   const pending = useRef<{ id: string; points: ZonePoint[] } | null>(null);
 
@@ -295,15 +297,41 @@ export default function VillageMapEditorGeo({
     }
     const next = pending.current;
     pending.current = null;
-    setLive(null);
-    if (next && next.id === id) onZoneChange(id, next.points);
+    if (next && next.id === id) {
+      // Keep painting the dragged shape until the parent state comes back with
+      // the saved geometry — otherwise the outline snaps back on release and
+      // looks like the edit was lost.
+      setLive(next);
+      onZoneChange(id, next.points);
+    } else {
+      setLive(null);
+    }
   }
 
   useEffect(() => () => {
     if (frame.current != null) cancelAnimationFrame(frame.current);
   }, []);
 
+  // Drop the live overlay once the stored zone matches what we painted.
+  useEffect(() => {
+    if (!live || pending.current) return;
+    const stored = zones.find((z) => z.id === live.id);
+    if (!stored) {
+      setLive(null);
+      return;
+    }
+    const same =
+      stored.points.length === live.points.length &&
+      stored.points.every(
+        (p, i) =>
+          Math.abs(p.lat - live.points[i].lat) < 1e-7 &&
+          Math.abs(p.lng - live.points[i].lng) < 1e-7,
+      );
+    if (same) setLive(null);
+  }, [zones, live]);
+
   const zonePoints = (z: VillageZone) => (live && live.id === z.id ? live.points : z.points);
+
 
   const activeZone = zones.find((z) => z.id === selectedZone) ?? null;
 
@@ -360,6 +388,10 @@ export default function VillageMapEditorGeo({
           zoomAnimation={false}
           markerZoomAnimation={false}
           preferCanvas
+          // Big off-screen buffer so heavily detailed builds keep every shape
+          // drawn while panning instead of re-rasterising at each frame.
+          renderer={L.canvas({ padding: 1.5, tolerance: 8 })}
+
           bounceAtZoomLimits={false}
           touchZoom
           doubleClickZoom
@@ -441,7 +473,11 @@ export default function VillageMapEditorGeo({
             const clash = overlapping.has(z.id);
             const pts = zonePoints(z);
             const positions = pts.map((p) => [p.lat, p.lng]) as [number, number][];
-            const c = zoneCentroid({ ...z, points: pts });
+            // Handles are positioned from the stored geometry only: Leaflet
+            // moves them itself while dragging, so re-feeding live coords every
+            // frame just fights the gesture and makes dragging feel sluggish.
+            const c = zoneCentroid(z);
+
             return (
               <Fragment key={z.id}>
                 {active ? (
@@ -530,12 +566,13 @@ export default function VillageMapEditorGeo({
                         dragend: () => commit(z.id),
                       }}
                     />
-                    {pts.map((p, i) => (
+                    {z.points.map((p, i) => (
                       <Marker
                         keyboard={false}
                         autoPanOnFocus={false}
                         key={`${z.id}-v${i}`}
                         position={[p.lat, p.lng]}
+
                         icon={handleIcon(zoneColor(z))}
                         draggable
                         eventHandlers={{
@@ -715,7 +752,7 @@ export default function VillageMapEditorGeo({
         </div>
       ) : activeZone && !locked ? (
         <div className="pointer-events-none absolute inset-x-0 top-3 z-[500] flex justify-center px-3">
-          <div className="pointer-events-auto w-full max-w-md space-y-2 rounded-xl bg-card/95 p-3 shadow-lg ring-1 ring-border backdrop-blur">
+          <div className="pointer-events-auto max-h-[70vh] w-full max-w-md space-y-2 overflow-y-auto rounded-xl bg-card/95 p-3 shadow-lg ring-1 ring-border backdrop-blur">
             <div className="flex items-center gap-2">
               <input
                 value={activeZone.name}
@@ -748,13 +785,23 @@ export default function VillageMapEditorGeo({
                 Delete
               </button>
               <button
+                onClick={() => setPanelMin((v) => !v)}
+                className="shrink-0 rounded-lg bg-muted px-2 py-1 text-[11px] font-bold"
+                aria-label={panelMin ? "Expand area panel" : "Minimise area panel"}
+              >
+                {panelMin ? "▼" : "▲"}
+              </button>
+              <button
                 onClick={() => onSelectZone(null)}
                 className="shrink-0 rounded-lg bg-muted px-2 py-1 text-[11px] font-bold"
               >
                 Done
               </button>
             </div>
+            {!panelMin ? (
+            <>
             <p className="text-[11px] font-semibold text-ink-soft">
+
               {(() => {
                 const s = zoneSizeM(activeZone);
                 return `${Math.round(s.w)}m × ${Math.round(s.h)}m · ${formatArea(zoneAreaM2(activeZone))} · ${formatLength(zonePerimeterM(activeZone))} perimeter · drag ✥ to move, white dots reshape, tap + to add a corner, tap a dot to remove it`;
@@ -815,7 +862,10 @@ export default function VillageMapEditorGeo({
               rows={3}
               className="w-full resize-y rounded-lg border border-border bg-background px-2 py-1.5 text-xs"
             />
+            </>
+            ) : null}
           </div>
+
         </div>
       ) : null}
     </div>
