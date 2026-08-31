@@ -299,8 +299,11 @@ export function riderScheduleForEmail(
     ) as any[],
     category,
   );
-  const tier = tierOf(category);
-  const field = fieldOf(category);
+  // Day-pass riders start with the weekend-pass riders in their category, so
+  // they get the full itinerary with every batch start rather than a filtered one.
+  const dayPass = isDayPass(category);
+  const tier = dayPass ? null : tierOf(category);
+  const field = dayPass ? null : fieldOf(category);
 
   const build = (items: any[]): EmailScheduleDay["items"] =>
     items
