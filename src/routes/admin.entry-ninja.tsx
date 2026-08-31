@@ -35,9 +35,11 @@ function EntryNinjaPage() {
   const [result, setResult] = useState<SyncResult | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  const [includeClosed, setIncludeClosed] = useState(false);
+
   const events = useQuery({
-    queryKey: ["entry-ninja-events"],
-    queryFn: () => listFn({}),
+    queryKey: ["entry-ninja-events", includeClosed],
+    queryFn: () => listFn({ data: { includeClosed } }),
     staleTime: 60_000,
   });
 
