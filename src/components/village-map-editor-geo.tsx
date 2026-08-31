@@ -40,7 +40,7 @@ function pinIcon(color: string, label: string, active: boolean, iconId?: string)
   });
 }
 
-function handleIcon(color: string, size = 12) {
+function handleIcon(color: string, size = 18) {
   return L.divIcon({
     className: "rce-zone-handle",
     html: `<span style="display:block;width:${size}px;height:${size}px;border-radius:999px;background:#fff;border:3px solid ${color};box-shadow:0 1px 4px rgba(0,0,0,.4)"></span>`,
@@ -225,6 +225,7 @@ export default function VillageMapEditorGeo({
   onSelectZone,
   onRenameZone,
   onDuplicateZone,
+  onDeleteZone,
   onPatchZone,
   tents = [],
   tentMode = false,
@@ -255,6 +256,7 @@ export default function VillageMapEditorGeo({
   onSelectZone: (id: string | null) => void;
   onRenameZone?: (id: string, name: string) => void;
   onDuplicateZone?: (id: string) => void;
+  onDeleteZone?: (id: string) => void;
   onPatchZone?: (id: string, patch: Partial<VillageZone>) => void;
   tents?: { id: string; label: string; lat: number; lng: number; kind?: "tent" | "marker" | null; tent_type?: string | null }[];
   tentMode?: boolean;
@@ -735,6 +737,17 @@ export default function VillageMapEditorGeo({
                 Copy
               </button>
               <button
+                onClick={() => {
+                  if (window.confirm(`Delete “${activeZone.name}”?`)) {
+                    onDeleteZone?.(activeZone.id);
+                    onSelectZone(null);
+                  }
+                }}
+                className="shrink-0 rounded-lg bg-red-600 px-2 py-1 text-[11px] font-bold text-white"
+              >
+                Delete
+              </button>
+              <button
                 onClick={() => onSelectZone(null)}
                 className="shrink-0 rounded-lg bg-muted px-2 py-1 text-[11px] font-bold"
               >
@@ -744,7 +757,7 @@ export default function VillageMapEditorGeo({
             <p className="text-[11px] font-semibold text-ink-soft">
               {(() => {
                 const s = zoneSizeM(activeZone);
-                return `${Math.round(s.w)}m × ${Math.round(s.h)}m · ${formatArea(zoneAreaM2(activeZone))} · ${formatLength(zonePerimeterM(activeZone))} perimeter · drag ✥ to move, white dots reshape`;
+                return `${Math.round(s.w)}m × ${Math.round(s.h)}m · ${formatArea(zoneAreaM2(activeZone))} · ${formatLength(zonePerimeterM(activeZone))} perimeter · drag ✥ to move, white dots reshape, tap + to add a corner, tap a dot to remove it`;
               })()}
             </p>
             <div className="flex items-center gap-1.5">

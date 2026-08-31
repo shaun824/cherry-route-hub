@@ -308,6 +308,22 @@ function VillageEditor() {
     setSelectedZone(copy.id);
   }
 
+  function deleteZone(id: string) {
+    patch({ zones: zones.filter((o) => o.id !== id) });
+    if (selectedZone === id) setSelectedZone(null);
+  }
+
+  function addQuickArea() {
+    if (!centre) return;
+    const zone = rectangleZone(centre, 10, 10, `Area ${zones.length + 1}`);
+    zone.color = ZONE_COLORS[zones.length % ZONE_COLORS.length];
+    patch({ zones: [...zones, zone] });
+    setSelectedZone(zone.id);
+    setPlacing(false);
+    setDrawing(false);
+    setTentMode(false);
+  }
+
   function addDrawnZone(points: ZonePoint[]) {
     const zone: VillageZone = {
       id: crypto.randomUUID(),
@@ -661,6 +677,13 @@ function VillageEditor() {
           </button>
         ) : null}
         <button
+          onClick={addQuickArea}
+          disabled={usingImage || !centre}
+          className="inline-flex items-center gap-1.5 rounded-lg cherry-gradient px-3 py-1.5 text-xs font-bold text-white disabled:opacity-50"
+        >
+          <Square className="h-3.5 w-3.5" /> Add 10×10m area
+        </button>
+        <button
           onClick={addRectangle}
           disabled={usingImage || !centre}
           className="inline-flex items-center gap-1.5 rounded-lg bg-muted px-3 py-1.5 text-xs font-bold text-ink disabled:opacity-50"
@@ -819,6 +842,7 @@ function VillageEditor() {
               onSelectZone={setSelectedZone}
               onRenameZone={(id, name) => updateZone(id, { name })}
               onDuplicateZone={duplicateZone}
+              onDeleteZone={deleteZone}
               onPatchZone={updateZone}
               tents={tents.map((t) => ({
                 id: t.id,
