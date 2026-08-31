@@ -427,12 +427,14 @@ export default function VillageMapEditorGeo({
           {zones.map((z) => {
             const active = selectedZone === z.id && !locked;
             const clash = overlapping.has(z.id);
-            const c = zoneCentroid(z);
+            const pts = zonePoints(z);
+            const positions = pts.map((p) => [p.lat, p.lng]) as [number, number][];
+            const c = zoneCentroid({ ...z, points: pts });
             return (
               <Fragment key={z.id}>
                 {active ? (
                   <Polygon
-                    positions={z.points.map((p) => [p.lat, p.lng]) as [number, number][]}
+                    positions={positions}
                     interactive={false}
                     pathOptions={{
                       color: "#ffffff",
@@ -444,7 +446,7 @@ export default function VillageMapEditorGeo({
                   />
                 ) : null}
                 <Polygon
-                  positions={z.points.map((p) => [p.lat, p.lng]) as [number, number][]}
+                  positions={positions}
                   interactive={!placing && !drawing}
                   bubblingMouseEvents={false}
                   pathOptions={{
@@ -479,7 +481,7 @@ export default function VillageMapEditorGeo({
                 {/* invisible fat hitbox so small zones stay tappable */}
                 {!locked ? (
                   <Polygon
-                    positions={z.points.map((p) => [p.lat, p.lng]) as [number, number][]}
+                    positions={positions}
                     interactive
                     bubblingMouseEvents={false}
                     pathOptions={{
@@ -509,13 +511,14 @@ export default function VillageMapEditorGeo({
                       icon={moveIcon(zoneColor(z))}
                       draggable
                       eventHandlers={{
-                        dragend: (e) => {
+                        drag: (e) => {
                           const ll = (e.target as L.Marker).getLatLng();
-                          onZoneChange(z.id, moveZone(z, { lat: ll.lat, lng: ll.lng }).points);
+                          paint(z.id, moveZone(z, { lat: ll.lat, lng: ll.lng }).points);
                         },
+                        dragend: () => commit(z.id),
                       }}
                     />
-                    {z.points.map((p, i) => (
+                    {pts.map((p, i) => (
                       <Marker
                         keyboard={false}
                         autoPanOnFocus={false}
@@ -526,12 +529,16 @@ export default function VillageMapEditorGeo({
                         eventHandlers={{
                           drag: (e) => {
                             const ll = (e.target as L.Marker).getLatLng();
-                            const next = z.points.map((q, j) =>
-                              j === i ? { lat: +ll.lat.toFixed(7), lng: +ll.lng.toFixed(7) } : q,
+                            paint(
+                              z.id,
+                              z.points.map((q, j) =>
+                                j === i ? { lat: +ll.lat.toFixed(7), lng: +ll.lng.toFixed(7) } : q,
+                              ),
                             );
-                            onZoneChange(z.id, next);
                           },
-                          dblclick: () => {
+                          dragend: () => commit(z.id),
+                          click: (e) => {
+                            L.DomEvent.stopPropagation(e as unknown as Event);
                             if (z.points.length > 3) {
                               onZoneChange(z.id, z.points.filter((_, j) => j !== i));
                             }
@@ -539,11 +546,37 @@ export default function VillageMapEditorGeo({
                         }}
                       />
                     ))}
+                    {/* midpoint “+” handles — tap to add a new corner */}
+                    {pts.map((p, i) => {
+                      const n = pts[(i + 1) % pts.length];
+                      const mid = { lat: (p.lat + n.lat) / 2, lng: (p.lng + n.lng) / 2 };
+                      return (
+                        <Marker
+                          keyboard={false}
+                          autoPanOnFocus={false}
+                          key={`${z.id}-m${i}`}
+                          position={[mid.lat, mid.lng]}
+                          icon={addIcon(zoneColor(z))}
+                          eventHandlers={{
+                            click: (e) => {
+                              L.DomEvent.stopPropagation(e as unknown as Event);
+                              const next = [...z.points];
+                              next.splice(i + 1, 0, {
+                                lat: +mid.lat.toFixed(7),
+                                lng: +mid.lng.toFixed(7),
+                              });
+                              onZoneChange(z.id, next);
+                            },
+                          }}
+                        />
+                      );
+                    })}
                   </>
                 ) : null}
               </Fragment>
             );
           })}
+
 
           {/* draft being drawn */}
           {draftPreview.length > 1 ? (
