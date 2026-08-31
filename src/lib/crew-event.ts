@@ -16,24 +16,35 @@ export function writeCrewEventId(id: string) {
 type EventLike = { id: string; event_date?: string | null };
 
 /**
- * Returns the crew's chosen event id, defaulting to the saved one (or the next
- * upcoming event) once the list loads. Setting it persists for every crew tool.
+ * Returns the crew's chosen event id. The default is always the next upcoming
+ * event (today counts); past events stay in the list for manual selection.
+ * A manual pick persists for every crew tool until the list reloads.
  */
 export function useCrewEvent(events: EventLike[]): [string, (id: string) => void] {
   const [eventId, setEventId] = useState("");
 
   useEffect(() => {
     if (eventId || !events.length) return;
+    // Next upcoming event: compare at day granularity so today's event wins.
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const next = events.find((e) => {
+      if (!e.event_date) return false;
+      const d = new Date(e.event_date);
+      d.setHours(0, 0, 0, 0);
+      return d.getTime() >= today.getTime();
+    });
+    if (next) {
+      setEventId(next.id);
+      return;
+    }
     const saved = readCrewEventId();
     if (saved && events.some((e) => e.id === saved)) {
       setEventId(saved);
       return;
     }
-    const now = Date.now();
-    const next =
-      events.find((e) => (e.event_date ? new Date(e.event_date).getTime() >= now : false)) ??
-      events[events.length - 1];
-    if (next) setEventId(next.id);
+    const last = events[events.length - 1];
+    if (last) setEventId(last.id);
   }, [events, eventId]);
 
   const pick = useCallback((id: string) => {
