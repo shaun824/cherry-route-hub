@@ -41,9 +41,9 @@ export async function checkIsCrew(client: SupabaseClient<any, any, any>): Promis
 export async function fetchCrewEvents(): Promise<CrewEvent[]> {
   const { data } = await supabase
     .from("events")
-    .select("id, name, event_date")
+    .select("id, name, event_date, days")
     .order("event_date", { ascending: true });
-  return (data ?? []) as CrewEvent[];
+  return visibleInBackend((data ?? []) as (CrewEvent & { days?: unknown[] })[]);
 }
 
 export async function fetchCrewRooming(eventId: string): Promise<CrewRoomingRow[]> {
