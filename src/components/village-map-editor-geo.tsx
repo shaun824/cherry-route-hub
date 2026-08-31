@@ -341,7 +341,17 @@ export default function VillageMapEditorGeo({
 
   useEffect(() => () => {
     if (frame.current != null) cancelAnimationFrame(frame.current);
+    if (tentFrame.current != null) cancelAnimationFrame(tentFrame.current);
   }, []);
+
+  // Drop the live tent position once the stored tent matches what we painted.
+  useEffect(() => {
+    if (!tentLive || tentPending.current) return;
+    const t = tents.find((x) => x.id === tentLive.id);
+    if (!t || (Math.abs(t.lat - tentLive.lat) < 1e-7 && Math.abs(t.lng - tentLive.lng) < 1e-7)) {
+      setTentLive(null);
+    }
+  }, [tents, tentLive]);
 
   // Drop the live overlay once the stored zone matches what we painted.
   useEffect(() => {
