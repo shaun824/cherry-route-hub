@@ -103,7 +103,7 @@ export const setWorkflowStatus = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertAdmin(context as any);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const patch: Record<string, any> = { status: data.status };
+    const patch: { status: string; activated_at?: string } = { status: data.status };
     if (data.status === "active") {
       const { data: existing } = await supabaseAdmin
         .from("event_email_campaigns")
