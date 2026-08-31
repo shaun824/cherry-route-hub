@@ -38,7 +38,7 @@ function CrewTrackingPage() {
 
   return (
     <div className="p-4">
-      <RaceControlPanel title="Race control" />
+      <RaceControlPanel title="Race control" shareCrewEvent />
     </div>
   );
 }

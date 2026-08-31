@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { BedDouble, MapPin, Search, Users, Copy, Check } from "lucide-react";
 import { useIsCrew } from "@/lib/auth";
+import { useCrewEvent } from "@/lib/crew-event";
 import {
   fetchCrewEvents,
   fetchCrewRooming,
@@ -38,7 +39,6 @@ export const Route = createFileRoute("/crew/rooming")({
 
 function CrewPage() {
   const { isCrew, loading, user } = useIsCrew();
-  const [eventId, setEventId] = useState("");
   const [term, setTerm] = useState("");
   const [openId, setOpenId] = useState<string | null>(null);
   const [focusSpot, setFocusSpot] = useState<string | null>(null);
@@ -49,21 +49,14 @@ function CrewPage() {
   const mapRef = useRef<HTMLDivElement>(null);
 
   const eventsQ = useQuery({ queryKey: ["crew-events"], queryFn: fetchCrewEvents, enabled: isCrew });
+  const events = eventsQ.data ?? [];
+  const [eventId, setEventId] = useCrewEvent(events);
   const roomingQ = useQuery({
     queryKey: ["crew-rooming", eventId],
     queryFn: () => fetchCrewRooming(eventId),
     enabled: isCrew && !!eventId,
   });
 
-  const events = eventsQ.data ?? [];
-
-  useEffect(() => {
-    if (!eventId && events.length) {
-      const now = Date.now();
-      const next = events.find((e) => new Date(e.event_date).getTime() >= now) ?? events[events.length - 1];
-      setEventId(next.id);
-    }
-  }, [events, eventId]);
 
   const rows = roomingQ.data ?? [];
   const results = useMemo(() => rows.filter((r) => matchesSearch(r, term)), [rows, term]);

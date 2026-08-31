@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ClipboardList, HardHat, Loader2 } from "lucide-react";
 import { useIsCrew } from "@/lib/auth";
+import { useCrewEvent } from "@/lib/crew-event";
 import { fetchCrewEvents } from "@/lib/crew";
 import {
   fetchDepartments,
@@ -37,26 +38,15 @@ export const Route = createFileRoute("/crew/run-sheet")({
   component: RunSheetPage,
 });
 
-const EVENT_KEY = "rce:crew-event";
-
 function RunSheetPage() {
   const { isCrew, loading, user } = useIsCrew();
   const qc = useQueryClient();
-  const [eventId, setEventId] = useState("");
   const [dayKey, setDayKey] = useState("");
   const [mineOnly, setMineOnly] = useState(true);
 
   const eventsQ = useQuery({ queryKey: ["crew-events"], queryFn: fetchCrewEvents, enabled: isCrew });
   const events = eventsQ.data ?? [];
-
-  useEffect(() => {
-    if (eventId || !events.length) return;
-    const saved = typeof window !== "undefined" ? window.localStorage.getItem(EVENT_KEY) : null;
-    if (saved && events.some((e) => e.id === saved)) return setEventId(saved);
-    const now = Date.now();
-    const next = events.find((e) => new Date(e.event_date).getTime() >= now) ?? events[events.length - 1];
-    setEventId(next.id);
-  }, [events, eventId]);
+  const [eventId, setEventId] = useCrewEvent(events);
 
   const deptQ = useQuery({
     queryKey: ["crew-departments", eventId],
@@ -127,10 +117,7 @@ function RunSheetPage() {
       {events.length > 1 ? (
         <select
           value={eventId}
-          onChange={(e) => {
-            setEventId(e.target.value);
-            if (typeof window !== "undefined") window.localStorage.setItem(EVENT_KEY, e.target.value);
-          }}
+          onChange={(e) => setEventId(e.target.value)}
           className="mt-3 w-full rounded-xl border border-border bg-card px-3 py-2 text-sm"
         >
           {events.map((e) => (
