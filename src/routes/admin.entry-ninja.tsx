@@ -78,8 +78,18 @@ function EntryNinjaPage() {
         <h1 className="font-display text-xl font-bold">Entry Ninja</h1>
         <p className="text-sm text-ink-soft">
           Live connection to your Entry Ninja account. Sync an event to pull every entrant, class,
-          batch, race number and apparel size straight into the rider app.
+          batch, race number and apparel size straight into the rider app. Only events still open
+          for entry are listed and synced — closed events are archived and left alone.
         </p>
+        <label className="inline-flex items-center gap-2 pt-1 text-xs font-semibold text-ink-soft">
+          <input
+            type="checkbox"
+            checked={includeClosed}
+            onChange={(ev) => setIncludeClosed(ev.target.checked)}
+            className="h-3.5 w-3.5 accent-cherry"
+          />
+          Show closed / archived events
+        </label>
       </header>
 
       <div className="flex items-center gap-2 rounded-xl border border-border bg-card p-3 text-xs text-ink-soft">
