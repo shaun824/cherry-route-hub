@@ -47,6 +47,15 @@ export async function fetchCrewEvents(): Promise<CrewEvent[]> {
   return visibleInBackend((data ?? []) as (CrewEvent & { days?: unknown[] })[]);
 }
 
+/** Every event including ones that ended long ago — used by tools that work on past events. */
+export async function fetchAllCrewEvents(): Promise<CrewEvent[]> {
+  const { data } = await supabase
+    .from("events")
+    .select("id, name, event_date, days")
+    .order("event_date", { ascending: true });
+  return (data ?? []) as CrewEvent[];
+}
+
 export async function fetchCrewRooming(eventId: string): Promise<CrewRoomingRow[]> {
   const { data, error } = await supabase
     .from("event_rooming")
