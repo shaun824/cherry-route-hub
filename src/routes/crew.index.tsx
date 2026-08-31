@@ -5,9 +5,9 @@ import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { BedDouble, Boxes, CalendarDays, ClipboardList, GraduationCap, HardHat, Map as MapIcon, MapPin, Search, Siren, Users } from "lucide-react";
 import { useIsCrew } from "@/lib/auth";
-import { fetchCrewEvents, fetchCrewRooming, normaliseTent } from "@/lib/crew";
+import { fetchAllCrewEvents, fetchCrewEvents, fetchCrewRooming, normaliseTent } from "@/lib/crew";
 import { buildCrewTimeline, groupScheduleByDay, pickCurrentDay } from "@/lib/crew-plan";
-import { useCrewEvent } from "@/lib/crew-event";
+import { useCrewEvent, useCrewShowPast } from "@/lib/crew-event";
 import { supabase } from "@/integrations/supabase/client";
 import type { EventDay, ScheduleItem } from "@/lib/mock-data";
 
@@ -37,7 +37,12 @@ export const Route = createFileRoute("/crew/")({
 function CrewDashboard() {
   const { isCrew, loading, user } = useIsCrew();
 
-  const eventsQ = useQuery({ queryKey: ["crew-events"], queryFn: fetchCrewEvents, enabled: isCrew });
+  const [showPast, setShowPast] = useCrewShowPast();
+  const eventsQ = useQuery({
+    queryKey: ["crew-events", showPast ? "all" : "visible"],
+    queryFn: showPast ? fetchAllCrewEvents : fetchCrewEvents,
+    enabled: isCrew,
+  });
   const events = eventsQ.data ?? [];
   const [eventId, pickEvent] = useCrewEvent(events);
 
@@ -137,6 +142,15 @@ function CrewDashboard() {
             </option>
           ))}
         </select>
+        <label className="mt-2 flex items-center gap-2 text-[11px] font-semibold text-ink-soft">
+          <input
+            type="checkbox"
+            checked={showPast}
+            onChange={(e) => setShowPast(e.target.checked)}
+            className="h-3.5 w-3.5 accent-cherry"
+          />
+          Show past events
+        </label>
       </label>
 
       <div className="grid grid-cols-3 gap-2">

@@ -7,7 +7,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Boxes, Check, Loader2, MapPin, Package, Plus, Trash2, Truck } from "lucide-react";
 import { toast } from "sonner";
 import { useIsAdmin, useIsCrew } from "@/lib/auth";
-import { useCrewEvent } from "@/lib/crew-event";
+import { useCrewEvent, useCrewShowPast } from "@/lib/crew-event";
 import { fetchAllCrewEvents, fetchCrewEvents } from "@/lib/crew";
 import { fetchDepartments } from "@/lib/run-sheet";
 import { supabase } from "@/integrations/supabase/client";
@@ -68,10 +68,10 @@ function InventoryPage() {
   const { isAdmin } = useIsAdmin();
   const qc = useQueryClient();
   const [tab, setTab] = useState<"load" | "runs" | "catalogue">("load");
-  const [showPast, setShowPast] = useState(false);
+  const [showPast, setShowPast] = useCrewShowPast();
 
   const eventsQ = useQuery({
-    queryKey: ["crew-events", showPast ? "all" : "current"],
+    queryKey: ["crew-events", showPast ? "all" : "visible"],
     queryFn: showPast ? fetchAllCrewEvents : fetchCrewEvents,
     enabled: isCrew,
   });
@@ -199,7 +199,7 @@ function InventoryPage() {
         </select>
         <button
           type="button"
-          onClick={() => setShowPast((v) => !v)}
+          onClick={() => setShowPast(!showPast)}
           className={`shrink-0 rounded-xl px-3 py-2.5 text-xs font-bold ring-1 ring-border ${
             showPast ? "bg-cherry text-white" : "bg-surface text-ink-soft"
           }`}

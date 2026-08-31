@@ -2,8 +2,8 @@ import { createFileRoute, Navigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { HardHat } from "lucide-react";
 import { useIsCrew } from "@/lib/auth";
-import { fetchCrewEvents } from "@/lib/crew";
-import { useCrewEvent } from "@/lib/crew-event";
+import { fetchAllCrewEvents, fetchCrewEvents } from "@/lib/crew";
+import { useCrewEvent, useCrewShowPast } from "@/lib/crew-event";
 import { VillageMapView } from "@/components/village-map-view";
 import { OfflinePackCard } from "@/components/offline-pack-card";
 
@@ -31,7 +31,12 @@ export const Route = createFileRoute("/crew/build")({
 
 function CrewBuildPage() {
   const { isCrew, loading } = useIsCrew();
-  const eventsQ = useQuery({ queryKey: ["crew-events"], queryFn: fetchCrewEvents, enabled: isCrew });
+  const [showPast] = useCrewShowPast();
+  const eventsQ = useQuery({
+    queryKey: ["crew-events", showPast ? "all" : "visible"],
+    queryFn: showPast ? fetchAllCrewEvents : fetchCrewEvents,
+    enabled: isCrew,
+  });
   const events = eventsQ.data ?? [];
   const [eventId, setEventId] = useCrewEvent(events);
 
