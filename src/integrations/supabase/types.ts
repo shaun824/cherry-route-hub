@@ -150,7 +150,9 @@ export type Database = {
       branding_inventory: {
         Row: {
           active: boolean
+          category: string
           created_at: string
+          home_location: string | null
           id: string
           kind: string
           name: string
@@ -162,7 +164,9 @@ export type Database = {
         }
         Insert: {
           active?: boolean
+          category?: string
           created_at?: string
+          home_location?: string | null
           id?: string
           kind?: string
           name: string
@@ -174,7 +178,9 @@ export type Database = {
         }
         Update: {
           active?: boolean
+          category?: string
           created_at?: string
+          home_location?: string | null
           id?: string
           kind?: string
           name?: string
@@ -716,6 +722,7 @@ export type Database = {
       }
       event_branding_bookings: {
         Row: {
+          category: string
           created_at: string
           created_by: string | null
           department_id: string | null
@@ -723,17 +730,30 @@ export type Database = {
           id: string
           item_id: string | null
           kind: string
+          location: string | null
           name: string
           notes: string | null
+          on_site_at: string | null
+          on_site_by: string | null
+          packed_at: string | null
+          packed_by: string | null
           placement: string | null
           qty: number
+          qty_label: string | null
+          returned_at: string | null
+          returned_by: string | null
+          run_id: string | null
+          setup_at: string | null
+          setup_by: string | null
           size_spec: string | null
+          sort_order: number
           sponsor: string | null
           status: string
           updated_at: string
           village_spot_id: string | null
         }
         Insert: {
+          category?: string
           created_at?: string
           created_by?: string | null
           department_id?: string | null
@@ -741,17 +761,30 @@ export type Database = {
           id?: string
           item_id?: string | null
           kind?: string
+          location?: string | null
           name: string
           notes?: string | null
+          on_site_at?: string | null
+          on_site_by?: string | null
+          packed_at?: string | null
+          packed_by?: string | null
           placement?: string | null
           qty?: number
+          qty_label?: string | null
+          returned_at?: string | null
+          returned_by?: string | null
+          run_id?: string | null
+          setup_at?: string | null
+          setup_by?: string | null
           size_spec?: string | null
+          sort_order?: number
           sponsor?: string | null
           status?: string
           updated_at?: string
           village_spot_id?: string | null
         }
         Update: {
+          category?: string
           created_at?: string
           created_by?: string | null
           department_id?: string | null
@@ -759,11 +792,23 @@ export type Database = {
           id?: string
           item_id?: string | null
           kind?: string
+          location?: string | null
           name?: string
           notes?: string | null
+          on_site_at?: string | null
+          on_site_by?: string | null
+          packed_at?: string | null
+          packed_by?: string | null
           placement?: string | null
           qty?: number
+          qty_label?: string | null
+          returned_at?: string | null
+          returned_by?: string | null
+          run_id?: string | null
+          setup_at?: string | null
+          setup_by?: string | null
           size_spec?: string | null
+          sort_order?: number
           sponsor?: string | null
           status?: string
           updated_at?: string
@@ -789,6 +834,13 @@ export type Database = {
             columns: ["item_id"]
             isOneToOne: false
             referencedRelation: "branding_inventory"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_branding_bookings_run_fk"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "event_logistics_runs"
             referencedColumns: ["id"]
           },
         ]
@@ -1279,6 +1331,59 @@ export type Database = {
             foreignKeyName: "event_info_blocks_event_id_fkey"
             columns: ["event_id"]
             isOneToOne: true
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_logistics_runs: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          direction: string
+          driver: string | null
+          event_id: string
+          id: string
+          notes: string | null
+          run_date: string | null
+          sort_order: number
+          taking: string | null
+          updated_at: string
+          vehicle: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          direction?: string
+          driver?: string | null
+          event_id: string
+          id?: string
+          notes?: string | null
+          run_date?: string | null
+          sort_order?: number
+          taking?: string | null
+          updated_at?: string
+          vehicle?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          direction?: string
+          driver?: string | null
+          event_id?: string
+          id?: string
+          notes?: string | null
+          run_date?: string | null
+          sort_order?: number
+          taking?: string | null
+          updated_at?: string
+          vehicle?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_logistics_runs_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
             referencedRelation: "events"
             referencedColumns: ["id"]
           },
