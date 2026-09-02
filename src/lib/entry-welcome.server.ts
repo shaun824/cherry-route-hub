@@ -252,21 +252,14 @@ function dayDate(iso: string | null | undefined) {
  * event website.
  */
 /**
- * True unless a scrape for this event is sitting in "needs review". Rider
- * emails must never quote times we could not verify against the website.
+ * The event's stored schedule is the single source of truth for rider emails.
+ * Scrape "needs review" flags no longer blank out times — admins edit the
+ * schedule directly, so whatever is stored is what riders get.
  */
-export async function scheduleTrustedEventIds(admin: any, eventIds: string[]): Promise<Set<string>> {
-  const trusted = new Set(eventIds);
-  if (!eventIds.length) return trusted;
-  const { data } = await admin
-    .from("event_schedule_sync")
-    .select("event_id, needs_review")
-    .in("event_id", eventIds);
-  for (const row of (data ?? []) as any[]) {
-    if (row.needs_review) trusted.delete(row.event_id as string);
-  }
-  return trusted;
+export async function scheduleTrustedEventIds(_admin: any, eventIds: string[]): Promise<Set<string>> {
+  return new Set(eventIds);
 }
+
 
 /** Only absolute https logos work in email clients. */
 export function absoluteLogo(url: string | null | undefined): string | null {
