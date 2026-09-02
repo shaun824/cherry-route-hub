@@ -504,8 +504,9 @@ export async function sendPendingEntryWelcomes(
     if (result.sent + result.suppressed >= limit) break;
 
     // Belt and braces: if any entry at this event already mailed this address,
-    // never send again — just stamp the stragglers.
-    const already = await hasWelcomeForEmail(admin, event.id, email);
+    // never send again — just stamp the stragglers. A deliberate resend skips
+    // this guard, since the point is to correct a mail already delivered.
+    const already = opts.mode === "resend" ? false : await hasWelcomeForEmail(admin, event.id, email);
     if (already) {
       await stampRows(admin, groupRows);
       result.skipped += groupRows.length;
