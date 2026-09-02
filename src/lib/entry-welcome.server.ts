@@ -439,7 +439,7 @@ async function buildActionLink(
  */
 export async function sendPendingEntryWelcomes(
   admin: AnyClient,
-  opts: { eventId?: string; limit?: number; mode?: "new" | "backfill" } = {},
+  opts: { eventId?: string; limit?: number; mode?: "new" | "backfill" | "resend" } = {},
 ): Promise<WelcomeBatchResult> {
   const limit = Math.min(Math.max(opts.limit ?? 50, 1), 200);
   const result: WelcomeBatchResult = {
