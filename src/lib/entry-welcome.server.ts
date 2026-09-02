@@ -439,7 +439,7 @@ async function buildActionLink(
  */
 export async function sendPendingEntryWelcomes(
   admin: AnyClient,
-  opts: { eventId?: string; limit?: number; mode?: "new" | "backfill" } = {},
+  opts: { eventId?: string; limit?: number; mode?: "new" | "backfill" | "resend" } = {},
 ): Promise<WelcomeBatchResult> {
   const limit = Math.min(Math.max(opts.limit ?? 50, 1), 200);
   const result: WelcomeBatchResult = {
@@ -460,10 +460,11 @@ export async function sendPendingEntryWelcomes(
     .eq("welcome_email_skipped", false)
     .order("created_at", { ascending: false })
     .limit(limit * 3);
-  query =
-    opts.mode === "backfill"
-      ? query.or(`welcome_email_sent_at.is.null,welcome_email_sent_at.lt.${LEGACY_CUTOFF}`)
-      : query.is("welcome_email_sent_at", null);
+  // "resend" deliberately re-mails everyone on the event with the corrected
+  // content (e.g. after a schedule fix), so it applies no sent/unsent filter.
+  if (opts.mode === "backfill")
+    query = query.or(`welcome_email_sent_at.is.null,welcome_email_sent_at.lt.${LEGACY_CUTOFF}`);
+  else if (opts.mode !== "resend") query = query.is("welcome_email_sent_at", null);
   if (opts.eventId) query = query.eq("event_id", opts.eventId);
 
 
@@ -503,8 +504,9 @@ export async function sendPendingEntryWelcomes(
     if (result.sent + result.suppressed >= limit) break;
 
     // Belt and braces: if any entry at this event already mailed this address,
-    // never send again — just stamp the stragglers.
-    const already = await hasWelcomeForEmail(admin, event.id, email);
+    // never send again — just stamp the stragglers. A deliberate resend skips
+    // this guard, since the point is to correct a mail already delivered.
+    const already = opts.mode === "resend" ? false : await hasWelcomeForEmail(admin, event.id, email);
     if (already) {
       await stampRows(admin, groupRows);
       result.skipped += groupRows.length;
@@ -527,7 +529,10 @@ export async function sendPendingEntryWelcomes(
       );
 
       const send = await sendTemplateEmail("entry-welcome", email, {
-        idempotencyKey: `entry-welcome-${event.id}-${email}`,
+        idempotencyKey:
+          opts.mode === "resend"
+            ? `entry-welcome-fix-${event.id}-${email}-${new Date().toISOString().slice(0, 10)}`
+            : `entry-welcome-${event.id}-${email}`,
         templateData: {
           firstName: firstName(lead.entrants?.full_name),
           eventName: event.name,
