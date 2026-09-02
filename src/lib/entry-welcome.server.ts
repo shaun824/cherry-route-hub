@@ -270,9 +270,10 @@ export function absoluteLogo(url: string | null | undefined): string | null {
 export function riderScheduleForEmail(
   event: any,
   category: string | null | undefined,
-  opts: { trusted?: boolean } = {},
+  _opts: { trusted?: boolean } = {},
 ): EmailScheduleDay[] {
   const schedule: any[] = Array.isArray(event?.schedule) ? event.schedule : [];
+
   const rawDays: any[] = Array.isArray(event?.days) ? event.days : [];
   // No published (or no verified) schedule yet: still give riders the day-by-day
   // shape of the event so every event email carries the same standard.
