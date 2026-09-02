@@ -434,6 +434,20 @@ function WelcomeEmailsCard({ events }: { events: { id: string; name: string }[] 
         >
           {busy ? "Sending…" : `Backfill existing (${counts.data?.historic ?? "…"})`}
         </button>
+        <button
+          onClick={() => {
+            if (!eventId) {
+              setErr("Pick an event first — resends are per event.");
+              return;
+            }
+            if (confirm("Re-send the corrected welcome email to riders already emailed for this event?"))
+              void send("resend");
+          }}
+          disabled={busy}
+          className="rounded-lg border border-cherry px-3 py-2 text-xs font-semibold text-cherry disabled:opacity-60"
+        >
+          Resend corrected
+        </button>
         <input
           value={testCategory}
           onChange={(e) => setTestCategory(e.target.value)}
