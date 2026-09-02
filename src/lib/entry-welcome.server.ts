@@ -460,10 +460,11 @@ export async function sendPendingEntryWelcomes(
     .eq("welcome_email_skipped", false)
     .order("created_at", { ascending: false })
     .limit(limit * 3);
-  query =
-    opts.mode === "backfill"
-      ? query.or(`welcome_email_sent_at.is.null,welcome_email_sent_at.lt.${LEGACY_CUTOFF}`)
-      : query.is("welcome_email_sent_at", null);
+  // "resend" deliberately re-mails everyone on the event with the corrected
+  // content (e.g. after a schedule fix), so it applies no sent/unsent filter.
+  if (opts.mode === "backfill")
+    query = query.or(`welcome_email_sent_at.is.null,welcome_email_sent_at.lt.${LEGACY_CUTOFF}`);
+  else if (opts.mode !== "resend") query = query.is("welcome_email_sent_at", null);
   if (opts.eventId) query = query.eq("event_id", opts.eventId);
 
 
