@@ -338,7 +338,7 @@ function WelcomeEmailsCard({ events }: { events: { id: string; name: string }[] 
     staleTime: 15_000,
   });
 
-  async function send(mode: "new" | "backfill") {
+  async function send(mode: "new" | "backfill" | "resend") {
     setBusy(true);
     setErr(null);
     setNote(null);
