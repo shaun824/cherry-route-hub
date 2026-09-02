@@ -529,7 +529,10 @@ export async function sendPendingEntryWelcomes(
       );
 
       const send = await sendTemplateEmail("entry-welcome", email, {
-        idempotencyKey: `entry-welcome-${event.id}-${email}`,
+        idempotencyKey:
+          opts.mode === "resend"
+            ? `entry-welcome-fix-${event.id}-${email}-${new Date().toISOString().slice(0, 10)}`
+            : `entry-welcome-${event.id}-${email}`,
         templateData: {
           firstName: firstName(lead.entrants?.full_name),
           eventName: event.name,
