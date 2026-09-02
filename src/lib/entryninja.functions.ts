@@ -68,7 +68,7 @@ export const syncEntryNinjaEvent = createServerFn({ method: "POST" })
 const welcomeSchema = z.object({
   eventId: z.string().uuid().optional(),
   limit: z.number().int().min(1).max(200).optional(),
-  mode: z.enum(["new", "backfill"]).optional(),
+  mode: z.enum(["new", "backfill", "resend"]).optional(),
 });
 
 /** How many entries are still waiting on a welcome email. */
