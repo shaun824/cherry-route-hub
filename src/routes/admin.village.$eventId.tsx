@@ -258,6 +258,7 @@ function VillageEditor() {
       ["village-tents", event.id, venueId],
       (current: typeof tents | undefined) => current?.filter((tent) => tent.id !== id) ?? [],
     );
+    toast.success("Tent pin deleted");
     await qc.invalidateQueries({ queryKey: ["village-tents", event.id, venueId] });
     toast.success("Pin deleted");
   }
@@ -710,7 +711,11 @@ function VillageEditor() {
         ) : null}
         {selectedTent ? (
           <button
-            onClick={() => void deleteTent(selectedTent)}
+            onClick={() => {
+              const id = selectedTent;
+              setSelectedTent(null);
+              void deleteTent(id);
+            }}
             className="inline-flex items-center gap-1.5 rounded-lg bg-muted px-3 py-1.5 text-xs font-bold text-ink"
           >
             <Trash2 className="h-3.5 w-3.5" /> Delete tent pin

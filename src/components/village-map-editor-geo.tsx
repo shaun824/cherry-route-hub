@@ -442,7 +442,12 @@ export default function VillageMapEditorGeo({
     }
   }, [drawing]);
 
+  // Point and area editing is locked while dropping tents, but existing tent
+  // pins must remain draggable and deletable in that mode. Otherwise the most
+  // common workflow (drop, adjust, remove) appears broken until the mode is
+  // manually switched off.
   const locked = placing || drawing || tentMode;
+  const tentsLocked = placing || drawing;
 
   // Editing areas is disabled in add-pin / draw modes — drop any selection.
   useEffect(() => {
@@ -528,13 +533,13 @@ export default function VillageMapEditorGeo({
               autoPanOnFocus={false}
               key={t.id}
               position={[t.lat, t.lng]}
-              draggable={!locked}
+              draggable={!tentsLocked}
               // Keep the icon stable when selection changes. Swapping from the
               // normal to the active icon rebuilds Leaflet's marker element and
               // immediately closes the popup the rider just tapped.
               icon={tentPinIcon(t.label, false, t.kind === "marker")}
               eventHandlers={{
-                click: () => onSelectTent?.(selectedTent === t.id ? null : t.id),
+                click: () => onSelectTent?.(t.id),
                 drag: (e) => {
                   const ll = (e.target as L.Marker).getLatLng();
                   paintTent(t.id, ll.lat, ll.lng);
