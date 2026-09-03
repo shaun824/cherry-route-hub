@@ -227,6 +227,23 @@ function VillageEditor() {
     await qc.invalidateQueries({ queryKey: ["village-tents", event.id, venueId] });
   }
 
+  /** Turn a tent pin so its square footprint matches how it is pitched. */
+  async function rotateTent(id: string, byDegrees: number) {
+    const tent = tents.find((t) => t.id === id);
+    if (!tent) return;
+    const next = ((((tent.rotation ?? 0) + byDegrees) % 360) + 360) % 360;
+    qc.setQueryData(
+      ["village-tents", event.id, venueId],
+      (current: typeof tents | undefined) =>
+        current?.map((t) => (t.id === id ? { ...t, rotation: next } : t)) ?? current,
+    );
+    const { error } = await supabase.from("event_village_tents").update({ rotation: next }).eq("id", id);
+    if (error) {
+      toast.error(error.message);
+      await qc.invalidateQueries({ queryKey: ["village-tents", event.id, venueId] });
+    }
+  }
+
   async function toggleTentKind(id: string) {
     const tent = tents.find((t) => t.id === id);
     if (!tent) return;
@@ -709,6 +726,28 @@ function VillageEditor() {
           </label>
         ) : null}
         {selectedTent ? (
+          <span className="inline-flex items-center gap-1 rounded-lg bg-secondary px-2 py-1 text-[11px] font-bold text-ink-soft">
+            Turn tent
+            <button
+              onClick={() => void rotateTent(selectedTent, -15)}
+              className="rounded bg-background px-2 py-1 text-xs font-bold text-ink"
+              title="Turn 15° anti-clockwise"
+            >
+              ↺
+            </button>
+            <button
+              onClick={() => void rotateTent(selectedTent, 15)}
+              className="rounded bg-background px-2 py-1 text-xs font-bold text-ink"
+              title="Turn 15° clockwise"
+            >
+              ↻
+            </button>
+            <span className="tabular-nums">
+              {Math.round(tents.find((t) => t.id === selectedTent)?.rotation ?? 0)}°
+            </span>
+          </span>
+        ) : null}
+        {selectedTent ? (
           <button
             onClick={() => {
               const id = selectedTent;
@@ -895,6 +934,7 @@ function VillageEditor() {
                 lng: t.lng,
                 kind: t.kind,
                 tent_type: t.tent_type,
+                rotation: t.rotation,
               }))}
               tentMode={tentMode}
               onPlaceTent={placeTent}
