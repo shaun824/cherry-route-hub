@@ -1,0 +1,1 @@
+ALTER TABLE public.event_village_tents ADD COLUMN IF NOT EXISTS rotation numeric NOT NULL DEFAULT 0;

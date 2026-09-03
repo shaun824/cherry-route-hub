@@ -19,6 +19,8 @@ export type VillageTent = {
   kind: "tent" | "marker";
   /** Tent product placed on the field. Luxury tents are 4m x 4m, RCE tents 2m x 2m. */
   tent_type: TentType;
+  /** Direction the tent faces, in degrees clockwise from north. */
+  rotation: number;
 };
 
 export type TentType = "rce" | "luxury";
@@ -47,6 +49,35 @@ export function tentFootprintBounds(
   ];
 }
 
+/**
+ * Four corners of a tent's square footprint, turned by `rotation` degrees
+ * clockwise from north. Tents are rarely pegged square to the compass, so the
+ * drawn square follows the angle the tent was actually set up at.
+ */
+export function tentFootprintCorners(
+  lat: number,
+  lng: number,
+  sizeM: number,
+  rotation = 0,
+): [number, number][] {
+  const half = sizeM / 2;
+  const mLat = 1 / 111_320;
+  const mLng = 1 / (111_320 * Math.max(Math.cos((lat * Math.PI) / 180), 0.01));
+  const rad = (rotation * Math.PI) / 180;
+  const cos = Math.cos(rad);
+  const sin = Math.sin(rad);
+  return ([
+    [-half, -half],
+    [half, -half],
+    [half, half],
+    [-half, half],
+  ] as [number, number][]).map(([x, y]) => {
+    const rx = x * cos - y * sin;
+    const ry = x * sin + y * cos;
+    return [lat + ry * mLat, lng + rx * mLng] as [number, number];
+  });
+}
+
 export type TentRule = {
   id: string;
   event_id: string;
@@ -68,7 +99,7 @@ export async function fetchVillageTents(eventId: string, venueId: string | null 
 async function fetchVillageTentsLive(eventId: string, venueId: string | null): Promise<VillageTent[]> {
   let query = supabase
     .from("event_village_tents")
-    .select("id, event_id, venue_id, label, lat, lng, zone_id, capacity, notes, kind, tent_type")
+    .select("id, event_id, venue_id, label, lat, lng, zone_id, capacity, notes, kind, tent_type, rotation")
     .eq("event_id", eventId);
   query = venueId ? query.eq("venue_id", venueId) : query.is("venue_id", null);
   const { data, error } = await query.order("label", { ascending: true });
@@ -80,6 +111,7 @@ async function fetchVillageTentsLive(eventId: string, venueId: string | null): P
     ...t,
     kind: t.kind === "marker" ? "marker" : "tent",
     tent_type: t.tent_type === "luxury" ? "luxury" : "rce",
+    rotation: Number(t.rotation ?? 0) || 0,
   }));
 }
 

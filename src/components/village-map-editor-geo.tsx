@@ -2,7 +2,7 @@
 // satellite map of the venue — no plan image required. Also supports drawing
 // measured areas (zones) so the field layout can be planned to the metre.
 import { Fragment, useEffect, useMemo, useRef, useState } from "react";
-import { MapContainer, TileLayer, Marker, Polygon, Polyline, Popup, Rectangle, Tooltip, useMap, useMapEvents } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Polygon, Polyline, Popup, Tooltip, useMap, useMapEvents } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 // Bearing support so the build can be laid out "the right way round" — the
@@ -11,7 +11,7 @@ import "leaflet/dist/leaflet.css";
 await import("leaflet-rotate");
 import { spotColor, spotIcon, type VillageHotspot } from "@/lib/village-map";
 import { villageIconSvg } from "@/lib/village-icons";
-import { tentFootprintBounds, tentTypeMeta } from "@/lib/village-tents";
+import { tentFootprintCorners, tentTypeMeta } from "@/lib/village-tents";
 import VillageMapTrackpadZoom from "@/components/village-map-trackpad-zoom";
 import { Button } from "@/components/ui/button";
 import {
@@ -288,7 +288,7 @@ export default function VillageMapEditorGeo({
   onDuplicateZone?: (id: string) => void;
   onDeleteZone?: (id: string) => void;
   onPatchZone?: (id: string, patch: Partial<VillageZone>) => void;
-  tents?: { id: string; label: string; lat: number; lng: number; kind?: "tent" | "marker" | null; tent_type?: string | null }[];
+  tents?: { id: string; label: string; lat: number; lng: number; kind?: "tent" | "marker" | null; tent_type?: string | null; rotation?: number | null }[];
   tentMode?: boolean;
   onPlaceTent?: (lat: number, lng: number) => void;
   onMoveTent?: (id: string, lat: number, lng: number) => void;
@@ -498,9 +498,9 @@ export default function VillageMapEditorGeo({
               const meta = tentTypeMeta(t.tent_type);
               const pos = tentLive && tentLive.id === t.id ? tentLive : t;
               return (
-                <Rectangle
+                <Polygon
                   key={`fp-${t.id}`}
-                  bounds={tentFootprintBounds(pos.lat, pos.lng, meta.sizeM)}
+                  positions={tentFootprintCorners(pos.lat, pos.lng, meta.sizeM, t.rotation ?? 0)}
                   pathOptions={{
                     color: selectedTent === t.id ? "#c8102e" : meta.id === "luxury" ? "#f59e0b" : "#38bdf8",
                     weight: 1.5,
