@@ -197,12 +197,19 @@ function RootComponent() {
   const isAdmin = useRouterState({
     select: (s) => s.location.pathname.startsWith("/admin") || s.location.pathname.startsWith("/auth"),
   });
+  // Embed routes render bare for third-party iframes: no shell, no assistant,
+  // no prompts — just the embedded content.
+  const isEmbed = useRouterState({
+    select: (s) => s.location.pathname.startsWith("/embed"),
+  });
   const onAuthPages = useRouterState({
     select: (s) =>
       s.location.pathname.startsWith("/auth") ||
       s.location.pathname.startsWith("/reset-password") ||
+      s.location.pathname.startsWith("/embed") ||
       s.location.pathname.startsWith("/crew"),
   });
+
 
   usePageTracking();
 
@@ -229,7 +236,9 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      {isAdmin ? (
+      {isEmbed ? (
+        <Outlet />
+      ) : isAdmin ? (
         <>
           <Outlet />
           <AssistantWidget />
@@ -241,6 +250,7 @@ function RootComponent() {
       )}
       {onAuthPages ? null : <SetPasswordPrompt />}
     </QueryClientProvider>
+
   );
 }
 
