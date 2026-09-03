@@ -49,6 +49,35 @@ export function tentFootprintBounds(
   ];
 }
 
+/**
+ * Four corners of a tent's square footprint, turned by `rotation` degrees
+ * clockwise from north. Tents are rarely pegged square to the compass, so the
+ * drawn square follows the angle the tent was actually set up at.
+ */
+export function tentFootprintCorners(
+  lat: number,
+  lng: number,
+  sizeM: number,
+  rotation = 0,
+): [number, number][] {
+  const half = sizeM / 2;
+  const mLat = 1 / 111_320;
+  const mLng = 1 / (111_320 * Math.max(Math.cos((lat * Math.PI) / 180), 0.01));
+  const rad = (rotation * Math.PI) / 180;
+  const cos = Math.cos(rad);
+  const sin = Math.sin(rad);
+  return ([
+    [-half, -half],
+    [half, -half],
+    [half, half],
+    [-half, half],
+  ] as [number, number][]).map(([x, y]) => {
+    const rx = x * cos - y * sin;
+    const ry = x * sin + y * cos;
+    return [lat + ry * mLat, lng + rx * mLng] as [number, number];
+  });
+}
+
 export type TentRule = {
   id: string;
   event_id: string;
