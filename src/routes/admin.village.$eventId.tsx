@@ -41,6 +41,8 @@ import {
   pointInZone,
   translateZone,
   zoneSizeM as zoneSizeMetres,
+  zoneCentroid,
+  toMetres,
   ZONE_KINDS,
   type ZoneKind,
   type VillageZone,
