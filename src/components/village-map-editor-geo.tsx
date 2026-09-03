@@ -186,7 +186,6 @@ function MapDeleteBubble({
 }) {
   // Native confirm() is blocked inside the editor preview iframe, which made
   // Delete look like it did nothing. Two-tap inline confirmation instead.
-  const [armed, setArmed] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const bubbleRef = useRef<HTMLDivElement>(null);
 
@@ -198,10 +197,7 @@ function MapDeleteBubble({
   }, []);
 
   async function confirmDelete() {
-    if (!armed || deleting) {
-      setArmed(true);
-      return;
-    }
+    if (deleting) return;
     setDeleting(true);
     try {
       await onDelete();
@@ -213,7 +209,7 @@ function MapDeleteBubble({
   return (
     <div ref={bubbleRef} className="flex items-center gap-2">
       <span className="text-[11px] font-bold text-ink">{label}</span>
-      {onToggleKind && !armed ? (
+      {onToggleKind ? (
         <Button
           type="button"
           onClick={onToggleKind}
@@ -224,18 +220,6 @@ function MapDeleteBubble({
           {isMarker ? "Make tent number" : "Make area marker"}
         </Button>
       ) : null}
-      {armed ? (
-        <Button
-          type="button"
-          onClick={() => setArmed(false)}
-          disabled={deleting}
-          variant="secondary"
-          size="sm"
-          className="h-7 px-2 text-[11px] font-bold"
-        >
-          Cancel
-        </Button>
-      ) : null}
       <Button
         type="button"
         onClick={() => void confirmDelete()}
@@ -244,7 +228,7 @@ function MapDeleteBubble({
         size="sm"
         className="h-7 px-2 text-[11px] font-bold"
       >
-        {deleting ? "Deleting…" : armed ? "Confirm delete" : "Delete"}
+        {deleting ? "Deleting…" : "Delete"}
       </Button>
     </div>
   );
@@ -442,7 +426,12 @@ export default function VillageMapEditorGeo({
     }
   }, [drawing]);
 
+  // Point and area editing is locked while dropping tents, but existing tent
+  // pins must remain draggable and deletable in that mode. Otherwise the most
+  // common workflow (drop, adjust, remove) appears broken until the mode is
+  // manually switched off.
   const locked = placing || drawing || tentMode;
+  const tentsLocked = placing || drawing;
 
   // Editing areas is disabled in add-pin / draw modes — drop any selection.
   useEffect(() => {
@@ -526,15 +515,16 @@ export default function VillageMapEditorGeo({
             <Marker
               keyboard={false}
               autoPanOnFocus={false}
+              bubblingMouseEvents={false}
               key={t.id}
               position={[t.lat, t.lng]}
-              draggable={!locked}
+              draggable={!tentsLocked}
               // Keep the icon stable when selection changes. Swapping from the
               // normal to the active icon rebuilds Leaflet's marker element and
               // immediately closes the popup the rider just tapped.
               icon={tentPinIcon(t.label, false, t.kind === "marker")}
               eventHandlers={{
-                click: () => onSelectTent?.(selectedTent === t.id ? null : t.id),
+                click: () => onSelectTent?.(t.id),
                 drag: (e) => {
                   const ll = (e.target as L.Marker).getLatLng();
                   paintTent(t.id, ll.lat, ll.lng);
