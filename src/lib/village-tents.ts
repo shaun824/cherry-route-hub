@@ -99,7 +99,7 @@ export async function fetchVillageTents(eventId: string, venueId: string | null 
 async function fetchVillageTentsLive(eventId: string, venueId: string | null): Promise<VillageTent[]> {
   let query = supabase
     .from("event_village_tents")
-    .select("id, event_id, venue_id, label, lat, lng, zone_id, capacity, notes, kind, tent_type")
+    .select("id, event_id, venue_id, label, lat, lng, zone_id, capacity, notes, kind, tent_type, rotation")
     .eq("event_id", eventId);
   query = venueId ? query.eq("venue_id", venueId) : query.is("venue_id", null);
   const { data, error } = await query.order("label", { ascending: true });
@@ -111,6 +111,7 @@ async function fetchVillageTentsLive(eventId: string, venueId: string | null): P
     ...t,
     kind: t.kind === "marker" ? "marker" : "tent",
     tent_type: t.tent_type === "luxury" ? "luxury" : "rce",
+    rotation: Number(t.rotation ?? 0) || 0,
   }));
 }
 
