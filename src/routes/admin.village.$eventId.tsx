@@ -229,21 +229,83 @@ function VillageEditor() {
     await qc.invalidateQueries({ queryKey: ["village-tents", event.id, venueId] });
   }
 
+  /** Optimistically patch one tent pin, then persist it. */
+  async function patchTent(id: string, patch: Record<string, unknown>) {
+    qc.setQueryData(
+      ["village-tents", event.id, venueId],
+      (current: typeof tents | undefined) =>
+        current?.map((t) => (t.id === id ? { ...t, ...(patch as object) } : t)) ?? current,
+    );
+    const { error } = await supabase.from("event_village_tents").update(patch).eq("id", id);
+    if (error) toast.error(error.message);
+    await qc.invalidateQueries({ queryKey: ["village-tents", event.id, venueId] });
+  }
+
   /** Turn a tent pin so its square footprint matches how it is pitched. */
   async function rotateTent(id: string, byDegrees: number) {
     const tent = tents.find((t) => t.id === id);
     if (!tent) return;
-    const next = ((((tent.rotation ?? 0) + byDegrees) % 360) + 360) % 360;
-    qc.setQueryData(
-      ["village-tents", event.id, venueId],
-      (current: typeof tents | undefined) =>
-        current?.map((t) => (t.id === id ? { ...t, rotation: next } : t)) ?? current,
-    );
-    const { error } = await supabase.from("event_village_tents").update({ rotation: next }).eq("id", id);
-    if (error) {
-      toast.error(error.message);
-      await qc.invalidateQueries({ queryKey: ["village-tents", event.id, venueId] });
+    await setTentRotation(id, (tent.rotation ?? 0) + byDegrees);
+  }
+
+  async function setTentRotation(id: string, degrees: number) {
+    const next = (((Math.round(degrees) % 360) + 360) % 360);
+    await patchTent(id, { rotation: next });
+  }
+
+  /** Swap a pin between the 2x2m standard tent and the 4x4m luxury tent. */
+  async function setTentTypeFor(id: string, type: TentType) {
+    await patchTent(id, { tent_type: type });
+  }
+
+  /** Drop a pin into a drawn area: attach it and, if it sits outside, move it in. */
+  async function assignTentToZone(id: string, zoneId: string | null) {
+    const tent = tents.find((t) => t.id === id);
+    if (!tent) return;
+    const zone = zones.find((z) => z.id === zoneId) ?? null;
+    if (!zone) {
+      await patchTent(id, { zone_id: null });
+      return;
     }
+    const inside = pointInZone({ lat: tent.lat, lng: tent.lng }, zone);
+    const centre = zoneCentroid(zone);
+    const patch: Record<string, unknown> = { zone_id: zone.id };
+    if (!inside && centre) {
+      patch.lat = centre.lat;
+      patch.lng = centre.lng;
+    }
+    await patchTent(id, patch);
+  }
+
+  /** Line a tent up with the longest edge of its area, so rows sit straight. */
+  function zoneBearing(zone: VillageZone): number {
+    const pts = zone.points ?? [];
+    if (pts.length < 2) return 0;
+    const ref = pts[0];
+    let best = 0;
+    let bestLen = -1;
+    for (let i = 0; i < pts.length; i++) {
+      const a = toMetres(ref, pts[i]);
+      const b = toMetres(ref, pts[(i + 1) % pts.length]);
+      const de = b.e - a.e;
+      const dn = b.n - a.n;
+      const len = Math.hypot(de, dn);
+      if (len > bestLen) {
+        bestLen = len;
+        best = (Math.atan2(de, dn) * 180) / Math.PI;
+      }
+    }
+    return ((Math.round(best) % 90) + 90) % 90;
+  }
+
+  async function alignTentToZone(id: string) {
+    const tent = tents.find((t) => t.id === id);
+    const zone = zones.find((z) => z.id === tent?.zone_id);
+    if (!tent || !zone) {
+      toast.message("Put the tent in an area first, then align it.");
+      return;
+    }
+    await setTentRotation(id, zoneBearing(zone));
   }
 
   async function toggleTentKind(id: string) {
