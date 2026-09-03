@@ -177,14 +177,29 @@ function VillageEditor() {
     return label.replace(/\d+$/, String(n + 1));
   }
 
+  /** Next free number at or after `label`'s number, ignoring `justUsed`. */
+  function freeLabelFrom(label: string, justUsed: string[] = []) {
+    const used = new Set(
+      [...tents.filter((t) => t.kind !== "marker").map((t) => t.label), ...justUsed]
+        .map((l) => Number(String(l).match(/\d+/)?.[0] ?? NaN))
+        .filter((n) => Number.isFinite(n)),
+    );
+    let n = Number(label.match(/\d+$/)?.[0] ?? NaN);
+    if (!Number.isFinite(n)) return label;
+    while (used.has(n)) n += 1;
+    return label.replace(/\d+$/, String(n));
+  }
+
   async function placeTent(lat: number, lng: number) {
-    const label = nextTentLabel.trim() || nextFreeTentNumber();
-    if (
-      tentKind === "tent" &&
-      tents.some((t) => t.kind !== "marker" && t.label.trim().toLowerCase() === label.toLowerCase())
-    ) {
-      toast.error(`Tent ${label} already exists — numbers can't repeat across Luxury and RCE tents.`);
-      return;
+    let label = nextTentLabel.trim() || nextFreeTentNumber();
+    if (tentKind === "tent") {
+      // Dropping a tent must never silently do nothing: if the number in the
+      // box is already on the field, roll on to the next free number instead.
+      const free = freeLabelFrom(label);
+      if (free !== label) {
+        toast.message(`Tent ${label} already exists — dropped tent ${free} instead.`);
+        label = free;
+      }
     }
     const zone = zones.find((z) => pointInZone({ lat, lng }, z)) ?? null;
     const { error } = await supabase.from("event_village_tents").insert({
@@ -201,9 +216,10 @@ function VillageEditor() {
       toast.error(error.message);
       return;
     }
-    if (tentKind === "tent") setNextTentLabel(bumpLabel(label));
+    if (tentKind === "tent") setNextTentLabel(freeLabelFrom(bumpLabel(label), [label]));
     await qc.invalidateQueries({ queryKey: ["village-tents", event.id, venueId] });
   }
+
 
   async function moveTent(id: string, lat: number, lng: number) {
     const zone = zones.find((z) => pointInZone({ lat, lng }, z)) ?? null;
