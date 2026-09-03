@@ -790,38 +790,115 @@ function VillageEditor() {
           </label>
         ) : null}
         {selectedTent ? (
-          <span className="inline-flex items-center gap-1 rounded-lg bg-secondary px-2 py-1 text-[11px] font-bold text-ink-soft">
-            Turn tent
-            <button
-              onClick={() => void rotateTent(selectedTent, -15)}
-              className="rounded bg-background px-2 py-1 text-xs font-bold text-ink"
-              title="Turn 15° anti-clockwise"
-            >
-              ↺
-            </button>
-            <button
-              onClick={() => void rotateTent(selectedTent, 15)}
-              className="rounded bg-background px-2 py-1 text-xs font-bold text-ink"
-              title="Turn 15° clockwise"
-            >
-              ↻
-            </button>
-            <span className="tabular-nums">
-              {Math.round(tents.find((t) => t.id === selectedTent)?.rotation ?? 0)}°
+          <div className="flex w-full flex-wrap items-center gap-2 rounded-xl bg-secondary p-2 text-[11px] font-bold text-ink-soft">
+            <span className="rounded bg-background px-2 py-1 text-ink">
+              Tent {tents.find((t) => t.id === selectedTent)?.label ?? ""}
             </span>
-          </span>
-        ) : null}
-        {selectedTent ? (
-          <button
-            onClick={() => {
-              const id = selectedTent;
-              setSelectedTent(null);
-              void deleteTent(id);
-            }}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-muted px-3 py-1.5 text-xs font-bold text-ink"
-          >
-            <Trash2 className="h-3.5 w-3.5" /> Delete tent pin
-          </button>
+
+            <span className="inline-flex items-center gap-1">
+              Size
+              <span className="inline-flex overflow-hidden rounded-lg ring-1 ring-border">
+                {TENT_TYPES.map((t) => (
+                  <button
+                    key={t.id}
+                    onClick={() => void setTentTypeFor(selectedTent, t.id)}
+                    className={`px-2 py-1 ${
+                      (tents.find((x) => x.id === selectedTent)?.tent_type ?? "rce") === t.id
+                        ? "bg-cherry text-white"
+                        : "bg-background text-ink-soft"
+                    }`}
+                  >
+                    {t.name} {t.sizeM}×{t.sizeM}m
+                  </button>
+                ))}
+              </span>
+            </span>
+
+            <span className="inline-flex items-center gap-1">
+              Turn
+              <button
+                onClick={() => void rotateTent(selectedTent, -15)}
+                className="rounded bg-background px-2 py-1 text-ink"
+                title="Turn 15° anti-clockwise"
+              >
+                ↺
+              </button>
+              <button
+                onClick={() => void rotateTent(selectedTent, -1)}
+                className="rounded bg-background px-2 py-1 text-ink"
+                title="Turn 1° anti-clockwise"
+              >
+                −1°
+              </button>
+              <input
+                type="range"
+                min={0}
+                max={359}
+                step={1}
+                value={Math.round(tents.find((t) => t.id === selectedTent)?.rotation ?? 0)}
+                onChange={(e) => void setTentRotation(selectedTent, Number(e.target.value))}
+                className="w-32 accent-[hsl(var(--cherry))]"
+              />
+              <button
+                onClick={() => void rotateTent(selectedTent, 1)}
+                className="rounded bg-background px-2 py-1 text-ink"
+                title="Turn 1° clockwise"
+              >
+                +1°
+              </button>
+              <button
+                onClick={() => void rotateTent(selectedTent, 15)}
+                className="rounded bg-background px-2 py-1 text-ink"
+                title="Turn 15° clockwise"
+              >
+                ↻
+              </button>
+              <span className="tabular-nums text-ink">
+                {Math.round(tents.find((t) => t.id === selectedTent)?.rotation ?? 0)}°
+              </span>
+              <button
+                onClick={() => void setTentRotation(selectedTent, 0)}
+                className="rounded bg-background px-2 py-1 text-ink"
+                title="Square the tent up with north"
+              >
+                Square up
+              </button>
+            </span>
+
+            <span className="inline-flex items-center gap-1">
+              Area
+              <select
+                value={tents.find((t) => t.id === selectedTent)?.zone_id ?? ""}
+                onChange={(e) => void assignTentToZone(selectedTent, e.target.value || null)}
+                className="rounded border border-border bg-background px-2 py-1 text-xs font-semibold text-ink"
+              >
+                <option value="">No area</option>
+                {zones.map((z) => (
+                  <option key={z.id} value={z.id}>
+                    {z.name}
+                  </option>
+                ))}
+              </select>
+              <button
+                onClick={() => void alignTentToZone(selectedTent)}
+                className="rounded bg-background px-2 py-1 text-ink"
+                title="Line the tent up with the area's longest edge"
+              >
+                Align to area
+              </button>
+            </span>
+
+            <button
+              onClick={() => {
+                const id = selectedTent;
+                setSelectedTent(null);
+                void deleteTent(id);
+              }}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-muted px-3 py-1.5 text-xs font-bold text-ink"
+            >
+              <Trash2 className="h-3.5 w-3.5" /> Delete tent pin
+            </button>
+          </div>
         ) : null}
         <button
           onClick={addQuickArea}
