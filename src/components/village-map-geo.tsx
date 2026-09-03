@@ -18,7 +18,7 @@ await import("leaflet-rotate");
 import type { VillageGeo, VillageHotspot } from "@/lib/village-map";
 import { spotColor, spotIcon } from "@/lib/village-map";
 import { villageIconSvg } from "@/lib/village-icons";
-import { tentFootprintBounds, tentTypeMeta } from "@/lib/village-tents";
+import { tentFootprintCorners, tentTypeMeta } from "@/lib/village-tents";
 import { hasBuildDetail, zoneCentroid, zoneColor, zoneKindLabel, type VillageZone } from "@/lib/village-zones";
 
 
@@ -237,7 +237,7 @@ function FlyToTent({ tent }: { tent: MapTent | null }) {
   return null;
 }
 
-export type MapTent = { id: string; label: string; lat: number; lng: number; kind?: "tent" | "marker" | null; tent_type?: string | null };
+export type MapTent = { id: string; label: string; lat: number; lng: number; kind?: "tent" | "marker" | null; tent_type?: string | null; rotation?: number | null };
 
 
 /** Facility marker: a clean coloured icon puck, with its name shown once tapped. */
@@ -523,7 +523,7 @@ export default function VillageMapGeo({
           return {
             tent,
             meta,
-            footprint: tentFootprintBounds(tent.lat, tent.lng, meta.sizeM),
+            footprint: tentFootprintCorners(tent.lat, tent.lng, meta.sizeM, tent.rotation ?? 0),
             pos: [tent.lat, tent.lng] as [number, number],
             icon: tentIcon(tent.label, false),
           };
@@ -709,8 +709,8 @@ export default function VillageMapGeo({
 
             return (
               <Fragment key={t.id}>
-              <Rectangle
-                bounds={footprint}
+              <Polygon
+                positions={footprint}
                 pathOptions={{
                   color: hot ? "#c8102e" : meta.id === "luxury" ? "#f59e0b" : "#38bdf8",
                   weight: 1.5,

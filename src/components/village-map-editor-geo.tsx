@@ -2,7 +2,7 @@
 // satellite map of the venue — no plan image required. Also supports drawing
 // measured areas (zones) so the field layout can be planned to the metre.
 import { Fragment, useEffect, useMemo, useRef, useState } from "react";
-import { MapContainer, TileLayer, Marker, Polygon, Polyline, Popup, Rectangle, Tooltip, useMap, useMapEvents } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Polygon, Polyline, Popup, Tooltip, useMap, useMapEvents } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 // Bearing support so the build can be laid out "the right way round" — the
