@@ -236,7 +236,9 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      {isAdmin ? (
+      {isEmbed ? (
+        <Outlet />
+      ) : isAdmin ? (
         <>
           <Outlet />
           <AssistantWidget />
@@ -248,6 +250,7 @@ function RootComponent() {
       )}
       {onAuthPages ? null : <SetPasswordPrompt />}
     </QueryClientProvider>
+
   );
 }
 
