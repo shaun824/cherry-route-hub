@@ -529,7 +529,10 @@ export default function VillageMapEditorGeo({
               key={t.id}
               position={[t.lat, t.lng]}
               draggable={!locked}
-              icon={tentPinIcon(t.label, selectedTent === t.id, t.kind === "marker")}
+              // Keep the icon stable when selection changes. Swapping from the
+              // normal to the active icon rebuilds Leaflet's marker element and
+              // immediately closes the popup the rider just tapped.
+              icon={tentPinIcon(t.label, false, t.kind === "marker")}
               eventHandlers={{
                 click: () => onSelectTent?.(selectedTent === t.id ? null : t.id),
                 drag: (e) => {
@@ -539,7 +542,9 @@ export default function VillageMapEditorGeo({
                 dragend: () => commitTent(t.id),
               }}
             >
-              {onDeleteTent && !locked ? (
+              {/* Placement/drawing mode only locks dragging; it must not hide
+                  the popup used to delete a pin that was placed by mistake. */}
+              {onDeleteTent ? (
                 <Popup autoPan={false} closeButton={false}>
                   <MapDeleteBubble
                     label={
