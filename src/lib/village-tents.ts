@@ -19,6 +19,8 @@ export type VillageTent = {
   kind: "tent" | "marker";
   /** Tent product placed on the field. Luxury tents are 4m x 4m, RCE tents 2m x 2m. */
   tent_type: TentType;
+  /** Direction the tent faces, in degrees clockwise from north. */
+  rotation: number;
 };
 
 export type TentType = "rce" | "luxury";
