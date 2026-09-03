@@ -260,7 +260,6 @@ function VillageEditor() {
     );
     toast.success("Tent pin deleted");
     await qc.invalidateQueries({ queryKey: ["village-tents", event.id, venueId] });
-    toast.success("Pin deleted");
   }
 
   const fileRef = useRef<HTMLInputElement>(null);
