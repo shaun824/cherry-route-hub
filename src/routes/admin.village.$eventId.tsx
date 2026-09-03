@@ -230,11 +230,14 @@ function VillageEditor() {
   }
 
   /** Optimistically patch one tent pin, then persist it. */
-  async function patchTent(id: string, patch: Record<string, unknown>) {
+  async function patchTent(
+    id: string,
+    patch: { rotation?: number; tent_type?: TentType; zone_id?: string | null; lat?: number; lng?: number },
+  ) {
     qc.setQueryData(
       ["village-tents", event.id, venueId],
       (current: typeof tents | undefined) =>
-        current?.map((t) => (t.id === id ? { ...t, ...(patch as object) } : t)) ?? current,
+        current?.map((t) => (t.id === id ? { ...t, ...patch } : t)) ?? current,
     );
     const { error } = await supabase.from("event_village_tents").update(patch).eq("id", id);
     if (error) toast.error(error.message);
@@ -269,7 +272,7 @@ function VillageEditor() {
     }
     const inside = pointInZone({ lat: tent.lat, lng: tent.lng }, zone);
     const centre = zoneCentroid(zone);
-    const patch: Record<string, unknown> = { zone_id: zone.id };
+    const patch: { zone_id: string; lat?: number; lng?: number } = { zone_id: zone.id };
     if (!inside && centre) {
       patch.lat = centre.lat;
       patch.lng = centre.lng;
