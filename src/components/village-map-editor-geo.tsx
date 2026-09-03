@@ -30,8 +30,23 @@ import {
   type ZonePoint,
 } from "@/lib/village-zones";
 
+// Icons are cached by their inputs so every render hands react-leaflet the
+// *same* icon object. A fresh icon triggers marker.setIcon(), which rebuilds
+// the marker's DOM element and cancels any drag in progress — that is why the
+// area move / corner handles could not be dragged: dragging re-renders the
+// editor each frame.
+const iconCache = new Map<string, L.DivIcon>();
+function cachedIcon(key: string, make: () => L.DivIcon) {
+  let icon = iconCache.get(key);
+  if (!icon) {
+    icon = make();
+    iconCache.set(key, icon);
+  }
+  return icon;
+}
+
 function pinIcon(color: string, label: string, active: boolean, iconId?: string) {
-  return L.divIcon({
+  return cachedIcon(`pin|${color}|${label}|${active}|${iconId ?? ""}`, () => L.divIcon({
     className: "rce-village-pin",
     html: `<div style="display:flex;flex-direction:column;align-items:center;transform:translateY(-6px)">
       <span style="display:inline-flex;align-items:center;gap:4px;background:${color};color:#fff;font-size:10px;font-weight:800;padding:3px 7px;border-radius:999px;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,.35);border:${
@@ -41,35 +56,36 @@ function pinIcon(color: string, label: string, active: boolean, iconId?: string)
     </div>`,
     iconSize: [10, 10],
     iconAnchor: [5, 18],
-  });
+  }));
 }
 
 function handleIcon(color: string, size = 18) {
-  return L.divIcon({
+  return cachedIcon(`handle|${color}|${size}`, () => L.divIcon({
     className: "rce-zone-handle",
     html: `<span style="display:block;width:${size}px;height:${size}px;border-radius:999px;background:#fff;border:3px solid ${color};box-shadow:0 1px 4px rgba(0,0,0,.4)"></span>`,
     iconSize: [size, size],
     iconAnchor: [size / 2, size / 2],
-  });
+  }));
 }
 
 function addIcon(color: string) {
-  return L.divIcon({
+  return cachedIcon(`add|${color}`, () => L.divIcon({
     className: "rce-zone-add",
     html: `<span style="display:grid;place-items:center;width:18px;height:18px;border-radius:999px;background:#fff;color:${color};border:2px solid ${color};box-shadow:0 1px 4px rgba(0,0,0,.35);font-size:12px;font-weight:900;line-height:1">+</span>`,
     iconSize: [18, 18],
     iconAnchor: [9, 9],
-  });
+  }));
 }
 
 function moveIcon(color: string) {
-  return L.divIcon({
+  return cachedIcon(`move|${color}`, () => L.divIcon({
     className: "rce-zone-move",
     html: `<span style="display:grid;place-items:center;width:34px;height:34px;border-radius:999px;background:${color};color:#fff;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.45);font-size:16px;font-weight:900">✥</span>`,
     iconSize: [34, 34],
     iconAnchor: [17, 17],
-  });
+  }));
 }
+
 
 
 function ClickCatcher({ onClick }: { onClick: (lat: number, lng: number) => void }) {
@@ -144,7 +160,7 @@ function BearingWatch({ onBearing }: { onBearing: (b: number) => void }) {
 function tentPinIcon(label: string, active: boolean, marker = false) {
   const bg = active ? "#c8102e" : marker ? "#64748b" : "#111827";
   const safe = label.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c] as string);
-  return L.divIcon({
+  return cachedIcon(`tent|${bg}|${safe}|${active}|${marker}`, () => L.divIcon({
     className: "rce-village-tent",
     html: `<div style="display:flex;flex-direction:column;align-items:center">
       <span style="background:${bg};color:#fff;font-size:10px;font-weight:800;padding:2px 6px;border-radius:6px;white-space:nowrap;border:${
@@ -154,7 +170,7 @@ function tentPinIcon(label: string, active: boolean, marker = false) {
     </div>`,
     iconSize: [10, 10],
     iconAnchor: [5, 14],
-  });
+  }));
 }
 
 function MapDeleteBubble({
@@ -639,6 +655,9 @@ export default function VillageMapEditorGeo({
                       autoPanOnFocus={false}
                       position={[c.lat, c.lng]}
                       icon={moveIcon(zoneColor(z))}
+                      // Pin labels are wide and sit in the same pane, so without
+                      // this the handles end up buried and can't be grabbed.
+                      zIndexOffset={2000}
                       draggable
                       eventHandlers={{
                         drag: (e) => {
@@ -656,6 +675,7 @@ export default function VillageMapEditorGeo({
                         position={[p.lat, p.lng]}
 
                         icon={handleIcon(zoneColor(z))}
+                        zIndexOffset={2000}
                         draggable
                         eventHandlers={{
                           drag: (e) => {
@@ -688,6 +708,7 @@ export default function VillageMapEditorGeo({
                           key={`${z.id}-m${i}`}
                           position={[mid.lat, mid.lng]}
                           icon={addIcon(zoneColor(z))}
+                          zIndexOffset={1900}
                           eventHandlers={{
                             click: (e) => {
                               L.DomEvent.stopPropagation(e as unknown as Event);
