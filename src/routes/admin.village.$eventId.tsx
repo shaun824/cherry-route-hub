@@ -41,6 +41,8 @@ import {
   pointInZone,
   translateZone,
   zoneSizeM as zoneSizeMetres,
+  zoneCentroid,
+  toMetres,
   ZONE_KINDS,
   type ZoneKind,
   type VillageZone,
@@ -227,21 +229,86 @@ function VillageEditor() {
     await qc.invalidateQueries({ queryKey: ["village-tents", event.id, venueId] });
   }
 
+  /** Optimistically patch one tent pin, then persist it. */
+  async function patchTent(
+    id: string,
+    patch: { rotation?: number; tent_type?: TentType; zone_id?: string | null; lat?: number; lng?: number },
+  ) {
+    qc.setQueryData(
+      ["village-tents", event.id, venueId],
+      (current: typeof tents | undefined) =>
+        current?.map((t) => (t.id === id ? { ...t, ...patch } : t)) ?? current,
+    );
+    const { error } = await supabase.from("event_village_tents").update(patch).eq("id", id);
+    if (error) toast.error(error.message);
+    await qc.invalidateQueries({ queryKey: ["village-tents", event.id, venueId] });
+  }
+
   /** Turn a tent pin so its square footprint matches how it is pitched. */
   async function rotateTent(id: string, byDegrees: number) {
     const tent = tents.find((t) => t.id === id);
     if (!tent) return;
-    const next = ((((tent.rotation ?? 0) + byDegrees) % 360) + 360) % 360;
-    qc.setQueryData(
-      ["village-tents", event.id, venueId],
-      (current: typeof tents | undefined) =>
-        current?.map((t) => (t.id === id ? { ...t, rotation: next } : t)) ?? current,
-    );
-    const { error } = await supabase.from("event_village_tents").update({ rotation: next }).eq("id", id);
-    if (error) {
-      toast.error(error.message);
-      await qc.invalidateQueries({ queryKey: ["village-tents", event.id, venueId] });
+    await setTentRotation(id, (tent.rotation ?? 0) + byDegrees);
+  }
+
+  async function setTentRotation(id: string, degrees: number) {
+    const next = (((Math.round(degrees) % 360) + 360) % 360);
+    await patchTent(id, { rotation: next });
+  }
+
+  /** Swap a pin between the 2x2m standard tent and the 4x4m luxury tent. */
+  async function setTentTypeFor(id: string, type: TentType) {
+    await patchTent(id, { tent_type: type });
+  }
+
+  /** Drop a pin into a drawn area: attach it and, if it sits outside, move it in. */
+  async function assignTentToZone(id: string, zoneId: string | null) {
+    const tent = tents.find((t) => t.id === id);
+    if (!tent) return;
+    const zone = zones.find((z) => z.id === zoneId) ?? null;
+    if (!zone) {
+      await patchTent(id, { zone_id: null });
+      return;
     }
+    const inside = pointInZone({ lat: tent.lat, lng: tent.lng }, zone);
+    const centre = zoneCentroid(zone);
+    const patch: { zone_id: string; lat?: number; lng?: number } = { zone_id: zone.id };
+    if (!inside && centre) {
+      patch.lat = centre.lat;
+      patch.lng = centre.lng;
+    }
+    await patchTent(id, patch);
+  }
+
+  /** Line a tent up with the longest edge of its area, so rows sit straight. */
+  function zoneBearing(zone: VillageZone): number {
+    const pts = zone.points ?? [];
+    if (pts.length < 2) return 0;
+    const ref = pts[0];
+    let best = 0;
+    let bestLen = -1;
+    for (let i = 0; i < pts.length; i++) {
+      const a = toMetres(ref, pts[i]);
+      const b = toMetres(ref, pts[(i + 1) % pts.length]);
+      const de = b.e - a.e;
+      const dn = b.n - a.n;
+      const len = Math.hypot(de, dn);
+      if (len > bestLen) {
+        bestLen = len;
+        best = (Math.atan2(de, dn) * 180) / Math.PI;
+      }
+    }
+    return ((Math.round(best) % 90) + 90) % 90;
+  }
+
+  async function alignTentToZone(id: string) {
+    const tent = tents.find((t) => t.id === id);
+    const zone = zones.find((z) => z.id === tent?.zone_id);
+    if (!tent || !zone) {
+      toast.message("Put the tent in an area first, then align it.");
+      return;
+    }
+    await setTentRotation(id, zoneBearing(zone));
   }
 
   async function toggleTentKind(id: string) {
@@ -726,38 +793,115 @@ function VillageEditor() {
           </label>
         ) : null}
         {selectedTent ? (
-          <span className="inline-flex items-center gap-1 rounded-lg bg-secondary px-2 py-1 text-[11px] font-bold text-ink-soft">
-            Turn tent
-            <button
-              onClick={() => void rotateTent(selectedTent, -15)}
-              className="rounded bg-background px-2 py-1 text-xs font-bold text-ink"
-              title="Turn 15° anti-clockwise"
-            >
-              ↺
-            </button>
-            <button
-              onClick={() => void rotateTent(selectedTent, 15)}
-              className="rounded bg-background px-2 py-1 text-xs font-bold text-ink"
-              title="Turn 15° clockwise"
-            >
-              ↻
-            </button>
-            <span className="tabular-nums">
-              {Math.round(tents.find((t) => t.id === selectedTent)?.rotation ?? 0)}°
+          <div className="flex w-full flex-wrap items-center gap-2 rounded-xl bg-secondary p-2 text-[11px] font-bold text-ink-soft">
+            <span className="rounded bg-background px-2 py-1 text-ink">
+              Tent {tents.find((t) => t.id === selectedTent)?.label ?? ""}
             </span>
-          </span>
-        ) : null}
-        {selectedTent ? (
-          <button
-            onClick={() => {
-              const id = selectedTent;
-              setSelectedTent(null);
-              void deleteTent(id);
-            }}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-muted px-3 py-1.5 text-xs font-bold text-ink"
-          >
-            <Trash2 className="h-3.5 w-3.5" /> Delete tent pin
-          </button>
+
+            <span className="inline-flex items-center gap-1">
+              Size
+              <span className="inline-flex overflow-hidden rounded-lg ring-1 ring-border">
+                {TENT_TYPES.map((t) => (
+                  <button
+                    key={t.id}
+                    onClick={() => void setTentTypeFor(selectedTent, t.id)}
+                    className={`px-2 py-1 ${
+                      (tents.find((x) => x.id === selectedTent)?.tent_type ?? "rce") === t.id
+                        ? "bg-cherry text-white"
+                        : "bg-background text-ink-soft"
+                    }`}
+                  >
+                    {t.name} {t.sizeM}×{t.sizeM}m
+                  </button>
+                ))}
+              </span>
+            </span>
+
+            <span className="inline-flex items-center gap-1">
+              Turn
+              <button
+                onClick={() => void rotateTent(selectedTent, -15)}
+                className="rounded bg-background px-2 py-1 text-ink"
+                title="Turn 15° anti-clockwise"
+              >
+                ↺
+              </button>
+              <button
+                onClick={() => void rotateTent(selectedTent, -1)}
+                className="rounded bg-background px-2 py-1 text-ink"
+                title="Turn 1° anti-clockwise"
+              >
+                −1°
+              </button>
+              <input
+                type="range"
+                min={0}
+                max={359}
+                step={1}
+                value={Math.round(tents.find((t) => t.id === selectedTent)?.rotation ?? 0)}
+                onChange={(e) => void setTentRotation(selectedTent, Number(e.target.value))}
+                className="w-32 accent-[hsl(var(--cherry))]"
+              />
+              <button
+                onClick={() => void rotateTent(selectedTent, 1)}
+                className="rounded bg-background px-2 py-1 text-ink"
+                title="Turn 1° clockwise"
+              >
+                +1°
+              </button>
+              <button
+                onClick={() => void rotateTent(selectedTent, 15)}
+                className="rounded bg-background px-2 py-1 text-ink"
+                title="Turn 15° clockwise"
+              >
+                ↻
+              </button>
+              <span className="tabular-nums text-ink">
+                {Math.round(tents.find((t) => t.id === selectedTent)?.rotation ?? 0)}°
+              </span>
+              <button
+                onClick={() => void setTentRotation(selectedTent, 0)}
+                className="rounded bg-background px-2 py-1 text-ink"
+                title="Square the tent up with north"
+              >
+                Square up
+              </button>
+            </span>
+
+            <span className="inline-flex items-center gap-1">
+              Area
+              <select
+                value={tents.find((t) => t.id === selectedTent)?.zone_id ?? ""}
+                onChange={(e) => void assignTentToZone(selectedTent, e.target.value || null)}
+                className="rounded border border-border bg-background px-2 py-1 text-xs font-semibold text-ink"
+              >
+                <option value="">No area</option>
+                {zones.map((z) => (
+                  <option key={z.id} value={z.id}>
+                    {z.name}
+                  </option>
+                ))}
+              </select>
+              <button
+                onClick={() => void alignTentToZone(selectedTent)}
+                className="rounded bg-background px-2 py-1 text-ink"
+                title="Line the tent up with the area's longest edge"
+              >
+                Align to area
+              </button>
+            </span>
+
+            <button
+              onClick={() => {
+                const id = selectedTent;
+                setSelectedTent(null);
+                void deleteTent(id);
+              }}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-muted px-3 py-1.5 text-xs font-bold text-ink"
+            >
+              <Trash2 className="h-3.5 w-3.5" /> Delete tent pin
+            </button>
+          </div>
         ) : null}
         <button
           onClick={addQuickArea}
