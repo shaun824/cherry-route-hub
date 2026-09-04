@@ -159,6 +159,17 @@ function EmailWorkflowsPage() {
 
       {q.isLoading ? <p className="text-sm text-ink-soft">Loading…</p> : null}
 
+      <EmailsGoingOut
+        events={events}
+        campaigns={campaigns}
+        systemEmails={(q.data?.systemEmails ?? []) as any[]}
+        onStartWorkflow={(id, name) => {
+          setNewEventId(id);
+          setNewName(name);
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        }}
+      />
+
       {campaigns.map((c) => (
         <CampaignCard
           key={c.id}
@@ -186,12 +197,159 @@ function EmailWorkflowsPage() {
 
       {!q.isLoading && !campaigns.length ? (
         <p className="rounded-2xl border border-dashed border-border p-6 text-center text-sm text-ink-soft">
-          No workflows yet — create one above.
+          No custom workflows yet — the automatic emails above still go out on their own.
         </p>
       ) : null}
     </div>
   );
 }
+
+const TEMPLATE_LABELS: Record<string, string> = {
+  "entry-welcome": "You're entered (welcome email)",
+  "event-update": "Event update (workflow email)",
+  "schedule-apology": "Corrected start times",
+  "crew-training-invite": "Crew training invite",
+  "feedback-notification": "Rider problem report",
+  "auth-signup": "Account: confirm your email",
+  "auth-invite": "Account: invite",
+  "auth-magic-link": "Account: login link",
+  "auth-recovery": "Account: reset your password",
+  "auth-email-change": "Account: confirm new email",
+  "auth-reauthentication": "Account: verification code",
+};
+
+function templateLabel(t: string) {
+  return TEMPLATE_LABELS[t] ?? t.replace(/-/g, " ");
+}
+
+function shortDate(iso?: string | null) {
+  if (!iso) return "—";
+  return new Date(iso).toLocaleDateString("en-ZA", { day: "numeric", month: "short", year: "numeric" });
+}
+
+function EmailsGoingOut({
+  events,
+  campaigns,
+  systemEmails,
+  onStartWorkflow,
+}: {
+  events: any[];
+  campaigns: any[];
+  systemEmails: { template: string; sent: number; lastSentAt: string | null }[];
+  onStartWorkflow: (eventId: string, name: string) => void;
+}) {
+  const accountEmails = systemEmails.filter((s) => s.template.startsWith("auth-"));
+  const otherEmails = systemEmails.filter((s) => !s.template.startsWith("auth-"));
+
+  return (
+    <section className="space-y-4 rounded-2xl border border-border bg-card p-4">
+      <div>
+        <h2 className="font-display text-lg font-bold">Emails going out now</h2>
+        <p className="text-xs text-ink-soft">
+          Every event and the emails riders already receive for it, plus the account emails the app
+          sends on its own.
+        </p>
+      </div>
+
+      <div className="space-y-2">
+        {events.map((e) => {
+          const eventCampaigns = campaigns.filter((c) => c.event_id === e.id);
+          const stepCount = eventCampaigns.reduce((n, c) => n + (c.steps?.length ?? 0), 0);
+          const active = eventCampaigns.some((c) => c.status === "active");
+          return (
+            <div key={e.id} className="rounded-xl border border-border/70 bg-secondary/30 p-3">
+              <div className="flex flex-wrap items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-semibold">{e.name}</p>
+                  <p className="text-xs text-ink-soft">
+                    {shortDate(e.eventDate)} · {e.entrants ?? 0} entries
+                  </p>
+                </div>
+                <span
+                  className={`rounded-full px-2 py-1 text-[11px] font-semibold ${
+                    active ? "bg-primary/10 text-primary" : "bg-secondary text-ink-soft"
+                  }`}
+                >
+                  {active ? "workflow on" : eventCampaigns.length ? "workflow off" : "automatic only"}
+                </span>
+              </div>
+
+              <ul className="mt-2 space-y-1 text-xs text-ink-soft">
+                <li>
+                  • Welcome email when someone enters —{" "}
+                  <b className="text-ink">{e.welcomeSent ?? 0} sent</b>
+                </li>
+                {eventCampaigns.map((c) => (
+                  <li key={c.id}>
+                    • {c.name} — {c.steps?.length ?? 0} email{(c.steps?.length ?? 0) === 1 ? "" : "s"} ·{" "}
+                    {c.status}
+                  </li>
+                ))}
+                {!eventCampaigns.length ? (
+                  <li className="flex items-center gap-2">
+                    • No build-up emails yet
+                    <button
+                      onClick={() => onStartWorkflow(e.id, `${e.name} build-up`)}
+                      className="rounded-md border border-border bg-card px-2 py-0.5 text-[11px] font-semibold text-ink"
+                    >
+                      Set one up
+                    </button>
+                  </li>
+                ) : null}
+              </ul>
+              {stepCount > 0 ? null : null}
+            </div>
+          );
+        })}
+        {!events.length ? <p className="text-sm text-ink-soft">No events yet.</p> : null}
+      </div>
+
+      <div className="grid gap-3 md:grid-cols-2">
+        <div className="rounded-xl border border-border/70 p-3">
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-soft">
+            Rider &amp; crew emails sent
+          </p>
+          {otherEmails.length ? (
+            <ul className="space-y-1 text-xs">
+              {otherEmails.map((s) => (
+                <li key={s.template} className="flex justify-between gap-2">
+                  <span className="truncate">{templateLabel(s.template)}</span>
+                  <span className="shrink-0 text-ink-soft">
+                    {s.sent} · last {shortDate(s.lastSentAt)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-xs text-ink-soft">Nothing sent yet.</p>
+          )}
+        </div>
+        <div className="rounded-xl border border-border/70 p-3">
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-soft">
+            Account emails sent
+          </p>
+          {accountEmails.length ? (
+            <ul className="space-y-1 text-xs">
+              {accountEmails.map((s) => (
+                <li key={s.template} className="flex justify-between gap-2">
+                  <span className="truncate">{templateLabel(s.template)}</span>
+                  <span className="shrink-0 text-ink-soft">
+                    {s.sent} · last {shortDate(s.lastSentAt)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-xs text-ink-soft">
+              Sign-in and password emails go out automatically.
+            </p>
+          )}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 
 interface StepPayload {
   id?: string;

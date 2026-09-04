@@ -57,8 +57,53 @@ export const listEmailWorkflows = createServerFn({ method: "POST" })
       countByStep.set(s.step_id, c);
     }
 
+    // ---- Emails that already go out automatically ------------------------
+    // Per-event welcome mails (Entry Ninja "you're entered") plus everything
+    // recorded in email_sends, so the page shows the full picture, not just
+    // hand-built workflows.
+    const eventIds = (events ?? []).map((e: any) => e.id);
+    const safeEventIds = eventIds.length ? eventIds : ["00000000-0000-0000-0000-000000000000"];
+
+    const { data: entrantRows } = await (supabaseAdmin as any)
+      .from("event_entrants")
+      .select("event_id, welcome_email_sent_at")
+      .in("event_id", safeEventIds)
+      .limit(50000);
+
+    const entrantStats = new Map<string, { entrants: number; welcomeSent: number }>();
+    for (const row of (entrantRows ?? []) as any[]) {
+      const s = entrantStats.get(row.event_id) ?? { entrants: 0, welcomeSent: 0 };
+      s.entrants++;
+      if (row.welcome_email_sent_at) s.welcomeSent++;
+      entrantStats.set(row.event_id, s);
+    }
+
+    const { data: sentRows } = await (supabaseAdmin as any)
+      .from("email_sends")
+      .select("template, sent_at")
+      .order("sent_at", { ascending: false })
+      .limit(20000);
+
+    const byTemplate = new Map<string, { sent: number; lastSentAt: string | null }>();
+    for (const row of (sentRows ?? []) as any[]) {
+      const t = String(row.template ?? "unknown");
+      const s = byTemplate.get(t) ?? { sent: 0, lastSentAt: null };
+      s.sent++;
+      if (!s.lastSentAt || row.sent_at > s.lastSentAt) s.lastSentAt = row.sent_at;
+      byTemplate.set(t, s);
+    }
+
     return {
-      events: (events ?? []).map((e: any) => ({ id: e.id, name: e.name, eventDate: e.event_date })),
+      events: (events ?? []).map((e: any) => ({
+        id: e.id,
+        name: e.name,
+        eventDate: e.event_date,
+        entrants: entrantStats.get(e.id)?.entrants ?? 0,
+        welcomeSent: entrantStats.get(e.id)?.welcomeSent ?? 0,
+      })),
+      systemEmails: Array.from(byTemplate.entries())
+        .map(([template, s]) => ({ template, ...s }))
+        .sort((a, b) => b.sent - a.sent),
       campaigns: ((campaigns ?? []) as any[]).map((c) => ({
         ...c,
         steps: ((steps ?? []) as any[])
@@ -67,6 +112,7 @@ export const listEmailWorkflows = createServerFn({ method: "POST" })
       })),
     };
   });
+
 
 export const saveEmailWorkflow = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
