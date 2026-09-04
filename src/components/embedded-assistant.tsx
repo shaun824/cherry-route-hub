@@ -278,7 +278,7 @@ export function EmbeddedAssistant() {
 
 function ReportForm({ transcript }: { transcript: string }) {
   const send = useServerFn(submitFeedback);
-  const [category, setCategory] = useState<(typeof categories)[number]["value"]("issue");
+  const [category, setCategory] = useState<(typeof categories)[number]["value"]>("issue");
   const [message, setMessage] = useState("");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
