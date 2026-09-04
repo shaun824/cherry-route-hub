@@ -331,35 +331,6 @@ export function riderScheduleForEmail(
   return items.length ? [{ label: "Event day", date: null, items }] : [];
 }
 
-/**
- * When riders on one entry are in different categories/trips, each of them
- * gets their own key times so the entry holder sees every start time on the
- * entry — not just the recipient's. Returns [] when everyone rides the same
- * class (nothing extra to show).
- */
-export function partySchedulesForEmail(
-  event: any,
-  party: { name: string; category?: string | null }[],
-  opts: { trusted?: boolean } = {},
-): { name: string; category?: string | null; days: EmailScheduleDay[] }[] {
-  const distinct = new Map<string, string | null>();
-  for (const p of party) {
-    const c = (p.category ?? "").trim().toLowerCase();
-    if (c && !distinct.has(c)) distinct.set(c, p.category ?? null);
-  }
-  if (distinct.size < 2) return [];
-  const byCategory = new Map<string, EmailScheduleDay[]>();
-  for (const [key, label] of distinct) {
-    byCategory.set(key, riderScheduleForEmail(event, label, opts));
-  }
-  return party
-    .map((p) => {
-      const key = (p.category ?? "").trim().toLowerCase();
-      const days = key ? (byCategory.get(key) ?? []) : [];
-      return { name: p.name, category: p.category ?? null, days };
-    })
-    .filter((ps) => ps.days.length);
-}
 
 export type WelcomeBatchResult = {
   candidates: number;
@@ -561,7 +532,6 @@ export async function sendPendingEntryWelcomes(
           category: lead.category ?? null,
           bibNumber: lead.bib_number ?? null,
           party,
-          partySchedules: partySchedulesForEmail(event, party, { trusted: trustedSchedules.has(event.id) }),
           eventUrl,
           actionUrl: url,
           needsPassword,
