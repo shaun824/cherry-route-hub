@@ -46,6 +46,13 @@ export function useCrewEvent(events: EventLike[]): [string, (id: string) => void
 
   useEffect(() => {
     if (eventId || !events.length) return;
+    // A deliberate pick made on any crew page wins — that's the whole point of
+    // "pick your event once". Only fall back when nothing usable is saved.
+    const saved = readCrewEventId();
+    if (saved && events.some((e) => e.id === saved)) {
+      setEventId(saved);
+      return;
+    }
     // Next upcoming event: compare at day granularity so today's event wins.
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -58,11 +65,6 @@ export function useCrewEvent(events: EventLike[]): [string, (id: string) => void
     if (next) {
       setEventId(next.id);
       writeCrewEventId(next.id);
-      return;
-    }
-    const saved = readCrewEventId();
-    if (saved && events.some((e) => e.id === saved)) {
-      setEventId(saved);
       return;
     }
     const last = events[events.length - 1];

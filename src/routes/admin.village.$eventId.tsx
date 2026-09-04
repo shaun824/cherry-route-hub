@@ -120,6 +120,8 @@ function VillageEditor() {
   const [selectedZone, setSelectedZone] = useState<string | null>(null);
   const [tentMode, setTentMode] = useState(false);
   const [selectedTent, setSelectedTent] = useState<string | null>(null);
+  /** Live rotation while the slider is being dragged — saved once on release. */
+  const [rotDraft, setRotDraft] = useState<number | null>(null);
   const [nextTentLabel, setNextTentLabel] = useState("1");
   // 'tent' drops a real tent number (shown to riders); 'marker' drops a helper
   // point used only for drawing areas — never rendered on rider-facing maps.
@@ -244,6 +246,16 @@ function VillageEditor() {
     await qc.invalidateQueries({ queryKey: ["village-tents", event.id, venueId] });
   }
 
+  /** Show a rotation on the map without hitting the database (slider drag). */
+  function previewTentRotation(id: string, degrees: number) {
+    const next = (((Math.round(degrees) % 360) + 360) % 360);
+    qc.setQueryData(
+      ["village-tents", event.id, venueId],
+      (current: typeof tents | undefined) =>
+        current?.map((t) => (t.id === id ? { ...t, rotation: next } : t)) ?? current,
+    );
+  }
+
   /** Turn a tent pin so its square footprint matches how it is pitched. */
   async function rotateTent(id: string, byDegrees: number) {
     const tent = tents.find((t) => t.id === id);
@@ -255,6 +267,7 @@ function VillageEditor() {
     const next = (((Math.round(degrees) % 360) + 360) % 360);
     await patchTent(id, { rotation: next });
   }
+
 
   /** Swap a pin between the 2x2m standard tent and the 4x4m luxury tent. */
   async function setTentTypeFor(id: string, type: TentType) {
@@ -838,8 +851,24 @@ function VillageEditor() {
                 min={0}
                 max={359}
                 step={1}
-                value={Math.round(tents.find((t) => t.id === selectedTent)?.rotation ?? 0)}
-                onChange={(e) => void setTentRotation(selectedTent, Number(e.target.value))}
+                value={rotDraft ?? Math.round(tents.find((t) => t.id === selectedTent)?.rotation ?? 0)}
+                onChange={(e) => {
+                  const deg = Number(e.target.value);
+                  setRotDraft(deg);
+                  previewTentRotation(selectedTent, deg);
+                }}
+                onPointerUp={() => {
+                  if (rotDraft == null) return;
+                  const deg = rotDraft;
+                  setRotDraft(null);
+                  void setTentRotation(selectedTent, deg);
+                }}
+                onBlur={() => {
+                  if (rotDraft == null) return;
+                  const deg = rotDraft;
+                  setRotDraft(null);
+                  void setTentRotation(selectedTent, deg);
+                }}
                 className="w-32 accent-[hsl(var(--cherry))]"
               />
               <button

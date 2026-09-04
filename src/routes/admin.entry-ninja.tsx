@@ -189,6 +189,8 @@ function ArchiveBackfillCard() {
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
   const [log, setLog] = useState<string[]>([]);
   const [err, setErr] = useState<string | null>(null);
+  /** Where the last "Resend corrected" run stopped, so the next click continues. */
+  const [resendCursor, setResendCursor] = useState<string | null>(null);
 
   const coverage = useQuery({
     queryKey: ["roster-coverage"],
@@ -344,10 +346,21 @@ function WelcomeEmailsCard({ events }: { events: { id: string; name: string }[] 
     setNote(null);
     try {
       const r = await sendFn({
-        data: { ...(eventId ? { eventId } : {}), limit: batch, mode },
+        data: {
+          ...(eventId ? { eventId } : {}),
+          limit: batch,
+          mode,
+          ...(mode === "resend" && resendCursor ? { after: resendCursor } : {}),
+        },
       });
+      if (mode === "resend") setResendCursor(r.nextCursor ?? null);
       setNote(
         `${r.sent} sent · ${r.suppressed} suppressed · ${r.skipped} skipped (no email or draft event)` +
+          (mode === "resend"
+            ? r.nextCursor
+              ? " · click again to carry on down the roster"
+              : " · roster complete"
+            : "") +
           (r.errors.length ? ` · ${r.errors[0]}` : ""),
       );
       void counts.refetch();
@@ -399,7 +412,10 @@ function WelcomeEmailsCard({ events }: { events: { id: string; name: string }[] 
       <div className="flex flex-wrap items-center gap-2">
         <select
           value={eventId}
-          onChange={(e) => setEventId(e.target.value)}
+          onChange={(e) => {
+            setEventId(e.target.value);
+            setResendCursor(null);
+          }}
           className="rounded-lg border border-border bg-background px-2.5 py-2 text-xs"
         >
           <option value="">All linked events</option>
@@ -446,7 +462,7 @@ function WelcomeEmailsCard({ events }: { events: { id: string; name: string }[] 
           disabled={busy}
           className="rounded-lg border border-cherry px-3 py-2 text-xs font-semibold text-cherry disabled:opacity-60"
         >
-          Resend corrected
+          {resendCursor ? "Resend corrected (continue)" : "Resend corrected"}
         </button>
         <input
           value={testCategory}

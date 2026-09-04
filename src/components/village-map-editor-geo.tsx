@@ -940,7 +940,7 @@ export default function VillageMapEditorGeo({
                 Show on
               </span>
               {(["crew", "rider"] as const).map((a) => {
-                const on = (activeZone.audience ?? "crew") === a;
+                const on = (activeZone.audience ?? "rider") === a;
                 return (
                   <button
                     key={a}
