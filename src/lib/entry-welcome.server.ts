@@ -367,6 +367,8 @@ export type WelcomeBatchResult = {
   skipped: number;
   suppressed: number;
   errors: string[];
+  /** Resend only: pass back on the next click to carry on down the roster. */
+  nextCursor?: string | null;
 };
 
 function firstName(fullName?: string | null) {
@@ -439,9 +441,16 @@ async function buildActionLink(
  */
 export async function sendPendingEntryWelcomes(
   admin: AnyClient,
-  opts: { eventId?: string; limit?: number; mode?: "new" | "backfill" | "resend" } = {},
+  opts: {
+    eventId?: string;
+    limit?: number;
+    mode?: "new" | "backfill" | "resend";
+    /** Resend only: carry on after this entry timestamp (see nextCursor). */
+    after?: string;
+  } = {},
 ): Promise<WelcomeBatchResult> {
   const limit = Math.min(Math.max(opts.limit ?? 50, 1), 200);
+  const resend = opts.mode === "resend";
   const result: WelcomeBatchResult = {
     candidates: 0,
     sent: 0,
@@ -453,18 +462,21 @@ export async function sendPendingEntryWelcomes(
   let query = admin
     .from("event_entrants")
     .select(
-      "id, event_id, entrant_id, registration_ref, category, bib_number, entrants(full_name, email), events(id, name, event_date, location, map_query, lifecycle, days, schedule, logo_url, cover_url)",
+      "id, event_id, created_at, entrant_id, registration_ref, category, bib_number, entrants(full_name, email), events(id, name, event_date, location, map_query, lifecycle, days, schedule, logo_url, cover_url)",
     )
     // Archived-roster imports are flagged as skipped; without this filter they
     // fill every batch and brand-new entries never get reached.
     .eq("welcome_email_skipped", false)
-    .order("created_at", { ascending: false })
+    // Resends walk the roster oldest-first from a cursor, so repeat clicks
+    // continue down the list instead of re-mailing the newest batch forever.
+    .order("created_at", { ascending: !resend })
     .limit(limit * 3);
   // "resend" deliberately re-mails everyone on the event with the corrected
   // content (e.g. after a schedule fix), so it applies no sent/unsent filter.
   if (opts.mode === "backfill")
     query = query.or(`welcome_email_sent_at.is.null,welcome_email_sent_at.lt.${LEGACY_CUTOFF}`);
-  else if (opts.mode !== "resend") query = query.is("welcome_email_sent_at", null);
+  else if (!resend) query = query.is("welcome_email_sent_at", null);
+  if (resend && opts.after) query = query.gt("created_at", opts.after);
   if (opts.eventId) query = query.eq("event_id", opts.eventId);
 
 
@@ -482,7 +494,7 @@ export async function sendPendingEntryWelcomes(
 
   // One email address gets ONE mail per event, no matter how many riders sit
   // under that entry — group the pending rows by event + address first.
-  const groups = new Map<string, { email: string; event: any; rows: any[] }>();
+  const groups = new Map<string, { email: string; event: any; rows: any[]; cursor: string | null }>();
   for (const row of rows) {
     const email = (row.entrants?.email ?? "").trim().toLowerCase();
     const event = row.events;
@@ -496,12 +508,16 @@ export async function sendPendingEntryWelcomes(
     // will still include everyone on the same registration reference.
     const key = `${event.id}|${email}`;
     const existing = groups.get(key);
+    // Cursor = the group's OLDEST entry, so the next batch can never skip a
+    // row that belongs to a group we haven't reached yet.
     if (existing) existing.rows.push(row);
-    else groups.set(key, { email, event, rows: [row] });
+    else groups.set(key, { email, event, rows: [row], cursor: row.created_at ?? null });
   }
 
-  for (const { email, event, rows: groupRows } of groups.values()) {
+  for (const { email, event, rows: groupRows, cursor } of groups.values()) {
     if (result.sent + result.suppressed >= limit) break;
+    if (resend && cursor) result.nextCursor = cursor;
+
 
     // Belt and braces: if any entry at this event already mailed this address,
     // never send again — just stamp the stragglers. A deliberate resend skips

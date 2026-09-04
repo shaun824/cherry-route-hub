@@ -18,8 +18,9 @@ export type VillageZone = {
   /** crew-only: build and strike instructions */
   crewNotes?: string;
   /**
-   * Who sees this outline on the map. "crew" (default) keeps it on the crew
-   * build map only; "rider" also draws the clean outline (no name or build
+   * Who sees this outline on the map. Areas drawn before this setting existed
+   * (no value) stay visible to riders, as they always were; "crew" hides the
+   * outline from riders, "rider" draws the clean outline (no name or build
    * detail) on the rider map.
    */
   audience?: "crew" | "rider";
@@ -27,7 +28,7 @@ export type VillageZone = {
 
 /** True when this outline should also be drawn on the rider-facing map. */
 export function riderSeesZone(z: VillageZone): boolean {
-  return z.audience === "rider";
+  return (z.audience ?? "rider") === "rider";
 }
 
 /** Crew-only classification of a drawn area. */

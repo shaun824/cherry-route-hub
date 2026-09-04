@@ -69,6 +69,8 @@ const welcomeSchema = z.object({
   eventId: z.string().uuid().optional(),
   limit: z.number().int().min(1).max(200).optional(),
   mode: z.enum(["new", "backfill", "resend"]).optional(),
+  /** Resend only: continue after this entry timestamp. */
+  after: z.string().optional(),
 });
 
 /** How many entries are still waiting on a welcome email. */
@@ -98,6 +100,7 @@ export const sendEntryWelcomeBatch = createServerFn({ method: "POST" })
       ...(data.eventId ? { eventId: data.eventId } : {}),
       limit: data.limit ?? 50,
       mode: data.mode ?? "new",
+      ...(data.after ? { after: data.after } : {}),
     });
   });
 

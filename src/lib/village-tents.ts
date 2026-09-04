@@ -72,8 +72,9 @@ export function tentFootprintCorners(
     [half, half],
     [-half, half],
   ] as [number, number][]).map(([x, y]) => {
-    const rx = x * cos - y * sin;
-    const ry = x * sin + y * cos;
+    // x = east, y = north; clockwise-from-north rotation.
+    const rx = x * cos + y * sin;
+    const ry = -x * sin + y * cos;
     return [lat + ry * mLat, lng + rx * mLng] as [number, number];
   });
 }
