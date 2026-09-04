@@ -29,6 +29,7 @@ import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as SpectateEventIdRouteImport } from './routes/spectate.$eventId'
 import { Route as MyEventsEventIdRouteImport } from './routes/my-events.$eventId'
 import { Route as EventsEventIdRouteImport } from './routes/events.$eventId'
+import { Route as EmbedChatRouteImport } from './routes/embed.chat'
 import { Route as CrewTrackingRouteImport } from './routes/crew.tracking'
 import { Route as CrewRunSheetRouteImport } from './routes/crew.run-sheet'
 import { Route as CrewRoomingRouteImport } from './routes/crew.rooming'
@@ -208,6 +209,11 @@ const MyEventsEventIdRoute = MyEventsEventIdRouteImport.update({
 const EventsEventIdRoute = EventsEventIdRouteImport.update({
   id: '/events/$eventId',
   path: '/events/$eventId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EmbedChatRoute = EmbedChatRouteImport.update({
+  id: '/embed/chat',
+  path: '/embed/chat',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CrewTrackingRoute = CrewTrackingRouteImport.update({
@@ -682,6 +688,7 @@ export interface FileRoutesByFullPath {
   '/crew/rooming': typeof CrewRoomingRoute
   '/crew/run-sheet': typeof CrewRunSheetRoute
   '/crew/tracking': typeof CrewTrackingRoute
+  '/embed/chat': typeof EmbedChatRoute
   '/events/$eventId': typeof EventsEventIdRouteWithChildren
   '/my-events/$eventId': typeof MyEventsEventIdRoute
   '/spectate/$eventId': typeof SpectateEventIdRoute
@@ -781,6 +788,7 @@ export interface FileRoutesByTo {
   '/crew/rooming': typeof CrewRoomingRoute
   '/crew/run-sheet': typeof CrewRunSheetRoute
   '/crew/tracking': typeof CrewTrackingRoute
+  '/embed/chat': typeof EmbedChatRoute
   '/my-events/$eventId': typeof MyEventsEventIdRoute
   '/spectate/$eventId': typeof SpectateEventIdRoute
   '/admin': typeof AdminIndexRoute
@@ -883,6 +891,7 @@ export interface FileRoutesById {
   '/crew/rooming': typeof CrewRoomingRoute
   '/crew/run-sheet': typeof CrewRunSheetRoute
   '/crew/tracking': typeof CrewTrackingRoute
+  '/embed/chat': typeof EmbedChatRoute
   '/events/$eventId': typeof EventsEventIdRouteWithChildren
   '/my-events/$eventId': typeof MyEventsEventIdRoute
   '/spectate/$eventId': typeof SpectateEventIdRoute
@@ -987,6 +996,7 @@ export interface FileRouteTypes {
     | '/crew/rooming'
     | '/crew/run-sheet'
     | '/crew/tracking'
+    | '/embed/chat'
     | '/events/$eventId'
     | '/my-events/$eventId'
     | '/spectate/$eventId'
@@ -1086,6 +1096,7 @@ export interface FileRouteTypes {
     | '/crew/rooming'
     | '/crew/run-sheet'
     | '/crew/tracking'
+    | '/embed/chat'
     | '/my-events/$eventId'
     | '/spectate/$eventId'
     | '/admin'
@@ -1187,6 +1198,7 @@ export interface FileRouteTypes {
     | '/crew/rooming'
     | '/crew/run-sheet'
     | '/crew/tracking'
+    | '/embed/chat'
     | '/events/$eventId'
     | '/my-events/$eventId'
     | '/spectate/$eventId'
@@ -1261,6 +1273,7 @@ export interface RootRouteChildren {
   CrewRoomingRoute: typeof CrewRoomingRoute
   CrewRunSheetRoute: typeof CrewRunSheetRoute
   CrewTrackingRoute: typeof CrewTrackingRoute
+  EmbedChatRoute: typeof EmbedChatRoute
   EventsEventIdRoute: typeof EventsEventIdRouteWithChildren
   CrewIndexRoute: typeof CrewIndexRoute
   EventsIndexRoute: typeof EventsIndexRoute
@@ -1440,6 +1453,13 @@ declare module '@tanstack/react-router' {
       path: '/events/$eventId'
       fullPath: '/events/$eventId'
       preLoaderRoute: typeof EventsEventIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/embed/chat': {
+      id: '/embed/chat'
+      path: '/embed/chat'
+      fullPath: '/embed/chat'
+      preLoaderRoute: typeof EmbedChatRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/crew/tracking': {
@@ -2161,6 +2181,7 @@ const rootRouteChildren: RootRouteChildren = {
   CrewRoomingRoute: CrewRoomingRoute,
   CrewRunSheetRoute: CrewRunSheetRoute,
   CrewTrackingRoute: CrewTrackingRoute,
+  EmbedChatRoute: EmbedChatRoute,
   EventsEventIdRoute: EventsEventIdRouteWithChildren,
   CrewIndexRoute: CrewIndexRoute,
   EventsIndexRoute: EventsIndexRoute,
