@@ -19,7 +19,6 @@ export async function sendEmailSamples(opts: { to: string; eventId?: string | nu
     offersForEvent,
     venueMapUrl,
     riderScheduleForEmail,
-    partySchedulesForEmail,
     absoluteLogo,
     scheduleTrustedEventIds,
   } = await import("./entry-welcome.server");
@@ -76,7 +75,6 @@ export async function sendEmailSamples(opts: { to: string; eventId?: string | nu
         needsPassword: false,
         offers: offersForEvent(promos, event.name),
         party,
-        partySchedules: partySchedulesForEmail(event, party, { trusted }),
       },
     },
     {
