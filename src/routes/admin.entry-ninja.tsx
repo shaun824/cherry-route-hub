@@ -189,8 +189,6 @@ function ArchiveBackfillCard() {
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
   const [log, setLog] = useState<string[]>([]);
   const [err, setErr] = useState<string | null>(null);
-  /** Where the last "Resend corrected" run stopped, so the next click continues. */
-  const [resendCursor, setResendCursor] = useState<string | null>(null);
 
   const coverage = useQuery({
     queryKey: ["roster-coverage"],
@@ -333,6 +331,8 @@ function WelcomeEmailsCard({ events }: { events: { id: string; name: string }[] 
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
+  /** Where the last "Resend corrected" run stopped, so the next click continues. */
+  const [resendCursor, setResendCursor] = useState<string | null>(null);
 
   const counts = useQuery({
     queryKey: ["entry-welcome-counts", eventId],
