@@ -490,7 +490,26 @@ export default function VillageMapEditorGeo({
           <FitToContent points={contentPoints} token={fitToken} />
 
           {placing ? <ClickCatcher onClick={onPlace} /> : null}
-          {tentMode && onPlaceTent ? <ClickCatcher onClick={onPlaceTent} /> : null}
+          {tentMode && onPlaceTent ? (
+            <ClickCatcher
+              onClick={(lat, lng) => {
+                // Never stack a second tent on one that's already there: a tap
+                // on (or right next to) an existing tent selects it instead.
+                const hit = tents.find((t) => {
+                  const sizeM = Math.max(tentTypeMeta(t.tent_type).sizeM, 2);
+                  const dLat = (t.lat - lat) * 111_320;
+                  const dLng =
+                    (t.lng - lng) * 111_320 * Math.max(Math.cos((lat * Math.PI) / 180), 0.01);
+                  return Math.hypot(dLat, dLng) <= sizeM * 0.75;
+                });
+                if (hit) {
+                  onSelectTent?.(hit.id);
+                  return;
+                }
+                onPlaceTent(lat, lng);
+              }}
+            />
+          ) : null}
 
           {tents
             .filter((t) => (t.kind ?? "tent") !== "marker")
@@ -501,11 +520,13 @@ export default function VillageMapEditorGeo({
                 <Polygon
                   key={`fp-${t.id}`}
                   positions={tentFootprintCorners(pos.lat, pos.lng, meta.sizeM, t.rotation ?? 0)}
+                  bubblingMouseEvents={false}
+                  eventHandlers={{ click: () => onSelectTent?.(t.id) }}
                   pathOptions={{
                     color: selectedTent === t.id ? "#c8102e" : meta.id === "luxury" ? "#f59e0b" : "#38bdf8",
                     weight: 1.5,
                     fillOpacity: 0.18,
-                    interactive: false,
+                    interactive: true,
                   }}
                 />
               );

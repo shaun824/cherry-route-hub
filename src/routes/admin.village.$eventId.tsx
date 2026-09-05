@@ -268,6 +268,27 @@ function VillageEditor() {
     await patchTent(id, { rotation: next });
   }
 
+  /** Straighten every tent to match the one that's already set right. */
+  async function applyRotationToAllTents(id: string) {
+    const tent = tents.find((t) => t.id === id);
+    if (!tent) return;
+    const next = (((Math.round(tent.rotation ?? 0) % 360) + 360) % 360);
+    const ids = tents.filter((t) => (t.kind ?? "tent") !== "marker").map((t) => t.id);
+    if (ids.length === 0) return;
+    qc.setQueryData(
+      ["village-tents", event.id, venueId],
+      (current: typeof tents | undefined) =>
+        current?.map((t) => (ids.includes(t.id) ? { ...t, rotation: next } : t)) ?? current,
+    );
+    const { error } = await supabase
+      .from("event_village_tents")
+      .update({ rotation: next })
+      .in("id", ids);
+    if (error) toast.error(error.message);
+    else toast.success(`All ${ids.length} tents turned to ${next}°.`);
+    await qc.invalidateQueries({ queryKey: ["village-tents", event.id, venueId] });
+  }
+
 
   /** Swap a pin between the 2x2m standard tent and the 4x4m luxury tent. */
   async function setTentTypeFor(id: string, type: TentType) {
@@ -894,6 +915,13 @@ function VillageEditor() {
                 title="Square the tent up with north"
               >
                 Square up
+              </button>
+              <button
+                onClick={() => void applyRotationToAllTents(selectedTent)}
+                className="rounded bg-cherry px-2 py-1 font-bold text-white"
+                title="Turn every tent to this same angle"
+              >
+                Match all tents
               </button>
             </span>
 
