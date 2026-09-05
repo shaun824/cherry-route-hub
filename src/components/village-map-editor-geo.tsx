@@ -88,6 +88,30 @@ function moveIcon(color: string) {
 
 
 
+/**
+ * Where a dragged marker ACTUALLY sits on screen, as lat/lng. When the map is
+ * rotated (leaflet-rotate), Leaflet's own drag math ignores the bearing, so
+ * marker.getLatLng() after a drag is off by the rotation — the pin "jumps"
+ * away from where it was dropped. Reading the icon's on-screen anchor point
+ * back through map.containerPointToLatLng (which the rotate plugin patches
+ * correctly) gives the true drop spot. Falls back to getLatLng when no map.
+ */
+function trueMarkerLatLng(marker: L.Marker): { lat: number; lng: number } {
+  const map = (marker as unknown as { _map?: L.Map })._map;
+  const el = marker.getElement?.();
+  if (!map || !el) {
+    const ll = marker.getLatLng();
+    return { lat: ll.lat, lng: ll.lng };
+  }
+  const icon = marker.options.icon as L.DivIcon | undefined;
+  const anchor = (icon?.options?.iconAnchor as [number, number] | undefined) ?? [0, 0];
+  const rect = el.getBoundingClientRect();
+  const crect = map.getContainer().getBoundingClientRect();
+  const point = L.point(rect.left - crect.left + anchor[0], rect.top - crect.top + anchor[1]);
+  const ll = map.containerPointToLatLng(point);
+  return { lat: ll.lat, lng: ll.lng };
+}
+
 function ClickCatcher({ onClick }: { onClick: (lat: number, lng: number) => void }) {
   useMapEvents({
     click(e) {
@@ -547,7 +571,7 @@ export default function VillageMapEditorGeo({
               eventHandlers={{
                 click: () => onSelectTent?.(t.id),
                 drag: (e) => {
-                  const ll = (e.target as L.Marker).getLatLng();
+                  const ll = trueMarkerLatLng(e.target as L.Marker);
                   paintTent(t.id, ll.lat, ll.lng);
                 },
                 dragend: () => commitTent(t.id),
@@ -677,7 +701,7 @@ export default function VillageMapEditorGeo({
                       draggable
                       eventHandlers={{
                         drag: (e) => {
-                          const ll = (e.target as L.Marker).getLatLng();
+                          const ll = trueMarkerLatLng(e.target as L.Marker);
                           paint(z.id, moveZone(z, { lat: ll.lat, lng: ll.lng }).points);
                         },
                         dragend: () => commit(z.id),
@@ -695,7 +719,7 @@ export default function VillageMapEditorGeo({
                         draggable
                         eventHandlers={{
                           drag: (e) => {
-                            const ll = (e.target as L.Marker).getLatLng();
+                            const ll = trueMarkerLatLng(e.target as L.Marker);
                             paint(
                               z.id,
                               z.points.map((q, j) =>
@@ -770,7 +794,7 @@ export default function VillageMapEditorGeo({
                 eventHandlers={{
                   click: () => onSelect(s.id),
                   dragend: (e) => {
-                    const { lat, lng } = (e.target as L.Marker).getLatLng();
+                    const { lat, lng } = trueMarkerLatLng(e.target as L.Marker);
                     onMove(s.id, +lat.toFixed(6), +lng.toFixed(6));
                   },
                 }}
