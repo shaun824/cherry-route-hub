@@ -1315,6 +1315,13 @@ function VillageEditor() {
               className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
               placeholder="What happens here?"
             />
+            <textarea
+              value={selectedSpot.crewNotes ?? ""}
+              onChange={(e) => updateSpot(selectedSpot.id, { crewNotes: e.target.value || undefined })}
+              rows={2}
+              className="mt-2 w-full rounded-lg border border-dashed border-border bg-muted/40 px-3 py-2 text-sm"
+              placeholder="Crew only notes — setup detail, who owns it, timings (riders never see this)"
+            />
           </div>
         </div>
       ) : null}
@@ -1570,6 +1577,13 @@ function VillageEditor() {
               rows={2}
               className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
               placeholder="What happens here?"
+            />
+            <textarea
+              value={s.crewNotes ?? ""}
+              onChange={(e) => updateSpot(s.id, { crewNotes: e.target.value || undefined })}
+              rows={2}
+              className="mt-2 w-full rounded-lg border border-dashed border-border bg-muted/40 px-3 py-2 text-sm"
+              placeholder="Crew only notes — setup detail, who owns it, timings (riders never see this)"
             />
             <p className="mt-1 text-[11px] text-ink-soft">
               {Number.isFinite(s.lat) && Number.isFinite(s.lng)

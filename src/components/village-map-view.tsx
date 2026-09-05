@@ -590,6 +590,12 @@ export function VillageMapView({
               {detail.description ? (
                 <p className="mt-2 text-sm leading-relaxed text-ink-soft">{detail.description}</p>
               ) : null}
+              {isCrew && detail.crewNotes ? (
+                <div className="mt-2 rounded-xl bg-muted/60 p-2 ring-1 ring-border">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-ink-soft">Crew only</p>
+                  <p className="mt-0.5 whitespace-pre-wrap text-sm leading-relaxed text-ink">{detail.crewNotes}</p>
+                </div>
+              ) : null}
             </div>
             {selected ? (
               <button onClick={() => setSelected(null)} aria-label="Close">

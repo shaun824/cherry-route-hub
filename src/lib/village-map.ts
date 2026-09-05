@@ -67,6 +67,8 @@ export type VillageHotspot = {
   layer?: VillageLayer;
   /** quantity + size for build items, e.g. "3 × 3m gazebo", "60kVA" */
   spec?: string;
+  /** notes only crew/admin see — never shown to riders */
+  crewNotes?: string;
 };
 
 /** Layer a point belongs to, defaulting legacy points to the rider layer. */
