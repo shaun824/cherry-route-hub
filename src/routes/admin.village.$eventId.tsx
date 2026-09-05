@@ -1,7 +1,7 @@
 import { createFileRoute, ClientOnly, Link, notFound, useBlocker, useRouter } from "@tanstack/react-router";
 import { Suspense, lazy, useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Loader2, MapPin, PencilRuler, Save, Sparkles, Square, Tent, Trash2, Upload, X } from "lucide-react";
+import { ArrowLeft, Eye, Loader2, MapPin, PencilRuler, Save, Sparkles, Square, Tent, Trash2, Upload, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   BUILD_CATEGORIES,
