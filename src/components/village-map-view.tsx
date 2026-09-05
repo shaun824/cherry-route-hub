@@ -617,6 +617,18 @@ export function VillageMapView({
             <Minus className="h-4 w-4" />
           </button>
         </div>
+
+        {/* Full-screen detail sheet: docks to the bottom strip so the tapped
+            point stays visible above it and the map stays interactive. */}
+        {planFullscreen && detail ? (
+          <div className="absolute inset-x-0 bottom-0 z-20 mx-auto max-h-[38dvh] w-full max-w-xl overflow-y-auto rounded-t-2xl bg-card/95 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-2xl ring-1 ring-border backdrop-blur">
+            <SpotDetailBody
+              detail={detail}
+              isCrew={isCrew}
+              onClose={selected ? () => setSelected(null) : null}
+            />
+          </div>
+        ) : null}
       </div>
       </Portal>
       )}
@@ -624,43 +636,11 @@ export function VillageMapView({
 
       {detail ? (
         <div className="rounded-2xl bg-card p-4 ring-1 ring-border">
-          <div className="flex items-start gap-2">
-            {(() => {
-              const DetailIcon = villageIcon(spotIcon(detail)).Comp;
-              return (
-                <span
-                  className="mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full text-white"
-                  style={{ backgroundColor: spotColor(detail) }}
-                >
-                  <DetailIcon className="h-3.5 w-3.5" />
-                </span>
-              );
-            })()}
-            <div className="min-w-0 flex-1">
-              <p className="font-display text-base font-bold text-ink">{detail.title}</p>
-              <p className="text-[11px] font-semibold uppercase tracking-widest text-ink-soft">
-                {categoryMeta(detail.category).label}
-                {detail.hours ? ` · ${detail.hours}` : ""}
-              </p>
-              {detail.spec ? (
-                <p className="mt-1 text-sm font-semibold text-ink">{detail.spec}</p>
-              ) : null}
-              {detail.description ? (
-                <p className="mt-2 text-sm leading-relaxed text-ink-soft">{detail.description}</p>
-              ) : null}
-              {isCrew && detail.crewNotes ? (
-                <div className="mt-2 rounded-xl bg-muted/60 p-2 ring-1 ring-border">
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-ink-soft">Crew only</p>
-                  <p className="mt-0.5 whitespace-pre-wrap text-sm leading-relaxed text-ink">{detail.crewNotes}</p>
-                </div>
-              ) : null}
-            </div>
-            {selected ? (
-              <button onClick={() => setSelected(null)} aria-label="Close">
-                <X className="h-4 w-4 text-ink-soft" />
-              </button>
-            ) : null}
-          </div>
+          <SpotDetailBody
+            detail={detail}
+            isCrew={isCrew}
+            onClose={selected ? () => setSelected(null) : null}
+          />
         </div>
       ) : (
         <p className="text-center text-xs text-ink-soft">
