@@ -571,7 +571,7 @@ export default function VillageMapEditorGeo({
               eventHandlers={{
                 click: () => onSelectTent?.(t.id),
                 drag: (e) => {
-                  const ll = (e.target as L.Marker).getLatLng();
+                  const ll = trueMarkerLatLng(e.target as L.Marker);
                   paintTent(t.id, ll.lat, ll.lng);
                 },
                 dragend: () => commitTent(t.id),
@@ -701,7 +701,7 @@ export default function VillageMapEditorGeo({
                       draggable
                       eventHandlers={{
                         drag: (e) => {
-                          const ll = (e.target as L.Marker).getLatLng();
+                          const ll = trueMarkerLatLng(e.target as L.Marker);
                           paint(z.id, moveZone(z, { lat: ll.lat, lng: ll.lng }).points);
                         },
                         dragend: () => commit(z.id),
@@ -719,7 +719,7 @@ export default function VillageMapEditorGeo({
                         draggable
                         eventHandlers={{
                           drag: (e) => {
-                            const ll = (e.target as L.Marker).getLatLng();
+                            const ll = trueMarkerLatLng(e.target as L.Marker);
                             paint(
                               z.id,
                               z.points.map((q, j) =>
@@ -794,7 +794,7 @@ export default function VillageMapEditorGeo({
                 eventHandlers={{
                   click: () => onSelect(s.id),
                   dragend: (e) => {
-                    const { lat, lng } = (e.target as L.Marker).getLatLng();
+                    const { lat, lng } = trueMarkerLatLng(e.target as L.Marker);
                     onMove(s.id, +lat.toFixed(6), +lng.toFixed(6));
                   },
                 }}
