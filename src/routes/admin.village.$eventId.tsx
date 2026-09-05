@@ -916,6 +916,13 @@ function VillageEditor() {
               >
                 Square up
               </button>
+              <button
+                onClick={() => void applyRotationToAllTents(selectedTent)}
+                className="rounded bg-cherry px-2 py-1 font-bold text-white"
+                title="Turn every tent to this same angle"
+              >
+                Match all tents
+              </button>
             </span>
 
             <span className="inline-flex items-center gap-1">
