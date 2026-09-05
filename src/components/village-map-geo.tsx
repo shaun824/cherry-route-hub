@@ -1,7 +1,7 @@
 // Client-only Leaflet view of the event village: the plan image is placed over
 // a satellite basemap at its real-world position, hotspots become map markers
 // and the rider's live GPS position is shown as a pulsing dot.
-import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { MapContainer, TileLayer, ImageOverlay, useMap, CircleMarker, Polygon, Popup, Marker } from "react-leaflet";
 import { Maximize2, Minimize2 } from "lucide-react";
@@ -363,6 +363,7 @@ export default function VillageMapGeo({
 
   highlightZoneId = null,
   highlightTentId = null,
+  fullscreenDetail = null,
 }: {
   imageUrl?: string | null;
   geo: VillageGeo;
@@ -376,6 +377,9 @@ export default function VillageMapGeo({
   onZoneSelect?: (id: string | null) => void;
   highlightZoneId?: string | null;
   highlightTentId?: string | null;
+  /** Detail panel for the tapped point, docked to the bottom in full screen so
+      the point itself stays visible and the map stays interactive. */
+  fullscreenDetail?: ReactNode;
 }) {
 
 
@@ -858,6 +862,14 @@ export default function VillageMapGeo({
         >
           {locating ? "Finding you…" : me ? "Hide my location" : "Show my location"}
         </button>
+
+        {/* Full-screen detail sheet: docked to the bottom strip, well clear of
+            the tapped point, so you can read about it and keep using the map. */}
+        {fullscreen && fullscreenDetail ? (
+          <div className="absolute inset-x-0 bottom-0 z-[700] mx-auto max-h-[38dvh] w-full max-w-xl overflow-y-auto rounded-t-2xl bg-card/95 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-2xl ring-1 ring-border backdrop-blur">
+            {fullscreenDetail}
+          </div>
+        ) : null}
       </div>
   );
 
