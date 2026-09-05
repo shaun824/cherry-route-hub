@@ -544,7 +544,15 @@ export function VillageMapView({
               onZoneSelect={(id) => setSelectedZone((prev) => (prev === id ? null : id))}
               highlightZoneId={selectedZone ?? focusZoneId ?? null}
               highlightTentId={focusTentId ?? null}
-
+              fullscreenDetail={
+                detail ? (
+                  <SpotDetailBody
+                    detail={detail}
+                    isCrew={isCrew}
+                    onClose={selected ? () => setSelected(null) : null}
+                  />
+                ) : null
+              }
             />
           </Suspense>
         </ClientOnly>
