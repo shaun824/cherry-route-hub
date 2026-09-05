@@ -520,11 +520,13 @@ export default function VillageMapEditorGeo({
                 <Polygon
                   key={`fp-${t.id}`}
                   positions={tentFootprintCorners(pos.lat, pos.lng, meta.sizeM, t.rotation ?? 0)}
+                  bubblingMouseEvents={false}
+                  eventHandlers={{ click: () => onSelectTent?.(t.id) }}
                   pathOptions={{
                     color: selectedTent === t.id ? "#c8102e" : meta.id === "luxury" ? "#f59e0b" : "#38bdf8",
                     weight: 1.5,
                     fillOpacity: 0.18,
-                    interactive: false,
+                    interactive: true,
                   }}
                 />
               );
