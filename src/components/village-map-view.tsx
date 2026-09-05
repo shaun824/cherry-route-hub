@@ -379,6 +379,23 @@ export function VillageMapView({
           <span className="text-[10px] font-bold uppercase tracking-widest text-ink-soft">
             Layers
           </span>
+          <button
+            title="Show every point from every layer at once"
+            onClick={() =>
+              setLayers((prev) =>
+                prev.length === VILLAGE_LAYERS.length
+                  ? (defaultLayers ?? ["rider"])
+                  : VILLAGE_LAYERS.map((l) => l.id),
+              )
+            }
+            className={`rounded-full px-2.5 py-1 text-[11px] font-bold ring-1 ${
+              layers.length === VILLAGE_LAYERS.length
+                ? "bg-ink text-background ring-ink"
+                : "bg-muted text-ink-soft ring-border"
+            }`}
+          >
+            All points
+          </button>
           {VILLAGE_LAYERS.map((l) => {
             const on = layers.includes(l.id);
             return (
