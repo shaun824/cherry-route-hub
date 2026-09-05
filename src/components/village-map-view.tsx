@@ -92,6 +92,54 @@ function Pin({
   );
 }
 
+// Shared spot-detail body — used by the card under the map and by the bottom
+// sheet in plan full screen, so rider and crew see the identical layout.
+function SpotDetailBody({
+  detail,
+  isCrew,
+  onClose,
+}: {
+  detail: VillageHotspot;
+  isCrew: boolean;
+  onClose?: (() => void) | null;
+}) {
+  const DetailIcon = villageIcon(spotIcon(detail)).Comp;
+  return (
+    <div className="flex items-start gap-2">
+      <span
+        className="mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full text-white"
+        style={{ backgroundColor: spotColor(detail) }}
+      >
+        <DetailIcon className="h-3.5 w-3.5" />
+      </span>
+      <div className="min-w-0 flex-1">
+        <p className="font-display text-base font-bold text-ink">{detail.title}</p>
+        <p className="text-[11px] font-semibold uppercase tracking-widest text-ink-soft">
+          {categoryMeta(detail.category).label}
+          {detail.hours ? ` · ${detail.hours}` : ""}
+        </p>
+        {detail.spec ? (
+          <p className="mt-1 text-sm font-semibold text-ink">{detail.spec}</p>
+        ) : null}
+        {detail.description ? (
+          <p className="mt-2 text-sm leading-relaxed text-ink-soft">{detail.description}</p>
+        ) : null}
+        {isCrew && detail.crewNotes ? (
+          <div className="mt-2 rounded-xl bg-muted/60 p-2 ring-1 ring-border">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-ink-soft">Crew only</p>
+            <p className="mt-0.5 whitespace-pre-wrap text-sm leading-relaxed text-ink">{detail.crewNotes}</p>
+          </div>
+        ) : null}
+      </div>
+      {onClose ? (
+        <button onClick={onClose} aria-label="Close">
+          <X className="h-4 w-4 text-ink-soft" />
+        </button>
+      ) : null}
+    </div>
+  );
+}
+
 export function VillageMapView({
   eventId,
   focusSpotId,
