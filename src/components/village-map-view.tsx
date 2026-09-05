@@ -367,13 +367,15 @@ export function VillageMapView({
       const y = (spot.y / 100) * scaledHeight;
       wrap.scrollTo({
         left: Math.max(0, x - rect.width / 2),
-        top: Math.max(0, y - rect.height / 2),
+        // In full screen a detail sheet docks to the bottom, so keep the point
+        // in the upper third of the screen where the sheet can't cover it.
+        top: Math.max(0, y - rect.height * (planFullscreen ? 0.35 : 0.5)),
         behavior: "smooth",
       });
     };
     const t = window.setTimeout(center, 220);
     return () => window.clearTimeout(t);
-  }, [selected, showLive, facilities]);
+  }, [selected, showLive, facilities, planFullscreen]);
 
   if (q.isLoading) {
     return <div className="h-56 animate-pulse rounded-2xl bg-muted" />;
@@ -584,7 +586,15 @@ export function VillageMapView({
           </div>
         </div>
 
-        <div className="absolute bottom-3 right-3 flex flex-col gap-1">
+        <div
+          className={
+            // Full screen docks the detail sheet at the bottom — keep the zoom
+            // controls at the top there so the sheet never covers them.
+            planFullscreen
+              ? "absolute right-3 top-3 flex flex-col gap-1"
+              : "absolute bottom-3 right-3 flex flex-col gap-1"
+          }
+        >
           <button
             onClick={() => setPlanFullscreen((f) => !f)}
             className="grid h-8 w-8 place-items-center rounded-full bg-card/95 shadow ring-1 ring-border"
