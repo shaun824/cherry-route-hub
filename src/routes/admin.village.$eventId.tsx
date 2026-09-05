@@ -114,6 +114,9 @@ function VillageEditor() {
   // Which layer we are working on: new points land here and only this layer
   // (plus rider points as context) is shown on the editor map.
   const [layer, setLayer] = useState<VillageLayer>("rider");
+  // "See everything" shows ALL placements across every layer at once; the
+  // layer switch still decides where newly added points land.
+  const [showAll, setShowAll] = useState(false);
   const [selected, setSelected] = useState<string | null>(null);
   const [centreToken, setCentreToken] = useState(0);
   const [drawing, setDrawing] = useState(false);
@@ -420,6 +423,8 @@ function VillageEditor() {
   }
 
   function layerSpots(all: VillageHotspot[]) {
+    // "See everything" overrides the layer filter for a one-glance overview.
+    if (showAll) return all;
     // Rider points stay visible as context while building, but only the active
     // layer is added to; on a build layer we hide the other build layer.
     return all.filter((s) => spotLayer(s) === layer || spotLayer(s) === "rider");
@@ -991,6 +996,15 @@ function VillageEditor() {
             </button>
           ))}
         </div>
+        <button
+          onClick={() => setShowAll((v) => !v)}
+          title="Show every point from all layers at once"
+          className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[11px] font-bold ring-1 ring-border ${
+            showAll ? "bg-cherry text-white" : "bg-muted text-ink-soft"
+          }`}
+        >
+          <Eye className="h-3.5 w-3.5" /> See everything
+        </button>
         {layer !== "rider" ? (
           <button
             onClick={loadBuildKit}
