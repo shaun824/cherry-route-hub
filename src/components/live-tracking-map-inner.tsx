@@ -24,7 +24,7 @@ const TIER_COLORS: Record<string, string> = {
   Custom: "#e11d48",
 };
 
-const POLL_MS = 15_000;
+const POLL_MS = 1_000;
 const STALE_AFTER_MS = 5 * 60_000;
 
 

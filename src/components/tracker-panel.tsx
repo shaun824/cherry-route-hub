@@ -17,8 +17,9 @@ import {
 
 type Coords = { lat: number; lng: number; accuracy: number } | null;
 
-const FLUSH_INTERVAL_MS = 60_000;
-const MIN_POINT_GAP_MS = 25_000;
+const FLUSH_INTERVAL_MS = 15_000;
+// Temporary high-resolution mode: record a point every second.
+const MIN_POINT_GAP_MS = 1_000;
 
 function queueKey(eventId: string) {
   return `rce-track-queue-${eventId}`;
@@ -189,7 +190,7 @@ export function TrackerPanel({
     setError(null);
     watchIdRef.current = navigator.geolocation.watchPosition(addPoint, (e) => setError(e.message), {
       enableHighAccuracy: true,
-      maximumAge: 10_000,
+      maximumAge: 0,
       timeout: 15_000,
     });
     // Upload any points queued from a previous patchy-signal stretch.
