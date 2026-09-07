@@ -155,7 +155,7 @@ export type GlobalBotContext = { text: string; focusEventIds: string[] };
 
 export async function buildGlobalBotContext(
   admin: AnyClient,
-  opts: { question: string; userId: string | null; isAdmin?: boolean },
+  opts: { question: string; userId: string | null; isAdmin?: boolean; isStaff?: boolean },
 ): Promise<GlobalBotContext> {
   const { data: events } = await admin
     .from("events")
@@ -270,7 +270,7 @@ export async function buildGlobalBotContext(
     knowledgeText = await buildKnowledgeContext(admin, {
       question: opts.question,
       eventIds: focusIds,
-      includeInternal: opts.isAdmin === true,
+      includeInternal: opts.isAdmin === true || opts.isStaff === true,
     });
   } catch (e) {
     console.error("[app-bot] knowledge context failed", e);

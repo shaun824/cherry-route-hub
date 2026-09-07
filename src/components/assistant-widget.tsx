@@ -101,6 +101,21 @@ export function AssistantWidget() {
     listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, thinking]);
 
+  // Anywhere in the app can open the assistant (optionally with a question
+  // already asked) by dispatching `red-cherry-assistant-open`.
+  const sendRef = useRef<(q: string) => void>(() => {});
+  useEffect(() => {
+    function onOpen(e: Event) {
+      setNudge(false);
+      setOpen(true);
+      const q = (e as CustomEvent<{ question?: string }>).detail?.question;
+      if (q) window.setTimeout(() => sendRef.current(q), 60);
+    }
+    window.addEventListener("red-cherry-assistant-open", onOpen as EventListener);
+    return () => window.removeEventListener("red-cherry-assistant-open", onOpen as EventListener);
+  }, []);
+
+
   async function sendQuestion(qRaw: string) {
     const q = qRaw.trim();
     if (!q || thinking) return;
@@ -139,6 +154,10 @@ export function AssistantWidget() {
     }
 
   }
+
+  sendRef.current = (q: string) => void sendQuestion(q);
+
+
 
   const transcript = messages
     .map((m) => `${m.role === "user" ? "Rider" : "Assistant"}: ${m.content}`)
