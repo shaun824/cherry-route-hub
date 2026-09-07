@@ -159,6 +159,27 @@ function CrewDashboard() {
         <Stat icon={<MapIcon className="h-4 w-4" />} label="On the map" value={`${placed}/${rooming.length}`} />
       </div>
 
+      <div className="grid grid-cols-2 gap-1 rounded-full bg-surface p-1 ring-1 ring-border">
+        {([
+          ["tools", "Tools"],
+          ["plan", "Crew plan"],
+        ] as const).map(([key, label]) => (
+          <button
+            key={key}
+            type="button"
+            onClick={() => setTab(key)}
+            className={`rounded-full py-2 text-xs font-bold transition ${
+              tab === key ? "bg-cherry text-white shadow-sm" : "text-ink-soft"
+            }`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      <AskBotCard eventName={event?.name ?? null} />
+
+      {tab === "plan" ? (
       <section className="rounded-2xl bg-card p-4 shadow-sm ring-1 ring-border">
         <h2 className="flex items-center gap-1.5 font-display text-sm font-bold text-ink">
           <CalendarDays className="h-4 w-4 text-cherry" /> Crew plan
@@ -240,8 +261,7 @@ function CrewDashboard() {
           <p className="mt-2 text-sm text-ink-soft">No running order loaded for this event yet.</p>
         )}
       </section>
-
-
+      ) : (
       <section className="grid gap-2 sm:grid-cols-2">
         <Tile
           to="/crew/learn"
@@ -306,6 +326,8 @@ function CrewDashboard() {
           />
         ) : null}
       </section>
+      )}
+
     </div>
   );
 }
