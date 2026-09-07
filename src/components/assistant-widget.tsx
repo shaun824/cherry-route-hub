@@ -155,6 +155,10 @@ export function AssistantWidget() {
 
   }
 
+  sendRef.current = (q: string) => void sendQuestion(q);
+
+
+
   const transcript = messages
     .map((m) => `${m.role === "user" ? "Rider" : "Assistant"}: ${m.content}`)
     .join("\n\n");
