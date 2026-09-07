@@ -1,4 +1,4 @@
-import { createFileRoute, Navigate } from "@tanstack/react-router";
+import { createFileRoute, Navigate, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { HardHat } from "lucide-react";
 import { useIsCrew } from "@/lib/auth";
@@ -35,6 +35,7 @@ export const Route = createFileRoute("/crew/build")({
 function CrewBuildPage() {
   const { isCrew, loading } = useIsCrew();
   const { event: linkedEvent } = Route.useSearch();
+  const navigate = useNavigate();
   const [showPast] = useCrewShowPast();
   const eventsQ = useQuery({
     queryKey: ["crew-events", showPast ? "all" : "visible"],
@@ -70,7 +71,10 @@ function CrewBuildPage() {
       {events.length > 1 ? (
         <select
           value={eventId}
-          onChange={(e) => setEventId(e.target.value)}
+          onChange={(e) => {
+            setEventId(e.target.value);
+            void navigate({ to: "/crew/build", search: { event: e.target.value } });
+          }}
           className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm font-semibold"
         >
           {events.map((e) => (
