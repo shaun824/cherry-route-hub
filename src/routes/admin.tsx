@@ -97,6 +97,11 @@ function AdminLayout() {
   useHydratedStore();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { isAdmin, loading, user } = useIsAdmin();
+  const currentSection =
+    navGroups.find((g) => g.items.some((n) => (n.exact ? pathname === n.to : pathname.startsWith(n.to))))?.section ??
+    navGroups[0]!.section;
+  const [pickedSection, setMobileSection] = useState<string | null>(null);
+  const mobileSection = pickedSection ?? currentSection;
 
   if (loading) {
     return <div className="grid min-h-screen place-items-center text-sm text-ink-soft">Loading admin…</div>;
