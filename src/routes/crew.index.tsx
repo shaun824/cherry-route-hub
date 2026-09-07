@@ -3,7 +3,7 @@
 import { createFileRoute, Link, Navigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { BedDouble, Boxes, CalendarDays, ClipboardList, GraduationCap, HardHat, Map as MapIcon, MapPin, Search, Siren, Users } from "lucide-react";
+import { BedDouble, Bot, Boxes, CalendarDays, ClipboardList, GraduationCap, HardHat, Map as MapIcon, MapPin, Search, Siren, Users } from "lucide-react";
 import { useIsCrew } from "@/lib/auth";
 import { fetchAllCrewEvents, fetchCrewEvents, fetchCrewRooming, normaliseTent } from "@/lib/crew";
 import { buildCrewTimeline, groupScheduleByDay, pickCurrentDay } from "@/lib/crew-plan";
@@ -373,5 +373,50 @@ function Tile({
         <span className="block text-[11px] text-ink-soft">{body}</span>
       </span>
     </Link>
+  );
+}
+
+/** Nudges crew to ask the assistant, which reads the website + internal knowledge base. */
+function AskBotCard({ eventName }: { eventName: string | null }) {
+  const prompts = [
+    "What am I responsible for on build day?",
+    eventName ? `Give me a full brief on ${eventName}` : "Give me a full brief on the next event",
+    "Where do the generators and water points go?",
+    "What's in the load-out and who is driving it?",
+  ];
+  function ask(question?: string) {
+    window.dispatchEvent(
+      new CustomEvent("red-cherry-assistant-open", { detail: question ? { question } : {} }),
+    );
+  }
+  return (
+    <section className="rounded-2xl bg-cherry/5 p-4 ring-1 ring-cherry/20">
+      <h2 className="flex items-center gap-1.5 font-display text-sm font-bold text-ink">
+        <Bot className="h-4 w-4 text-cherry" /> Ask the Red Cherry assistant first
+      </h2>
+      <p className="mt-1 text-[12px] text-ink-soft">
+        It reads the event website, every event page, the run sheets and our internal crew knowledge base — so
+        ask it anything about the event instead of hunting through pages or phoning around.
+      </p>
+      <div className="mt-3 flex flex-wrap gap-1.5">
+        {prompts.map((p) => (
+          <button
+            key={p}
+            type="button"
+            onClick={() => ask(p)}
+            className="rounded-full bg-card px-3 py-1.5 text-[11px] font-semibold text-ink ring-1 ring-border transition active:scale-[0.98]"
+          >
+            {p}
+          </button>
+        ))}
+      </div>
+      <button
+        type="button"
+        onClick={() => ask()}
+        className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-cherry px-4 py-2 text-xs font-bold text-white"
+      >
+        <Bot className="h-3.5 w-3.5" /> Open the assistant
+      </button>
+    </section>
   );
 }
