@@ -12,9 +12,8 @@ import { loginIdentifierToEmail, isEmailAddress } from "@/lib/crew-username";
 export const Route = createFileRoute("/crew/login")({
   // Shared links (e.g. the field build map) send crew here with ?next=… so a
   // sign-in lands straight on the page they were sent, not the dashboard.
-  validateSearch: (search: Record<string, unknown>) => ({
-    next: typeof search["next"] === "string" ? (search["next"] as string) : undefined,
-  }),
+  validateSearch: (search: Record<string, unknown>): { next?: string } =>
+    typeof search["next"] === "string" ? { next: search["next"] as string } : {},
   head: () => ({
     meta: [
       { title: "Crew sign in · Red Cherry Events" },

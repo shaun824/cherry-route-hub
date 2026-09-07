@@ -8,9 +8,8 @@ import { VillageMapView } from "@/components/village-map-view";
 import { OfflinePackCard } from "@/components/offline-pack-card";
 
 export const Route = createFileRoute("/crew/build")({
-  validateSearch: (search: Record<string, unknown>) => ({
-    event: typeof search["event"] === "string" ? (search["event"] as string) : undefined,
-  }),
+  validateSearch: (search: Record<string, unknown>): { event?: string } =>
+    typeof search["event"] === "string" ? { event: search["event"] as string } : {},
   head: () => ({
     meta: [
       { title: "Field build map · Red Cherry Events" },
