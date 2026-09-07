@@ -190,7 +190,7 @@ export function TrackerPanel({
     setError(null);
     watchIdRef.current = navigator.geolocation.watchPosition(addPoint, (e) => setError(e.message), {
       enableHighAccuracy: true,
-      maximumAge: 10_000,
+      maximumAge: 0,
       timeout: 15_000,
     });
     // Upload any points queued from a previous patchy-signal stretch.
