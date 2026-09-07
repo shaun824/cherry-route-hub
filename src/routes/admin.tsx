@@ -15,45 +15,82 @@ export const Route = createFileRoute("/admin")({
   component: AdminLayout,
 });
 
-const nav: { to: string; label: string; icon: typeof LayoutDashboard; exact?: boolean }[] = [
-  { to: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
-  { to: "/admin/analytics", label: "Analytics", icon: BarChart3 },
-  { to: "/admin/tracking", label: "Live tracking", icon: Radar },
-  { to: "/admin/events", label: "Events", icon: CalendarDays },
-  { to: "/admin/event-info", label: "Rider info", icon: Newspaper },
-  { to: "/admin/village", label: "Village maps", icon: Tent },
-  { to: "/admin/roster", label: "Roster", icon: UserPlus },
-  { to: "/admin/entry-ninja", label: "Entry Ninja", icon: Plug },
-  { to: "/admin/merchandise", label: "Merchandise", icon: Package },
-  { to: "/admin/pricing", label: "Price book", icon: Wallet },
-  { to: "/admin/results", label: "Results", icon: Trophy },
+type NavItem = { to: string; label: string; icon: typeof LayoutDashboard; exact?: boolean };
+type NavGroup = { section: string; items: NavItem[] };
 
-
-  { to: "/admin/loyalty", label: "Loyalty", icon: Medal },
-  { to: "/admin/rooming", label: "Rooming", icon: BedDouble },
-  { to: "/admin/run-sheet", label: "Run sheets", icon: ClipboardList },
-  { to: "/admin/learn", label: "Crew training", icon: GraduationCap },
-  { to: "/crew", label: "Crew finder", icon: HardHat },
-
-  { to: "/admin/messages", label: "Messages", icon: MessagesSquare },
-  { to: "/admin/knowledge", label: "Bot knowledge", icon: Brain },
-  { to: "/admin/bot-log", label: "Bot Q&A log", icon: Bot },
-  { to: "/admin/notifications", label: "Notifications", icon: BellRing },
-  { to: "/admin/feed", label: "News feed", icon: Newspaper },
-  { to: "/admin/promos", label: "Promos", icon: Tag },
-  { to: "/admin/sponsors", label: "Sponsors", icon: Handshake },
-  { to: "/admin/social", label: "Social feeds", icon: Instagram },
-  { to: "/admin/riders", label: "Riders", icon: Users },
-  { to: "/admin/sign-ins", label: "Sign-in activity", icon: LogIn },
-  { to: "/admin/emails", label: "Email log", icon: Mail },
-  { to: "/admin/crew", label: "Crew logins", icon: KeyRound },
-  { to: "/admin/schedule-sync", label: "Schedule sync", icon: CalendarClock },
-  { to: "/admin/email-content", label: "Email content", icon: Mail },
-  { to: "/admin/email-workflows", label: "Email workflows", icon: Mail },
-
-  { to: "/admin/audit", label: "Content check", icon: ShieldCheck },
-  { to: "/admin/settings", label: "Settings", icon: Settings },
+const navGroups: NavGroup[] = [
+  {
+    section: "Overview",
+    items: [
+      { to: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
+      { to: "/admin/analytics", label: "Analytics", icon: BarChart3 },
+      { to: "/admin/tracking", label: "Live tracking", icon: Radar },
+    ],
+  },
+  {
+    section: "Events",
+    items: [
+      { to: "/admin/events", label: "Events", icon: CalendarDays },
+      { to: "/admin/event-info", label: "Rider info", icon: Newspaper },
+      { to: "/admin/village", label: "Village maps", icon: Tent },
+      { to: "/admin/results", label: "Results", icon: Trophy },
+      { to: "/admin/schedule-sync", label: "Schedule sync", icon: CalendarClock },
+    ],
+  },
+  {
+    section: "Entries & money",
+    items: [
+      { to: "/admin/entry-ninja", label: "Entry Ninja", icon: Plug },
+      { to: "/admin/pricing", label: "Price book", icon: Wallet },
+      { to: "/admin/merchandise", label: "Merchandise", icon: Package },
+      { to: "/admin/loyalty", label: "Loyalty", icon: Medal },
+      { to: "/admin/promos", label: "Promos", icon: Tag },
+    ],
+  },
+  {
+    section: "On the ground",
+    items: [
+      { to: "/crew", label: "Crew finder", icon: HardHat },
+      { to: "/admin/roster", label: "Roster", icon: UserPlus },
+      { to: "/admin/rooming", label: "Rooming", icon: BedDouble },
+      { to: "/admin/run-sheet", label: "Run sheets", icon: ClipboardList },
+      { to: "/admin/learn", label: "Crew training", icon: GraduationCap },
+    ],
+  },
+  {
+    section: "Comms",
+    items: [
+      { to: "/admin/messages", label: "Messages", icon: MessagesSquare },
+      { to: "/admin/notifications", label: "Notifications", icon: BellRing },
+      { to: "/admin/feed", label: "News feed", icon: Newspaper },
+      { to: "/admin/social", label: "Social feeds", icon: Instagram },
+      { to: "/admin/email-content", label: "Email content", icon: Mail },
+      { to: "/admin/email-workflows", label: "Email workflows", icon: Mail },
+      { to: "/admin/emails", label: "Email log", icon: Mail },
+    ],
+  },
+  {
+    section: "Assistant",
+    items: [
+      { to: "/admin/knowledge", label: "Bot knowledge", icon: Brain },
+      { to: "/admin/bot-log", label: "Bot Q&A log", icon: Bot },
+    ],
+  },
+  {
+    section: "People & setup",
+    items: [
+      { to: "/admin/riders", label: "Riders", icon: Users },
+      { to: "/admin/crew", label: "Crew logins", icon: KeyRound },
+      { to: "/admin/sign-ins", label: "Sign-in activity", icon: LogIn },
+      { to: "/admin/sponsors", label: "Sponsors", icon: Handshake },
+      { to: "/admin/audit", label: "Content check", icon: ShieldCheck },
+      { to: "/admin/settings", label: "Settings", icon: Settings },
+    ],
+  },
 ];
+
+const nav: NavItem[] = navGroups.flatMap((g) => g.items);
+
 
 
 function AdminLayout() {
@@ -118,47 +155,78 @@ function AdminLayout() {
       </header>
 
       <div className="mx-auto flex max-w-7xl gap-6 px-4 py-6 md:px-8">
-        {/* Sidebar (desktop) */}
+        {/* Sidebar (desktop) — grouped by section, only the current section open */}
         <aside className="hidden w-56 shrink-0 md:block">
-          <nav className="sticky top-20 max-h-[calc(100vh-6rem)] space-y-1 overflow-y-auto overscroll-contain pr-1">
-            {nav.map((n) => {
+          <nav className="sticky top-20 max-h-[calc(100vh-6rem)] space-y-2 overflow-y-auto overscroll-contain pr-1">
+            {navGroups.map((g) => {
+              const groupActive = g.items.some((n) => (n.exact ? pathname === n.to : pathname.startsWith(n.to)));
+              return (
+                <details key={g.section} open={groupActive} className="group">
+                  <summary className="cursor-pointer list-none px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.16em] text-ink-soft">
+                    {g.section}
+                  </summary>
+                  <div className="mt-0.5 space-y-0.5">
+                    {g.items.map((n) => {
+                      const Icon = n.icon;
+                      const active = n.exact ? pathname === n.to : pathname.startsWith(n.to);
+                      return (
+                        <Link
+                          key={n.to}
+                          to={n.to}
+                          className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-semibold ${
+                            active ? "bg-cherry text-white shadow-sm" : "text-ink-soft hover:bg-card"
+                          }`}
+                        >
+                          <Icon className="h-4 w-4" strokeWidth={active ? 2.4 : 2} />
+                          {n.label}
+                        </Link>
+                      );
+                    })}
+                  </div>
+                </details>
+              );
+            })}
+          </nav>
+        </aside>
+
+        {/* Mobile nav — pick a section, then a page */}
+        <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-card/95 backdrop-blur md:hidden">
+          <div className="flex gap-1 overflow-x-auto px-2 pt-2">
+            {navGroups.map((g) => {
+              const on = g.section === mobileSection;
+              return (
+                <button
+                  key={g.section}
+                  onClick={() => setMobileSection(g.section)}
+                  className={`shrink-0 rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wider ${
+                    on ? "bg-ink text-white" : "bg-secondary text-ink-soft"
+                  }`}
+                >
+                  {g.section}
+                </button>
+              );
+            })}
+          </div>
+          <div className="flex gap-1 overflow-x-auto px-2 pb-2 pt-1">
+            {(navGroups.find((g) => g.section === mobileSection)?.items ?? []).map((n) => {
               const Icon = n.icon;
               const active = n.exact ? pathname === n.to : pathname.startsWith(n.to);
               return (
                 <Link
                   key={n.to}
                   to={n.to}
-                  className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-semibold ${
-                    active ? "bg-cherry text-white shadow-sm" : "text-ink-soft hover:bg-card"
+                  className={`flex shrink-0 flex-col items-center gap-0.5 rounded-lg px-3 py-1.5 text-[10px] font-semibold ${
+                    active ? "bg-cherry text-white" : "text-ink-soft"
                   }`}
                 >
-                  <Icon className="h-4 w-4" strokeWidth={active ? 2.4 : 2} />
+                  <Icon className="h-4 w-4" />
                   {n.label}
                 </Link>
               );
             })}
-          </nav>
-        </aside>
-
-        {/* Mobile nav pills */}
-        <nav className="fixed inset-x-0 bottom-0 z-30 flex gap-1 overflow-x-auto border-t border-border bg-card/95 px-2 py-2 backdrop-blur md:hidden">
-          {nav.map((n) => {
-            const Icon = n.icon;
-            const active = n.exact ? pathname === n.to : pathname.startsWith(n.to);
-            return (
-              <Link
-                key={n.to}
-                to={n.to}
-                className={`flex shrink-0 flex-col items-center gap-0.5 rounded-lg px-3 py-1.5 text-[10px] font-semibold ${
-                  active ? "bg-cherry text-white" : "text-ink-soft"
-                }`}
-              >
-                <Icon className="h-4 w-4" />
-                {n.label}
-              </Link>
-            );
-          })}
+          </div>
         </nav>
+
 
         {/* Content */}
         <main className="min-w-0 flex-1 pb-24 md:pb-6">
