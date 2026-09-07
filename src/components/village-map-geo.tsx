@@ -391,7 +391,9 @@ export default function VillageMapGeo({
   const [recenterToken, setRecenterToken] = useState(0);
   const [viewBoundsToken, setViewBoundsToken] = useState(0);
   const [satellite, setSatellite] = useState(true);
-  const [bearing, setBearing] = useState(0);
+  // Villages can save a default orientation so everyone opens the map the same
+  // way round as the field is actually built.
+  const [bearing, setBearing] = useState(geo.bearing ?? 0);
   // Full-screen expand: the same live map instance just fills the viewport, so
   // the rider's current zoom/position is kept. Works on every device (unlike
   // the native Fullscreen API, which iPhone Safari refuses for divs).

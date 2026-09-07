@@ -290,7 +290,9 @@ export default function VillageMapEditorGeo({
   onDeleteTent,
   onToggleTentKind,
   onDeleteHotspot,
+  defaultBearing = 0,
 }: {
+  defaultBearing?: number;
   centre: { lat: number; lng: number };
   centreToken: number;
   hotspots: VillageHotspot[];
@@ -333,7 +335,7 @@ export default function VillageMapEditorGeo({
   // While a tent is being dragged, its footprint square tracks the marker via
   // this live position instead of waiting for the save to come back.
   const [tentLive, setTentLive] = useState<{ id: string; lat: number; lng: number } | null>(null);
-  const [bearing, setBearing] = useState(0);
+  const [bearing, setBearing] = useState(defaultBearing);
   const [panelMin, setPanelMin] = useState(false);
 
   const frame = useRef<number | null>(null);

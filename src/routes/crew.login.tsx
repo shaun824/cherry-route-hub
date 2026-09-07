@@ -10,6 +10,10 @@ import { BrandMark } from "@/components/ui-bits";
 import { loginIdentifierToEmail, isEmailAddress } from "@/lib/crew-username";
 
 export const Route = createFileRoute("/crew/login")({
+  // Shared links (e.g. the field build map) send crew here with ?next=… so a
+  // sign-in lands straight on the page they were sent, not the dashboard.
+  validateSearch: (search: Record<string, unknown>): { next?: string } =>
+    typeof search["next"] === "string" ? { next: search["next"] as string } : {},
   head: () => ({
     meta: [
       { title: "Crew sign in · Red Cherry Events" },
@@ -33,14 +37,21 @@ export const Route = createFileRoute("/crew/login")({
 function CrewLoginPage() {
   const { user, isCrew, loading } = useIsCrew();
   const navigate = useNavigate();
+  const { next } = Route.useSearch();
+  const safeNext = next && next.startsWith("/") && !next.startsWith("//") ? next : null;
+  const goOn = () => {
+    if (safeNext) window.location.assign(safeNext);
+    else void navigate({ to: "/crew" });
+  };
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!loading && user && isCrew) navigate({ to: "/crew" });
-  }, [loading, user, isCrew, navigate]);
+    if (!loading && user && isCrew) goOn();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading, user, isCrew, safeNext]);
 
   async function signIn(e: React.FormEvent) {
     e.preventDefault();
@@ -57,13 +68,13 @@ function CrewLoginPage() {
       );
       return;
     }
-    navigate({ to: "/crew" });
+    goOn();
   }
 
   async function google() {
     setError(null);
     try {
-      await lovable.auth.signInWithOAuth("google", { redirect_uri: `${window.location.origin}/crew` });
+      await lovable.auth.signInWithOAuth("google", { redirect_uri: `${window.location.origin}${safeNext ?? "/crew"}` });
     } catch {
       setError("Google sign-in didn't complete. Try your email and password.");
     }

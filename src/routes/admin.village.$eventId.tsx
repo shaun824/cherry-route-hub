@@ -1121,6 +1121,7 @@ function VillageEditor() {
         <ClientOnly fallback={<div className="h-[65vh] min-h-[360px] animate-pulse rounded-2xl bg-muted" />}>
           <Suspense fallback={<div className="h-[65vh] min-h-[360px] animate-pulse rounded-2xl bg-muted" />}>
             <VillageMapEditorGeo
+              defaultBearing={map.geo?.bearing ?? 0}
               centre={centre}
               centreToken={centreToken}
               hotspots={layerSpots(map.hotspots)}

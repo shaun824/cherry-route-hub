@@ -1,4 +1,4 @@
-import { createFileRoute, Navigate } from "@tanstack/react-router";
+import { createFileRoute, Navigate, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { HardHat } from "lucide-react";
 import { useIsCrew } from "@/lib/auth";
@@ -8,6 +8,8 @@ import { VillageMapView } from "@/components/village-map-view";
 import { OfflinePackCard } from "@/components/offline-pack-card";
 
 export const Route = createFileRoute("/crew/build")({
+  validateSearch: (search: Record<string, unknown>): { event?: string } =>
+    typeof search["event"] === "string" ? { event: search["event"] as string } : {},
   head: () => ({
     meta: [
       { title: "Field build map · Red Cherry Events" },
@@ -31,6 +33,8 @@ export const Route = createFileRoute("/crew/build")({
 
 function CrewBuildPage() {
   const { isCrew, loading } = useIsCrew();
+  const { event: linkedEvent } = Route.useSearch();
+  const navigate = useNavigate();
   const [showPast] = useCrewShowPast();
   const eventsQ = useQuery({
     queryKey: ["crew-events", showPast ? "all" : "visible"],
@@ -38,10 +42,18 @@ function CrewBuildPage() {
     enabled: isCrew,
   });
   const events = eventsQ.data ?? [];
-  const [eventId, setEventId] = useCrewEvent(events);
+  const [pickedEvent, setEventId] = useCrewEvent(events);
+  // A shared link like /crew/build?event=<id> opens straight on that village.
+  const eventId = linkedEvent ?? pickedEvent;
 
   if (loading) return <div className="p-4"><div className="h-40 animate-pulse rounded-2xl bg-muted" /></div>;
-  if (!isCrew) return <Navigate to="/crew/login" />;
+  if (!isCrew)
+    return (
+      <Navigate
+        to="/crew/login"
+        search={{ next: typeof window === "undefined" ? undefined : window.location.pathname + window.location.search }}
+      />
+    );
 
   return (
     <div className="space-y-4 p-4">
@@ -58,7 +70,10 @@ function CrewBuildPage() {
       {events.length > 1 ? (
         <select
           value={eventId}
-          onChange={(e) => setEventId(e.target.value)}
+          onChange={(e) => {
+            setEventId(e.target.value);
+            void navigate({ to: "/crew/build", search: { event: e.target.value } });
+          }}
           className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm font-semibold"
         >
           {events.map((e) => (

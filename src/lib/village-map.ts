@@ -90,6 +90,8 @@ export type VillageGeo = {
   widthM: number;
   /** clockwise rotation of the image in degrees */
   rotation?: number;
+  /** default map orientation (degrees) every viewer opens this village at */
+  bearing?: number;
 };
 
 export type VillageMap = {
