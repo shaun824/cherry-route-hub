@@ -17,12 +17,12 @@ No paid mapping or routing service. When someone taps a pin they get a small pop
 - Rider name, race number, category, and how long ago the position was reported.
 - Distance and compass direction from the viewer's own location (calculated in the browser, free).
 - **Navigate** button, shown to crew only, that hands the rider's coordinates to the phone's own maps app (Google Maps on Android/desktop, Apple Maps on iPhone) — a plain link, no cost, and turn-by-turn is done by the app the crew member already has. The public spectate popup has no navigate button.
-- **Copy coordinates** and **Share** so a crew member can send the position over WhatsApp/radio.
+- **Copy coordinates** and **Share** (crew only) so a crew member can send the position over WhatsApp/radio.
 - A dashed straight line from the viewer's position to the rider while the popup is open, drawn locally on the existing map — a visual "that way, 2.4 km" cue with no extra requests.
 
 Nothing extra is fetched per pin, so cost stays exactly where it is today.
 
-Same behaviour on both the crew race-control map and the public spectate map, except crew also see the rider's battery level; the public popup omits it.
+The public spectate popup shows only name, race number, category and last-seen time. Navigate, share, copy coordinates, the distance line and battery level are crew and admin only.
 
 ## Technical notes
 
