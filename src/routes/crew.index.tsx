@@ -101,6 +101,8 @@ function CrewDashboard() {
   const activeDay = dayGroups.find((d) => d.id === dayId) ?? dayGroups[0];
   const crewTasks = useMemo(() => buildCrewTimeline(activeDay), [activeDay]);
   const [view, setView] = useState<"crew" | "riders">("crew");
+  const [tab, setTab] = useState<"tools" | "plan">("tools");
+
 
 
   if (loading) return <div className="p-6 text-sm text-ink-soft">Checking your crew access…</div>;
