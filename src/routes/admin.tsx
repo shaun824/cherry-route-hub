@@ -155,47 +155,78 @@ function AdminLayout() {
       </header>
 
       <div className="mx-auto flex max-w-7xl gap-6 px-4 py-6 md:px-8">
-        {/* Sidebar (desktop) */}
+        {/* Sidebar (desktop) — grouped by section, only the current section open */}
         <aside className="hidden w-56 shrink-0 md:block">
-          <nav className="sticky top-20 max-h-[calc(100vh-6rem)] space-y-1 overflow-y-auto overscroll-contain pr-1">
-            {nav.map((n) => {
+          <nav className="sticky top-20 max-h-[calc(100vh-6rem)] space-y-2 overflow-y-auto overscroll-contain pr-1">
+            {navGroups.map((g) => {
+              const groupActive = g.items.some((n) => (n.exact ? pathname === n.to : pathname.startsWith(n.to)));
+              return (
+                <details key={g.section} open={groupActive} className="group">
+                  <summary className="cursor-pointer list-none px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.16em] text-ink-soft">
+                    {g.section}
+                  </summary>
+                  <div className="mt-0.5 space-y-0.5">
+                    {g.items.map((n) => {
+                      const Icon = n.icon;
+                      const active = n.exact ? pathname === n.to : pathname.startsWith(n.to);
+                      return (
+                        <Link
+                          key={n.to}
+                          to={n.to}
+                          className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-semibold ${
+                            active ? "bg-cherry text-white shadow-sm" : "text-ink-soft hover:bg-card"
+                          }`}
+                        >
+                          <Icon className="h-4 w-4" strokeWidth={active ? 2.4 : 2} />
+                          {n.label}
+                        </Link>
+                      );
+                    })}
+                  </div>
+                </details>
+              );
+            })}
+          </nav>
+        </aside>
+
+        {/* Mobile nav — pick a section, then a page */}
+        <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-card/95 backdrop-blur md:hidden">
+          <div className="flex gap-1 overflow-x-auto px-2 pt-2">
+            {navGroups.map((g) => {
+              const on = g.section === mobileSection;
+              return (
+                <button
+                  key={g.section}
+                  onClick={() => setMobileSection(g.section)}
+                  className={`shrink-0 rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wider ${
+                    on ? "bg-ink text-white" : "bg-secondary text-ink-soft"
+                  }`}
+                >
+                  {g.section}
+                </button>
+              );
+            })}
+          </div>
+          <div className="flex gap-1 overflow-x-auto px-2 pb-2 pt-1">
+            {(navGroups.find((g) => g.section === mobileSection)?.items ?? []).map((n) => {
               const Icon = n.icon;
               const active = n.exact ? pathname === n.to : pathname.startsWith(n.to);
               return (
                 <Link
                   key={n.to}
                   to={n.to}
-                  className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-semibold ${
-                    active ? "bg-cherry text-white shadow-sm" : "text-ink-soft hover:bg-card"
+                  className={`flex shrink-0 flex-col items-center gap-0.5 rounded-lg px-3 py-1.5 text-[10px] font-semibold ${
+                    active ? "bg-cherry text-white" : "text-ink-soft"
                   }`}
                 >
-                  <Icon className="h-4 w-4" strokeWidth={active ? 2.4 : 2} />
+                  <Icon className="h-4 w-4" />
                   {n.label}
                 </Link>
               );
             })}
-          </nav>
-        </aside>
-
-        {/* Mobile nav pills */}
-        <nav className="fixed inset-x-0 bottom-0 z-30 flex gap-1 overflow-x-auto border-t border-border bg-card/95 px-2 py-2 backdrop-blur md:hidden">
-          {nav.map((n) => {
-            const Icon = n.icon;
-            const active = n.exact ? pathname === n.to : pathname.startsWith(n.to);
-            return (
-              <Link
-                key={n.to}
-                to={n.to}
-                className={`flex shrink-0 flex-col items-center gap-0.5 rounded-lg px-3 py-1.5 text-[10px] font-semibold ${
-                  active ? "bg-cherry text-white" : "text-ink-soft"
-                }`}
-              >
-                <Icon className="h-4 w-4" />
-                {n.label}
-              </Link>
-            );
-          })}
+          </div>
         </nav>
+
 
         {/* Content */}
         <main className="min-w-0 flex-1 pb-24 md:pb-6">
