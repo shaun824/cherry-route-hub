@@ -8,6 +8,9 @@ import { VillageMapView } from "@/components/village-map-view";
 import { OfflinePackCard } from "@/components/offline-pack-card";
 
 export const Route = createFileRoute("/crew/build")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    event: typeof search["event"] === "string" ? (search["event"] as string) : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Field build map · Red Cherry Events" },
@@ -31,6 +34,7 @@ export const Route = createFileRoute("/crew/build")({
 
 function CrewBuildPage() {
   const { isCrew, loading } = useIsCrew();
+  const { event: linkedEvent } = Route.useSearch();
   const [showPast] = useCrewShowPast();
   const eventsQ = useQuery({
     queryKey: ["crew-events", showPast ? "all" : "visible"],
@@ -38,10 +42,18 @@ function CrewBuildPage() {
     enabled: isCrew,
   });
   const events = eventsQ.data ?? [];
-  const [eventId, setEventId] = useCrewEvent(events);
+  const [pickedEvent, setEventId] = useCrewEvent(events);
+  // A shared link like /crew/build?event=<id> opens straight on that village.
+  const eventId = linkedEvent ?? pickedEvent;
 
   if (loading) return <div className="p-4"><div className="h-40 animate-pulse rounded-2xl bg-muted" /></div>;
-  if (!isCrew) return <Navigate to="/crew/login" />;
+  if (!isCrew)
+    return (
+      <Navigate
+        to="/crew/login"
+        search={{ next: typeof window === "undefined" ? undefined : window.location.pathname + window.location.search }}
+      />
+    );
 
   return (
     <div className="space-y-4 p-4">
