@@ -38,23 +38,27 @@ export const askAppBot = createServerFn({ method: "POST" })
     const authHeader = getRequestHeader("authorization") ?? null;
     const userId = await resolveOptionalUserId(authHeader);
 
-    // Internal-tier knowledge is only ever exposed to verified admins.
+    // Internal-tier knowledge is only ever exposed to verified staff
+    // (admins and crew) — never to riders or signed-out visitors.
     let isAdmin = false;
+    let isStaff = false;
     if (userId) {
       const { data: roles } = await supabaseAdmin
         .from("user_roles")
         .select("role")
         .eq("user_id", userId)
-        .eq("role", "admin")
-        .limit(1);
-      isAdmin = (roles?.length ?? 0) > 0;
+        .in("role", ["admin", "crew"]);
+      isAdmin = (roles ?? []).some((r: any) => r.role === "admin");
+      isStaff = (roles?.length ?? 0) > 0;
     }
 
     const { text: contextText, focusEventIds } = await buildGlobalBotContext(supabaseAdmin as any, {
       question: data.question,
       userId,
       isAdmin,
+      isStaff,
     });
+
 
     const systemPrompt = `You are the Red Cherry Events assistant inside the Rider Hub app. You help riders, spectators and crew with (a) how to use the app and (b) questions about any Red Cherry event, current or future.
 
