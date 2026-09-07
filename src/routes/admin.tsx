@@ -15,45 +15,82 @@ export const Route = createFileRoute("/admin")({
   component: AdminLayout,
 });
 
-const nav: { to: string; label: string; icon: typeof LayoutDashboard; exact?: boolean }[] = [
-  { to: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
-  { to: "/admin/analytics", label: "Analytics", icon: BarChart3 },
-  { to: "/admin/tracking", label: "Live tracking", icon: Radar },
-  { to: "/admin/events", label: "Events", icon: CalendarDays },
-  { to: "/admin/event-info", label: "Rider info", icon: Newspaper },
-  { to: "/admin/village", label: "Village maps", icon: Tent },
-  { to: "/admin/roster", label: "Roster", icon: UserPlus },
-  { to: "/admin/entry-ninja", label: "Entry Ninja", icon: Plug },
-  { to: "/admin/merchandise", label: "Merchandise", icon: Package },
-  { to: "/admin/pricing", label: "Price book", icon: Wallet },
-  { to: "/admin/results", label: "Results", icon: Trophy },
+type NavItem = { to: string; label: string; icon: typeof LayoutDashboard; exact?: boolean };
+type NavGroup = { section: string; items: NavItem[] };
 
-
-  { to: "/admin/loyalty", label: "Loyalty", icon: Medal },
-  { to: "/admin/rooming", label: "Rooming", icon: BedDouble },
-  { to: "/admin/run-sheet", label: "Run sheets", icon: ClipboardList },
-  { to: "/admin/learn", label: "Crew training", icon: GraduationCap },
-  { to: "/crew", label: "Crew finder", icon: HardHat },
-
-  { to: "/admin/messages", label: "Messages", icon: MessagesSquare },
-  { to: "/admin/knowledge", label: "Bot knowledge", icon: Brain },
-  { to: "/admin/bot-log", label: "Bot Q&A log", icon: Bot },
-  { to: "/admin/notifications", label: "Notifications", icon: BellRing },
-  { to: "/admin/feed", label: "News feed", icon: Newspaper },
-  { to: "/admin/promos", label: "Promos", icon: Tag },
-  { to: "/admin/sponsors", label: "Sponsors", icon: Handshake },
-  { to: "/admin/social", label: "Social feeds", icon: Instagram },
-  { to: "/admin/riders", label: "Riders", icon: Users },
-  { to: "/admin/sign-ins", label: "Sign-in activity", icon: LogIn },
-  { to: "/admin/emails", label: "Email log", icon: Mail },
-  { to: "/admin/crew", label: "Crew logins", icon: KeyRound },
-  { to: "/admin/schedule-sync", label: "Schedule sync", icon: CalendarClock },
-  { to: "/admin/email-content", label: "Email content", icon: Mail },
-  { to: "/admin/email-workflows", label: "Email workflows", icon: Mail },
-
-  { to: "/admin/audit", label: "Content check", icon: ShieldCheck },
-  { to: "/admin/settings", label: "Settings", icon: Settings },
+const navGroups: NavGroup[] = [
+  {
+    section: "Overview",
+    items: [
+      { to: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
+      { to: "/admin/analytics", label: "Analytics", icon: BarChart3 },
+      { to: "/admin/tracking", label: "Live tracking", icon: Radar },
+    ],
+  },
+  {
+    section: "Events",
+    items: [
+      { to: "/admin/events", label: "Events", icon: CalendarDays },
+      { to: "/admin/event-info", label: "Rider info", icon: Newspaper },
+      { to: "/admin/village", label: "Village maps", icon: Tent },
+      { to: "/admin/results", label: "Results", icon: Trophy },
+      { to: "/admin/schedule-sync", label: "Schedule sync", icon: CalendarClock },
+    ],
+  },
+  {
+    section: "Entries & money",
+    items: [
+      { to: "/admin/entry-ninja", label: "Entry Ninja", icon: Plug },
+      { to: "/admin/pricing", label: "Price book", icon: Wallet },
+      { to: "/admin/merchandise", label: "Merchandise", icon: Package },
+      { to: "/admin/loyalty", label: "Loyalty", icon: Medal },
+      { to: "/admin/promos", label: "Promos", icon: Tag },
+    ],
+  },
+  {
+    section: "On the ground",
+    items: [
+      { to: "/crew", label: "Crew finder", icon: HardHat },
+      { to: "/admin/roster", label: "Roster", icon: UserPlus },
+      { to: "/admin/rooming", label: "Rooming", icon: BedDouble },
+      { to: "/admin/run-sheet", label: "Run sheets", icon: ClipboardList },
+      { to: "/admin/learn", label: "Crew training", icon: GraduationCap },
+    ],
+  },
+  {
+    section: "Comms",
+    items: [
+      { to: "/admin/messages", label: "Messages", icon: MessagesSquare },
+      { to: "/admin/notifications", label: "Notifications", icon: BellRing },
+      { to: "/admin/feed", label: "News feed", icon: Newspaper },
+      { to: "/admin/social", label: "Social feeds", icon: Instagram },
+      { to: "/admin/email-content", label: "Email content", icon: Mail },
+      { to: "/admin/email-workflows", label: "Email workflows", icon: Mail },
+      { to: "/admin/emails", label: "Email log", icon: Mail },
+    ],
+  },
+  {
+    section: "Assistant",
+    items: [
+      { to: "/admin/knowledge", label: "Bot knowledge", icon: Brain },
+      { to: "/admin/bot-log", label: "Bot Q&A log", icon: Bot },
+    ],
+  },
+  {
+    section: "People & setup",
+    items: [
+      { to: "/admin/riders", label: "Riders", icon: Users },
+      { to: "/admin/crew", label: "Crew logins", icon: KeyRound },
+      { to: "/admin/sign-ins", label: "Sign-in activity", icon: LogIn },
+      { to: "/admin/sponsors", label: "Sponsors", icon: Handshake },
+      { to: "/admin/audit", label: "Content check", icon: ShieldCheck },
+      { to: "/admin/settings", label: "Settings", icon: Settings },
+    ],
+  },
 ];
+
+const nav: NavItem[] = navGroups.flatMap((g) => g.items);
+
 
 
 function AdminLayout() {
