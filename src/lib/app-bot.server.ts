@@ -155,7 +155,7 @@ export type GlobalBotContext = { text: string; focusEventIds: string[] };
 
 export async function buildGlobalBotContext(
   admin: AnyClient,
-  opts: { question: string; userId: string | null; isAdmin?: boolean },
+  opts: { question: string; userId: string | null; isAdmin?: boolean; isStaff?: boolean },
 ): Promise<GlobalBotContext> {
   const { data: events } = await admin
     .from("events")
