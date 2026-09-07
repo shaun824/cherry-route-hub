@@ -28,5 +28,5 @@ The public spectate popup shows only name, race number, category and last-seen t
 
 - Grant `EXECUTE` on `public.live_tracking_identity(uuid)` to `anon` (migration). It is `SECURITY DEFINER` and already scoped to riders with points in the last 12 hours.
 - `fetchLiveTracking` in `src/lib/tracking.functions.ts`: capture and log the `rpc` error; keep the existing publishable-key client.
-- `src/components/live-tracking-map-inner.tsx`: replace the tooltip-only marker with `bindPopup` content built from the rider row; add a `isCrew` prop (passed true from `race-control.tsx`) for the battery line; use the browser `geolocation` position already available for the viewer to compute distance/bearing and draw one reusable `L.polyline`.
+- `src/components/live-tracking-map-inner.tsx`: replace the tooltip-only marker with `bindPopup` content built from the rider row; add an `isCrew` prop (true only from `race-control.tsx`) gating the navigate/share/copy actions, battery line and distance polyline; use the browser `geolocation` position to compute distance/bearing and draw one reusable `L.polyline`.
 - Navigation links: `https://www.google.com/maps/dir/?api=1&destination=<lat>,<lng>&travelmode=driving`, and `maps://?daddr=` on iOS user agents.
