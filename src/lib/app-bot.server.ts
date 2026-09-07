@@ -270,7 +270,7 @@ export async function buildGlobalBotContext(
     knowledgeText = await buildKnowledgeContext(admin, {
       question: opts.question,
       eventIds: focusIds,
-      includeInternal: opts.isAdmin === true,
+      includeInternal: opts.isAdmin === true || opts.isStaff === true,
     });
   } catch (e) {
     console.error("[app-bot] knowledge context failed", e);
