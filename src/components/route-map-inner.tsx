@@ -429,16 +429,18 @@ export default function RouteMapInner({
               />
             )),
           )}
-          {visible.flatMap((l) =>
-            l.markers.map((m) => {
+          {shownMarkers.map(({ owner: l, marker: m }) => {
               const color = m.color || l.color;
-              const legs = markerLegs[`${l.route.id}-${m.id}`] ?? [];
+              const legs = (markerLegs[`${l.route.id}-${m.id}`] ?? []).filter(
+                (leg) => enabled[leg.routeId],
+              );
               return (
                 <Marker
                   key={`${l.route.id}-mk-${m.id}`}
                   position={[m.lat, m.lng] as [number, number]}
                   icon={customIcon(color, m.icon, m.logoUrl)}
                 >
+
                   <Popup>
                     <div className="max-w-[260px] space-y-2">
                       <div className="flex items-start gap-2">
