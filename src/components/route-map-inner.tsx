@@ -12,6 +12,7 @@ import { useServerFn } from "@tanstack/react-start";
 import type { CustomMarker, Event, EventRoute } from "@/lib/mock-data";
 import {
   boundsFromCoords,
+  haversineMeters,
   parseKml,
   polylineElevationGainM,
   polylineKm,
@@ -121,11 +122,40 @@ function HoverMarker() {
 
 function FitToBounds({ bounds }: { bounds: [[number, number], [number, number]] | null }) {
   const map = useMap();
+  // Only fit when the actual bounds values change — the array identity changes
+  // on every render, and re-fitting would yank the rider back out of a zoom.
+  const key = bounds ? bounds.flat().map((n) => n.toFixed(5)).join(",") : "";
+  const applied = useRef<string>("");
   useEffect(() => {
-    if (bounds) map.fitBounds(bounds, { padding: [24, 24] });
-  }, [bounds, map]);
+    if (!bounds || !key || applied.current === key) return;
+    applied.current = key;
+    map.fitBounds(bounds, { padding: [24, 24] });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key, map]);
   return null;
 }
+
+/**
+ * Nearest point on a route to a marker: how far into the route it sits (km)
+ * and how far off the line it is (m), so we can hide irrelevant matches.
+ */
+function distanceAlongRoute(
+  lines: LatLngAlt[][],
+  lat: number,
+  lng: number,
+): { km: number; offM: number } | null {
+  let best: { km: number; offM: number } | null = null;
+  let travelled = 0;
+  for (const line of lines) {
+    for (let i = 0; i < line.length; i++) {
+      if (i > 0) travelled += haversineMeters(line[i - 1], line[i]);
+      const off = haversineMeters([lng, lat], line[i]);
+      if (!best || off < best.offM) best = { km: travelled / 1000, offM: off };
+    }
+  }
+  return best;
+}
+
 
 export default function RouteMapInner({
   event,
@@ -242,6 +272,45 @@ export default function RouteMapInner({
     }
   }, [loaded, fetchElev]);
 
+  // For every custom marker (water points, aid stations…), work out how far
+  // into each route of that same day it sits. Only routes that actually pass
+  // within 300 m of the marker are listed.
+  const markerLegs = useMemo(() => {
+    const out: Record<
+      string,
+      { routeId: string; name: string; color: string; km: number; totalKm: number; remainingKm: number }[]
+    > = {};
+    for (const owner of loaded) {
+      for (const m of owner.markers) {
+        const legs: {
+          routeId: string;
+          name: string;
+          color: string;
+          km: number;
+          totalKm: number;
+          remainingKm: number;
+        }[] = [];
+        for (const l of loaded) {
+          if (l.dayLabel !== owner.dayLabel || l.lines.length === 0) continue;
+          const hit = distanceAlongRoute(l.lines, m.lat, m.lng);
+          if (!hit || hit.offM > 300) continue;
+          legs.push({
+            routeId: l.route.id,
+            name: l.route.name || l.route.tier,
+            color: l.color,
+            km: hit.km,
+            totalKm: l.distanceKm,
+            remainingKm: Math.max(0, l.distanceKm - hit.km),
+          });
+        }
+        legs.sort((a, b) => a.km - b.km);
+        out[`${owner.route.id}-${m.id}`] = legs;
+      }
+    }
+    return out;
+  }, [loaded]);
+
+
   const visible = loaded.filter((l) => enabled[l.route.id]);
   const allCoords: LatLngAlt[] = [
     ...visible.flatMap((l) => l.lines.flat()),
@@ -345,6 +414,7 @@ export default function RouteMapInner({
           {visible.flatMap((l) =>
             l.markers.map((m) => {
               const color = m.color || l.color;
+              const legs = markerLegs[`${l.route.id}-${m.id}`] ?? [];
               return (
                 <Marker
                   key={`${l.route.id}-mk-${m.id}`}
@@ -352,14 +422,59 @@ export default function RouteMapInner({
                   icon={customIcon(color, m.icon, m.logoUrl)}
                 >
                   <Popup>
-                    <div className="max-w-[240px] space-y-1">
-                      <p className="font-semibold text-ink">{m.name}</p>
+                    <div className="max-w-[260px] space-y-2">
+                      <div className="flex items-start gap-2">
+                        <span
+                          className="mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full text-sm"
+                          style={{ backgroundColor: color }}
+                        >
+                          {MARKER_GLYPH[m.icon ?? "pin"]}
+                        </span>
+                        <div className="min-w-0">
+                          <p className="font-semibold text-ink">{m.name}</p>
+                          <p className="text-[10px] uppercase tracking-wider text-ink-soft/70">
+                            {l.dayLabel}
+                          </p>
+                        </div>
+                      </div>
+
                       {m.description ? (
                         <p className="whitespace-pre-line text-xs text-ink-soft">{m.description}</p>
                       ) : null}
-                      <p className="text-[10px] uppercase tracking-wider text-ink-soft/70">
-                        {l.route.name || l.route.tier} · {l.dayLabel}
-                      </p>
+
+                      {legs.length > 0 ? (
+                        <div className="space-y-1 rounded-lg bg-secondary/60 p-2">
+                          <p className="text-[10px] font-bold uppercase tracking-wider text-ink-soft">
+                            How far into each route
+                          </p>
+                          {legs.map((leg) => (
+                            <div key={leg.routeId} className="flex items-center justify-between gap-2 text-xs">
+                              <span className="flex min-w-0 items-center gap-1.5">
+                                <span
+                                  className="inline-block h-2 w-2 shrink-0 rounded-full"
+                                  style={{ backgroundColor: leg.color }}
+                                />
+                                <span className="truncate text-ink">{leg.name}</span>
+                              </span>
+                              <span className="shrink-0 font-semibold text-ink">
+                                {leg.km.toFixed(1)} km
+                                <span className="font-normal text-ink-soft">
+                                  {" "}
+                                  / {leg.totalKm.toFixed(0)} km
+                                </span>
+                              </span>
+                            </div>
+                          ))}
+                          {legs.some((leg) => leg.remainingKm > 0) && (
+                            <p className="text-[10px] text-ink-soft">
+                              {legs.length === 1
+                                ? `${legs[0].remainingKm.toFixed(1)} km still to ride after this point.`
+                                : "Distances are measured from each route's start."}
+                            </p>
+                          )}
+                        </div>
+                      ) : null}
+
                       <a
                         href={`https://www.google.com/maps/dir/?api=1&destination=${m.lat},${m.lng}`}
                         target="_blank"
@@ -374,6 +489,7 @@ export default function RouteMapInner({
               );
             }),
           )}
+
         </MapContainer>
       </div>
 
