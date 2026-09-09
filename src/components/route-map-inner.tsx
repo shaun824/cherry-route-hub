@@ -272,6 +272,45 @@ export default function RouteMapInner({
     }
   }, [loaded, fetchElev]);
 
+  // For every custom marker (water points, aid stations…), work out how far
+  // into each route of that same day it sits. Only routes that actually pass
+  // within 300 m of the marker are listed.
+  const markerLegs = useMemo(() => {
+    const out: Record<
+      string,
+      { routeId: string; name: string; color: string; km: number; totalKm: number; remainingKm: number }[]
+    > = {};
+    for (const owner of loaded) {
+      for (const m of owner.markers) {
+        const legs: {
+          routeId: string;
+          name: string;
+          color: string;
+          km: number;
+          totalKm: number;
+          remainingKm: number;
+        }[] = [];
+        for (const l of loaded) {
+          if (l.dayLabel !== owner.dayLabel || l.lines.length === 0) continue;
+          const hit = distanceAlongRoute(l.lines, m.lat, m.lng);
+          if (!hit || hit.offM > 300) continue;
+          legs.push({
+            routeId: l.route.id,
+            name: l.route.name || l.route.tier,
+            color: l.color,
+            km: hit.km,
+            totalKm: l.distanceKm,
+            remainingKm: Math.max(0, l.distanceKm - hit.km),
+          });
+        }
+        legs.sort((a, b) => a.km - b.km);
+        out[`${owner.route.id}-${m.id}`] = legs;
+      }
+    }
+    return out;
+  }, [loaded]);
+
+
   const visible = loaded.filter((l) => enabled[l.route.id]);
   const allCoords: LatLngAlt[] = [
     ...visible.flatMap((l) => l.lines.flat()),
