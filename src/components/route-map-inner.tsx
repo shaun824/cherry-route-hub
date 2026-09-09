@@ -12,6 +12,7 @@ import { useServerFn } from "@tanstack/react-start";
 import type { CustomMarker, Event, EventRoute } from "@/lib/mock-data";
 import {
   boundsFromCoords,
+  haversineMeters,
   parseKml,
   polylineElevationGainM,
   polylineKm,
