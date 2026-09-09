@@ -1,0 +1,1 @@
+GRANT EXECUTE ON FUNCTION public.live_tracking_identity(uuid) TO anon;

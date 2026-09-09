@@ -1,4 +1,4 @@
-// Live spectator map: polls for the latest rider positions every 15s and plots
+// Live spectator map: polls for the latest rider positions every 1s and plots
 // them on a Leaflet map. Public — uses the same read path as the spectate page.
 // The event's KML course is overlaid underneath, picked by cross-referencing the
 // riders' entry category / position against the event's routes.
@@ -27,7 +27,6 @@ const TIER_COLORS: Record<string, string> = {
 const POLL_MS = 1_000;
 const STALE_AFTER_MS = 5 * 60_000;
 
-
 function markerIcon(stale: boolean) {
   return L.divIcon({
     className: "",
@@ -41,13 +40,140 @@ function markerIcon(stale: boolean) {
   });
 }
 
-export default function LiveTrackingMapInner({ eventId }: { eventId: string }) {
+function formatAgo(iso: string): string {
+  const d = new Date(iso).getTime();
+  const ago = Math.max(0, Date.now() - d);
+  if (ago < 60_000) return "just now";
+  if (ago < 60 * 60_000) return `${Math.floor(ago / 60_000)}m ago`;
+  return new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+}
+
+function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const R = 6371;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLng = ((lng2 - lng1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLng / 2) ** 2;
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
+function bearingText(lat1: number, lng1: number, lat2: number, lng2: number): string {
+  const dLng = ((lng2 - lng1) * Math.PI) / 180;
+  const lat1r = (lat1 * Math.PI) / 180;
+  const lat2r = (lat2 * Math.PI) / 180;
+  const y = Math.sin(dLng) * Math.cos(lat2r);
+  const x = Math.cos(lat1r) * Math.sin(lat2r) - Math.sin(lat1r) * Math.cos(lat2r) * Math.cos(dLng);
+  const brng = (Math.atan2(y, x) * 180) / Math.PI;
+  const normalized = (brng + 360) % 360;
+  const dirs = ["N", "NE", "E", "SE", "S", "SW", "W", "NW", "N"];
+  return dirs[Math.round(normalized / 45)];
+}
+
+function navUrl(lat: number, lng: number): string {
+  const isIOS =
+    typeof navigator !== "undefined" && /iPad|iPhone|iPod/.test(navigator.userAgent);
+  if (isIOS) return `maps://?daddr=${lat},${lng}`;
+  return `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`;
+}
+
+function popupContent(r: {
+  riderName: string | null;
+  bib: string | null;
+  category: string | null;
+  lat: number;
+  lng: number;
+  batteryPct: number | null;
+  recordedAt: string;
+}, isCrew: boolean, viewer: { lat: number; lng: number } | null): HTMLElement {
+  const wrap = document.createElement("div");
+  wrap.className = "min-w-[180px] max-w-[260px] font-sans text-sm";
+
+  const title = document.createElement("p");
+  title.className = "font-bold text-ink";
+  title.textContent = r.riderName || r.bib || "Rider";
+  wrap.appendChild(title);
+
+  const meta = document.createElement("p");
+  meta.className = "text-xs text-muted-foreground";
+  const bits = [
+    r.bib ? `#${r.bib}` : null,
+    r.category ?? null,
+    formatAgo(r.recordedAt),
+  ].filter(Boolean);
+  meta.textContent = bits.join(" · ");
+  wrap.appendChild(meta);
+
+  if (isCrew) {
+    if (r.batteryPct != null) {
+      const bat = document.createElement("p");
+      bat.className = "mt-1 text-xs text-muted-foreground";
+      bat.textContent = `Battery ${r.batteryPct}%`;
+      wrap.appendChild(bat);
+    }
+
+    if (viewer) {
+      const dist = document.createElement("p");
+      dist.className = "mt-1 text-xs font-semibold text-cherry";
+      const km = haversineKm(viewer.lat, viewer.lng, r.lat, r.lng);
+      const dir = bearingText(viewer.lat, viewer.lng, r.lat, r.lng);
+      dist.textContent = `${km < 1 ? `${(km * 1000).toFixed(0)} m` : `${km.toFixed(1)} km`} · ${dir}`;
+      wrap.appendChild(dist);
+    }
+
+    const actions = document.createElement("div");
+    actions.className = "mt-2 flex flex-wrap gap-2";
+
+    const navBtn = document.createElement("a");
+    navBtn.href = navUrl(r.lat, r.lng);
+    navBtn.target = "_blank";
+    navBtn.rel = "noopener noreferrer";
+    navBtn.className =
+      "inline-flex items-center gap-1 rounded-full bg-cherry px-2.5 py-1 text-xs font-semibold text-white no-underline";
+    navBtn.textContent = "Navigate";
+    actions.appendChild(navBtn);
+
+    const copyBtn = document.createElement("button");
+    copyBtn.type = "button";
+    copyBtn.className =
+      "rounded-full bg-secondary px-2.5 py-1 text-xs font-semibold text-secondary-foreground";
+    copyBtn.textContent = "Copy";
+    copyBtn.dataset.action = "copy";
+    actions.appendChild(copyBtn);
+
+    const shareBtn = document.createElement("button");
+    shareBtn.type = "button";
+    shareBtn.className =
+      "rounded-full bg-secondary px-2.5 py-1 text-xs font-semibold text-secondary-foreground";
+    shareBtn.textContent = "Share";
+    shareBtn.dataset.action = "share";
+    actions.appendChild(shareBtn);
+
+    wrap.appendChild(actions);
+  }
+
+  return wrap;
+}
+
+export default function LiveTrackingMapInner({
+  eventId,
+  isCrew = false,
+}: {
+  eventId: string;
+  isCrew?: boolean;
+}) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<L.Map | null>(null);
   const markersRef = useRef<Map<string, L.Marker>>(new Map());
   const fittedRef = useRef(false);
   const [follow, setFollow] = useState<string | null>(null);
   const [search, setSearch] = useState("");
+  const [viewerLoc, setViewerLoc] = useState<{ lat: number; lng: number } | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const guideLineRef = useRef<L.Polyline | null>(null);
 
   const { data } = useQuery({
     queryKey: ["live-tracking", eventId],
@@ -65,6 +191,23 @@ export default function LiveTrackingMapInner({ eventId }: { eventId: string }) {
         (r.bib ?? "").toLowerCase().includes(q),
     );
   }, [riders, search]);
+
+  // Viewer location for crew distance/bearing and guide line.
+  useEffect(() => {
+    if (!isCrew || typeof navigator === "undefined" || !navigator.geolocation) return;
+    let watch: number | undefined;
+    navigator.geolocation.getCurrentPosition(
+      (p) => setViewerLoc({ lat: p.coords.latitude, lng: p.coords.longitude }),
+      () => {},
+    );
+    watch = navigator.geolocation.watchPosition(
+      (p) => setViewerLoc({ lat: p.coords.latitude, lng: p.coords.longitude }),
+      () => {},
+    );
+    return () => {
+      if (watch != null) navigator.geolocation.clearWatch(watch);
+    };
+  }, [isCrew]);
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
@@ -193,8 +336,7 @@ export default function LiveTrackingMapInner({ eventId }: { eventId: string }) {
     };
   }, [candidates, matchedRoutes, matchedIds]);
 
-
-
+  // Update markers and popups.
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
@@ -205,23 +347,49 @@ export default function LiveTrackingMapInner({ eventId }: { eventId: string }) {
     for (const r of riders) {
       seen.add(r.userId);
       const stale = now - new Date(r.recordedAt).getTime() > STALE_AFTER_MS;
-      const label = r.riderName ?? "Rider";
-      const sub = [
-        r.bib ? `#${r.bib}` : null,
-        r.category ?? null,
-        new Date(r.recordedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-      ]
-        .filter(Boolean)
-        .join(" · ");
       const existing = markersRef.current.get(r.userId);
       if (existing) {
         existing.setLatLng([r.lat, r.lng]);
         existing.setIcon(markerIcon(stale));
-        existing.setTooltipContent(`<strong>${label}</strong><br/>${sub}`);
+        // Refresh popup content if this rider is selected.
+        if (selectedId === r.userId) {
+          existing.setPopupContent(popupContent(r, isCrew, viewerLoc));
+          existing.openPopup();
+        }
       } else {
         const m = L.marker([r.lat, r.lng], { icon: markerIcon(stale) })
           .addTo(map)
-          .bindTooltip(`<strong>${label}</strong><br/>${sub}`, { direction: "top" });
+          .bindPopup(popupContent(r, isCrew, viewerLoc));
+        m.on("popupopen", () => {
+          setSelectedId(r.userId);
+          const el = m.getPopup()?.getElement();
+          if (!el) return;
+          const copyBtn = el.querySelector('[data-action="copy"]') as HTMLButtonElement | null;
+          const shareBtn = el.querySelector('[data-action="share"]') as HTMLButtonElement | null;
+          copyBtn?.addEventListener("click", () => {
+            const text = `${r.lat.toFixed(6)}, ${r.lng.toFixed(6)}`;
+            navigator.clipboard?.writeText(text).catch(() => {});
+            copyBtn.textContent = "Copied";
+            window.setTimeout(() => (copyBtn.textContent = "Copy"), 1500);
+          });
+          shareBtn?.addEventListener("click", async () => {
+            const text = `Rider ${r.riderName || r.bib || ""} at ${r.lat.toFixed(6)}, ${r.lng.toFixed(6)}`;
+            if (navigator.share) {
+              try {
+                await navigator.share({ title: "Rider location", text });
+              } catch {
+                // user cancelled
+              }
+            } else {
+              navigator.clipboard?.writeText(text).catch(() => {});
+              shareBtn.textContent = "Copied";
+              window.setTimeout(() => (shareBtn.textContent = "Share"), 1500);
+            }
+          });
+        });
+        m.on("popupclose", () => {
+          setSelectedId((id) => (id === r.userId ? null : id));
+        });
         markersRef.current.set(r.userId, m);
       }
       bounds.push([r.lat, r.lng]);
@@ -240,7 +408,33 @@ export default function LiveTrackingMapInner({ eventId }: { eventId: string }) {
       map.fitBounds(L.latLngBounds(bounds).pad(0.15));
       fittedRef.current = true;
     }
-  }, [riders, follow]);
+  }, [riders, follow, isCrew, viewerLoc, selectedId]);
+
+  // Draw/refresh the dashed guide line from viewer to selected rider.
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    if (guideLineRef.current) {
+      guideLineRef.current.remove();
+      guideLineRef.current = null;
+    }
+    if (!isCrew || !viewerLoc || !selectedId) return;
+    const rider = riders.find((r) => r.userId === selectedId);
+    if (!rider) return;
+    guideLineRef.current = L.polyline(
+      [
+        [viewerLoc.lat, viewerLoc.lng],
+        [rider.lat, rider.lng],
+      ],
+      { dashArray: "6,8", color: "#e11d48", weight: 2, opacity: 0.7 },
+    ).addTo(map);
+    return () => {
+      if (guideLineRef.current) {
+        guideLineRef.current.remove();
+        guideLineRef.current = null;
+      }
+    };
+  }, [isCrew, viewerLoc, selectedId, riders]);
 
   return (
     <div className="space-y-2">
@@ -307,7 +501,7 @@ export default function LiveTrackingMapInner({ eventId }: { eventId: string }) {
       <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
         <MapPin className="h-3.5 w-3.5 text-cherry" />
         {riders.length > 0
-          ? `${riders.length} rider${riders.length === 1 ? "" : "s"} tracking · updates every 15 seconds`
+          ? `${riders.length} rider${riders.length === 1 ? "" : "s"} tracking · updates every second`
           : "No riders are sharing their position yet — dots appear here once riders start tracking."}
       </p>
     </div>

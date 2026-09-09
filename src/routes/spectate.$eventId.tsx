@@ -391,7 +391,7 @@ function SpectatorEventPage() {
             </h2>
             <p className="mt-1 text-xs text-muted-foreground">
               Riders who have started live tracking in their app appear here. Positions update
-              every 15 seconds.
+              every second.
             </p>
 
             {myEntry ? (
@@ -415,7 +415,7 @@ function SpectatorEventPage() {
             ) : null}
 
             <div className="mt-4">
-              <LiveTrackingMap eventId={eventId} />
+              <LiveTrackingMap eventId={eventId} isCrew={false} />
             </div>
           </section>
         </div>
