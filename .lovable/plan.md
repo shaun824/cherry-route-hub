@@ -30,3 +30,14 @@ The public spectate popup shows only name, race number, category and last-seen t
 - `fetchLiveTracking` in `src/lib/tracking.functions.ts`: capture and log the `rpc` error; keep the existing publishable-key client.
 - `src/components/live-tracking-map-inner.tsx`: replace the tooltip-only marker with `bindPopup` content built from the rider row; add an `isCrew` prop (true only from `race-control.tsx`) gating the navigate/share/copy actions, battery line and distance polyline; use the browser `geolocation` position to compute distance/bearing and draw one reusable `L.polyline`.
 - Navigation links: `https://www.google.com/maps/dir/?api=1&destination=<lat>,<lng>&travelmode=driving`, and `maps://?daddr=` on iOS user agents.
+
+## Also fix: embed chat button text is invisible on third-party sites
+
+Andrew's Weekend Warrior site loads `/embed/chat` in an iframe. The parent message wrapper applies `[&_a]:text-cherry` to all links, which overrides the pill button's `text-white` because the arbitrary variant has higher specificity. The result is orange text on an orange button, and the label is clipped by `truncate`.
+
+Fix in `src/components/embedded-assistant.tsx`:
+
+- Change the internal link pill's text colour to `!text-white` so it wins over the parent rule.
+- Remove `truncate` from the button label (or replace with `whitespace-nowrap`) so short labels like "Your Events Hub" aren't clipped.
+
+No other UI or behaviour changes.
