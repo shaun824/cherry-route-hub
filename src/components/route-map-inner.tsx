@@ -121,11 +121,40 @@ function HoverMarker() {
 
 function FitToBounds({ bounds }: { bounds: [[number, number], [number, number]] | null }) {
   const map = useMap();
+  // Only fit when the actual bounds values change — the array identity changes
+  // on every render, and re-fitting would yank the rider back out of a zoom.
+  const key = bounds ? bounds.flat().map((n) => n.toFixed(5)).join(",") : "";
+  const applied = useRef<string>("");
   useEffect(() => {
-    if (bounds) map.fitBounds(bounds, { padding: [24, 24] });
-  }, [bounds, map]);
+    if (!bounds || !key || applied.current === key) return;
+    applied.current = key;
+    map.fitBounds(bounds, { padding: [24, 24] });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key, map]);
   return null;
 }
+
+/**
+ * Nearest point on a route to a marker: how far into the route it sits (km)
+ * and how far off the line it is (m), so we can hide irrelevant matches.
+ */
+function distanceAlongRoute(
+  lines: LatLngAlt[][],
+  lat: number,
+  lng: number,
+): { km: number; offM: number } | null {
+  let best: { km: number; offM: number } | null = null;
+  let travelled = 0;
+  for (const line of lines) {
+    for (let i = 0; i < line.length; i++) {
+      if (i > 0) travelled += haversineMeters(line[i - 1], line[i]);
+      const off = haversineMeters([lng, lat], line[i]);
+      if (!best || off < best.offM) best = { km: travelled / 1000, offM: off };
+    }
+  }
+  return best;
+}
+
 
 export default function RouteMapInner({
   event,
