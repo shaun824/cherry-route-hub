@@ -312,11 +312,29 @@ export default function RouteMapInner({
 
 
   const visible = loaded.filter((l) => enabled[l.route.id]);
+
+  // Water points and other markers are usually captured against one route
+  // (often Gold), but they serve every distance riding that day — so show them
+  // whenever any route from the same day is switched on. Dedupe by position.
+  const visibleDays = new Set(visible.map((l) => l.dayLabel));
+  const seenMarkers = new Set<string>();
+  const shownMarkers: { owner: Loaded; marker: CustomMarker }[] = [];
+  for (const owner of loaded) {
+    if (!visibleDays.has(owner.dayLabel)) continue;
+    for (const m of owner.markers) {
+      const key = `${owner.dayLabel}|${m.name}|${m.lat.toFixed(5)}|${m.lng.toFixed(5)}`;
+      if (seenMarkers.has(key)) continue;
+      seenMarkers.add(key);
+      shownMarkers.push({ owner, marker: m });
+    }
+  }
+
   const allCoords: LatLngAlt[] = [
     ...visible.flatMap((l) => l.lines.flat()),
-    ...visible.flatMap((l) => l.markers.map((m) => [m.lng, m.lat, undefined] as LatLngAlt)),
+    ...shownMarkers.map(({ marker }) => [marker.lng, marker.lat, undefined] as LatLngAlt),
   ];
   const bounds = boundsFromCoords(allCoords);
+
 
   const totalDistance = visible.reduce((acc, l) => acc + l.distanceKm, 0);
   const totalGain = visible.reduce((acc, l) => {
