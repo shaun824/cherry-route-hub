@@ -127,7 +127,7 @@ export function RaceControlPanel({
       ) : null}
 
       {selected ? (
-        <LiveTrackingMap eventId={selected} />
+        <LiveTrackingMap eventId={selected} isCrew />
       ) : (
         <p className="text-sm text-muted-foreground">Pick an event to see live rider positions.</p>
       )}

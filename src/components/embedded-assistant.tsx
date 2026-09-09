@@ -165,9 +165,9 @@ export function EmbeddedAssistant() {
                             href={url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex max-w-full items-center gap-1 rounded-full bg-cherry px-3 py-1 text-xs font-semibold text-white no-underline"
+                            className="inline-flex max-w-full items-center gap-1 rounded-full bg-cherry px-3 py-1 text-xs font-semibold !text-white no-underline"
                           >
-                            <span className="truncate">{children}</span>
+                            <span className="line-clamp-1">{children}</span>
                             <ArrowRight className="h-3 w-3 shrink-0" />
                           </a>
                         );

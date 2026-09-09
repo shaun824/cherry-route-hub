@@ -199,9 +199,12 @@ export const fetchLiveTracking = createServerFn({ method: "GET" })
     // RLS blocks direct roster reads for spectators, so resolve via the
     // security-definer helper that only exposes riders who are tracking.
     if (entrantIds.size > 0) {
-      const { data: identity } = await supabase.rpc("live_tracking_identity", {
+      const { data: identity, error: identityError } = await supabase.rpc("live_tracking_identity", {
         _event_id: data.eventId,
       });
+      if (identityError) {
+        console.error("[live-tracking] live_tracking_identity failed:", identityError.message);
+      }
       type IdentityRow = { entrant_id: string; full_name: string | null; bib_number: string | null; category: string | null };
       const info = new Map((identity ?? []).map((r: IdentityRow) => [r.entrant_id, r]));
       for (const p of points ?? []) {
