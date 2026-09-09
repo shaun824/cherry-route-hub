@@ -507,8 +507,8 @@ export default function RouteMapInner({
                   </Popup>
                 </Marker>
               );
-            }),
-          )}
+          })}
+
 
         </MapContainer>
       </div>
