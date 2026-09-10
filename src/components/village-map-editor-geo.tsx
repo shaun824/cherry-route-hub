@@ -723,6 +723,11 @@ export default function VillageMapEditorGeo({
             // moves them itself while dragging, so re-feeding live coords every
             // frame just fights the gesture and makes dragging feel sluggish.
             const c = zoneCentroid(z);
+            // The name label is a Leaflet tooltip, which only picks its spot
+            // when it is (re)bound — so key it on the live centre, otherwise a
+            // moved area leaves its name behind at the old position.
+            const labelC = zoneCentroid({ ...z, points: pts });
+            const labelKey = labelC ? `${labelC.lat.toFixed(6)},${labelC.lng.toFixed(6)}` : z.id;
 
             return (
               <Fragment key={z.id}>
@@ -769,6 +774,7 @@ export default function VillageMapEditorGeo({
                 >
                   {showLabels || active ? (
                     <Tooltip
+                      key={labelKey}
                       direction="center"
                       permanent
                       interactive={false}
