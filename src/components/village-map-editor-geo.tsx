@@ -19,6 +19,7 @@ import {
   formatArea,
   formatLength,
   moveZone,
+  pointInZone,
   zoneAreaM2,
   zoneCentroid,
   zoneColor,
