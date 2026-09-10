@@ -106,6 +106,19 @@ export const EventUpdateEmail = ({
         </Text>
       ))}
 
+      {gallery.length ? (
+        <Section style={{ margin: '4px 0 18px' }}>
+          {gallery.map((g, i) => (
+            <Section key={i} style={{ margin: '0 0 14px', lineHeight: 0 }}>
+              <Img src={g.url} alt={g.caption ?? eventName} width="600" style={bannerImg} />
+              {g.caption ? (
+                <Text style={{ ...meta, margin: '6px 0 0', textAlign: 'center' as const }}>{g.caption}</Text>
+              ) : null}
+            </Section>
+          ))}
+        </Section>
+      ) : null}
+
       {cta ? (
         <Button style={button} href={cta}>
           {ctaText}
