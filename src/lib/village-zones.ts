@@ -148,6 +148,104 @@ export function zoneSizeM(z: VillageZone): { w: number; h: number } {
   return { w: Math.max(...es) - Math.min(...es), h: Math.max(...ns) - Math.min(...ns) };
 }
 
+/**
+ * True size of the shape measured along its own sides, not north/south and
+ * east/west. A 6m × 40m start chute lying at an angle has a north-south /
+ * east-west box of roughly 25m × 38m — the box is not the chute. This finds the
+ * tightest rectangle that wraps the outline (rotating callipers, brute-forced
+ * over each edge direction) and returns the real across × along measurements
+ * plus the bearing the shape is lying at (degrees clockwise from north).
+ */
+export function zoneTrueSizeM(z: VillageZone): { across: number; along: number; bearingDeg: number } {
+  const pts = ringPoints(z);
+  if (pts.length < 3) {
+    const s = zoneSizeM(z);
+    return { across: Math.min(s.w, s.h), along: Math.max(s.w, s.h), bearingDeg: 0 };
+  }
+  const ref = pts[0];
+  const M = pts.map((p) => toMetres(ref, p));
+  let best: { across: number; along: number; angle: number } | null = null;
+  for (let i = 0; i < M.length; i++) {
+    const a = M[i];
+    const b = M[(i + 1) % M.length];
+    const len = Math.hypot(b.e - a.e, b.n - a.n);
+    if (len < 1e-6) continue;
+    const ux = (b.e - a.e) / len;
+    const uy = (b.n - a.n) / len;
+    let minU = Infinity, maxU = -Infinity, minV = Infinity, maxV = -Infinity;
+    for (const p of M) {
+      const u = p.e * ux + p.n * uy;
+      const v = -p.e * uy + p.n * ux;
+      if (u < minU) minU = u;
+      if (u > maxU) maxU = u;
+      if (v < minV) minV = v;
+      if (v > maxV) maxV = v;
+    }
+    const w = maxU - minU;
+    const h = maxV - minV;
+    if (!best || w * h < best.across * best.along) {
+      const along = Math.max(w, h);
+      const across = Math.min(w, h);
+      // angle of the long side, measured clockwise from north
+      const longIsU = w >= h;
+      const dirE = longIsU ? ux : -uy;
+      const dirN = longIsU ? uy : ux;
+      best = { across, along, angle: (Math.atan2(dirE, dirN) * 180) / Math.PI };
+    }
+  }
+  if (!best) {
+    const s = zoneSizeM(z);
+    return { across: Math.min(s.w, s.h), along: Math.max(s.w, s.h), bearingDeg: 0 };
+  }
+  const bearing = ((best.angle % 180) + 180) % 180;
+  return { across: best.across, along: best.along, bearingDeg: bearing };
+}
+
+/** Outline points with a duplicated closing point dropped. */
+function ringPoints(z: VillageZone): ZonePoint[] {
+  const pts = z.points.slice();
+  const first = pts[0];
+  const last = pts[pts.length - 1];
+  if (pts.length > 2 && first && last && first.lat === last.lat && first.lng === last.lng) pts.pop();
+  return pts;
+}
+
+/** Length of every side, in drawing order — for checking a shape side by side. */
+export function zoneEdgeLengthsM(z: VillageZone): number[] {
+  const pts = ringPoints(z);
+  if (pts.length < 2) return [];
+  return pts.map((p, i) => distanceM(p, pts[(i + 1) % pts.length]));
+}
+
+/**
+ * Rescales a shape along its own sides so its true across × along measurements
+ * match, keeping the angle it is lying at. Use this rather than resizeZone
+ * whenever a real-world width matters.
+ */
+export function resizeZoneTrue(z: VillageZone, acrossM: number, alongM: number): VillageZone {
+  const c = zoneCentroid(z);
+  const cur = zoneTrueSizeM(z);
+  if (!c || cur.across <= 0 || cur.along <= 0) return z;
+  const rad = (cur.bearingDeg * Math.PI) / 180; // clockwise from north
+  // unit vector along the long axis, in east/north metres
+  const ae = Math.sin(rad);
+  const an = Math.cos(rad);
+  const sAlong = alongM / cur.along;
+  const sAcross = acrossM / cur.across;
+  return {
+    ...z,
+    points: z.points.map((p) => {
+      const { e, n } = toMetres(c, p);
+      const along = e * ae + n * an;
+      const across = -e * an + n * ae;
+      const a2 = along * sAlong;
+      const c2 = across * sAcross;
+      return fromMetres(c, a2 * ae - c2 * an, a2 * an + c2 * ae);
+    }),
+  };
+}
+
+
 export function formatArea(m2: number): string {
   if (m2 >= 10000) return `${(m2 / 10000).toFixed(2)} ha (${Math.round(m2).toLocaleString()} m²)`;
   return `${Math.round(m2).toLocaleString()} m²`;
