@@ -1029,6 +1029,7 @@ export type Database = {
       event_email_steps: {
         Row: {
           banner_url: string | null
+          blocks: Json | null
           body: string
           campaign_id: string
           created_at: string
@@ -1045,6 +1046,7 @@ export type Database = {
         }
         Insert: {
           banner_url?: string | null
+          blocks?: Json | null
           body?: string
           campaign_id: string
           created_at?: string
@@ -1061,6 +1063,7 @@ export type Database = {
         }
         Update: {
           banner_url?: string | null
+          blocks?: Json | null
           body?: string
           campaign_id?: string
           created_at?: string

@@ -1,0 +1,1 @@
+ALTER TABLE public.event_email_steps ADD COLUMN IF NOT EXISTS blocks jsonb;
