@@ -24,7 +24,8 @@ import {
   zoneCentroid,
   zoneColor,
   zonePerimeterM,
-  zoneSizeM,
+  zoneTrueSizeM,
+  zoneEdgeLengthsM,
   ZONE_KINDS,
   type VillageZone,
   type ZoneKind,
@@ -1128,8 +1129,9 @@ export default function VillageMapEditorGeo({
             <p className="text-[11px] font-semibold text-ink-soft">
 
               {(() => {
-                const s = zoneSizeM(activeZone);
-                return `${Math.round(s.w)}m × ${Math.round(s.h)}m · ${formatArea(zoneAreaM2(activeZone))} · ${formatLength(zonePerimeterM(activeZone))} perimeter · drag anywhere inside the area (or ✥) to move the whole thing, white dots reshape, tap + to add a corner, tap a dot to remove it`;
+                const s = zoneTrueSizeM(activeZone);
+                const sides = zoneEdgeLengthsM(activeZone).map((m) => `${m < 10 ? m.toFixed(1) : Math.round(m)}m`).join(" · ");
+                return `${Math.round(s.across)}m across × ${Math.round(s.along)}m long · sides ${sides} · ${formatArea(zoneAreaM2(activeZone))} · ${formatLength(zonePerimeterM(activeZone))} perimeter · drag anywhere inside the area (or ✥) to move the whole thing, white dots reshape, tap + to add a corner, tap a dot to remove it`;
               })()}
             </p>
             <button

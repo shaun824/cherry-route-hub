@@ -33,10 +33,13 @@ import {
   overlappingZoneIds,
   rectangleZone,
   resizeZone,
+  resizeZoneTrue,
   zoneAreaM2,
   zoneColor,
+  zoneEdgeLengthsM,
   zonePerimeterM,
   zoneSizeM,
+  zoneTrueSizeM,
   nextZoneName,
   pointInZone,
   translateZone,
@@ -1369,7 +1372,8 @@ function VillageEditor() {
             </p>
           ) : null}
           {zones.map((z) => {
-            const size = zoneSizeM(z);
+            const size = zoneTrueSizeM(z);
+            const edges = zoneEdgeLengthsM(z);
             const clash = overlapping.has(z.id);
             return (
               <div
@@ -1400,31 +1404,32 @@ function VillageEditor() {
                 </div>
                 <div className="mt-2 grid gap-2 sm:grid-cols-3">
                   <label className="text-xs font-semibold text-ink-soft">
-                    Width (m)
+                    Width across (m)
                     <input
                       type="number"
                       step="0.5"
-                      value={Math.round(size.w * 10) / 10}
+                      value={Math.round(size.across * 10) / 10}
                       onChange={(e) => {
                         const w = Number(e.target.value);
-                        if (w > 0) updateZone(z.id, resizeZone(z, w, size.h));
+                        if (w > 0) updateZone(z.id, resizeZoneTrue(z, w, size.along));
                       }}
                       className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
                     />
                   </label>
                   <label className="text-xs font-semibold text-ink-soft">
-                    Length (m)
+                    Length along (m)
                     <input
                       type="number"
                       step="0.5"
-                      value={Math.round(size.h * 10) / 10}
+                      value={Math.round(size.along * 10) / 10}
                       onChange={(e) => {
                         const h = Number(e.target.value);
-                        if (h > 0) updateZone(z.id, resizeZone(z, size.w, h));
+                        if (h > 0) updateZone(z.id, resizeZoneTrue(z, size.across, h));
                       }}
                       className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
                     />
                   </label>
+
                   <div className="flex flex-wrap items-end gap-1">
                     {ZONE_COLORS.map((c) => (
                       <button
@@ -1450,6 +1455,10 @@ function VillageEditor() {
                   {formatArea(zoneAreaM2(z))} · {z.points.length} corners · {formatLength(zonePerimeterM(z))} perimeter
                   {clash ? " · overlaps another area" : ""}
                 </p>
+                <p className="mt-1 text-[11px] text-ink-soft">
+                  Measured along the sides: {edges.map((m) => `${m < 10 ? m.toFixed(1) : Math.round(m)}m`).join(" · ")}
+                </p>
+
                 <div className="mt-3 rounded-xl bg-muted/50 p-3">
                   <p className="text-[10px] font-bold uppercase tracking-widest text-ink-soft">
                     Crew-only build detail

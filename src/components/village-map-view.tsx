@@ -25,7 +25,7 @@ import {
   zoneAreaM2,
   zoneColor,
   zoneKindLabel,
-  zoneSizeM,
+  zoneTrueSizeM,
 } from "@/lib/village-zones";
 
 import { fetchVillageTents } from "@/lib/village-tents";
@@ -670,8 +670,8 @@ export function VillageMapView({
               </p>
               <p className="mt-1 text-xs text-ink-soft">
                 {(() => {
-                  const s = zoneSizeM(zoneDetail);
-                  return `${Math.round(s.w)}m × ${Math.round(s.h)}m · ${formatArea(zoneAreaM2(zoneDetail))}`;
+                  const s = zoneTrueSizeM(zoneDetail);
+                  return `${Math.round(s.across)}m × ${Math.round(s.along)}m · ${formatArea(zoneAreaM2(zoneDetail))}`;
                 })()}
               </p>
               {zoneDetail.spec ? (
@@ -718,7 +718,7 @@ export function VillageMapView({
                   {buildZones
                     .filter((z) => zoneKindLabel(z.kind) === kindLabel)
                     .map((z) => {
-                      const s = zoneSizeM(z);
+                      const s = zoneTrueSizeM(z);
                       return (
                         <li key={z.id}>
                           <button
@@ -728,7 +728,7 @@ export function VillageMapView({
                             <span className="flex items-baseline justify-between gap-3">
                               <span className="text-sm font-semibold text-ink">{z.name}</span>
                               <span className="shrink-0 text-[11px] font-semibold text-ink-soft">
-                                {Math.round(s.w)}m × {Math.round(s.h)}m
+                                {Math.round(s.across)}m × {Math.round(s.along)}m
                               </span>
                             </span>
                             {z.spec ? (
