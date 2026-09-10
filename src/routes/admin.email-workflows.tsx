@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Mail, Play, Pause, Plus, Send, Trash2, Clock } from "lucide-react";
@@ -526,17 +526,28 @@ function StepEditor({
     return (
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="min-w-0">
-          <p className="truncate text-sm font-semibold">
+          <Link
+            to="/admin/email-builder/$stepId"
+            params={{ stepId: step.id }}
+            className="block truncate text-sm font-semibold hover:underline"
+          >
             {index}. {step.subject}
-          </p>
+          </Link>
           <p className="flex items-center gap-1 text-xs text-ink-soft">
             <Clock className="h-3 w-3" /> {delayLabel(step.delay_hours)} · {step.sent ?? 0} sent
             {step.failed ? ` · ${step.failed} failed` : ""}
           </p>
         </div>
         <div className="flex gap-2">
+          <Link
+            to="/admin/email-builder/$stepId"
+            params={{ stepId: step.id }}
+            className="rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground"
+          >
+            Open builder
+          </Link>
           <button onClick={() => setOpen(true)} className="rounded-lg border border-border px-3 py-1.5 text-xs font-semibold">
-            Edit
+            Quick edit
           </button>
           {onTest ? (
             <button
