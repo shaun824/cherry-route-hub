@@ -1452,6 +1452,10 @@ function VillageEditor() {
                   {formatArea(zoneAreaM2(z))} · {z.points.length} corners · {formatLength(zonePerimeterM(z))} perimeter
                   {clash ? " · overlaps another area" : ""}
                 </p>
+                <p className="mt-1 text-[11px] text-ink-soft">
+                  Measured along the sides: {edges.map((m) => `${m < 10 ? m.toFixed(1) : Math.round(m)}m`).join(" · ")}
+                </p>
+
                 <div className="mt-3 rounded-xl bg-muted/50 p-3">
                   <p className="text-[10px] font-bold uppercase tracking-widest text-ink-soft">
                     Crew-only build detail
