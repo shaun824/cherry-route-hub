@@ -309,3 +309,96 @@ export const runEmailWorkflowsNow = createServerFn({ method: "POST" })
       limit: 200,
     });
   });
+
+/** One email plus its event, for the visual builder. */
+export const getWorkflowStep = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { stepId: string }) => input)
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context as any);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: step, error } = await supabaseAdmin
+      .from("event_email_steps")
+      .select(
+        "id, campaign_id, position, subject, heading, body, blocks, cta_label, cta_url, banner_url, image_urls, delay_hours, enabled, event_email_campaigns(id, name, status, anchor, event_id, events(id, name, event_date, location, logo_url, cover_url))",
+      )
+      .eq("id", data.stepId)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    if (!step) throw new Error("Email not found");
+    const campaign = (step as any).event_email_campaigns;
+    return {
+      step: {
+        id: (step as any).id as string,
+        campaignId: (step as any).campaign_id as string,
+        position: (step as any).position as number,
+        subject: ((step as any).subject ?? "") as string,
+        heading: ((step as any).heading ?? "") as string,
+        body: ((step as any).body ?? "") as string,
+        blocks: normaliseBlocks((step as any).blocks),
+        ctaLabel: ((step as any).cta_label ?? "") as string,
+        ctaUrl: ((step as any).cta_url ?? "") as string,
+        bannerUrl: ((step as any).banner_url ?? "") as string,
+        imageUrls: (Array.isArray((step as any).image_urls) ? (step as any).image_urls : []) as string[],
+        delayHours: Number((step as any).delay_hours ?? 24),
+        enabled: !!(step as any).enabled,
+      },
+      campaign: campaign
+        ? { id: campaign.id as string, name: campaign.name as string, status: campaign.status as string, anchor: campaign.anchor as string }
+        : null,
+      event: campaign?.events ?? null,
+    };
+  });
+
+/** Renders exactly what the rider will receive, as HTML, for the live preview. */
+export const renderWorkflowStepPreview = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(
+    (input: {
+      eventId: string;
+      subject: string;
+      heading?: string | null;
+      bannerUrl?: string | null;
+      blocks?: unknown;
+      body?: string | null;
+      ctaLabel?: string | null;
+      ctaUrl?: string | null;
+    }) => input,
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context as any);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { render } = await import("@react-email/render");
+    const React = (await import("react")).default;
+    const { EventUpdateEmail } = await import("./email-templates/event-update");
+    const { absoluteLogo } = await import("./entry-welcome.server");
+
+    const { data: event } = await supabaseAdmin
+      .from("events")
+      .select("id, name, event_date, location, logo_url, cover_url")
+      .eq("id", data.eventId)
+      .maybeSingle();
+
+    const ev = (event ?? {}) as any;
+    const html = await render(
+      React.createElement(EventUpdateEmail, {
+        firstName: "Shaun",
+        eventName: ev.name ?? "Your event",
+        eventDate: ev.event_date
+          ? new Date(ev.event_date).toLocaleDateString("en-ZA", { weekday: "short", day: "numeric", month: "long", year: "numeric" })
+          : null,
+        venue: ev.location ?? null,
+        eventCoverUrl: absoluteLogo(ev.cover_url),
+        eventLogoUrl: absoluteLogo(ev.logo_url),
+        bannerUrl: absoluteLogo(data.bannerUrl ?? null),
+        blocks: normaliseBlocks(data.blocks),
+        heading: data.heading || data.subject,
+        subject: data.subject,
+        body: data.body ?? "",
+        ctaLabel: data.ctaLabel ?? null,
+        ctaUrl: data.ctaUrl ?? null,
+        eventUrl: `https://riderapp.redcherryevents.co.za/my-events/${ev.id ?? ""}`,
+      } as any),
+    );
+    return { html };
+  });
