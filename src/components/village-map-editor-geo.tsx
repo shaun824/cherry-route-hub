@@ -774,6 +774,7 @@ export default function VillageMapEditorGeo({
                 >
                   {showLabels || active ? (
                     <Tooltip
+                      key={labelKey}
                       direction="center"
                       permanent
                       interactive={false}
