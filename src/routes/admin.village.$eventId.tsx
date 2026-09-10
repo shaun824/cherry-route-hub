@@ -1401,31 +1401,32 @@ function VillageEditor() {
                 </div>
                 <div className="mt-2 grid gap-2 sm:grid-cols-3">
                   <label className="text-xs font-semibold text-ink-soft">
-                    Width (m)
+                    Width across (m)
                     <input
                       type="number"
                       step="0.5"
-                      value={Math.round(size.w * 10) / 10}
+                      value={Math.round(size.across * 10) / 10}
                       onChange={(e) => {
                         const w = Number(e.target.value);
-                        if (w > 0) updateZone(z.id, resizeZone(z, w, size.h));
+                        if (w > 0) updateZone(z.id, resizeZoneTrue(z, w, size.along));
                       }}
                       className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
                     />
                   </label>
                   <label className="text-xs font-semibold text-ink-soft">
-                    Length (m)
+                    Length along (m)
                     <input
                       type="number"
                       step="0.5"
-                      value={Math.round(size.h * 10) / 10}
+                      value={Math.round(size.along * 10) / 10}
                       onChange={(e) => {
                         const h = Number(e.target.value);
-                        if (h > 0) updateZone(z.id, resizeZone(z, size.w, h));
+                        if (h > 0) updateZone(z.id, resizeZoneTrue(z, size.across, h));
                       }}
                       className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
                     />
                   </label>
+
                   <div className="flex flex-wrap items-end gap-1">
                     {ZONE_COLORS.map((c) => (
                       <button
