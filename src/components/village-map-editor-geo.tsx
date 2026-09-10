@@ -19,6 +19,7 @@ import {
   formatArea,
   formatLength,
   moveZone,
+  pointInZone,
   zoneAreaM2,
   zoneCentroid,
   zoneColor,
@@ -396,6 +397,112 @@ export default function VillageMapEditorGeo({
     }
   }
 
+  // ---- Pick up and move a whole area -------------------------------------
+  // Dragging anywhere on an area's fill moves the entire outline (and, when
+  // "Move contents" is on, every pin and tent standing inside it) instead of
+  // forcing corner-by-corner edits.
+  const [moveContents, setMoveContents] = useState(true);
+  const moveContentsRef = useRef(moveContents);
+  moveContentsRef.current = moveContents;
+
+  const handleContents = useRef<
+    | null
+    | { tents: { id: string; lat: number; lng: number }[]; spots: { id: string; lat: number; lng: number }[] }
+  >(null);
+
+  const zoneDrag = useRef<
+    | null
+    | {
+        id: string;
+        map: L.Map;
+        start: { lat: number; lng: number };
+        points: ZonePoint[];
+        tents: { id: string; lat: number; lng: number }[];
+        spots: { id: string; lat: number; lng: number }[];
+        moved: boolean;
+      }
+  >(null);
+
+  function zoneDragMove(e: L.LeafletMouseEvent) {
+    const d = zoneDrag.current;
+    if (!d) return;
+    const dLat = e.latlng.lat - d.start.lat;
+    const dLng = e.latlng.lng - d.start.lng;
+    if (Math.abs(dLat) > 1e-8 || Math.abs(dLng) > 1e-8) d.moved = true;
+    paint(
+      d.id,
+      d.points.map((p) => ({ lat: +(p.lat + dLat).toFixed(7), lng: +(p.lng + dLng).toFixed(7) })),
+    );
+  }
+
+  function zoneDragEnd(e?: L.LeafletMouseEvent) {
+    const d = zoneDrag.current;
+    if (!d) return;
+    zoneDrag.current = null;
+    d.map.off("mousemove", zoneDragMove);
+    d.map.off("mouseup", zoneDragEnd);
+    window.removeEventListener("mouseup", windowZoneDragEnd);
+    d.map.dragging.enable();
+    if (!d.moved) {
+      setLive(null);
+      return;
+    }
+    const end = e?.latlng;
+    const painted = pending.current?.id === d.id ? pending.current.points : null;
+    const dLat = end ? end.lat - d.start.lat : painted ? painted[0].lat - d.points[0].lat : 0;
+    const dLng = end ? end.lng - d.start.lng : painted ? painted[0].lng - d.points[0].lng : 0;
+    paint(
+      d.id,
+      d.points.map((p) => ({ lat: +(p.lat + dLat).toFixed(7), lng: +(p.lng + dLng).toFixed(7) })),
+    );
+    commit(d.id);
+    if (moveContentsRef.current) {
+      for (const t of d.tents) onMoveTent?.(t.id, +(t.lat + dLat).toFixed(7), +(t.lng + dLng).toFixed(7));
+      for (const s of d.spots) onMove(s.id, +(s.lat + dLat).toFixed(6), +(s.lng + dLng).toFixed(6));
+    }
+  }
+
+  function windowZoneDragEnd() {
+    zoneDragEnd();
+  }
+
+  /** Everything standing inside an area right now, captured before it moves. */
+  function zoneContents(z: VillageZone) {
+    return {
+      tents: tents
+        .filter((t) => pointInZone({ lat: t.lat, lng: t.lng }, z))
+        .map((t) => ({ id: t.id, lat: t.lat, lng: t.lng })),
+      spots: hotspots
+        .filter(
+          (s) =>
+            Number.isFinite(s.lat) &&
+            Number.isFinite(s.lng) &&
+            pointInZone({ lat: s.lat as number, lng: s.lng as number }, z),
+        )
+        .map((s) => ({ id: s.id, lat: s.lat as number, lng: s.lng as number })),
+    };
+  }
+
+  function beginZoneDrag(z: VillageZone, e: L.LeafletMouseEvent) {
+    const map = (e.target as unknown as { _map?: L.Map })._map;
+    if (!map || zoneDrag.current) return;
+    const inside = zoneContents(z);
+    zoneDrag.current = {
+      id: z.id,
+      map,
+      start: { lat: e.latlng.lat, lng: e.latlng.lng },
+      points: z.points.map((p) => ({ ...p })),
+      tents: inside.tents,
+      spots: inside.spots,
+      moved: false,
+    };
+    map.dragging.disable();
+    map.on("mousemove", zoneDragMove);
+    map.on("mouseup", zoneDragEnd);
+    window.addEventListener("mouseup", windowZoneDragEnd);
+    L.DomEvent.stop(e as unknown as Event);
+  }
+
   useEffect(() => () => {
     if (frame.current != null) cancelAnimationFrame(frame.current);
     if (tentFrame.current != null) cancelAnimationFrame(tentFrame.current);
@@ -651,6 +758,11 @@ export default function VillageMapEditorGeo({
                       onSelectZone(z.id);
 
                     },
+                    mousedown: (e) => {
+                      if (locked) return;
+                      onSelectZone(z.id);
+                      beginZoneDrag(z, e as L.LeafletMouseEvent);
+                    },
                   }}
                 >
                   {showLabels || active ? (
@@ -684,6 +796,10 @@ export default function VillageMapEditorGeo({
                         L.DomEvent.stopPropagation(e as unknown as Event);
                         onSelectZone(z.id);
                       },
+                      mousedown: (e) => {
+                        onSelectZone(z.id);
+                        beginZoneDrag(z, e as L.LeafletMouseEvent);
+                      },
                     }}
                   />
                 ) : null}
@@ -702,11 +818,27 @@ export default function VillageMapEditorGeo({
                       zIndexOffset={2000}
                       draggable
                       eventHandlers={{
+                        dragstart: () => {
+                          handleContents.current = zoneContents(z);
+                        },
                         drag: (e) => {
                           const ll = trueMarkerLatLng(e.target as L.Marker);
                           paint(z.id, moveZone(z, { lat: ll.lat, lng: ll.lng }).points);
                         },
-                        dragend: () => commit(z.id),
+                        dragend: () => {
+                          const before = z.points[0];
+                          const after = pending.current?.id === z.id ? pending.current.points[0] : null;
+                          commit(z.id);
+                          const carried = handleContents.current;
+                          handleContents.current = null;
+                          if (!after || !carried || !moveContentsRef.current) return;
+                          const dLat = after.lat - before.lat;
+                          const dLng = after.lng - before.lng;
+                          for (const t of carried.tents)
+                            onMoveTent?.(t.id, +(t.lat + dLat).toFixed(7), +(t.lng + dLng).toFixed(7));
+                          for (const s of carried.spots)
+                            onMove(s.id, +(s.lat + dLat).toFixed(6), +(s.lng + dLng).toFixed(6));
+                        },
                       }}
                     />
                     {z.points.map((p, i) => (
@@ -979,9 +1111,20 @@ export default function VillageMapEditorGeo({
 
               {(() => {
                 const s = zoneSizeM(activeZone);
-                return `${Math.round(s.w)}m × ${Math.round(s.h)}m · ${formatArea(zoneAreaM2(activeZone))} · ${formatLength(zonePerimeterM(activeZone))} perimeter · drag ✥ to move, white dots reshape, tap + to add a corner, tap a dot to remove it`;
+                return `${Math.round(s.w)}m × ${Math.round(s.h)}m · ${formatArea(zoneAreaM2(activeZone))} · ${formatLength(zonePerimeterM(activeZone))} perimeter · drag anywhere inside the area (or ✥) to move the whole thing, white dots reshape, tap + to add a corner, tap a dot to remove it`;
               })()}
             </p>
+            <button
+              type="button"
+              onClick={() => setMoveContents((v) => !v)}
+              className={`w-full rounded-lg px-2 py-1.5 text-[11px] font-bold ${
+                moveContents ? "cherry-gradient text-white" : "bg-muted text-ink-soft"
+              }`}
+            >
+              {moveContents
+                ? "Moving the area takes its pins & tents with it"
+                : "Moving the area leaves pins & tents behind"}
+            </button>
             <div className="flex items-center gap-1.5">
               <span className="text-[10px] font-bold uppercase tracking-widest text-ink-soft">
                 Show on
