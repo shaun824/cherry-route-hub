@@ -24,7 +24,6 @@ import {
   zoneCentroid,
   zoneColor,
   zonePerimeterM,
-  zoneSizeM,
   zoneTrueSizeM,
   zoneEdgeLengthsM,
   ZONE_KINDS,
