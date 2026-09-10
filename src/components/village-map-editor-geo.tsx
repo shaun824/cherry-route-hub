@@ -727,7 +727,7 @@ export default function VillageMapEditorGeo({
             // when it is (re)bound — so key it on the live centre, otherwise a
             // moved area leaves its name behind at the old position.
             const labelC = zoneCentroid({ ...z, points: pts });
-            const labelKey = `${labelC.lat.toFixed(6)},${labelC.lng.toFixed(6)}`;
+            const labelKey = labelC ? `${labelC.lat.toFixed(6)},${labelC.lng.toFixed(6)}` : z.id;
 
             return (
               <Fragment key={z.id}>
