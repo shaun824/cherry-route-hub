@@ -1122,6 +1122,7 @@ function VillageEditor() {
           <Suspense fallback={<div className="h-[65vh] min-h-[360px] animate-pulse rounded-2xl bg-muted" />}>
             <VillageMapEditorGeo
               defaultBearing={map.geo?.bearing ?? 0}
+              onSaveBearing={(b) => patchGeo({ bearing: b })}
               centre={centre}
               centreToken={centreToken}
               hotspots={layerSpots(map.hotspots)}
