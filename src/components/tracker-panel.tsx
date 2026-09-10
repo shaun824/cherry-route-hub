@@ -208,6 +208,7 @@ export function TrackerPanel({
       navigator.geolocation.clearWatch(watchIdRef.current);
       watchIdRef.current = null;
     }
+    firstFlushRef.current = false;
     void flush(); // push the remaining buffer out
   }, [flush]);
 
