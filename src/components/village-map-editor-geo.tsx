@@ -405,6 +405,11 @@ export default function VillageMapEditorGeo({
   const moveContentsRef = useRef(moveContents);
   moveContentsRef.current = moveContents;
 
+  const handleContents = useRef<
+    | null
+    | { tents: { id: string; lat: number; lng: number }[]; spots: { id: string; lat: number; lng: number }[] }
+  >(null);
+
   const zoneDrag = useRef<
     | null
     | {
