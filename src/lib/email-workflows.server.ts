@@ -3,6 +3,7 @@
 // one. An hourly job sends whatever is due, one email per address per step.
 import { EmailAPIError } from "@lovable.dev/email-js";
 
+import { normaliseBlocks } from "./email-blocks";
 import { sendTemplateEmail } from "./email-templates/send-email";
 import { absoluteLogo } from "./entry-welcome.server";
 
@@ -114,6 +115,7 @@ export async function sendWorkflowEmail(
       images: (Array.isArray(step.image_urls) ? step.image_urls : []).filter((u: string) =>
         /^https:\/\//i.test(String(u ?? "")),
       ),
+      blocks: normaliseBlocks((step as any).blocks),
       heading: step.heading || step.subject,
       subject: step.subject,
       body: step.body ?? "",

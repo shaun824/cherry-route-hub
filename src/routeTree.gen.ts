@@ -81,6 +81,7 @@ import { Route as CrewDepartmentDeptIdRouteImport } from './routes/crew.departme
 import { Route as AdminVillageEventIdRouteImport } from './routes/admin.village.$eventId'
 import { Route as AdminRiderUserIdRouteImport } from './routes/admin.rider.$userId'
 import { Route as AdminEventInfoEventIdRouteImport } from './routes/admin.event-info.$eventId'
+import { Route as AdminEmailBuilderStepIdRouteImport } from './routes/admin.email-builder.$stepId'
 import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
 import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
 import { Route as SpectateEventIdRiderEntrantIdRouteImport } from './routes/spectate_.$eventId_.rider.$entrantId'
@@ -473,6 +474,11 @@ const AdminEventInfoEventIdRoute = AdminEventInfoEventIdRouteImport.update({
   path: '/event-info/$eventId',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminEmailBuilderStepIdRoute = AdminEmailBuilderStepIdRouteImport.update({
+  id: '/email-builder/$stepId',
+  path: '/email-builder/$stepId',
+  getParentRoute: () => AdminRoute,
+} as any)
 const Char91DotmcpChar93InvokeToolToolRoute =
   Char91DotmcpChar93InvokeToolToolRouteImport.update({
     id: '/.mcp/invoke-tool/$tool',
@@ -699,6 +705,7 @@ export interface FileRoutesByFullPath {
   '/spectate/': typeof SpectateIndexRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
+  '/admin/email-builder/$stepId': typeof AdminEmailBuilderStepIdRoute
   '/admin/event-info/$eventId': typeof AdminEventInfoEventIdRoute
   '/admin/rider/$userId': typeof AdminRiderUserIdRoute
   '/admin/village/$eventId': typeof AdminVillageEventIdRoute
@@ -798,6 +805,7 @@ export interface FileRoutesByTo {
   '/spectate': typeof SpectateIndexRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
+  '/admin/email-builder/$stepId': typeof AdminEmailBuilderStepIdRoute
   '/admin/event-info/$eventId': typeof AdminEventInfoEventIdRoute
   '/admin/rider/$userId': typeof AdminRiderUserIdRoute
   '/admin/village/$eventId': typeof AdminVillageEventIdRoute
@@ -902,6 +910,7 @@ export interface FileRoutesById {
   '/spectate/': typeof SpectateIndexRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
+  '/admin/email-builder/$stepId': typeof AdminEmailBuilderStepIdRoute
   '/admin/event-info/$eventId': typeof AdminEventInfoEventIdRoute
   '/admin/rider/$userId': typeof AdminRiderUserIdRoute
   '/admin/village/$eventId': typeof AdminVillageEventIdRoute
@@ -1007,6 +1016,7 @@ export interface FileRouteTypes {
     | '/spectate/'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
+    | '/admin/email-builder/$stepId'
     | '/admin/event-info/$eventId'
     | '/admin/rider/$userId'
     | '/admin/village/$eventId'
@@ -1106,6 +1116,7 @@ export interface FileRouteTypes {
     | '/spectate'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
+    | '/admin/email-builder/$stepId'
     | '/admin/event-info/$eventId'
     | '/admin/rider/$userId'
     | '/admin/village/$eventId'
@@ -1209,6 +1220,7 @@ export interface FileRouteTypes {
     | '/spectate/'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
+    | '/admin/email-builder/$stepId'
     | '/admin/event-info/$eventId'
     | '/admin/rider/$userId'
     | '/admin/village/$eventId'
@@ -1819,6 +1831,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminEventInfoEventIdRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/email-builder/$stepId': {
+      id: '/admin/email-builder/$stepId'
+      path: '/email-builder/$stepId'
+      fullPath: '/admin/email-builder/$stepId'
+      preLoaderRoute: typeof AdminEmailBuilderStepIdRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/.mcp/invoke-tool/$tool': {
       id: '/.mcp/invoke-tool/$tool'
       path: '/.mcp/invoke-tool/$tool'
@@ -2068,6 +2087,7 @@ interface AdminRouteChildren {
   AdminSponsorsRoute: typeof AdminSponsorsRoute
   AdminTrackingRoute: typeof AdminTrackingRoute
   AdminIndexRoute: typeof AdminIndexRoute
+  AdminEmailBuilderStepIdRoute: typeof AdminEmailBuilderStepIdRoute
   AdminEventInfoEventIdRoute: typeof AdminEventInfoEventIdRoute
   AdminRiderUserIdRoute: typeof AdminRiderUserIdRoute
   AdminVillageEventIdRoute: typeof AdminVillageEventIdRoute
@@ -2106,6 +2126,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminSponsorsRoute: AdminSponsorsRoute,
   AdminTrackingRoute: AdminTrackingRoute,
   AdminIndexRoute: AdminIndexRoute,
+  AdminEmailBuilderStepIdRoute: AdminEmailBuilderStepIdRoute,
   AdminEventInfoEventIdRoute: AdminEventInfoEventIdRoute,
   AdminRiderUserIdRoute: AdminRiderUserIdRoute,
   AdminVillageEventIdRoute: AdminVillageEventIdRoute,

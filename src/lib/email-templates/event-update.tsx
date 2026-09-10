@@ -2,6 +2,8 @@ import * as React from 'react'
 
 import { Button, Heading, Img, Link, Section, Text } from '@react-email/components'
 
+import { EmailBlockView } from './blocks'
+import type { EmailBlock } from '../email-blocks'
 import type { TemplateEntry } from './registry'
 import { EmailShell, brand, button, h1, link, text } from './theme'
 
@@ -10,6 +12,8 @@ export interface EventUpdateProps {
   eventName: string
   /** Plain text body — blank lines become paragraphs. */
   body: string
+  /** Visually built layout. When present it replaces body/images/CTA. */
+  blocks?: EmailBlock[] | null
   heading?: string | null
   subject?: string
   ctaLabel?: string | null
@@ -57,6 +61,7 @@ export const EventUpdateEmail = ({
   firstName,
   eventName,
   body,
+  blocks,
   heading,
   ctaLabel,
   ctaUrl,
@@ -76,6 +81,7 @@ export const EventUpdateEmail = ({
     .map((i) => (typeof i === 'string' ? { url: i, caption: null } : i))
     .filter((i) => /^https:\/\//i.test(String(i?.url ?? '')))
   const cta = ctaUrl || eventUrl
+  const built = (blocks ?? []).filter(Boolean)
   const ctaText = ctaLabel || 'Open your event page'
 
   return (
@@ -95,7 +101,9 @@ export const EventUpdateEmail = ({
 
       {firstName ? <Text style={text}>Hi {firstName},</Text> : null}
 
-      {paragraphs.map((p, i) => (
+      {built.length ? built.map((b) => <EmailBlockView key={b.id} block={b} />) : null}
+
+      {built.length ? null : paragraphs.map((p, i) => (
         <Text key={i} style={text}>
           {p.split('\n').map((lineText, li) => (
             <React.Fragment key={li}>
@@ -106,7 +114,7 @@ export const EventUpdateEmail = ({
         </Text>
       ))}
 
-      {gallery.length ? (
+      {built.length ? null : gallery.length ? (
         <Section style={{ margin: '4px 0 18px' }}>
           {gallery.map((g, i) => (
             <Section key={i} style={{ margin: '0 0 14px', lineHeight: 0 }}>
@@ -119,7 +127,7 @@ export const EventUpdateEmail = ({
         </Section>
       ) : null}
 
-      {cta ? (
+      {built.length && !ctaUrl ? null : cta ? (
         <Button style={button} href={cta}>
           {ctaText}
         </Button>
