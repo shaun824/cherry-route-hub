@@ -813,11 +813,27 @@ export default function VillageMapEditorGeo({
                       zIndexOffset={2000}
                       draggable
                       eventHandlers={{
+                        dragstart: () => {
+                          handleContents.current = zoneContents(z);
+                        },
                         drag: (e) => {
                           const ll = trueMarkerLatLng(e.target as L.Marker);
                           paint(z.id, moveZone(z, { lat: ll.lat, lng: ll.lng }).points);
                         },
-                        dragend: () => commit(z.id),
+                        dragend: () => {
+                          const before = z.points[0];
+                          const after = pending.current?.id === z.id ? pending.current.points[0] : null;
+                          commit(z.id);
+                          const carried = handleContents.current;
+                          handleContents.current = null;
+                          if (!after || !carried || !moveContentsRef.current) return;
+                          const dLat = after.lat - before.lat;
+                          const dLng = after.lng - before.lng;
+                          for (const t of carried.tents)
+                            onMoveTent?.(t.id, +(t.lat + dLat).toFixed(7), +(t.lng + dLng).toFixed(7));
+                          for (const s of carried.spots)
+                            onMove(s.id, +(s.lat + dLat).toFixed(6), +(s.lng + dLng).toFixed(6));
+                        },
                       }}
                     />
                     {z.points.map((p, i) => (
