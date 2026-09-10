@@ -71,7 +71,10 @@ export const EventUpdateEmail = ({
   siteUrl = 'https://riderapp.redcherryevents.co.za',
 }: EventUpdateProps) => {
   const paragraphs = bodyParagraphs(body)
-  const banner = eventCoverUrl || eventLogoUrl
+  const banner = bannerUrl || eventCoverUrl || eventLogoUrl
+  const gallery = (images ?? [])
+    .map((i) => (typeof i === 'string' ? { url: i, caption: null } : i))
+    .filter((i) => /^https:\/\//i.test(String(i?.url ?? '')))
   const cta = ctaUrl || eventUrl
   const ctaText = ctaLabel || 'Open your event page'
 
