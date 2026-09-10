@@ -110,6 +110,10 @@ export async function sendWorkflowEmail(
       venue: event.location ?? null,
       eventCoverUrl: absoluteLogo(event.cover_url),
       eventLogoUrl: absoluteLogo(event.logo_url),
+      bannerUrl: absoluteLogo(step.banner_url),
+      images: (Array.isArray(step.image_urls) ? step.image_urls : []).filter((u: string) =>
+        /^https:\/\//i.test(String(u ?? "")),
+      ),
       heading: step.heading || step.subject,
       subject: step.subject,
       body: step.body ?? "",
