@@ -791,6 +791,10 @@ export default function VillageMapEditorGeo({
                         L.DomEvent.stopPropagation(e as unknown as Event);
                         onSelectZone(z.id);
                       },
+                      mousedown: (e) => {
+                        onSelectZone(z.id);
+                        beginZoneDrag(z, e as L.LeafletMouseEvent);
+                      },
                     }}
                   />
                 ) : null}
