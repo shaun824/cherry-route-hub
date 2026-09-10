@@ -17,9 +17,9 @@ import {
 
 type Coords = { lat: number; lng: number; accuracy: number } | null;
 
-const FLUSH_INTERVAL_MS = 15_000;
-// Temporary high-resolution mode: record a point every second.
-const MIN_POINT_GAP_MS = 1_000;
+// Live mode: record and send a position every 3 seconds.
+const FLUSH_INTERVAL_MS = 3_000;
+const MIN_POINT_GAP_MS = 3_000;
 
 function queueKey(eventId: string) {
   return `rce-track-queue-${eventId}`;

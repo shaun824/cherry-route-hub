@@ -24,7 +24,7 @@ const TIER_COLORS: Record<string, string> = {
   Custom: "#e11d48",
 };
 
-const POLL_MS = 1_000;
+const POLL_MS = 3_000;
 const STALE_AFTER_MS = 5 * 60_000;
 
 function markerIcon(stale: boolean) {
@@ -393,7 +393,11 @@ export default function LiveTrackingMapInner({
         markersRef.current.set(r.userId, m);
       }
       bounds.push([r.lat, r.lng]);
-      if (follow === r.userId) map.panTo([r.lat, r.lng]);
+      // Keep the map centred on whoever is being followed or whose pin is open,
+      // so a selected rider stays in view as they move.
+      if (follow === r.userId || selectedId === r.userId) {
+        map.panTo([r.lat, r.lng], { animate: true, duration: 0.5 });
+      }
     }
 
     // Remove markers for riders no longer reporting.
