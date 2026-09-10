@@ -1111,9 +1111,20 @@ export default function VillageMapEditorGeo({
 
               {(() => {
                 const s = zoneSizeM(activeZone);
-                return `${Math.round(s.w)}m × ${Math.round(s.h)}m · ${formatArea(zoneAreaM2(activeZone))} · ${formatLength(zonePerimeterM(activeZone))} perimeter · drag ✥ to move, white dots reshape, tap + to add a corner, tap a dot to remove it`;
+                return `${Math.round(s.w)}m × ${Math.round(s.h)}m · ${formatArea(zoneAreaM2(activeZone))} · ${formatLength(zonePerimeterM(activeZone))} perimeter · drag anywhere inside the area (or ✥) to move the whole thing, white dots reshape, tap + to add a corner, tap a dot to remove it`;
               })()}
             </p>
+            <button
+              type="button"
+              onClick={() => setMoveContents((v) => !v)}
+              className={`w-full rounded-lg px-2 py-1.5 text-[11px] font-bold ${
+                moveContents ? "cherry-gradient text-white" : "bg-muted text-ink-soft"
+              }`}
+            >
+              {moveContents
+                ? "Moving the area takes its pins & tents with it"
+                : "Moving the area leaves pins & tents behind"}
+            </button>
             <div className="flex items-center gap-1.5">
               <span className="text-[10px] font-bold uppercase tracking-widest text-ink-soft">
                 Show on
