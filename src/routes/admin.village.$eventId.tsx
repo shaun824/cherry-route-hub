@@ -1369,7 +1369,8 @@ function VillageEditor() {
             </p>
           ) : null}
           {zones.map((z) => {
-            const size = zoneSizeM(z);
+            const size = zoneTrueSizeM(z);
+            const edges = zoneEdgeLengthsM(z);
             const clash = overlapping.has(z.id);
             return (
               <div
