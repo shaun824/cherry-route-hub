@@ -17,6 +17,10 @@ export interface EventUpdateProps {
   eventUrl?: string | null
   eventCoverUrl?: string | null
   eventLogoUrl?: string | null
+  /** Overrides the event cover at the top of the email. */
+  bannerUrl?: string | null
+  /** Extra pictures (route profiles etc) shown under the body, one per row. */
+  images?: (string | { url: string; caption?: string | null })[] | null
   eventDate?: string | null
   venue?: string | null
   siteName?: string
@@ -59,6 +63,8 @@ export const EventUpdateEmail = ({
   eventUrl,
   eventCoverUrl,
   eventLogoUrl,
+  bannerUrl,
+  images,
   eventDate,
   venue,
   siteName = 'Red Cherry Events',
