@@ -39,7 +39,7 @@ export const listEmailWorkflows = createServerFn({ method: "POST" })
 
     const { data: steps } = await supabaseAdmin
       .from("event_email_steps")
-      .select("id, campaign_id, position, subject, heading, body, cta_label, cta_url, delay_hours, enabled")
+      .select("id, campaign_id, position, subject, heading, body, cta_label, cta_url, banner_url, image_urls, delay_hours, enabled")
       .in("campaign_id", safeIds)
       .order("position", { ascending: true });
 
@@ -193,6 +193,8 @@ export const saveWorkflowStep = createServerFn({ method: "POST" })
       body: string;
       ctaLabel?: string | null;
       ctaUrl?: string | null;
+      bannerUrl?: string | null;
+      imageUrls?: string[] | null;
       delayHours: number;
       position?: number;
       enabled?: boolean;
@@ -209,6 +211,8 @@ export const saveWorkflowStep = createServerFn({ method: "POST" })
       body: data.body ?? "",
       cta_label: data.ctaLabel?.trim() || null,
       cta_url: data.ctaUrl?.trim() || null,
+      banner_url: data.bannerUrl?.trim() || null,
+      image_urls: (data.imageUrls ?? []).map((u) => String(u).trim()).filter(Boolean),
       delay_hours: Math.max(0, Math.round(Number(data.delayHours) || 0)),
       enabled: data.enabled ?? true,
     };
@@ -263,7 +267,7 @@ export const sendWorkflowStepTest = createServerFn({ method: "POST" })
     const { data: step, error } = await supabaseAdmin
       .from("event_email_steps")
       .select(
-        "id, campaign_id, subject, heading, body, cta_label, cta_url, event_email_campaigns(id, event_id, events(id, name, event_date, location, logo_url, cover_url))",
+        "id, campaign_id, subject, heading, body, cta_label, cta_url, banner_url, image_urls, event_email_campaigns(id, event_id, events(id, name, event_date, location, logo_url, cover_url))",
       )
       .eq("id", data.stepId)
       .maybeSingle();

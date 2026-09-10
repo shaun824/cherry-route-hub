@@ -181,7 +181,7 @@ export async function processDueWorkflowEmails(
 
     const { data: stepRows } = await admin
       .from("event_email_steps")
-      .select("id, position, subject, heading, body, cta_label, cta_url, delay_hours, enabled")
+      .select("id, position, subject, heading, body, cta_label, cta_url, banner_url, image_urls, delay_hours, enabled")
       .eq("campaign_id", campaign.id)
       .order("position", { ascending: true });
     const steps = ((stepRows ?? []) as any[]).filter((s) => s.enabled);
