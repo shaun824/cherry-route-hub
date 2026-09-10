@@ -1,5 +1,6 @@
 // Admin API for event email workflows — create a sequence of emails per event,
 // set the delay between them, preview one, and run the queue on demand.
+import { normaliseBlocks } from "@/lib/email-blocks";
 import { visibleInBackend } from "@/lib/event-window";
 import { createServerFn } from "@tanstack/react-start";
 
@@ -39,7 +40,7 @@ export const listEmailWorkflows = createServerFn({ method: "POST" })
 
     const { data: steps } = await supabaseAdmin
       .from("event_email_steps")
-      .select("id, campaign_id, position, subject, heading, body, cta_label, cta_url, banner_url, image_urls, delay_hours, enabled")
+      .select("id, campaign_id, position, subject, heading, body, blocks, cta_label, cta_url, banner_url, image_urls, delay_hours, enabled")
       .in("campaign_id", safeIds)
       .order("position", { ascending: true });
 
@@ -195,6 +196,7 @@ export const saveWorkflowStep = createServerFn({ method: "POST" })
       ctaUrl?: string | null;
       bannerUrl?: string | null;
       imageUrls?: string[] | null;
+      blocks?: unknown;
       delayHours: number;
       position?: number;
       enabled?: boolean;
@@ -213,6 +215,7 @@ export const saveWorkflowStep = createServerFn({ method: "POST" })
       cta_url: data.ctaUrl?.trim() || null,
       banner_url: data.bannerUrl?.trim() || null,
       image_urls: (data.imageUrls ?? []).map((u) => String(u).trim()).filter(Boolean),
+      ...(data.blocks === undefined ? {} : { blocks: normaliseBlocks(data.blocks) }),
       delay_hours: Math.max(0, Math.round(Number(data.delayHours) || 0)),
       enabled: data.enabled ?? true,
     };
@@ -267,7 +270,7 @@ export const sendWorkflowStepTest = createServerFn({ method: "POST" })
     const { data: step, error } = await supabaseAdmin
       .from("event_email_steps")
       .select(
-        "id, campaign_id, subject, heading, body, cta_label, cta_url, banner_url, image_urls, event_email_campaigns(id, event_id, events(id, name, event_date, location, logo_url, cover_url))",
+        "id, campaign_id, subject, heading, body, blocks, cta_label, cta_url, banner_url, image_urls, event_email_campaigns(id, event_id, events(id, name, event_date, location, logo_url, cover_url))",
       )
       .eq("id", data.stepId)
       .maybeSingle();
