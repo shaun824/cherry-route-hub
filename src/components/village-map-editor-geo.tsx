@@ -753,6 +753,11 @@ export default function VillageMapEditorGeo({
                       onSelectZone(z.id);
 
                     },
+                    mousedown: (e) => {
+                      if (locked) return;
+                      onSelectZone(z.id);
+                      beginZoneDrag(z, e as L.LeafletMouseEvent);
+                    },
                   }}
                 >
                   {showLabels || active ? (
