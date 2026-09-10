@@ -110,6 +110,10 @@ export async function sendWorkflowEmail(
       venue: event.location ?? null,
       eventCoverUrl: absoluteLogo(event.cover_url),
       eventLogoUrl: absoluteLogo(event.logo_url),
+      bannerUrl: absoluteLogo(step.banner_url),
+      images: (Array.isArray(step.image_urls) ? step.image_urls : []).filter((u: string) =>
+        /^https:\/\//i.test(String(u ?? "")),
+      ),
       heading: step.heading || step.subject,
       subject: step.subject,
       body: step.body ?? "",
@@ -177,7 +181,7 @@ export async function processDueWorkflowEmails(
 
     const { data: stepRows } = await admin
       .from("event_email_steps")
-      .select("id, position, subject, heading, body, cta_label, cta_url, delay_hours, enabled")
+      .select("id, position, subject, heading, body, cta_label, cta_url, banner_url, image_urls, delay_hours, enabled")
       .eq("campaign_id", campaign.id)
       .order("position", { ascending: true });
     const steps = ((stepRows ?? []) as any[]).filter((s) => s.enabled);

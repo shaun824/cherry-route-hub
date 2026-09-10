@@ -17,6 +17,10 @@ export interface EventUpdateProps {
   eventUrl?: string | null
   eventCoverUrl?: string | null
   eventLogoUrl?: string | null
+  /** Overrides the event cover at the top of the email. */
+  bannerUrl?: string | null
+  /** Extra pictures (route profiles etc) shown under the body, one per row. */
+  images?: (string | { url: string; caption?: string | null })[] | null
   eventDate?: string | null
   venue?: string | null
   siteName?: string
@@ -59,13 +63,18 @@ export const EventUpdateEmail = ({
   eventUrl,
   eventCoverUrl,
   eventLogoUrl,
+  bannerUrl,
+  images,
   eventDate,
   venue,
   siteName = 'Red Cherry Events',
   siteUrl = 'https://riderapp.redcherryevents.co.za',
 }: EventUpdateProps) => {
   const paragraphs = bodyParagraphs(body)
-  const banner = eventCoverUrl || eventLogoUrl
+  const banner = bannerUrl || eventCoverUrl || eventLogoUrl
+  const gallery = (images ?? [])
+    .map((i) => (typeof i === 'string' ? { url: i, caption: null } : i))
+    .filter((i) => /^https:\/\//i.test(String(i?.url ?? '')))
   const cta = ctaUrl || eventUrl
   const ctaText = ctaLabel || 'Open your event page'
 
@@ -96,6 +105,19 @@ export const EventUpdateEmail = ({
           ))}
         </Text>
       ))}
+
+      {gallery.length ? (
+        <Section style={{ margin: '4px 0 18px' }}>
+          {gallery.map((g, i) => (
+            <Section key={i} style={{ margin: '0 0 14px', lineHeight: 0 }}>
+              <Img src={g.url} alt={g.caption ?? eventName} width="600" style={bannerImg} />
+              {g.caption ? (
+                <Text style={{ ...meta, margin: '6px 0 0', textAlign: 'center' as const }}>{g.caption}</Text>
+              ) : null}
+            </Section>
+          ))}
+        </Section>
+      ) : null}
 
       {cta ? (
         <Button style={button} href={cta}>

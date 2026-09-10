@@ -1028,6 +1028,7 @@ export type Database = {
       }
       event_email_steps: {
         Row: {
+          banner_url: string | null
           body: string
           campaign_id: string
           created_at: string
@@ -1037,11 +1038,13 @@ export type Database = {
           enabled: boolean
           heading: string | null
           id: string
+          image_urls: string[]
           position: number
           subject: string
           updated_at: string
         }
         Insert: {
+          banner_url?: string | null
           body?: string
           campaign_id: string
           created_at?: string
@@ -1051,11 +1054,13 @@ export type Database = {
           enabled?: boolean
           heading?: string | null
           id?: string
+          image_urls?: string[]
           position?: number
           subject: string
           updated_at?: string
         }
         Update: {
+          banner_url?: string | null
           body?: string
           campaign_id?: string
           created_at?: string
@@ -1065,6 +1070,7 @@ export type Database = {
           enabled?: boolean
           heading?: string | null
           id?: string
+          image_urls?: string[]
           position?: number
           subject?: string
           updated_at?: string

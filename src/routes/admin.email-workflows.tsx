@@ -358,6 +358,8 @@ interface StepPayload {
   body: string;
   ctaLabel?: string | null;
   ctaUrl?: string | null;
+  bannerUrl?: string | null;
+  imageUrls?: string[];
   delayHours: number;
 }
 
@@ -492,6 +494,8 @@ function StepEditor({
   const [body, setBody] = useState(step?.body ?? "");
   const [ctaLabel, setCtaLabel] = useState(step?.cta_label ?? "");
   const [ctaUrl, setCtaUrl] = useState(step?.cta_url ?? "");
+  const [bannerUrl, setBannerUrl] = useState(step?.banner_url ?? "");
+  const [imageText, setImageText] = useState(((step?.image_urls ?? []) as string[]).join("\n"));
   const [delayHours, setDelayHours] = useState<number>(step?.delay_hours ?? 24);
   const [busy, setBusy] = useState(false);
 
@@ -505,6 +509,8 @@ function StepEditor({
         body,
         ctaLabel,
         ctaUrl,
+        bannerUrl,
+        imageUrls: imageText.split(/\n+/).map((u) => u.trim()).filter(Boolean),
         delayHours,
       });
       toast.success("Saved");
@@ -579,6 +585,18 @@ function StepEditor({
         <input className={input} placeholder="Button label (optional)" value={ctaLabel} onChange={(e) => setCtaLabel(e.target.value)} />
         <input className={input} placeholder="Button link (defaults to the event page)" value={ctaUrl} onChange={(e) => setCtaUrl(e.target.value)} />
       </div>
+      <input
+        className={input}
+        placeholder="Top picture link (optional — defaults to the event cover)"
+        value={bannerUrl}
+        onChange={(e) => setBannerUrl(e.target.value)}
+      />
+      <textarea
+        className={`${input} min-h-24`}
+        placeholder={"Picture links, one per line (e.g. route profiles). Must start with https://"}
+        value={imageText}
+        onChange={(e) => setImageText(e.target.value)}
+      />
       <div className="flex gap-2">
         <button
           disabled={busy || !subject.trim()}
