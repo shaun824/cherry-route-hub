@@ -292,8 +292,10 @@ export default function VillageMapEditorGeo({
   onToggleTentKind,
   onDeleteHotspot,
   defaultBearing = 0,
+  onSaveBearing,
 }: {
   defaultBearing?: number;
+  onSaveBearing?: (bearing: number) => void;
   centre: { lat: number; lng: number };
   centreToken: number;
   hotspots: VillageHotspot[];
@@ -974,7 +976,17 @@ export default function VillageMapEditorGeo({
             North ↑ {Math.round(bearing)}°
           </button>
         ) : null}
+        {onSaveBearing && Math.round(bearing) !== Math.round(defaultBearing) ? (
+          <button
+            type="button"
+            onClick={() => onSaveBearing(Math.round(bearing))}
+            className="pointer-events-auto rounded-full bg-cherry px-3 py-1.5 text-[11px] font-bold text-white shadow ring-1 ring-border backdrop-blur"
+          >
+            Save this view
+          </button>
+        ) : null}
       </div>
+
 
       <div className="absolute bottom-3 right-3 z-[500] flex gap-2">
         <button

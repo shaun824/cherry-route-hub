@@ -124,6 +124,7 @@ export function TrackerPanel({
   const lastPointAtRef = useRef(0);
   const watchIdRef = useRef<number | null>(null);
   const flushingRef = useRef(false);
+  const firstFlushRef = useRef(false);
 
   const flush = useCallback(async () => {
     if (flushingRef.current) return;
@@ -173,10 +174,15 @@ export function TrackerPanel({
           recordedAt: new Date(now).toISOString(),
         });
         setQueued(loadQueue(eventId).length + bufferRef.current.length);
-        // Upload straight away so the rider shows on the live map within seconds
-        // of starting, not only after the first minute-long flush window.
-        void flush();
+        // Upload the very first point straight away so the rider appears on the
+        // live map within seconds; after that the 15s interval batches uploads
+        // instead of firing one request per second.
+        if (!firstFlushRef.current) {
+          firstFlushRef.current = true;
+          void flush();
+        }
       });
+
     },
     [eventId, flush],
   );
@@ -202,6 +208,7 @@ export function TrackerPanel({
       navigator.geolocation.clearWatch(watchIdRef.current);
       watchIdRef.current = null;
     }
+    firstFlushRef.current = false;
     void flush(); // push the remaining buffer out
   }, [flush]);
 
