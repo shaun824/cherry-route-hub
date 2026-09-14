@@ -32,12 +32,16 @@ const cache = new Map<string, CacheEntry>();
 
 export class MyriadError extends Error {
   code: number | null;
-  constructor(message: string, code: number | null = null) {
+  /** True when the request was cut off by our own timeout, not answered with an error. */
+  timedOut: boolean;
+  constructor(message: string, code: number | null = null, timedOut = false) {
     super(message);
     this.name = "MyriadError";
     this.code = code;
+    this.timedOut = timedOut;
   }
 }
+
 
 async function getJson<T>(
   path: string,
