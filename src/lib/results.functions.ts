@@ -161,6 +161,8 @@ export const getEventResults = createServerFn({ method: "GET" })
       results_published: Boolean(ev?.results_published),
       myriad_race_id: raceId,
     };
+    let feedError: string | null = null;
+
 
     // When a Myriad RaceId is linked, the live feed is the source of truth.
     if (raceId) {
