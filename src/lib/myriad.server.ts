@@ -49,19 +49,25 @@ async function getJson<T>(path: string, params: Record<string, string | number |
   const hit = cache.get(url);
   if (hit && Date.now() - hit.at < CACHE_MS) return hit.value as T;
 
-  // The timing host intermittently returns 5xx (Cloudflare 502/522/524); retry briefly.
+  // The timing host intermittently returns 5xx (Cloudflare 502/522/524) and sometimes
+  // stalls for ~40s on empty start groups; cap each try and retry briefly.
+  const TIMEOUT_MS = 8_000;
   let res: Response | null = null;
   let lastErr: unknown = null;
-  for (let attempt = 0; attempt < 4; attempt += 1) {
+  for (let attempt = 0; attempt < 3; attempt += 1) {
     try {
-      res = await fetch(url, { headers: { accept: "application/json" } });
+      res = await fetch(url, {
+        headers: { accept: "application/json" },
+        signal: AbortSignal.timeout(TIMEOUT_MS),
+      });
       if (res.status < 500) break;
     } catch (err) {
       lastErr = err;
       res = null;
     }
-    if (attempt < 3) await new Promise((r) => setTimeout(r, 300 * (attempt + 1)));
+    if (attempt < 2) await new Promise((r) => setTimeout(r, 300 * (attempt + 1)));
   }
+
   if (!res) {
     throw new MyriadError(
       `The results feed could not be reached${lastErr instanceof Error ? `: ${lastErr.message}` : "."}`,
