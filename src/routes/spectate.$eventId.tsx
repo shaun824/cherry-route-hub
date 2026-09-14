@@ -794,6 +794,11 @@ function SpectatorEventPage() {
             </div>
           ) : (
             <>
+              {results.source === "myriad" ? (
+                <p className="mb-3 rounded-xl bg-accent px-3 py-2 text-[11px] text-cherry-deep">
+                  Live timing · refreshes every minute. Times marked provisional can still change.
+                </p>
+              ) : null}
               {results.sets.length > 1 ? (
                 <div className="flex gap-2 overflow-x-auto pb-2">
                   {results.sets.map((s) => {
