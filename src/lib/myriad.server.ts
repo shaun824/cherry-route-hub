@@ -39,7 +39,11 @@ export class MyriadError extends Error {
   }
 }
 
-async function getJson<T>(path: string, params: Record<string, string | number | undefined>) {
+async function getJson<T>(
+  path: string,
+  params: Record<string, string | number | undefined>,
+  opts: { timeoutMs?: number; retryTimeouts?: boolean } = {},
+) {
   const qs = new URLSearchParams({ format: "json" });
   for (const [k, v] of Object.entries(params)) {
     if (v !== undefined && v !== null && v !== "") qs.set(k, String(v));
@@ -51,7 +55,8 @@ async function getJson<T>(path: string, params: Record<string, string | number |
 
   // The timing host intermittently returns 5xx (Cloudflare 502/522/524) and sometimes
   // stalls for ~40s on empty start groups; cap each try and retry briefly.
-  const TIMEOUT_MS = 6_000;
+  const TIMEOUT_MS = opts.timeoutMs ?? 6_000;
+
   let res: Response | null = null;
   let lastErr: unknown = null;
   for (let attempt = 0; attempt < 3; attempt += 1) {
