@@ -154,10 +154,37 @@ export const getEventResults = createServerFn({ method: "GET" })
       .order("position", { ascending: true, nullsFirst: false })
       .limit(5000);
 
-    return {
+    const raceId = ((ev?.myriad_race_id as string | null) ?? "").trim() || null;
+    const base = {
       results_url: (ev?.results_url as string | null) ?? null,
       results_rider_url_template: (ev?.results_rider_url_template as string | null) ?? null,
       results_published: Boolean(ev?.results_published),
+      myriad_race_id: raceId,
+    };
+
+    // When a Myriad RaceId is linked, the live feed is the source of truth.
+    if (raceId) {
+      try {
+        const { fetchRaceResults } = await import("@/lib/myriad.server");
+        const live = await fetchRaceResults(raceId);
+        if (live.rows.length > 0) {
+          return { ...base, source: "myriad" as const, feed_error: null, ...live };
+        }
+      } catch (e) {
+        return {
+          ...base,
+          source: "import" as const,
+          feed_error: e instanceof Error ? e.message : "The results feed is unavailable.",
+          sets: [],
+          rows: [],
+        };
+      }
+    }
+
+    return {
+      ...base,
+      source: "import" as const,
+      feed_error: null,
       sets: (sets ?? []).map((s: any) => ({
         id: String(s.id),
         label: String(s.label),
