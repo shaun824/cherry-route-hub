@@ -32,14 +32,22 @@ const cache = new Map<string, CacheEntry>();
 
 export class MyriadError extends Error {
   code: number | null;
-  constructor(message: string, code: number | null = null) {
+  /** True when the request was cut off by our own timeout, not answered with an error. */
+  timedOut: boolean;
+  constructor(message: string, code: number | null = null, timedOut = false) {
     super(message);
     this.name = "MyriadError";
     this.code = code;
+    this.timedOut = timedOut;
   }
 }
 
-async function getJson<T>(path: string, params: Record<string, string | number | undefined>) {
+
+async function getJson<T>(
+  path: string,
+  params: Record<string, string | number | undefined>,
+  opts: { timeoutMs?: number; retryTimeouts?: boolean } = {},
+) {
   const qs = new URLSearchParams({ format: "json" });
   for (const [k, v] of Object.entries(params)) {
     if (v !== undefined && v !== null && v !== "") qs.set(k, String(v));
@@ -49,7 +57,45 @@ async function getJson<T>(path: string, params: Record<string, string | number |
   const hit = cache.get(url);
   if (hit && Date.now() - hit.at < CACHE_MS) return hit.value as T;
 
-  const res = await fetch(url, { headers: { accept: "application/json" } });
+  // The timing host intermittently returns 5xx (Cloudflare 502/522/524) and sometimes
+  // stalls for ~40s on empty start groups; cap each try and retry briefly.
+  const TIMEOUT_MS = opts.timeoutMs ?? 6_000;
+
+  let res: Response | null = null;
+  let lastErr: unknown = null;
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    try {
+      res = await fetch(url, {
+        headers: { accept: "application/json" },
+        signal: AbortSignal.timeout(TIMEOUT_MS),
+      });
+      if (res.status < 500) break;
+    } catch (err) {
+      lastErr = err;
+      res = null;
+      // A timeout usually means that start group is stalling; don't queue behind it again.
+      if (
+        !opts.retryTimeouts &&
+        err instanceof Error &&
+        (err.name === "TimeoutError" || err.name === "AbortError")
+      )
+        break;
+
+    }
+    if (attempt < 2) await new Promise((r) => setTimeout(r, 300 * (attempt + 1)));
+  }
+
+
+  if (!res) {
+    const timedOut =
+      lastErr instanceof Error && (lastErr.name === "TimeoutError" || lastErr.name === "AbortError");
+    throw new MyriadError(
+      `The results feed could not be reached${lastErr instanceof Error ? `: ${lastErr.message}` : "."}`,
+      null,
+      timedOut,
+    );
+  }
+
   if (!res.ok) {
     throw new MyriadError(
       res.status === 405
@@ -57,6 +103,7 @@ async function getJson<T>(path: string, params: Record<string, string | number |
         : `The results feed replied with ${res.status}.`,
     );
   }
+
   const json = (await res.json()) as any;
   // The feed reports data errors with HTTP 200 and a top-level error object.
   if (json?.error) {
@@ -74,9 +121,12 @@ export async function fetchRace(
   raceId: string,
   opts: { mostRecentOnly?: boolean } = {},
 ): Promise<MyriadRace> {
-  const json = await getJson<any>(`/race/${encodeURIComponent(raceId)}`, {
-    most_recent_events_only: opts.mostRecentOnly ? "T" : undefined,
-  });
+  const json = await getJson<any>(
+    `/race/${encodeURIComponent(raceId)}`,
+    { most_recent_events_only: opts.mostRecentOnly ? "T" : undefined },
+    { timeoutMs: 15_000, retryTimeouts: true },
+  );
+
   const race = json?.race ?? {};
   return {
     race_id: Number(race.race_id ?? raceId),
@@ -109,25 +159,40 @@ async function fetchEventResultSets(
   raceId: string,
   eventId: number,
   params: Record<string, string | number | undefined> = {},
+  opts: { timeoutMs?: number } = {},
 ): Promise<RawSet[]> {
-  const json = await getJson<any>(`/race/${encodeURIComponent(raceId)}/results/get-results`, {
-    event_id: eventId,
-    include_total_finishers: "T",
-    ...params,
-  });
+  const json = await getJson<any>(
+    `/race/${encodeURIComponent(raceId)}/results/get-results`,
+    { event_id: eventId, include_total_finishers: "T", ...params },
+    opts,
+  );
   return (json?.individual_results_sets ?? []) as RawSet[];
 }
 
 /** All pages of one event's results (the feed pages 50 at a time). */
-async function fetchAllPages(raceId: string, eventId: number): Promise<RawSet[]> {
+async function fetchAllPages(
+  raceId: string,
+  eventId: number,
+  opts: { timeoutMs?: number } = {},
+): Promise<RawSet[]> {
   const perPage = 50;
-  const first = await fetchEventResultSets(raceId, eventId, { page: 1, results_per_page: perPage });
+  const first = await fetchEventResultSets(
+    raceId,
+    eventId,
+    { page: 1, results_per_page: perPage },
+    opts,
+  );
   const merged = first.map((s) => ({ ...s, results: [...(s.results ?? [])] }));
 
   const maxFinishers = Math.max(0, ...merged.map((s) => Number(s.num_finishers ?? 0)));
   const pages = Math.min(Math.ceil(maxFinishers / perPage), 40); // hard cap: 2000 rows / event
   for (let page = 2; page <= pages; page++) {
-    const next = await fetchEventResultSets(raceId, eventId, { page, results_per_page: perPage });
+    const next = await fetchEventResultSets(
+      raceId,
+      eventId,
+      { page, results_per_page: perPage },
+      opts,
+    );
     let added = 0;
     for (const set of next) {
       const target = merged.find(
@@ -145,6 +210,25 @@ async function fetchAllPages(raceId: string, eventId: number): Promise<RawSet[]>
   }
   return merged;
 }
+
+
+/** The feed rate-limits bursts (returns 5xx), so keep requests to a few at a time. */
+async function mapLimit<T, R>(items: T[], limit: number, fn: (item: T, i: number) => Promise<R>) {
+  const out = new Array<R>(items.length);
+  let cursor = 0;
+  await Promise.all(
+    Array.from({ length: Math.min(limit, items.length) }, async () => {
+      for (;;) {
+        const i = cursor++;
+        if (i >= items.length) return;
+        out[i] = await fn(items[i] as T, i);
+      }
+    }),
+  );
+  return out;
+}
+
+
 
 function stripTags(v: string) {
   return v.replace(/<[^>]*>/g, "").trim();
@@ -241,21 +325,37 @@ function normalise(raceEventName: string, sets: RawSet[], baseOrder: number): My
 /** Everything published for a race, normalised into the app's results shape. */
 export async function fetchRaceResults(raceId: string): Promise<MyriadNormalised> {
   const race = await fetchRace(raceId, { mostRecentOnly: true });
-  const parts = await Promise.all(
-    race.events.map(async (ev, i) => {
+  const stalled: { ev: MyriadRaceEvent; i: number }[] = [];
+
+  const parts = await mapLimit(race.events, 4, async (ev, i) => {
+    try {
+      const sets = await fetchAllPages(raceId, ev.event_id);
+      return normalise(ev.name, sets, i);
+    } catch (err) {
+      // Empty start groups often stall for ~40s; give the real ones a slower second try.
+      if (err instanceof MyriadError && err.timedOut) stalled.push({ ev, i });
+      return { sets: [], rows: [] } as MyriadNormalised;
+    }
+  });
+
+  if (stalled.length) {
+    const retried = await mapLimit(stalled, 3, async ({ ev, i }) => {
       try {
-        const sets = await fetchAllPages(raceId, ev.event_id);
-        return normalise(ev.name, sets, i);
+        const sets = await fetchAllPages(raceId, ev.event_id, { timeoutMs: 45_000 });
+        return { i, part: normalise(ev.name, sets, i) };
       } catch {
-        return { sets: [], rows: [] } as MyriadNormalised;
+        return null;
       }
-    }),
-  );
+    });
+    for (const r of retried) if (r) parts[r.i] = r.part;
+  }
+
   return {
     sets: parts.flatMap((p) => p.sets).sort((a, b) => a.sort_order - b.sort_order),
     rows: parts.flatMap((p) => p.rows),
   };
 }
+
 
 /** Chapter 5: find one participant across every event of a race. */
 export async function findRaceParticipant(
@@ -263,19 +363,18 @@ export async function findRaceParticipant(
   query: { lastName?: string; bib?: string },
 ): Promise<{ eventName: string; sets: ResultSet[]; rows: ResultRow[] }[]> {
   const race = await fetchRace(raceId, { mostRecentOnly: true });
-  const found = await Promise.all(
-    race.events.map(async (ev, i) => {
-      try {
-        const sets = await fetchEventResultSets(raceId, ev.event_id, {
-          last_name: query.lastName,
-          bib_num: query.bib,
-        });
-        const n = normalise(ev.name, sets, i);
-        return n.rows.length ? { eventName: ev.name, ...n } : null;
-      } catch {
-        return null;
-      }
-    }),
-  );
+  const found = await mapLimit(race.events, 4, async (ev, i) => {
+    try {
+      const sets = await fetchEventResultSets(raceId, ev.event_id, {
+        last_name: query.lastName,
+        bib_num: query.bib,
+      });
+      const n = normalise(ev.name, sets, i);
+      return n.rows.length ? { eventName: ev.name, ...n } : null;
+    } catch {
+      return null;
+    }
+  });
+
   return found.filter(Boolean) as { eventName: string; sets: ResultSet[]; rows: ResultRow[] }[];
 }
