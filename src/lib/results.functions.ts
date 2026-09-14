@@ -39,6 +39,11 @@ export type EventResultsPayload = {
   results_url: string | null;
   results_rider_url_template: string | null;
   results_published: boolean;
+  /** Where the rows came from: the Myriad live feed or an uploaded file. */
+  source: "myriad" | "import";
+  myriad_race_id: string | null;
+  /** Set when the live feed could not be read; the imported rows are shown instead. */
+  feed_error: string | null;
   sets: ResultSet[];
   rows: ResultRow[];
 };
