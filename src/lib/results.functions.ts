@@ -135,7 +135,7 @@ export const getEventResults = createServerFn({ method: "GET" })
 
     const { data: ev } = await supabaseAdmin
       .from("events")
-      .select("results_url, results_rider_url_template, results_published")
+      .select("results_url, results_rider_url_template, results_published, myriad_race_id")
       .eq("id", data.eventId)
       .maybeSingle();
 
