@@ -7,11 +7,13 @@ import Papa from "papaparse";
 import { FileUp, Save, Trash2, Trophy } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import {
+  checkMyriadRace,
   deleteResultSet,
   getEventResults,
   importEventResults,
   saveResultsSettings,
   type EventResultsPayload,
+  type MyriadRacePreview,
 } from "@/lib/results.functions";
 
 export const Route = createFileRoute("/admin/results")({
