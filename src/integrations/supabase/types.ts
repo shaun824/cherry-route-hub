@@ -2159,6 +2159,7 @@ export type Database = {
           location: string
           logo_url: string | null
           map_query: string | null
+          myriad_race_id: string | null
           name: string
           photos_album_url: string | null
           results_published: boolean
@@ -2203,6 +2204,7 @@ export type Database = {
           location: string
           logo_url?: string | null
           map_query?: string | null
+          myriad_race_id?: string | null
           name: string
           photos_album_url?: string | null
           results_published?: boolean
@@ -2247,6 +2249,7 @@ export type Database = {
           location?: string
           logo_url?: string | null
           map_query?: string | null
+          myriad_race_id?: string | null
           name?: string
           photos_album_url?: string | null
           results_published?: boolean

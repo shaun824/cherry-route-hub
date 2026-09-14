@@ -124,7 +124,9 @@ function SpectatorEventPage() {
   const resultsQ = useQuery<EventResultsPayload>({
     queryKey: ["event-results", eventId],
     queryFn: () => fetchResults({ data: { eventId } }),
-    staleTime: 60_000,
+    staleTime: 30_000,
+    // Live-timed events keep refreshing themselves while the race is on.
+    refetchInterval: (q) => (q.state.data?.source === "myriad" ? 60_000 : false),
   });
   const results = resultsQ.data;
 
@@ -792,6 +794,11 @@ function SpectatorEventPage() {
             </div>
           ) : (
             <>
+              {results.source === "myriad" ? (
+                <p className="mb-3 rounded-xl bg-accent px-3 py-2 text-[11px] text-cherry-deep">
+                  Live timing · refreshes every minute. Times marked provisional can still change.
+                </p>
+              ) : null}
               {results.sets.length > 1 ? (
                 <div className="flex gap-2 overflow-x-auto pb-2">
                   {results.sets.map((s) => {

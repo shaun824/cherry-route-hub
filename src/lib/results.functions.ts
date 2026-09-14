@@ -39,6 +39,11 @@ export type EventResultsPayload = {
   results_url: string | null;
   results_rider_url_template: string | null;
   results_published: boolean;
+  /** Where the rows came from: the Myriad live feed or an uploaded file. */
+  source: "myriad" | "import";
+  myriad_race_id: string | null;
+  /** Set when the live feed could not be read; the imported rows are shown instead. */
+  feed_error: string | null;
   sets: ResultSet[];
   rows: ResultRow[];
 };
@@ -130,7 +135,7 @@ export const getEventResults = createServerFn({ method: "GET" })
 
     const { data: ev } = await supabaseAdmin
       .from("events")
-      .select("results_url, results_rider_url_template, results_published")
+      .select("results_url, results_rider_url_template, results_published, myriad_race_id")
       .eq("id", data.eventId)
       .maybeSingle();
 
@@ -149,10 +154,34 @@ export const getEventResults = createServerFn({ method: "GET" })
       .order("position", { ascending: true, nullsFirst: false })
       .limit(5000);
 
-    return {
+    const raceId = ((ev?.myriad_race_id as string | null) ?? "").trim() || null;
+    const base = {
       results_url: (ev?.results_url as string | null) ?? null,
       results_rider_url_template: (ev?.results_rider_url_template as string | null) ?? null,
       results_published: Boolean(ev?.results_published),
+      myriad_race_id: raceId,
+    };
+    let feedError: string | null = null;
+
+
+    // When a Myriad RaceId is linked, the live feed is the source of truth.
+    if (raceId) {
+      try {
+        const { fetchRaceResults } = await import("@/lib/myriad.server");
+        const live = await fetchRaceResults(raceId);
+        if (live.rows.length > 0) {
+          return { ...base, source: "myriad" as const, feed_error: null, ...live };
+        }
+      } catch (e) {
+        // Fall back to whatever was imported, but say why the feed is missing.
+        feedError = e instanceof Error ? e.message : "The results feed is unavailable.";
+      }
+    }
+
+    return {
+      ...base,
+      source: "import" as const,
+      feed_error: feedError,
       sets: (sets ?? []).map((s: any) => ({
         id: String(s.id),
         label: String(s.label),
@@ -182,6 +211,7 @@ const SettingsInput = z.object({
   results_url: z.string().nullable(),
   results_rider_url_template: z.string().nullable(),
   results_published: z.boolean(),
+  myriad_race_id: z.string().nullable().optional(),
 });
 
 export const saveResultsSettings = createServerFn({ method: "POST" })
@@ -197,10 +227,109 @@ export const saveResultsSettings = createServerFn({ method: "POST" })
         results_url: data.results_url || null,
         results_rider_url_template: data.results_rider_url_template || null,
         results_published: data.results_published,
+        myriad_race_id: (data.myriad_race_id ?? "").trim() || null,
       })
       .eq("id", data.eventId);
     if (error) throw new Error(error.message);
     return { ok: true };
+  });
+
+export type MyriadRacePreview = {
+  ok: boolean;
+  error: string | null;
+  race_id: number | null;
+  name: string | null;
+  last_date: string | null;
+  url: string | null;
+  events: { event_id: number; name: string; start_time: string | null }[];
+};
+
+/** Admin: read the Myriad feed for a RaceId so the race can be confirmed before saving. */
+export const checkMyriadRace = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ raceId: z.string().min(1) }).parse(input))
+  .handler(async ({ data, context }): Promise<MyriadRacePreview> => {
+    const { assertAdmin } = await import("@/lib/results.server");
+    await assertAdmin(context);
+    const { fetchRace } = await import("@/lib/myriad.server");
+    try {
+      const race = await fetchRace(data.raceId.trim());
+      return {
+        ok: true,
+        error: null,
+        race_id: race.race_id,
+        name: race.name,
+        last_date: race.last_date,
+        url: race.url,
+        events: race.events,
+      };
+    } catch (e) {
+      return {
+        ok: false,
+        error: e instanceof Error ? e.message : "Could not read the results feed.",
+        race_id: null,
+        name: null,
+        last_date: null,
+        url: null,
+        events: [],
+      };
+    }
+  });
+
+export type ParticipantMatch = {
+  event_name: string;
+  set_label: string;
+  row: ResultRow;
+  laps: { lap: number; time: string; pace: string; distanceKm: number }[];
+};
+
+/** Find one participant across every race within an event, by surname or race number. */
+export const findResultsParticipant = createServerFn({ method: "GET" })
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        eventId: z.string().uuid(),
+        lastName: z.string().trim().optional(),
+        bib: z.string().trim().optional(),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data }): Promise<{ matches: ParticipantMatch[]; error: string | null }> => {
+    if (!data.lastName && !data.bib) return { matches: [], error: null };
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: ev } = await supabaseAdmin
+      .from("events")
+      .select("myriad_race_id")
+      .eq("id", data.eventId)
+      .maybeSingle();
+    const raceId = ((ev?.myriad_race_id as string | null) ?? "").trim();
+    if (!raceId) return { matches: [], error: null };
+
+    const { findRaceParticipant, parseLapDetails } = await import("@/lib/myriad.server");
+    try {
+      const found = await findRaceParticipant(raceId, {
+        lastName: data.lastName || undefined,
+        bib: data.bib || undefined,
+      });
+      const matches: ParticipantMatch[] = [];
+      for (const group of found) {
+        for (const row of group.rows) {
+          const set = group.sets.find((s) => s.id === row.result_set_id);
+          matches.push({
+            event_name: group.eventName,
+            set_label: set?.label ?? group.eventName,
+            row,
+            laps: parseLapDetails(row.extras["Lap Details"] ?? null),
+          });
+        }
+      }
+      return { matches, error: null };
+    } catch (e) {
+      return {
+        matches: [],
+        error: e instanceof Error ? e.message : "The results feed is unavailable.",
+      };
+    }
   });
 
 const ImportInput = z.object({
