@@ -211,6 +211,7 @@ const SettingsInput = z.object({
   results_url: z.string().nullable(),
   results_rider_url_template: z.string().nullable(),
   results_published: z.boolean(),
+  myriad_race_id: z.string().nullable().optional(),
 });
 
 export const saveResultsSettings = createServerFn({ method: "POST" })
