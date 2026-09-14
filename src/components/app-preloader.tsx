@@ -1,9 +1,9 @@
-import { useIsFetching } from "@tanstack/react-query";
 import { useEffect, useId, useRef, useState } from "react";
 
-const ANIMATION_DURATION_MS = 1_600;
+const SHOW_DELAY_MS = 300;
 const SAFETY_TIMEOUT_MS = 5_000;
-const TRANSITION_MINIMUM_MS = 400;
+const FADE_DURATION_MS = 180;
+const ANIMATION_DURATION_MS = 1_200;
 
 function wheelieAngle(progress: number) {
   if (progress >= 0.32 && progress < 0.44) {
@@ -22,31 +22,9 @@ function wheelieAngle(progress: number) {
 
 type AppPreloaderProps = {
   routeLoading: boolean;
-  routeKey: string;
 };
 
-async function waitForPageAssets() {
-  if (document.fonts?.ready) await document.fonts.ready.catch(() => undefined);
-
-  const pendingImages = Array.from(document.images).filter((image) => {
-    if (image.complete) return false;
-    const bounds = image.getBoundingClientRect();
-    return image.loading !== "lazy" || (bounds.top < window.innerHeight && bounds.bottom > 0);
-  });
-  await Promise.allSettled(
-    pendingImages.map(
-      (image) =>
-        new Promise<void>((resolve) => {
-          image.addEventListener("load", () => resolve(), { once: true });
-          image.addEventListener("error", () => resolve(), { once: true });
-        }),
-    ),
-  );
-
-  await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
-}
-
-export function AppPreloader({ routeLoading, routeKey }: AppPreloaderProps) {
+export function AppPreloader({ routeLoading }: AppPreloaderProps) {
   const reactId = useId();
   const clipId = `ww-mountain-reveal-${reactId.replace(/:/g, "")}`;
   const redLineRef = useRef<SVGLineElement>(null);
@@ -54,47 +32,40 @@ export function AppPreloader({ routeLoading, routeKey }: AppPreloaderProps) {
   const chassisRef = useRef<SVGGElement>(null);
   const clipRectRef = useRef<SVGRectElement>(null);
   const [leaving, setLeaving] = useState(false);
-  const [visible, setVisible] = useState(true);
-  const [cycle, setCycle] = useState(0);
-  const initialCycle = useRef(true);
-  const wasRouteLoading = useRef(routeLoading);
-  const initialPageFetches = useIsFetching({
-    predicate: (query) => query.state.data === undefined,
-  });
+  const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    if (routeLoading && !wasRouteLoading.current) {
-      setLeaving(false);
-      setVisible(true);
-      setCycle((value) => value + 1);
+    let showTimer: number | undefined;
+    let hideTimer: number | undefined;
+    let safetyTimer: number | undefined;
+
+    if (routeLoading) {
+      showTimer = window.setTimeout(() => {
+        setLeaving(false);
+        setVisible(true);
+      }, SHOW_DELAY_MS);
+      safetyTimer = window.setTimeout(() => {
+        setLeaving(true);
+        hideTimer = window.setTimeout(() => setVisible(false), FADE_DURATION_MS);
+      }, SAFETY_TIMEOUT_MS);
+    } else if (visible) {
+      setLeaving(true);
+      hideTimer = window.setTimeout(() => setVisible(false), FADE_DURATION_MS);
     }
-    wasRouteLoading.current = routeLoading;
-  }, [routeLoading]);
+
+    return () => {
+      if (showTimer !== undefined) window.clearTimeout(showTimer);
+      if (hideTimer !== undefined) window.clearTimeout(hideTimer);
+      if (safetyTimer !== undefined) window.clearTimeout(safetyTimer);
+    };
+  }, [routeLoading, visible]);
 
   useEffect(() => {
-    if (!visible || routeLoading || initialPageFetches > 0) return;
+    if (!visible || leaving) return;
 
     let frame = 0;
     let startTime: number | undefined;
-    let hasStartedLeaving = false;
-    let removalTimer: number | undefined;
-    let cancelled = false;
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const duration = reduceMotion
-      ? 100
-      : initialCycle.current
-        ? ANIMATION_DURATION_MS
-        : TRANSITION_MINIMUM_MS;
-
-    function beginLeaving() {
-      if (hasStartedLeaving || cancelled) return;
-      hasStartedLeaving = true;
-      setLeaving(true);
-      removalTimer = window.setTimeout(() => {
-        setVisible(false);
-        initialCycle.current = false;
-      }, 450);
-    }
 
     function render(progress: number) {
       const currentX = 20 + 560 * progress;
@@ -106,28 +77,18 @@ export function AppPreloader({ routeLoading, routeKey }: AppPreloaderProps) {
 
     function animate(timestamp: number) {
       startTime ??= timestamp;
-      const progress = Math.min((timestamp - startTime) / duration, 1);
+      const progress = reduceMotion ? 0.55 : ((timestamp - startTime) % ANIMATION_DURATION_MS) / ANIMATION_DURATION_MS;
       render(progress);
-      if (progress < 1) {
-        frame = window.requestAnimationFrame(animate);
-        return;
-      }
-      void waitForPageAssets().then(beginLeaving);
+      if (!reduceMotion) frame = window.requestAnimationFrame(animate);
     }
 
     render(0);
     frame = window.requestAnimationFrame(animate);
-    const safetyTimer = window.setTimeout(() => {
-      beginLeaving();
-    }, SAFETY_TIMEOUT_MS);
 
     return () => {
-      cancelled = true;
       window.cancelAnimationFrame(frame);
-      window.clearTimeout(safetyTimer);
-      if (removalTimer !== undefined) window.clearTimeout(removalTimer);
     };
-  }, [cycle, initialPageFetches, routeKey, routeLoading, visible]);
+  }, [leaving, visible]);
 
   if (!visible) return null;
 

@@ -327,7 +327,8 @@
   background: color-mix(in oklab, var(--color-background) 88%, var(--brand-orange) 12%);
   opacity: 1;
   visibility: visible;
-  transition: opacity 400ms cubic-bezier(0.4, 0, 0.2, 1), visibility 400ms ease;
+  contain: strict;
+  transition: opacity 180ms ease-out, visibility 180ms ease-out;
 }
 
 .ww-preloader.is-loaded {
@@ -384,6 +385,7 @@
   height: 100%;
   overflow: visible;
   color: var(--color-ink);
+  transform: translateZ(0);
 }
 
 .ww-mountain-ghost,
@@ -402,7 +404,6 @@
   stroke: var(--brand-orange);
   stroke-width: 1.5;
   stroke-opacity: 0.65;
-  filter: drop-shadow(0 0 5px color-mix(in oklab, var(--brand-orange) 35%, transparent));
 }
 
 .ww-path-base {
@@ -416,7 +417,6 @@
   stroke: var(--brand-orange);
   stroke-width: 2.5;
   stroke-linecap: round;
-  filter: drop-shadow(0 0 6px color-mix(in oklab, var(--brand-orange) 45%, transparent));
 }
 
 .ww-bike-chassis {
@@ -449,27 +449,14 @@
   .ww-loader-wind { animation: none; }
 }
 
-/* Preloader performance optimizations */
-.ww-preloader {
-  backface-visibility: hidden;
-  perspective: 1000px;
-}
-
-.ww-preloader-svg {
-  will-change: transform;
-}
-
-.ww-bike-chassis, 
-.ww-path-fill, 
-.ww-mountain-active {
-  will-change: transform, width, x2;
-}
+/* Keep only the moving artwork on a light compositing layer. */
+.ww-preloader-svg,
+.ww-bike-chassis { backface-visibility: hidden; }
 
 @media (max-width: 768px) {
   /* Disable expensive filters on mobile for smoother animation */
   .ww-mountain-active,
   .ww-path-fill {
-    filter: none !important;
     stroke-opacity: 0.9;
   }
 }
