@@ -445,6 +445,29 @@ function BlockFields({
         </div>
       );
 
+    case "route-pair":
+      return (
+        <div className="space-y-3">
+          <input className={input} value={block.category} onChange={(e) => set({ category: e.target.value })} placeholder="Category, e.g. Gold" />
+          {[0, 1].map((i) => {
+            const day = block.days[i] ?? { label: `Day ${i + 1}`, detail: "", url: "", href: null };
+            const update = (changes: Record<string, unknown>) => {
+              const days = [0, 1].map((n) => ({ ...(block.days[n] ?? { label: `Day ${n + 1}`, detail: "", url: "", href: null }) }));
+              days[i] = { ...days[i], ...changes } as any;
+              set({ days });
+            };
+            return (
+              <div key={i} className="space-y-2 rounded-lg border border-border p-2">
+                <p className="text-xs font-semibold text-ink-soft">{i === 0 ? "First slide" : "Second slide"}</p>
+                <input className={input} value={day.label} onChange={(e) => update({ label: e.target.value })} placeholder={`Day ${i + 1}`} />
+                <input className={input} value={day.detail ?? ""} onChange={(e) => update({ detail: e.target.value })} placeholder="Distance and elevation" />
+                <input className={input} value={day.url} onChange={(e) => update({ url: e.target.value })} placeholder="Picture link (https://…)" />
+              </div>
+            );
+          })}
+        </div>
+      );
+
     case "button":
       return (
         <div className="space-y-2">
