@@ -208,6 +208,64 @@ function ResultsAdminPage() {
       {eventId ? (
         <>
           <section className="rounded-2xl bg-card p-4 ring-1 ring-border">
+            <h2 className="font-display text-sm font-bold text-ink">Live timing (Myriad Events)</h2>
+            <p className="mt-1 text-[11px] text-ink-soft">
+              Ask Myriad Events for this event’s race number, paste it here, and results fill in by
+              themselves while the race runs.
+            </p>
+            <div className="mt-3 flex gap-2">
+              <input
+                value={raceId}
+                onChange={(e) => setRaceId(e.target.value)}
+                placeholder="e.g. 214997"
+                inputMode="numeric"
+                className="w-full rounded-xl bg-background px-3 py-2 text-sm ring-1 ring-border"
+              />
+              <button
+                type="button"
+                disabled={busy || !raceId.trim()}
+                onClick={handleCheckFeed}
+                className="shrink-0 rounded-xl bg-accent px-3 py-2 text-sm font-semibold text-cherry-deep disabled:opacity-50"
+              >
+                Check feed
+              </button>
+            </div>
+            {feedPreview?.ok ? (
+              <div className="mt-3 rounded-xl bg-background p-3 text-xs ring-1 ring-border">
+                <p className="font-semibold text-ink">{feedPreview.name}</p>
+                <p className="text-[11px] text-ink-soft">
+                  {feedPreview.last_date ?? "No date"} · {feedPreview.events.length} races in this
+                  event
+                </p>
+                <ul className="mt-2 space-y-0.5 text-[11px] text-ink-soft">
+                  {feedPreview.events.slice(0, 12).map((e) => (
+                    <li key={e.event_id}>{e.name}</li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+            {feedPreview && !feedPreview.ok ? (
+              <p className="mt-3 text-xs text-cherry">{feedPreview.error}</p>
+            ) : null}
+            {resultsQ.data?.feed_error ? (
+              <p className="mt-3 text-xs text-cherry">
+                Live feed problem: {resultsQ.data.feed_error}
+              </p>
+            ) : null}
+            <p className="mt-3 text-[11px] text-ink-soft">
+              Remember to tick “Publish results to riders” below once you’re happy.
+            </p>
+            <button
+              type="button"
+              disabled={busy}
+              onClick={handleSaveSettings}
+              className="mt-3 inline-flex items-center gap-2 rounded-xl bg-cherry px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+            >
+              <Save className="h-4 w-4" /> Save
+            </button>
+          </section>
+
+          <section className="rounded-2xl bg-card p-4 ring-1 ring-border">
             <h2 className="font-display text-sm font-bold text-ink">Results links</h2>
             <label className="mt-3 block">
               <span className="text-[11px] font-semibold uppercase tracking-wider text-ink-soft">
