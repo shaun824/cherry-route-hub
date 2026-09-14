@@ -325,20 +325,37 @@ function normalise(raceEventName: string, sets: RawSet[], baseOrder: number): My
 /** Everything published for a race, normalised into the app's results shape. */
 export async function fetchRaceResults(raceId: string): Promise<MyriadNormalised> {
   const race = await fetchRace(raceId, { mostRecentOnly: true });
+  const stalled: { ev: MyriadRaceEvent; i: number }[] = [];
+
   const parts = await mapLimit(race.events, 4, async (ev, i) => {
     try {
       const sets = await fetchAllPages(raceId, ev.event_id);
       return normalise(ev.name, sets, i);
-    } catch {
+    } catch (err) {
+      // Empty start groups often stall for ~40s; give the real ones a slower second try.
+      if (err instanceof MyriadError && err.timedOut) stalled.push({ ev, i });
       return { sets: [], rows: [] } as MyriadNormalised;
     }
   });
+
+  if (stalled.length) {
+    const retried = await mapLimit(stalled, 3, async ({ ev, i }) => {
+      try {
+        const sets = await fetchAllPages(raceId, ev.event_id, { timeoutMs: 45_000 });
+        return { i, part: normalise(ev.name, sets, i) };
+      } catch {
+        return null;
+      }
+    });
+    for (const r of retried) if (r) parts[r.i] = r.part;
+  }
 
   return {
     sets: parts.flatMap((p) => p.sets).sort((a, b) => a.sort_order - b.sort_order),
     rows: parts.flatMap((p) => p.rows),
   };
 }
+
 
 /** Chapter 5: find one participant across every event of a race. */
 export async function findRaceParticipant(
