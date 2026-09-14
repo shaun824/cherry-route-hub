@@ -1,7 +1,9 @@
+import { useIsFetching } from "@tanstack/react-query";
 import { useEffect, useId, useRef, useState } from "react";
 
 const ANIMATION_DURATION_MS = 1_600;
 const SAFETY_TIMEOUT_MS = 8_000;
+const TRANSITION_MINIMUM_MS = 500;
 
 function wheelieAngle(progress: number) {
   if (progress >= 0.32 && progress < 0.44) {
@@ -18,7 +20,33 @@ function wheelieAngle(progress: number) {
   return 0;
 }
 
-export function AppPreloader() {
+type AppPreloaderProps = {
+  routeLoading: boolean;
+  routeKey: string;
+};
+
+async function waitForPageAssets() {
+  if (document.fonts?.ready) await document.fonts.ready.catch(() => undefined);
+
+  const pendingImages = Array.from(document.images).filter((image) => {
+    if (image.complete) return false;
+    const bounds = image.getBoundingClientRect();
+    return image.loading !== "lazy" || (bounds.top < window.innerHeight && bounds.bottom > 0);
+  });
+  await Promise.allSettled(
+    pendingImages.map(
+      (image) =>
+        new Promise<void>((resolve) => {
+          image.addEventListener("load", () => resolve(), { once: true });
+          image.addEventListener("error", () => resolve(), { once: true });
+        }),
+    ),
+  );
+
+  await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
+}
+
+export function AppPreloader({ routeLoading, routeKey }: AppPreloaderProps) {
   const reactId = useId();
   const clipId = `ww-mountain-reveal-${reactId.replace(/:/g, "")}`;
   const redLineRef = useRef<SVGLineElement>(null);
@@ -27,21 +55,45 @@ export function AppPreloader() {
   const clipRectRef = useRef<SVGRectElement>(null);
   const [leaving, setLeaving] = useState(false);
   const [visible, setVisible] = useState(true);
+  const [cycle, setCycle] = useState(0);
+  const initialCycle = useRef(true);
+  const wasRouteLoading = useRef(routeLoading);
+  const initialPageFetches = useIsFetching({
+    predicate: (query) => query.state.data === undefined,
+  });
 
   useEffect(() => {
+    if (routeLoading && !wasRouteLoading.current) {
+      setLeaving(false);
+      setVisible(true);
+      setCycle((value) => value + 1);
+    }
+    wasRouteLoading.current = routeLoading;
+  }, [routeLoading]);
+
+  useEffect(() => {
+    if (!visible || routeLoading || initialPageFetches > 0) return;
+
     let frame = 0;
     let startTime: number | undefined;
-    let animationFinished = false;
     let hasStartedLeaving = false;
     let removalTimer: number | undefined;
+    let cancelled = false;
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const duration = reduceMotion ? 250 : ANIMATION_DURATION_MS;
+    const duration = reduceMotion
+      ? 100
+      : initialCycle.current
+        ? ANIMATION_DURATION_MS
+        : TRANSITION_MINIMUM_MS;
 
     function beginLeaving() {
-      if (hasStartedLeaving || (!animationFinished && !reduceMotion)) return;
+      if (hasStartedLeaving || cancelled) return;
       hasStartedLeaving = true;
       setLeaving(true);
-      removalTimer = window.setTimeout(() => setVisible(false), 450);
+      removalTimer = window.setTimeout(() => {
+        setVisible(false);
+        initialCycle.current = false;
+      }, 450);
     }
 
     function render(progress: number) {
@@ -60,23 +112,22 @@ export function AppPreloader() {
         frame = window.requestAnimationFrame(animate);
         return;
       }
-      animationFinished = true;
-      beginLeaving();
+      void waitForPageAssets().then(beginLeaving);
     }
 
     render(0);
     frame = window.requestAnimationFrame(animate);
     const safetyTimer = window.setTimeout(() => {
-      animationFinished = true;
       beginLeaving();
     }, SAFETY_TIMEOUT_MS);
 
     return () => {
+      cancelled = true;
       window.cancelAnimationFrame(frame);
       window.clearTimeout(safetyTimer);
       if (removalTimer !== undefined) window.clearTimeout(removalTimer);
     };
-  }, []);
+  }, [cycle, initialPageFetches, routeKey, routeLoading, visible]);
 
   if (!visible) return null;
 
@@ -92,9 +143,9 @@ export function AppPreloader() {
     >
       <div className="ww-preloader-track-wrap">
         <div className="ww-preloader-meta" aria-hidden="true">
-          <span className="ww-preloader-brand">OTTO1890</span>
+          <span className="ww-preloader-brand">Rider Hub</span>
           <span className="ww-preloader-dot" />
-          <span className="ww-preloader-label">Preparing stage</span>
+          <span className="ww-preloader-label">Preparing to start</span>
         </div>
 
         <div className="ww-preloader-canvas-box" aria-hidden="true">

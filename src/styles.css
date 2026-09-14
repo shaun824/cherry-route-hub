@@ -313,8 +313,8 @@
   }
 }
 
-/* Weekend Warrior startup screen. The app renders underneath while this
-   lightweight SVG completes one pass and the browser finishes loading. */
+/* Rider Hub loading screen. The destination renders underneath while this
+   lightweight SVG covers startup and page-to-page transitions. */
 .ww-preloader {
   position: fixed;
   inset: 0;
@@ -350,7 +350,7 @@
   margin-bottom: 6px;
   font-family: var(--font-display);
   font-size: 11px;
-  letter-spacing: 3px;
+  letter-spacing: 0;
   text-transform: uppercase;
 }
 
