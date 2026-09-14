@@ -86,10 +86,13 @@ function ResultsAdminPage() {
     setResultsUrl(resultsQ.data.results_url ?? "");
     setRiderTemplate(resultsQ.data.results_rider_url_template ?? "");
     setPublished(resultsQ.data.results_published);
+    setRaceId(resultsQ.data.myriad_race_id ?? "");
+    setFeedPreview(null);
     setSettingsLoadedFor(eventId);
   }
 
   const saveSettings = useServerFn(saveResultsSettings);
+  const checkRace = useServerFn(checkMyriadRace);
   const runImport = useServerFn(importEventResults);
   const removeSet = useServerFn(deleteResultSet);
 
