@@ -69,8 +69,14 @@ async function getJson<T>(
     } catch (err) {
       lastErr = err;
       res = null;
-      // A timeout means that start group is stalling; don't queue behind it again.
-      if (err instanceof Error && (err.name === "TimeoutError" || err.name === "AbortError")) break;
+      // A timeout usually means that start group is stalling; don't queue behind it again.
+      if (
+        !opts.retryTimeouts &&
+        err instanceof Error &&
+        (err.name === "TimeoutError" || err.name === "AbortError")
+      )
+        break;
+
     }
     if (attempt < 2) await new Promise((r) => setTimeout(r, 300 * (attempt + 1)));
   }
