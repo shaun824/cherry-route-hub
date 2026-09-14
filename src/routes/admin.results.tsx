@@ -124,6 +124,7 @@ function ResultsAdminPage() {
           results_url: resultsUrl.trim() || null,
           results_rider_url_template: riderTemplate.trim() || null,
           results_published: published,
+          myriad_race_id: raceId.trim() || null,
         },
       });
       setMsg("Results settings saved.");
