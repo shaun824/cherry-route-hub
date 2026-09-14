@@ -203,6 +203,8 @@ function RootComponent() {
   const isEmbed = useRouterState({
     select: (s) => s.location.pathname.startsWith("/embed"),
   });
+  const routeLoading = useRouterState({ select: (s) => s.isLoading });
+  const routeKey = useRouterState({ select: (s) => s.location.href });
   const onAuthPages = useRouterState({
     select: (s) =>
       s.location.pathname.startsWith("/auth") ||
@@ -237,7 +239,7 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      {isEmbed ? null : <AppPreloader />}
+      {isEmbed ? null : <AppPreloader routeLoading={routeLoading} routeKey={routeKey} />}
       {isEmbed ? (
         <Outlet />
       ) : isAdmin ? (
