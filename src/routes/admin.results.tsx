@@ -136,6 +136,21 @@ function ResultsAdminPage() {
     }
   }
 
+  async function handleCheckFeed() {
+    if (!raceId.trim()) return;
+    setBusy(true);
+    setFeedPreview(null);
+    try {
+      const res = await checkRace({ data: { raceId: raceId.trim() } });
+      setFeedPreview(res);
+      setMsg(res.ok ? `Feed found: ${res.name}` : res.error);
+    } catch (e) {
+      setMsg(e instanceof Error ? e.message : "Could not reach the results feed.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function handleImport() {
     if (!eventId || rows.length === 0) return;
     setBusy(true);
