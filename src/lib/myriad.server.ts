@@ -87,10 +87,15 @@ async function getJson<T>(
 
 
   if (!res) {
+    const timedOut =
+      lastErr instanceof Error && (lastErr.name === "TimeoutError" || lastErr.name === "AbortError");
     throw new MyriadError(
       `The results feed could not be reached${lastErr instanceof Error ? `: ${lastErr.message}` : "."}`,
+      null,
+      timedOut,
     );
   }
+
   if (!res.ok) {
     throw new MyriadError(
       res.status === 405
