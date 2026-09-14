@@ -32,16 +32,13 @@ export function AppPreloader() {
     let frame = 0;
     let startTime: number | undefined;
     let animationFinished = false;
-    // Hydration has already produced this component, so an interactive document
-    // is ready to reveal even if a slow image keeps the window load event open.
-    let pageFinished = document.readyState !== "loading";
     let hasStartedLeaving = false;
     let removalTimer: number | undefined;
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const duration = reduceMotion ? 250 : ANIMATION_DURATION_MS;
 
     function beginLeaving() {
-      if (hasStartedLeaving || (!animationFinished && !reduceMotion) || !pageFinished) return;
+      if (hasStartedLeaving || (!animationFinished && !reduceMotion)) return;
       hasStartedLeaving = true;
       setLeaving(true);
       removalTimer = window.setTimeout(() => setVisible(false), 450);
@@ -67,22 +64,14 @@ export function AppPreloader() {
       beginLeaving();
     }
 
-    function onPageLoad() {
-      pageFinished = true;
-      beginLeaving();
-    }
-
     render(0);
-    window.addEventListener("load", onPageLoad, { once: true });
     frame = window.requestAnimationFrame(animate);
     const safetyTimer = window.setTimeout(() => {
-      pageFinished = true;
       animationFinished = true;
       beginLeaving();
     }, SAFETY_TIMEOUT_MS);
 
     return () => {
-      window.removeEventListener("load", onPageLoad);
       window.cancelAnimationFrame(frame);
       window.clearTimeout(safetyTimer);
       if (removalTimer !== undefined) window.clearTimeout(removalTimer);
