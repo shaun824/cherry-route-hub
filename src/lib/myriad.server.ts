@@ -51,7 +51,7 @@ async function getJson<T>(path: string, params: Record<string, string | number |
 
   // The timing host intermittently returns 5xx (Cloudflare 502/522/524) and sometimes
   // stalls for ~40s on empty start groups; cap each try and retry briefly.
-  const TIMEOUT_MS = 8_000;
+  const TIMEOUT_MS = 6_000;
   let res: Response | null = null;
   let lastErr: unknown = null;
   for (let attempt = 0; attempt < 3; attempt += 1) {
@@ -64,9 +64,12 @@ async function getJson<T>(path: string, params: Record<string, string | number |
     } catch (err) {
       lastErr = err;
       res = null;
+      // A timeout means that start group is stalling; don't queue behind it again.
+      if (err instanceof Error && (err.name === "TimeoutError" || err.name === "AbortError")) break;
     }
     if (attempt < 2) await new Promise((r) => setTimeout(r, 300 * (attempt + 1)));
   }
+
 
   if (!res) {
     throw new MyriadError(
