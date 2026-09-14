@@ -171,20 +171,15 @@ export const getEventResults = createServerFn({ method: "GET" })
           return { ...base, source: "myriad" as const, feed_error: null, ...live };
         }
       } catch (e) {
-        return {
-          ...base,
-          source: "import" as const,
-          feed_error: e instanceof Error ? e.message : "The results feed is unavailable.",
-          sets: [],
-          rows: [],
-        };
+        // Fall back to whatever was imported, but say why the feed is missing.
+        feedError = e instanceof Error ? e.message : "The results feed is unavailable.";
       }
     }
 
     return {
       ...base,
       source: "import" as const,
-      feed_error: null,
+      feed_error: feedError,
       sets: (sets ?? []).map((s: any) => ({
         id: String(s.id),
         label: String(s.label),
