@@ -49,6 +49,8 @@ export type EventDay = {
   id: string;
   date: string;            // ISO date (YYYY-MM-DD acceptable)
   label?: string;          // e.g. "Day 1 — Prologue"
+  summary?: string;        // what the day's riding is like, shown above the routes
+  imageUrl?: string;       // photo / route picture for the day
   routes: EventRoute[];
 };
 

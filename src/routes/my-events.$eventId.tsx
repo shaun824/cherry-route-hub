@@ -667,6 +667,19 @@ function RoutesPanel({
             <SectionTitle>
               {day.label || (day.date ? new Date(day.date).toDateString() : `Day ${di + 1}`)}
             </SectionTitle>
+            {day.imageUrl ? (
+              <img
+                src={day.imageUrl}
+                alt={`${day.label || `Day ${di + 1}`} riding`}
+                loading="lazy"
+                className="mt-2 h-44 w-full rounded-2xl object-cover ring-1 ring-border"
+              />
+            ) : null}
+            {day.summary ? (
+              <p className="mt-2 whitespace-pre-line text-xs leading-relaxed text-ink-soft">
+                {day.summary}
+              </p>
+            ) : null}
             <ul className="mt-2 space-y-3">
               {routes.map((r: EventRoute, ri) => {
                 const kmls = r.kmlUrls ?? [];
