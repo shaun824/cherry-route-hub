@@ -49,7 +49,24 @@ async function getJson<T>(path: string, params: Record<string, string | number |
   const hit = cache.get(url);
   if (hit && Date.now() - hit.at < CACHE_MS) return hit.value as T;
 
-  const res = await fetch(url, { headers: { accept: "application/json" } });
+  // The timing host intermittently returns 5xx (Cloudflare 502/522/524); retry briefly.
+  let res: Response | null = null;
+  let lastErr: unknown = null;
+  for (let attempt = 0; attempt < 4; attempt += 1) {
+    try {
+      res = await fetch(url, { headers: { accept: "application/json" } });
+      if (res.status < 500) break;
+    } catch (err) {
+      lastErr = err;
+      res = null;
+    }
+    if (attempt < 3) await new Promise((r) => setTimeout(r, 300 * (attempt + 1)));
+  }
+  if (!res) {
+    throw new MyriadError(
+      `The results feed could not be reached${lastErr instanceof Error ? `: ${lastErr.message}` : "."}`,
+    );
+  }
   if (!res.ok) {
     throw new MyriadError(
       res.status === 405
@@ -57,6 +74,7 @@ async function getJson<T>(path: string, params: Record<string, string | number |
         : `The results feed replied with ${res.status}.`,
     );
   }
+
   const json = (await res.json()) as any;
   // The feed reports data errors with HTTP 200 and a top-level error object.
   if (json?.error) {
@@ -145,6 +163,24 @@ async function fetchAllPages(raceId: string, eventId: number): Promise<RawSet[]>
   }
   return merged;
 }
+
+/** The feed rate-limits bursts (returns 5xx), so keep requests to a few at a time. */
+async function mapLimit<T, R>(items: T[], limit: number, fn: (item: T, i: number) => Promise<R>) {
+  const out = new Array<R>(items.length);
+  let cursor = 0;
+  await Promise.all(
+    Array.from({ length: Math.min(limit, items.length) }, async () => {
+      for (;;) {
+        const i = cursor++;
+        if (i >= items.length) return;
+        out[i] = await fn(items[i] as T, i);
+      }
+    }),
+  );
+  return out;
+}
+
+
 
 function stripTags(v: string) {
   return v.replace(/<[^>]*>/g, "").trim();
@@ -241,16 +277,15 @@ function normalise(raceEventName: string, sets: RawSet[], baseOrder: number): My
 /** Everything published for a race, normalised into the app's results shape. */
 export async function fetchRaceResults(raceId: string): Promise<MyriadNormalised> {
   const race = await fetchRace(raceId, { mostRecentOnly: true });
-  const parts = await Promise.all(
-    race.events.map(async (ev, i) => {
-      try {
-        const sets = await fetchAllPages(raceId, ev.event_id);
-        return normalise(ev.name, sets, i);
-      } catch {
-        return { sets: [], rows: [] } as MyriadNormalised;
-      }
-    }),
-  );
+  const parts = await mapLimit(race.events, 4, async (ev, i) => {
+    try {
+      const sets = await fetchAllPages(raceId, ev.event_id);
+      return normalise(ev.name, sets, i);
+    } catch {
+      return { sets: [], rows: [] } as MyriadNormalised;
+    }
+  });
+
   return {
     sets: parts.flatMap((p) => p.sets).sort((a, b) => a.sort_order - b.sort_order),
     rows: parts.flatMap((p) => p.rows),
@@ -263,19 +298,18 @@ export async function findRaceParticipant(
   query: { lastName?: string; bib?: string },
 ): Promise<{ eventName: string; sets: ResultSet[]; rows: ResultRow[] }[]> {
   const race = await fetchRace(raceId, { mostRecentOnly: true });
-  const found = await Promise.all(
-    race.events.map(async (ev, i) => {
-      try {
-        const sets = await fetchEventResultSets(raceId, ev.event_id, {
-          last_name: query.lastName,
-          bib_num: query.bib,
-        });
-        const n = normalise(ev.name, sets, i);
-        return n.rows.length ? { eventName: ev.name, ...n } : null;
-      } catch {
-        return null;
-      }
-    }),
-  );
+  const found = await mapLimit(race.events, 4, async (ev, i) => {
+    try {
+      const sets = await fetchEventResultSets(raceId, ev.event_id, {
+        last_name: query.lastName,
+        bib_num: query.bib,
+      });
+      const n = normalise(ev.name, sets, i);
+      return n.rows.length ? { eventName: ev.name, ...n } : null;
+    } catch {
+      return null;
+    }
+  });
+
   return found.filter(Boolean) as { eventName: string; sets: ResultSet[]; rows: ResultRow[] }[];
 }
