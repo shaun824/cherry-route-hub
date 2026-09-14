@@ -2,8 +2,8 @@ import { useIsFetching } from "@tanstack/react-query";
 import { useEffect, useId, useRef, useState } from "react";
 
 const ANIMATION_DURATION_MS = 1_600;
-const SAFETY_TIMEOUT_MS = 8_000;
-const TRANSITION_MINIMUM_MS = 500;
+const SAFETY_TIMEOUT_MS = 5_000;
+const TRANSITION_MINIMUM_MS = 400;
 
 function wheelieAngle(progress: number) {
   if (progress >= 0.32 && progress < 0.44) {

@@ -448,3 +448,28 @@
 @media (prefers-reduced-motion: reduce) {
   .ww-loader-wind { animation: none; }
 }
+
+/* Preloader performance optimizations */
+.ww-preloader {
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+.ww-preloader-svg {
+  will-change: transform;
+}
+
+.ww-bike-chassis, 
+.ww-path-fill, 
+.ww-mountain-active {
+  will-change: transform, width, x2;
+}
+
+@media (max-width: 768px) {
+  /* Disable expensive filters on mobile for smoother animation */
+  .ww-mountain-active,
+  .ww-path-fill {
+    filter: none !important;
+    stroke-opacity: 0.9;
+  }
+}
