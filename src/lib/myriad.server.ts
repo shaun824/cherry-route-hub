@@ -112,9 +112,12 @@ export async function fetchRace(
   raceId: string,
   opts: { mostRecentOnly?: boolean } = {},
 ): Promise<MyriadRace> {
-  const json = await getJson<any>(`/race/${encodeURIComponent(raceId)}`, {
-    most_recent_events_only: opts.mostRecentOnly ? "T" : undefined,
-  });
+  const json = await getJson<any>(
+    `/race/${encodeURIComponent(raceId)}`,
+    { most_recent_events_only: opts.mostRecentOnly ? "T" : undefined },
+    { timeoutMs: 15_000, retryTimeouts: true },
+  );
+
   const race = json?.race ?? {};
   return {
     race_id: Number(race.race_id ?? raceId),
