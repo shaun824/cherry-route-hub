@@ -8,17 +8,22 @@ import {
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
-import { useEffect, type ReactNode } from "react";
+import { lazy, Suspense, useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { AppShell } from "../components/app-shell";
-import { AssistantWidget } from "../components/assistant-widget";
-import { SetPasswordPrompt } from "../components/set-password-prompt";
 import { AppPreloader } from "../components/app-preloader";
 import { supabase } from "../integrations/supabase/client";
 import { usePageTracking } from "../lib/analytics";
 import { ensureOfflineWorker } from "../lib/offline-pack";
+
+const LazyAssistantWidget = lazy(() =>
+  import("../components/assistant-widget").then((module) => ({ default: module.AssistantWidget })),
+);
+const LazySetPasswordPrompt = lazy(() =>
+  import("../components/set-password-prompt").then((module) => ({ default: module.SetPasswordPrompt })),
+);
 
 
 function NotFoundComponent() {
@@ -204,7 +209,6 @@ function RootComponent() {
     select: (s) => s.location.pathname.startsWith("/embed"),
   });
   const routeLoading = useRouterState({ select: (s) => s.isLoading });
-  const routeKey = useRouterState({ select: (s) => s.location.href });
   const onAuthPages = useRouterState({
     select: (s) =>
       s.location.pathname.startsWith("/auth") ||
@@ -239,20 +243,20 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      {isEmbed ? null : <AppPreloader routeLoading={routeLoading} routeKey={routeKey} />}
+      {isEmbed ? null : <AppPreloader routeLoading={routeLoading} />}
       {isEmbed ? (
         <Outlet />
       ) : isAdmin ? (
         <>
           <Outlet />
-          <AssistantWidget />
+          <Suspense fallback={null}><LazyAssistantWidget /></Suspense>
         </>
       ) : (
         <AppShell>
           <Outlet />
         </AppShell>
       )}
-      {onAuthPages ? null : <SetPasswordPrompt />}
+      {onAuthPages ? null : <Suspense fallback={null}><LazySetPasswordPrompt /></Suspense>}
     </QueryClientProvider>
 
   );

@@ -1,14 +1,17 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { Home, Ticket, Binoculars, User, LogIn, X, HardHat, BedDouble, Smartphone, ClipboardList, GraduationCap, RefreshCw } from "lucide-react";
-import { useEffect, useState, type ReactNode } from "react";
+import { lazy, Suspense, useEffect, useState, type ReactNode } from "react";
 import { useSession, useIsCrew } from "@/lib/auth";
 import { usePullToRefresh } from "@/lib/use-pull-to-refresh";
 import { useEntryAutoSync } from "@/lib/use-entry-autosync";
 import { useCrewMode } from "@/lib/crew-mode";
 import { Footer } from "@/components/footer";
 import { BrandMark } from "@/components/ui-bits";
-import { AssistantWidget } from "@/components/assistant-widget";
 import { InstallAppPrompt } from "@/components/install-app-prompt";
+
+const LazyAssistantWidget = lazy(() =>
+  import("@/components/assistant-widget").then((module) => ({ default: module.AssistantWidget })),
+);
 
 const riderTabs = [
   { to: "/", label: "Home", icon: Home, match: (p: string) => p === "/" },
@@ -260,7 +263,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       </nav>
 
       <InstallAppPrompt />
-      <AssistantWidget />
+      <Suspense fallback={null}><LazyAssistantWidget /></Suspense>
     </div>
   );
 }
