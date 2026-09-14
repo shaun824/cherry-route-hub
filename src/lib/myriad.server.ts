@@ -159,25 +159,40 @@ async function fetchEventResultSets(
   raceId: string,
   eventId: number,
   params: Record<string, string | number | undefined> = {},
+  opts: { timeoutMs?: number } = {},
 ): Promise<RawSet[]> {
-  const json = await getJson<any>(`/race/${encodeURIComponent(raceId)}/results/get-results`, {
-    event_id: eventId,
-    include_total_finishers: "T",
-    ...params,
-  });
+  const json = await getJson<any>(
+    `/race/${encodeURIComponent(raceId)}/results/get-results`,
+    { event_id: eventId, include_total_finishers: "T", ...params },
+    opts,
+  );
   return (json?.individual_results_sets ?? []) as RawSet[];
 }
 
 /** All pages of one event's results (the feed pages 50 at a time). */
-async function fetchAllPages(raceId: string, eventId: number): Promise<RawSet[]> {
+async function fetchAllPages(
+  raceId: string,
+  eventId: number,
+  opts: { timeoutMs?: number } = {},
+): Promise<RawSet[]> {
   const perPage = 50;
-  const first = await fetchEventResultSets(raceId, eventId, { page: 1, results_per_page: perPage });
+  const first = await fetchEventResultSets(
+    raceId,
+    eventId,
+    { page: 1, results_per_page: perPage },
+    opts,
+  );
   const merged = first.map((s) => ({ ...s, results: [...(s.results ?? [])] }));
 
   const maxFinishers = Math.max(0, ...merged.map((s) => Number(s.num_finishers ?? 0)));
   const pages = Math.min(Math.ceil(maxFinishers / perPage), 40); // hard cap: 2000 rows / event
   for (let page = 2; page <= pages; page++) {
-    const next = await fetchEventResultSets(raceId, eventId, { page, results_per_page: perPage });
+    const next = await fetchEventResultSets(
+      raceId,
+      eventId,
+      { page, results_per_page: perPage },
+      opts,
+    );
     let added = 0;
     for (const set of next) {
       const target = merged.find(
@@ -195,6 +210,7 @@ async function fetchAllPages(raceId: string, eventId: number): Promise<RawSet[]>
   }
   return merged;
 }
+
 
 /** The feed rate-limits bursts (returns 5xx), so keep requests to a few at a time. */
 async function mapLimit<T, R>(items: T[], limit: number, fn: (item: T, i: number) => Promise<R>) {
