@@ -38,6 +38,10 @@ export const Route = createFileRoute("/admin/email-builder/$stepId")({
     meta: [
       { title: "Email builder · Red Cherry Events admin" },
       { name: "description", content: "Build an event email visually — headings, pictures, buttons — and publish it to the workflow." },
+      { property: "og:title", content: "Email builder · Red Cherry Events admin" },
+      { property: "og:description", content: "Build an event email visually — headings, pictures, buttons — and publish it to the workflow." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { name: "robots", content: "noindex,nofollow" },
     ],
   }),
