@@ -298,7 +298,7 @@ function ResultsAdminPage() {
                 checked={published}
                 onChange={(e) => setPublished(e.target.checked)}
               />
-              Publish imported results to riders
+              Publish results to riders
             </label>
             <button
               type="button"
