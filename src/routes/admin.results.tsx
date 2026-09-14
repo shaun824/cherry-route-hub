@@ -59,6 +59,8 @@ function ResultsAdminPage() {
   const [resultsUrl, setResultsUrl] = useState("");
   const [riderTemplate, setRiderTemplate] = useState("");
   const [published, setPublished] = useState(false);
+  const [raceId, setRaceId] = useState("");
+  const [feedPreview, setFeedPreview] = useState<MyriadRacePreview | null>(null);
   const [settingsLoadedFor, setSettingsLoadedFor] = useState<string | null>(null);
 
   const eventsQ = useQuery({
