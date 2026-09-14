@@ -15,6 +15,7 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { AppShell } from "../components/app-shell";
 import { AssistantWidget } from "../components/assistant-widget";
 import { SetPasswordPrompt } from "../components/set-password-prompt";
+import { AppPreloader } from "../components/app-preloader";
 import { supabase } from "../integrations/supabase/client";
 import { usePageTracking } from "../lib/analytics";
 import { ensureOfflineWorker } from "../lib/offline-pack";
@@ -236,6 +237,7 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
+      {isEmbed ? null : <AppPreloader />}
       {isEmbed ? (
         <Outlet />
       ) : isAdmin ? (
