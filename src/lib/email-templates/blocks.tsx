@@ -25,6 +25,28 @@ const caption = {
 const headingSize = { xl: '28px', lg: '22px', md: '18px' } as const
 const spacerSize = { sm: '8px', md: '20px', lg: '36px' } as const
 
+const routePairCss = `
+.route-pair-swipe{display:none;}
+.route-pair-fallback{display:block;}
+@supports (scroll-snap-type:x mandatory){
+  .route-pair-swipe{display:block!important;overflow-x:auto!important;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;white-space:nowrap;}
+  .route-pair-fallback{display:none!important;}
+  .route-pair-slide{display:inline-block!important;width:100%!important;vertical-align:top;white-space:normal;scroll-snap-align:start;}
+}
+`
+
+function RoutePicture({ day }: { day: { label: string; detail?: string | null; url: string; href?: string | null } }) {
+  if (!/^https:\/\//i.test(day.url)) return null
+  const picture = <Img src={day.url} alt={`${day.label} route profile`} width="600" style={img} />
+  return (
+    <Section style={{ margin: '0 0 14px', lineHeight: 0 }}>
+      <Text style={{ ...caption, color: brand.ink, fontSize: '14px', fontWeight: 700, margin: '0 0 7px', textAlign: 'left' }}>{day.label}</Text>
+      {day.href ? <Link href={day.href}>{picture}</Link> : picture}
+      {day.detail ? <Text style={caption}>{day.detail}</Text> : null}
+    </Section>
+  )
+}
+
 /** Renders one builder block as email-safe markup. Text is never raw HTML. */
 export function EmailBlockView({ block }: { block: EmailBlock }) {
   switch (block.type) {
@@ -82,6 +104,28 @@ export function EmailBlockView({ block }: { block: EmailBlock }) {
               )
             })}
           </Row>
+        </Section>
+      )
+    }
+
+    case 'route-pair': {
+      const days = block.days.filter((day) => /^https:\/\//i.test(day.url))
+      if (!days.length) return null
+      return (
+        <Section style={{ margin: '4px 0 24px' }}>
+          <style>{routePairCss}</style>
+          <Text style={{ ...text, fontSize: '18px', fontWeight: 700, margin: '0 0 2px' }}>{block.category}</Text>
+          <Text style={{ ...caption, margin: '0 0 10px', textAlign: 'left' }}>Swipe across for Day 2&nbsp;&nbsp; • ○</Text>
+          <div className="route-pair-swipe" style={{ display: 'none' }}>
+            {days.map((day, index) => (
+              <div className="route-pair-slide" key={`${day.label}-${index}`}>
+                <RoutePicture day={day} />
+              </div>
+            ))}
+          </div>
+          <div className="route-pair-fallback">
+            {days.map((day, index) => <RoutePicture day={day} key={`${day.label}-${index}`} />)}
+          </div>
         </Section>
       )
     }

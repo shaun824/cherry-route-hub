@@ -9,6 +9,12 @@ export type EmailBlock =
   | { id: string; type: "text"; text: string; align?: EmailBlockAlign }
   | { id: string; type: "image"; url: string; caption?: string | null; href?: string | null }
   | { id: string; type: "columns"; items: { url: string; caption?: string | null; href?: string | null }[] }
+  | {
+      id: string;
+      type: "route-pair";
+      category: string;
+      days: { label: string; detail?: string | null; url: string; href?: string | null }[];
+    }
   | { id: string; type: "button"; label: string; url: string; align?: EmailBlockAlign }
   | { id: string; type: "list"; items: string[]; ordered?: boolean }
   | { id: string; type: "quote"; text: string; cite?: string | null }
@@ -23,6 +29,7 @@ export const BLOCK_LIBRARY: { type: EmailBlockType; label: string; hint: string 
   { type: "text", label: "Paragraph", hint: "Normal writing" },
   { type: "image", label: "Picture", hint: "One full-width picture" },
   { type: "columns", label: "Two pictures", hint: "Side by side" },
+  { type: "route-pair", label: "Swipeable routes", hint: "Day 1 and Day 2 route profiles" },
   { type: "button", label: "Button", hint: "A tappable link" },
   { type: "list", label: "Bullet list", hint: "Short points" },
   { type: "callout", label: "Highlight box", hint: "Stands out from the rest" },
@@ -48,6 +55,16 @@ export function makeBlock(type: EmailBlockType): EmailBlock {
       return { id, type, url: "", caption: null, href: null };
     case "columns":
       return { id, type, items: [{ url: "", caption: null }, { url: "", caption: null }] };
+    case "route-pair":
+      return {
+        id,
+        type,
+        category: "Route option",
+        days: [
+          { label: "Day 1", detail: "", url: "", href: null },
+          { label: "Day 2", detail: "", url: "", href: null },
+        ],
+      };
     case "button":
       return { id, type, label: "Open your event page", url: "", align: "center" };
     case "list":
@@ -81,6 +98,8 @@ export function blockSummary(b: EmailBlock): string {
       return b.url ? b.url.split("/").pop() || b.url : "No picture chosen yet";
     case "columns":
       return `${b.items.filter((i) => i.url).length} of ${b.items.length} pictures set`;
+    case "route-pair":
+      return `${b.category || "Route option"} · ${b.days.filter((d) => d.url).length} days set`;
     case "button":
       return `${b.label || "Button"} → ${b.url || "no link yet"}`;
     case "list":
@@ -120,6 +139,19 @@ export function normaliseBlocks(raw: unknown): EmailBlock[] {
             url: str(i?.url),
             caption: i?.caption ? str(i.caption) : null,
             href: i?.href ? str(i.href) : null,
+          })),
+        });
+        break;
+      case "route-pair":
+        out.push({
+          id,
+          type: "route-pair",
+          category: str(b['category']) || "Route option",
+          days: (Array.isArray(b['days']) ? b['days'] : []).slice(0, 2).map((d: any, index: number) => ({
+            label: str(d?.label) || `Day ${index + 1}`,
+            detail: d?.detail ? str(d.detail) : null,
+            url: str(d?.url),
+            href: d?.href ? str(d.href) : null,
           })),
         });
         break;
@@ -202,6 +234,13 @@ export function blocksToPlainText(blocks: EmailBlock[]): string {
         break;
       case "list":
         parts.push(b.items.filter(Boolean).map((i) => `• ${i}`).join("\n"));
+        break;
+      case "route-pair":
+        parts.push(
+          [b.category, ...b.days.map((d) => [d.label, d.detail].filter(Boolean).join(" — "))]
+            .filter(Boolean)
+            .join("\n"),
+        );
         break;
       default:
         break;
