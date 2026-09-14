@@ -28,7 +28,11 @@ type AppPreloaderProps = {
 async function waitForPageAssets() {
   if (document.fonts?.ready) await document.fonts.ready.catch(() => undefined);
 
-  const pendingImages = Array.from(document.images).filter((image) => !image.complete);
+  const pendingImages = Array.from(document.images).filter((image) => {
+    if (image.complete) return false;
+    const bounds = image.getBoundingClientRect();
+    return image.loading !== "lazy" || (bounds.top < window.innerHeight && bounds.bottom > 0);
+  });
   await Promise.allSettled(
     pendingImages.map(
       (image) =>
@@ -54,12 +58,12 @@ export function AppPreloader({ routeLoading, routeKey }: AppPreloaderProps) {
   const [cycle, setCycle] = useState(0);
   const initialCycle = useRef(true);
   const wasRouteLoading = useRef(routeLoading);
-  const routeStartedAt = useRef(performance.now());
-  const isFetching = useIsFetching();
+  const initialPageFetches = useIsFetching({
+    predicate: (query) => query.state.data === undefined,
+  });
 
   useEffect(() => {
     if (routeLoading && !wasRouteLoading.current) {
-      routeStartedAt.current = performance.now();
       setLeaving(false);
       setVisible(true);
       setCycle((value) => value + 1);
@@ -68,7 +72,7 @@ export function AppPreloader({ routeLoading, routeKey }: AppPreloaderProps) {
   }, [routeLoading]);
 
   useEffect(() => {
-    if (!visible || routeLoading || isFetching > 0) return;
+    if (!visible || routeLoading || initialPageFetches > 0) return;
 
     let frame = 0;
     let startTime: number | undefined;
@@ -123,7 +127,7 @@ export function AppPreloader({ routeLoading, routeKey }: AppPreloaderProps) {
       window.clearTimeout(safetyTimer);
       if (removalTimer !== undefined) window.clearTimeout(removalTimer);
     };
-  }, [cycle, isFetching, routeKey, routeLoading, visible]);
+  }, [cycle, initialPageFetches, routeKey, routeLoading, visible]);
 
   if (!visible) return null;
 
