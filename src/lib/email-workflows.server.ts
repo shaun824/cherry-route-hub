@@ -237,6 +237,19 @@ export async function processDueWorkflowEmails(
         if (now.getTime() < anchor.getTime() + offsetMs) continue;
 
         touched = true;
+        // Claim this (step, email) pair before sending so two overlapping runs
+        // (e.g. cron and a manual trigger) can never send the same mail twice.
+        const { error: claimError } = await admin.from("event_email_sends").insert({
+          step_id: step.id,
+          campaign_id: campaign.id,
+          event_id: event.id,
+          email: rider.email,
+          status: "sending",
+        });
+        if (claimError) {
+          done.add(`${step.id}|${rider.email}`);
+          continue;
+        }
         try {
           const r = await sendWorkflowEmail(admin, {
             campaignId: campaign.id,
