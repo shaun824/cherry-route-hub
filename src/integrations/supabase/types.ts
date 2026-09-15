@@ -1042,6 +1042,7 @@ export type Database = {
           image_urls: string[]
           position: number
           subject: string
+          template_name: string
           updated_at: string
         }
         Insert: {
@@ -1059,6 +1060,7 @@ export type Database = {
           image_urls?: string[]
           position?: number
           subject: string
+          template_name?: string
           updated_at?: string
         }
         Update: {
@@ -1076,6 +1078,7 @@ export type Database = {
           image_urls?: string[]
           position?: number
           subject?: string
+          template_name?: string
           updated_at?: string
         }
         Relationships: [
