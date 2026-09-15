@@ -6,6 +6,7 @@ import { EmailAPIError } from "@lovable.dev/email-js";
 import { normaliseBlocks } from "./email-blocks";
 import { sendTemplateEmail } from "./email-templates/send-email";
 import { absoluteLogo } from "./entry-welcome.server";
+import { buildPePlettExtrasEmailData } from "./pe-plett-extras.server";
 
 type AnyClient = any;
 
@@ -61,12 +62,15 @@ interface Recipient {
   email: string;
   name: string | null;
   enteredAt: string;
+  entrantId: string;
+  extras: any[];
+  registrationRef: string | null;
 }
 
 async function loadRecipients(admin: AnyClient, eventId: string): Promise<Recipient[]> {
   const { data, error } = await admin
     .from("event_entrants")
-    .select("created_at, entrants(full_name, email)")
+    .select("id, created_at, extras, registration_ref, entrants(full_name, email)")
     .eq("event_id", eventId)
     .limit(5000);
   if (error) throw new Error(error.message);
@@ -82,6 +86,9 @@ async function loadRecipients(admin: AnyClient, eventId: string): Promise<Recipi
         email,
         name: row.entrants?.full_name ?? existing?.name ?? null,
         enteredAt: row.created_at,
+        entrantId: row.id,
+        extras: Array.isArray(row.extras) ? row.extras : [],
+        registrationRef: row.registration_ref ?? null,
       });
     }
   }
@@ -97,14 +104,25 @@ export async function sendWorkflowEmail(
     step: any;
     to: string;
     name?: string | null;
+    entrantId?: string;
+    extras?: any[];
+    registrationRef?: string | null;
     record?: boolean;
   },
 ): Promise<"sent" | "suppressed"> {
   const { event, step } = opts;
   const eventUrl = `${APP_URL}/my-events/${event.id}`;
-  const result = await sendTemplateEmail("event-update", opts.to, {
+  const isPePlettExtras = step.template_name === "pe-plett-extras";
+  const result = await sendTemplateEmail(isPePlettExtras ? "pe-plett-extras" : "event-update", opts.to, {
     idempotencyKey: `workflow-${opts.stepId}-${opts.to}`,
-    templateData: {
+    templateData: isPePlettExtras
+      ? buildPePlettExtrasEmailData({
+          firstName: firstName(opts.name) ?? undefined,
+          eventName: event.name,
+          registrationRef: opts.registrationRef,
+          extras: opts.extras,
+        })
+      : {
       firstName: firstName(opts.name),
       eventName: event.name,
       eventDate: formatDate(event.event_date),
@@ -121,8 +139,8 @@ export async function sendWorkflowEmail(
       body: step.body ?? "",
       ctaLabel: step.cta_label ?? null,
       ctaUrl: step.cta_url ?? null,
-      eventUrl,
-    },
+          eventUrl,
+        },
   });
 
   if (opts.record !== false) {
@@ -183,7 +201,7 @@ export async function processDueWorkflowEmails(
 
     const { data: stepRows } = await admin
       .from("event_email_steps")
-      .select("id, position, subject, heading, body, cta_label, cta_url, banner_url, image_urls, delay_hours, enabled")
+      .select("id, position, subject, heading, body, cta_label, cta_url, banner_url, image_urls, delay_hours, enabled, template_name")
       .eq("campaign_id", campaign.id)
       .order("position", { ascending: true });
     const steps = ((stepRows ?? []) as any[]).filter((s) => s.enabled);
@@ -227,6 +245,9 @@ export async function processDueWorkflowEmails(
             step,
             to: rider.email,
             name: rider.name,
+            entrantId: rider.entrantId,
+            extras: rider.extras,
+            registrationRef: rider.registrationRef,
           });
           if (r === "sent") out.sent++;
           else out.suppressed++;
