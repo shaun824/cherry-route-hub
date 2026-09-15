@@ -1,8 +1,11 @@
 import * as React from 'react'
-import { Button, Heading, Link, Section, Text } from '@react-email/components'
+import { Button, Heading, Img, Link, Section, Text } from '@react-email/components'
 
 import type { TemplateEntry } from './registry'
 import { EmailShell, brand, button, footer, h1, link, text } from './theme'
+import pePlettHeader from '@/assets/pe-plett-email-header.jpg.asset.json'
+
+const PE_PLETT_HEADER_URL = `https://riderapp.redcherryevents.co.za${pePlettHeader.url}`
 
 export interface PePlettExtra {
   name: string
@@ -113,6 +116,12 @@ export const PePlettExtrasEmail = ({
     preview={`Your booked extras for ${eventName}, plus everything you need to use them`}
     siteName="M&G Investments PE Plett"
   >
+    <Img
+      src={PE_PLETT_HEADER_URL}
+      alt="M&G Investments PE Plett — 17 to 21 February 2027"
+      width="464"
+      style={{ display: 'block', height: 'auto', margin: '0 0 24px', maxWidth: '100%' }}
+    />
     <Heading style={h1}>{firstName ? `${firstName}, your extras are sorted` : 'Your extras are sorted'}</Heading>
     <Text style={text}>
       Here is what is currently booked on your <strong>{eventName}</strong> entry, what each item

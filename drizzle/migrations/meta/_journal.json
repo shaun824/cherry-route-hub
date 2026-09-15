@@ -8,6 +8,13 @@
       "when": 1789391509775,
       "tag": "0000_add_myriad_race_id",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1789448214211,
+      "tag": "0001_add_email_step_template_name",
+      "breakpoints": true
     }
   ]
 }
