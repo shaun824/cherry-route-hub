@@ -29,7 +29,7 @@ export const BLOCK_LIBRARY: { type: EmailBlockType; label: string; hint: string 
   { type: "text", label: "Paragraph", hint: "Normal writing" },
   { type: "image", label: "Picture", hint: "One full-width picture" },
   { type: "columns", label: "Two pictures", hint: "Side by side" },
-  { type: "route-pair", label: "Swipeable routes", hint: "Day 1 and Day 2 route profiles" },
+  { type: "route-pair", label: "Route profiles", hint: "Day 1 and Day 2 profiles, stacked for reliable email display" },
   { type: "button", label: "Button", hint: "A tappable link" },
   { type: "list", label: "Bullet list", hint: "Short points" },
   { type: "callout", label: "Highlight box", hint: "Stands out from the rest" },
