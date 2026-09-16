@@ -1,9 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { AlertTriangle, CheckCircle2, RefreshCw, ShieldCheck } from "lucide-react";
+import { AlertTriangle, Check, CheckCircle2, RefreshCw, ShieldCheck, X } from "lucide-react";
 import { toast } from "sonner";
-import { listContentAudits, restoreAuditIssue, runContentAuditNow } from "@/lib/content-audit.functions";
+import {
+  approveAuditFix,
+  dismissAuditIssue,
+  listContentAudits,
+  restoreAuditIssue,
+  runContentAuditNow,
+} from "@/lib/content-audit.functions";
 
 export const Route = createFileRoute("/admin/audit")({
   head: () => ({
@@ -17,11 +23,14 @@ export const Route = createFileRoute("/admin/audit")({
 });
 
 type Issue = {
+  key?: string;
   severity: "high" | "medium" | "low";
   area: string;
+  eventId?: string | null;
   eventName: string;
   message: string;
   fix?: string;
+  action?: { kind: string; label: string; [k: string]: unknown };
 };
 
 const sevStyles: Record<Issue["severity"], string> = {
@@ -46,13 +55,43 @@ function AuditPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const approve = useServerFn(approveAuditFix);
+  const approveM = useMutation({
+    mutationFn: (i: Issue) =>
+      approve({
+        data: {
+          issueKey: i.key!,
+          area: i.area,
+          message: i.message,
+          action: i.action as never,
+        },
+      }),
+    onSuccess: (r: any) => {
+      toast.success(r.message ?? "Change applied");
+      qc.invalidateQueries({ queryKey: ["content-audits"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const dismiss = useServerFn(dismissAuditIssue);
+  const dismissM = useMutation({
+    mutationFn: (i: Issue) =>
+      dismiss({
+        data: { issueKey: i.key!, area: i.area, eventId: i.eventId, message: i.message },
+      }),
+    onSuccess: () => {
+      toast.success("Warning dismissed");
+      qc.invalidateQueries({ queryKey: ["content-audits"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   const restore = useServerFn(restoreAuditIssue);
   const restoreM = useMutation({
     mutationFn: (issueKey: string) => restore({ data: { issueKey } }),
     onSuccess: () => {
       toast.success("Warning restored");
       qc.invalidateQueries({ queryKey: ["content-audits"] });
-      qc.invalidateQueries({ queryKey: ["home-audit-warnings"] });
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -60,7 +99,10 @@ function AuditPage() {
   const runs = (q.data?.runs ?? []) as any[];
   const resolutions = (q.data?.resolutions ?? []) as any[];
   const latest = runs[0];
-  const issues = (latest?.issues ?? []) as Issue[];
+  const resolvedKeys = new Set(resolutions.map((r) => r.issue_key));
+  const issues = ((latest?.issues ?? []) as Issue[]).filter(
+    (i) => !i.key || !resolvedKeys.has(i.key),
+  );
 
   const grouped = issues.reduce<Record<string, Issue[]>>((acc, i) => {
     (acc[i.eventName] ??= []).push(i);
@@ -129,6 +171,28 @@ function AuditPage() {
                       </div>
                       <p className="mt-1 text-ink">{i.message}</p>
                       {i.fix && <p className="mt-0.5 text-[12px] text-ink-soft">Fix: {i.fix}</p>}
+                      {i.key ? (
+                        <div className="mt-2 flex flex-wrap gap-2">
+                          {i.action ? (
+                            <button
+                              onClick={() => approveM.mutate(i)}
+                              disabled={approveM.isPending}
+                              className="inline-flex items-center gap-1.5 rounded-lg bg-cherry px-3 py-1.5 text-[12px] font-semibold text-white disabled:opacity-60"
+                            >
+                              <Check className="h-3.5 w-3.5" />
+                              Approve: {i.action.label}
+                            </button>
+                          ) : null}
+                          <button
+                            onClick={() => dismissM.mutate(i)}
+                            disabled={dismissM.isPending}
+                            className="inline-flex items-center gap-1.5 rounded-lg bg-secondary px-3 py-1.5 text-[12px] font-semibold text-ink-soft ring-1 ring-border disabled:opacity-60"
+                          >
+                            <X className="h-3.5 w-3.5" />
+                            Dismiss
+                          </button>
+                        </div>
+                      ) : null}
                     </li>
                   ))}
                 </ul>
@@ -142,7 +206,7 @@ function AuditPage() {
         <section className="mt-6 rounded-2xl bg-card p-5 ring-1 ring-border">
           <h2 className="font-display text-base font-bold">Approved &amp; dismissed</h2>
           <p className="mt-1 text-[12px] text-ink-soft">
-            These warnings stay hidden on the home page. Restore one to see it again.
+            These warnings stay hidden from the report. Restore one to see it again.
           </p>
           <ul className="mt-3 space-y-2">
             {resolutions.map((r) => (
