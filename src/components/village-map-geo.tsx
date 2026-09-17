@@ -283,7 +283,7 @@ type LabelCandidate = {
   width: number;
   priority: number;
   selected: boolean;
-  kind: "facility" | "zone";
+  kind: "facility" | "zone" | "obstacle";
 };
 
 function rectanglesOverlap(a: L.Bounds, b: L.Bounds, gap = 4) {
@@ -310,7 +310,7 @@ function LabelLayout({ candidates, zoom, onLayout }: {
       const occupied: L.Bounds[] = [];
       const ordered = [...candidates].sort((a, b) => Number(b.selected) - Number(a.selected) || b.priority - a.priority);
       for (const item of ordered) {
-        if (!item.selected && zoom < (item.kind === "zone" ? 19.25 : 18.75)) continue;
+        if (!item.selected && zoom < (item.kind === "zone" ? 19.25 : item.kind === "obstacle" ? 20 : 18.75)) continue;
         const p = map.latLngToContainerPoint(item.position);
         const box = L.bounds(
           L.point(p.x - item.width / 2, p.y + 15),
@@ -318,7 +318,8 @@ function LabelLayout({ candidates, zoom, onLayout }: {
         );
         if (!item.selected && occupied.some((used) => rectanglesOverlap(box, used))) continue;
         occupied.push(box);
-        (item.kind === "facility" ? facilities : zones).add(item.id);
+        if (item.kind === "facility") facilities.add(item.id);
+        if (item.kind === "zone") zones.add(item.id);
       }
       onLayout(facilities, zones);
     };
@@ -429,6 +430,7 @@ export default function VillageMapGeo({
   highlightZoneId = null,
   highlightTentId = null,
   fullscreenDetail = null,
+  fullscreenControls = null,
 }: {
   imageUrl?: string | null;
   geo: VillageGeo;
@@ -445,6 +447,8 @@ export default function VillageMapGeo({
   /** Detail panel for the tapped point, docked to the bottom in full screen so
       the point itself stays visible and the map stays interactive. */
   fullscreenDetail?: ReactNode;
+  /** Crew layer controls repeated inside the full-screen portal. */
+  fullscreenControls?: ReactNode;
 }) {
 
 
@@ -654,7 +658,15 @@ export default function VillageMapGeo({
       selected: zone.id === highlightZoneId,
       kind: "zone" as const,
     }] : []),
-  ], [facilitySpots, geo, heightM, selected, visibleZones, highlightZoneId]);
+    ...droppedTents.map(({ tent }) => ({
+      id: tent.id,
+      position: [tent.lat, tent.lng] as [number, number],
+      width: Math.min(110, Math.max(34, tent.label.length * 6 + 12)),
+      priority: tent.id === highlightTentId ? 120 : 30,
+      selected: tent.id === highlightTentId,
+      kind: "obstacle" as const,
+    })),
+  ], [facilitySpots, geo, heightM, selected, visibleZones, highlightZoneId, droppedTents, highlightTentId]);
 
   const applyLabelLayout = useCallback((nextFacilities: Set<string>, nextZones: Set<string>) => {
     setFacilityLabels(nextFacilities);
@@ -973,6 +985,12 @@ export default function VillageMapGeo({
             {satellite ? "Satellite" : "Street"}
           </button>
         </div>
+
+        {fullscreen && fullscreenControls ? (
+          <div className="pointer-events-auto absolute left-[max(0.75rem,env(safe-area-inset-left))] top-[max(0.75rem,env(safe-area-inset-top))] z-[500] max-w-[calc(100vw-10rem)] rounded-lg bg-card/95 p-2 shadow ring-1 ring-border backdrop-blur">
+            {fullscreenControls}
+          </div>
+        ) : null}
 
         {/* Rotate the map to match the way you're facing. */}
         <div className={`pointer-events-none absolute left-[max(0.75rem,env(safe-area-inset-left))] z-[500] flex items-center gap-1.5 ${fullscreen && fullscreenDetail ? "bottom-[calc(38dvh+0.75rem)]" : "bottom-[max(0.75rem,env(safe-area-inset-bottom))]"}`}>

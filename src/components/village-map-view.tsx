@@ -144,6 +144,37 @@ function SpotDetailBody({
   );
 }
 
+function ZoneDetailBody({ detail, onClose }: { detail: NonNullable<ReturnType<typeof zoneDetailForType>>; onClose?: () => void }) {
+  const size = zoneTrueSizeM(detail);
+  return (
+    <div className="flex items-start gap-2">
+      <span className="mt-1 h-4 w-4 shrink-0 rounded" style={{ backgroundColor: zoneColor(detail) }} />
+      <div className="min-w-0 flex-1">
+        <p className="font-display text-base font-bold text-ink">{detail.name}</p>
+        <p className="text-[11px] font-semibold uppercase tracking-widest text-ink-soft">
+          Crew only · {zoneKindLabel(detail.kind)}
+        </p>
+        <p className="mt-1 text-xs text-ink-soft">
+          {Math.round(size.across)}m × {Math.round(size.along)}m · {formatArea(zoneAreaM2(detail))}
+        </p>
+        {detail.spec ? <p className="mt-2 text-sm font-semibold text-ink">{detail.spec}</p> : null}
+        {detail.notes?.trim() ? <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-ink-soft">{detail.notes}</p> : null}
+        {detail.crewNotes ? <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-ink-soft">{detail.crewNotes}</p> : null}
+        {!detail.spec?.trim() && !detail.notes?.trim() && !detail.crewNotes?.trim() ? (
+          <p className="mt-2 text-sm italic text-ink-soft">No requirements captured for this area yet.</p>
+        ) : null}
+      </div>
+      {onClose ? (
+        <button onClick={onClose} aria-label="Close"><X className="h-4 w-4 text-ink-soft" /></button>
+      ) : null}
+    </div>
+  );
+}
+
+function zoneDetailForType() {
+  return null as unknown as import("@/lib/village-zones").VillageZone;
+}
+
 export function VillageMapView({
   eventId,
   focusSpotId,
@@ -336,7 +367,7 @@ export function VillageMapView({
       el.removeEventListener("pointerup", up);
       el.removeEventListener("pointercancel", up);
     };
-  }, []);
+  }, [mode, planFullscreen]);
 
   // Crew "find this room" deep-focus: highlight the requested point when it changes.
   useEffect(() => {
@@ -394,6 +425,32 @@ export function VillageMapView({
   // Any tapped area shows its detail to crew, even before build fields are filled in.
   const zoneDetail =
     (isCrew ? (map?.zones ?? []).find((z) => z.id === selectedZone) : null) ?? null;
+
+  const layerControls = isCrew ? (
+    <div className="flex flex-wrap items-center gap-1.5">
+      <span className="text-[10px] font-bold uppercase tracking-widest text-ink-soft">Layers</span>
+      <button
+        title="Show every point from every layer at once"
+        onClick={() => setLayers((prev) => prev.length === VILLAGE_LAYERS.length ? (defaultLayers ?? ["rider"]) : VILLAGE_LAYERS.map((layer) => layer.id))}
+        className={`rounded-full px-2.5 py-1 text-[11px] font-bold ring-1 ${layers.length === VILLAGE_LAYERS.length ? "bg-ink text-background ring-ink" : "bg-muted text-ink-soft ring-border"}`}
+      >
+        All points
+      </button>
+      {VILLAGE_LAYERS.map((layer) => {
+        const on = layers.includes(layer.id);
+        return (
+          <button
+            key={layer.id}
+            title={layer.blurb}
+            onClick={() => setLayers((prev) => prev.includes(layer.id) ? prev.filter((item) => item !== layer.id) : [...prev, layer.id])}
+            className={`rounded-full px-2.5 py-1 text-[11px] font-bold ${on ? "bg-cherry text-white" : "bg-muted text-ink-soft"}`}
+          >
+            {layer.label}
+          </button>
+        );
+      })}
+    </div>
+  ) : null;
 
 
   const venueTabs =
@@ -543,49 +600,7 @@ export function VillageMapView({
         </div>
       ) : null}
 
-      {isCrew ? (
-        <div className="flex flex-wrap items-center gap-1.5">
-          <span className="text-[10px] font-bold uppercase tracking-widest text-ink-soft">
-            Layers
-          </span>
-          <button
-            title="Show every point from every layer at once"
-            onClick={() =>
-              setLayers((prev) =>
-                prev.length === VILLAGE_LAYERS.length
-                  ? (defaultLayers ?? ["rider"])
-                  : VILLAGE_LAYERS.map((l) => l.id),
-              )
-            }
-            className={`rounded-full px-2.5 py-1 text-[11px] font-bold ring-1 ${
-              layers.length === VILLAGE_LAYERS.length
-                ? "bg-ink text-background ring-ink"
-                : "bg-muted text-ink-soft ring-border"
-            }`}
-          >
-            All points
-          </button>
-          {VILLAGE_LAYERS.map((l) => {
-            const on = layers.includes(l.id);
-            return (
-              <button
-                key={l.id}
-                title={l.blurb}
-                onClick={() =>
-                  setLayers((prev) =>
-                    prev.includes(l.id) ? prev.filter((p) => p !== l.id) : [...prev, l.id],
-                  )
-                }
-                className={`rounded-full px-2.5 py-1 text-[11px] font-bold ${
-                  on ? "bg-cherry text-white" : "bg-muted text-ink-soft"
-                }`}
-              >
-                {l.label}
-              </button>
-            );
-          })}
-        </div>
-      ) : null}
+      {layerControls}
 
       {categories.length > 1 ? (
         <div className="flex flex-wrap gap-1.5">
@@ -670,8 +685,11 @@ export function VillageMapView({
                     isCrew={isCrew}
                     onClose={selected ? () => setSelected(null) : null}
                   />
+                ) : zoneDetail ? (
+                  <ZoneDetailBody detail={zoneDetail} onClose={() => setSelectedZone(null)} />
                 ) : null
               }
+              fullscreenControls={layerControls}
             />
           </Suspense>
         </ClientOnly>
@@ -690,6 +708,11 @@ export function VillageMapView({
             planFullscreen ? "h-full" : "max-h-[70vh]"
           }`}
         >
+        {planFullscreen && layerControls ? (
+          <div className="absolute left-[max(0.75rem,env(safe-area-inset-left))] top-[max(0.75rem,env(safe-area-inset-top))] z-30 max-w-[calc(100vw-7rem)] rounded-lg bg-card/95 p-2 shadow ring-1 ring-border backdrop-blur">
+            {layerControls}
+          </div>
+        ) : null}
           <div
             className="relative w-full origin-top-left transition-transform duration-200"
             style={{ transform: `scale(${scale})`, width: `${100}%` }}
@@ -746,13 +769,10 @@ export function VillageMapView({
 
         {/* Full-screen detail sheet: docks to the bottom strip so the tapped
             point stays visible above it and the map stays interactive. */}
-        {planFullscreen && detail ? (
+        {planFullscreen && (detail || zoneDetail) ? (
           <div className="absolute inset-x-0 bottom-0 z-20 mx-auto max-h-[38dvh] w-full max-w-xl overflow-y-auto rounded-t-2xl bg-card/95 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-2xl ring-1 ring-border backdrop-blur">
-            <SpotDetailBody
-              detail={detail}
-              isCrew={isCrew}
-              onClose={selected ? () => setSelected(null) : null}
-            />
+            {detail ? <SpotDetailBody detail={detail} isCrew={isCrew} onClose={selected ? () => setSelected(null) : null} /> : null}
+            {zoneDetail ? <ZoneDetailBody detail={zoneDetail} onClose={() => setSelectedZone(null)} /> : null}
           </div>
         ) : null}
       </div>
@@ -776,47 +796,7 @@ export function VillageMapView({
 
       {zoneDetail ? (
         <div className="rounded-2xl bg-card p-4 ring-1 ring-border">
-          <div className="flex items-start gap-2">
-            <span
-              className="mt-1 h-4 w-4 shrink-0 rounded"
-              style={{ backgroundColor: zoneColor(zoneDetail) }}
-            />
-            <div className="min-w-0 flex-1">
-              <p className="font-display text-base font-bold text-ink">{zoneDetail.name}</p>
-              <p className="text-[11px] font-semibold uppercase tracking-widest text-ink-soft">
-                Crew only · {zoneKindLabel(zoneDetail.kind)}
-              </p>
-              <p className="mt-1 text-xs text-ink-soft">
-                {(() => {
-                  const s = zoneTrueSizeM(zoneDetail);
-                  return `${Math.round(s.across)}m × ${Math.round(s.along)}m · ${formatArea(zoneAreaM2(zoneDetail))}`;
-                })()}
-              </p>
-              {zoneDetail.spec ? (
-                <p className="mt-2 text-sm font-semibold text-ink">{zoneDetail.spec}</p>
-              ) : null}
-              {zoneDetail.notes?.trim() ? (
-                <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-ink-soft">
-                  {zoneDetail.notes}
-                </p>
-              ) : null}
-              {zoneDetail.crewNotes ? (
-                <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-ink-soft">
-                  {zoneDetail.crewNotes}
-                </p>
-              ) : null}
-              {!zoneDetail.spec?.trim() &&
-              !zoneDetail.notes?.trim() &&
-              !zoneDetail.crewNotes?.trim() ? (
-                <p className="mt-2 text-sm italic text-ink-soft">
-                  No requirements captured for this area yet.
-                </p>
-              ) : null}
-            </div>
-            <button onClick={() => setSelectedZone(null)} aria-label="Close">
-              <X className="h-4 w-4 text-ink-soft" />
-            </button>
-          </div>
+          <ZoneDetailBody detail={zoneDetail} onClose={() => setSelectedZone(null)} />
         </div>
       ) : null}
 
