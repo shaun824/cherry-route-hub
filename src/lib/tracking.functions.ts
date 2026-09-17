@@ -468,7 +468,9 @@ export const fetchSosAlerts = createServerFn({ method: "GET" })
     await assertAdmin(context.supabase, context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     let q = table(supabaseAdmin, "tracking_sos")
-      .select("id, event_id, user_id, lat, lng, message, status, created_at")
+      .select(
+        "id, event_id, user_id, lat, lng, reason, note, message, status, created_at, acknowledged_at, acknowledged_by, escalated_at",
+      )
       .order("created_at", { ascending: false })
       .limit(100);
     if (data.eventId) q = q.eq("event_id", data.eventId);
@@ -481,18 +483,49 @@ export const fetchSosAlerts = createServerFn({ method: "GET" })
       user_id: string;
       lat: number | null;
       lng: number | null;
+      reason: string | null;
+      note: string | null;
       message: string | null;
       status: string;
       created_at: string;
+      acknowledged_at: string | null;
+      acknowledged_by: string | null;
+      escalated_at: string | null;
     }[];
-    const userIds: string[] = [...new Set(sosRows.map((r) => r.user_id))];
+    const userIds: string[] = [
+      ...new Set([
+        ...sosRows.map((r) => r.user_id),
+        ...sosRows.map((r) => r.acknowledged_by).filter((v): v is string => Boolean(v)),
+      ]),
+    ];
     const names = new Map<string, string>();
+    const bibs = new Map<string, string>();
     if (userIds.length) {
       const { data: entrants } = await supabaseAdmin
         .from("entrants")
         .select("user_id, full_name")
         .in("user_id", userIds);
       for (const e of entrants ?? []) if (e.user_id) names.set(e.user_id, e.full_name);
+      const { data: profiles } = await supabaseAdmin
+        .from("profiles")
+        .select("id, full_name, email")
+        .in("id", userIds);
+      for (const p of profiles ?? [])
+        if (!names.has(p.id)) names.set(p.id, p.full_name ?? p.email ?? "Crew");
+      if (data.eventId) {
+        const entrantUserIds = sosRows.map((r) => r.user_id);
+        const { data: ee } = await supabaseAdmin
+          .from("event_entrants")
+          .select("bib_number, entrants!inner(user_id)")
+          .eq("event_id", data.eventId);
+        for (const row of (ee ?? []) as unknown as {
+          bib_number: string | null;
+          entrants: { user_id: string | null } | null;
+        }[]) {
+          const uid = row.entrants?.user_id;
+          if (uid && row.bib_number && entrantUserIds.includes(uid)) bibs.set(uid, row.bib_number);
+        }
+      }
     }
 
     const alerts: SosAlert[] = sosRows.map((r) => ({
@@ -500,16 +533,86 @@ export const fetchSosAlerts = createServerFn({ method: "GET" })
       eventId: r.event_id,
       userId: r.user_id,
       riderName: names.get(r.user_id) ?? null,
+      bib: bibs.get(r.user_id) ?? null,
       lat: r.lat,
       lng: r.lng,
+      reason: r.reason,
+      note: r.note ?? r.message,
       message: r.message,
       status: r.status,
       createdAt: r.created_at,
+      acknowledgedAt: r.acknowledged_at,
+      acknowledgedByName: r.acknowledged_by ? (names.get(r.acknowledged_by) ?? "Crew") : null,
+      escalatedAt: r.escalated_at,
     }));
     return { alerts };
   });
 
-/** Admin: mark an SOS alert resolved. */
+/** Crew: confirm a human has seen the alert. Stops the alarm; keeps it open. */
+export const acknowledgeSosAlert = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({ id: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.supabase, context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await table(supabaseAdmin, "tracking_sos")
+      .update({
+        status: "acknowledged",
+        acknowledged_by: context.userId,
+        acknowledged_at: new Date().toISOString(),
+      })
+      .eq("id", data.id)
+      .eq("status", "active");
+    if (error) throw new Error(error.message);
+    return { ok: true as const };
+  });
+
+/**
+ * Crew screen escalates an alert nobody acknowledged in time: records the
+ * escalation once and re-pushes to every other crew/admin device.
+ */
+export const escalateSosAlert = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({ id: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.supabase, context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: rows } = await table(supabaseAdmin, "tracking_sos")
+      .select("id, user_id, reason, note, escalated_at, status")
+      .eq("id", data.id)
+      .limit(1);
+    const row = (rows ?? [])[0];
+    if (!row || row.escalated_at || row.status !== "active") return { ok: true as const, sent: false };
+
+    await table(supabaseAdmin, "tracking_sos")
+      .update({ escalated_at: new Date().toISOString() })
+      .eq("id", data.id);
+
+    const { dispatchNotification } = await import("./notifications.server");
+    const ids = await crewUserIds(supabaseAdmin, [context.userId]);
+    const { data: me } = await supabaseAdmin
+      .from("entrants")
+      .select("full_name")
+      .eq("user_id", row.user_id)
+      .limit(1);
+    if (ids.length) {
+      await dispatchNotification({
+        title: "SOS NOT ACKNOWLEDGED",
+        body: `${me?.[0]?.full_name ?? "A rider"} is still waiting — nobody has acknowledged this SOS.`,
+        url: "/crew/tracking",
+        audience: "all",
+        onlyUserIds: ids,
+        urgent: true,
+        kind: "safety",
+        source: "sos-escalation",
+        dedupeKey: `sos-escalate-${data.id}`,
+        createdBy: context.userId,
+      });
+    }
+    return { ok: true as const, sent: ids.length > 0 };
+  });
+
+/** Admin: mark an SOS alert resolved (closes the incident). */
 export const resolveSosAlert = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input) => z.object({ id: z.string().uuid() }).parse(input))
@@ -517,8 +620,13 @@ export const resolveSosAlert = createServerFn({ method: "POST" })
     await assertAdmin(context.supabase, context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await table(supabaseAdmin, "tracking_sos")
-      .update({ status: "resolved" })
+      .update({
+        status: "resolved",
+        resolved_by: context.userId,
+        resolved_at: new Date().toISOString(),
+      })
       .eq("id", data.id);
     if (error) throw new Error(error.message);
     return { ok: true as const };
   });
+
