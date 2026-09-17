@@ -476,30 +476,86 @@ export default function LiveTrackingMapInner({
     };
   }, [candidates, matchedRoutes, matchedIds]);
 
+  // Course line used for progress + off-course checks (the matched route).
+  const course: CourseLine | null = useMemo(() => {
+    const pick = matchedRoutes[0] ?? candidates[0];
+    return pick ? buildCourseLine(pick.lines) : null;
+  }, [matchedRoutes, candidates]);
+
+  const progressFor = useCallback(
+    (r: LiveRiderPosition) => (course ? progressOnCourse(course, r.lat, r.lng) : null),
+    [course],
+  );
+
+  // Off-course watch list for race control (soft warning — never an alarm).
+  useEffect(() => {
+    if (!onOffCourse || !course) return;
+    const out: Record<string, number> = {};
+    for (const r of riders) {
+      const p = progressOnCourse(course, r.lat, r.lng);
+      if (p && p.offCourseM > OFF_COURSE_M) out[r.userId] = p.offCourseM;
+    }
+    onOffCourse(out);
+  }, [riders, course, onOffCourse]);
+
+  /** Eases a marker from where it is to its new position over the poll window. */
+  const animateTo = useCallback((id: string, marker: L.Marker, lat: number, lng: number) => {
+    const from = marker.getLatLng();
+    if (Math.abs(from.lat - lat) < 1e-7 && Math.abs(from.lng - lng) < 1e-7) return;
+    // Big jumps (offline catch-up) snap instead of sliding across the map.
+    if (Math.abs(from.lat - lat) > 0.05 || Math.abs(from.lng - lng) > 0.05) {
+      marker.setLatLng([lat, lng]);
+      return;
+    }
+    const existing = animRef.current.get(id);
+    if (existing) cancelAnimationFrame(existing);
+    const start = performance.now();
+    const step = (t: number) => {
+      const k = Math.min(1, (t - start) / POLL_MS);
+      const e = k < 0.5 ? 2 * k * k : -1 + (4 - 2 * k) * k; // ease in/out
+      marker.setLatLng([from.lat + (lat - from.lat) * e, from.lng + (lng - from.lng) * e]);
+      if (k < 1) animRef.current.set(id, requestAnimationFrame(step));
+      else animRef.current.delete(id);
+    };
+    animRef.current.set(id, requestAnimationFrame(step));
+  }, []);
+
   // Update markers and popups.
   useEffect(() => {
     const map = mapRef.current;
-    if (!map) return;
+    const cluster = clusterRef.current;
+    if (!map || !cluster) return;
     const seen = new Set<string>();
-    const now = Date.now();
     const bounds: [number, number][] = [];
 
     for (const r of riders) {
       seen.add(r.userId);
-      const stale = now - new Date(r.recordedAt).getTime() > STALE_AFTER_MS;
+      const signal = signalOf(r.recordedAt);
+      const p = progressFor(r);
+      const progressText = p && p.offCourseM < 1000 ? formatProgress(p) : null;
       const existing = markersRef.current.get(r.userId);
       if (existing) {
-        existing.setLatLng([r.lat, r.lng]);
-        existing.setIcon(markerIcon(stale));
-        // Refresh popup content if this rider is selected.
+        animateTo(r.userId, existing, r.lat, r.lng);
+        existing.setIcon(markerIcon(signal, r.sos));
+        // An SOS pin must live outside the cluster group so it always shows.
+        const inCluster = cluster.hasLayer(existing);
+        if (r.sos && inCluster) {
+          cluster.removeLayer(existing);
+          existing.addTo(map);
+        } else if (!r.sos && !inCluster) {
+          existing.remove();
+          cluster.addLayer(existing);
+        }
         if (selectedId === r.userId) {
-          existing.setPopupContent(popupContent(r, isCrew, viewerLoc));
+          existing.setPopupContent(popupContent(r, isCrew, viewerLoc, progressText));
           existing.openPopup();
         }
       } else {
-        const m = L.marker([r.lat, r.lng], { icon: markerIcon(stale) })
-          .addTo(map)
-          .bindPopup(popupContent(r, isCrew, viewerLoc));
+        const m = L.marker([r.lat, r.lng], { icon: markerIcon(signal, r.sos) }).bindPopup(
+          popupContent(r, isCrew, viewerLoc, progressText),
+        );
+        if (r.sos) m.addTo(map);
+        else cluster.addLayer(m);
         m.on("popupopen", () => {
           setSelectedId(r.userId);
           const el = m.getPopup()?.getElement();
@@ -532,27 +588,60 @@ export default function LiveTrackingMapInner({
         });
         markersRef.current.set(r.userId, m);
       }
+
+      // Faint accuracy halo so viewers can tell a sharp fix from a rough one.
+      if (r.accuracyM != null && r.accuracyM > 25) {
+        const circle = circlesRef.current.get(r.userId);
+        if (circle) circle.setLatLng([r.lat, r.lng]).setRadius(r.accuracyM);
+        else
+          circlesRef.current.set(
+            r.userId,
+            L.circle([r.lat, r.lng], {
+              radius: r.accuracyM,
+              color: "#e11d48",
+              weight: 1,
+              opacity: 0.25,
+              fillOpacity: 0.07,
+              interactive: false,
+            }).addTo(map),
+          );
+      } else {
+        circlesRef.current.get(r.userId)?.remove();
+        circlesRef.current.delete(r.userId);
+      }
+
       bounds.push([r.lat, r.lng]);
-      // Keep the map centred on whoever is being followed or whose pin is open,
-      // so a selected rider stays in view as they move.
-      if (follow === r.userId || selectedId === r.userId) {
+      // Follow mode recentres smoothly, but stays out of the way once the
+      // viewer has panned or zoomed themselves.
+      if ((follow === r.userId || selectedId === r.userId) && !followPaused) {
+        programmaticMoveRef.current = true;
         map.panTo([r.lat, r.lng], { animate: true, duration: 0.5 });
+        window.setTimeout(() => (programmaticMoveRef.current = false), 700);
       }
     }
 
     // Remove markers for riders no longer reporting.
     for (const [id, m] of markersRef.current) {
       if (!seen.has(id)) {
+        const anim = animRef.current.get(id);
+        if (anim) cancelAnimationFrame(anim);
+        animRef.current.delete(id);
+        if (cluster.hasLayer(m)) cluster.removeLayer(m);
         m.remove();
         markersRef.current.delete(id);
+        circlesRef.current.get(id)?.remove();
+        circlesRef.current.delete(id);
       }
     }
 
     if (!fittedRef.current && bounds.length > 0 && !follow) {
+      programmaticMoveRef.current = true;
       map.fitBounds(L.latLngBounds(bounds).pad(0.15));
       fittedRef.current = true;
+      window.setTimeout(() => (programmaticMoveRef.current = false), 700);
     }
-  }, [riders, follow, isCrew, viewerLoc, selectedId]);
+  }, [riders, follow, followPaused, isCrew, viewerLoc, selectedId, animateTo, progressFor]);
+
 
   // Draw/refresh the dashed guide line from viewer to selected rider.
   useEffect(() => {
