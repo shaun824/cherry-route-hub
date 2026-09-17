@@ -3806,6 +3806,15 @@ export type Database = {
           full_name: string
         }[]
       }
+      live_tracking_sos_flags: {
+        Args: { _event_id: string }
+        Returns: {
+          created_at: string
+          reason: string
+          status: string
+          user_id: string
+        }[]
+      }
       my_entry_group: {
         Args: { _event_id: string }
         Returns: {
