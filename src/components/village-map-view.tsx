@@ -26,6 +26,7 @@ import {
   zoneColor,
   zoneKindLabel,
   zoneTrueSizeM,
+  type VillageZone,
 } from "@/lib/village-zones";
 
 import { fetchVillageTents } from "@/lib/village-tents";
@@ -144,7 +145,7 @@ function SpotDetailBody({
   );
 }
 
-function ZoneDetailBody({ detail, onClose }: { detail: NonNullable<ReturnType<typeof zoneDetailForType>>; onClose?: () => void }) {
+function ZoneDetailBody({ detail, onClose }: { detail: VillageZone; onClose?: () => void }) {
   const size = zoneTrueSizeM(detail);
   return (
     <div className="flex items-start gap-2">
@@ -169,10 +170,6 @@ function ZoneDetailBody({ detail, onClose }: { detail: NonNullable<ReturnType<ty
       ) : null}
     </div>
   );
-}
-
-function zoneDetailForType() {
-  return null as unknown as import("@/lib/village-zones").VillageZone;
 }
 
 export function VillageMapView({

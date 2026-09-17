@@ -287,11 +287,15 @@ type LabelCandidate = {
 };
 
 function rectanglesOverlap(a: L.Bounds, b: L.Bounds, gap = 4) {
+  const aMin = a.getTopLeft();
+  const aMax = a.getBottomRight();
+  const bMin = b.getTopLeft();
+  const bMax = b.getBottomRight();
   return !(
-    a.max.x + gap < b.min.x ||
-    a.min.x - gap > b.max.x ||
-    a.max.y + gap < b.min.y ||
-    a.min.y - gap > b.max.y
+    aMax.x + gap < bMin.x ||
+    aMin.x - gap > bMax.x ||
+    aMax.y + gap < bMin.y ||
+    aMin.y - gap > bMax.y
   );
 }
 
@@ -325,7 +329,9 @@ function LabelLayout({ candidates, zoom, onLayout }: {
     };
     layout();
     map.on("moveend zoomend resize rotate", layout);
-    return () => map.off("moveend zoomend resize rotate", layout);
+    return () => {
+      map.off("moveend zoomend resize rotate", layout);
+    };
   }, [map, candidates, zoom, onLayout]);
   return null;
 }
