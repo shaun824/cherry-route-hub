@@ -460,3 +460,18 @@
     stroke-opacity: 0.9;
   }
 }
+
+/* Live tracking: an SOS rider's pin pulses so race control can't miss it. */
+@keyframes rce-sos-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.55); }
+  70% { box-shadow: 0 0 0 18px rgba(220, 38, 38, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); }
+}
+
+.rce-sos-pin {
+  animation: rce-sos-pulse 1.4s ease-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rce-sos-pin { animation: none; }
+}
