@@ -1,16 +1,24 @@
-// Live spectator map: polls for the latest rider positions every 1s and plots
-// them on a Leaflet map. Public — uses the same read path as the spectate page.
+// Live spectator map: polls for the latest rider positions and plots them on a
+// Leaflet map. Public — uses the same read path as the spectate page.
 // The event's KML course is overlaid underneath, picked by cross-referencing the
 // riders' entry category / position against the event's routes.
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import "leaflet.markercluster";
+import "leaflet.markercluster/dist/MarkerCluster.css";
 import { useQuery } from "@tanstack/react-query";
-import { fetchLiveTracking } from "@/lib/tracking.functions";
-import { MapPin, Route as RouteIcon } from "lucide-react";
+import { fetchLiveTracking, type LiveRiderPosition } from "@/lib/tracking.functions";
+import { Crosshair, MapPin, Route as RouteIcon } from "lucide-react";
 import { useAdminStore } from "@/lib/store";
 import { withRegistrationDayLabels } from "@/lib/event-days";
 import { parseKml, simplifyPolyline, capPolyline, type LatLngAlt } from "@/lib/geo";
+import {
+  buildCourseLine,
+  formatProgress,
+  progressOnCourse,
+  type CourseLine,
+} from "@/lib/course-progress";
 import {
   candidateDayIds,
   matchRoutesForRiders,
@@ -26,19 +34,46 @@ const TIER_COLORS: Record<string, string> = {
 
 const POLL_MS = 3_000;
 const STALE_AFTER_MS = 5 * 60_000;
+const LOST_SIGNAL_MS = 10 * 60_000;
+// A rider further than this from the course line counts as off course.
+const OFF_COURSE_M = 400;
 
-function markerIcon(stale: boolean) {
+type Signal = "live" | "stale" | "lost";
+
+function signalOf(recordedAt: string): Signal {
+  const age = Date.now() - new Date(recordedAt).getTime();
+  if (age > LOST_SIGNAL_MS) return "lost";
+  if (age > STALE_AFTER_MS) return "stale";
+  return "live";
+}
+
+function markerIcon(signal: Signal, sos: boolean) {
+  if (sos) {
+    return L.divIcon({
+      className: "",
+      html: `<div class="rce-sos-pin" style="
+        width:26px;height:26px;border-radius:9999px;background:#dc2626;
+        border:3px solid #fff;box-shadow:0 0 0 6px rgba(220,38,38,.35);
+        display:flex;align-items:center;justify-content:center;color:#fff;
+        font-size:14px;font-weight:900;">!</div>`,
+      iconSize: [26, 26],
+      iconAnchor: [13, 13],
+    });
+  }
+  const color = signal === "lost" ? "#6b7280" : signal === "stale" ? "#9ca3af" : "#e11d48";
   return L.divIcon({
     className: "",
     html: `<div style="
       width:18px;height:18px;border-radius:9999px;
-      background:${stale ? "#9ca3af" : "#e11d48"};
+      background:${color};
       border:3px solid #fff;box-shadow:0 1px 6px rgba(0,0,0,.4);
+      ${signal === "lost" ? "opacity:.75;" : ""}
     "></div>`,
     iconSize: [18, 18],
     iconAnchor: [9, 9],
   });
 }
+
 
 function formatAgo(iso: string): string {
   const d = new Date(iso).getTime();
