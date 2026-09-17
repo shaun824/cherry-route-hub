@@ -385,6 +385,21 @@ export function TrackerPanel({
           </p>
         ) : null}
         <p className="mt-2 text-xs text-ink-soft">{windowState.message}</p>
+        {needsInstall ? (
+          <div className="mt-3 rounded-xl bg-amber-50 p-3 ring-1 ring-amber-300">
+            <div className="flex items-center gap-2">
+              <Smartphone className="h-4 w-4 text-amber-700" />
+              <p className="text-xs font-bold text-amber-900">
+                Add the Rider Hub to your home screen first
+              </p>
+            </div>
+            <p className="mt-1 text-xs text-amber-900/90">
+              {isIos()
+                ? "In Safari, tap the Share button and choose “Add to Home Screen”, then open the Rider Hub from that icon. Without it, iPhone stops your tracking a few seconds after the screen locks."
+                : "Open your browser menu and choose “Install app” / “Add to Home screen”, then start tracking from that icon. Without it your phone may pause tracking when the screen locks."}
+            </p>
+          </div>
+        ) : null}
         <button
           onClick={toggleTracking}
           disabled={!windowState.open && !tracking}
@@ -401,6 +416,12 @@ export function TrackerPanel({
               ? "Start live tracking"
               : "Tracking unavailable"}
         </button>
+        {tracking && needsInstall ? (
+          <p className="mt-2 text-xs font-semibold text-amber-800">
+            Keep this screen on — tracking pauses when your phone locks unless the Rider Hub is
+            added to your home screen.
+          </p>
+        ) : null}
       </div>
 
       <div className="overflow-hidden rounded-2xl border-2 border-cherry/30 bg-gradient-to-br from-white to-accent p-4">
@@ -408,21 +429,77 @@ export function TrackerPanel({
           <Siren className="h-5 w-5 text-cherry" />
           <p className="font-display text-base font-bold text-ink">Emergency SOS</p>
         </div>
-        <p className="mt-1 text-xs text-ink-soft">
-          Sends your GPS coordinates and rider ID to race control and your emergency contact.
-        </p>
-        <button
-          onClick={triggerSos}
-          className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl cherry-gradient py-4 text-base font-black uppercase tracking-widest text-white shadow-lg shadow-cherry/40 active:scale-[0.98] transition-transform"
-        >
-          <Siren className="h-5 w-5" /> Send SOS
-        </button>
-        {sosSent ? (
-          <p className="mt-2 rounded-lg bg-cherry/10 px-3 py-2 text-center text-xs font-semibold text-cherry-deep">
-            SOS sent · Race control notified
-          </p>
-        ) : null}
+
+        {openSos ? (
+          <>
+            <p className="mt-2 rounded-lg bg-cherry/10 px-3 py-2 text-xs font-semibold text-cherry-deep">
+              SOS sent at {new Date(openSos.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+              {openSos.acknowledgedAt
+                ? " · Race control has seen it and is on the way."
+                : " · Waiting for race control to confirm…"}
+            </p>
+            <button
+              onClick={() =>
+                void cancelSos({ data: { eventId } }).then(() => void mySosQ.refetch())
+              }
+              className="mt-3 w-full rounded-xl bg-secondary py-3 text-sm font-bold text-secondary-foreground active:scale-[0.99]"
+            >
+              I'm okay now — cancel my SOS
+            </button>
+          </>
+        ) : (
+          <>
+            <p className="mt-1 text-xs text-ink-soft">
+              Sends your GPS position, your name and this reason to race control.
+            </p>
+            <div className="mt-3 flex flex-wrap gap-1.5">
+              {SOS_REASONS.map((r) => (
+                <button
+                  key={r}
+                  type="button"
+                  onClick={() => setSosReason(r)}
+                  className={`rounded-full px-3 py-1.5 text-xs font-bold ring-1 transition-colors ${
+                    sosReason === r
+                      ? "bg-cherry text-white ring-cherry"
+                      : "bg-card text-ink ring-border"
+                  }`}
+                >
+                  {SOS_REASON_LABELS[r]}
+                </button>
+              ))}
+            </div>
+            <input
+              value={sosNote}
+              onChange={(e) => setSosNote(e.target.value.slice(0, 200))}
+              placeholder="Add a short note (optional)"
+              className="mt-2 w-full rounded-xl bg-card px-3 py-2.5 text-sm text-ink ring-1 ring-border focus:outline-none focus:ring-2 focus:ring-cherry"
+            />
+            <button
+              onPointerDown={startHold}
+              onPointerUp={endHold}
+              onPointerLeave={endHold}
+              onPointerCancel={endHold}
+              className="relative mt-3 flex w-full items-center justify-center gap-2 overflow-hidden rounded-xl cherry-gradient py-4 text-base font-black uppercase tracking-widest text-white shadow-lg shadow-cherry/40 active:scale-[0.98] transition-transform"
+            >
+              <span
+                className="absolute inset-y-0 left-0 bg-white/30 transition-[width] duration-75"
+                style={{ width: `${holdPct}%` }}
+                aria-hidden
+              />
+              <Siren className="relative h-5 w-5" />
+              <span className="relative">
+                {holdPct > 0 ? "Keep holding…" : "Hold 2s to send SOS"}
+              </span>
+            </button>
+            {sosSent ? (
+              <p className="mt-2 rounded-lg bg-cherry/10 px-3 py-2 text-center text-xs font-semibold text-cherry-deep">
+                SOS sent · Race control notified
+              </p>
+            ) : null}
+          </>
+        )}
       </div>
+
     </div>
   );
 }
