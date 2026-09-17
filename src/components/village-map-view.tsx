@@ -18,6 +18,7 @@ import {
   type VillageLayer,
 } from "@/lib/village-map";
 import { villageIcon } from "@/lib/village-icons";
+import { VillageShare } from "./village-share";
 import {
   formatArea,
   hasBuildDetail,
@@ -180,6 +181,7 @@ export function VillageMapView({
   venueId: venueIdProp,
   defaultLayers,
   riderOnly = false,
+  crewView = false,
 }: {
   eventId: string;
   focusSpotId?: string | null;
@@ -195,6 +197,11 @@ export function VillageMapView({
    * validate precisely what riders see.
    */
   riderOnly?: boolean;
+  /**
+   * Show the crew build layers without a signed-in crew account — used by the
+   * shareable crew link so suppliers and contractors can see the field layout.
+   */
+  crewView?: boolean;
 }) {
   // Pinch on the village map must zoom the map only — never the page itself.
   useLockPageZoom();
@@ -247,8 +254,10 @@ export function VillageMapView({
   // Build layers (infrastructure + branding) are crew/admin only — riders never
   // see generators, cable runs or banner positions.
   const { isCrew: signedInCrew } = useIsCrew();
-  const isCrew = signedInCrew && !riderOnly;
-  const [layers, setLayers] = useState<VillageLayer[]>(defaultLayers ?? ["rider"]);
+  const isCrew = (signedInCrew || crewView) && !riderOnly;
+  const [layers, setLayers] = useState<VillageLayer[]>(
+    defaultLayers ?? (crewView ? ["rider", "infra", "branding"] : ["rider"]),
+  );
   const visibleLayers = useMemo<VillageLayer[]>(() => (isCrew ? layers : ["rider"]), [isCrew, layers]);
   const wrapRef = useRef<HTMLDivElement>(null);
   // Plan-view full screen + pinch zoom (the live map handles both natively).
@@ -571,6 +580,7 @@ export function VillageMapView({
   return (
     <div className="space-y-3">
       {venueTabs}
+      <VillageShare eventId={eventId} venueId={venueId} isCrew={isCrew} />
       {focusZone ? (
         <p className="rounded-xl bg-accent px-3 py-2 text-xs font-semibold text-cherry-deep">
           Highlighted in red: {focusZone.name || "your spot"}.

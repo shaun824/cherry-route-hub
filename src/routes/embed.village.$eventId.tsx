@@ -2,11 +2,15 @@ import { createFileRoute, notFound } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { VillageMapView } from "@/components/village-map-view";
 
-type EmbedSearch = { venue?: string };
+type EmbedSearch = { venue?: string; view?: "crew" };
 
 export const Route = createFileRoute("/embed/village/$eventId")({
   validateSearch: (search: Record<string, unknown>): EmbedSearch => ({
     venue: typeof search.venue === "string" && search.venue ? search.venue : undefined,
+    // ?view=crew opens the build layout for people without a login (suppliers,
+    // contractors) — village map data is already public, this only unlocks the
+    // crew layers and build detail in the UI.
+    view: search.view === "crew" ? "crew" : undefined,
   }),
   loader: async ({ params }) => {
     const { data, error } = await supabase
@@ -43,10 +47,16 @@ export const Route = createFileRoute("/embed/village/$eventId")({
 
 function VillageEmbed() {
   const { eventId } = Route.useParams();
-  const { venue } = Route.useSearch();
+  const { venue, view } = Route.useSearch();
+  const crew = view === "crew";
   return (
     <div className="h-[100dvh] w-full overflow-hidden bg-background">
-      <VillageMapView eventId={eventId} venueId={venue ?? null} riderOnly />
+      <VillageMapView
+        eventId={eventId}
+        venueId={venue ?? null}
+        riderOnly={!crew}
+        crewView={crew}
+      />
     </div>
   );
 }
