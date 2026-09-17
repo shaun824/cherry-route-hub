@@ -253,8 +253,10 @@ export function VillageMapView({
   // Build layers (infrastructure + branding) are crew/admin only — riders never
   // see generators, cable runs or banner positions.
   const { isCrew: signedInCrew } = useIsCrew();
-  const isCrew = signedInCrew && !riderOnly;
-  const [layers, setLayers] = useState<VillageLayer[]>(defaultLayers ?? ["rider"]);
+  const isCrew = (signedInCrew || crewView) && !riderOnly;
+  const [layers, setLayers] = useState<VillageLayer[]>(
+    defaultLayers ?? (crewView ? ["rider", "infra", "branding"] : ["rider"]),
+  );
   const visibleLayers = useMemo<VillageLayer[]>(() => (isCrew ? layers : ["rider"]), [isCrew, layers]);
   const wrapRef = useRef<HTMLDivElement>(null);
   // Plan-view full screen + pinch zoom (the live map handles both natively).
