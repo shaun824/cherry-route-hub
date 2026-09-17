@@ -3638,36 +3638,57 @@ export type Database = {
       tracking_sos: {
         Row: {
           accuracy_m: number | null
+          acknowledged_at: string | null
+          acknowledged_by: string | null
           created_at: string
+          escalated_at: string | null
           event_id: string
           id: string
           lat: number | null
           lng: number | null
           message: string | null
+          note: string | null
+          reason: string | null
+          resolved_at: string | null
+          resolved_by: string | null
           status: string
           updated_at: string
           user_id: string
         }
         Insert: {
           accuracy_m?: number | null
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
           created_at?: string
+          escalated_at?: string | null
           event_id: string
           id?: string
           lat?: number | null
           lng?: number | null
           message?: string | null
+          note?: string | null
+          reason?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
           status?: string
           updated_at?: string
           user_id: string
         }
         Update: {
           accuracy_m?: number | null
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
           created_at?: string
+          escalated_at?: string | null
           event_id?: string
           id?: string
           lat?: number | null
           lng?: number | null
           message?: string | null
+          note?: string | null
+          reason?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
           status?: string
           updated_at?: string
           user_id?: string
