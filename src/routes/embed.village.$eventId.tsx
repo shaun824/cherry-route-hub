@@ -56,6 +56,7 @@ function VillageEmbed() {
         venueId={venue ?? null}
         riderOnly={!crew}
         crewView={crew}
+        startFullscreen
       />
     </div>
   );

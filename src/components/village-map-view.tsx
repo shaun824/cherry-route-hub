@@ -182,6 +182,7 @@ export function VillageMapView({
   defaultLayers,
   riderOnly = false,
   crewView = false,
+  startFullscreen = false,
 }: {
   eventId: string;
   focusSpotId?: string | null;
@@ -202,6 +203,8 @@ export function VillageMapView({
    * shareable crew link so suppliers and contractors can see the field layout.
    */
   crewView?: boolean;
+  /** Open directly as a viewport-filling map, used by public share links. */
+  startFullscreen?: boolean;
 }) {
   // Pinch on the village map must zoom the map only — never the page itself.
   useLockPageZoom();
@@ -698,6 +701,7 @@ export function VillageMapView({
                 ) : null
               }
               fullscreenControls={layerControls}
+              initialFullscreen={startFullscreen}
             />
           </Suspense>
         </ClientOnly>

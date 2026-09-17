@@ -428,6 +428,7 @@ export default function VillageMapGeo({
   highlightTentId = null,
   fullscreenDetail = null,
   fullscreenControls = null,
+  initialFullscreen = false,
 }: {
   imageUrl?: string | null;
   geo: VillageGeo;
@@ -446,6 +447,8 @@ export default function VillageMapGeo({
   fullscreenDetail?: ReactNode;
   /** Crew layer controls repeated inside the full-screen portal. */
   fullscreenControls?: ReactNode;
+  /** Start as a viewport-filling map without requiring an extra tap. */
+  initialFullscreen?: boolean;
 }) {
 
 
@@ -463,9 +466,11 @@ export default function VillageMapGeo({
   // Full-screen expand: the same live map instance just fills the viewport, so
   // the rider's current zoom/position is kept. Works on every device (unlike
   // the native Fullscreen API, which iPhone Safari refuses for divs).
-  const [fullscreen, setFullscreen] = useState(false);
+  const [fullscreen, setFullscreen] = useState(initialFullscreen);
   const mapRef = useRef<L.Map | null>(null);
   const fullscreenHistoryKey = useRef(`village-map-${Math.random().toString(36).slice(2)}`);
+  const detailSheetRef = useRef<HTMLDivElement | null>(null);
+  const [detailSheetHeight, setDetailSheetHeight] = useState(0);
 
   const [zoom, setZoom] = useState(17);
   const [view, setView] = useState<L.LatLngBounds | null>(null);
@@ -505,6 +510,19 @@ export default function VillageMapGeo({
       window.clearTimeout(t);
     };
   }, [fullscreen]);
+
+  useEffect(() => {
+    const sheet = detailSheetRef.current;
+    if (!fullscreen || !fullscreenDetail || !sheet) {
+      setDetailSheetHeight(0);
+      return;
+    }
+    const measure = () => setDetailSheetHeight(sheet.getBoundingClientRect().height);
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(sheet);
+    return () => observer.disconnect();
+  }, [fullscreen, fullscreenDetail]);
 
   useEffect(() => {
     if (!fullscreen) return;
@@ -964,8 +982,12 @@ export default function VillageMapGeo({
           </div>
         ) : null}
 
-        {/* Rotate the map to match the way you're facing. */}
-        <div className={`pointer-events-none absolute left-[max(0.75rem,env(safe-area-inset-left))] z-[500] flex items-center gap-1.5 ${fullscreen && fullscreenDetail ? "bottom-[calc(38dvh+0.75rem)]" : "bottom-[max(0.75rem,env(safe-area-inset-bottom))]"}`}>
+        {/* Rotation is a desktop/crew precision control. On phones, keep the
+            map clear and prioritise the rider's live-location action. */}
+        <div
+          className="pointer-events-none absolute left-[max(0.75rem,env(safe-area-inset-left))] z-[500] hidden items-center gap-1.5 sm:flex"
+          style={{ bottom: fullscreen && fullscreenDetail ? detailSheetHeight + 12 : "max(0.75rem, env(safe-area-inset-bottom))" }}
+        >
           <button
             type="button"
             aria-label="Rotate map anti-clockwise"
@@ -998,7 +1020,8 @@ export default function VillageMapGeo({
         <button
           type="button"
           onClick={locate}
-          className={`absolute right-[max(0.75rem,env(safe-area-inset-right))] z-[500] rounded-full cherry-gradient px-4 py-2 text-xs font-bold text-white shadow-lg ${fullscreen && fullscreenDetail ? "bottom-[calc(38dvh+0.75rem)]" : "bottom-[max(0.75rem,env(safe-area-inset-bottom))]"}`}
+          className="absolute right-[max(0.75rem,env(safe-area-inset-right))] z-[500] rounded-full cherry-gradient px-4 py-2 text-xs font-bold text-white shadow-lg"
+          style={{ bottom: fullscreen && fullscreenDetail ? detailSheetHeight + 12 : "max(0.75rem, env(safe-area-inset-bottom))" }}
         >
           {locating ? "Finding you…" : me ? "Hide my location" : "Show my location"}
         </button>
@@ -1006,7 +1029,7 @@ export default function VillageMapGeo({
         {/* Full-screen detail sheet: docked to the bottom strip, well clear of
             the tapped point, so you can read about it and keep using the map. */}
         {fullscreen && fullscreenDetail ? (
-          <div className="absolute inset-x-0 bottom-0 z-[700] mx-auto max-h-[38dvh] w-full max-w-xl overflow-y-auto rounded-t-2xl bg-card/95 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-2xl ring-1 ring-border backdrop-blur">
+          <div ref={detailSheetRef} className="absolute inset-x-0 bottom-0 z-[700] mx-auto max-h-[38dvh] w-full max-w-xl overflow-y-auto rounded-t-2xl bg-card/95 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-2xl ring-1 ring-border backdrop-blur">
             {fullscreenDetail}
           </div>
         ) : null}
@@ -1023,7 +1046,7 @@ export default function VillageMapGeo({
         <p className="text-xs text-ink-soft">Live location on · accurate to about {Math.round(accuracy)} m.</p>
       ) : (
         <p className="text-xs text-ink-soft">
-          Use two fingers to move, pinch to zoom or twist to rotate the map, and tap any marker for details.
+          Drag to move, pinch to zoom, and tap any marker for details.
         </p>
       )}
     </div>
