@@ -703,17 +703,10 @@ export function VillageMapView({
       >
         <div
           ref={wrapRef}
-          className={`overflow-auto bg-muted ${planFullscreen ? "[touch-action:none]" : "[touch-action:pan-y]"} ${
+          className={`overflow-auto bg-muted [touch-action:none] ${
             planFullscreen ? "h-full" : "max-h-[70vh]"
           }`}
         >
-        {!planFullscreen && planTwoFingerHint ? (
-          <div className="pointer-events-none absolute inset-0 z-40 grid place-items-center bg-ink/45 px-6 text-center">
-            <p className="rounded-2xl bg-card/95 px-4 py-3 text-sm font-bold text-ink shadow-lg ring-1 ring-border">
-              Use two fingers to move the map
-            </p>
-          </div>
-        ) : null}
         {planFullscreen && layerControls ? (
           <div className="absolute left-[max(0.75rem,env(safe-area-inset-left))] top-[max(0.75rem,env(safe-area-inset-top))] z-30 max-w-[calc(100vw-7rem)] rounded-lg bg-card/95 p-2 shadow ring-1 ring-border backdrop-blur">
             {layerControls}
