@@ -131,27 +131,13 @@ function VectorMoveSync() {
  * over the map never gets trapped. A one-finger drag surfaces a hint instead.
  */
 
-function TwoFingerPanGate({ fullscreen, onTouch }: { fullscreen: boolean; onTouch: () => void }) {
+/** One-finger panning everywhere on touch devices (rider request): the map
+    always drags with a single finger, inline and full screen alike. */
+function OneFingerPan() {
   const map = useMap();
-  const cbRef = useRef(onTouch);
-  cbRef.current = onTouch;
-
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    const coarse = window.matchMedia?.("(pointer: coarse)")?.matches;
-    if (!coarse) return;
-    const el = map.getContainer();
-    if (fullscreen) map.dragging.enable();
-    else map.dragging.disable();
-
-    const onStart = () => cbRef.current();
-    if (!fullscreen) el.addEventListener("touchstart", onStart, { passive: true });
-    return () => {
-      el.removeEventListener("touchstart", onStart);
-      map.dragging.enable();
-    };
-  }, [map, fullscreen]);
-
+    map.dragging.enable();
+  }, [map]);
   return null;
 }
 
@@ -490,23 +476,6 @@ export default function VillageMapGeo({
     [view],
   );
 
-  // Shown once as the map loads on touch devices, then dismissed for good on
-  // the first touch — re-showing it on every single tap got in the way.
-  const [twoFingerHint, setTwoFingerHint] = useState(false);
-  const hintTimer = useRef<number | null>(null);
-  const dismissTwoFingerHint = useCallback(() => {
-    if (hintTimer.current) window.clearTimeout(hintTimer.current);
-    setTwoFingerHint(false);
-  }, []);
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    if (!window.matchMedia?.("(pointer: coarse)")?.matches) return;
-    setTwoFingerHint(true);
-    hintTimer.current = window.setTimeout(() => setTwoFingerHint(false), 4000);
-    return () => {
-      if (hintTimer.current) window.clearTimeout(hintTimer.current);
-    };
-  }, []);
 
   const watchRef = useRef<number | null>(null);
 
