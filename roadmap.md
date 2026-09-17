@@ -7,3 +7,5 @@
 - [x] Complete the Village Map interaction, fullscreen, labels, and crew readability pass
 
 - [x] Open shared Village Map links full screen and simplify mobile location controls
+
+- [x] Add a one-tap return to the village while live location stays active
