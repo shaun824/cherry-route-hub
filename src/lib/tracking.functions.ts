@@ -411,12 +411,19 @@ export type SosAlert = {
   eventId: string;
   userId: string;
   riderName: string | null;
+  bib: string | null;
   lat: number | null;
   lng: number | null;
+  reason: string | null;
+  note: string | null;
   message: string | null;
   status: string;
   createdAt: string;
+  acknowledgedAt: string | null;
+  acknowledgedByName: string | null;
+  escalatedAt: string | null;
 };
+
 
 /**
  * Throws unless the signed-in user is crew or admin (RLS-scoped check).
