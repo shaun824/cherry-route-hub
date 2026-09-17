@@ -266,6 +266,21 @@ export function TrackerPanel({
   );
 
 
+  // ---- SOS: reason + note, press-and-hold to send, cancel if it was a mistake.
+  const [sosReason, setSosReason] = useState<SosReason>("medical");
+  const [sosNote, setSosNote] = useState("");
+  const [holdPct, setHoldPct] = useState(0);
+  const holdTimer = useRef<number | null>(null);
+
+  const cancelSos = useServerFn(cancelMySos);
+  const fetchMine = useServerFn(fetchMySos);
+  const mySosQ = useQuery({
+    queryKey: ["my-sos", eventId],
+    queryFn: () => fetchMine({ data: { eventId } }),
+    refetchInterval: 20_000,
+  });
+  const openSos = mySosQ.data?.open ?? null;
+
   function triggerSos() {
     setError(null);
     const send = (pos: GeolocationPosition | null) => {
@@ -275,10 +290,14 @@ export function TrackerPanel({
           lat: pos?.coords.latitude ?? null,
           lng: pos?.coords.longitude ?? null,
           accuracyM: pos ? Math.round(pos.coords.accuracy) : null,
+          reason: sosReason,
+          message: sosNote.trim() ? sosNote.trim() : null,
         },
       })
         .then(() => {
           setSosSent(true);
+          setSosNote("");
+          void mySosQ.refetch();
           setTimeout(() => setSosSent(false), 8000);
         })
         .catch(() => setError("Could not send SOS — please call race control directly."));
@@ -292,6 +311,29 @@ export function TrackerPanel({
       send(null);
     }
   }
+
+  // 2-second press-and-hold guards against an accidental tap on a safety button.
+  function startHold() {
+    if (holdTimer.current !== null) return;
+    const started = Date.now();
+    holdTimer.current = window.setInterval(() => {
+      const pct = Math.min(100, ((Date.now() - started) / SOS_HOLD_MS) * 100);
+      setHoldPct(pct);
+      if (pct >= 100) {
+        endHold();
+        triggerSos();
+      }
+    }, 50);
+  }
+
+  function endHold() {
+    if (holdTimer.current !== null) window.clearInterval(holdTimer.current);
+    holdTimer.current = null;
+    setHoldPct(0);
+  }
+
+  useEffect(() => () => endHold(), []);
+
 
   return (
     <div className="space-y-3">
