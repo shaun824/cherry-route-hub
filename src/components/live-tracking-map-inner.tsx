@@ -681,36 +681,62 @@ export default function LiveTrackingMapInner({
       </div>
       {search.trim() ? (
         <div className="flex flex-wrap gap-1.5">
-          {filtered.slice(0, 8).map((r) => (
-            <button
-              key={r.userId}
-              type="button"
-              onClick={() => {
-                setFollow(r.userId);
-                const map = mapRef.current;
-                if (map) map.setView([r.lat, r.lng], Math.max(map.getZoom(), 14));
-              }}
-              className={`rounded-full px-3 py-1 text-xs font-semibold ring-1 transition-colors ${
-                follow === r.userId
-                  ? "bg-cherry text-white ring-cherry"
-                  : "bg-card text-ink ring-border hover:bg-accent"
-              }`}
-            >
-              {r.riderName ?? "Rider"}
-              {r.bib ? ` · #${r.bib}` : ""}
-            </button>
-          ))}
-          {follow ? (
-            <button
-              type="button"
-              onClick={() => setFollow(null)}
-              className="rounded-full bg-secondary px-3 py-1 text-xs font-semibold text-secondary-foreground"
-            >
-              Stop following
-            </button>
-          ) : null}
+          {filtered.slice(0, 8).map((r) => {
+            const p = progressFor(r);
+            return (
+              <button
+                key={r.userId}
+                type="button"
+                onClick={() => {
+                  startFollowing(r.userId);
+                  const map = mapRef.current;
+                  if (map) {
+                    programmaticMoveRef.current = true;
+                    map.setView([r.lat, r.lng], Math.max(map.getZoom(), 14));
+                    window.setTimeout(() => (programmaticMoveRef.current = false), 700);
+                  }
+                }}
+                className={`rounded-full px-3 py-1 text-xs font-semibold ring-1 transition-colors ${
+                  follow === r.userId
+                    ? "bg-cherry text-white ring-cherry"
+                    : "bg-card text-ink ring-border hover:bg-accent"
+                }`}
+              >
+                {r.riderName ?? "Rider"}
+                {r.bib ? ` · #${r.bib}` : ""}
+                {p && p.offCourseM < 1000 ? ` · ${formatProgress(p)}` : ""}
+              </button>
+            );
+          })}
         </div>
       ) : null}
+
+      {follow ? (
+        <div className="flex flex-wrap items-center gap-2 rounded-xl bg-card px-3 py-2 text-xs ring-1 ring-border">
+          <span className="font-semibold text-ink">
+            Following{" "}
+            {riders.find((r) => r.userId === follow)?.riderName ?? "this rider"}
+            {followPaused ? " · paused while you move the map" : ""}
+          </span>
+          {followPaused ? (
+            <button
+              type="button"
+              onClick={() => setFollowPaused(false)}
+              className="ml-auto inline-flex items-center gap-1 rounded-full bg-cherry px-3 py-1 font-bold text-white"
+            >
+              <Crosshair className="h-3.5 w-3.5" /> Re-centre
+            </button>
+          ) : null}
+          <button
+            type="button"
+            onClick={() => startFollowing(null)}
+            className={`rounded-full bg-secondary px-3 py-1 font-semibold text-secondary-foreground ${followPaused ? "" : "ml-auto"}`}
+          >
+            Stop following
+          </button>
+        </div>
+      ) : null}
+
       <div
         ref={containerRef}
         className="h-96 w-full overflow-hidden rounded-2xl ring-1 ring-border"
@@ -731,12 +757,24 @@ export default function LiveTrackingMapInner({
         </div>
       ) : null}
 
-      <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
-        <MapPin className="h-3.5 w-3.5 text-cherry" />
-        {riders.length > 0
-          ? `${riders.length} rider${riders.length === 1 ? "" : "s"} tracking · updates every second`
-          : "No riders are sharing their position yet — dots appear here once riders start tracking."}
-      </p>
+      <div className="flex flex-wrap items-center gap-2">
+        <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+          <MapPin className="h-3.5 w-3.5 text-cherry" />
+          {riders.length > 0
+            ? `${riders.length} rider${riders.length === 1 ? "" : "s"} on course · updates every 3 seconds`
+            : "No riders are sharing their position yet — dots appear here once riders start tracking."}
+        </p>
+        {finishedCount > 0 ? (
+          <button
+            type="button"
+            onClick={() => setShowFinished((s) => !s)}
+            className="ml-auto rounded-full bg-card px-3 py-1 text-xs font-semibold text-ink ring-1 ring-border"
+          >
+            {showFinished ? "Hide" : "Show"} finished ({finishedCount})
+          </button>
+        ) : null}
+      </div>
+
     </div>
   );
 }
