@@ -15,6 +15,27 @@
       "when": 1789448214211,
       "tag": "0001_add_email_step_template_name",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1789620781413,
+      "tag": "0002_sos_triage_fields",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1789620852838,
+      "tag": "0003_live_tracking_identity_v2",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1789620906220,
+      "tag": "0004_live_tracking_sos_flags",
+      "breakpoints": true
     }
   ]
 }

@@ -1,16 +1,24 @@
-// Live spectator map: polls for the latest rider positions every 1s and plots
-// them on a Leaflet map. Public — uses the same read path as the spectate page.
+// Live spectator map: polls for the latest rider positions and plots them on a
+// Leaflet map. Public — uses the same read path as the spectate page.
 // The event's KML course is overlaid underneath, picked by cross-referencing the
 // riders' entry category / position against the event's routes.
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import "leaflet.markercluster";
+import "leaflet.markercluster/dist/MarkerCluster.css";
 import { useQuery } from "@tanstack/react-query";
-import { fetchLiveTracking } from "@/lib/tracking.functions";
-import { MapPin, Route as RouteIcon } from "lucide-react";
+import { fetchLiveTracking, type LiveRiderPosition } from "@/lib/tracking.functions";
+import { Crosshair, MapPin, Route as RouteIcon } from "lucide-react";
 import { useAdminStore } from "@/lib/store";
 import { withRegistrationDayLabels } from "@/lib/event-days";
 import { parseKml, simplifyPolyline, capPolyline, type LatLngAlt } from "@/lib/geo";
+import {
+  buildCourseLine,
+  formatProgress,
+  progressOnCourse,
+  type CourseLine,
+} from "@/lib/course-progress";
 import {
   candidateDayIds,
   matchRoutesForRiders,
@@ -26,19 +34,46 @@ const TIER_COLORS: Record<string, string> = {
 
 const POLL_MS = 3_000;
 const STALE_AFTER_MS = 5 * 60_000;
+const LOST_SIGNAL_MS = 10 * 60_000;
+// A rider further than this from the course line counts as off course.
+const OFF_COURSE_M = 400;
 
-function markerIcon(stale: boolean) {
+type Signal = "live" | "stale" | "lost";
+
+function signalOf(recordedAt: string): Signal {
+  const age = Date.now() - new Date(recordedAt).getTime();
+  if (age > LOST_SIGNAL_MS) return "lost";
+  if (age > STALE_AFTER_MS) return "stale";
+  return "live";
+}
+
+function markerIcon(signal: Signal, sos: boolean) {
+  if (sos) {
+    return L.divIcon({
+      className: "",
+      html: `<div class="rce-sos-pin" style="
+        width:26px;height:26px;border-radius:9999px;background:#dc2626;
+        border:3px solid #fff;box-shadow:0 0 0 6px rgba(220,38,38,.35);
+        display:flex;align-items:center;justify-content:center;color:#fff;
+        font-size:14px;font-weight:900;">!</div>`,
+      iconSize: [26, 26],
+      iconAnchor: [13, 13],
+    });
+  }
+  const color = signal === "lost" ? "#6b7280" : signal === "stale" ? "#9ca3af" : "#e11d48";
   return L.divIcon({
     className: "",
     html: `<div style="
       width:18px;height:18px;border-radius:9999px;
-      background:${stale ? "#9ca3af" : "#e11d48"};
+      background:${color};
       border:3px solid #fff;box-shadow:0 1px 6px rgba(0,0,0,.4);
+      ${signal === "lost" ? "opacity:.75;" : ""}
     "></div>`,
     iconSize: [18, 18],
     iconAnchor: [9, 9],
   });
 }
+
 
 function formatAgo(iso: string): string {
   const d = new Date(iso).getTime();
@@ -80,17 +115,21 @@ function navUrl(lat: number, lng: number): string {
   return `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`;
 }
 
-function popupContent(r: {
-  riderName: string | null;
-  bib: string | null;
-  category: string | null;
-  lat: number;
-  lng: number;
-  batteryPct: number | null;
-  recordedAt: string;
-}, isCrew: boolean, viewer: { lat: number; lng: number } | null): HTMLElement {
+function popupContent(
+  r: LiveRiderPosition,
+  isCrew: boolean,
+  viewer: { lat: number; lng: number } | null,
+  progressText: string | null,
+): HTMLElement {
   const wrap = document.createElement("div");
   wrap.className = "min-w-[180px] max-w-[260px] font-sans text-sm";
+
+  if (r.sos) {
+    const sos = document.createElement("p");
+    sos.className = "mb-1 rounded bg-red-600 px-2 py-1 text-xs font-black uppercase text-white";
+    sos.textContent = `SOS${r.sosReason ? ` · ${r.sosReason}` : ""}`;
+    wrap.appendChild(sos);
+  }
 
   const title = document.createElement("p");
   title.className = "font-bold text-ink";
@@ -99,13 +138,26 @@ function popupContent(r: {
 
   const meta = document.createElement("p");
   meta.className = "text-xs text-muted-foreground";
+  const age = Date.now() - new Date(r.recordedAt).getTime();
   const bits = [
     r.bib ? `#${r.bib}` : null,
     r.category ?? null,
-    formatAgo(r.recordedAt),
+    age > LOST_SIGNAL_MS
+      ? `lost signal · ${formatAgo(r.recordedAt)}`
+      : age > STALE_AFTER_MS
+        ? `stale · ${formatAgo(r.recordedAt)}`
+        : formatAgo(r.recordedAt),
   ].filter(Boolean);
   meta.textContent = bits.join(" · ");
   wrap.appendChild(meta);
+
+  if (progressText) {
+    const prog = document.createElement("p");
+    prog.className = "mt-1 text-xs font-semibold text-ink";
+    prog.textContent = progressText;
+    wrap.appendChild(prog);
+  }
+
 
   if (isCrew) {
     if (r.batteryPct != null) {
@@ -158,22 +210,67 @@ function popupContent(r: {
   return wrap;
 }
 
+function followKey(eventId: string) {
+  return `rce-follow-${eventId}`;
+}
+
 export default function LiveTrackingMapInner({
   eventId,
   isCrew = false,
+  focusUserId = null,
+  onOffCourse,
 }: {
   eventId: string;
   isCrew?: boolean;
+  /** Race control can jump the map to a specific rider. */
+  focusUserId?: string | null;
+  /** Reports riders sitting far off the course line (metres), for the watch list. */
+  onOffCourse?: (map: Record<string, number>) => void;
 }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<L.Map | null>(null);
+  const clusterRef = useRef<L.MarkerClusterGroup | null>(null);
   const markersRef = useRef<Map<string, L.Marker>>(new Map());
+  const circlesRef = useRef<Map<string, L.Circle>>(new Map());
+  const animRef = useRef<Map<string, number>>(new Map());
   const fittedRef = useRef(false);
+  const programmaticMoveRef = useRef(false);
   const [follow, setFollow] = useState<string | null>(null);
+  const [followPaused, setFollowPaused] = useState(false);
   const [search, setSearch] = useState("");
+  const [showFinished, setShowFinished] = useState(false);
   const [viewerLoc, setViewerLoc] = useState<{ lat: number; lng: number } | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const guideLineRef = useRef<L.Polyline | null>(null);
+
+  // Remember who a spectator is following so reopening the page keeps them on
+  // their rider instead of making them search again.
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(followKey(eventId));
+      if (saved) setFollow(saved);
+    } catch {
+      /* storage unavailable */
+    }
+  }, [eventId]);
+
+  const startFollowing = useCallback(
+    (userId: string | null) => {
+      setFollow(userId);
+      setFollowPaused(false);
+      try {
+        if (userId) localStorage.setItem(followKey(eventId), userId);
+        else localStorage.removeItem(followKey(eventId));
+      } catch {
+        /* storage unavailable */
+      }
+    },
+    [eventId],
+  );
+
+  useEffect(() => {
+    if (focusUserId) startFollowing(focusUserId);
+  }, [focusUserId, startFollowing]);
 
   const { data } = useQuery({
     queryKey: ["live-tracking", eventId],
@@ -181,7 +278,13 @@ export default function LiveTrackingMapInner({
     refetchInterval: POLL_MS,
   });
 
-  const riders = useMemo(() => data?.riders ?? [], [data]);
+  const allRiders = useMemo(() => data?.riders ?? [], [data]);
+  const finishedCount = allRiders.filter((r) => r.finished).length;
+  // Finished riders would otherwise sit on the map as grey clutter all day.
+  const riders = useMemo(
+    () => (showFinished ? allRiders : allRiders.filter((r) => !r.finished || r.sos)),
+    [allRiders, showFinished],
+  );
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     if (!q) return riders;
@@ -191,6 +294,7 @@ export default function LiveTrackingMapInner({
         (r.bib ?? "").toLowerCase().includes(q),
     );
   }, [riders, search]);
+
 
   // Viewer location for crew distance/bearing and guide line.
   useEffect(() => {
@@ -216,13 +320,49 @@ export default function LiveTrackingMapInner({
       attribution: "&copy; OpenStreetMap contributors",
       maxZoom: 19,
     }).addTo(map);
+
+    // Cluster ordinary riders so 300 dots stay readable; SOS pins are added to
+    // the map directly so they can never be swallowed by a cluster bubble.
+    const cluster = L.markerClusterGroup({
+      showCoverageOnHover: false,
+      spiderfyOnMaxZoom: true,
+      maxClusterRadius: 45,
+      iconCreateFunction: (c) => {
+        const n = c.getChildCount();
+        const size = n < 10 ? 34 : n < 50 ? 42 : n < 150 ? 50 : 58;
+        return L.divIcon({
+          className: "",
+          html: `<div style="
+            width:${size}px;height:${size}px;border-radius:9999px;
+            background:rgba(30,41,59,.85);color:#fff;border:3px solid #fff;
+            display:flex;align-items:center;justify-content:center;
+            font-weight:800;font-size:${n < 100 ? 13 : 12}px;
+            box-shadow:0 2px 8px rgba(0,0,0,.35);">${n}</div>`,
+          iconSize: [size, size],
+        });
+      },
+    });
+    cluster.addTo(map);
+    clusterRef.current = cluster;
+
+    // Standard follow behaviour: a manual pan or zoom pauses auto-recentring.
+    const onUserMove = () => {
+      if (programmaticMoveRef.current) return;
+      setFollowPaused(true);
+    };
+    map.on("dragstart", onUserMove);
+    map.on("zoomstart", onUserMove);
+
     mapRef.current = map;
     return () => {
       map.remove();
       mapRef.current = null;
+      clusterRef.current = null;
       markersRef.current.clear();
+      circlesRef.current.clear();
     };
   }, []);
+
 
   // ---- Course overlay -------------------------------------------------
   const event = useAdminStore((s) => s.events.find((e) => e.id === eventId));
@@ -336,30 +476,86 @@ export default function LiveTrackingMapInner({
     };
   }, [candidates, matchedRoutes, matchedIds]);
 
+  // Course line used for progress + off-course checks (the matched route).
+  const course: CourseLine | null = useMemo(() => {
+    const pick = matchedRoutes[0] ?? candidates[0];
+    return pick ? buildCourseLine(pick.lines) : null;
+  }, [matchedRoutes, candidates]);
+
+  const progressFor = useCallback(
+    (r: LiveRiderPosition) => (course ? progressOnCourse(course, r.lat, r.lng) : null),
+    [course],
+  );
+
+  // Off-course watch list for race control (soft warning — never an alarm).
+  useEffect(() => {
+    if (!onOffCourse || !course) return;
+    const out: Record<string, number> = {};
+    for (const r of riders) {
+      const p = progressOnCourse(course, r.lat, r.lng);
+      if (p && p.offCourseM > OFF_COURSE_M) out[r.userId] = p.offCourseM;
+    }
+    onOffCourse(out);
+  }, [riders, course, onOffCourse]);
+
+  /** Eases a marker from where it is to its new position over the poll window. */
+  const animateTo = useCallback((id: string, marker: L.Marker, lat: number, lng: number) => {
+    const from = marker.getLatLng();
+    if (Math.abs(from.lat - lat) < 1e-7 && Math.abs(from.lng - lng) < 1e-7) return;
+    // Big jumps (offline catch-up) snap instead of sliding across the map.
+    if (Math.abs(from.lat - lat) > 0.05 || Math.abs(from.lng - lng) > 0.05) {
+      marker.setLatLng([lat, lng]);
+      return;
+    }
+    const existing = animRef.current.get(id);
+    if (existing) cancelAnimationFrame(existing);
+    const start = performance.now();
+    const step = (t: number) => {
+      const k = Math.min(1, (t - start) / POLL_MS);
+      const e = k < 0.5 ? 2 * k * k : -1 + (4 - 2 * k) * k; // ease in/out
+      marker.setLatLng([from.lat + (lat - from.lat) * e, from.lng + (lng - from.lng) * e]);
+      if (k < 1) animRef.current.set(id, requestAnimationFrame(step));
+      else animRef.current.delete(id);
+    };
+    animRef.current.set(id, requestAnimationFrame(step));
+  }, []);
+
   // Update markers and popups.
   useEffect(() => {
     const map = mapRef.current;
-    if (!map) return;
+    const cluster = clusterRef.current;
+    if (!map || !cluster) return;
     const seen = new Set<string>();
-    const now = Date.now();
     const bounds: [number, number][] = [];
 
     for (const r of riders) {
       seen.add(r.userId);
-      const stale = now - new Date(r.recordedAt).getTime() > STALE_AFTER_MS;
+      const signal = signalOf(r.recordedAt);
+      const p = progressFor(r);
+      const progressText = p && p.offCourseM < 1000 ? formatProgress(p) : null;
       const existing = markersRef.current.get(r.userId);
       if (existing) {
-        existing.setLatLng([r.lat, r.lng]);
-        existing.setIcon(markerIcon(stale));
-        // Refresh popup content if this rider is selected.
+        animateTo(r.userId, existing, r.lat, r.lng);
+        existing.setIcon(markerIcon(signal, r.sos));
+        // An SOS pin must live outside the cluster group so it always shows.
+        const inCluster = cluster.hasLayer(existing);
+        if (r.sos && inCluster) {
+          cluster.removeLayer(existing);
+          existing.addTo(map);
+        } else if (!r.sos && !inCluster) {
+          existing.remove();
+          cluster.addLayer(existing);
+        }
         if (selectedId === r.userId) {
-          existing.setPopupContent(popupContent(r, isCrew, viewerLoc));
+          existing.setPopupContent(popupContent(r, isCrew, viewerLoc, progressText));
           existing.openPopup();
         }
       } else {
-        const m = L.marker([r.lat, r.lng], { icon: markerIcon(stale) })
-          .addTo(map)
-          .bindPopup(popupContent(r, isCrew, viewerLoc));
+        const m = L.marker([r.lat, r.lng], { icon: markerIcon(signal, r.sos) }).bindPopup(
+          popupContent(r, isCrew, viewerLoc, progressText),
+        );
+        if (r.sos) m.addTo(map);
+        else cluster.addLayer(m);
         m.on("popupopen", () => {
           setSelectedId(r.userId);
           const el = m.getPopup()?.getElement();
@@ -392,27 +588,60 @@ export default function LiveTrackingMapInner({
         });
         markersRef.current.set(r.userId, m);
       }
+
+      // Faint accuracy halo so viewers can tell a sharp fix from a rough one.
+      if (r.accuracyM != null && r.accuracyM > 25) {
+        const circle = circlesRef.current.get(r.userId);
+        if (circle) circle.setLatLng([r.lat, r.lng]).setRadius(r.accuracyM);
+        else
+          circlesRef.current.set(
+            r.userId,
+            L.circle([r.lat, r.lng], {
+              radius: r.accuracyM,
+              color: "#e11d48",
+              weight: 1,
+              opacity: 0.25,
+              fillOpacity: 0.07,
+              interactive: false,
+            }).addTo(map),
+          );
+      } else {
+        circlesRef.current.get(r.userId)?.remove();
+        circlesRef.current.delete(r.userId);
+      }
+
       bounds.push([r.lat, r.lng]);
-      // Keep the map centred on whoever is being followed or whose pin is open,
-      // so a selected rider stays in view as they move.
-      if (follow === r.userId || selectedId === r.userId) {
+      // Follow mode recentres smoothly, but stays out of the way once the
+      // viewer has panned or zoomed themselves.
+      if ((follow === r.userId || selectedId === r.userId) && !followPaused) {
+        programmaticMoveRef.current = true;
         map.panTo([r.lat, r.lng], { animate: true, duration: 0.5 });
+        window.setTimeout(() => (programmaticMoveRef.current = false), 700);
       }
     }
 
     // Remove markers for riders no longer reporting.
     for (const [id, m] of markersRef.current) {
       if (!seen.has(id)) {
+        const anim = animRef.current.get(id);
+        if (anim) cancelAnimationFrame(anim);
+        animRef.current.delete(id);
+        if (cluster.hasLayer(m)) cluster.removeLayer(m);
         m.remove();
         markersRef.current.delete(id);
+        circlesRef.current.get(id)?.remove();
+        circlesRef.current.delete(id);
       }
     }
 
     if (!fittedRef.current && bounds.length > 0 && !follow) {
+      programmaticMoveRef.current = true;
       map.fitBounds(L.latLngBounds(bounds).pad(0.15));
       fittedRef.current = true;
+      window.setTimeout(() => (programmaticMoveRef.current = false), 700);
     }
-  }, [riders, follow, isCrew, viewerLoc, selectedId]);
+  }, [riders, follow, followPaused, isCrew, viewerLoc, selectedId, animateTo, progressFor]);
+
 
   // Draw/refresh the dashed guide line from viewer to selected rider.
   useEffect(() => {
@@ -452,36 +681,62 @@ export default function LiveTrackingMapInner({
       </div>
       {search.trim() ? (
         <div className="flex flex-wrap gap-1.5">
-          {filtered.slice(0, 8).map((r) => (
-            <button
-              key={r.userId}
-              type="button"
-              onClick={() => {
-                setFollow(r.userId);
-                const map = mapRef.current;
-                if (map) map.setView([r.lat, r.lng], Math.max(map.getZoom(), 14));
-              }}
-              className={`rounded-full px-3 py-1 text-xs font-semibold ring-1 transition-colors ${
-                follow === r.userId
-                  ? "bg-cherry text-white ring-cherry"
-                  : "bg-card text-ink ring-border hover:bg-accent"
-              }`}
-            >
-              {r.riderName ?? "Rider"}
-              {r.bib ? ` · #${r.bib}` : ""}
-            </button>
-          ))}
-          {follow ? (
-            <button
-              type="button"
-              onClick={() => setFollow(null)}
-              className="rounded-full bg-secondary px-3 py-1 text-xs font-semibold text-secondary-foreground"
-            >
-              Stop following
-            </button>
-          ) : null}
+          {filtered.slice(0, 8).map((r) => {
+            const p = progressFor(r);
+            return (
+              <button
+                key={r.userId}
+                type="button"
+                onClick={() => {
+                  startFollowing(r.userId);
+                  const map = mapRef.current;
+                  if (map) {
+                    programmaticMoveRef.current = true;
+                    map.setView([r.lat, r.lng], Math.max(map.getZoom(), 14));
+                    window.setTimeout(() => (programmaticMoveRef.current = false), 700);
+                  }
+                }}
+                className={`rounded-full px-3 py-1 text-xs font-semibold ring-1 transition-colors ${
+                  follow === r.userId
+                    ? "bg-cherry text-white ring-cherry"
+                    : "bg-card text-ink ring-border hover:bg-accent"
+                }`}
+              >
+                {r.riderName ?? "Rider"}
+                {r.bib ? ` · #${r.bib}` : ""}
+                {p && p.offCourseM < 1000 ? ` · ${formatProgress(p)}` : ""}
+              </button>
+            );
+          })}
         </div>
       ) : null}
+
+      {follow ? (
+        <div className="flex flex-wrap items-center gap-2 rounded-xl bg-card px-3 py-2 text-xs ring-1 ring-border">
+          <span className="font-semibold text-ink">
+            Following{" "}
+            {riders.find((r) => r.userId === follow)?.riderName ?? "this rider"}
+            {followPaused ? " · paused while you move the map" : ""}
+          </span>
+          {followPaused ? (
+            <button
+              type="button"
+              onClick={() => setFollowPaused(false)}
+              className="ml-auto inline-flex items-center gap-1 rounded-full bg-cherry px-3 py-1 font-bold text-white"
+            >
+              <Crosshair className="h-3.5 w-3.5" /> Re-centre
+            </button>
+          ) : null}
+          <button
+            type="button"
+            onClick={() => startFollowing(null)}
+            className={`rounded-full bg-secondary px-3 py-1 font-semibold text-secondary-foreground ${followPaused ? "" : "ml-auto"}`}
+          >
+            Stop following
+          </button>
+        </div>
+      ) : null}
+
       <div
         ref={containerRef}
         className="h-96 w-full overflow-hidden rounded-2xl ring-1 ring-border"
@@ -502,12 +757,24 @@ export default function LiveTrackingMapInner({
         </div>
       ) : null}
 
-      <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
-        <MapPin className="h-3.5 w-3.5 text-cherry" />
-        {riders.length > 0
-          ? `${riders.length} rider${riders.length === 1 ? "" : "s"} tracking · updates every second`
-          : "No riders are sharing their position yet — dots appear here once riders start tracking."}
-      </p>
+      <div className="flex flex-wrap items-center gap-2">
+        <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+          <MapPin className="h-3.5 w-3.5 text-cherry" />
+          {riders.length > 0
+            ? `${riders.length} rider${riders.length === 1 ? "" : "s"} on course · updates every 3 seconds`
+            : "No riders are sharing their position yet — dots appear here once riders start tracking."}
+        </p>
+        {finishedCount > 0 ? (
+          <button
+            type="button"
+            onClick={() => setShowFinished((s) => !s)}
+            className="ml-auto rounded-full bg-card px-3 py-1 text-xs font-semibold text-ink ring-1 ring-border"
+          >
+            {showFinished ? "Hide" : "Show"} finished ({finishedCount})
+          </button>
+        ) : null}
+      </div>
+
     </div>
   );
 }

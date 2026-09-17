@@ -393,8 +393,9 @@ function SpectatorEventPage() {
             </h2>
             <p className="mt-1 text-xs text-muted-foreground">
               Riders who have started live tracking in their app appear here. Positions update
-              every second.
+              every 3 seconds.
             </p>
+
 
             {myEntry ? (
               <div className="mt-4 rounded-2xl bg-gradient-to-br from-cherry/10 to-accent p-4 ring-1 ring-cherry/20">
