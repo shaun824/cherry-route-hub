@@ -3,7 +3,7 @@ import { getRequestHeader } from "@tanstack/react-start/server";
 import { z } from "zod";
 import { BOT_MISS_REPLY } from "@/lib/bot-handoff";
 import { FOLLOWUP_PROMPT_RULE, splitFollowUps } from "@/lib/bot-followups";
-import { CONFIDENTIALITY_RULES } from "@/lib/knowledge-redact";
+import { CONFIDENTIALITY_RULES, CONFIDENTIALITY_RULES_STAFF } from "@/lib/knowledge-redact";
 
 
 const BOT_MISS_SENTINEL = "NEEDS_ADMIN";
@@ -87,9 +87,16 @@ Rules:
 ${FOLLOWUP_PROMPT_RULE}
 
 
+${
+  isStaff
+    ? `- This person is verified Red Cherry crew or admin. Answer operational questions in full from RED CHERRY BUSINESS KNOWLEDGE, including the event safety and build plan (roles and responsibilities, build and breakdown timings, site services, traffic and parking, fire, medical, security, evacuation, weather plan and on-site emergency contacts). Be precise and practical — quote the actual times, quantities, placements, procedures and contacts. If they ask about something the plan does not cover, say so plainly.
+- Crew links you can use: crew dashboard [/crew], run sheet [/crew/run-sheet], build map [/crew/build], inventory [/crew/inventory], rooming [/crew/rooming], training [/crew/learn], tracking [/crew/tracking].`
+    : ""
+}
+
 - Never mention the sentinel, "context", or that information was scraped.
 
-${CONFIDENTIALITY_RULES}`;
+${isStaff ? CONFIDENTIALITY_RULES_STAFF : CONFIDENTIALITY_RULES}`;
 
 
 

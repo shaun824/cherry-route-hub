@@ -383,6 +383,10 @@ function AskBotCard({ eventName }: { eventName: string | null }) {
     eventName ? `Give me a full brief on ${eventName}` : "Give me a full brief on the next event",
     "Where do the generators and water points go?",
     "What's in the load-out and who is driving it?",
+    "What does the safety plan say about fire and evacuation?",
+    "Who is the safety officer and what are the emergency contacts?",
+    "How does traffic, parking and access control work on site?",
+    "What's the plan if the weather turns bad?",
   ];
   function ask(question?: string) {
     window.dispatchEvent(
@@ -395,8 +399,9 @@ function AskBotCard({ eventName }: { eventName: string | null }) {
         <Bot className="h-4 w-4 text-cherry" /> Ask the Red Cherry assistant first
       </h2>
       <p className="mt-1 text-[12px] text-ink-soft">
-        It reads the event website, every event page, the run sheets and our internal crew knowledge base — so
-        ask it anything about the event instead of hunting through pages or phoning around.
+        It reads the event website, every event page, the run sheets, the event safety and build plan
+        and our internal crew knowledge base — so ask it anything about the event instead of hunting
+        through pages or phoning around.
       </p>
       <div className="mt-3 flex flex-wrap gap-1.5">
         {prompts.map((p) => (
