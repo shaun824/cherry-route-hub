@@ -18,6 +18,7 @@ import {
   type VillageLayer,
 } from "@/lib/village-map";
 import { villageIcon } from "@/lib/village-icons";
+import { VillageShare } from "./village-share";
 import {
   formatArea,
   hasBuildDetail,
@@ -579,6 +580,7 @@ export function VillageMapView({
   return (
     <div className="space-y-3">
       {venueTabs}
+      <VillageShare eventId={eventId} venueId={venueId} isCrew={isCrew} />
       {focusZone ? (
         <p className="rounded-xl bg-accent px-3 py-2 text-xs font-semibold text-cherry-deep">
           Highlighted in red: {focusZone.name || "your spot"}.
