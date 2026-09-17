@@ -720,22 +720,39 @@ export default function VillageMapGeo({
     setLocating(true);
     setGeoError(null);
     if (watchRef.current !== null) navigator.geolocation.clearWatch(watchRef.current);
-    watchRef.current = navigator.geolocation.watchPosition(
-      (pos) => {
-        setLocating(false);
-        setMe([pos.coords.latitude, pos.coords.longitude]);
-        setAccuracy(pos.coords.accuracy ?? null);
-        setRecenterToken((t) => t + 1);
-      },
-      (err) => {
-        setLocating(false);
-        setGeoError(
-          err.code === err.PERMISSION_DENIED
-            ? "Location permission denied — allow location to see yourself on the map."
-            : "Couldn't get your location. Try again outdoors.",
+    watchRef.current = null;
+
+    const showPosition = (pos: GeolocationPosition, shouldCentre: boolean) => {
+      setLocating(false);
+      setGeoError(null);
+      setMe([pos.coords.latitude, pos.coords.longitude]);
+      setAccuracy(pos.coords.accuracy ?? null);
+      if (shouldCentre) setRecenterToken((t) => t + 1);
+    };
+    const showError = (err: GeolocationPositionError) => {
+      setLocating(false);
+      setGeoError(
+        err.code === err.PERMISSION_DENIED
+          ? "Location is blocked. Allow Location for this website in your browser settings, then tap Try again."
+          : err.code === err.TIMEOUT
+            ? "Location took too long. Move into an open area and try again."
+            : "Your location could not be found. Check that Location Services are on, then try again.",
+      );
+    };
+
+    // Ask for one position first. This reliably triggers the browser permission
+    // prompt when the map was opened from another website or an in-app browser.
+    navigator.geolocation.getCurrentPosition(
+      (first) => {
+        showPosition(first, true);
+        watchRef.current = navigator.geolocation.watchPosition(
+          (next) => showPosition(next, false),
+          showError,
+          { enableHighAccuracy: true, maximumAge: 5000, timeout: 20000 },
         );
       },
-      { enableHighAccuracy: true, maximumAge: 5000, timeout: 15000 },
+      showError,
+      { enableHighAccuracy: true, maximumAge: 60000, timeout: 20000 },
     );
   }
 
@@ -1018,9 +1035,21 @@ export default function VillageMapGeo({
 
 
         <div
-          className="absolute right-[max(0.75rem,env(safe-area-inset-right))] z-[500] flex flex-col items-end gap-2"
+          className="pointer-events-auto absolute right-[max(0.75rem,env(safe-area-inset-right))] z-[650] flex max-w-[calc(100vw-1.5rem)] flex-col items-end gap-2"
           style={{ bottom: fullscreen && fullscreenDetail ? detailSheetHeight + 12 : "max(0.75rem, env(safe-area-inset-bottom))" }}
         >
+          {fullscreen && geoError ? (
+            <div role="alert" className="max-w-xs rounded-lg bg-card/95 p-3 text-left text-xs font-semibold text-ink shadow-lg ring-1 ring-border backdrop-blur">
+              <p>{geoError}</p>
+              <button
+                type="button"
+                onClick={locate}
+                className="mt-2 font-bold text-cherry underline underline-offset-2"
+              >
+                Try again
+              </button>
+            </div>
+          ) : null}
           {me ? (
             <button
               type="button"
@@ -1054,7 +1083,7 @@ export default function VillageMapGeo({
       {fullscreen ? createPortal(shell, document.body) : shell}
 
 
-      {geoError ? <p className="text-xs font-semibold text-cherry">{geoError}</p> : null}
+      {!fullscreen && geoError ? <p role="alert" className="text-xs font-semibold text-cherry">{geoError}</p> : null}
       {me && accuracy ? (
         <p className="text-xs text-ink-soft">Live location on · accurate to about {Math.round(accuracy)} m.</p>
       ) : (
