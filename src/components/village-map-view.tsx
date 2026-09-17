@@ -180,6 +180,7 @@ export function VillageMapView({
   venueId: venueIdProp,
   defaultLayers,
   riderOnly = false,
+  crewView = false,
 }: {
   eventId: string;
   focusSpotId?: string | null;
@@ -195,6 +196,11 @@ export function VillageMapView({
    * validate precisely what riders see.
    */
   riderOnly?: boolean;
+  /**
+   * Show the crew build layers without a signed-in crew account — used by the
+   * shareable crew link so suppliers and contractors can see the field layout.
+   */
+  crewView?: boolean;
 }) {
   // Pinch on the village map must zoom the map only — never the page itself.
   useLockPageZoom();
