@@ -935,16 +935,8 @@ export default function VillageMapGeo({
           ) : null}
 
           <BearingSync bearing={bearing} />
-          <TwoFingerPanGate fullscreen={fullscreen} onTouch={dismissTwoFingerHint} />
+          <OneFingerPan />
         </MapContainer>
-
-        {!fullscreen && twoFingerHint ? (
-          <div className="pointer-events-none absolute inset-0 z-[600] grid place-items-center bg-ink/45 px-6 text-center">
-            <p className="rounded-2xl bg-card/95 px-4 py-3 text-sm font-bold text-ink shadow-lg ring-1 ring-border">
-              Use two fingers to move the map
-            </p>
-          </div>
-        ) : null}
 
 
 

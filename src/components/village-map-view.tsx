@@ -257,8 +257,6 @@ export function VillageMapView({
   planFullscreenRef.current = planFullscreen;
   const planHistoryKey = useRef(`village-plan-${Math.random().toString(36).slice(2)}`);
   const [planLabels, setPlanLabels] = useState<Set<string>>(() => new Set());
-  const [planTwoFingerHint, setPlanTwoFingerHint] = useState(false);
-  const planHintShown = useRef(false);
   const scaleRef = useRef(1);
   scaleRef.current = scale;
 
@@ -298,17 +296,8 @@ export function VillageMapView({
     setPlanFullscreen(true);
   }, [planFullscreen]);
 
-  useEffect(() => {
-    if (mode !== "plan" || planFullscreen || planHintShown.current) return;
-    if (!window.matchMedia?.("(pointer: coarse)")?.matches) return;
-    planHintShown.current = true;
-    setPlanTwoFingerHint(true);
-    const timer = window.setTimeout(() => setPlanTwoFingerHint(false), 4000);
-    return () => window.clearTimeout(timer);
-  }, [mode, planFullscreen]);
-
-  // Plan gestures mirror the live map: two fingers pan/pinch inline so the page
-  // remains scrollable, while one finger pans naturally in full screen.
+  // Plan gestures mirror the live map: one finger pans everywhere (rider
+  // request), two fingers pinch-zoom.
   useEffect(() => {
     const el = wrapRef.current;
     if (!el) return;
@@ -319,9 +308,8 @@ export function VillageMapView({
     const down = (e: PointerEvent) => {
       if (e.pointerType !== "touch" && e.pointerType !== "mouse") return;
       if ((e.target as HTMLElement).closest("button")) return;
-      if (e.pointerType === "touch") setPlanTwoFingerHint(false);
       pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
-      if ((planFullscreenRef.current || e.pointerType === "mouse") && pts.size === 1) {
+      if (pts.size === 1) {
         single = { x: e.clientX, y: e.clientY, left: el.scrollLeft, top: el.scrollTop };
         el.setPointerCapture(e.pointerId);
       }
@@ -714,17 +702,10 @@ export function VillageMapView({
       >
         <div
           ref={wrapRef}
-          className={`overflow-auto bg-muted ${planFullscreen ? "[touch-action:none]" : "[touch-action:pan-y]"} ${
+          className={`overflow-auto bg-muted [touch-action:none] ${
             planFullscreen ? "h-full" : "max-h-[70vh]"
           }`}
         >
-        {!planFullscreen && planTwoFingerHint ? (
-          <div className="pointer-events-none absolute inset-0 z-40 grid place-items-center bg-ink/45 px-6 text-center">
-            <p className="rounded-2xl bg-card/95 px-4 py-3 text-sm font-bold text-ink shadow-lg ring-1 ring-border">
-              Use two fingers to move the map
-            </p>
-          </div>
-        ) : null}
         {planFullscreen && layerControls ? (
           <div className="absolute left-[max(0.75rem,env(safe-area-inset-left))] top-[max(0.75rem,env(safe-area-inset-top))] z-30 max-w-[calc(100vw-7rem)] rounded-lg bg-card/95 p-2 shadow ring-1 ring-border backdrop-blur">
             {layerControls}
