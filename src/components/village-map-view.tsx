@@ -1,4 +1,4 @@
-import { Suspense, lazy, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { useQuery } from "@tanstack/react-query";
 import { ClientOnly } from "@tanstack/react-router";
@@ -26,6 +26,7 @@ import {
   zoneColor,
   zoneKindLabel,
   zoneTrueSizeM,
+  type VillageZone,
 } from "@/lib/village-zones";
 
 import { fetchVillageTents } from "@/lib/village-tents";
@@ -51,12 +52,14 @@ function Pin({
   onHover,
   onSelect,
   scale,
+  showLabel,
 }: {
   spot: VillageHotspot;
   active: boolean;
   onHover: (id: string | null) => void;
   onSelect: (id: string) => void;
   scale: number;
+  showLabel: boolean;
 }) {
   const color = spotColor(spot);
   const Icon = villageIcon(spotIcon(spot)).Comp;
@@ -76,13 +79,15 @@ function Pin({
       aria-label={spot.title}
     >
       <span
-        className={`flex items-center gap-1 whitespace-nowrap rounded-full px-2 py-1 text-[10px] font-bold text-white shadow-lg transition ${
+        className={`flex items-center whitespace-nowrap rounded-full text-[10px] font-bold text-white shadow-lg transition ${
+          showLabel ? "gap-1 px-2 py-1" : "h-7 w-7 justify-center p-0"
+        } ${
           active ? "ring-2 ring-white" : ""
         }`}
         style={{ backgroundColor: color }}
       >
         <Icon className="h-3 w-3" />
-        {spot.title}
+        {showLabel ? spot.title : null}
       </span>
       <span
         className="h-2 w-2 -translate-y-[3px] rotate-45 rounded-[2px]"
@@ -135,6 +140,33 @@ function SpotDetailBody({
         <button onClick={onClose} aria-label="Close">
           <X className="h-4 w-4 text-ink-soft" />
         </button>
+      ) : null}
+    </div>
+  );
+}
+
+function ZoneDetailBody({ detail, onClose }: { detail: VillageZone; onClose?: () => void }) {
+  const size = zoneTrueSizeM(detail);
+  return (
+    <div className="flex items-start gap-2">
+      <span className="mt-1 h-4 w-4 shrink-0 rounded" style={{ backgroundColor: zoneColor(detail) }} />
+      <div className="min-w-0 flex-1">
+        <p className="font-display text-base font-bold text-ink">{detail.name}</p>
+        <p className="text-[11px] font-semibold uppercase tracking-widest text-ink-soft">
+          Crew only · {zoneKindLabel(detail.kind)}
+        </p>
+        <p className="mt-1 text-xs text-ink-soft">
+          {Math.round(size.across)}m × {Math.round(size.along)}m · {formatArea(zoneAreaM2(detail))}
+        </p>
+        {detail.spec ? <p className="mt-2 text-sm font-semibold text-ink">{detail.spec}</p> : null}
+        {detail.notes?.trim() ? <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-ink-soft">{detail.notes}</p> : null}
+        {detail.crewNotes ? <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-ink-soft">{detail.crewNotes}</p> : null}
+        {!detail.spec?.trim() && !detail.notes?.trim() && !detail.crewNotes?.trim() ? (
+          <p className="mt-2 text-sm italic text-ink-soft">No requirements captured for this area yet.</p>
+        ) : null}
+      </div>
+      {onClose ? (
+        <button onClick={onClose} aria-label="Close"><X className="h-4 w-4 text-ink-soft" /></button>
       ) : null}
     </div>
   );
@@ -221,44 +253,119 @@ export function VillageMapView({
   const wrapRef = useRef<HTMLDivElement>(null);
   // Plan-view full screen + pinch zoom (the live map handles both natively).
   const [planFullscreen, setPlanFullscreen] = useState(false);
+  const planFullscreenRef = useRef(false);
+  planFullscreenRef.current = planFullscreen;
+  const planHistoryKey = useRef(`village-plan-${Math.random().toString(36).slice(2)}`);
+  const [planLabels, setPlanLabels] = useState<Set<string>>(() => new Set());
+  const [planTwoFingerHint, setPlanTwoFingerHint] = useState(false);
+  const planHintShown = useRef(false);
   const scaleRef = useRef(1);
   scaleRef.current = scale;
 
   useEffect(() => {
-    document.body.style.overflow = planFullscreen ? "hidden" : "";
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = planFullscreen ? "hidden" : previousOverflow;
     return () => {
-      document.body.style.overflow = "";
+      document.body.style.overflow = previousOverflow;
     };
   }, [planFullscreen]);
 
-  // Two-finger pinch on the plan image: scale follows the finger spread, and
-  // one-finger scrolling keeps panning the zoomed image inside its container.
+  useEffect(() => {
+    if (!planFullscreen) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        if (window.history.state?.villageFullscreen === planHistoryKey.current) window.history.back();
+        else setPlanFullscreen(false);
+      }
+    };
+    const onPopState = () => setPlanFullscreen(false);
+    window.addEventListener("keydown", onKey);
+    window.addEventListener("popstate", onPopState);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("popstate", onPopState);
+    };
+  }, [planFullscreen]);
+
+  const togglePlanFullscreen = useCallback(() => {
+    if (planFullscreen) {
+      if (window.history.state?.villageFullscreen === planHistoryKey.current) window.history.back();
+      else setPlanFullscreen(false);
+      return;
+    }
+    window.history.pushState({ ...window.history.state, villageFullscreen: planHistoryKey.current }, "");
+    setPlanFullscreen(true);
+  }, [planFullscreen]);
+
+  useEffect(() => {
+    if (mode !== "plan" || planFullscreen || planHintShown.current) return;
+    if (!window.matchMedia?.("(pointer: coarse)")?.matches) return;
+    planHintShown.current = true;
+    setPlanTwoFingerHint(true);
+    const timer = window.setTimeout(() => setPlanTwoFingerHint(false), 4000);
+    return () => window.clearTimeout(timer);
+  }, [mode, planFullscreen]);
+
+  // Plan gestures mirror the live map: two fingers pan/pinch inline so the page
+  // remains scrollable, while one finger pans naturally in full screen.
   useEffect(() => {
     const el = wrapRef.current;
     if (!el) return;
     const pts = new Map<number, { x: number; y: number }>();
-    let pinch: { d: number; s: number } | null = null;
+    let gesture: { d: number; s: number; cx: number; cy: number; left: number; top: number } | null = null;
+    let single: { x: number; y: number; left: number; top: number } | null = null;
     const clamp = (v: number) => Math.min(4, Math.max(1, v));
     const down = (e: PointerEvent) => {
-      if (e.pointerType !== "touch") return;
+      if (e.pointerType !== "touch" && e.pointerType !== "mouse") return;
+      if ((e.target as HTMLElement).closest("button")) return;
+      if (e.pointerType === "touch") setPlanTwoFingerHint(false);
       pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if ((planFullscreenRef.current || e.pointerType === "mouse") && pts.size === 1) {
+        single = { x: e.clientX, y: e.clientY, left: el.scrollLeft, top: el.scrollTop };
+        el.setPointerCapture(e.pointerId);
+      }
       if (pts.size === 2) {
         const [a, b] = [...pts.values()];
-        pinch = { d: Math.hypot(a.x - b.x, a.y - b.y), s: scaleRef.current };
+        gesture = {
+          d: Math.hypot(a.x - b.x, a.y - b.y),
+          s: scaleRef.current,
+          cx: (a.x + b.x) / 2,
+          cy: (a.y + b.y) / 2,
+          left: el.scrollLeft,
+          top: el.scrollTop,
+        };
+        single = null;
       }
     };
     const move = (e: PointerEvent) => {
       if (!pts.has(e.pointerId)) return;
       pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
-      if (pinch && pts.size === 2) {
+      if (gesture && pts.size === 2) {
+        e.preventDefault();
         const [a, b] = [...pts.values()];
         const d = Math.hypot(a.x - b.x, a.y - b.y);
-        if (pinch.d > 0) setScale(clamp(+(pinch.s * (d / pinch.d)).toFixed(3)));
+        const cx = (a.x + b.x) / 2;
+        const cy = (a.y + b.y) / 2;
+        if (gesture.d > 0) {
+          const next = clamp(+(gesture.s * (d / gesture.d)).toFixed(3));
+          const factor = next / gesture.s;
+          setScale(next);
+          requestAnimationFrame(() => {
+            el.scrollLeft = (gesture?.left ?? 0) * factor - (cx - (gesture?.cx ?? cx));
+            el.scrollTop = (gesture?.top ?? 0) * factor - (cy - (gesture?.cy ?? cy));
+          });
+        }
+      } else if (single && pts.size === 1) {
+        e.preventDefault();
+        el.scrollLeft = single.left - (e.clientX - single.x);
+        el.scrollTop = single.top - (e.clientY - single.y);
       }
     };
     const up = (e: PointerEvent) => {
       pts.delete(e.pointerId);
-      if (pts.size < 2) pinch = null;
+      if (pts.size < 2) gesture = null;
+      if (pts.size === 0) single = null;
     };
     el.addEventListener("pointerdown", down);
     el.addEventListener("pointermove", move);
@@ -270,7 +377,7 @@ export function VillageMapView({
       el.removeEventListener("pointerup", up);
       el.removeEventListener("pointercancel", up);
     };
-  }, []);
+  }, [mode, planFullscreen]);
 
   // Crew "find this room" deep-focus: highlight the requested point when it changes.
   useEffect(() => {
@@ -329,6 +436,32 @@ export function VillageMapView({
   const zoneDetail =
     (isCrew ? (map?.zones ?? []).find((z) => z.id === selectedZone) : null) ?? null;
 
+  const layerControls = isCrew ? (
+    <div className="flex flex-wrap items-center gap-1.5">
+      <span className="text-[10px] font-bold uppercase tracking-widest text-ink-soft">Layers</span>
+      <button
+        title="Show every point from every layer at once"
+        onClick={() => setLayers((prev) => prev.length === VILLAGE_LAYERS.length ? (defaultLayers ?? ["rider"]) : VILLAGE_LAYERS.map((layer) => layer.id))}
+        className={`rounded-full px-2.5 py-1 text-[11px] font-bold ring-1 ${layers.length === VILLAGE_LAYERS.length ? "bg-ink text-background ring-ink" : "bg-muted text-ink-soft ring-border"}`}
+      >
+        All points
+      </button>
+      {VILLAGE_LAYERS.map((layer) => {
+        const on = layers.includes(layer.id);
+        return (
+          <button
+            key={layer.id}
+            title={layer.blurb}
+            onClick={() => setLayers((prev) => prev.includes(layer.id) ? prev.filter((item) => item !== layer.id) : [...prev, layer.id])}
+            className={`rounded-full px-2.5 py-1 text-[11px] font-bold ${on ? "bg-cherry text-white" : "bg-muted text-ink-soft"}`}
+          >
+            {layer.label}
+          </button>
+        );
+      })}
+    </div>
+  ) : null;
+
 
   const venueTabs =
     venues.length > 1 ? (
@@ -349,7 +482,8 @@ export function VillageMapView({
 
   const showLive = geoReady && (mode === "live" || !hasImage);
 
-  // Plan view: tapping a chip or a pin zooms in and centres the chosen facility.
+  // Plan view: preserve scale for visible, isolated points; add only enough
+  // zoom to separate a crowded point, and keep it above the detail sheet.
   useEffect(() => {
     if (showLive || !selected || !wrapRef.current) return;
     const spot = facilities.find((s) => s.id === selected);
@@ -357,14 +491,26 @@ export function VillageMapView({
     const wrap = wrapRef.current;
     const img = wrap.querySelector("img");
     if (!img) return;
-    const targetScale = 3;
+    const rect = wrap.getBoundingClientRect();
+    const imgHeight = img.offsetHeight || rect.height;
+    let targetScale = scaleRef.current;
+    const nearestAt = (candidate: number) => facilities.reduce((nearest, other) => {
+      if (other.id === spot.id) return nearest;
+      const dx = ((other.x - spot.x) / 100) * rect.width * candidate;
+      const dy = ((other.y - spot.y) / 100) * imgHeight * candidate;
+      return Math.min(nearest, Math.hypot(dx, dy));
+    }, Number.POSITIVE_INFINITY);
+    while (targetScale < 4 && nearestAt(targetScale) < 52) targetScale = Math.min(4, targetScale + 0.5);
     setScale(targetScale);
     const center = () => {
-      const rect = wrap.getBoundingClientRect();
       const scaledWidth = rect.width * targetScale;
-      const scaledHeight = img.offsetHeight * targetScale;
+      const scaledHeight = imgHeight * targetScale;
       const x = (spot.x / 100) * scaledWidth;
       const y = (spot.y / 100) * scaledHeight;
+      const comfortablyVisible =
+        x > wrap.scrollLeft + 48 && x < wrap.scrollLeft + rect.width - 48 &&
+        y > wrap.scrollTop + 48 && y < wrap.scrollTop + rect.height * (planFullscreen ? 0.58 : 1) - 48;
+      if (comfortablyVisible && targetScale === scaleRef.current) return;
       wrap.scrollTo({
         left: Math.max(0, x - rect.width / 2),
         // In full screen a detail sheet docks to the bottom, so keep the point
@@ -376,6 +522,46 @@ export function VillageMapView({
     const t = window.setTimeout(center, 220);
     return () => window.clearTimeout(t);
   }, [selected, showLive, facilities, planFullscreen]);
+
+  useEffect(() => {
+    if (showLive || !wrapRef.current) return;
+    const wrap = wrapRef.current;
+    const layout = () => {
+      const rect = wrap.getBoundingClientRect();
+      const image = wrap.querySelector("img");
+      const imageHeight = image?.offsetHeight ?? rect.height;
+      const occupied: { left: number; right: number; top: number; bottom: number }[] = [];
+      const shown = new Set<string>();
+      const priority = (spot: VillageHotspot) => {
+        const values: Partial<Record<VillageHotspot["category"], number>> = {
+          medical: 100, registration: 95, toilets: 90, start: 88, finish: 87,
+          food: 82, bar: 78, parking: 72, bike: 70, camping: 68,
+        };
+        return values[spot.category] ?? (spotLayer(spot) === "rider" ? 55 : 35);
+      };
+      const ordered = [...spots].sort((a, b) => Number(b.id === selected) - Number(a.id === selected) || priority(b) - priority(a));
+      for (const spot of ordered) {
+        const active = spot.id === selected || spot.id === hovered;
+        if (!active && scale < 1.75) continue;
+        const x = (spot.x / 100) * rect.width * scale - wrap.scrollLeft;
+        const y = (spot.y / 100) * imageHeight * scale - wrap.scrollTop;
+        const width = Math.min(180, Math.max(58, spot.title.length * 6.2 + 26));
+        const box = { left: x - width / 2, right: x + width / 2, top: y - 34, bottom: y - 10 };
+        const collision = occupied.some((used) => !(box.right + 4 < used.left || box.left - 4 > used.right || box.bottom + 4 < used.top || box.top - 4 > used.bottom));
+        if (!active && collision) continue;
+        occupied.push(box);
+        shown.add(spot.id);
+      }
+      setPlanLabels(shown);
+    };
+    layout();
+    wrap.addEventListener("scroll", layout, { passive: true });
+    window.addEventListener("resize", layout);
+    return () => {
+      wrap.removeEventListener("scroll", layout);
+      window.removeEventListener("resize", layout);
+    };
+  }, [showLive, spots, selected, hovered, scale, planFullscreen]);
 
   if (q.isLoading) {
     return <div className="h-56 animate-pulse rounded-2xl bg-muted" />;
@@ -424,49 +610,7 @@ export function VillageMapView({
         </div>
       ) : null}
 
-      {isCrew ? (
-        <div className="flex flex-wrap items-center gap-1.5">
-          <span className="text-[10px] font-bold uppercase tracking-widest text-ink-soft">
-            Layers
-          </span>
-          <button
-            title="Show every point from every layer at once"
-            onClick={() =>
-              setLayers((prev) =>
-                prev.length === VILLAGE_LAYERS.length
-                  ? (defaultLayers ?? ["rider"])
-                  : VILLAGE_LAYERS.map((l) => l.id),
-              )
-            }
-            className={`rounded-full px-2.5 py-1 text-[11px] font-bold ring-1 ${
-              layers.length === VILLAGE_LAYERS.length
-                ? "bg-ink text-background ring-ink"
-                : "bg-muted text-ink-soft ring-border"
-            }`}
-          >
-            All points
-          </button>
-          {VILLAGE_LAYERS.map((l) => {
-            const on = layers.includes(l.id);
-            return (
-              <button
-                key={l.id}
-                title={l.blurb}
-                onClick={() =>
-                  setLayers((prev) =>
-                    prev.includes(l.id) ? prev.filter((p) => p !== l.id) : [...prev, l.id],
-                  )
-                }
-                className={`rounded-full px-2.5 py-1 text-[11px] font-bold ${
-                  on ? "bg-cherry text-white" : "bg-muted text-ink-soft"
-                }`}
-              >
-                {l.label}
-              </button>
-            );
-          })}
-        </div>
-      ) : null}
+      {layerControls}
 
       {categories.length > 1 ? (
         <div className="flex flex-wrap gap-1.5">
@@ -551,8 +695,11 @@ export function VillageMapView({
                     isCrew={isCrew}
                     onClose={selected ? () => setSelected(null) : null}
                   />
+                ) : zoneDetail ? (
+                  <ZoneDetailBody detail={zoneDetail} onClose={() => setSelectedZone(null)} />
                 ) : null
               }
+              fullscreenControls={layerControls}
             />
           </Suspense>
         </ClientOnly>
@@ -567,10 +714,22 @@ export function VillageMapView({
       >
         <div
           ref={wrapRef}
-          className={`overflow-auto bg-muted [touch-action:pan-x_pan-y] ${
+          className={`overflow-auto bg-muted ${planFullscreen ? "[touch-action:none]" : "[touch-action:pan-y]"} ${
             planFullscreen ? "h-full" : "max-h-[70vh]"
           }`}
         >
+        {!planFullscreen && planTwoFingerHint ? (
+          <div className="pointer-events-none absolute inset-0 z-40 grid place-items-center bg-ink/45 px-6 text-center">
+            <p className="rounded-2xl bg-card/95 px-4 py-3 text-sm font-bold text-ink shadow-lg ring-1 ring-border">
+              Use two fingers to move the map
+            </p>
+          </div>
+        ) : null}
+        {planFullscreen && layerControls ? (
+          <div className="absolute left-[max(0.75rem,env(safe-area-inset-left))] top-[max(0.75rem,env(safe-area-inset-top))] z-30 max-w-[calc(100vw-7rem)] rounded-lg bg-card/95 p-2 shadow ring-1 ring-border backdrop-blur">
+            {layerControls}
+          </div>
+        ) : null}
           <div
             className="relative w-full origin-top-left transition-transform duration-200"
             style={{ transform: `scale(${scale})`, width: `${100}%` }}
@@ -586,6 +745,7 @@ export function VillageMapView({
                 key={s.id}
                 spot={s}
                 scale={scale}
+                showLabel={planLabels.has(s.id) || (selected ?? hovered) === s.id}
                 active={(selected ?? hovered) === s.id}
                 onHover={setHovered}
                 onSelect={(id) => setSelected((prev) => (prev === id ? null : id))}
@@ -598,13 +758,11 @@ export function VillageMapView({
           className={
             // Full screen docks the detail sheet at the bottom — keep the zoom
             // controls at the top there so the sheet never covers them.
-            planFullscreen
-              ? "absolute right-3 top-3 flex flex-col gap-1"
-              : "absolute bottom-3 right-3 flex flex-col gap-1"
+            "absolute right-[max(0.75rem,env(safe-area-inset-right))] top-[max(0.75rem,env(safe-area-inset-top))] z-30 flex flex-col gap-1"
           }
         >
           <button
-            onClick={() => setPlanFullscreen((f) => !f)}
+            onClick={togglePlanFullscreen}
             className="grid h-8 w-8 place-items-center rounded-full bg-card/95 shadow ring-1 ring-border"
             aria-label={planFullscreen ? "Exit full screen" : "View full screen"}
           >
@@ -628,13 +786,10 @@ export function VillageMapView({
 
         {/* Full-screen detail sheet: docks to the bottom strip so the tapped
             point stays visible above it and the map stays interactive. */}
-        {planFullscreen && detail ? (
+        {planFullscreen && (detail || zoneDetail) ? (
           <div className="absolute inset-x-0 bottom-0 z-20 mx-auto max-h-[38dvh] w-full max-w-xl overflow-y-auto rounded-t-2xl bg-card/95 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-2xl ring-1 ring-border backdrop-blur">
-            <SpotDetailBody
-              detail={detail}
-              isCrew={isCrew}
-              onClose={selected ? () => setSelected(null) : null}
-            />
+            {detail ? <SpotDetailBody detail={detail} isCrew={isCrew} onClose={selected ? () => setSelected(null) : null} /> : null}
+            {zoneDetail ? <ZoneDetailBody detail={zoneDetail} onClose={() => setSelectedZone(null)} /> : null}
           </div>
         ) : null}
       </div>
@@ -658,47 +813,7 @@ export function VillageMapView({
 
       {zoneDetail ? (
         <div className="rounded-2xl bg-card p-4 ring-1 ring-border">
-          <div className="flex items-start gap-2">
-            <span
-              className="mt-1 h-4 w-4 shrink-0 rounded"
-              style={{ backgroundColor: zoneColor(zoneDetail) }}
-            />
-            <div className="min-w-0 flex-1">
-              <p className="font-display text-base font-bold text-ink">{zoneDetail.name}</p>
-              <p className="text-[11px] font-semibold uppercase tracking-widest text-ink-soft">
-                Crew only · {zoneKindLabel(zoneDetail.kind)}
-              </p>
-              <p className="mt-1 text-xs text-ink-soft">
-                {(() => {
-                  const s = zoneTrueSizeM(zoneDetail);
-                  return `${Math.round(s.across)}m × ${Math.round(s.along)}m · ${formatArea(zoneAreaM2(zoneDetail))}`;
-                })()}
-              </p>
-              {zoneDetail.spec ? (
-                <p className="mt-2 text-sm font-semibold text-ink">{zoneDetail.spec}</p>
-              ) : null}
-              {zoneDetail.notes?.trim() ? (
-                <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-ink-soft">
-                  {zoneDetail.notes}
-                </p>
-              ) : null}
-              {zoneDetail.crewNotes ? (
-                <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-ink-soft">
-                  {zoneDetail.crewNotes}
-                </p>
-              ) : null}
-              {!zoneDetail.spec?.trim() &&
-              !zoneDetail.notes?.trim() &&
-              !zoneDetail.crewNotes?.trim() ? (
-                <p className="mt-2 text-sm italic text-ink-soft">
-                  No requirements captured for this area yet.
-                </p>
-              ) : null}
-            </div>
-            <button onClick={() => setSelectedZone(null)} aria-label="Close">
-              <X className="h-4 w-4 text-ink-soft" />
-            </button>
-          </div>
+          <ZoneDetailBody detail={zoneDetail} onClose={() => setSelectedZone(null)} />
         </div>
       ) : null}
 

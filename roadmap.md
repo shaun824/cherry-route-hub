@@ -4,4 +4,4 @@
 
 - [x] Add PE Plett header, configure a paused two-day new-entry extras workflow, and resend test
 
-- [ ] Complete the Village Map interaction, fullscreen, labels, and crew readability pass
+- [x] Complete the Village Map interaction, fullscreen, labels, and crew readability pass
