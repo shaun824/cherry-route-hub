@@ -110,7 +110,26 @@ export const getMyResultStatus = createServerFn({ method: "GET" })
     return { finished };
   });
 
-/** Rider triggers an SOS with their last known position. */
+export const SOS_REASONS = ["medical", "mechanical", "lost", "other", "checking-in"] as const;
+export type SosReason = (typeof SOS_REASONS)[number];
+
+export const SOS_REASON_LABELS: Record<SosReason, string> = {
+  medical: "Medical",
+  mechanical: "Mechanical",
+  lost: "Lost / off course",
+  other: "Other",
+  "checking-in": "Just checking in",
+};
+
+/** Crew + admin user ids — the people who must hear about an SOS. */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function crewUserIds(admin: any, exclude?: string[]): Promise<string[]> {
+  const { data } = await admin.from("user_roles").select("user_id").in("role", ["admin", "crew"]);
+  const ids = [...new Set(((data ?? []) as { user_id: string }[]).map((r) => r.user_id))];
+  return exclude?.length ? ids.filter((id) => !exclude.includes(id)) : ids;
+}
+
+/** Rider triggers an SOS with their last known position, reason and note. */
 export const sendTrackingSos = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input) =>
@@ -120,22 +139,102 @@ export const sendTrackingSos = createServerFn({ method: "POST" })
         lat: z.number().min(-90).max(90).nullish(),
         lng: z.number().min(-180).max(180).nullish(),
         accuracyM: z.number().min(0).max(100000).nullish(),
+        reason: z.enum(SOS_REASONS).nullish(),
         message: z.string().max(500).nullish(),
       })
       .parse(input),
   )
   .handler(async ({ data, context }) => {
-    const { error } = await table(context.supabase, "tracking_sos").insert({
-      event_id: data.eventId,
-      user_id: context.userId,
-      lat: data.lat ?? null,
-      lng: data.lng ?? null,
-      accuracy_m: data.accuracyM ?? null,
-      message: data.message ?? null,
-    });
+    const { data: inserted, error } = await table(context.supabase, "tracking_sos")
+      .insert({
+        event_id: data.eventId,
+        user_id: context.userId,
+        lat: data.lat ?? null,
+        lng: data.lng ?? null,
+        accuracy_m: data.accuracyM ?? null,
+        reason: data.reason ?? null,
+        note: data.message ?? null,
+        message: data.message ?? null,
+      })
+      .select("id")
+      .single();
+    if (error) throw new Error(error.message);
+
+    // Push to every crew/admin device so an alert never depends on someone
+    // having the race-control tab open.
+    try {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { dispatchNotification } = await import("./notifications.server");
+      const ids = await crewUserIds(supabaseAdmin);
+      const { data: me } = await supabaseAdmin
+        .from("entrants")
+        .select("full_name")
+        .eq("user_id", context.userId)
+        .limit(1);
+      const rider = me?.[0]?.full_name ?? "A rider";
+      const reasonLabel = data.reason ? SOS_REASON_LABELS[data.reason] : "SOS";
+      if (ids.length) {
+        await dispatchNotification({
+          title: `SOS · ${reasonLabel}`,
+          body: `${rider} sent an SOS${data.message ? ` — ${data.message}` : ""}`,
+          url: "/crew/tracking",
+          audience: "all",
+          onlyUserIds: ids,
+          urgent: true,
+          kind: "safety",
+          source: "sos",
+          dedupeKey: `sos-${inserted?.id ?? Date.now()}`,
+          createdBy: context.userId,
+        });
+      }
+    } catch (err) {
+      console.error("[sos] push fan-out failed:", err);
+    }
+
+    return { ok: true as const, id: inserted?.id ?? null };
+  });
+
+/** Rider cancels/downgrades their own active SOS ("I'm okay now"). */
+export const cancelMySos = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({ eventId: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { error } = await table(context.supabase, "tracking_sos")
+      .update({ status: "cancelled" })
+      .eq("event_id", data.eventId)
+      .eq("user_id", context.userId)
+      .in("status", ["active", "acknowledged"]);
     if (error) throw new Error(error.message);
     return { ok: true as const };
   });
+
+/** Rider: their own open SOS for this event, if any. */
+export const fetchMySos = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({ eventId: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { data: rows } = await table(context.supabase, "tracking_sos")
+      .select("id, status, reason, note, created_at, acknowledged_at")
+      .eq("event_id", data.eventId)
+      .eq("user_id", context.userId)
+      .in("status", ["active", "acknowledged"])
+      .order("created_at", { ascending: false })
+      .limit(1);
+    const row = (rows ?? [])[0] ?? null;
+    return {
+      open: row
+        ? {
+            id: row.id as string,
+            status: row.status as string,
+            reason: (row.reason ?? null) as string | null,
+            note: (row.note ?? null) as string | null,
+            createdAt: row.created_at as string,
+            acknowledgedAt: (row.acknowledged_at ?? null) as string | null,
+          }
+        : null,
+    };
+  });
+
 
 export type LiveRiderPosition = {
   userId: string;
