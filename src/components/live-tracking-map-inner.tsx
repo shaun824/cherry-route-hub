@@ -115,17 +115,21 @@ function navUrl(lat: number, lng: number): string {
   return `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`;
 }
 
-function popupContent(r: {
-  riderName: string | null;
-  bib: string | null;
-  category: string | null;
-  lat: number;
-  lng: number;
-  batteryPct: number | null;
-  recordedAt: string;
-}, isCrew: boolean, viewer: { lat: number; lng: number } | null): HTMLElement {
+function popupContent(
+  r: LiveRiderPosition,
+  isCrew: boolean,
+  viewer: { lat: number; lng: number } | null,
+  progressText: string | null,
+): HTMLElement {
   const wrap = document.createElement("div");
   wrap.className = "min-w-[180px] max-w-[260px] font-sans text-sm";
+
+  if (r.sos) {
+    const sos = document.createElement("p");
+    sos.className = "mb-1 rounded bg-red-600 px-2 py-1 text-xs font-black uppercase text-white";
+    sos.textContent = `SOS${r.sosReason ? ` · ${r.sosReason}` : ""}`;
+    wrap.appendChild(sos);
+  }
 
   const title = document.createElement("p");
   title.className = "font-bold text-ink";
@@ -134,13 +138,26 @@ function popupContent(r: {
 
   const meta = document.createElement("p");
   meta.className = "text-xs text-muted-foreground";
+  const age = Date.now() - new Date(r.recordedAt).getTime();
   const bits = [
     r.bib ? `#${r.bib}` : null,
     r.category ?? null,
-    formatAgo(r.recordedAt),
+    age > LOST_SIGNAL_MS
+      ? `lost signal · ${formatAgo(r.recordedAt)}`
+      : age > STALE_AFTER_MS
+        ? `stale · ${formatAgo(r.recordedAt)}`
+        : formatAgo(r.recordedAt),
   ].filter(Boolean);
   meta.textContent = bits.join(" · ");
   wrap.appendChild(meta);
+
+  if (progressText) {
+    const prog = document.createElement("p");
+    prog.className = "mt-1 text-xs font-semibold text-ink";
+    prog.textContent = progressText;
+    wrap.appendChild(prog);
+  }
+
 
   if (isCrew) {
     if (r.batteryPct != null) {
