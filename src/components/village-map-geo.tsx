@@ -1017,14 +1017,27 @@ export default function VillageMapGeo({
         </div>
 
 
-        <button
-          type="button"
-          onClick={locate}
-          className="absolute right-[max(0.75rem,env(safe-area-inset-right))] z-[500] rounded-full cherry-gradient px-4 py-2 text-xs font-bold text-white shadow-lg"
+        <div
+          className="absolute right-[max(0.75rem,env(safe-area-inset-right))] z-[500] flex flex-col items-end gap-2"
           style={{ bottom: fullscreen && fullscreenDetail ? detailSheetHeight + 12 : "max(0.75rem, env(safe-area-inset-bottom))" }}
         >
-          {locating ? "Finding you…" : me ? "Hide my location" : "Show my location"}
-        </button>
+          {me ? (
+            <button
+              type="button"
+              onClick={() => setViewBoundsToken((token) => token + 1)}
+              className="rounded-full bg-card/95 px-4 py-2 text-xs font-bold text-ink shadow-lg ring-1 ring-border"
+            >
+              Back to village
+            </button>
+          ) : null}
+          <button
+            type="button"
+            onClick={locate}
+            className="rounded-full cherry-gradient px-4 py-2 text-xs font-bold text-white shadow-lg"
+          >
+            {locating ? "Finding you…" : me ? "Hide my location" : "Show my location"}
+          </button>
+        </div>
 
         {/* Full-screen detail sheet: docked to the bottom strip, well clear of
             the tapped point, so you can read about it and keep using the map. */}
