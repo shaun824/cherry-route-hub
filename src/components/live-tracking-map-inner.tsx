@@ -210,22 +210,67 @@ function popupContent(
   return wrap;
 }
 
+function followKey(eventId: string) {
+  return `rce-follow-${eventId}`;
+}
+
 export default function LiveTrackingMapInner({
   eventId,
   isCrew = false,
+  focusUserId = null,
+  onOffCourse,
 }: {
   eventId: string;
   isCrew?: boolean;
+  /** Race control can jump the map to a specific rider. */
+  focusUserId?: string | null;
+  /** Reports riders sitting far off the course line (metres), for the watch list. */
+  onOffCourse?: (map: Record<string, number>) => void;
 }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<L.Map | null>(null);
+  const clusterRef = useRef<L.MarkerClusterGroup | null>(null);
   const markersRef = useRef<Map<string, L.Marker>>(new Map());
+  const circlesRef = useRef<Map<string, L.Circle>>(new Map());
+  const animRef = useRef<Map<string, number>>(new Map());
   const fittedRef = useRef(false);
+  const programmaticMoveRef = useRef(false);
   const [follow, setFollow] = useState<string | null>(null);
+  const [followPaused, setFollowPaused] = useState(false);
   const [search, setSearch] = useState("");
+  const [showFinished, setShowFinished] = useState(false);
   const [viewerLoc, setViewerLoc] = useState<{ lat: number; lng: number } | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const guideLineRef = useRef<L.Polyline | null>(null);
+
+  // Remember who a spectator is following so reopening the page keeps them on
+  // their rider instead of making them search again.
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(followKey(eventId));
+      if (saved) setFollow(saved);
+    } catch {
+      /* storage unavailable */
+    }
+  }, [eventId]);
+
+  const startFollowing = useCallback(
+    (userId: string | null) => {
+      setFollow(userId);
+      setFollowPaused(false);
+      try {
+        if (userId) localStorage.setItem(followKey(eventId), userId);
+        else localStorage.removeItem(followKey(eventId));
+      } catch {
+        /* storage unavailable */
+      }
+    },
+    [eventId],
+  );
+
+  useEffect(() => {
+    if (focusUserId) startFollowing(focusUserId);
+  }, [focusUserId, startFollowing]);
 
   const { data } = useQuery({
     queryKey: ["live-tracking", eventId],
@@ -233,7 +278,13 @@ export default function LiveTrackingMapInner({
     refetchInterval: POLL_MS,
   });
 
-  const riders = useMemo(() => data?.riders ?? [], [data]);
+  const allRiders = useMemo(() => data?.riders ?? [], [data]);
+  const finishedCount = allRiders.filter((r) => r.finished).length;
+  // Finished riders would otherwise sit on the map as grey clutter all day.
+  const riders = useMemo(
+    () => (showFinished ? allRiders : allRiders.filter((r) => !r.finished || r.sos)),
+    [allRiders, showFinished],
+  );
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     if (!q) return riders;
@@ -243,6 +294,7 @@ export default function LiveTrackingMapInner({
         (r.bib ?? "").toLowerCase().includes(q),
     );
   }, [riders, search]);
+
 
   // Viewer location for crew distance/bearing and guide line.
   useEffect(() => {
