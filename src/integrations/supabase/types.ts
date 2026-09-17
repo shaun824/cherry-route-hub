@@ -3795,6 +3795,17 @@ export type Database = {
           full_name: string
         }[]
       }
+      live_tracking_identity_v2: {
+        Args: { _event_id: string }
+        Returns: {
+          batch: string
+          bib_number: string
+          category: string
+          entrant_id: string
+          finished_at: string
+          full_name: string
+        }[]
+      }
       my_entry_group: {
         Args: { _event_id: string }
         Returns: {
