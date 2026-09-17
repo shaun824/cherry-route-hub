@@ -257,8 +257,6 @@ export function VillageMapView({
   planFullscreenRef.current = planFullscreen;
   const planHistoryKey = useRef(`village-plan-${Math.random().toString(36).slice(2)}`);
   const [planLabels, setPlanLabels] = useState<Set<string>>(() => new Set());
-  const [planTwoFingerHint, setPlanTwoFingerHint] = useState(false);
-  const planHintShown = useRef(false);
   const scaleRef = useRef(1);
   scaleRef.current = scale;
 
@@ -297,15 +295,6 @@ export function VillageMapView({
     window.history.pushState({ ...window.history.state, villageFullscreen: planHistoryKey.current }, "");
     setPlanFullscreen(true);
   }, [planFullscreen]);
-
-  useEffect(() => {
-    if (mode !== "plan" || planFullscreen || planHintShown.current) return;
-    if (!window.matchMedia?.("(pointer: coarse)")?.matches) return;
-    planHintShown.current = true;
-    setPlanTwoFingerHint(true);
-    const timer = window.setTimeout(() => setPlanTwoFingerHint(false), 4000);
-    return () => window.clearTimeout(timer);
-  }, [mode, planFullscreen]);
 
   // Plan gestures mirror the live map: one finger pans everywhere (rider
   // request), two fingers pinch-zoom.
