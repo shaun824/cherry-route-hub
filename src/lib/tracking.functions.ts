@@ -241,16 +241,26 @@ export type LiveRiderPosition = {
   riderName: string | null;
   bib: string | null;
   category: string | null;
+  batch: string | null;
   lat: number;
   lng: number;
   accuracyM: number | null;
   batteryPct: number | null;
   recordedAt: string;
+  /** Rider has an open (active/acknowledged) SOS. */
+  sos: boolean;
+  sosReason: string | null;
+  /** Rider has a recorded finish time for this event. */
+  finished: boolean;
+  /** Milliseconds this rider has been effectively stationary, else null. */
+  stoppedForMs: number | null;
 };
 
 export type LiveTrackingPayload = {
   riders: LiveRiderPosition[];
   activeSos: number;
+  /** Start of the window the feed covers (current stage day). */
+  since: string;
 };
 
 function publishableClient() {
@@ -259,52 +269,111 @@ function publishableClient() {
   });
 }
 
+/** Start of the current racing day in SAST (UTC+2), never more than 12h back. */
+function currentDayStartIso(now = Date.now()): string {
+  const offsetMs = 2 * 60 * 60 * 1000;
+  const local = new Date(now + offsetMs);
+  local.setUTCHours(0, 0, 0, 0);
+  const dayStart = local.getTime() - offsetMs;
+  return new Date(Math.max(dayStart, now - 12 * 60 * 60 * 1000)).toISOString();
+}
+
+// A rider who hasn't moved more than this in the window below counts as stopped.
+const STOPPED_RADIUS_M = 60;
+const STOPPED_WINDOW_MS = 12 * 60_000;
+const STOPPED_MIN_MS = 8 * 60_000;
+
+function metresBetween(aLat: number, aLng: number, bLat: number, bLng: number) {
+  const R = 6371000;
+  const dLat = ((bLat - aLat) * Math.PI) / 180;
+  const dLng = ((bLng - aLng) * Math.PI) / 180;
+  const s =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((aLat * Math.PI) / 180) * Math.cos((bLat * Math.PI) / 180) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.atan2(Math.sqrt(s), Math.sqrt(1 - s));
+}
+
 /**
- * Public: latest position per rider for an event (last 12 hours of data).
- * Read-only and safe to poll from the spectator map.
+ * Public: latest position per rider for an event, scoped to the current racing
+ * day. Read-only and safe to poll from the spectator map.
  */
 export const fetchLiveTracking = createServerFn({ method: "GET" })
   .inputValidator((input) => z.object({ eventId: z.string().uuid() }).parse(input))
   .handler(async ({ data }): Promise<LiveTrackingPayload> => {
     const supabase = publishableClient();
-    const since = new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString();
+    const since = currentDayStartIso();
     const { data: points, error } = await table(supabase, "tracking_points")
       .select("user_id, entrant_id, lat, lng, accuracy_m, battery_pct, recorded_at")
       .eq("event_id", data.eventId)
       .gte("recorded_at", since)
       .order("recorded_at", { ascending: false })
-      .limit(10000);
+      .limit(20000);
     if (error) throw new Error(error.message);
 
     const latest = new Map<string, LiveRiderPosition>();
     const entrantIds = new Set<string>();
+    const history = new Map<string, { lat: number; lng: number; t: number }[]>();
     for (const p of points ?? []) {
-      if (latest.has(p.user_id)) continue; // rows are newest-first
-      latest.set(p.user_id, {
-        userId: p.user_id,
-        riderName: null,
-        bib: null,
-        category: null,
-        lat: p.lat,
-        lng: p.lng,
-        accuracyM: p.accuracy_m,
-        batteryPct: p.battery_pct,
-        recordedAt: p.recorded_at,
-      });
-      if (p.entrant_id) entrantIds.add(p.entrant_id);
+      const t = new Date(p.recorded_at).getTime();
+      if (!latest.has(p.user_id)) {
+        latest.set(p.user_id, {
+          userId: p.user_id,
+          riderName: null,
+          bib: null,
+          category: null,
+          batch: null,
+          lat: p.lat,
+          lng: p.lng,
+          accuracyM: p.accuracy_m,
+          batteryPct: p.battery_pct,
+          recordedAt: p.recorded_at,
+          sos: false,
+          sosReason: null,
+          finished: false,
+          stoppedForMs: null,
+        });
+        if (p.entrant_id) entrantIds.add(p.entrant_id);
+      }
+      const newest = new Date(latest.get(p.user_id)!.recordedAt).getTime();
+      if (newest - t <= STOPPED_WINDOW_MS) {
+        const arr = history.get(p.user_id) ?? [];
+        arr.push({ lat: p.lat, lng: p.lng, t });
+        history.set(p.user_id, arr);
+      }
+    }
+
+    // "Stopped" = every recent point sits inside a small radius of the latest.
+    for (const [userId, pos] of latest) {
+      const pts = history.get(userId) ?? [];
+      if (pts.length < 2) continue;
+      const oldest = pts[pts.length - 1];
+      const span = new Date(pos.recordedAt).getTime() - oldest.t;
+      if (span < STOPPED_MIN_MS) continue;
+      const moved = pts.every(
+        (p) => metresBetween(pos.lat, pos.lng, p.lat, p.lng) <= STOPPED_RADIUS_M,
+      );
+      if (moved) pos.stoppedForMs = span;
     }
 
     // Public-safe identity: same roster data the spectate page already publishes.
     // RLS blocks direct roster reads for spectators, so resolve via the
     // security-definer helper that only exposes riders who are tracking.
     if (entrantIds.size > 0) {
-      const { data: identity, error: identityError } = await supabase.rpc("live_tracking_identity", {
-        _event_id: data.eventId,
-      });
+      const { data: identity, error: identityError } = await supabase.rpc(
+        "live_tracking_identity_v2",
+        { _event_id: data.eventId },
+      );
       if (identityError) {
-        console.error("[live-tracking] live_tracking_identity failed:", identityError.message);
+        console.error("[live-tracking] live_tracking_identity_v2 failed:", identityError.message);
       }
-      type IdentityRow = { entrant_id: string; full_name: string | null; bib_number: string | null; category: string | null };
+      type IdentityRow = {
+        entrant_id: string;
+        full_name: string | null;
+        bib_number: string | null;
+        category: string | null;
+        batch: string | null;
+        finished_at: string | null;
+      };
       const info = new Map((identity ?? []).map((r: IdentityRow) => [r.entrant_id, r]));
       for (const p of points ?? []) {
         const pos = latest.get(p.user_id);
@@ -314,10 +383,29 @@ export const fetchLiveTracking = createServerFn({ method: "GET" })
         pos.riderName = ex.full_name ?? null;
         pos.bib = ex.bib_number ?? null;
         pos.category = ex.category ?? null;
+        pos.batch = ex.batch ?? null;
+        pos.finished = Boolean(ex.finished_at);
       }
     }
 
-    return { riders: [...latest.values()], activeSos: 0 };
+    // Open SOS alerts — flagged on the rider so their pin can shout.
+    const { data: sosRows } = await table(supabase, "tracking_sos")
+      .select("user_id, reason, status")
+      .eq("event_id", data.eventId)
+      .in("status", ["active", "acknowledged"])
+      .limit(200);
+    let activeSos = 0;
+    for (const s of (sosRows ?? []) as { user_id: string; reason: string | null; status: string }[]) {
+      if (s.status === "active") activeSos += 1;
+      const pos = latest.get(s.user_id);
+      if (pos) {
+        pos.sos = true;
+        pos.sosReason = s.reason;
+      }
+    }
+
+    return { riders: [...latest.values()], activeSos, since };
+
   });
 
 export type SosAlert = {
