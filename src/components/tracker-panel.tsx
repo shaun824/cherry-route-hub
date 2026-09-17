@@ -2,16 +2,21 @@
 // Captures GPS every ~30s while tracking, buffers points locally (offline-safe),
 // and uploads batches once a minute when there's signal.
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Navigation, Play, Siren, Square } from "lucide-react";
+import { Navigation, Play, Siren, Smartphone, Square } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { useAdminStore } from "@/lib/store";
 import { trackingWindow } from "@/lib/tracking-window";
 import { useIsAdmin } from "@/lib/auth";
 import {
+  cancelMySos,
+  fetchMySos,
   getMyResultStatus,
   sendTrackingSos,
   uploadTrackingPoints,
+  SOS_REASONS,
+  SOS_REASON_LABELS,
+  type SosReason,
   type TrackingPointInput,
 } from "@/lib/tracking.functions";
 
@@ -20,6 +25,21 @@ type Coords = { lat: number; lng: number; accuracy: number } | null;
 // Live mode: record and send a position every 3 seconds.
 const FLUSH_INTERVAL_MS = 3_000;
 const MIN_POINT_GAP_MS = 3_000;
+// Press-and-hold duration before an SOS actually fires.
+const SOS_HOLD_MS = 2_000;
+
+/** True when the Rider Hub is running as an installed app (home-screen icon). */
+function isInstalledApp() {
+  if (typeof window === "undefined") return true;
+  const nav = navigator as Navigator & { standalone?: boolean };
+  return window.matchMedia("(display-mode: standalone)").matches || nav.standalone === true;
+}
+
+function isIos() {
+  if (typeof navigator === "undefined") return false;
+  return /iphone|ipad|ipod/i.test(navigator.userAgent);
+}
+
 
 function queueKey(eventId: string) {
   return `rce-track-queue-${eventId}`;
