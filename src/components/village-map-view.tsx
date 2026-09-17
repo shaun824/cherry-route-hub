@@ -308,7 +308,6 @@ export function VillageMapView({
     const down = (e: PointerEvent) => {
       if (e.pointerType !== "touch" && e.pointerType !== "mouse") return;
       if ((e.target as HTMLElement).closest("button")) return;
-      if (e.pointerType === "touch") setPlanTwoFingerHint(false);
       pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
       if (pts.size === 1) {
         single = { x: e.clientX, y: e.clientY, left: el.scrollLeft, top: el.scrollTop };
