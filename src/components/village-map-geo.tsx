@@ -464,9 +464,12 @@ export default function VillageMapGeo({
   // the native Fullscreen API, which iPhone Safari refuses for divs).
   const [fullscreen, setFullscreen] = useState(false);
   const mapRef = useRef<L.Map | null>(null);
+  const fullscreenHistoryKey = useRef(`village-map-${Math.random().toString(36).slice(2)}`);
 
   const [zoom, setZoom] = useState(17);
   const [view, setView] = useState<L.LatLngBounds | null>(null);
+  const [facilityLabels, setFacilityLabels] = useState<Set<string>>(() => new Set());
+  const [zoneLabels, setZoneLabels] = useState<Set<string>>(() => new Set());
   const inView = useCallback(
     (lat: number, lng: number) => !view || view.contains(L.latLng(lat, lng)),
     [view],
@@ -510,12 +513,44 @@ export default function VillageMapGeo({
   // Full-screen: freeze the page behind the map and tell Leaflet its container
   // changed size, otherwise tiles/markers keep the old dimensions.
   useEffect(() => {
-    document.body.style.overflow = fullscreen ? "hidden" : "";
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = fullscreen ? "hidden" : previousOverflow;
     const t = window.setTimeout(() => mapRef.current?.invalidateSize(), 80);
     return () => {
-      document.body.style.overflow = "";
+      document.body.style.overflow = previousOverflow;
       window.clearTimeout(t);
     };
+  }, [fullscreen]);
+
+  useEffect(() => {
+    if (!fullscreen) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        if (window.history.state?.villageFullscreen === fullscreenHistoryKey.current) window.history.back();
+        else setFullscreen(false);
+      }
+    };
+    const onPopState = () => setFullscreen(false);
+    window.addEventListener("keydown", onKey);
+    window.addEventListener("popstate", onPopState);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("popstate", onPopState);
+    };
+  }, [fullscreen]);
+
+  const toggleFullscreen = useCallback(() => {
+    if (fullscreen) {
+      if (window.history.state?.villageFullscreen === fullscreenHistoryKey.current) window.history.back();
+      else setFullscreen(false);
+      return;
+    }
+    window.history.pushState(
+      { ...window.history.state, villageFullscreen: fullscreenHistoryKey.current },
+      "",
+    );
+    setFullscreen(true);
   }, [fullscreen]);
 
   const showOverlay = !!imageUrl && (geo.widthM ?? 0) > 0;
@@ -601,6 +636,53 @@ export default function VillageMapGeo({
         }),
     [tents],
   );
+
+  const labelCandidates = useMemo<LabelCandidate[]>(() => [
+    ...facilitySpots.map((spot) => ({
+      id: spot.id,
+      position: hotspotLatLng(geo, spot, heightM),
+      width: Math.min(180, Math.max(58, spot.title.length * 6.2 + 18)),
+      priority: CATEGORY_LABEL_PRIORITY[spot.category] ?? (spot.layer === "rider" || !spot.layer ? 55 : 35),
+      selected: spot.id === selected,
+      kind: "facility" as const,
+    })),
+    ...visibleZones.flatMap(({ zone, centre }) => centre ? [{
+      id: zone.id,
+      position: [centre.lat, centre.lng] as [number, number],
+      width: Math.min(190, Math.max(64, (zone.name || zoneKindLabel(zone.kind)).length * 6.2 + 20)),
+      priority: zone.id === highlightZoneId ? 110 : 42,
+      selected: zone.id === highlightZoneId,
+      kind: "zone" as const,
+    }] : []),
+  ], [facilitySpots, geo, heightM, selected, visibleZones, highlightZoneId]);
+
+  const applyLabelLayout = useCallback((nextFacilities: Set<string>, nextZones: Set<string>) => {
+    setFacilityLabels(nextFacilities);
+    setZoneLabels(nextZones);
+  }, []);
+
+  const focusTarget = useMemo<FocusTarget>(() => {
+    if (highlightTentId) {
+      const tent = droppedTents.find(({ tent: item }) => item.id === highlightTentId)?.tent;
+      if (tent) return { key: `tent:${tent.id}`, position: [tent.lat, tent.lng] };
+    }
+    if (selected) {
+      const spot = facilitySpots.find((item) => item.id === selected);
+      if (spot) return { key: `spot:${spot.id}`, position: hotspotLatLng(geo, spot, heightM) };
+    }
+    if (highlightZoneId) {
+      const zone = zones.find((item) => item.id === highlightZoneId);
+      const centre = zone ? zoneCentroid(zone) : null;
+      if (centre) return { key: `zone:${zone?.id}`, position: [centre.lat, centre.lng] };
+    }
+    return null;
+  }, [highlightTentId, droppedTents, selected, facilitySpots, geo, heightM, highlightZoneId, zones]);
+
+  const focusNeighbours = useMemo<[number, number][]>(() => [
+    ...facilitySpots.map((spot) => hotspotLatLng(geo, spot, heightM)),
+    ...droppedTents.map(({ pos }) => pos),
+    ...visibleZones.flatMap(({ centre }) => centre ? [[centre.lat, centre.lng] as [number, number]] : []),
+  ], [facilitySpots, geo, heightM, droppedTents, visibleZones]);
 
 
   function clearLocation() {
@@ -740,7 +822,7 @@ export default function VillageMapGeo({
                     fillOpacity: hot ? 0.45 : 0.18,
                   }}
                 />
-                {centre ? (
+                {centre && (hot || zoneLabels.has(z.id)) ? (
                   <Marker
                     keyboard={false}
                     autoPanOnFocus={false}
@@ -757,6 +839,7 @@ export default function VillageMapGeo({
 
           <ZoomWatcher onZoom={setZoom} />
           <ViewportWatcher onView={setView} />
+          <LabelLayout candidates={labelCandidates} zoom={zoom} onLayout={applyLabelLayout} />
 
           {/* Dropped tent pins are shown exactly where they were placed. Only
               exact duplicates of the same number are collapsed. */}
@@ -804,10 +887,10 @@ export default function VillageMapGeo({
             );
           })}
 
-          <FlyToTent tent={droppedTents.find(({ tent: t }) => t.id === highlightTentId)?.tent ?? null} />
-          <FlyToSelected selected={selected} hotspots={hotspots} geo={geo} heightM={heightM} />
-          <FlyToZone
-            zone={highlightTentId ? null : zones.find((z) => z.id === highlightZoneId) ?? null}
+          <FocusSelection
+            target={focusTarget}
+            neighbours={focusNeighbours}
+            detailOpen={fullscreen && !!fullscreenDetail}
           />
 
 
@@ -827,7 +910,7 @@ export default function VillageMapGeo({
                 autoPanOnFocus={false}
                 key={`spot-${spot.id}`}
                 position={pos}
-                icon={facilityIcon(spot, active)}
+                icon={facilityIcon(spot, active, active || facilityLabels.has(spot.id))}
                 zIndexOffset={active ? 1000 : 400}
                 eventHandlers={{ click: () => onSelect(active ? null : spot.id) }}
               />
@@ -860,10 +943,10 @@ export default function VillageMapGeo({
           ) : null}
 
           <BearingSync bearing={bearing} />
-          <TwoFingerPanGate onTouch={dismissTwoFingerHint} />
+          <TwoFingerPanGate fullscreen={fullscreen} onTouch={dismissTwoFingerHint} />
         </MapContainer>
 
-        {twoFingerHint ? (
+        {!fullscreen && twoFingerHint ? (
           <div className="pointer-events-none absolute inset-0 z-[600] grid place-items-center bg-ink/45 px-6 text-center">
             <p className="rounded-2xl bg-card/95 px-4 py-3 text-sm font-bold text-ink shadow-lg ring-1 ring-border">
               Use two fingers to move the map
@@ -873,10 +956,10 @@ export default function VillageMapGeo({
 
 
 
-        <div className="pointer-events-none absolute right-3 top-3 z-[500] flex gap-2">
+        <div className="pointer-events-none absolute right-[max(0.75rem,env(safe-area-inset-right))] top-[max(0.75rem,env(safe-area-inset-top))] z-[500] flex gap-2">
           <button
             type="button"
-            onClick={() => setFullscreen((f) => !f)}
+            onClick={toggleFullscreen}
             aria-label={fullscreen ? "Exit full screen" : "View full screen"}
             className="pointer-events-auto grid h-8 w-8 place-items-center rounded-full bg-card/95 text-ink shadow ring-1 ring-border"
           >
@@ -892,7 +975,7 @@ export default function VillageMapGeo({
         </div>
 
         {/* Rotate the map to match the way you're facing. */}
-        <div className="pointer-events-none absolute bottom-3 left-3 z-[500] flex items-center gap-1.5">
+        <div className={`pointer-events-none absolute left-[max(0.75rem,env(safe-area-inset-left))] z-[500] flex items-center gap-1.5 ${fullscreen && fullscreenDetail ? "bottom-[calc(38dvh+0.75rem)]" : "bottom-[max(0.75rem,env(safe-area-inset-bottom))]"}`}>
           <button
             type="button"
             aria-label="Rotate map anti-clockwise"
@@ -925,7 +1008,7 @@ export default function VillageMapGeo({
         <button
           type="button"
           onClick={locate}
-          className="absolute bottom-3 right-3 z-[500] rounded-full cherry-gradient px-4 py-2 text-xs font-bold text-white shadow-lg"
+          className={`absolute right-[max(0.75rem,env(safe-area-inset-right))] z-[500] rounded-full cherry-gradient px-4 py-2 text-xs font-bold text-white shadow-lg ${fullscreen && fullscreenDetail ? "bottom-[calc(38dvh+0.75rem)]" : "bottom-[max(0.75rem,env(safe-area-inset-bottom))]"}`}
         >
           {locating ? "Finding you…" : me ? "Hide my location" : "Show my location"}
         </button>
