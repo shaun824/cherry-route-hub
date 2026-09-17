@@ -22,9 +22,11 @@ import {
 
 type Coords = { lat: number; lng: number; accuracy: number } | null;
 
-// Live mode: record and send a position every 3 seconds.
-const FLUSH_INTERVAL_MS = 3_000;
-const MIN_POINT_GAP_MS = 3_000;
+// Live mode: record and send a position every 5 seconds. Chosen over 3s to cut
+// database load ~40% at 300+ riders while staying well inside safety-tracking norms.
+const FLUSH_INTERVAL_MS = 5_000;
+const MIN_POINT_GAP_MS = 5_000;
+
 // Press-and-hold duration before an SOS actually fires.
 const SOS_HOLD_MS = 2_000;
 
