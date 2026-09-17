@@ -389,11 +389,9 @@ export const fetchLiveTracking = createServerFn({ method: "GET" })
     }
 
     // Open SOS alerts — flagged on the rider so their pin can shout.
-    const { data: sosRows } = await table(supabase, "tracking_sos")
-      .select("user_id, reason, status")
-      .eq("event_id", data.eventId)
-      .in("status", ["active", "acknowledged"])
-      .limit(200);
+    const { data: sosRows } = await supabase.rpc("live_tracking_sos_flags", {
+      _event_id: data.eventId,
+    });
     let activeSos = 0;
     for (const s of (sosRows ?? []) as { user_id: string; reason: string | null; status: string }[]) {
       if (s.status === "active") activeSos += 1;
