@@ -131,7 +131,7 @@ function VectorMoveSync() {
  * over the map never gets trapped. A one-finger drag surfaces a hint instead.
  */
 
-function TwoFingerPanGate({ onTouch }: { onTouch: () => void }) {
+function TwoFingerPanGate({ fullscreen, onTouch }: { fullscreen: boolean; onTouch: () => void }) {
   const map = useMap();
   const cbRef = useRef(onTouch);
   cbRef.current = onTouch;
@@ -141,12 +141,16 @@ function TwoFingerPanGate({ onTouch }: { onTouch: () => void }) {
     const coarse = window.matchMedia?.("(pointer: coarse)")?.matches;
     if (!coarse) return;
     const el = map.getContainer();
-    map.dragging.disable();
+    if (fullscreen) map.dragging.enable();
+    else map.dragging.disable();
 
     const onStart = () => cbRef.current();
-    el.addEventListener("touchstart", onStart, { passive: true });
-    return () => el.removeEventListener("touchstart", onStart);
-  }, [map]);
+    if (!fullscreen) el.addEventListener("touchstart", onStart, { passive: true });
+    return () => {
+      el.removeEventListener("touchstart", onStart);
+      map.dragging.enable();
+    };
+  }, [map, fullscreen]);
 
   return null;
 }
@@ -186,54 +190,48 @@ function escapeHtml(v: string) {
 }
 
 
-/** Flies to a drawn area when a rider asks "where is my tent?". */
-function FlyToZone({ zone }: { zone: VillageZone | null }) {
-  const map = useMap();
-  useEffect(() => {
-    if (!zone) return;
-    const c = zoneCentroid(zone);
-    if (c) map.flyTo([c.lat, c.lng], Math.max(map.getZoom(), 19), { duration: 0.8 });
-  }, [map, zone]);
-  return null;
-}
+type FocusTarget = { key: string; position: [number, number] } | null;
 
-/** When a facility is selected (marker tap or chip tap), fly close enough that
-    tightly-packed icons separate and the chosen one sits in the centre. */
-function FlyToSelected({
-  selected,
-  hotspots,
-  geo,
-  heightM,
+/**
+ * Focuses any selected village object without replacing the viewer's chosen
+ * scale. It only adds the minimum zoom needed to separate a genuinely crowded
+ * target, and reserves the lower screen for the full-screen detail sheet.
+ */
+function FocusSelection({
+  target,
+  neighbours,
+  detailOpen,
 }: {
-  selected: string | null;
-  hotspots: VillageHotspot[];
-  geo: VillageGeo;
-  heightM: number;
+  target: FocusTarget;
+  neighbours: [number, number][];
+  detailOpen: boolean;
 }) {
   const map = useMap();
   const last = useRef<string | null>(null);
   useEffect(() => {
-    if (selected === last.current) return;
-    last.current = selected;
-    if (!selected) return;
-    const spot = hotspots.find((h) => h.id === selected);
-    if (!spot) return;
-    const pos = hotspotLatLng(geo, spot, heightM);
-    // Zoom in close: many village icons are clustered, so a high zoom is
-    // needed to tell them apart. 21 keeps satellite tiles usable while
-    // making each pin clearly distinct.
-    map.flyTo(pos, 21, { duration: 0.7 });
-  }, [map, selected, hotspots, geo, heightM]);
-  return null;
-}
+    if (!target || target.key === last.current) return;
+    last.current = target.key;
+    const currentZoom = map.getZoom();
+    const targetLatLng = L.latLng(target.position);
+    const nearestAt = (candidateZoom: number) => {
+      const projected = map.project(targetLatLng, candidateZoom);
+      let nearest = Number.POSITIVE_INFINITY;
+      for (const position of neighbours) {
+        if (position[0] === target.position[0] && position[1] === target.position[1]) continue;
+        nearest = Math.min(nearest, projected.distanceTo(map.project(L.latLng(position), candidateZoom)));
+      }
+      return nearest;
+    };
+    let targetZoom = currentZoom;
+    while (targetZoom < 21 && nearestAt(targetZoom) < 48) targetZoom = Math.min(21, targetZoom + 1);
 
-/** Flies straight to an exact tent pin — the tightest "this is your tent" view. */
-function FlyToTent({ tent }: { tent: MapTent | null }) {
-  const map = useMap();
-  useEffect(() => {
-    if (!tent) return;
-    map.flyTo([tent.lat, tent.lng], Math.max(map.getZoom(), 21), { duration: 0.9 });
-  }, [map, tent]);
+    const size = map.getSize();
+    const reserveBottom = detailOpen ? Math.min(size.y * 0.38, 360) : 0;
+    const targetPoint = map.project(targetLatLng, targetZoom);
+    const centrePoint = targetPoint.add(L.point(0, reserveBottom / 2));
+    const centre = map.unproject(centrePoint, targetZoom);
+    map.flyTo(centre, targetZoom, { duration: targetZoom === currentZoom ? 0.45 : 0.65 });
+  }, [map, target, neighbours, detailOpen]);
   return null;
 }
 
@@ -241,7 +239,7 @@ export type MapTent = { id: string; label: string; lat: number; lng: number; kin
 
 
 /** Facility marker: a clean coloured icon puck, with its name shown once tapped. */
-function facilityIcon(spot: VillageHotspot, active: boolean) {
+function facilityIcon(spot: VillageHotspot, active: boolean, showLabel: boolean) {
   const color = spotColor(spot);
   const glyph = villageIconSvg(spotIcon(spot), active ? 15 : 13, "#fff");
   const size = active ? 32 : 26;
@@ -252,7 +250,7 @@ function facilityIcon(spot: VillageHotspot, active: boolean) {
         active ? "2.5px" : "2px"
       } solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.4)">${glyph}</span>
       ${
-        active
+        showLabel
           ? `<span style="background:#0f172a;color:#fff;font-size:10px;font-weight:800;padding:2px 7px;border-radius:7px;white-space:nowrap;border:1.5px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.35)">${escapeHtml(
               spot.title,
             )}</span>`
@@ -262,6 +260,73 @@ function facilityIcon(spot: VillageHotspot, active: boolean) {
     iconSize: [size, size],
     iconAnchor: [size / 2, size / 2],
   });
+}
+
+const CATEGORY_LABEL_PRIORITY: Partial<Record<VillageHotspot["category"], number>> = {
+  medical: 100,
+  registration: 95,
+  toilets: 90,
+  start: 88,
+  finish: 87,
+  food: 82,
+  bar: 78,
+  parking: 72,
+  bike: 70,
+  camping: 68,
+  shop: 62,
+  stage: 60,
+};
+
+type LabelCandidate = {
+  id: string;
+  position: [number, number];
+  width: number;
+  priority: number;
+  selected: boolean;
+  kind: "facility" | "zone";
+};
+
+function rectanglesOverlap(a: L.Bounds, b: L.Bounds, gap = 4) {
+  return !(
+    a.max.x + gap < b.min.x ||
+    a.min.x - gap > b.max.x ||
+    a.max.y + gap < b.min.y ||
+    a.min.y - gap > b.max.y
+  );
+}
+
+/** Progressive Mapbox-style label placement: important/selected labels claim
+    space first; lower-priority labels appear only when their boxes fit. */
+function LabelLayout({ candidates, zoom, onLayout }: {
+  candidates: LabelCandidate[];
+  zoom: number;
+  onLayout: (facilityIds: Set<string>, zoneIds: Set<string>) => void;
+}) {
+  const map = useMap();
+  useEffect(() => {
+    const layout = () => {
+      const facilities = new Set<string>();
+      const zones = new Set<string>();
+      const occupied: L.Bounds[] = [];
+      const ordered = [...candidates].sort((a, b) => Number(b.selected) - Number(a.selected) || b.priority - a.priority);
+      for (const item of ordered) {
+        if (!item.selected && zoom < (item.kind === "zone" ? 19.25 : 18.75)) continue;
+        const p = map.latLngToContainerPoint(item.position);
+        const box = L.bounds(
+          L.point(p.x - item.width / 2, p.y + 15),
+          L.point(p.x + item.width / 2, p.y + 34),
+        );
+        if (!item.selected && occupied.some((used) => rectanglesOverlap(box, used))) continue;
+        occupied.push(box);
+        (item.kind === "facility" ? facilities : zones).add(item.id);
+      }
+      onLayout(facilities, zones);
+    };
+    layout();
+    map.on("moveend zoomend resize rotate", layout);
+    return () => map.off("moveend zoomend resize rotate", layout);
+  }, [map, candidates, zoom, onLayout]);
+  return null;
 }
 
 
