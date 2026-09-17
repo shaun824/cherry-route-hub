@@ -320,13 +320,49 @@ export default function LiveTrackingMapInner({
       attribution: "&copy; OpenStreetMap contributors",
       maxZoom: 19,
     }).addTo(map);
+
+    // Cluster ordinary riders so 300 dots stay readable; SOS pins are added to
+    // the map directly so they can never be swallowed by a cluster bubble.
+    const cluster = L.markerClusterGroup({
+      showCoverageOnHover: false,
+      spiderfyOnMaxZoom: true,
+      maxClusterRadius: 45,
+      iconCreateFunction: (c) => {
+        const n = c.getChildCount();
+        const size = n < 10 ? 34 : n < 50 ? 42 : n < 150 ? 50 : 58;
+        return L.divIcon({
+          className: "",
+          html: `<div style="
+            width:${size}px;height:${size}px;border-radius:9999px;
+            background:rgba(30,41,59,.85);color:#fff;border:3px solid #fff;
+            display:flex;align-items:center;justify-content:center;
+            font-weight:800;font-size:${n < 100 ? 13 : 12}px;
+            box-shadow:0 2px 8px rgba(0,0,0,.35);">${n}</div>`,
+          iconSize: [size, size],
+        });
+      },
+    });
+    cluster.addTo(map);
+    clusterRef.current = cluster;
+
+    // Standard follow behaviour: a manual pan or zoom pauses auto-recentring.
+    const onUserMove = () => {
+      if (programmaticMoveRef.current) return;
+      setFollowPaused(true);
+    };
+    map.on("dragstart", onUserMove);
+    map.on("zoomstart", onUserMove);
+
     mapRef.current = map;
     return () => {
       map.remove();
       mapRef.current = null;
+      clusterRef.current = null;
       markersRef.current.clear();
+      circlesRef.current.clear();
     };
   }, []);
+
 
   // ---- Course overlay -------------------------------------------------
   const event = useAdminStore((s) => s.events.find((e) => e.id === eventId));
