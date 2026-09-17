@@ -214,12 +214,22 @@ export async function processDueWorkflowEmails(
     const recipients = await loadRecipients(admin, campaign.event_id);
     if (!recipients.length) continue;
 
+    // Release stale claims: a run that was cut off mid-flight (rate limit,
+    // crash) can leave "sending" rows behind. Those riders must stay eligible.
+    await admin
+      .from("event_email_sends")
+      .delete()
+      .eq("campaign_id", campaign.id)
+      .eq("status", "sending")
+      .lt("sent_at", new Date(Date.now() - 15 * 60_000).toISOString());
+
     const { data: sentRows } = await admin
       .from("event_email_sends")
       .select("step_id, email")
       .eq("campaign_id", campaign.id)
       .limit(20000);
     const done = new Set(((sentRows ?? []) as any[]).map((r) => `${r.step_id}|${r.email}`));
+
 
     for (let i = 0; i < steps.length; i++) {
       const step = steps[i];
@@ -266,9 +276,17 @@ export async function processDueWorkflowEmails(
           else out.suppressed++;
         } catch (err) {
           if (err instanceof EmailAPIError && err.status === 429) {
+            // Give the claim back so this rider is picked up on the next run.
+            await admin
+              .from("event_email_sends")
+              .delete()
+              .eq("step_id", step.id)
+              .eq("email", rider.email)
+              .eq("status", "sending");
             out.errors.push("Hourly email allowance reached — the rest go out on the next run.");
             return out;
           }
+
           out.failed++;
           if (out.errors.length < 10) out.errors.push(`${rider.email}: ${(err as Error).message}`);
           await admin.from("event_email_sends").upsert(
