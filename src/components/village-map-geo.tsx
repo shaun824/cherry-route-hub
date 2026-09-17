@@ -209,8 +209,13 @@ function FocusSelection({
   const map = useMap();
   const last = useRef<string | null>(null);
   useEffect(() => {
-    if (!target || target.key === last.current) return;
-    last.current = target.key;
+    const signature = target ? `${target.key}:${detailOpen ? "sheet" : "plain"}` : null;
+    if (!target) {
+      last.current = null;
+      return;
+    }
+    if (signature === last.current) return;
+    last.current = signature;
     const currentZoom = map.getZoom();
     const targetLatLng = L.latLng(target.position);
     const nearestAt = (candidateZoom: number) => {
@@ -668,7 +673,7 @@ export default function VillageMapGeo({
       id: tent.id,
       position: [tent.lat, tent.lng] as [number, number],
       width: Math.min(110, Math.max(34, tent.label.length * 6 + 12)),
-      priority: tent.id === highlightTentId ? 120 : 30,
+      priority: tent.id === highlightTentId ? 120 : 76,
       selected: tent.id === highlightTentId,
       kind: "obstacle" as const,
     })),
