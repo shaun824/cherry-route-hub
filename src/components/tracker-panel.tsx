@@ -354,6 +354,12 @@ export function TrackerPanel({
 
   useEffect(() => () => endHold(), []);
 
+  // Background GPS only survives a locked screen in the installed app.
+  const [needsInstall, setNeedsInstall] = useState(false);
+  useEffect(() => setNeedsInstall(!isInstalledApp()), []);
+
+
+
 
   return (
     <div className="space-y-3">
