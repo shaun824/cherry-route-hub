@@ -276,9 +276,17 @@ export async function processDueWorkflowEmails(
           else out.suppressed++;
         } catch (err) {
           if (err instanceof EmailAPIError && err.status === 429) {
+            // Give the claim back so this rider is picked up on the next run.
+            await admin
+              .from("event_email_sends")
+              .delete()
+              .eq("step_id", step.id)
+              .eq("email", rider.email)
+              .eq("status", "sending");
             out.errors.push("Hourly email allowance reached — the rest go out on the next run.");
             return out;
           }
+
           out.failed++;
           if (out.errors.length < 10) out.errors.push(`${rider.email}: ${(err as Error).message}`);
           await admin.from("event_email_sends").upsert(
