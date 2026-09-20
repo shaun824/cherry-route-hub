@@ -92,7 +92,15 @@ import { SyncMyEntryButton } from "@/components/sync-my-entry";
 import { Image as ImageIcon } from "lucide-react";
 
 
+const EVENT_TABS = ["info", "village", "routes", "news", "photos", "chat", "ask", "packing", "sponsors", "accommodation"] as const;
+type Tab = (typeof EVENT_TABS)[number];
+
 export const Route = createFileRoute("/my-events/$eventId")({
+  // ?tab=village lets shared links (e.g. the embeddable village map) deep-link
+  // straight onto a tab inside the app.
+  validateSearch: (search: Record<string, unknown>): { tab?: Tab } => ({
+    tab: EVENT_TABS.includes(search.tab as Tab) ? (search.tab as Tab) : undefined,
+  }),
   loader: async ({ params }) => {
     const { data, error } = await supabase
       .from("events")
@@ -134,12 +142,11 @@ export const Route = createFileRoute("/my-events/$eventId")({
 /** Lets the accommodation card jump the page to the village tab, focused. */
 
 
-type Tab = "info" | "village" | "routes" | "news" | "photos" | "chat" | "ask" | "packing" | "sponsors" | "accommodation";
-
 function MyEventDetail() {
   const { event } = Route.useLoaderData();
   const { user } = useSession();
-  const [tab, setTab] = useState<Tab>("info");
+  const { tab: initialTab } = Route.useSearch();
+  const [tab, setTab] = useState<Tab>(initialTab ?? "info");
   const tabNavRef = useRef<HTMLElement | null>(null);
   /** Switching tabs should always land you at the top of the new section. */
   const scrollToTabTop = useCallback(() => {
