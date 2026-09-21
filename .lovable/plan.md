@@ -1,50 +1,68 @@
-# Best-in-class Village Map interaction pass
+# Two apps, or one faster app?
 
-## Goal
-Make the rider and crew village maps feel predictable and map-native: measured focus instead of forced close-ups, context-aware touch gestures, complete full-screen controls, progressive readable labels, and consistent behavior across live satellite and Plan views.
+## Short answer
 
-## Implementation
+Splitting crew and rider into two apps would be a big job and would **not**
+make the rider side meaningfully faster. The rider pages already only download
+their own code — crew and admin screens are never sent to a rider's phone. The
+slowness riders feel comes from a few shared things that load on every page,
+and those follow you into a second app.
 
-### 1. Measured focus for points, tents, and areas
-- Replace the three fixed zoom jumps with one shared Leaflet focus controller.
-- Keep the current zoom when the target is already inside a comfortable visible region and its nearest neighbour is visually separated.
-- When markers overlap, calculate their screen-space separation at candidate zooms and move only the minimum number of levels needed, capped at zoom 21.
-- Account for the full-screen detail sheet by centring selected content in the unobscured portion of the map.
-- Use the same rule for facility chips, map markers, tent deep-links, build-area labels, and crew build-list selections.
-- Give Plan view the equivalent measured focus: retain the current scale for isolated, visible points and increase only enough to separate nearby pins, instead of always forcing scale 3.
+Recommendation: keep one app and one database, and do a focused speed pass.
+If you still want a separate crew experience later, we can give crew its own
+installable icon and start screen without duplicating the codebase.
 
-### 2. Context-aware gestures and reliable full screen
-- Keep cooperative two-finger panning and its one-time hint in inline live-map cards.
-- Enable one-finger panning immediately in full screen and suppress the hint there.
-- Rework Plan view panning so inline touch uses two fingers while full screen uses one finger; keep pinch centred under the fingers and keep desktop scrolling/dragging usable.
-- Standardise expand/exit controls in the top-right for both modes.
-- Add safe-area spacing to top and bottom controls, and shift lower controls above an open detail sheet.
-- Exit full screen with Escape and with browser/Android back without leaving the event page; clean up the temporary history entry on button exit.
-- Recalculate map/image dimensions when entering or leaving full screen so controls, points, and imagery remain aligned.
+## What splitting would actually cost
 
-### 3. Progressive, collision-aware labels
-- Add a shared label-layout helper that measures projected marker positions and estimated label boxes.
-- Keep the normal overview icon-only. At higher zoom, progressively place non-overlapping names; selected and hovered labels always win.
-- Rank rider-critical facilities first, then ordinary rider points, then crew infrastructure/branding. Recalculate after settled pan, zoom, layer, or viewport changes.
-- Keep tent labels under the existing clean-map zoom rule and include visible tents and build-area labels as collision obstacles in dense crew views.
-- Apply the same priority and collision rules to Plan view, where pins currently always include text.
+- Two deployments, two domains, two publish steps for every change.
+- Shared pieces (rider records, event info, village map, assistant, emails,
+  sign-in, uploads, Entry Ninja and results syncs) would need to be kept in
+  step across two codebases, or moved into a shared library — weeks of work
+  plus ongoing double maintenance.
+- Your data is safe either way: both apps would read the same database, so
+  rider details, manual uploads and API-synced info stay in one place.
+- Real benefit is limited to: a separate app icon for staff, and a cleaner
+  crew-only navigation. Both are achievable inside the current app.
 
-### 4. Crew-specific readability
-- Make build-area labels participate in collision placement rather than always rendering over facilities.
-- Keep the Build areas and Build list panels as the complete reference; on-map labels remain contextual and selected items remain guaranteed visible.
-- Preserve all editor drag, resize, rotate, and placement behavior. Only share the collision/focus rules where the editor displays dense labels; do not alter placement geometry or saved data.
+## What will actually make the rider side faster
 
-## Technical details
-- Add small client-side helpers for focus calculations, projected spacing, label priority, and rectangle collision; no database or data-model changes.
-- The live map will expose its settled viewport to label layout and will use Leaflet projection APIs for exact screen-space decisions.
-- Plan view will track explicit pan offsets rather than relying on scroll overflow, allowing the same one-/two-finger policy and cursor/finger-anchored zoom math.
-- Full-screen browser-history handling will add one temporary same-page state and consume it on Back; Escape and the exit button use the same close path.
-- Existing rotation, live location, layer filtering, viewport culling, tent visibility, and detail content remain intact.
+1. **Trim what loads on every single page.** The shell currently wires up
+   pull-to-refresh, entry auto-sync, crew checks, analytics, the offline
+   worker, install prompt and the assistant on every route — including pages
+   that don't need them. Defer these until after first paint, and skip
+   crew-only checks entirely for riders.
+2. **Stop crew/admin work running for riders.** The crew-role lookup and
+   entry auto-sync fire for everyone. Gate them to the pages that use them.
+3. **Split the heavy screens.** A handful of very large pages (the event hub,
+   village editor, events admin) pull in maps, charts and spreadsheet tools.
+   Load those parts only when the rider actually opens that section.
+4. **Cut startup data calls.** The content store hydrates events, feed,
+   promos, sponsors and settings on mount, plus live subscriptions. Load only
+   what the current page needs, and subscribe on demand.
+5. **Measure before and after** on a phone-sized profile so the improvement is
+   real, not assumed.
 
-## Verification
-- In the actual preview, test clustered and isolated facilities, tents, and build areas at several zooms.
-- Verify labels appear progressively without overlap in rider mode and with all crew layers enabled.
-- Verify two-finger inline behavior and one-finger full-screen behavior in both map modes.
-- Verify Escape, browser/Android Back, safe areas, controls, and bottom-sheet clearance at desktop, portrait phone, and small landscape phone sizes.
-- Verify the admin editor still supports pin/tent/area placement and dragging without jumps.
-- Run targeted type checks and confirm the latest preview build and browser console are clean.
+## Optional: crew gets its own icon, same app
+
+If the goal is also "crew shouldn't see rider stuff", we can add a crew-only
+installable entry point (`/crew` as the start screen, crew name and icon) so
+staff phones get a separate app tile, while everything stays in one codebase
+and one database.
+
+## Proposed next step
+
+Do the speed pass above (items 1–5), measure the difference, and only revisit
+a true split if the numbers say the shared shell is the problem — which, from
+the current structure, they will not.
+
+## Technical notes
+
+- Routes are already code-split per file by the TanStack Router plugin, so
+  `admin.*` and `crew.*` chunks are not downloaded by riders. The shared cost
+  is `__root.tsx` + `app-shell.tsx` and their eager imports, not route volume.
+- Heaviest shared dependencies: `leaflet` + `leaflet-rotate` +
+  `leaflet.markercluster`, `recharts`, `xlsx`. Confirm each is behind a
+  `lazy()` boundary and never pulled into the root chunk.
+- `useHydratedStore` opens one realtime channel with five table subscriptions
+  at mount; scope this per route.
+- No schema changes needed for any of this.
