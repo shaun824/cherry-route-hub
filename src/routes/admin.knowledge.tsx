@@ -14,6 +14,7 @@ import {
   upsertLearnedFaq,
 } from "@/lib/faq-learned.functions";
 import { KnowledgeIntake, KnowledgeLibrary } from "@/components/knowledge-library";
+import { KnowledgeTeachChat } from "@/components/knowledge-teach-chat";
 
 export const Route = createFileRoute("/admin/knowledge")({
   head: () => ({
@@ -29,7 +30,7 @@ type Status = "suggested" | "approved" | "rejected";
 
 function AdminKnowledge() {
   const qc = useQueryClient();
-  const [tab, setTab] = useState<Status | "gaps" | "library" | "intake">("suggested");
+  const [tab, setTab] = useState<Status | "gaps" | "library" | "intake" | "teach">("teach");
 
   const list = useServerFn(listLearnedFaqs);
   const gaps = useServerFn(listBotGaps);
