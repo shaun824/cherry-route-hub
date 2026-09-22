@@ -128,6 +128,7 @@ function AdminKnowledge() {
       <nav className="flex flex-wrap gap-1">
         {(
           [
+            { id: "teach", label: "Teach the bot" },
             { id: "suggested", label: "Review queue" },
             { id: "approved", label: "Approved" },
             { id: "rejected", label: "Rejected" },
