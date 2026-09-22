@@ -259,8 +259,14 @@ export function AssistantWidget() {
                   <Sparkles className="h-4 w-4" />
                 </span>
                 <div>
-                  <h2 className="font-display text-base font-bold">Ask Red Cherry</h2>
-                  <p className="text-[11px] text-ink-soft">App help &amp; event questions</p>
+                  <h2 className="font-display text-base font-bold">
+                    {mode === "teach" ? "Teach Red Cherry" : "Ask Red Cherry"}
+                  </h2>
+                  <p className="text-[11px] text-ink-soft">
+                    {mode === "teach"
+                      ? "Tell it something new — text, picture, voice note or PDF"
+                      : "App help & event questions"}
+                  </p>
                 </div>
               </div>
               <button
@@ -273,6 +279,29 @@ export function AssistantWidget() {
               </button>
             </div>
 
+            {isAdmin ? (
+              <div className="flex gap-1 border-b border-border px-4 py-2">
+                {(["ask", "teach"] as const).map((m) => (
+                  <button
+                    key={m}
+                    type="button"
+                    onClick={() => setMode(m)}
+                    className={`rounded-full px-3 py-1 text-[11px] font-bold ${
+                      mode === m ? "bg-cherry text-white" : "bg-secondary text-ink-soft"
+                    }`}
+                  >
+                    {m === "ask" ? "Ask" : "Teach"}
+                  </button>
+                ))}
+              </div>
+            ) : null}
+
+            {mode === "teach" && isAdmin ? (
+              <div className="min-w-0 flex-1 overflow-y-auto p-3">
+                <KnowledgeTeachChat compact events={teachEventsQ.data ?? []} />
+              </div>
+            ) : (
+            <>
             <div ref={listRef} className="min-w-0 flex-1 space-y-3 overflow-y-auto overflow-x-hidden p-4">
               <div className="max-w-[85%] rounded-2xl bg-secondary px-3 py-2 text-sm text-ink">
                 {GREETING}
