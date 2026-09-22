@@ -443,6 +443,8 @@ export function AssistantWidget() {
                 />
               ) : null}
             </div>
+            </>
+            )}
           </div>
         </div>
       ) : null}
