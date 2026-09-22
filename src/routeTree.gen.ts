@@ -78,6 +78,7 @@ import { Route as EmbedVillageEventIdRouteImport } from './routes/embed.village.
 import { Route as CrewLearnCalendarRouteImport } from './routes/crew.learn.calendar'
 import { Route as CrewLearnCourseIdRouteImport } from './routes/crew.learn.$courseId'
 import { Route as CrewDepartmentDeptIdRouteImport } from './routes/crew.department.$deptId'
+import { Route as ApiPublicEntryCountRouteImport } from './routes/api/public/entry-count'
 import { Route as AdminVillageEventIdRouteImport } from './routes/admin.village.$eventId'
 import { Route as AdminRiderUserIdRouteImport } from './routes/admin.rider.$userId'
 import { Route as AdminEventInfoEventIdRouteImport } from './routes/admin.event-info.$eventId'
@@ -459,6 +460,11 @@ const CrewDepartmentDeptIdRoute = CrewDepartmentDeptIdRouteImport.update({
   path: '/crew/department/$deptId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicEntryCountRoute = ApiPublicEntryCountRouteImport.update({
+  id: '/api/public/entry-count',
+  path: '/api/public/entry-count',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminVillageEventIdRoute = AdminVillageEventIdRouteImport.update({
   id: '/village/$eventId',
   path: '/village/$eventId',
@@ -709,6 +715,7 @@ export interface FileRoutesByFullPath {
   '/admin/event-info/$eventId': typeof AdminEventInfoEventIdRoute
   '/admin/rider/$userId': typeof AdminRiderUserIdRoute
   '/admin/village/$eventId': typeof AdminVillageEventIdRoute
+  '/api/public/entry-count': typeof ApiPublicEntryCountRoute
   '/crew/department/$deptId': typeof CrewDepartmentDeptIdRoute
   '/crew/learn/$courseId': typeof CrewLearnCourseIdRoute
   '/crew/learn/calendar': typeof CrewLearnCalendarRoute
@@ -809,6 +816,7 @@ export interface FileRoutesByTo {
   '/admin/event-info/$eventId': typeof AdminEventInfoEventIdRoute
   '/admin/rider/$userId': typeof AdminRiderUserIdRoute
   '/admin/village/$eventId': typeof AdminVillageEventIdRoute
+  '/api/public/entry-count': typeof ApiPublicEntryCountRoute
   '/crew/department/$deptId': typeof CrewDepartmentDeptIdRoute
   '/crew/learn/$courseId': typeof CrewLearnCourseIdRoute
   '/crew/learn/calendar': typeof CrewLearnCalendarRoute
@@ -914,6 +922,7 @@ export interface FileRoutesById {
   '/admin/event-info/$eventId': typeof AdminEventInfoEventIdRoute
   '/admin/rider/$userId': typeof AdminRiderUserIdRoute
   '/admin/village/$eventId': typeof AdminVillageEventIdRoute
+  '/api/public/entry-count': typeof ApiPublicEntryCountRoute
   '/crew/department/$deptId': typeof CrewDepartmentDeptIdRoute
   '/crew/learn/$courseId': typeof CrewLearnCourseIdRoute
   '/crew/learn/calendar': typeof CrewLearnCalendarRoute
@@ -1020,6 +1029,7 @@ export interface FileRouteTypes {
     | '/admin/event-info/$eventId'
     | '/admin/rider/$userId'
     | '/admin/village/$eventId'
+    | '/api/public/entry-count'
     | '/crew/department/$deptId'
     | '/crew/learn/$courseId'
     | '/crew/learn/calendar'
@@ -1120,6 +1130,7 @@ export interface FileRouteTypes {
     | '/admin/event-info/$eventId'
     | '/admin/rider/$userId'
     | '/admin/village/$eventId'
+    | '/api/public/entry-count'
     | '/crew/department/$deptId'
     | '/crew/learn/$courseId'
     | '/crew/learn/calendar'
@@ -1224,6 +1235,7 @@ export interface FileRouteTypes {
     | '/admin/event-info/$eventId'
     | '/admin/rider/$userId'
     | '/admin/village/$eventId'
+    | '/api/public/entry-count'
     | '/crew/department/$deptId'
     | '/crew/learn/$courseId'
     | '/crew/learn/calendar'
@@ -1291,6 +1303,7 @@ export interface RootRouteChildren {
   EventsIndexRoute: typeof EventsIndexRoute
   DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
   Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
+  ApiPublicEntryCountRoute: typeof ApiPublicEntryCountRoute
   CrewDepartmentDeptIdRoute: typeof CrewDepartmentDeptIdRoute
   CrewLearnCourseIdRoute: typeof CrewLearnCourseIdRoute
   CrewLearnCalendarRoute: typeof CrewLearnCalendarRoute
@@ -1810,6 +1823,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CrewDepartmentDeptIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/entry-count': {
+      id: '/api/public/entry-count'
+      path: '/api/public/entry-count'
+      fullPath: '/api/public/entry-count'
+      preLoaderRoute: typeof ApiPublicEntryCountRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/village/$eventId': {
       id: '/admin/village/$eventId'
       path: '/village/$eventId'
@@ -2208,6 +2228,7 @@ const rootRouteChildren: RootRouteChildren = {
   EventsIndexRoute: EventsIndexRoute,
   DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
   Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
+  ApiPublicEntryCountRoute: ApiPublicEntryCountRoute,
   CrewDepartmentDeptIdRoute: CrewDepartmentDeptIdRoute,
   CrewLearnCourseIdRoute: CrewLearnCourseIdRoute,
   CrewLearnCalendarRoute: CrewLearnCalendarRoute,
