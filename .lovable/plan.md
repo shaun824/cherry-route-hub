@@ -1,68 +1,42 @@
-# Two apps, or one faster app?
+# Live entry-count endpoint for peplett.co.za
 
-## Short answer
+Add a public, read-only numbers endpoint the WordPress site can call to show live PE Plett entry numbers.
 
-Splitting crew and rider into two apps would be a big job and would **not**
-make the rider side meaningfully faster. The rider pages already only download
-their own code — crew and admin screens are never sent to a rider's phone. The
-slowness riders feel comes from a few shared things that load on every page,
-and those follow you into a second app.
+## What you get
 
-Recommendation: keep one app and one database, and do a focused speed pass.
-If you still want a separate crew experience later, we can give crew its own
-installable icon and start screen without duplicating the codebase.
+A URL like:
 
-## What splitting would actually cost
+`https://riderapp.redcherryevents.co.za/api/public/entry-count`
 
-- Two deployments, two domains, two publish steps for every change.
-- Shared pieces (rider records, event info, village map, assistant, emails,
-  sign-in, uploads, Entry Ninja and results syncs) would need to be kept in
-  step across two codebases, or moved into a shared library — weeks of work
-  plus ongoing double maintenance.
-- Your data is safe either way: both apps would read the same database, so
-  rider details, manual uploads and API-synced info stay in one place.
-- Real benefit is limited to: a separate app icon for staff, and a cleaner
-  crew-only navigation. Both are achievable inside the current app.
+returning JSON:
 
-## What will actually make the rider side faster
+```json
+{ "event": "PE Plett 2027", "taken": 172, "paid": 57, "cap": 250 }
+```
 
-1. **Trim what loads on every single page.** The shell currently wires up
-   pull-to-refresh, entry auto-sync, crew checks, analytics, the offline
-   worker, install prompt and the assistant on every route — including pages
-   that don't need them. Defer these until after first paint, and skip
-   crew-only checks entirely for riders.
-2. **Stop crew/admin work running for riders.** The crew-role lookup and
-   entry auto-sync fire for everyone. Gate them to the pages that use them.
-3. **Split the heavy screens.** A handful of very large pages (the event hub,
-   village editor, events admin) pull in maps, charts and spreadsheet tools.
-   Load those parts only when the rider actually opens that section.
-4. **Cut startup data calls.** The content store hydrates events, feed,
-   promos, sponsors and settings on mount, plus live subscriptions. Load only
-   what the current page needs, and subscribe on demand.
-5. **Measure before and after** on a phone-sized profile so the improvement is
-   real, not assumed.
+- `taken` — everyone on the event roster (entered).
+- `paid` — riders whose entry is marked paid (the real "sold" number).
+- `cap` — defaults to 250; changeable per event via `?cap=`, or hard-coded per event.
 
-## Optional: crew gets its own icon, same app
+Options: `?event=<other event id>` makes it reusable for future events; `?paid=1` counts only paid riders as `taken`.
 
-If the goal is also "crew shouldn't see rider stuff", we can add a crew-only
-installable entry point (`/crew` as the start screen, crew name and icon) so
-staff phones get a separate app tile, while everything stays in one codebase
-and one database.
+## Why it differs from the snippet you were given
 
-## Proposed next step
+- That snippet uses an older routing style (`createServerFileRoute`) — this app uses `createFileRoute` with a `server.handlers` block.
+- It pointed at the `entries` table, which is empty. Real rider counts live in `event_entrants` (PE Plett: 172 rostered, 57 paid).
+- The endpoint goes under `/api/public/*` so it works on the published site without sign-in.
 
-Do the speed pass above (items 1–5), measure the difference, and only revisit
-a true split if the numbers say the shared shell is the problem — which, from
-the current structure, they will not.
+## Build
 
-## Technical notes
+1. **New route** `src/routes/api/public/entry-count.ts`:
+   - `GET` handler: parse `event`, `cap`, `paid` query params (validated), count `event_entrants` rows for the event (head-only count query, no rows fetched). Server-side count via the privileged backend client loaded inside the handler — nothing but two numbers is ever returned, so no rider data can leak; no new database permissions needed.
+   - Response headers: `content-type: application/json`, `access-control-allow-origin: *` (WordPress can read it from the browser), `cache-control: public, max-age=60` (busy pages can't hammer the database).
+   - `OPTIONS` handler returning 204 with the same CORS headers.
+   - Invalid/unknown event id → `404` JSON error, no data.
+2. **WordPress snippet** (I give you the finished HTML/JS to paste): a small script that fetches the endpoint once a minute and writes the numbers into your page, e.g. a "157 of 250 entries taken" bar. Plain JavaScript, no plugins needed.
+3. No database migration, no schema change, no new permissions — code only.
 
-- Routes are already code-split per file by the TanStack Router plugin, so
-  `admin.*` and `crew.*` chunks are not downloaded by riders. The shared cost
-  is `__root.tsx` + `app-shell.tsx` and their eager imports, not route volume.
-- Heaviest shared dependencies: `leaflet` + `leaflet-rotate` +
-  `leaflet.markercluster`, `recharts`, `xlsx`. Confirm each is behind a
-  `lazy()` boundary and never pulled into the root chunk.
-- `useHydratedStore` opens one realtime channel with five table subscriptions
-  at mount; scope this per route.
-- No schema changes needed for any of this.
+## Notes
+
+- One minute of caching means the number can lag real entries by up to ~60 seconds.
+- Works on the preview URL immediately; needs a publish before peplett.co.za can use the live custom-domain URL.
