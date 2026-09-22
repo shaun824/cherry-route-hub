@@ -135,7 +135,7 @@ function AdminKnowledge() {
             { id: "gaps", label: "Unanswered questions" },
             { id: "library", label: "Business knowledge" },
             { id: "intake", label: "Email intake" },
-          ] as { id: Status | "gaps" | "library" | "intake"; label: string }[]
+          ] as { id: Status | "gaps" | "library" | "intake" | "teach"; label: string }[]
         ).map((t) => (
           <button
             key={t.id}
@@ -149,7 +149,9 @@ function AdminKnowledge() {
         ))}
       </nav>
 
-      {tab === "library" ? (
+      {tab === "teach" ? (
+        <KnowledgeTeachChat events={(eventsQ.data ?? []) as { id: string; name: string }[]} />
+      ) : tab === "library" ? (
         <KnowledgeLibrary events={(eventsQ.data ?? []) as { id: string; name: string }[]} />
       ) : tab === "intake" ? (
         <KnowledgeIntake />
