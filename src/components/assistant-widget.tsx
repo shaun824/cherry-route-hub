@@ -42,8 +42,25 @@ export function AssistantWidget() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { user } = useSession();
   const ask = useServerFn(askAppBot);
+  const { isAdmin } = useIsAdmin();
 
   const [open, setOpen] = useState(false);
+  // Admins can flip the same bubble into "teach me something" mode.
+  const [mode, setMode] = useState<"ask" | "teach">("ask");
+  const teachEventsQ = useQuery({
+    queryKey: ["teach-events-min"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("events")
+        .select("id, name, event_date, days")
+        .order("event_date");
+      return visibleInBackend(
+        (data ?? []) as { id: string; name: string; event_date: string; days?: unknown[] }[],
+      ) as { id: string; name: string }[];
+    },
+    enabled: isAdmin && open && mode === "teach",
+    staleTime: 5 * 60 * 1000,
+  });
   // First-session nudge so riders notice the assistant exists.
   const [nudge, setNudge] = useState(false);
   useEffect(() => {
