@@ -24,7 +24,6 @@ export const Route = createFileRoute('/api/public/entry-count')({
         }
         const capParam = Number(url.searchParams.get('cap'))
         const cap = Number.isFinite(capParam) && capParam > 0 ? Math.min(Math.floor(capParam), 100000) : 250
-        const paidOnly = url.searchParams.get('paid') === '1'
 
         const { supabaseAdmin } = await import('@/integrations/supabase/client.server')
 
@@ -40,23 +39,13 @@ export const Route = createFileRoute('/api/public/entry-count')({
           )
         }
 
-        let takenQuery = supabaseAdmin
+        const { count } = await supabaseAdmin
           .from('event_entrants')
           .select('id', { count: 'exact', head: true })
           .eq('event_id', eventParam)
-        if (paidOnly) takenQuery = takenQuery.eq('paid', true)
-
-        const [{ count: taken }, { count: paid }] = await Promise.all([
-          takenQuery,
-          supabaseAdmin
-            .from('event_entrants')
-            .select('id', { count: 'exact', head: true })
-            .eq('event_id', eventParam)
-            .eq('paid', true),
-        ])
 
         return Response.json(
-          { event: eventRow.name, taken: taken ?? 0, paid: paid ?? 0, cap },
+          { event: eventRow.name, taken: count ?? 0, cap },
           {
             headers: {
               ...corsHeaders,
