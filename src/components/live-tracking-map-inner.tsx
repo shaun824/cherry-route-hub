@@ -3,6 +3,7 @@
 // The event's KML course is overlaid underneath, picked by cross-referencing the
 // riders' entry category / position against the event's routes.
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import "leaflet.markercluster";
@@ -242,7 +243,24 @@ export default function LiveTrackingMapInner({
   onFocusedProgress?: (progress: ReturnType<typeof progressOnCourse>) => void;
   currentPosition?: { lat: number; lng: number } | null;
 }) {
-  const containerRef = useRef<HTMLDivElement | null>(null);
+  // The Leaflet element is owned here and moved between the inline and the
+  // full-screen host, so the map keeps its state when switching views.
+  const [mapEl] = useState(() => {
+    const d = document.createElement("div");
+    d.style.width = "100%";
+    d.style.height = "100%";
+    return d;
+  });
+  const containerRef = useRef<HTMLDivElement | null>(mapEl);
+  const hostRef = useCallback(
+    (el: HTMLDivElement | null) => {
+      if (el && mapEl.parentElement !== el) {
+        el.appendChild(mapEl);
+        window.setTimeout(() => mapRef.current?.invalidateSize(), 30);
+      }
+    },
+    [mapEl],
+  );
   const mapRef = useRef<L.Map | null>(null);
   const clusterRef = useRef<L.MarkerClusterGroup | null>(null);
   const markersRef = useRef<Map<string, L.Marker>>(new Map());
@@ -865,7 +883,7 @@ export default function LiveTrackingMapInner({
 
   const legendRoutes = matchedRoutes;
 
-  return (
+  const tree = (
     <div
       className={
         fullscreen
@@ -945,7 +963,7 @@ export default function LiveTrackingMapInner({
 
       <div className={fullscreen ? "relative min-h-0 flex-1" : "relative"}>
         <div
-          ref={containerRef}
+          ref={hostRef}
           className={`${fullscreen ? "h-full" : riderMode ? "h-[52dvh] min-h-80 rounded-2xl ring-1 ring-border" : "h-96 rounded-2xl ring-1 ring-border"} w-full overflow-hidden`}
         />
         <div className={`absolute right-3 z-[600] flex flex-col items-end gap-2 ${riderMode && !fullscreen ? "top-24" : "top-3"}`}>
@@ -1153,4 +1171,5 @@ export default function LiveTrackingMapInner({
       ) : null}
     </div>
   );
+  return fullscreen ? createPortal(tree, document.body) : tree;
 }
