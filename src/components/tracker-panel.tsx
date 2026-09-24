@@ -482,6 +482,7 @@ export function TrackerPanel({
             focusUserId={user?.id ?? null}
             riderMode
             onFocusedProgress={setCourseProgress}
+            currentPosition={coords ? { lat: coords.lat, lng: coords.lng } : null}
           />
           <div className="absolute inset-x-3 top-3 z-[500] grid grid-cols-2 gap-1.5 rounded-xl bg-card/95 p-2.5 shadow-lg ring-1 ring-border backdrop-blur sm:grid-cols-4">
             <span className="flex items-center gap-1.5 text-xs font-semibold text-ink"><Crosshair className="h-3.5 w-3.5 text-cherry" />{gpsQuality} · {coords ? `±${Math.round(coords.accuracy)}m` : "…"}</span>

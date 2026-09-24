@@ -221,6 +221,7 @@ export default function LiveTrackingMapInner({
   onOffCourse,
   riderMode = false,
   onFocusedProgress,
+  currentPosition = null,
 }: {
   eventId: string;
   isCrew?: boolean;
@@ -231,6 +232,7 @@ export default function LiveTrackingMapInner({
   /** Compact, map-first view embedded in the rider's own tracking controls. */
   riderMode?: boolean;
   onFocusedProgress?: (progress: ReturnType<typeof progressOnCourse>) => void;
+  currentPosition?: { lat: number; lng: number } | null;
 }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<L.Map | null>(null);
@@ -247,6 +249,7 @@ export default function LiveTrackingMapInner({
   const [viewerLoc, setViewerLoc] = useState<{ lat: number; lng: number } | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const guideLineRef = useRef<L.Polyline | null>(null);
+  const ownMarkerRef = useRef<L.Marker | null>(null);
 
   // Remember who a spectator is following so reopening the page keeps them on
   // their rider instead of making them search again.
@@ -492,13 +495,34 @@ export default function LiveTrackingMapInner({
   );
 
   const focusedProgress = useMemo(() => {
+    if (currentPosition && course) {
+      return progressOnCourse(course, currentPosition.lat, currentPosition.lng);
+    }
     const focused = focusUserId ? riders.find((r) => r.userId === focusUserId) : null;
     return focused ? progressFor(focused) : null;
-  }, [focusUserId, riders, progressFor]);
+  }, [currentPosition, course, focusUserId, riders, progressFor]);
 
   useEffect(() => {
     onFocusedProgress?.(focusedProgress);
   }, [focusedProgress, onFocusedProgress]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !riderMode || !currentPosition) return;
+    if (!ownMarkerRef.current) {
+      ownMarkerRef.current = L.marker([currentPosition.lat, currentPosition.lng], {
+        icon: markerIcon("live", false),
+        zIndexOffset: 900,
+      }).addTo(map).bindTooltip("You", { permanent: true, direction: "top", offset: [0, -8] });
+    } else {
+      ownMarkerRef.current.setLatLng([currentPosition.lat, currentPosition.lng]);
+    }
+    if (!followPaused) {
+      programmaticMoveRef.current = true;
+      map.setView([currentPosition.lat, currentPosition.lng], Math.max(map.getZoom(), 15));
+      window.setTimeout(() => (programmaticMoveRef.current = false), 700);
+    }
+  }, [currentPosition, followPaused, riderMode]);
 
   // Off-course watch list for race control (soft warning — never an alarm).
   useEffect(() => {
@@ -748,6 +772,16 @@ export default function LiveTrackingMapInner({
             Stop following
           </button>
         </div>
+      ) : null}
+
+      {riderMode && followPaused ? (
+        <button
+          type="button"
+          onClick={() => setFollowPaused(false)}
+          className="absolute right-4 top-24 z-[600] inline-flex items-center gap-1 rounded-full bg-cherry px-3 py-2 text-xs font-bold text-white shadow-lg"
+        >
+          <Crosshair className="h-3.5 w-3.5" /> Re-centre
+        </button>
       ) : null}
 
       <div

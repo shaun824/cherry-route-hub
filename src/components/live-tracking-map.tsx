@@ -12,6 +12,7 @@ export function LiveTrackingMap({
   onOffCourse,
   riderMode,
   onFocusedProgress,
+  currentPosition,
 }: {
   eventId: string;
   isCrew?: boolean;
@@ -19,6 +20,7 @@ export function LiveTrackingMap({
   onOffCourse?: (map: Record<string, number>) => void;
   riderMode?: boolean;
   onFocusedProgress?: (progress: ProgressResult | null) => void;
+  currentPosition?: { lat: number; lng: number } | null;
 }) {
   const fallback = (
     <div className="flex h-96 items-center justify-center rounded-2xl bg-card text-sm text-ink-soft ring-1 ring-border">
@@ -35,6 +37,7 @@ export function LiveTrackingMap({
           onOffCourse={onOffCourse}
           riderMode={riderMode}
           onFocusedProgress={onFocusedProgress}
+          currentPosition={currentPosition}
         />
       </Suspense>
 
