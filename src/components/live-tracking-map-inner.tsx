@@ -219,6 +219,8 @@ export default function LiveTrackingMapInner({
   isCrew = false,
   focusUserId = null,
   onOffCourse,
+  riderMode = false,
+  onFocusedProgress,
 }: {
   eventId: string;
   isCrew?: boolean;
@@ -226,6 +228,9 @@ export default function LiveTrackingMapInner({
   focusUserId?: string | null;
   /** Reports riders sitting far off the course line (metres), for the watch list. */
   onOffCourse?: (map: Record<string, number>) => void;
+  /** Compact, map-first view embedded in the rider's own tracking controls. */
+  riderMode?: boolean;
+  onFocusedProgress?: (progress: ReturnType<typeof progressOnCourse>) => void;
 }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<L.Map | null>(null);
@@ -294,7 +299,6 @@ export default function LiveTrackingMapInner({
         (r.bib ?? "").toLowerCase().includes(q),
     );
   }, [riders, search]);
-
 
   // Viewer location for crew distance/bearing and guide line.
   useEffect(() => {
@@ -487,6 +491,15 @@ export default function LiveTrackingMapInner({
     [course],
   );
 
+  const focusedProgress = useMemo(() => {
+    const focused = focusUserId ? riders.find((r) => r.userId === focusUserId) : null;
+    return focused ? progressFor(focused) : null;
+  }, [focusUserId, riders, progressFor]);
+
+  useEffect(() => {
+    onFocusedProgress?.(focusedProgress);
+  }, [focusedProgress, onFocusedProgress]);
+
   // Off-course watch list for race control (soft warning — never an alarm).
   useEffect(() => {
     if (!onOffCourse || !course) return;
@@ -671,15 +684,15 @@ export default function LiveTrackingMapInner({
 
   return (
     <div className="space-y-2">
-      <div className="flex items-center gap-2">
+      {!riderMode ? <div className="flex items-center gap-2">
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Find a rider by name or race number…"
           className="w-full rounded-xl bg-card px-3 py-2 text-sm text-ink ring-1 ring-border placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-cherry"
         />
-      </div>
-      {search.trim() ? (
+      </div> : null}
+      {!riderMode && search.trim() ? (
         <div className="flex flex-wrap gap-1.5">
           {filtered.slice(0, 8).map((r) => {
             const p = progressFor(r);
@@ -739,7 +752,7 @@ export default function LiveTrackingMapInner({
 
       <div
         ref={containerRef}
-        className="h-96 w-full overflow-hidden rounded-2xl ring-1 ring-border"
+        className={`${riderMode ? "h-[52dvh] min-h-80" : "h-96"} w-full overflow-hidden rounded-2xl ring-1 ring-border`}
       />
       {(matchedRoutes.length > 0 ? matchedRoutes : candidates).length > 0 ? (
         <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
@@ -757,7 +770,7 @@ export default function LiveTrackingMapInner({
         </div>
       ) : null}
 
-      <div className="flex flex-wrap items-center gap-2">
+      {!riderMode ? <div className="flex flex-wrap items-center gap-2">
         <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
           <MapPin className="h-3.5 w-3.5 text-cherry" />
           {riders.length > 0
@@ -773,7 +786,7 @@ export default function LiveTrackingMapInner({
             {showFinished ? "Hide" : "Show"} finished ({finishedCount})
           </button>
         ) : null}
-      </div>
+      </div> : null}
 
     </div>
   );
