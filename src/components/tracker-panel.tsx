@@ -74,6 +74,26 @@ function loadActive(eventId: string) {
   }
 }
 
+const ADMIN_SESSION_MS = 3 * 60 * 60_000;
+const RIDER_SESSION_MS = 12 * 60 * 60_000;
+const FINISH_RADIUS_M = 75;
+function loadSessionStart(eventId: string): number | null {
+  try {
+    const v = Number(localStorage.getItem(`rc-track-start:${eventId}`));
+    return Number.isFinite(v) && v > 0 ? v : null;
+  } catch {
+    return null;
+  }
+}
+function saveSessionStart(eventId: string, at: number | null) {
+  try {
+    if (at) localStorage.setItem(`rc-track-start:${eventId}`, String(at));
+    else localStorage.removeItem(`rc-track-start:${eventId}`);
+  } catch {
+    /* ignore */
+  }
+}
+
 function saveActive(eventId: string, active: boolean) {
   try {
     if (active) localStorage.setItem(activeKey(eventId), "1");
@@ -200,7 +220,11 @@ export function TrackerPanel({
       const remaining = [...pending];
       while (remaining.length > 0) {
         const batch = remaining.slice(0, 100);
-        await upload({ data: { eventId, points: batch } });
+        const res = await upload({ data: { eventId, points: batch, sessionStartedAt: loadSessionStart(eventId) } });
+        if (res && "expired" in res && res.expired) {
+          remaining.length = 0;
+          break;
+        }
         remaining.splice(0, batch.length);
       }
       bufferRef.current = [];
@@ -328,9 +352,50 @@ export function TrackerPanel({
   // Resume an in-progress session after navigating back to this page.
   useEffect(() => {
     if (!loadActive(eventId) || watchIdRef.current !== null) return;
+    const saved = loadSessionStart(eventId);
+    if (saved) setStartedAt(saved);
     setTracking(true);
     startTracking();
   }, [eventId, startTracking]);
+
+  // Hard session limit so a forgotten phone (or an admin test) never tracks for ever.
+  const sessionLimitMs = isAdmin || !computed.open ? ADMIN_SESSION_MS : RIDER_SESSION_MS;
+  const sessionLeftMs = tracking && startedAt ? startedAt + sessionLimitMs - elapsedNow : null;
+  const [autoStopNote, setAutoStopNote] = useState<string | null>(null);
+  const endSession = useCallback(
+    (note: string) => {
+      stopTracking();
+      setTracking(false);
+      saveActive(eventId, false);
+      saveSessionStart(eventId, null);
+      setAutoStopNote(note);
+    },
+    [stopTracking, eventId],
+  );
+  useEffect(() => {
+    if (sessionLeftMs !== null && sessionLeftMs <= 0) {
+      endSession(
+        isAdmin
+          ? "Test tracking stopped automatically after 3 hours."
+          : "Tracking stopped automatically after 12 hours. Start again if you are still riding.",
+      );
+    }
+  }, [sessionLeftMs, endSession, isAdmin]);
+  const extendSession = () => {
+    const next = Date.now() - sessionLimitMs + 60 * 60_000; // one more hour
+    const s = Math.max(startedAt ?? 0, next);
+    setStartedAt(s);
+    saveSessionStart(eventId, s);
+  };
+
+  // Stop at the finish line: most of the route covered and at its end.
+  useEffect(() => {
+    if (!tracking || !courseProgress) return;
+    const remaining = courseProgress.totalM - courseProgress.alongM;
+    if (courseProgress.pct >= 90 && remaining <= FINISH_RADIUS_M && courseProgress.offCourseM <= 150) {
+      endSession("You've finished — tracking stopped. Well ridden!");
+    }
+  }, [tracking, courseProgress, endSession]);
 
   // Enforce the window: stop the GPS watch the moment tracking closes.
   useEffect(() => {
@@ -344,8 +409,11 @@ export function TrackerPanel({
     if ((!windowState.open || startDistanceM === null || startDistanceM > START_RADIUS_M) && !tracking) return;
     if (tracking) stopTracking();
     else {
-      setStartedAt(Date.now());
-      setElapsedNow(Date.now());
+      const now = Date.now();
+      setStartedAt(now);
+      saveSessionStart(eventId, now);
+      setAutoStopNote(null);
+      setElapsedNow(now);
       setDistanceM(0);
       startTracking();
     }
@@ -475,6 +543,19 @@ export function TrackerPanel({
         : "Waiting for first upload";
   return (
     <div className="space-y-3">
+      {autoStopNote && !tracking ? (
+        <div className="rounded-xl bg-accent px-3 py-2 text-sm font-semibold text-ink ring-1 ring-border">{autoStopNote}</div>
+      ) : null}
+      {sessionLeftMs !== null && sessionLeftMs < 10 * 60_000 ? (
+        <div className="flex items-center gap-2 rounded-xl bg-accent px-3 py-2 text-xs font-semibold text-ink ring-1 ring-border">
+          <span className="flex-1">Tracking stops in {Math.max(1, Math.ceil(sessionLeftMs / 60_000))} min.</span>
+          {!isAdmin ? (
+            <button type="button" onClick={extendSession} className="rounded-full bg-cherry px-3 py-1 font-bold text-primary-foreground">
+              Keep tracking
+            </button>
+          ) : null}
+        </div>
+      ) : null}
       {tracking ? (
         <div className="relative overflow-hidden rounded-2xl bg-card ring-1 ring-border">
           <LiveTrackingMap

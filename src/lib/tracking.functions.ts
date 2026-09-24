@@ -36,10 +36,23 @@ export const uploadTrackingPoints = createServerFn({ method: "POST" })
         eventId: z.string().uuid(),
         entrantId: z.string().uuid().nullish(),
         points: z.array(pointSchema).min(1).max(200),
+        sessionStartedAt: z.number().nullish(),
       })
       .parse(input),
   )
   .handler(async ({ data, context }) => {
+    // Session cap: admin/crew tests stop after 3h, riders after 12h (+1h grace for "Keep tracking").
+    if (data.sessionStartedAt) {
+      const { data: roles } = await context.supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", context.userId);
+      const staff = (roles ?? []).some((r: { role: string }) => r.role === "admin" || r.role === "crew");
+      const limit = (staff ? 3 : 13) * 60 * 60_000 + 5 * 60_000;
+      if (Date.now() - data.sessionStartedAt > limit) {
+        return { ok: false as const, expired: true as const, uploaded: 0 };
+      }
+    }
     // Resolve the rider's entrant row so the live map can label the pin with
     // their name/bib instead of showing an anonymous dot.
     let entrantId = data.entrantId ?? null;
