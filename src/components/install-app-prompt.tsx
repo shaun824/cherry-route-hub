@@ -5,8 +5,8 @@ import { useSession } from "@/lib/auth";
 import { isStandalone } from "@/lib/push-client";
 
 const DISMISS_KEY = "rce.install-prompt-dismissed-at";
-/** Re-invite riders to install once a day, never once they've installed. */
-const SNOOZE_MS = 24 * 60 * 60 * 1000;
+/** Re-invite riders later the same day when background reliability matters. */
+const SNOOZE_MS = 6 * 60 * 60 * 1000;
 
 type BipEvent = Event & {
   prompt: () => Promise<void>;

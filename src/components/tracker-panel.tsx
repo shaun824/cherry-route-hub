@@ -2,12 +2,19 @@
 // Captures GPS every ~30s while tracking, buffers points locally (offline-safe),
 // and uploads batches once a minute when there's signal.
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Navigation, Play, Siren, Smartphone, Square } from "lucide-react";
+import { BatteryMedium, Clock3, Crosshair, LocateFixed, Play, Radio, Siren, Smartphone, Square, WifiOff } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { useAdminStore } from "@/lib/store";
 import { trackingWindow } from "@/lib/tracking-window";
 import { useIsAdmin } from "@/lib/auth";
+import { useSession } from "@/lib/auth";
+import { fetchEventInfo } from "@/lib/event-info";
+import { haversineMeters } from "@/lib/geo";
+import { resolveVenuePoint } from "@/lib/map-embed";
+import { LiveTrackingMap } from "@/components/live-tracking-map";
+import { Button } from "@/components/ui/button";
+import type { ProgressResult } from "@/lib/course-progress";
 import {
   cancelMySos,
   fetchMySos,
@@ -20,7 +27,7 @@ import {
   type TrackingPointInput,
 } from "@/lib/tracking.functions";
 
-type Coords = { lat: number; lng: number; accuracy: number } | null;
+type Coords = { lat: number; lng: number; accuracy: number; speedKph: number | null } | null;
 
 // Live mode: record and send a position every 5 seconds. Chosen over 3s to cut
 // database load ~40% at 300+ riders while staying well inside safety-tracking norms.
@@ -29,6 +36,14 @@ const MIN_POINT_GAP_MS = 5_000;
 
 // Press-and-hold duration before an SOS actually fires.
 const SOS_HOLD_MS = 2_000;
+const START_RADIUS_M = 1_000;
+
+function formatElapsed(ms: number) {
+  const totalMinutes = Math.max(0, Math.floor(ms / 60_000));
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  return hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
+}
 
 /** True when the Rider Hub is running as an installed app (home-screen icon). */
 function isInstalledApp() {
@@ -114,8 +129,30 @@ export function TrackerPanel({
   const [error, setError] = useState<string | null>(null);
   const [queued, setQueued] = useState(0);
   const [lastUploadAt, setLastUploadAt] = useState<Date | null>(null);
+  const [battery, setBattery] = useState<number | null>(null);
+  const [startedAt, setStartedAt] = useState<number | null>(null);
+  const [elapsedNow, setElapsedNow] = useState(() => Date.now());
+  const [distanceM, setDistanceM] = useState(0);
+  const [checkingStart, setCheckingStart] = useState(false);
+  const [startDistanceM, setStartDistanceM] = useState<number | null>(null);
+  const [startCheckError, setStartCheckError] = useState<string | null>(null);
+  const [courseProgress, setCourseProgress] = useState<ProgressResult | null>(null);
+  const [sosHadLocation, setSosHadLocation] = useState<boolean | null>(null);
+  const previousPointRef = useRef<{ lat: number; lng: number } | null>(null);
 
   const event = useAdminStore((s) => s.events.find((e) => e.id === eventId));
+  const { user } = useSession();
+  const eventInfoQ = useQuery({
+    queryKey: ["event-info", eventId],
+    queryFn: () => fetchEventInfo(eventId),
+    staleTime: 300_000,
+  });
+  const eventInfo = eventInfoQ.data;
+  const startPoint = resolveVenuePoint({
+    mapUrl: eventInfo?.map_embed_url,
+    lat: eventInfo?.venue_lat,
+    lng: eventInfo?.venue_lng,
+  });
   // Only this rider's own finish stops their tracking — not published results
   // for the field in general.
   const fetchMyResult = useServerFn(getMyResultStatus);
@@ -131,6 +168,11 @@ export function TrackerPanel({
     const id = window.setInterval(() => setClock(Date.now()), 30_000);
     return () => window.clearInterval(id);
   }, []);
+  useEffect(() => {
+    if (!tracking) return;
+    const id = window.setInterval(() => setElapsedNow(Date.now()), 1_000);
+    return () => window.clearInterval(id);
+  }, [tracking]);
   const resultsPublished = Boolean(myResult?.finished);
   const { isAdmin } = useIsAdmin();
   const computed = trackingWindow(event, { resultsPublished, now: new Date(clock) });
@@ -186,8 +228,10 @@ export function TrackerPanel({
         lat: pos.coords.latitude,
         lng: pos.coords.longitude,
         accuracy: pos.coords.accuracy,
+        speedKph: pos.coords.speed == null ? null : Math.max(0, pos.coords.speed * 3.6),
       });
       void batteryPct().then((pct) => {
+        setBattery(pct);
         bufferRef.current.push({
           lat: pos.coords.latitude,
           lng: pos.coords.longitude,
@@ -197,13 +241,21 @@ export function TrackerPanel({
         });
         setQueued(loadQueue(eventId).length + bufferRef.current.length);
         // Upload the very first point straight away so the rider appears on the
-        // live map within seconds; after that the 15s interval batches uploads
-        // instead of firing one request per second.
+        // live map within seconds; after that the 5s interval batches uploads.
         if (!firstFlushRef.current) {
           firstFlushRef.current = true;
           void flush();
         }
       });
+      const previous = previousPointRef.current;
+      if (previous) {
+        const step = haversineMeters(
+          [previous.lng, previous.lat],
+          [pos.coords.longitude, pos.coords.latitude],
+        );
+        if (step >= 3 && step < 500) setDistanceM((total) => total + step);
+      }
+      previousPointRef.current = { lat: pos.coords.latitude, lng: pos.coords.longitude };
 
     },
     [eventId, flush],
@@ -231,8 +283,47 @@ export function TrackerPanel({
       watchIdRef.current = null;
     }
     firstFlushRef.current = false;
+    previousPointRef.current = null;
     void flush(); // push the remaining buffer out
   }, [flush]);
+
+  const checkStartArea = useCallback(() => {
+    if (!startPoint) {
+      setStartCheckError("The event start location is not available yet. Please ask race control.");
+      return;
+    }
+    if (!("geolocation" in navigator)) {
+      setStartCheckError("This device cannot check your location.");
+      return;
+    }
+    setCheckingStart(true);
+    setStartCheckError(null);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const metres = haversineMeters(
+          [startPoint.lng, startPoint.lat],
+          [pos.coords.longitude, pos.coords.latitude],
+        );
+        setStartDistanceM(metres);
+        setCoords({
+          lat: pos.coords.latitude,
+          lng: pos.coords.longitude,
+          accuracy: pos.coords.accuracy,
+          speedKph: pos.coords.speed == null ? null : Math.max(0, pos.coords.speed * 3.6),
+        });
+        setCheckingStart(false);
+      },
+      (geoError) => {
+        setStartCheckError(
+          geoError.code === geoError.PERMISSION_DENIED
+            ? "Allow location access to confirm you are at the race village."
+            : "We could not confirm your location. Move into the open and try again.",
+        );
+        setCheckingStart(false);
+      },
+      { enableHighAccuracy: true, maximumAge: 15_000, timeout: 15_000 },
+    );
+  }, [startPoint]);
 
   // Resume an in-progress session after navigating back to this page.
   useEffect(() => {
@@ -250,9 +341,14 @@ export function TrackerPanel({
   }, [tracking, windowState.open, stopTracking, eventId]);
 
   function toggleTracking() {
-    if (!windowState.open && !tracking) return;
+    if ((!windowState.open || startDistanceM === null || startDistanceM > START_RADIUS_M) && !tracking) return;
     if (tracking) stopTracking();
-    else startTracking();
+    else {
+      setStartedAt(Date.now());
+      setElapsedNow(Date.now());
+      setDistanceM(0);
+      startTracking();
+    }
     setTracking((t) => !t);
     saveActive(eventId, !tracking);
   }
@@ -306,6 +402,7 @@ export function TrackerPanel({
   function triggerSos() {
     setError(null);
     const send = (pos: GeolocationPosition | null) => {
+      setSosHadLocation(Boolean(pos));
       void sendSos({
         data: {
           eventId,
@@ -360,39 +457,71 @@ export function TrackerPanel({
   const [needsInstall, setNeedsInstall] = useState(false);
   useEffect(() => setNeedsInstall(!isInstalledApp()), []);
 
-
-
-
+  const insideStartArea = startDistanceM !== null && startDistanceM <= START_RADIUS_M;
+  const canStart = windowState.open && insideStartArea;
+  const gpsQuality = !coords
+    ? "Finding GPS"
+    : coords.accuracy <= 20
+      ? "Good GPS"
+      : coords.accuracy <= 50
+        ? "Fair GPS"
+        : "Weak GPS";
+  const connectionState = typeof navigator !== "undefined" && !navigator.onLine
+    ? "Offline · safely queued"
+    : queued > 0
+      ? "Uploading saved points"
+      : lastUploadAt
+        ? "Sharing normally"
+        : "Waiting for first upload";
   return (
     <div className="space-y-3">
+      {tracking ? (
+        <div className="relative overflow-hidden rounded-2xl bg-card ring-1 ring-border">
+          <LiveTrackingMap
+            eventId={eventId}
+            focusUserId={user?.id ?? null}
+            riderMode
+            onFocusedProgress={setCourseProgress}
+            currentPosition={coords ? { lat: coords.lat, lng: coords.lng } : null}
+          />
+          <div className="absolute inset-x-3 top-3 z-[500] grid grid-cols-2 gap-1.5 rounded-xl bg-card/95 p-2.5 shadow-lg ring-1 ring-border backdrop-blur sm:grid-cols-4">
+            <span className="flex items-center gap-1.5 text-xs font-semibold text-ink"><Crosshair className="h-3.5 w-3.5 text-cherry" />{gpsQuality} · {coords ? `±${Math.round(coords.accuracy)}m` : "…"}</span>
+            <span className="flex items-center gap-1.5 text-xs font-semibold text-ink"><Radio className="h-3.5 w-3.5 text-cherry" />{connectionState}</span>
+            <span className="flex items-center gap-1.5 text-xs font-semibold text-ink"><BatteryMedium className="h-3.5 w-3.5 text-cherry" />{battery === null ? "Battery —" : `${battery}%`}</span>
+            <span className="flex items-center gap-1.5 text-xs font-semibold text-ink"><Clock3 className="h-3.5 w-3.5 text-cherry" />{formatElapsed(elapsedNow - (startedAt ?? elapsedNow))}</span>
+          </div>
+          <div className="absolute inset-x-3 bottom-3 z-[500] rounded-xl bg-card/95 p-3 shadow-lg ring-1 ring-border backdrop-blur">
+            <div className="grid grid-cols-3 gap-2 text-center">
+              <div><p className="text-base font-black text-ink">{courseProgress ? `${(courseProgress.alongM / 1000).toFixed(1)} km` : `${(distanceM / 1000).toFixed(1)} km`}</p><p className="text-[10px] font-bold uppercase text-ink-soft">Distance</p></div>
+              <div><p className="text-base font-black text-ink">{courseProgress ? `${Math.round(courseProgress.pct)}%` : "—"}</p><p className="text-[10px] font-bold uppercase text-ink-soft">Complete</p></div>
+              <div><p className="text-base font-black text-ink">{coords?.speedKph === null || coords?.speedKph === undefined ? "—" : coords.speedKph.toFixed(1)}</p><p className="text-[10px] font-bold uppercase text-ink-soft">km/h</p></div>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
       <div className="rounded-2xl bg-card p-4 ring-1 ring-border">
         <div className="flex items-center gap-2">
-          <Navigation className="h-4 w-4 text-cherry" />
+          <LocateFixed className="h-4 w-4 text-cherry" />
           <p className="text-[11px] font-bold uppercase tracking-wider text-ink-soft">
-            Your position{eventName ? ` · ${eventName}` : ""}
+            {tracking ? "Live tracking" : "Race-day readiness"}{eventName ? ` · ${eventName}` : ""}
           </p>
         </div>
-        {coords ? (
-          <div className="mt-2 space-y-0.5 font-mono text-sm text-ink">
-            <p>Lat  {coords.lat.toFixed(5)}°</p>
-            <p>Lng  {coords.lng.toFixed(5)}°</p>
-            <p className="text-xs text-muted-foreground">± {Math.round(coords.accuracy)}m accuracy</p>
+        {!tracking ? (
+          <div className="mt-3 space-y-2 text-sm">
+            <p className="flex items-center justify-between gap-3"><span className="text-ink-soft">Tracking time</span><strong className="text-right text-ink">{windowState.message}</strong></p>
+            <p className="flex items-center justify-between gap-3"><span className="text-ink-soft">Race village</span><strong className={insideStartArea ? "text-emerald-700" : "text-ink"}>{startDistanceM === null ? "Not checked" : insideStartArea ? `Ready · ${Math.round(startDistanceM)}m from start` : `${(startDistanceM / 1000).toFixed(1)} km away`}</strong></p>
+            <p className="flex items-center justify-between gap-3"><span className="text-ink-soft">Battery</span><strong className="text-ink">{battery === null ? "Check on start" : `${battery}%`}</strong></p>
+            <Button type="button" variant="outline" className="w-full" onClick={checkStartArea} disabled={checkingStart || eventInfoQ.isLoading}>
+              <LocateFixed className="h-4 w-4" />{checkingStart ? "Checking location…" : startDistanceM === null ? "Check my location" : "Retry location"}
+            </Button>
+            {startCheckError ? <p className="rounded-lg bg-destructive/10 px-3 py-2 text-xs font-semibold text-destructive">{startCheckError}</p> : null}
+            {startDistanceM !== null && !insideStartArea ? <p className="rounded-lg bg-amber-100 px-3 py-2 text-xs font-semibold text-amber-900">Tracking unlocks inside 1 km of the event start. Move closer, then retry.</p> : null}
           </div>
         ) : (
-          <p className="mt-2 text-sm text-muted-foreground">
-            {error ?? "Location not requested yet. Start tracking to share your position."}
-          </p>
+          <p className="mt-2 text-xs text-ink-soft">Positions record every 5 seconds. {queued > 0 ? `${queued} waiting safely on this phone.` : lastUploadAt ? `Last shared at ${lastUploadAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}.` : "Waiting for the first GPS fix."}</p>
         )}
-        {tracking ? (
-          <p className="mt-2 text-xs text-ink-soft">
-            {queued > 0
-              ? `${queued} point${queued === 1 ? "" : "s"} saved on your phone — will upload when there's signal.`
-              : lastUploadAt
-                ? `Live · last upload ${lastUploadAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`
-                : "Live · waiting for first GPS fix…"}
-          </p>
-        ) : null}
-        <p className="mt-2 text-xs text-ink-soft">{windowState.message}</p>
+        {error ? <p className="mt-2 flex items-start gap-1.5 rounded-lg bg-destructive/10 px-3 py-2 text-xs font-semibold text-destructive"><WifiOff className="mt-0.5 h-3.5 w-3.5 shrink-0" />{error}</p> : null}
         {needsInstall ? (
           <div className="mt-3 rounded-xl bg-amber-50 p-3 ring-1 ring-amber-300">
             <div className="flex items-center gap-2">
@@ -408,22 +537,19 @@ export function TrackerPanel({
             </p>
           </div>
         ) : null}
-        <button
+        <Button
           onClick={toggleTracking}
-          disabled={!windowState.open && !tracking}
-          className={`mt-3 disabled:cursor-not-allowed disabled:opacity-50 flex w-full items-center justify-center gap-2 rounded-xl py-3 text-sm font-bold transition-transform active:scale-[0.99] ${
-            tracking
-              ? "bg-secondary text-secondary-foreground"
-              : "cherry-gradient text-white shadow-md shadow-cherry/25"
-          }`}
+          disabled={!canStart && !tracking}
+          variant={tracking ? "secondary" : "default"}
+          className="mt-3 w-full"
         >
           {tracking ? <Square className="h-4 w-4" /> : <Play className="h-4 w-4" />}
           {tracking
             ? "Stop tracking"
             : windowState.open
-              ? "Start live tracking"
+              ? insideStartArea ? "Start live tracking" : "Check location to start"
               : "Tracking unavailable"}
-        </button>
+        </Button>
         {tracking && needsInstall ? (
           <p className="mt-2 text-xs font-semibold text-amber-800">
             Keep this screen on — tracking pauses when your phone locks unless the Rider Hub is
@@ -446,14 +572,15 @@ export function TrackerPanel({
                 ? " · Race control has seen it and is on the way."
                 : " · Waiting for race control to confirm…"}
             </p>
-            <button
+            <Button
+              variant="secondary"
               onClick={() =>
                 void cancelSos({ data: { eventId } }).then(() => void mySosQ.refetch())
               }
-              className="mt-3 w-full rounded-xl bg-secondary py-3 text-sm font-bold text-secondary-foreground active:scale-[0.99]"
+              className="mt-3 w-full"
             >
               I'm okay now — cancel my SOS
-            </button>
+            </Button>
           </>
         ) : (
           <>
@@ -462,18 +589,16 @@ export function TrackerPanel({
             </p>
             <div className="mt-3 flex flex-wrap gap-1.5">
               {SOS_REASONS.map((r) => (
-                <button
+                <Button
                   key={r}
                   type="button"
+                  variant={sosReason === r ? "default" : "outline"}
+                  size="sm"
                   onClick={() => setSosReason(r)}
-                  className={`rounded-full px-3 py-1.5 text-xs font-bold ring-1 transition-colors ${
-                    sosReason === r
-                      ? "bg-cherry text-white ring-cherry"
-                      : "bg-card text-ink ring-border"
-                  }`}
+                  className="rounded-full"
                 >
                   {SOS_REASON_LABELS[r]}
-                </button>
+                </Button>
               ))}
             </div>
             <input
@@ -482,12 +607,12 @@ export function TrackerPanel({
               placeholder="Add a short note (optional)"
               className="mt-2 w-full rounded-xl bg-card px-3 py-2.5 text-sm text-ink ring-1 ring-border focus:outline-none focus:ring-2 focus:ring-cherry"
             />
-            <button
+            <Button
               onPointerDown={startHold}
               onPointerUp={endHold}
               onPointerLeave={endHold}
               onPointerCancel={endHold}
-              className="relative mt-3 flex w-full items-center justify-center gap-2 overflow-hidden rounded-xl cherry-gradient py-4 text-base font-black uppercase tracking-widest text-white shadow-lg shadow-cherry/40 active:scale-[0.98] transition-transform"
+              className="relative mt-3 w-full overflow-hidden py-4 text-base font-black uppercase shadow-lg shadow-cherry/40"
             >
               <span
                 className="absolute inset-y-0 left-0 bg-white/30 transition-[width] duration-75"
@@ -498,10 +623,10 @@ export function TrackerPanel({
               <span className="relative">
                 {holdPct > 0 ? "Keep holding…" : "Hold 2s to send SOS"}
               </span>
-            </button>
+            </Button>
             {sosSent ? (
               <p className="mt-2 rounded-lg bg-cherry/10 px-3 py-2 text-center text-xs font-semibold text-cherry-deep">
-                SOS sent · Race control notified
+                SOS sent {sosHadLocation ? "with your location" : "without a GPS fix"} · Race control notified
               </p>
             ) : null}
           </>
