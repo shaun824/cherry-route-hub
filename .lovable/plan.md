@@ -13,7 +13,7 @@ Cherry Rider Hub already has the stronger rider safety foundation: phone GPS, fi
 
 ## 2. Strong pre-start and connection states
 
-- Before tracking, show one focused readiness screen: GPS permission, app installation/background reliability, battery and tracking opening time.
+- Before tracking, show one focused readiness screen: GPS permission, app installation/background reliability, battery, tracking opening time and distance from the event start. Only enable tracking when the rider is within 1 km of the start/race village, with a clear distance message and a retry-location action when they are outside it or GPS is unavailable.
 - Tie unavailable/start-window explanations directly to the Start button instead of leaving riders to interpret a separate message.
 - Give clear, distinct map states for: finding GPS, tracking normally, weak GPS, offline but safely queued, uploading queued points, stopped and finished.
 - Always show upload/GPS errors after a first fix; currently some errors disappear once coordinates exist.
