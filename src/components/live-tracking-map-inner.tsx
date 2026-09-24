@@ -21,7 +21,7 @@ import {
 } from "@/lib/course-progress";
 import {
   candidateDayIds,
-  matchRoutesForRiders,
+  categoryMatchesRoute,
   type RouteCandidate,
 } from "@/lib/tracking-route-overlay";
 
@@ -210,6 +210,13 @@ function popupContent(
   return wrap;
 }
 
+function routesKey(eventId: string) {
+  return `rc-routes:${eventId}`;
+}
+function favKey(eventId: string) {
+  return `rc-fav:${eventId}`;
+}
+
 function followKey(eventId: string) {
   return `rce-follow-${eventId}`;
 }
@@ -376,14 +383,16 @@ export default function LiveTrackingMapInner({
   const [candidates, setCandidates] = useState<RouteCandidate[]>([]);
   const routeLayersRef = useRef<Map<string, L.Polyline[]>>(new Map());
 
-  // Routes that could apply today (falls back to every day of the event).
+  const allDays = useMemo(
+    () => (event ? withRegistrationDayLabels(event.days ?? [], (event.schedule as any) ?? []) : []),
+    [event],
+  );
+  const todayDayIds = useMemo(() => candidateDayIds(event), [event]);
+
+  // Every route on every day is loaded so the picker can switch days.
   const routeSpecs = useMemo(() => {
-    if (!event) return [] as { route: any; dayId: string; dayLabel: string }[];
-    const only = candidateDayIds(event);
-    const days = withRegistrationDayLabels(event.days ?? [], (event.schedule as any) ?? []);
     const out: { route: any; dayId: string; dayLabel: string }[] = [];
-    for (const day of days) {
-      if (only && !only.includes(day.id)) continue;
+    for (const day of allDays) {
       const dayLabel =
         day.label ||
         new Date(day.date).toLocaleDateString("en-ZA", { day: "numeric", month: "short" });
@@ -392,7 +401,7 @@ export default function LiveTrackingMapInner({
       }
     }
     return out;
-  }, [event]);
+  }, [allDays]);
 
   const specKey = routeSpecs.map((s) => s.route.id).join(",");
 
@@ -405,29 +414,33 @@ export default function LiveTrackingMapInner({
     }
     (async () => {
       const out: RouteCandidate[] = [];
-      for (const spec of routeSpecs) {
-        const lines: LatLngAlt[][] = [];
-        for (const url of spec.route.kmlUrls ?? []) {
-          try {
-            const res = await fetch(url);
-            if (!res.ok) continue;
-            const layer = parseKml(await res.text());
-            for (const line of layer.lines) {
-              lines.push(capPolyline(simplifyPolyline(line, 8), 1500));
+      await Promise.all(
+        routeSpecs.map(async (spec) => {
+          const lines: LatLngAlt[][] = [];
+          for (const url of spec.route.kmlUrls ?? []) {
+            try {
+              const res = await fetch(url);
+              if (!res.ok) continue;
+              const layer = parseKml(await res.text());
+              for (const line of layer.lines) {
+                lines.push(capPolyline(simplifyPolyline(line, 8), 1500));
+              }
+            } catch (err) {
+              console.warn("[live-map] failed to load KML", url, err);
             }
-          } catch (err) {
-            console.warn("[live-map] failed to load KML", url, err);
           }
-        }
-        if (lines.length === 0) continue;
-        out.push({
-          route: spec.route,
-          dayId: spec.dayId,
-          dayLabel: spec.dayLabel,
-          color: spec.route.color || TIER_COLORS[spec.route.tier] || TIER_COLORS.Custom,
-          lines,
-        });
-      }
+          if (lines.length === 0) return;
+          out.push({
+            route: spec.route,
+            dayId: spec.dayId,
+            dayLabel: spec.dayLabel,
+            color: spec.route.color || TIER_COLORS[spec.route.tier] || TIER_COLORS.Custom,
+            lines,
+          });
+        }),
+      );
+      const order = routeSpecs.map((s) => s.route.id);
+      out.sort((x, y) => order.indexOf(x.route.id) - order.indexOf(y.route.id));
       if (!cancelled) setCandidates(out);
     })();
     return () => {
@@ -436,16 +449,66 @@ export default function LiveTrackingMapInner({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [specKey]);
 
-  // Cross-reference riders against the routes to decide what to highlight.
-  const matchedIds = useMemo(
-    () => matchRoutesForRiders(candidates, riders.map((r) => ({ lat: r.lat, lng: r.lng, category: r.category }))),
-    [candidates, riders],
+  // Day shown in the picker: today on race day, otherwise the first riding day.
+  const [pickedDay, setPickedDay] = useState<string | null>(null);
+  const dayOptions = useMemo(
+    () => allDays.filter((d) => candidates.some((c) => c.dayId === d.id)),
+    [allDays, candidates],
+  );
+  const activeDayId =
+    pickedDay ?? todayDayIds?.find((id) => dayOptions.some((d) => d.id === id)) ?? dayOptions[0]?.id ?? null;
+  const dayCandidates = useMemo(
+    () => candidates.filter((c) => !activeDayId || c.dayId === activeDayId),
+    [candidates, activeDayId],
   );
 
+  // Manually chosen overlays (remembered per event on this phone). null = automatic.
+  const [manualRoutes, setManualRoutes] = useState<string[] | null>(null);
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(routesKey(eventId));
+      if (raw) setManualRoutes(JSON.parse(raw));
+    } catch {
+      /* ignore */
+    }
+  }, [eventId]);
+  const saveManual = useCallback(
+    (ids: string[] | null) => {
+      setManualRoutes(ids);
+      try {
+        if (ids) localStorage.setItem(routesKey(eventId), JSON.stringify(ids));
+        else localStorage.removeItem(routesKey(eventId));
+      } catch {
+        /* ignore */
+      }
+    },
+    [eventId],
+  );
+
+  // Automatic: the route the followed rider entered (by entry class). No guessing by distance.
+  const followedRider = useMemo(
+    () => allRiders.find((r) => r.userId === (follow ?? focusUserId)) ?? null,
+    [allRiders, follow, focusUserId],
+  );
+  const autoIds = useMemo(() => {
+    const cats = followedRider ? [followedRider.category] : riders.map((r) => r.category);
+    const ids = new Set<string>();
+    for (const c of dayCandidates) if (cats.some((cat) => categoryMatchesRoute(cat, c.route))) ids.add(c.route.id);
+    return [...ids];
+  }, [followedRider, riders, dayCandidates]);
+  const routeUnknown = !manualRoutes && autoIds.length === 0 && dayCandidates.length > 1;
+  const matchedIds = useMemo(() => {
+    if (manualRoutes) return manualRoutes.filter((id) => candidates.some((c) => c.route.id === id));
+    return autoIds.length > 0 ? autoIds : dayCandidates.map((c) => c.route.id);
+  }, [manualRoutes, autoIds, dayCandidates, candidates]);
   const matchedRoutes = useMemo(
     () => candidates.filter((c) => matchedIds.includes(c.route.id)),
     [candidates, matchedIds],
   );
+  const toggleRoute = (id: string) => {
+    const base = manualRoutes ?? matchedIds;
+    saveManual(base.includes(id) ? base.filter((x) => x !== id) : [...base, id]);
+  };
 
   // Draw the course underneath the rider markers.
   useEffect(() => {
@@ -454,17 +517,15 @@ export default function LiveTrackingMapInner({
     for (const [, polys] of routeLayersRef.current) polys.forEach((p) => p.remove());
     routeLayersRef.current.clear();
 
-    const show = matchedRoutes.length > 0 ? matchedRoutes : candidates;
     const bounds: [number, number][] = [];
-    for (const c of show) {
-      const active = matchedRoutes.length === 0 || matchedIds.includes(c.route.id);
+    for (const c of matchedRoutes) {
       const polys = c.lines.map((line) => {
         const latlngs = line.map(([lng, lat]) => [lat, lng] as [number, number]);
         for (const ll of latlngs) bounds.push(ll);
         return L.polyline(latlngs, {
           color: c.color,
-          weight: active ? 5 : 3,
-          opacity: active ? 0.85 : 0.35,
+          weight: routeUnknown ? 3 : 5,
+          opacity: routeUnknown ? 0.45 : 0.85,
         })
           .addTo(map)
           .bindTooltip(`${c.route.name} · ${c.dayLabel}`, { sticky: true });
@@ -481,13 +542,15 @@ export default function LiveTrackingMapInner({
       for (const [, polys] of routeLayersRef.current) polys.forEach((p) => p.remove());
       routeLayersRef.current.clear();
     };
-  }, [candidates, matchedRoutes, matchedIds]);
+  }, [matchedRoutes, routeUnknown]);
 
-  // Course line used for progress + off-course checks (the matched route).
+  // Course line used for progress + off-course checks: the followed rider's route.
   const course: CourseLine | null = useMemo(() => {
-    const pick = matchedRoutes[0] ?? candidates[0];
+    const pick =
+      matchedRoutes.find((c) => followedRider && categoryMatchesRoute(followedRider.category, c.route)) ??
+      matchedRoutes[0];
     return pick ? buildCourseLine(pick.lines) : null;
-  }, [matchedRoutes, candidates]);
+  }, [matchedRoutes, followedRider]);
 
   const progressFor = useCallback(
     (r: LiveRiderPosition) => (course ? progressOnCourse(course, r.lat, r.lng) : null),
