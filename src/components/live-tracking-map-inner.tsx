@@ -707,7 +707,7 @@ export default function LiveTrackingMapInner({
   }, [isCrew, viewerLoc, selectedId, riders]);
 
   return (
-    <div className="space-y-2">
+    <div className="relative space-y-2">
       {!riderMode ? <div className="flex items-center gap-2">
         <input
           value={search}
