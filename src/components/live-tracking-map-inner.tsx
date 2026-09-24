@@ -3,13 +3,14 @@
 // The event's KML course is overlaid underneath, picked by cross-referencing the
 // riders' entry category / position against the event's routes.
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import "leaflet.markercluster";
 import "leaflet.markercluster/dist/MarkerCluster.css";
 import { useQuery } from "@tanstack/react-query";
 import { fetchLiveTracking, type LiveRiderPosition } from "@/lib/tracking.functions";
-import { Crosshair, MapPin, Route as RouteIcon } from "lucide-react";
+import { Crosshair, Layers, MapPin, Maximize2, Route as RouteIcon, Search, Star, X } from "lucide-react";
 import { useAdminStore } from "@/lib/store";
 import { withRegistrationDayLabels } from "@/lib/event-days";
 import { parseKml, simplifyPolyline, capPolyline, type LatLngAlt } from "@/lib/geo";
@@ -21,7 +22,7 @@ import {
 } from "@/lib/course-progress";
 import {
   candidateDayIds,
-  matchRoutesForRiders,
+  categoryMatchesRoute,
   type RouteCandidate,
 } from "@/lib/tracking-route-overlay";
 
@@ -47,7 +48,7 @@ function signalOf(recordedAt: string): Signal {
   return "live";
 }
 
-function markerIcon(signal: Signal, sos: boolean) {
+function markerIcon(signal: Signal, sos: boolean, fav = false) {
   if (sos) {
     return L.divIcon({
       className: "",
@@ -68,7 +69,8 @@ function markerIcon(signal: Signal, sos: boolean) {
       background:${color};
       border:3px solid #fff;box-shadow:0 1px 6px rgba(0,0,0,.4);
       ${signal === "lost" ? "opacity:.75;" : ""}
-    "></div>`,
+      position:relative;
+    ">${fav ? `<span style="position:absolute;top:-12px;left:6px;font-size:12px;color:#f59e0b;text-shadow:0 0 2px #fff;">★</span>` : ""}</div>`,
     iconSize: [18, 18],
     iconAnchor: [9, 9],
   });
@@ -210,6 +212,13 @@ function popupContent(
   return wrap;
 }
 
+function routesKey(eventId: string) {
+  return `rc-routes:${eventId}`;
+}
+function favKey(eventId: string) {
+  return `rc-fav:${eventId}`;
+}
+
 function followKey(eventId: string) {
   return `rce-follow-${eventId}`;
 }
@@ -234,7 +243,24 @@ export default function LiveTrackingMapInner({
   onFocusedProgress?: (progress: ReturnType<typeof progressOnCourse>) => void;
   currentPosition?: { lat: number; lng: number } | null;
 }) {
-  const containerRef = useRef<HTMLDivElement | null>(null);
+  // The Leaflet element is owned here and moved between the inline and the
+  // full-screen host, so the map keeps its state when switching views.
+  const [mapEl] = useState(() => {
+    const d = document.createElement("div");
+    d.style.width = "100%";
+    d.style.height = "100%";
+    return d;
+  });
+  const containerRef = useRef<HTMLDivElement | null>(mapEl);
+  const hostRef = useCallback(
+    (el: HTMLDivElement | null) => {
+      if (el && mapEl.parentElement !== el) {
+        el.appendChild(mapEl);
+        window.setTimeout(() => mapRef.current?.invalidateSize(), 30);
+      }
+    },
+    [mapEl],
+  );
   const mapRef = useRef<L.Map | null>(null);
   const clusterRef = useRef<L.MarkerClusterGroup | null>(null);
   const markersRef = useRef<Map<string, L.Marker>>(new Map());
@@ -244,6 +270,66 @@ export default function LiveTrackingMapInner({
   const programmaticMoveRef = useRef(false);
   const [follow, setFollow] = useState<string | null>(null);
   const [followPaused, setFollowPaused] = useState(false);
+  const [fullscreen, setFullscreen] = useState(false);
+  const [sheetTall, setSheetTall] = useState(false);
+  const [routesOpen, setRoutesOpen] = useState(false);
+  const [tab, setTab] = useState<"all" | "fav" | "finished">("all");
+  const [favs, setFavs] = useState<string[]>([]);
+  useEffect(() => {
+    try {
+      setFavs(JSON.parse(localStorage.getItem(favKey(eventId)) ?? "[]"));
+    } catch {
+      /* ignore */
+    }
+  }, [eventId]);
+  const toggleFav = useCallback(
+    (id: string) => {
+      setFavs((cur) => {
+        const next = cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id];
+        try {
+          localStorage.setItem(favKey(eventId), JSON.stringify(next));
+        } catch {
+          /* ignore */
+        }
+        return next;
+      });
+    },
+    [eventId],
+  );
+
+  // Full screen: phone back button / Escape close it; Leaflet needs a resize.
+  const openFullscreen = useCallback(() => {
+    setFullscreen(true);
+    try {
+      window.history.pushState({ rcLiveFs: true }, "");
+    } catch {
+      /* ignore */
+    }
+  }, []);
+  const closeFullscreen = useCallback(() => {
+    if (window.history.state?.rcLiveFs) window.history.back();
+    else setFullscreen(false);
+  }, []);
+  useEffect(() => {
+    if (!fullscreen) return;
+    const onPop = () => setFullscreen(false);
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") closeFullscreen();
+    };
+    window.addEventListener("popstate", onPop);
+    window.addEventListener("keydown", onKey);
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("popstate", onPop);
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prev;
+    };
+  }, [fullscreen, closeFullscreen]);
+  useEffect(() => {
+    const t = window.setTimeout(() => mapRef.current?.invalidateSize(), 60);
+    return () => window.clearTimeout(t);
+  }, [fullscreen, sheetTall]);
   const [search, setSearch] = useState("");
   const [showFinished, setShowFinished] = useState(false);
   const [viewerLoc, setViewerLoc] = useState<{ lat: number; lng: number } | null>(null);
@@ -376,14 +462,16 @@ export default function LiveTrackingMapInner({
   const [candidates, setCandidates] = useState<RouteCandidate[]>([]);
   const routeLayersRef = useRef<Map<string, L.Polyline[]>>(new Map());
 
-  // Routes that could apply today (falls back to every day of the event).
+  const allDays = useMemo(
+    () => (event ? withRegistrationDayLabels(event.days ?? [], (event.schedule as any) ?? []) : []),
+    [event],
+  );
+  const todayDayIds = useMemo(() => candidateDayIds(event), [event]);
+
+  // Every route on every day is loaded so the picker can switch days.
   const routeSpecs = useMemo(() => {
-    if (!event) return [] as { route: any; dayId: string; dayLabel: string }[];
-    const only = candidateDayIds(event);
-    const days = withRegistrationDayLabels(event.days ?? [], (event.schedule as any) ?? []);
     const out: { route: any; dayId: string; dayLabel: string }[] = [];
-    for (const day of days) {
-      if (only && !only.includes(day.id)) continue;
+    for (const day of allDays) {
       const dayLabel =
         day.label ||
         new Date(day.date).toLocaleDateString("en-ZA", { day: "numeric", month: "short" });
@@ -392,7 +480,7 @@ export default function LiveTrackingMapInner({
       }
     }
     return out;
-  }, [event]);
+  }, [allDays]);
 
   const specKey = routeSpecs.map((s) => s.route.id).join(",");
 
@@ -405,29 +493,33 @@ export default function LiveTrackingMapInner({
     }
     (async () => {
       const out: RouteCandidate[] = [];
-      for (const spec of routeSpecs) {
-        const lines: LatLngAlt[][] = [];
-        for (const url of spec.route.kmlUrls ?? []) {
-          try {
-            const res = await fetch(url);
-            if (!res.ok) continue;
-            const layer = parseKml(await res.text());
-            for (const line of layer.lines) {
-              lines.push(capPolyline(simplifyPolyline(line, 8), 1500));
+      await Promise.all(
+        routeSpecs.map(async (spec) => {
+          const lines: LatLngAlt[][] = [];
+          for (const url of spec.route.kmlUrls ?? []) {
+            try {
+              const res = await fetch(url);
+              if (!res.ok) continue;
+              const layer = parseKml(await res.text());
+              for (const line of layer.lines) {
+                lines.push(capPolyline(simplifyPolyline(line, 8), 1500));
+              }
+            } catch (err) {
+              console.warn("[live-map] failed to load KML", url, err);
             }
-          } catch (err) {
-            console.warn("[live-map] failed to load KML", url, err);
           }
-        }
-        if (lines.length === 0) continue;
-        out.push({
-          route: spec.route,
-          dayId: spec.dayId,
-          dayLabel: spec.dayLabel,
-          color: spec.route.color || TIER_COLORS[spec.route.tier] || TIER_COLORS.Custom,
-          lines,
-        });
-      }
+          if (lines.length === 0) return;
+          out.push({
+            route: spec.route,
+            dayId: spec.dayId,
+            dayLabel: spec.dayLabel,
+            color: spec.route.color || TIER_COLORS[spec.route.tier] || TIER_COLORS.Custom,
+            lines,
+          });
+        }),
+      );
+      const order = routeSpecs.map((s) => s.route.id);
+      out.sort((x, y) => order.indexOf(x.route.id) - order.indexOf(y.route.id));
       if (!cancelled) setCandidates(out);
     })();
     return () => {
@@ -436,16 +528,66 @@ export default function LiveTrackingMapInner({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [specKey]);
 
-  // Cross-reference riders against the routes to decide what to highlight.
-  const matchedIds = useMemo(
-    () => matchRoutesForRiders(candidates, riders.map((r) => ({ lat: r.lat, lng: r.lng, category: r.category }))),
-    [candidates, riders],
+  // Day shown in the picker: today on race day, otherwise the first riding day.
+  const [pickedDay, setPickedDay] = useState<string | null>(null);
+  const dayOptions = useMemo(
+    () => allDays.filter((d) => candidates.some((c) => c.dayId === d.id)),
+    [allDays, candidates],
+  );
+  const activeDayId =
+    pickedDay ?? todayDayIds?.find((id) => dayOptions.some((d) => d.id === id)) ?? dayOptions[0]?.id ?? null;
+  const dayCandidates = useMemo(
+    () => candidates.filter((c) => !activeDayId || c.dayId === activeDayId),
+    [candidates, activeDayId],
   );
 
+  // Manually chosen overlays (remembered per event on this phone). null = automatic.
+  const [manualRoutes, setManualRoutes] = useState<string[] | null>(null);
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(routesKey(eventId));
+      if (raw) setManualRoutes(JSON.parse(raw));
+    } catch {
+      /* ignore */
+    }
+  }, [eventId]);
+  const saveManual = useCallback(
+    (ids: string[] | null) => {
+      setManualRoutes(ids);
+      try {
+        if (ids) localStorage.setItem(routesKey(eventId), JSON.stringify(ids));
+        else localStorage.removeItem(routesKey(eventId));
+      } catch {
+        /* ignore */
+      }
+    },
+    [eventId],
+  );
+
+  // Automatic: the route the followed rider entered (by entry class). No guessing by distance.
+  const followedRider = useMemo(
+    () => allRiders.find((r) => r.userId === (follow ?? focusUserId)) ?? null,
+    [allRiders, follow, focusUserId],
+  );
+  const autoIds = useMemo(() => {
+    const cats = followedRider ? [followedRider.category] : riders.map((r) => r.category);
+    const ids = new Set<string>();
+    for (const c of dayCandidates) if (cats.some((cat) => categoryMatchesRoute(cat, c.route))) ids.add(c.route.id);
+    return [...ids];
+  }, [followedRider, riders, dayCandidates]);
+  const routeUnknown = !manualRoutes && autoIds.length === 0 && dayCandidates.length > 1;
+  const matchedIds = useMemo(() => {
+    if (manualRoutes) return manualRoutes.filter((id) => candidates.some((c) => c.route.id === id));
+    return autoIds.length > 0 ? autoIds : dayCandidates.map((c) => c.route.id);
+  }, [manualRoutes, autoIds, dayCandidates, candidates]);
   const matchedRoutes = useMemo(
     () => candidates.filter((c) => matchedIds.includes(c.route.id)),
     [candidates, matchedIds],
   );
+  const toggleRoute = (id: string) => {
+    const base = manualRoutes ?? matchedIds;
+    saveManual(base.includes(id) ? base.filter((x) => x !== id) : [...base, id]);
+  };
 
   // Draw the course underneath the rider markers.
   useEffect(() => {
@@ -454,17 +596,15 @@ export default function LiveTrackingMapInner({
     for (const [, polys] of routeLayersRef.current) polys.forEach((p) => p.remove());
     routeLayersRef.current.clear();
 
-    const show = matchedRoutes.length > 0 ? matchedRoutes : candidates;
     const bounds: [number, number][] = [];
-    for (const c of show) {
-      const active = matchedRoutes.length === 0 || matchedIds.includes(c.route.id);
+    for (const c of matchedRoutes) {
       const polys = c.lines.map((line) => {
         const latlngs = line.map(([lng, lat]) => [lat, lng] as [number, number]);
         for (const ll of latlngs) bounds.push(ll);
         return L.polyline(latlngs, {
           color: c.color,
-          weight: active ? 5 : 3,
-          opacity: active ? 0.85 : 0.35,
+          weight: routeUnknown ? 3 : 5,
+          opacity: routeUnknown ? 0.45 : 0.85,
         })
           .addTo(map)
           .bindTooltip(`${c.route.name} · ${c.dayLabel}`, { sticky: true });
@@ -481,13 +621,15 @@ export default function LiveTrackingMapInner({
       for (const [, polys] of routeLayersRef.current) polys.forEach((p) => p.remove());
       routeLayersRef.current.clear();
     };
-  }, [candidates, matchedRoutes, matchedIds]);
+  }, [matchedRoutes, routeUnknown]);
 
-  // Course line used for progress + off-course checks (the matched route).
+  // Course line used for progress + off-course checks: the followed rider's route.
   const course: CourseLine | null = useMemo(() => {
-    const pick = matchedRoutes[0] ?? candidates[0];
+    const pick =
+      matchedRoutes.find((c) => followedRider && categoryMatchesRoute(followedRider.category, c.route)) ??
+      matchedRoutes[0];
     return pick ? buildCourseLine(pick.lines) : null;
-  }, [matchedRoutes, candidates]);
+  }, [matchedRoutes, followedRider]);
 
   const progressFor = useCallback(
     (r: LiveRiderPosition) => (course ? progressOnCourse(course, r.lat, r.lng) : null),
@@ -573,7 +715,7 @@ export default function LiveTrackingMapInner({
       const existing = markersRef.current.get(r.userId);
       if (existing) {
         animateTo(r.userId, existing, r.lat, r.lng);
-        existing.setIcon(markerIcon(signal, r.sos));
+        existing.setIcon(markerIcon(signal, r.sos, favs.includes(r.userId)));
         // An SOS pin must live outside the cluster group so it always shows.
         const inCluster = cluster.hasLayer(existing);
         if (r.sos && inCluster) {
@@ -588,7 +730,7 @@ export default function LiveTrackingMapInner({
           existing.openPopup();
         }
       } else {
-        const m = L.marker([r.lat, r.lng], { icon: markerIcon(signal, r.sos) }).bindPopup(
+        const m = L.marker([r.lat, r.lng], { icon: markerIcon(signal, r.sos, favs.includes(r.userId)) }).bindPopup(
           popupContent(r, isCrew, viewerLoc, progressText),
         );
         if (r.sos) m.addTo(map);
@@ -677,7 +819,7 @@ export default function LiveTrackingMapInner({
       fittedRef.current = true;
       window.setTimeout(() => (programmaticMoveRef.current = false), 700);
     }
-  }, [riders, follow, followPaused, isCrew, viewerLoc, selectedId, animateTo, progressFor]);
+  }, [riders, follow, followPaused, isCrew, viewerLoc, selectedId, animateTo, progressFor, favs]);
 
 
   // Draw/refresh the dashed guide line from viewer to selected rider.
@@ -706,17 +848,79 @@ export default function LiveTrackingMapInner({
     };
   }, [isCrew, viewerLoc, selectedId, riders]);
 
-  return (
-    <div className="relative space-y-2">
-      {!riderMode ? <div className="flex items-center gap-2">
-        <input
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Find a rider by name or race number…"
-          className="w-full rounded-xl bg-card px-3 py-2 text-sm text-ink ring-1 ring-border placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-cherry"
-        />
-      </div> : null}
-      {!riderMode && search.trim() ? (
+  const focusRider = (r: LiveRiderPosition) => {
+    startFollowing(r.userId);
+    const map = mapRef.current;
+    if (map) {
+      programmaticMoveRef.current = true;
+      map.setView([r.lat, r.lng], Math.max(map.getZoom(), 14));
+      window.setTimeout(() => (programmaticMoveRef.current = false), 700);
+    }
+    if (fullscreen) setSheetTall(false);
+  };
+
+  const sheetList = (() => {
+    const q = search.trim().toLowerCase();
+    let list = tab === "finished" ? allRiders.filter((r) => r.finished) : tab === "fav" ? allRiders.filter((r) => favs.includes(r.userId)) : riders;
+    if (q)
+      list = list.filter(
+        (r) => (r.riderName ?? "").toLowerCase().includes(q) || (r.bib ?? "").toLowerCase().includes(q),
+      );
+    return [...list].sort(
+      (x, y) =>
+        (isCrew ? Number(y.sos) - Number(x.sos) : 0) ||
+        Number(favs.includes(y.userId)) - Number(favs.includes(x.userId)) ||
+        (x.riderName ?? "").localeCompare(y.riderName ?? ""),
+    );
+  })();
+
+  const freshness = (r: LiveRiderPosition) => {
+    const sig = signalOf(r.recordedAt);
+    const label = sig === "live" ? formatAgo(r.recordedAt) : sig === "stale" ? `${formatAgo(r.recordedAt)}` : "signal lost";
+    const cls = sig === "live" ? "bg-emerald-500/15 text-emerald-700" : sig === "stale" ? "bg-amber-500/15 text-amber-700" : "bg-muted text-muted-foreground";
+    return <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${cls}`}>{label}</span>;
+  };
+
+  const legendRoutes = matchedRoutes;
+
+  const tree = (
+    <div
+      className={
+        fullscreen
+          ? "fixed inset-0 z-[1000] flex flex-col bg-background"
+          : "relative space-y-2"
+      }
+    >
+      {fullscreen ? (
+        <div className="flex items-center gap-2 border-b border-border bg-card px-3 pb-2 pt-[max(0.5rem,env(safe-area-inset-top))]">
+          <button
+            type="button"
+            onClick={closeFullscreen}
+            aria-label="Close full screen"
+            className="grid h-9 w-9 place-items-center rounded-full bg-secondary text-ink"
+          >
+            <X className="h-4 w-4" />
+          </button>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-bold text-ink">{event?.name ?? "Live tracking"}</p>
+            <p className="truncate text-[11px] text-muted-foreground">
+              {dayOptions.find((d) => d.id === activeDayId)?.label ?? "Live"} · {riders.length} on course
+            </p>
+          </div>
+        </div>
+      ) : null}
+
+      {!riderMode && !fullscreen ? (
+        <div className="flex items-center gap-2">
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Find a rider by name or race number…"
+            className="w-full rounded-xl bg-card px-3 py-2 text-sm text-ink ring-1 ring-border placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-cherry"
+          />
+        </div>
+      ) : null}
+      {!riderMode && !fullscreen && search.trim() ? (
         <div className="flex flex-wrap gap-1.5">
           {filtered.slice(0, 8).map((r) => {
             const p = progressFor(r);
@@ -724,21 +928,14 @@ export default function LiveTrackingMapInner({
               <button
                 key={r.userId}
                 type="button"
-                onClick={() => {
-                  startFollowing(r.userId);
-                  const map = mapRef.current;
-                  if (map) {
-                    programmaticMoveRef.current = true;
-                    map.setView([r.lat, r.lng], Math.max(map.getZoom(), 14));
-                    window.setTimeout(() => (programmaticMoveRef.current = false), 700);
-                  }
-                }}
+                onClick={() => focusRider(r)}
                 className={`rounded-full px-3 py-1 text-xs font-semibold ring-1 transition-colors ${
                   follow === r.userId
                     ? "bg-cherry text-white ring-cherry"
                     : "bg-card text-ink ring-border hover:bg-accent"
                 }`}
               >
+                {favs.includes(r.userId) ? "★ " : ""}
                 {r.riderName ?? "Rider"}
                 {r.bib ? ` · #${r.bib}` : ""}
                 {p && p.offCourseM < 1000 ? ` · ${formatProgress(p)}` : ""}
@@ -748,80 +945,231 @@ export default function LiveTrackingMapInner({
         </div>
       ) : null}
 
-      {follow ? (
+      {follow && !fullscreen && !riderMode ? (
         <div className="flex flex-wrap items-center gap-2 rounded-xl bg-card px-3 py-2 text-xs ring-1 ring-border">
           <span className="font-semibold text-ink">
-            Following{" "}
-            {riders.find((r) => r.userId === follow)?.riderName ?? "this rider"}
+            Following {followedRider?.riderName ?? "this rider"}
             {followPaused ? " · paused while you move the map" : ""}
           </span>
-          {followPaused ? (
-            <button
-              type="button"
-              onClick={() => setFollowPaused(false)}
-              className="ml-auto inline-flex items-center gap-1 rounded-full bg-cherry px-3 py-1 font-bold text-white"
-            >
-              <Crosshair className="h-3.5 w-3.5" /> Re-centre
-            </button>
-          ) : null}
           <button
             type="button"
             onClick={() => startFollowing(null)}
-            className={`rounded-full bg-secondary px-3 py-1 font-semibold text-secondary-foreground ${followPaused ? "" : "ml-auto"}`}
+            className="ml-auto rounded-full bg-secondary px-3 py-1 font-semibold text-secondary-foreground"
           >
             Stop following
           </button>
         </div>
       ) : null}
 
-      {riderMode && followPaused ? (
-        <button
-          type="button"
-          onClick={() => setFollowPaused(false)}
-          className="absolute right-4 top-24 z-[600] inline-flex items-center gap-1 rounded-full bg-cherry px-3 py-2 text-xs font-bold text-white shadow-lg"
+      <div className={fullscreen ? "relative min-h-0 flex-1" : "relative"}>
+        <div
+          ref={hostRef}
+          className={`${fullscreen ? "h-full" : riderMode ? "h-[52dvh] min-h-80 rounded-2xl ring-1 ring-border" : "h-96 rounded-2xl ring-1 ring-border"} w-full overflow-hidden`}
+        />
+        <div className={`absolute right-3 z-[600] flex flex-col items-end gap-2 ${riderMode && !fullscreen ? "top-24" : "top-3"}`}>
+          {!fullscreen ? (
+            <button
+              type="button"
+              onClick={openFullscreen}
+              className="inline-flex items-center gap-1 rounded-full bg-card px-3 py-2 text-xs font-bold text-ink shadow-lg ring-1 ring-border"
+            >
+              <Maximize2 className="h-3.5 w-3.5" /> Full screen
+            </button>
+          ) : null}
+          {candidates.length > 0 ? (
+            <button
+              type="button"
+              onClick={() => setRoutesOpen((o) => !o)}
+              className="inline-flex items-center gap-1 rounded-full bg-card px-3 py-2 text-xs font-bold text-ink shadow-lg ring-1 ring-border"
+            >
+              <Layers className="h-3.5 w-3.5 text-cherry" /> Routes
+            </button>
+          ) : null}
+          {follow && followPaused ? (
+            <button
+              type="button"
+              onClick={() => setFollowPaused(false)}
+              className="inline-flex items-center gap-1 rounded-full bg-cherry px-3 py-2 text-xs font-bold text-white shadow-lg"
+            >
+              <Crosshair className="h-3.5 w-3.5" /> Re-centre
+            </button>
+          ) : null}
+          {routesOpen ? (
+            <div className="w-64 max-w-[80vw] rounded-2xl bg-card p-3 text-xs shadow-xl ring-1 ring-border">
+              <div className="mb-2 flex items-center justify-between">
+                <p className="font-bold text-ink">Route overlays</p>
+                <button type="button" onClick={() => setRoutesOpen(false)} aria-label="Close routes">
+                  <X className="h-3.5 w-3.5 text-muted-foreground" />
+                </button>
+              </div>
+              {dayOptions.length > 1 ? (
+                <div className="mb-2 flex flex-wrap gap-1">
+                  {dayOptions.map((d) => (
+                    <button
+                      key={d.id}
+                      type="button"
+                      onClick={() => setPickedDay(d.id)}
+                      className={`rounded-full px-2.5 py-1 font-semibold ring-1 ${
+                        d.id === activeDayId ? "bg-cherry text-white ring-cherry" : "bg-card text-ink ring-border"
+                      }`}
+                    >
+                      {d.label}
+                    </button>
+                  ))}
+                </div>
+              ) : null}
+              <div className="space-y-1">
+                {dayCandidates.map((c) => {
+                  const on = matchedIds.includes(c.route.id);
+                  return (
+                    <button
+                      key={c.route.id}
+                      type="button"
+                      onClick={() => toggleRoute(c.route.id)}
+                      className={`flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left ${on ? "bg-accent" : ""}`}
+                    >
+                      <span
+                        className={`grid h-4 w-4 place-items-center rounded border ${on ? "border-cherry bg-cherry text-white" : "border-border"}`}
+                      >
+                        {on ? "✓" : ""}
+                      </span>
+                      <span className="inline-block h-2 w-5 rounded-full" style={{ backgroundColor: c.color }} />
+                      <span className="font-medium text-ink">{c.route.name}</span>
+                    </button>
+                  );
+                })}
+              </div>
+              {manualRoutes ? (
+                <button
+                  type="button"
+                  onClick={() => saveManual(null)}
+                  className="mt-2 w-full rounded-full bg-secondary px-3 py-1.5 font-semibold text-secondary-foreground"
+                >
+                  Reset to rider's route
+                </button>
+              ) : null}
+            </div>
+          ) : null}
+        </div>
+      </div>
+
+      {fullscreen ? (
+        <div
+          className={`flex flex-col border-t border-border bg-card pb-[env(safe-area-inset-bottom)] shadow-[0_-8px_24px_rgba(0,0,0,.12)] ${
+            sheetTall ? "h-[60dvh]" : "h-[34dvh]"
+          }`}
         >
-          <Crosshair className="h-3.5 w-3.5" /> Re-centre
-        </button>
+          <button
+            type="button"
+            onClick={() => setSheetTall((t) => !t)}
+            aria-label={sheetTall ? "Shrink rider list" : "Expand rider list"}
+            className="mx-auto my-2 h-1.5 w-12 rounded-full bg-border"
+          />
+          <div className="px-3">
+            <div className="relative">
+              <Search className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                onFocus={() => setSheetTall(true)}
+                placeholder="Search name or race number"
+                className="w-full rounded-xl bg-background py-2 pl-9 pr-3 text-sm text-ink ring-1 ring-border focus:outline-none focus:ring-2 focus:ring-cherry"
+              />
+            </div>
+            <div className="mt-2 flex gap-1.5">
+              {(
+                [
+                  ["all", `All (${riders.length})`],
+                  ["fav", `★ Favourites (${favs.length})`],
+                  ["finished", `Finished (${finishedCount})`],
+                ] as const
+              ).map(([k, label]) => (
+                <button
+                  key={k}
+                  type="button"
+                  onClick={() => setTab(k)}
+                  className={`rounded-full px-3 py-1 text-xs font-semibold ring-1 ${
+                    tab === k ? "bg-cherry text-white ring-cherry" : "bg-card text-ink ring-border"
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+            {routeUnknown ? (
+              <p className="mt-2 text-[11px] text-muted-foreground">Route unknown for this rider — choose one under Routes.</p>
+            ) : null}
+          </div>
+          <ul className="mt-2 min-h-0 flex-1 divide-y divide-border overflow-y-auto px-3">
+            {sheetList.length === 0 ? (
+              <li className="py-6 text-center text-xs text-muted-foreground">
+                {tab === "fav" ? "Tap the star next to a rider to add them here." : "No riders to show yet."}
+              </li>
+            ) : null}
+            {sheetList.map((r) => {
+              const p = progressFor(r);
+              const fav = favs.includes(r.userId);
+              return (
+                <li key={r.userId} className={`flex items-center gap-2 py-2 ${follow === r.userId ? "bg-accent/60" : ""}`}>
+                  <button
+                    type="button"
+                    onClick={() => toggleFav(r.userId)}
+                    aria-label={fav ? "Remove favourite" : "Add favourite"}
+                    className="grid h-8 w-8 place-items-center"
+                  >
+                    <Star className={`h-4 w-4 ${fav ? "fill-amber-400 text-amber-400" : "text-muted-foreground"}`} />
+                  </button>
+                  <button type="button" onClick={() => focusRider(r)} className="min-w-0 flex-1 text-left">
+                    <p className="truncate text-sm font-semibold text-ink">
+                      {isCrew && r.sos ? <span className="mr-1 rounded bg-destructive px-1 text-[10px] text-destructive-foreground">SOS</span> : null}
+                      {r.riderName ?? "Rider"}
+                      {r.bib ? <span className="text-muted-foreground"> #{r.bib}</span> : null}
+                    </p>
+                    <p className="truncate text-[11px] text-muted-foreground">
+                      {[r.category, p && p.offCourseM < 1000 ? formatProgress(p) : null].filter(Boolean).join(" · ")}
+                    </p>
+                  </button>
+                  {freshness(r)}
+                </li>
+              );
+            })}
+          </ul>
+        </div>
       ) : null}
 
-      <div
-        ref={containerRef}
-        className={`${riderMode ? "h-[52dvh] min-h-80" : "h-96"} w-full overflow-hidden rounded-2xl ring-1 ring-border`}
-      />
-      {(matchedRoutes.length > 0 ? matchedRoutes : candidates).length > 0 ? (
+      {!fullscreen && legendRoutes.length > 0 ? (
         <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
           <RouteIcon className="h-3.5 w-3.5 text-cherry" />
-          <span>{matchedRoutes.length > 0 ? "Your route" : "Event routes"}:</span>
-          {(matchedRoutes.length > 0 ? matchedRoutes : candidates).map((c) => (
+          <span>{routeUnknown ? "Route unknown — showing all" : manualRoutes ? "Showing" : "Rider's route"}:</span>
+          {legendRoutes.map((c) => (
             <span key={c.route.id} className="inline-flex items-center gap-1.5 font-medium text-ink">
-              <span
-                className="inline-block h-2.5 w-6 rounded-full"
-                style={{ backgroundColor: c.color }}
-              />
+              <span className="inline-block h-2.5 w-6 rounded-full" style={{ backgroundColor: c.color }} />
               {c.route.name} · {c.dayLabel}
             </span>
           ))}
         </div>
       ) : null}
 
-      {!riderMode ? <div className="flex flex-wrap items-center gap-2">
-        <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
-          <MapPin className="h-3.5 w-3.5 text-cherry" />
-          {riders.length > 0
-            ? `${riders.length} rider${riders.length === 1 ? "" : "s"} on course · updates every 3 seconds`
-            : "No riders are sharing their position yet — dots appear here once riders start tracking."}
-        </p>
-        {finishedCount > 0 ? (
-          <button
-            type="button"
-            onClick={() => setShowFinished((s) => !s)}
-            className="ml-auto rounded-full bg-card px-3 py-1 text-xs font-semibold text-ink ring-1 ring-border"
-          >
-            {showFinished ? "Hide" : "Show"} finished ({finishedCount})
-          </button>
-        ) : null}
-      </div> : null}
-
+      {!riderMode && !fullscreen ? (
+        <div className="flex flex-wrap items-center gap-2">
+          <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <MapPin className="h-3.5 w-3.5 text-cherry" />
+            {riders.length > 0
+              ? `${riders.length} rider${riders.length === 1 ? "" : "s"} on course · updates every 3 seconds`
+              : "No riders are sharing their position yet — dots appear here once riders start tracking."}
+          </p>
+          {finishedCount > 0 ? (
+            <button
+              type="button"
+              onClick={() => setShowFinished((s) => !s)}
+              className="ml-auto rounded-full bg-card px-3 py-1 text-xs font-semibold text-ink ring-1 ring-border"
+            >
+              {showFinished ? "Hide" : "Show"} finished ({finishedCount})
+            </button>
+          ) : null}
+        </div>
+      ) : null}
     </div>
   );
+  return fullscreen ? createPortal(tree, document.body) : tree;
 }
