@@ -132,7 +132,7 @@ export const answerReadinessQuestion = createServerFn({ method: "POST" })
         .from("business_knowledge")
         .select("id, title, body")
         .eq("event_id", data.eventId)
-        .eq("source_ref", ref)
+        .eq("source_ref", ref as string)
         .maybeSingle();
       if (row) existing = row as any;
     }
