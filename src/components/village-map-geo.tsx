@@ -398,7 +398,7 @@ function tentIcon(label: string, active: boolean, compact = false, color = "#38b
   return L.divIcon({
     className: "rce-village-tent",
     html: compact
-      ? `<span aria-hidden="true" style="display:block;width:9px;height:9px;border-radius:2px;background:${color};border:1.5px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.65)"></span>`
+      ? `<span aria-hidden="true" style="display:block;width:12px;height:12px;border-radius:3px;background:${color};border:2px solid #fff;box-shadow:0 1px 5px rgba(0,0,0,.75)"></span>`
       : `<div style="display:flex;flex-direction:column;align-items:center">
       <span style="background:${bg};color:#fff;font-size:10px;font-weight:800;padding:2px 6px;border-radius:6px;white-space:nowrap;border:${
         active ? "2px solid #fff" : "1px solid rgba(255,255,255,.6)"
@@ -407,8 +407,8 @@ function tentIcon(label: string, active: boolean, compact = false, color = "#38b
       )}</span>
       <span style="width:6px;height:6px;background:${bg};transform:rotate(45deg) translateY(-2px);border-radius:1px"></span>
     </div>`,
-    iconSize: compact ? [9, 9] : [10, 10],
-    iconAnchor: compact ? [4.5, 4.5] : [5, 14],
+    iconSize: compact ? [12, 12] : [10, 10],
+    iconAnchor: compact ? [6, 6] : [5, 14],
   });
 }
 
@@ -889,7 +889,9 @@ export default function VillageMapGeo({
             // Villages with hundreds of tents stay smooth because off-screen
             // pins are never mounted.
             if (!hot && !inView(t.lat, t.lng)) return null;
-             const showNumber = hot || zoom >= 20 || tentLabels.has(t.id);
+             const number = Number(normalizedNumber(t.label));
+             const sampledNumber = Number.isFinite(number) && number % (zoom >= 18.5 ? 5 : 10) === 0;
+             const showNumber = hot || zoom >= 20 || sampledNumber || (zoom >= 19 && tentLabels.has(t.id));
              const tentColor = meta.id === "luxury" ? "#f59e0b" : "#38bdf8";
 
             return (
