@@ -636,13 +636,18 @@ export default function LiveTrackingMapInner({
     [course],
   );
 
+  // Key on primitive coords so a fresh {lat,lng} object from the parent each
+  // render doesn't recompute progress and loop through onFocusedProgress.
+  const posLat = currentPosition?.lat ?? null;
+  const posLng = currentPosition?.lng ?? null;
+
   const focusedProgress = useMemo(() => {
-    if (currentPosition && course) {
-      return progressOnCourse(course, currentPosition.lat, currentPosition.lng);
+    if (posLat !== null && posLng !== null && course) {
+      return progressOnCourse(course, posLat, posLng);
     }
     const focused = focusUserId ? riders.find((r) => r.userId === focusUserId) : null;
     return focused ? progressFor(focused) : null;
-  }, [currentPosition, course, focusUserId, riders, progressFor]);
+  }, [posLat, posLng, course, focusUserId, riders, progressFor]);
 
   useEffect(() => {
     onFocusedProgress?.(focusedProgress);
@@ -650,21 +655,21 @@ export default function LiveTrackingMapInner({
 
   useEffect(() => {
     const map = mapRef.current;
-    if (!map || !riderMode || !currentPosition) return;
+    if (!map || !riderMode || posLat === null || posLng === null) return;
     if (!ownMarkerRef.current) {
-      ownMarkerRef.current = L.marker([currentPosition.lat, currentPosition.lng], {
+      ownMarkerRef.current = L.marker([posLat, posLng], {
         icon: markerIcon("live", false),
         zIndexOffset: 900,
       }).addTo(map).bindTooltip("You", { permanent: true, direction: "top", offset: [0, -8] });
     } else {
-      ownMarkerRef.current.setLatLng([currentPosition.lat, currentPosition.lng]);
+      ownMarkerRef.current.setLatLng([posLat, posLng]);
     }
     if (!followPaused) {
       programmaticMoveRef.current = true;
-      map.setView([currentPosition.lat, currentPosition.lng], Math.max(map.getZoom(), 15));
+      map.setView([posLat, posLng], Math.max(map.getZoom(), 15));
       window.setTimeout(() => (programmaticMoveRef.current = false), 700);
     }
-  }, [currentPosition, followPaused, riderMode]);
+  }, [posLat, posLng, followPaused, riderMode]);
 
   // Off-course watch list for race control (soft warning — never an alarm).
   useEffect(() => {

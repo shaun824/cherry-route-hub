@@ -34,30 +34,37 @@ export function AppPreloader({ routeLoading }: AppPreloaderProps) {
   const [leaving, setLeaving] = useState(false);
   const [visible, setVisible] = useState(false);
 
-  useEffect(() => {
-    let showTimer: number | undefined;
-    let hideTimer: number | undefined;
-    let safetyTimer: number | undefined;
+  // Once the safety timeout fires for a load, stay hidden until that load ends.
+  const timedOutRef = useRef(false);
 
-    if (routeLoading) {
-      showTimer = window.setTimeout(() => {
-        setLeaving(false);
-        setVisible(true);
-      }, SHOW_DELAY_MS);
-      safetyTimer = window.setTimeout(() => {
-        setLeaving(true);
-        hideTimer = window.setTimeout(() => setVisible(false), FADE_DURATION_MS);
-      }, SAFETY_TIMEOUT_MS);
-    } else if (visible) {
+  useEffect(() => {
+    if (!routeLoading) {
+      timedOutRef.current = false;
+      return;
+    }
+    if (timedOutRef.current) return;
+    const showTimer = window.setTimeout(() => {
+      setLeaving(false);
+      setVisible(true);
+    }, SHOW_DELAY_MS);
+    let hideTimer: number | undefined;
+    const safetyTimer = window.setTimeout(() => {
+      timedOutRef.current = true;
       setLeaving(true);
       hideTimer = window.setTimeout(() => setVisible(false), FADE_DURATION_MS);
-    }
-
+    }, SAFETY_TIMEOUT_MS);
     return () => {
-      if (showTimer !== undefined) window.clearTimeout(showTimer);
+      window.clearTimeout(showTimer);
+      window.clearTimeout(safetyTimer);
       if (hideTimer !== undefined) window.clearTimeout(hideTimer);
-      if (safetyTimer !== undefined) window.clearTimeout(safetyTimer);
     };
+  }, [routeLoading]);
+
+  useEffect(() => {
+    if (routeLoading || !visible) return;
+    setLeaving(true);
+    const hideTimer = window.setTimeout(() => setVisible(false), FADE_DURATION_MS);
+    return () => window.clearTimeout(hideTimer);
   }, [routeLoading, visible]);
 
   useEffect(() => {
