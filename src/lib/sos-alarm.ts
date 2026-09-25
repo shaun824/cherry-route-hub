@@ -30,9 +30,13 @@ class Alarm {
     if (this.urgent) window.setTimeout(() => this.beep(1480, 260, g), 520);
   }
 
+  isRunning() {
+    return this.timer !== null;
+  }
+
   start(urgent = false) {
-    this.urgent = urgent;
     if (this.timer !== null) return;
+    this.urgent = urgent;
     try {
       this.ctx = this.ctx ?? new (window.AudioContext ||
         (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
@@ -92,6 +96,8 @@ export function useSosAlarm(active: boolean, urgent = false, label = "SOS") {
 
 /** Lets a click anywhere unlock audio before the first alert arrives. */
 export function primeAlarmAudio() {
+  // Never touch a running alarm — a click must not silence an active SOS.
+  if (alarm.isRunning()) return;
   alarm.start(false);
   alarm.stop();
 }

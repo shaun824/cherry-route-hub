@@ -254,7 +254,8 @@ export function KnowledgeTeachChat({
         },
       }).then((r: any) => ({ ...r, index: v.index })),
     onSuccess: (res: any) => {
-      setNoteId(res.id as string);
+      // Saved — the next message starts a new note instead of overwriting this one.
+      setNoteId(null);
       setEditing(null);
       setMessages((m) => {
         const next = [...m];
