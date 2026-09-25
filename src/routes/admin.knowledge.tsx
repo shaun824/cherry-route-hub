@@ -15,6 +15,7 @@ import {
 } from "@/lib/faq-learned.functions";
 import { KnowledgeIntake, KnowledgeLibrary } from "@/components/knowledge-library";
 import { KnowledgeTeachChat } from "@/components/knowledge-teach-chat";
+import { EventReadinessPanel } from "@/components/event-readiness-panel";
 
 export const Route = createFileRoute("/admin/knowledge")({
   head: () => ({
@@ -30,7 +31,7 @@ type Status = "suggested" | "approved" | "rejected";
 
 function AdminKnowledge() {
   const qc = useQueryClient();
-  const [tab, setTab] = useState<Status | "gaps" | "library" | "intake" | "teach">("teach");
+  const [tab, setTab] = useState<Status | "gaps" | "library" | "intake" | "teach" | "readiness">("teach");
 
   const list = useServerFn(listLearnedFaqs);
   const gaps = useServerFn(listBotGaps);
@@ -129,13 +130,14 @@ function AdminKnowledge() {
         {(
           [
             { id: "teach", label: "Teach the bot" },
+            { id: "readiness", label: "Event readiness" },
             { id: "suggested", label: "Review queue" },
             { id: "approved", label: "Approved" },
             { id: "rejected", label: "Rejected" },
             { id: "gaps", label: "Unanswered questions" },
             { id: "library", label: "Business knowledge" },
             { id: "intake", label: "Email intake" },
-          ] as { id: Status | "gaps" | "library" | "intake" | "teach"; label: string }[]
+          ] as { id: Status | "gaps" | "library" | "intake" | "teach" | "readiness"; label: string }[]
         ).map((t) => (
           <button
             key={t.id}
@@ -151,6 +153,8 @@ function AdminKnowledge() {
 
       {tab === "teach" ? (
         <KnowledgeTeachChat events={(eventsQ.data ?? []) as { id: string; name: string }[]} />
+      ) : tab === "readiness" ? (
+        <EventReadinessPanel events={(eventsQ.data ?? []) as { id: string; name: string }[]} />
       ) : tab === "library" ? (
         <KnowledgeLibrary events={(eventsQ.data ?? []) as { id: string; name: string }[]} />
       ) : tab === "intake" ? (
