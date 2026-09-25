@@ -129,6 +129,7 @@ function VillageEditor() {
   /** Live rotation while the slider is being dragged — saved once on release. */
   const [rotDraft, setRotDraft] = useState<number | null>(null);
   const [nextTentLabel, setNextTentLabel] = useState("1");
+  const placingTentRef = useRef(false);
   // 'tent' drops a real tent number (shown to riders); 'marker' drops a helper
   // point used only for drawing areas — never rendered on rider-facing maps.
   const [tentKind, setTentKind] = useState<"tent" | "marker">("tent");
