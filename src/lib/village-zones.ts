@@ -6,6 +6,8 @@ export type ZonePoint = { lat: number; lng: number };
 export type VillageZone = {
   id: string;
   name: string;
+  /** Whether the section name is displayed on shared rider and crew maps. */
+  showLabel?: boolean;
   /** hex fill/stroke colour */
   color?: string;
   /** outline vertices, in order */

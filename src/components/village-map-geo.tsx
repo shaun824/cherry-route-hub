@@ -295,17 +295,18 @@ function rectanglesOverlap(a: L.Bounds, b: L.Bounds, gap = 4) {
 function LabelLayout({ candidates, zoom, onLayout }: {
   candidates: LabelCandidate[];
   zoom: number;
-  onLayout: (facilityIds: Set<string>, zoneIds: Set<string>) => void;
+  onLayout: (facilityIds: Set<string>, zoneIds: Set<string>, tentIds: Set<string>) => void;
 }) {
   const map = useMap();
   useEffect(() => {
     const layout = () => {
       const facilities = new Set<string>();
       const zones = new Set<string>();
+      const tents = new Set<string>();
       const occupied: L.Bounds[] = [];
       const ordered = [...candidates].sort((a, b) => Number(b.selected) - Number(a.selected) || b.priority - a.priority);
       for (const item of ordered) {
-        if (!item.selected && zoom < (item.kind === "zone" ? 19.25 : item.kind === "obstacle" ? 20 : 18.75)) continue;
+        if (!item.selected && zoom < (item.kind === "zone" ? 19.25 : item.kind === "obstacle" ? 0 : 18.75)) continue;
         const p = map.latLngToContainerPoint(item.position);
         const box = L.bounds(
           L.point(p.x - item.width / 2, p.y + 15),
@@ -315,8 +316,9 @@ function LabelLayout({ candidates, zoom, onLayout }: {
         occupied.push(box);
         if (item.kind === "facility") facilities.add(item.id);
         if (item.kind === "zone") zones.add(item.id);
+        if (item.kind === "obstacle") tents.add(item.id);
       }
-      onLayout(facilities, zones);
+      onLayout(facilities, zones, tents);
     };
     layout();
     map.on("moveend zoomend resize rotate", layout);
@@ -391,11 +393,13 @@ function ViewportWatcher({ onView }: { onView: (b: L.LatLngBounds) => void }) {
 
 
 
-function tentIcon(label: string, active: boolean) {
+function tentIcon(label: string, active: boolean, compact = false, color = "#38bdf8") {
   const bg = active ? "#c8102e" : "#1f2937";
   return L.divIcon({
     className: "rce-village-tent",
-    html: `<div style="display:flex;flex-direction:column;align-items:center">
+    html: compact
+      ? `<span aria-hidden="true" style="display:block;width:12px;height:12px;border-radius:3px;background:${color};border:2px solid #fff;box-shadow:0 1px 5px rgba(0,0,0,.75)"></span>`
+      : `<div style="display:flex;flex-direction:column;align-items:center">
       <span style="background:${bg};color:#fff;font-size:10px;font-weight:800;padding:2px 6px;border-radius:6px;white-space:nowrap;border:${
         active ? "2px solid #fff" : "1px solid rgba(255,255,255,.6)"
       };box-shadow:0 2px 6px rgba(0,0,0,.35)${active ? ";animation:rce-pulse 1.4s ease-in-out infinite" : ""}">${escapeHtml(
@@ -403,8 +407,8 @@ function tentIcon(label: string, active: boolean) {
       )}</span>
       <span style="width:6px;height:6px;background:${bg};transform:rotate(45deg) translateY(-2px);border-radius:1px"></span>
     </div>`,
-    iconSize: [10, 10],
-    iconAnchor: [5, 14],
+    iconSize: compact ? [12, 12] : [10, 10],
+    iconAnchor: compact ? [6, 6] : [5, 14],
   });
 }
 
@@ -476,6 +480,7 @@ export default function VillageMapGeo({
   const [view, setView] = useState<L.LatLngBounds | null>(null);
   const [facilityLabels, setFacilityLabels] = useState<Set<string>>(() => new Set());
   const [zoneLabels, setZoneLabels] = useState<Set<string>>(() => new Set());
+  const [tentLabels, setTentLabels] = useState<Set<string>>(() => new Set());
   const inView = useCallback(
     (lat: number, lng: number) => !view || view.contains(L.latLng(lat, lng)),
     [view],
@@ -615,7 +620,7 @@ export default function VillageMapGeo({
         .map((z) => ({
           zone: z,
           positions: z.points.map((p) => [p.lat, p.lng]) as [number, number][],
-          centre: zonesInteractive && hasBuildDetail(z) ? zoneCentroid(z) : null,
+           centre: (z.showLabel ?? true) && (zonesInteractive || (z.audience ?? "rider") === "rider") ? zoneCentroid(z) : null,
         })),
     [zones, highlightZoneId, highlightTentId, zonesInteractive],
   );
@@ -666,9 +671,10 @@ export default function VillageMapGeo({
     })),
   ], [facilitySpots, geo, heightM, selected, visibleZones, highlightZoneId, droppedTents, highlightTentId]);
 
-  const applyLabelLayout = useCallback((nextFacilities: Set<string>, nextZones: Set<string>) => {
+  const applyLabelLayout = useCallback((nextFacilities: Set<string>, nextZones: Set<string>, nextTents: Set<string>) => {
     setFacilityLabels(nextFacilities);
     setZoneLabels(nextZones);
+    setTentLabels(nextTents);
   }, []);
 
   const focusTarget = useMemo<FocusTarget>(() => {
@@ -868,8 +874,9 @@ export default function VillageMapGeo({
           <ViewportWatcher onView={setView} />
           <LabelLayout candidates={labelCandidates} zoom={zoom} onLayout={applyLabelLayout} />
 
-          {/* Dropped tent pins are shown exactly where they were placed. Only
-              exact duplicates of the same number are collapsed. */}
+          {/* At village scale every tent remains visible as a compact coloured
+              square. Collision-free numbers appear as the rider zooms in, and
+              every number plus its measured footprint appears at close range. */}
           {droppedTents.filter(({ tent: t }, i, all) => {
             const number = normalizedNumber(t.label);
             if (!number || t.id === highlightTentId) return true;
@@ -879,31 +886,33 @@ export default function VillageMapGeo({
             return firstIdx === i;
           }).map(({ tent: t, meta, footprint, pos, icon }) => {
             const hot = highlightTentId === t.id;
-            // Clean-map rule (Weekend Warrior standard): the fitted Tour de Addo
-            // view lands at zoom 19, so ordinary tent pins must stay hidden until
-            // the rider deliberately zooms one level closer. No placeholder dots
-            // or area-corner labels are rendered. Your own tent stays visible.
-            if (!hot && zoom < 20) return null;
             // Villages with hundreds of tents stay smooth because off-screen
             // pins are never mounted.
             if (!hot && !inView(t.lat, t.lng)) return null;
+             const number = Number(normalizedNumber(t.label));
+             const sampledNumber = Number.isFinite(number) && number % (zoom >= 18.5 ? 5 : 10) === 0;
+             const showNumber = hot || zoom >= 20 || sampledNumber || (zoom >= 19 && tentLabels.has(t.id));
+             const tentColor = meta.id === "luxury" ? "#f59e0b" : "#38bdf8";
 
             return (
               <Fragment key={t.id}>
-              <Polygon
-                positions={footprint}
-                pathOptions={{
-                  color: hot ? "#c8102e" : meta.id === "luxury" ? "#f59e0b" : "#38bdf8",
-                  weight: 1.5,
-                  fillOpacity: 0.18,
-                  interactive: false,
-                }}
-              />
+               {hot || zoom >= 19.5 ? (
+                 <Polygon
+                   positions={footprint}
+                   pathOptions={{
+                     color: hot ? "#c8102e" : tentColor,
+                     weight: hot ? 2.5 : 1.5,
+                     fillColor: hot ? "#c8102e" : tentColor,
+                     fillOpacity: hot ? 0.42 : 0.28,
+                     interactive: false,
+                   }}
+                 />
+               ) : null}
               <Marker
                 keyboard={false}
                 autoPanOnFocus={false}
                 position={pos}
-                icon={hot ? tentIcon(t.label, true) : icon}
+                 icon={showNumber ? (hot ? tentIcon(t.label, true) : icon) : tentIcon(t.label, false, true, tentColor)}
                 zIndexOffset={hot ? 900 : 300}
               >
                 <Popup autoPan={false} keepInView={false}>

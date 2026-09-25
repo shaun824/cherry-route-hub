@@ -785,7 +785,7 @@ export default function VillageMapEditorGeo({
                     },
                   }}
                 >
-                  {showLabels || active ? (
+                  {(showLabels && (z.showLabel ?? true)) || active ? (
                     <Tooltip
                       key={labelKey}
                       direction="center"
@@ -1176,6 +1176,15 @@ export default function VillageMapEditorGeo({
                 );
               })}
             </div>
+            <button
+              type="button"
+              onClick={() => onPatchZone?.(activeZone.id, { showLabel: !(activeZone.showLabel ?? true) })}
+              className={`w-full rounded-lg px-2 py-1.5 text-[11px] font-bold ${
+                (activeZone.showLabel ?? true) ? "cherry-gradient text-white" : "bg-muted text-ink-soft"
+              }`}
+            >
+              {(activeZone.showLabel ?? true) ? "Section name shown on maps" : "Section name hidden on maps"}
+            </button>
             <select
               value={activeZone.kind ?? ""}
               onChange={(e) => {
