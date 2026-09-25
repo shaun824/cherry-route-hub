@@ -303,6 +303,12 @@ function CrewDashboard() {
           body="Generators, water, fencing, gazebos, flags and signage — where each goes, with quantities."
         />
         <Tile
+          to="/crew/rentals"
+          icon={<Boxes className="h-5 w-5" />}
+          title="Rental jobs"
+          body="Infrastructure hire for client events — build map, run sheet and load-out."
+        />
+        <Tile
           to="/crew/tracking"
           icon={<Siren className="h-5 w-5" />}
           title="Race control"
