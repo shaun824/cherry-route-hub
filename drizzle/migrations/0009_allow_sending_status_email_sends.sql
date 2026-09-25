@@ -1,0 +1,2 @@
+ALTER TABLE public.event_email_sends DROP CONSTRAINT event_email_sends_status_check;
+ALTER TABLE public.event_email_sends ADD CONSTRAINT event_email_sends_status_check CHECK (status = ANY (ARRAY['sending'::text, 'sent'::text, 'suppressed'::text, 'failed'::text]));
