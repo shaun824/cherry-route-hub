@@ -13,3 +13,4 @@
 - [x] Upgrade rider tracking using the best of Roof of Africa, including a 1 km race-village start check
 - [x] Improve mobile tent visibility and add per-section map-name controls
 - [x] Track supplier promo engagement, estimated ROI, CSV reporting, and admin assistant access
+- [x] Add Red Cherry branding, countdown, website imagery, and trust signals to rental client pages
