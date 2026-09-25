@@ -129,6 +129,7 @@ function VillageEditor() {
   /** Live rotation while the slider is being dragged — saved once on release. */
   const [rotDraft, setRotDraft] = useState<number | null>(null);
   const [nextTentLabel, setNextTentLabel] = useState("1");
+  const placingTentRef = useRef(false);
   // 'tent' drops a real tent number (shown to riders); 'marker' drops a helper
   // point used only for drawing areas — never rendered on rider-facing maps.
   const [tentKind, setTentKind] = useState<"tent" | "marker">("tent");
@@ -201,6 +202,17 @@ function VillageEditor() {
   }
 
   async function placeTent(lat: number, lng: number) {
+    // One tap = one tent: ignore extra clicks while the first is still saving.
+    if (placingTentRef.current) return;
+    placingTentRef.current = true;
+    try {
+      await placeTentNow(lat, lng);
+    } finally {
+      placingTentRef.current = false;
+    }
+  }
+
+  async function placeTentNow(lat: number, lng: number) {
     let label = nextTentLabel.trim() || nextFreeTentNumber();
     if (tentKind === "tent") {
       // Dropping a tent must never silently do nothing: if the number in the
@@ -227,6 +239,28 @@ function VillageEditor() {
       return;
     }
     if (tentKind === "tent") setNextTentLabel(freeLabelFrom(bumpLabel(label), [label]));
+    await qc.invalidateQueries({ queryKey: ["village-tents", event.id, venueId] });
+  }
+
+  /** Change a tent's number after it's been dropped. */
+  async function renameTent(id: string, raw: string) {
+    const label = raw.trim();
+    const current = tents.find((t) => t.id === id);
+    if (!current || !label || label === current.label) return;
+    const clash = tents.find(
+      (t) => t.id !== id && (t.kind ?? "tent") !== "marker" && t.label.trim().toLowerCase() === label.toLowerCase(),
+    );
+    if (clash) {
+      toast.error(`Tent ${label} already exists — renumber that one first.`);
+      return;
+    }
+    qc.setQueryData(
+      ["village-tents", event.id, venueId],
+      (cur: typeof tents | undefined) => cur?.map((t) => (t.id === id ? { ...t, label } : t)) ?? cur,
+    );
+    const { error } = await supabase.from("event_village_tents").update({ label }).eq("id", id);
+    if (error) toast.error(error.message);
+    else toast.success(`Renumbered to ${label}`);
     await qc.invalidateQueries({ queryKey: ["village-tents", event.id, venueId] });
   }
 
@@ -836,9 +870,20 @@ function VillageEditor() {
         ) : null}
         {selectedTent ? (
           <div className="flex w-full flex-wrap items-center gap-2 rounded-xl bg-secondary p-2 text-[11px] font-bold text-ink-soft">
-            <span className="rounded bg-background px-2 py-1 text-ink">
-              Tent {tents.find((t) => t.id === selectedTent)?.label ?? ""}
-            </span>
+            <label className="inline-flex items-center gap-1 rounded bg-background px-2 py-1 text-ink">
+              Tent
+              <input
+                key={`${selectedTent}-${tents.find((t) => t.id === selectedTent)?.label ?? ""}`}
+                defaultValue={tents.find((t) => t.id === selectedTent)?.label ?? ""}
+                onBlur={(e) => void renameTent(selectedTent, e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") (e.target as HTMLInputElement).blur();
+                }}
+                aria-label="Tent number"
+                title="Type a new number and press Enter"
+                className="w-16 rounded border border-border bg-card px-1.5 py-0.5 text-xs font-semibold text-ink"
+              />
+            </label>
 
             <span className="inline-flex items-center gap-1">
               Size
