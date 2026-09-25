@@ -306,7 +306,7 @@ function LabelLayout({ candidates, zoom, onLayout }: {
       const occupied: L.Bounds[] = [];
       const ordered = [...candidates].sort((a, b) => Number(b.selected) - Number(a.selected) || b.priority - a.priority);
       for (const item of ordered) {
-        if (!item.selected && zoom < (item.kind === "zone" ? 19.25 : item.kind === "obstacle" ? 18 : 18.75)) continue;
+        if (!item.selected && zoom < (item.kind === "zone" ? 19.25 : item.kind === "obstacle" ? 0 : 18.75)) continue;
         const p = map.latLngToContainerPoint(item.position);
         const box = L.bounds(
           L.point(p.x - item.width / 2, p.y + 15),
@@ -620,7 +620,7 @@ export default function VillageMapGeo({
         .map((z) => ({
           zone: z,
           positions: z.points.map((p) => [p.lat, p.lng]) as [number, number][],
-           centre: (z.showLabel ?? true) && (zonesInteractive || z.audience === "rider") ? zoneCentroid(z) : null,
+           centre: (z.showLabel ?? true) && (zonesInteractive || (z.audience ?? "rider") === "rider") ? zoneCentroid(z) : null,
         })),
     [zones, highlightZoneId, highlightTentId, zonesInteractive],
   );
