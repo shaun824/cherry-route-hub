@@ -11,3 +11,4 @@
 - [x] Add a one-tap return to the village while live location stays active
 
 - [x] Upgrade rider tracking using the best of Roof of Africa, including a 1 km race-village start check
+- [x] Improve mobile tent visibility and add per-section map-name controls
