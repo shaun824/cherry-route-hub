@@ -206,7 +206,7 @@ function RootComponent() {
   // Embed routes render bare for third-party iframes: no shell, no assistant,
   // no prompts — just the embedded content.
   const isEmbed = useRouterState({
-    select: (s) => s.location.pathname.startsWith("/embed"),
+    select: (s) => s.location.pathname.startsWith("/embed") || s.location.pathname.startsWith("/rental/"),
   });
   const routeLoading = useRouterState({ select: (s) => s.isLoading });
   const onAuthPages = useRouterState({
@@ -214,6 +214,7 @@ function RootComponent() {
       s.location.pathname.startsWith("/auth") ||
       s.location.pathname.startsWith("/reset-password") ||
       s.location.pathname.startsWith("/embed") ||
+      s.location.pathname.startsWith("/rental/") ||
       s.location.pathname.startsWith("/crew"),
   });
 

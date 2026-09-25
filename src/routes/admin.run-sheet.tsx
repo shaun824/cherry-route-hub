@@ -10,6 +10,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { previewRunSheet, syncRunSheet } from "@/lib/run-sheet.functions";
 
 export const Route = createFileRoute("/admin/run-sheet")({
+  validateSearch: (s: Record<string, unknown>): { event?: string } =>
+    typeof s["event"] === "string" ? { event: s["event"] as string } : {},
   head: () => ({
     meta: [
       { title: "Run sheets · Admin · Red Cherry Events" },
@@ -24,7 +26,8 @@ type Tab = "sheet" | "suggestions" | "waivers";
 function AdminRunSheet() {
   const qc = useQueryClient();
   const [tab, setTab] = useState<Tab>("sheet");
-  const [eventId, setEventId] = useState("");
+  const { event: linkedEvent } = Route.useSearch();
+  const [eventId, setEventId] = useState(linkedEvent ?? "");
   const [url, setUrl] = useState("");
   const [msg, setMsg] = useState<string | null>(null);
 

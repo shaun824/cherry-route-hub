@@ -208,6 +208,8 @@ export async function fetchEvents(): Promise<Event[] | null> {
   const { data, error } = await supabase
     .from("events")
     .select("*")
+    // Private infrastructure-rental jobs never show in the rider app.
+    .or("event_type.eq.race,is_public.eq.true")
     .order("event_date", { ascending: true });
   if (error) { log(error, "fetchEvents"); return null; }
   return (data ?? []).map((r: Row) => eventFromRow(r));

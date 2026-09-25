@@ -34,6 +34,7 @@ const navGroups: NavGroup[] = [
       { to: "/admin/events", label: "Events", icon: CalendarDays },
       { to: "/admin/event-info", label: "Rider info", icon: Newspaper },
       { to: "/admin/village", label: "Village maps", icon: Tent },
+      { to: "/admin/rentals", label: "Infrastructure rentals", icon: HardHat },
       { to: "/admin/results", label: "Results", icon: Trophy },
       { to: "/admin/schedule-sync", label: "Schedule sync", icon: CalendarClock },
     ],

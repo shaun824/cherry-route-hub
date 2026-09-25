@@ -1810,6 +1810,32 @@ export type Database = {
           },
         ]
       }
+      event_share_links: {
+        Row: {
+          created_at: string
+          event_id: string
+          token: string
+        }
+        Insert: {
+          created_at?: string
+          event_id: string
+          token: string
+        }
+        Update: {
+          created_at?: string
+          event_id?: string
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_share_links_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: true
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       event_social_posts: {
         Row: {
           active: boolean
@@ -2144,7 +2170,11 @@ export type Database = {
         Row: {
           auto_created: boolean
           batches: Json
+          breakdown_date: string | null
+          build_date: string | null
           classes: Json
+          client_contact: string | null
+          client_name: string | null
           cover_url: string | null
           created_at: string
           days: Json
@@ -2154,10 +2184,12 @@ export type Database = {
           entry_ninja_id: string | null
           entry_ninja_url: string | null
           event_date: string
+          event_type: string
           faq_url: string | null
           has_toilets: boolean
           hero_color: string | null
           id: string
+          is_public: boolean
           lifecycle: string
           location: string
           logo_url: string | null
@@ -2189,7 +2221,11 @@ export type Database = {
         Insert: {
           auto_created?: boolean
           batches?: Json
+          breakdown_date?: string | null
+          build_date?: string | null
           classes?: Json
+          client_contact?: string | null
+          client_name?: string | null
           cover_url?: string | null
           created_at?: string
           days?: Json
@@ -2199,10 +2235,12 @@ export type Database = {
           entry_ninja_id?: string | null
           entry_ninja_url?: string | null
           event_date: string
+          event_type?: string
           faq_url?: string | null
           has_toilets?: boolean
           hero_color?: string | null
           id?: string
+          is_public?: boolean
           lifecycle?: string
           location: string
           logo_url?: string | null
@@ -2234,7 +2272,11 @@ export type Database = {
         Update: {
           auto_created?: boolean
           batches?: Json
+          breakdown_date?: string | null
+          build_date?: string | null
           classes?: Json
+          client_contact?: string | null
+          client_name?: string | null
           cover_url?: string | null
           created_at?: string
           days?: Json
@@ -2244,10 +2286,12 @@ export type Database = {
           entry_ninja_id?: string | null
           entry_ninja_url?: string | null
           event_date?: string
+          event_type?: string
           faq_url?: string | null
           has_toilets?: boolean
           hero_color?: string | null
           id?: string
+          is_public?: boolean
           lifecycle?: string
           location?: string
           logo_url?: string | null

@@ -36,6 +36,13 @@
       "when": 1789620906220,
       "tag": "0004_live_tracking_sos_flags",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1790354963687,
+      "tag": "0005_infrastructure_rentals",
+      "breakpoints": true
     }
   ]
 }
