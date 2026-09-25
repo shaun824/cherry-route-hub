@@ -57,6 +57,13 @@
       "when": 1790360463876,
       "tag": "0007_promo_engagement_roi",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1790360603944,
+      "tag": "0008_allow_service_promo_summary",
+      "breakpoints": true
     }
   ]
 }
