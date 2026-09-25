@@ -94,6 +94,7 @@ export async function fetchPromos(): Promise<Promo[] | null> {
     eventMatch: (r.event_match as string | null) ?? undefined,
     active: r.active == null ? true : Boolean(r.active),
     sortOrder: (r.sort_order as number | null) ?? undefined,
+    estimatedClickValueCents: Number(r.estimated_click_value_cents ?? 0),
   }));
 }
 export async function upsertPromoCloud(p: Promo) {
@@ -113,6 +114,7 @@ export async function upsertPromoCloud(p: Promo) {
     event_match: p.eventMatch ?? null,
     active: p.active ?? true,
     sort_order: p.sortOrder ?? null,
+    estimated_click_value_cents: p.estimatedClickValueCents ?? 0,
   };
   const { data, error } = await supabase.from("promos").upsert(row).select().single();
   log(error, "upsertPromo");

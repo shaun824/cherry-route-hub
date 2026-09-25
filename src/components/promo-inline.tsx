@@ -3,6 +3,7 @@ import { ExternalLink, Sparkles, Tag } from "lucide-react";
 
 import type { EventPromo } from "@/lib/event-promos";
 import { PromoReminderDialog } from "@/components/promo-reminder-dialog";
+import { trackPromoAction, usePromoImpression } from "@/lib/promo-analytics";
 
 /**
  * Inline rider-offer strip built for the route sections.
@@ -13,12 +14,16 @@ import { PromoReminderDialog } from "@/components/promo-reminder-dialog";
  */
 export function PromoInline({ promo }: { promo: EventPromo }) {
   const [open, setOpen] = useState(false);
+  usePromoImpression(promo);
 
   return (
     <>
       <button
         type="button"
-        onClick={() => setOpen(true)}
+        onClick={() => {
+          trackPromoAction(promo, "promo_open");
+          setOpen(true);
+        }}
         className="relative block w-full overflow-hidden rounded-2xl p-[1.5px] text-left shadow-sm active:scale-[0.995]"
         style={{ background: `linear-gradient(135deg, ${promo.accent}, oklch(0.22 0.02 260))` }}
       >

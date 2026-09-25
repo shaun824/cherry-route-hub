@@ -160,6 +160,8 @@ export type Promo = {
   eventMatch?: string;
   active?: boolean;
   sortOrder?: number;
+  /** Admin estimate used for engagement ROI reporting, in cents per outbound click. */
+  estimatedClickValueCents?: number;
 };
 
 export type Rider = {

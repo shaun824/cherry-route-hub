@@ -16,6 +16,7 @@ export type EventPromo = {
   url: string;
   logoUrl: string;
   accent: string;
+  estimatedClickValueCents: number;
 };
 
 /** Maps an admin-managed promo row onto the rider-facing card shape. */
@@ -38,6 +39,7 @@ export function toEventPromo(p: Promo): EventPromo {
     url: p.url || "#",
     logoUrl: p.logoUrl ?? "",
     accent: p.accent,
+    estimatedClickValueCents: p.estimatedClickValueCents ?? 0,
   };
 }
 
