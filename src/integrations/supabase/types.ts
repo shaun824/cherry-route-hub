@@ -3830,6 +3830,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      analytics_summary: { Args: { _since: string }; Returns: Json }
       live_tracking_identity: {
         Args: { _event_id: string }
         Returns: {
