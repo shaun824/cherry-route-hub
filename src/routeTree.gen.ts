@@ -27,12 +27,14 @@ import { Route as EventsIndexRouteImport } from './routes/events.index'
 import { Route as CrewIndexRouteImport } from './routes/crew.index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as SpectateEventIdRouteImport } from './routes/spectate.$eventId'
+import { Route as RentalTokenRouteImport } from './routes/rental.$token'
 import { Route as MyEventsEventIdRouteImport } from './routes/my-events.$eventId'
 import { Route as EventsEventIdRouteImport } from './routes/events.$eventId'
 import { Route as EmbedChatRouteImport } from './routes/embed.chat'
 import { Route as CrewTrackingRouteImport } from './routes/crew.tracking'
 import { Route as CrewRunSheetRouteImport } from './routes/crew.run-sheet'
 import { Route as CrewRoomingRouteImport } from './routes/crew.rooming'
+import { Route as CrewRentalsRouteImport } from './routes/crew.rentals'
 import { Route as CrewLoginRouteImport } from './routes/crew.login'
 import { Route as CrewInventoryRouteImport } from './routes/crew.inventory'
 import { Route as CrewBuildRouteImport } from './routes/crew.build'
@@ -47,6 +49,7 @@ import { Route as AdminRosterRouteImport } from './routes/admin.roster'
 import { Route as AdminRoomingRouteImport } from './routes/admin.rooming'
 import { Route as AdminRidersRouteImport } from './routes/admin.riders'
 import { Route as AdminResultsRouteImport } from './routes/admin.results'
+import { Route as AdminRentalsRouteImport } from './routes/admin.rentals'
 import { Route as AdminPromosRouteImport } from './routes/admin.promos'
 import { Route as AdminPricingRouteImport } from './routes/admin.pricing'
 import { Route as AdminNotificationsRouteImport } from './routes/admin.notifications'
@@ -203,6 +206,11 @@ const SpectateEventIdRoute = SpectateEventIdRouteImport.update({
   path: '/$eventId',
   getParentRoute: () => SpectateRoute,
 } as any)
+const RentalTokenRoute = RentalTokenRouteImport.update({
+  id: '/rental/$token',
+  path: '/rental/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const MyEventsEventIdRoute = MyEventsEventIdRouteImport.update({
   id: '/$eventId',
   path: '/$eventId',
@@ -231,6 +239,11 @@ const CrewRunSheetRoute = CrewRunSheetRouteImport.update({
 const CrewRoomingRoute = CrewRoomingRouteImport.update({
   id: '/crew/rooming',
   path: '/crew/rooming',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CrewRentalsRoute = CrewRentalsRouteImport.update({
+  id: '/crew/rentals',
+  path: '/crew/rentals',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CrewLoginRoute = CrewLoginRouteImport.update({
@@ -301,6 +314,11 @@ const AdminRidersRoute = AdminRidersRouteImport.update({
 const AdminResultsRoute = AdminResultsRouteImport.update({
   id: '/results',
   path: '/results',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminRentalsRoute = AdminRentalsRouteImport.update({
+  id: '/rentals',
+  path: '/rentals',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminPromosRoute = AdminPromosRouteImport.update({
@@ -683,6 +701,7 @@ export interface FileRoutesByFullPath {
   '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/pricing': typeof AdminPricingRoute
   '/admin/promos': typeof AdminPromosRoute
+  '/admin/rentals': typeof AdminRentalsRoute
   '/admin/results': typeof AdminResultsRoute
   '/admin/riders': typeof AdminRidersRoute
   '/admin/rooming': typeof AdminRoomingRoute
@@ -697,12 +716,14 @@ export interface FileRoutesByFullPath {
   '/crew/build': typeof CrewBuildRoute
   '/crew/inventory': typeof CrewInventoryRoute
   '/crew/login': typeof CrewLoginRoute
+  '/crew/rentals': typeof CrewRentalsRoute
   '/crew/rooming': typeof CrewRoomingRoute
   '/crew/run-sheet': typeof CrewRunSheetRoute
   '/crew/tracking': typeof CrewTrackingRoute
   '/embed/chat': typeof EmbedChatRoute
   '/events/$eventId': typeof EventsEventIdRouteWithChildren
   '/my-events/$eventId': typeof MyEventsEventIdRoute
+  '/rental/$token': typeof RentalTokenRoute
   '/spectate/$eventId': typeof SpectateEventIdRoute
   '/admin/': typeof AdminIndexRoute
   '/crew/': typeof CrewIndexRoute
@@ -785,6 +806,7 @@ export interface FileRoutesByTo {
   '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/pricing': typeof AdminPricingRoute
   '/admin/promos': typeof AdminPromosRoute
+  '/admin/rentals': typeof AdminRentalsRoute
   '/admin/results': typeof AdminResultsRoute
   '/admin/riders': typeof AdminRidersRoute
   '/admin/rooming': typeof AdminRoomingRoute
@@ -799,11 +821,13 @@ export interface FileRoutesByTo {
   '/crew/build': typeof CrewBuildRoute
   '/crew/inventory': typeof CrewInventoryRoute
   '/crew/login': typeof CrewLoginRoute
+  '/crew/rentals': typeof CrewRentalsRoute
   '/crew/rooming': typeof CrewRoomingRoute
   '/crew/run-sheet': typeof CrewRunSheetRoute
   '/crew/tracking': typeof CrewTrackingRoute
   '/embed/chat': typeof EmbedChatRoute
   '/my-events/$eventId': typeof MyEventsEventIdRoute
+  '/rental/$token': typeof RentalTokenRoute
   '/spectate/$eventId': typeof SpectateEventIdRoute
   '/admin': typeof AdminIndexRoute
   '/crew': typeof CrewIndexRoute
@@ -890,6 +914,7 @@ export interface FileRoutesById {
   '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/pricing': typeof AdminPricingRoute
   '/admin/promos': typeof AdminPromosRoute
+  '/admin/rentals': typeof AdminRentalsRoute
   '/admin/results': typeof AdminResultsRoute
   '/admin/riders': typeof AdminRidersRoute
   '/admin/rooming': typeof AdminRoomingRoute
@@ -904,12 +929,14 @@ export interface FileRoutesById {
   '/crew/build': typeof CrewBuildRoute
   '/crew/inventory': typeof CrewInventoryRoute
   '/crew/login': typeof CrewLoginRoute
+  '/crew/rentals': typeof CrewRentalsRoute
   '/crew/rooming': typeof CrewRoomingRoute
   '/crew/run-sheet': typeof CrewRunSheetRoute
   '/crew/tracking': typeof CrewTrackingRoute
   '/embed/chat': typeof EmbedChatRoute
   '/events/$eventId': typeof EventsEventIdRouteWithChildren
   '/my-events/$eventId': typeof MyEventsEventIdRoute
+  '/rental/$token': typeof RentalTokenRoute
   '/spectate/$eventId': typeof SpectateEventIdRoute
   '/admin/': typeof AdminIndexRoute
   '/crew/': typeof CrewIndexRoute
@@ -997,6 +1024,7 @@ export interface FileRouteTypes {
     | '/admin/notifications'
     | '/admin/pricing'
     | '/admin/promos'
+    | '/admin/rentals'
     | '/admin/results'
     | '/admin/riders'
     | '/admin/rooming'
@@ -1011,12 +1039,14 @@ export interface FileRouteTypes {
     | '/crew/build'
     | '/crew/inventory'
     | '/crew/login'
+    | '/crew/rentals'
     | '/crew/rooming'
     | '/crew/run-sheet'
     | '/crew/tracking'
     | '/embed/chat'
     | '/events/$eventId'
     | '/my-events/$eventId'
+    | '/rental/$token'
     | '/spectate/$eventId'
     | '/admin/'
     | '/crew/'
@@ -1099,6 +1129,7 @@ export interface FileRouteTypes {
     | '/admin/notifications'
     | '/admin/pricing'
     | '/admin/promos'
+    | '/admin/rentals'
     | '/admin/results'
     | '/admin/riders'
     | '/admin/rooming'
@@ -1113,11 +1144,13 @@ export interface FileRouteTypes {
     | '/crew/build'
     | '/crew/inventory'
     | '/crew/login'
+    | '/crew/rentals'
     | '/crew/rooming'
     | '/crew/run-sheet'
     | '/crew/tracking'
     | '/embed/chat'
     | '/my-events/$eventId'
+    | '/rental/$token'
     | '/spectate/$eventId'
     | '/admin'
     | '/crew'
@@ -1203,6 +1236,7 @@ export interface FileRouteTypes {
     | '/admin/notifications'
     | '/admin/pricing'
     | '/admin/promos'
+    | '/admin/rentals'
     | '/admin/results'
     | '/admin/riders'
     | '/admin/rooming'
@@ -1217,12 +1251,14 @@ export interface FileRouteTypes {
     | '/crew/build'
     | '/crew/inventory'
     | '/crew/login'
+    | '/crew/rentals'
     | '/crew/rooming'
     | '/crew/run-sheet'
     | '/crew/tracking'
     | '/embed/chat'
     | '/events/$eventId'
     | '/my-events/$eventId'
+    | '/rental/$token'
     | '/spectate/$eventId'
     | '/admin/'
     | '/crew/'
@@ -1294,11 +1330,13 @@ export interface RootRouteChildren {
   CrewBuildRoute: typeof CrewBuildRoute
   CrewInventoryRoute: typeof CrewInventoryRoute
   CrewLoginRoute: typeof CrewLoginRoute
+  CrewRentalsRoute: typeof CrewRentalsRoute
   CrewRoomingRoute: typeof CrewRoomingRoute
   CrewRunSheetRoute: typeof CrewRunSheetRoute
   CrewTrackingRoute: typeof CrewTrackingRoute
   EmbedChatRoute: typeof EmbedChatRoute
   EventsEventIdRoute: typeof EventsEventIdRouteWithChildren
+  RentalTokenRoute: typeof RentalTokenRoute
   CrewIndexRoute: typeof CrewIndexRoute
   EventsIndexRoute: typeof EventsIndexRoute
   DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
@@ -1466,6 +1504,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SpectateEventIdRouteImport
       parentRoute: typeof SpectateRoute
     }
+    '/rental/$token': {
+      id: '/rental/$token'
+      path: '/rental/$token'
+      fullPath: '/rental/$token'
+      preLoaderRoute: typeof RentalTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/my-events/$eventId': {
       id: '/my-events/$eventId'
       path: '/$eventId'
@@ -1506,6 +1551,13 @@ declare module '@tanstack/react-router' {
       path: '/crew/rooming'
       fullPath: '/crew/rooming'
       preLoaderRoute: typeof CrewRoomingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/crew/rentals': {
+      id: '/crew/rentals'
+      path: '/crew/rentals'
+      fullPath: '/crew/rentals'
+      preLoaderRoute: typeof CrewRentalsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/crew/login': {
@@ -1604,6 +1656,13 @@ declare module '@tanstack/react-router' {
       path: '/results'
       fullPath: '/admin/results'
       preLoaderRoute: typeof AdminResultsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/rentals': {
+      id: '/admin/rentals'
+      path: '/rentals'
+      fullPath: '/admin/rentals'
+      preLoaderRoute: typeof AdminRentalsRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/promos': {
@@ -2095,6 +2154,7 @@ interface AdminRouteChildren {
   AdminNotificationsRoute: typeof AdminNotificationsRoute
   AdminPricingRoute: typeof AdminPricingRoute
   AdminPromosRoute: typeof AdminPromosRoute
+  AdminRentalsRoute: typeof AdminRentalsRoute
   AdminResultsRoute: typeof AdminResultsRoute
   AdminRidersRoute: typeof AdminRidersRoute
   AdminRoomingRoute: typeof AdminRoomingRoute
@@ -2134,6 +2194,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminNotificationsRoute: AdminNotificationsRoute,
   AdminPricingRoute: AdminPricingRoute,
   AdminPromosRoute: AdminPromosRoute,
+  AdminRentalsRoute: AdminRentalsRoute,
   AdminResultsRoute: AdminResultsRoute,
   AdminRidersRoute: AdminRidersRoute,
   AdminRoomingRoute: AdminRoomingRoute,
@@ -2219,11 +2280,13 @@ const rootRouteChildren: RootRouteChildren = {
   CrewBuildRoute: CrewBuildRoute,
   CrewInventoryRoute: CrewInventoryRoute,
   CrewLoginRoute: CrewLoginRoute,
+  CrewRentalsRoute: CrewRentalsRoute,
   CrewRoomingRoute: CrewRoomingRoute,
   CrewRunSheetRoute: CrewRunSheetRoute,
   CrewTrackingRoute: CrewTrackingRoute,
   EmbedChatRoute: EmbedChatRoute,
   EventsEventIdRoute: EventsEventIdRouteWithChildren,
+  RentalTokenRoute: RentalTokenRoute,
   CrewIndexRoute: CrewIndexRoute,
   EventsIndexRoute: EventsIndexRoute,
   DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
