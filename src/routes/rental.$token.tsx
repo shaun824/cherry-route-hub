@@ -141,7 +141,7 @@ function RentalPage() {
       <section className="border-b border-border bg-card px-4 py-5">
         <div className="mx-auto grid max-w-5xl grid-cols-3 divide-x divide-border text-center">
           <div className="px-2"><p className="font-display text-xl font-bold text-primary sm:text-2xl">Since 2001</p><p className="mt-1 text-[10px] font-semibold uppercase text-ink-soft">Building events</p></div>
-          <div className="px-2"><p className="font-display text-xl font-bold text-primary sm:text-2xl">20+ years</p><p className="mt-1 text-[10px] font-semibold uppercase text-ink-soft">Experience</p></div>
+          <div className="px-2"><p className="font-display text-xl font-bold text-primary sm:text-2xl">20+ years</p><p className="mt-1 text-[10px] font-semibold uppercase text-ink-soft">Years in business</p></div>
           <div className="px-2"><p className="font-display text-xl font-bold text-primary sm:text-2xl">Nationwide</p><p className="mt-1 text-[10px] font-semibold uppercase text-ink-soft">Delivery</p></div>
         </div>
       </section>
