@@ -35,6 +35,19 @@ function fmtDuration(ms: number) {
   return `${Math.floor(s / 60)}m ${s % 60}s`;
 }
 
+type Summary = {
+  visitors: number;
+  signed_in: number;
+  page_views: number;
+  unique_screens: number;
+  avg_time_ms: number;
+  bounce_pct: number;
+  per_page: { path: string; views: number; sessions: number; avg: number }[];
+  trend: { date: string; views: number; sessions: number }[];
+  devices: { device: string; count: number }[];
+  journeys: { id: string; last: string; user: boolean; steps: string[] }[];
+};
+
 function AdminAnalytics() {
   const [rangeKey, setRangeKey] = useState<string>("7");
   const days = RANGES.find((r) => r.key === rangeKey)?.days ?? 7;
@@ -44,124 +57,25 @@ function AdminAnalytics() {
   );
 
   const { data, isLoading, refetch, isFetching } = useQuery({
-    queryKey: ["analytics", rangeKey],
-    queryFn: async (): Promise<Row[]> => {
-      const { data, error } = await supabase
-        .from("analytics_events")
-        .select("id,session_id,user_id,event_name,path,route_label,duration_ms,device,referrer,created_at")
-        .gte("created_at", since)
-        .order("created_at", { ascending: false })
-        .limit(20000);
+    queryKey: ["analytics-summary", rangeKey],
+    queryFn: async (): Promise<Summary> => {
+      const { data, error } = await supabase.rpc("analytics_summary", { _since: since });
       if (error) throw error;
-      return (data ?? []) as Row[];
+      return data as unknown as Summary;
     },
     staleTime: 60_000,
   });
 
-  const adminsQ = useQuery({
-    queryKey: ["analytics", "admin-ids"],
-    queryFn: async (): Promise<string[]> => {
-      const { data, error } = await supabase.from("user_roles").select("user_id").eq("role", "admin");
-      if (error) throw error;
-      return (data ?? []).map((r) => r.user_id as string);
-    },
-    staleTime: 300_000,
-  });
-
-  // Staff traffic is excluded everywhere — including any historic rows
-  // recorded before admin tracking was switched off.
-  const rows = useMemo(() => {
-    const adminIds = new Set(adminsQ.data ?? []);
-    const all = data ?? [];
-    const staffSessions = new Set(
-      all.filter((r) => r.user_id && adminIds.has(r.user_id)).map((r) => r.session_id),
-    );
-    return all.filter((r) => !staffSessions.has(r.session_id));
-  }, [data, adminsQ.data]);
-  const views = rows.filter((r) => r.event_name === "pageview");
-  const exits = rows.filter((r) => r.event_name === "page_exit" && (r.duration_ms ?? 0) > 0);
-
-
-
-  const sessions = new Set(views.map((r) => r.session_id));
-  const signedIn = new Set(views.filter((r) => r.user_id).map((r) => r.user_id));
-
-  const perPage = useMemo(() => {
-    const map = new Map<string, { views: number; sessions: Set<string>; total: number; samples: number }>();
-    for (const r of views) {
-      const key = r.route_label ?? r.path;
-      const e = map.get(key) ?? { views: 0, sessions: new Set<string>(), total: 0, samples: 0 };
-      e.views += 1;
-      e.sessions.add(r.session_id);
-      map.set(key, e);
-    }
-    for (const r of exits) {
-      const key = r.route_label ?? r.path;
-      const e = map.get(key);
-      if (!e) continue;
-      e.total += r.duration_ms ?? 0;
-      e.samples += 1;
-    }
-    return [...map.entries()]
-      .map(([path, e]) => ({
-        path,
-        views: e.views,
-        sessions: e.sessions.size,
-        avg: e.samples ? e.total / e.samples : 0,
-      }))
-      .sort((a, b) => b.views - a.views);
-  }, [views, exits]);
-
-  const devices = useMemo(() => {
-    const map = new Map<string, Set<string>>();
-    for (const r of views) {
-      const key = r.device ?? "unknown";
-      const set = map.get(key) ?? new Set<string>();
-      set.add(r.session_id);
-      map.set(key, set);
-    }
-    return [...map.entries()].map(([k, v]) => ({ device: k, count: v.size })).sort((a, b) => b.count - a.count);
-  }, [views]);
-
-  const trend = useMemo(() => {
-    const buckets = new Map<string, { views: number; sessions: Set<string> }>();
-    for (let i = days - 1; i >= 0; i--) {
-      const d = new Date(Date.now() - i * 86400000).toISOString().slice(0, 10);
-      buckets.set(d, { views: 0, sessions: new Set() });
-    }
-    for (const r of views) {
-      const d = r.created_at.slice(0, 10);
-      const b = buckets.get(d);
-      if (!b) continue;
-      b.views += 1;
-      b.sessions.add(r.session_id);
-    }
-    return [...buckets.entries()].map(([date, b]) => ({ date, views: b.views, sessions: b.sessions.size }));
-  }, [views, days]);
-
-  const journeys = useMemo(() => {
-    const map = new Map<string, { steps: string[]; last: string; user: boolean }>();
-    for (const r of [...views].reverse()) {
-      const e = map.get(r.session_id) ?? { steps: [], last: r.created_at, user: false };
-      const label = r.route_label ?? r.path;
-      if (e.steps[e.steps.length - 1] !== label) e.steps.push(label);
-      e.last = r.created_at;
-      if (r.user_id) e.user = true;
-      map.set(r.session_id, e);
-    }
-    return [...map.entries()]
-      .sort((a, b) => (a[1].last < b[1].last ? 1 : -1))
-      .slice(0, 25)
-      .map(([id, e]) => ({ id, ...e }));
-  }, [views]);
-
-  const bounced = journeys.length
-    ? Math.round((journeys.filter((j) => j.steps.length === 1).length / journeys.length) * 100)
-    : 0;
-
-  const avgSession = exits.length
-    ? exits.reduce((sum, r) => sum + (r.duration_ms ?? 0), 0) / exits.length
-    : 0;
+  const sessions = { size: Number(data?.visitors ?? 0) };
+  const signedIn = { size: Number(data?.signed_in ?? 0) };
+  const views = { length: Number(data?.page_views ?? 0) };
+  const perPage = (data?.per_page ?? []).map((p) => ({ ...p, views: Number(p.views), sessions: Number(p.sessions), avg: Number(p.avg) }));
+  const uniqueScreens = Number(data?.unique_screens ?? 0);
+  const devices = (data?.devices ?? []).map((d) => ({ ...d, count: Number(d.count) }));
+  const trend = (data?.trend ?? []).map((t) => ({ ...t, views: Number(t.views), sessions: Number(t.sessions) }));
+  const journeys = data?.journeys ?? [];
+  const bounced = Number(data?.bounce_pct ?? 0);
+  const avgSession = Number(data?.avg_time_ms ?? 0);
 
   const maxViews = Math.max(1, ...trend.map((t) => t.views));
 

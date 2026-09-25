@@ -43,6 +43,13 @@
       "when": 1790354963687,
       "tag": "0005_infrastructure_rentals",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1790355768685,
+      "tag": "0006_analytics_summary_rpc",
+      "breakpoints": true
     }
   ]
 }
