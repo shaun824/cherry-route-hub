@@ -37,6 +37,7 @@ function blank(): Promo {
     redeem: "",
     eventMatch: "",
     active: true,
+    estimatedClickValueCents: 0,
   };
 }
 
@@ -301,6 +302,23 @@ function PromoEditor({
             />
             <span className="mt-1 block text-[11px] text-ink-soft">
               Riders tap the discount badge to open this link in a new tab.
+            </span>
+          </L>
+
+          <L label="Estimated value per website click" className="md:col-span-2">
+            <div className="flex items-center rounded-lg border border-border bg-background focus-within:border-cherry focus-within:ring-2 focus-within:ring-cherry/20">
+              <span className="px-3 text-sm font-semibold text-ink-soft">R</span>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                className="min-w-0 flex-1 bg-transparent px-1 py-2 text-sm outline-none"
+                value={((form.estimatedClickValueCents ?? 0) / 100).toFixed(2)}
+                onChange={(e) => update("estimatedClickValueCents", Math.max(0, Math.round(Number(e.target.value || 0) * 100)))}
+              />
+            </div>
+            <span className="mt-1 block text-[11px] text-ink-soft">
+              Used only for estimated ROI. It is not confirmed supplier revenue.
             </span>
           </L>
 

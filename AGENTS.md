@@ -10,3 +10,4 @@
 <!-- LOVABLE:END -->
 
 - Village section names use `VillageZone.showLabel` and default to visible when unset, preserving existing maps.
+- Supplier promo ROI is an engagement estimate from outbound clicks, never a confirmed redemption or sale.

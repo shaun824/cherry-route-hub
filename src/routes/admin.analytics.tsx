@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Activity, Users, Eye, Timer, RefreshCw, MonitorSmartphone } from "lucide-react";
+import { Activity, Users, Eye, Timer, RefreshCw, MonitorSmartphone, Download, MousePointerClick, Copy } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/admin/analytics")({
@@ -48,6 +48,35 @@ type Summary = {
   journeys: { id: string; last: string; user: boolean; steps: string[] }[];
 };
 
+type PromoRow = {
+  id: string;
+  brand: string;
+  title: string;
+  code: string | null;
+  impressions: number;
+  unique_viewers: number;
+  opens: number;
+  copies: number;
+  outbound_clicks: number;
+  click_through_pct: number;
+  estimated_click_value_cents: number;
+  estimated_return_cents: number;
+};
+
+type PromoSummary = {
+  impressions: number;
+  unique_viewers: number;
+  opens: number;
+  copies: number;
+  outbound_clicks: number;
+  estimated_return_cents: number;
+  promos: PromoRow[];
+};
+
+function money(cents: number) {
+  return new Intl.NumberFormat("en-ZA", { style: "currency", currency: "ZAR" }).format(cents / 100);
+}
+
 function AdminAnalytics() {
   const [rangeKey, setRangeKey] = useState<string>("7");
   const days = RANGES.find((r) => r.key === rangeKey)?.days ?? 7;
@@ -66,6 +95,19 @@ function AdminAnalytics() {
     staleTime: 60_000,
   });
 
+  const { data: promoData, refetch: refetchPromos, isFetching: promosFetching } = useQuery({
+    queryKey: ["promo-engagement-summary", rangeKey],
+    queryFn: async (): Promise<PromoSummary> => {
+      const { data, error } = await (supabase.rpc as unknown as (
+        name: string,
+        args: { _since: string },
+      ) => Promise<{ data: unknown; error: { message: string } | null }>)("promo_engagement_summary", { _since: since });
+      if (error) throw error;
+      return data as PromoSummary;
+    },
+    staleTime: 60_000,
+  });
+
   const sessions = { size: Number(data?.visitors ?? 0) };
   const signedIn = { size: Number(data?.signed_in ?? 0) };
   const views = { length: Number(data?.page_views ?? 0) };
@@ -78,6 +120,32 @@ function AdminAnalytics() {
   const avgSession = Number(data?.avg_time_ms ?? 0);
 
   const maxViews = Math.max(1, ...trend.map((t) => t.views));
+  const promoRows = (promoData?.promos ?? []).map((p) => ({
+    ...p,
+    impressions: Number(p.impressions),
+    unique_viewers: Number(p.unique_viewers),
+    opens: Number(p.opens),
+    copies: Number(p.copies),
+    outbound_clicks: Number(p.outbound_clicks),
+    click_through_pct: Number(p.click_through_pct),
+    estimated_click_value_cents: Number(p.estimated_click_value_cents),
+    estimated_return_cents: Number(p.estimated_return_cents),
+  }));
+
+  function downloadPromoCsv() {
+    const escape = (value: unknown) => `"${String(value ?? "").replaceAll('"', '""')}"`;
+    const rows = [
+      ["Supplier", "Offer", "Code", "Impressions", "Unique viewers", "Offer opens", "Code copies", "Supplier-site clicks", "Click-through rate", "Estimated value per click (ZAR)", "Estimated return (ZAR)"],
+      ...promoRows.map((p) => [p.brand, p.title, p.code ?? "", p.impressions, p.unique_viewers, p.opens, p.copies, p.outbound_clicks, `${p.click_through_pct}%`, (p.estimated_click_value_cents / 100).toFixed(2), (p.estimated_return_cents / 100).toFixed(2)]),
+    ];
+    const csv = `\uFEFF${rows.map((row) => row.map(escape).join(",")).join("\n")}`;
+    const href = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+    const link = document.createElement("a");
+    link.href = href;
+    link.download = `supplier-promo-report-${rangeKey}-days.csv`;
+    link.click();
+    URL.revokeObjectURL(href);
+  }
 
   return (
     <div>
@@ -103,11 +171,14 @@ function AdminAnalytics() {
             ))}
           </div>
           <button
-            onClick={() => void refetch()}
+            onClick={() => {
+              void refetch();
+              void refetchPromos();
+            }}
             className="grid h-8 w-8 place-items-center rounded-lg border border-border bg-card text-ink-soft transition hover:text-cherry"
             aria-label="Refresh"
           >
-            <RefreshCw className={`h-4 w-4 ${isFetching ? "animate-spin" : ""}`} />
+            <RefreshCw className={`h-4 w-4 ${isFetching || promosFetching ? "animate-spin" : ""}`} />
           </button>
         </div>
       </div>
@@ -228,8 +299,82 @@ function AdminAnalytics() {
               {journeys.length === 0 ? <p className="text-sm text-ink-soft">No visits recorded yet.</p> : null}
             </div>
           </Card>
+
+          <Card title="Supplier promo performance">
+            <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <p className="text-sm font-semibold text-ink">Interest generated by supplier offers</p>
+                <p className="mt-1 max-w-2xl text-xs text-ink-soft">
+                  Click values and returns are estimates. They do not confirm that a code was redeemed or a sale was completed.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={downloadPromoCsv}
+                disabled={promoRows.length === 0}
+                className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-xs font-semibold text-ink disabled:opacity-40"
+              >
+                <Download className="h-4 w-4" /> Download CSV
+              </button>
+            </div>
+
+            <div className="mb-4 grid grid-cols-2 gap-3 md:grid-cols-4">
+              <MiniStat label="Offer views" value={Number(promoData?.impressions ?? 0)} />
+              <MiniStat label="Code copies" value={Number(promoData?.copies ?? 0)} icon={Copy} />
+              <MiniStat label="Supplier clicks" value={Number(promoData?.outbound_clicks ?? 0)} icon={MousePointerClick} />
+              <MiniStat label="Estimated return" value={money(Number(promoData?.estimated_return_cents ?? 0))} />
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[760px] text-sm">
+                <thead>
+                  <tr className="text-left text-[11px] uppercase tracking-wide text-ink-soft">
+                    <th className="pb-2">Supplier</th>
+                    <th className="pb-2 text-right">Views</th>
+                    <th className="pb-2 text-right">Visitors</th>
+                    <th className="pb-2 text-right">Opens</th>
+                    <th className="pb-2 text-right">Copies</th>
+                    <th className="pb-2 text-right">Clicks</th>
+                    <th className="pb-2 text-right">CTR</th>
+                    <th className="pb-2 text-right">Est. return</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {promoRows.map((p) => (
+                    <tr key={p.id} className="border-t border-border">
+                      <td className="py-2 pr-3">
+                        <p className="font-semibold text-ink">{p.brand}</p>
+                        <p className="max-w-60 truncate text-[11px] text-ink-soft">{p.title}</p>
+                      </td>
+                      <td className="py-2 text-right tabular-nums">{p.impressions}</td>
+                      <td className="py-2 text-right tabular-nums">{p.unique_viewers}</td>
+                      <td className="py-2 text-right tabular-nums">{p.opens}</td>
+                      <td className="py-2 text-right tabular-nums">{p.copies}</td>
+                      <td className="py-2 text-right tabular-nums">{p.outbound_clicks}</td>
+                      <td className="py-2 text-right tabular-nums">{p.click_through_pct}%</td>
+                      <td className="py-2 text-right font-semibold tabular-nums">{money(p.estimated_return_cents)}</td>
+                    </tr>
+                  ))}
+                  {promoRows.length === 0 ? (
+                    <tr><td colSpan={8} className="py-5 text-center text-ink-soft">No supplier promo activity in this period.</td></tr>
+                  ) : null}
+                </tbody>
+              </table>
+            </div>
+          </Card>
         </div>
       )}
+    </div>
+  );
+}
+
+function MiniStat({ label, value, icon: Icon }: { label: string; value: string | number; icon?: typeof Users }) {
+  return (
+    <div className="rounded-lg bg-secondary/60 p-3">
+      <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase text-ink-soft">
+        {Icon ? <Icon className="h-3.5 w-3.5" /> : null}{label}
+      </div>
+      <p className="mt-1 font-display text-xl font-bold tabular-nums text-ink">{value}</p>
     </div>
   );
 }

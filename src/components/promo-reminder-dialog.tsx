@@ -4,6 +4,7 @@ import { Copy, Check, ExternalLink, X } from "lucide-react";
 
 import type { EventPromo } from "@/lib/event-promos";
 import { useMyEntryPhone } from "@/lib/use-my-phone";
+import { trackPromoAction } from "@/lib/promo-analytics";
 
 
 /**
@@ -45,6 +46,7 @@ export function PromoReminderDialog({
       /* clipboard blocked — the code is still shown on screen */
     }
     setCopied(true);
+    trackPromoAction(promo, "promo_copy");
   }
 
   useEffect(() => {
@@ -53,9 +55,16 @@ export function PromoReminderDialog({
     return () => clearTimeout(t);
   }, [copied]);
 
-  // Opening always copies, so the code is ready to paste.
+  // Opening still prepares the code, but only a deliberate copy tap counts as a copy.
   useEffect(() => {
-    if (open) copy();
+    if (open && promo.code) {
+      try {
+        navigator.clipboard?.writeText(promo.code);
+      } catch {
+        /* clipboard blocked — the code remains visible */
+      }
+      setCopied(true);
+    }
     else setCopied(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
@@ -178,7 +187,10 @@ export function PromoReminderDialog({
             href={promo.url}
             target="_blank"
             rel="noopener noreferrer"
-            onClick={onClose}
+            onClick={() => {
+              trackPromoAction(promo, "promo_outbound");
+              onClose();
+            }}
             className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-cherry px-4 py-3 text-sm font-bold text-white"
           >
             Continue to {promo.brand} <ExternalLink className="h-4 w-4" />

@@ -3,6 +3,7 @@ import { Copy, Check, ExternalLink } from "lucide-react";
 
 import type { EventPromo } from "@/lib/event-promos";
 import { PromoReminderDialog } from "@/components/promo-reminder-dialog";
+import { trackPromoAction, usePromoImpression } from "@/lib/promo-analytics";
 
 
 /**
@@ -15,6 +16,7 @@ export function PromoCodeCard({ promo }: { promo: EventPromo }) {
   const [copied, setCopied] = useState(false);
   const hasLink = Boolean(promo.url && promo.url !== "#");
   const [open, setOpen] = useState(false);
+  usePromoImpression(promo);
 
   function copy() {
     if (!promo.code) return;
@@ -24,6 +26,7 @@ export function PromoCodeCard({ promo }: { promo: EventPromo }) {
       /* clipboard blocked — the code is still shown on screen */
     }
     setCopied(true);
+    trackPromoAction(promo, "promo_copy");
   }
 
   useEffect(() => {
@@ -32,9 +35,8 @@ export function PromoCodeCard({ promo }: { promo: EventPromo }) {
     return () => clearTimeout(t);
   }, [copied]);
 
-  // Opening the reminder always copies, so the code is ready to paste.
   function openReminder() {
-    copy();
+    trackPromoAction(promo, "promo_open");
     setOpen(true);
   }
 

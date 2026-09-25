@@ -276,6 +276,24 @@ export async function buildGlobalBotContext(
     console.error("[app-bot] knowledge context failed", e);
   }
 
+  let promoPerformanceText = "";
+  if (opts.isAdmin) {
+    try {
+      const since = new Date(Date.now() - 30 * 86400000).toISOString();
+      const { data: promoSummary } = await admin.rpc("promo_engagement_summary", { _since: since });
+      const summary = promoSummary as any;
+      const rows = Array.isArray(summary?.promos) ? summary.promos : [];
+      promoPerformanceText = [
+        "SUPPLIER PROMO PERFORMANCE — LAST 30 DAYS (ADMIN ONLY):",
+        "These figures measure interest, not confirmed code redemptions or completed sales.",
+        `Total offer views: ${Number(summary?.impressions ?? 0)}; code copies: ${Number(summary?.copies ?? 0)}; supplier-site clicks: ${Number(summary?.outbound_clicks ?? 0)}; estimated return: R${(Number(summary?.estimated_return_cents ?? 0) / 100).toFixed(2)}.`,
+        ...rows.map((p: any) => `- ${p.brand} — ${p.impressions} views, ${p.unique_viewers} visitors, ${p.opens} opens, ${p.copies} copies, ${p.outbound_clicks} supplier-site clicks, ${p.click_through_pct}% click-through, estimated return R${(Number(p.estimated_return_cents ?? 0) / 100).toFixed(2)}.`),
+      ].join("\n");
+    } catch (e) {
+      console.error("[app-bot] promo performance failed", e);
+    }
+  }
+
   const text = [
     "HOW THE APP WORKS (use this for any 'how do I…' question about the app):",
     APP_HELP_TEXT,
@@ -283,6 +301,7 @@ export async function buildGlobalBotContext(
     approved,
     knowledgeText ? "RED CHERRY BUSINESS KNOWLEDGE (written by the team — trust it):" : "",
     knowledgeText,
+    promoPerformanceText,
     riderText ? "THIS PERSON'S OWN RECORDS (authoritative, personal to them):" : "",
     riderText,
     "ALL CURRENT AND UPCOMING EVENTS:",

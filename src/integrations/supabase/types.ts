@@ -3350,6 +3350,7 @@ export type Database = {
           code: string | null
           created_at: string
           discount: string
+          estimated_click_value_cents: number
           event_match: string | null
           expires: string | null
           id: string
@@ -3368,6 +3369,7 @@ export type Database = {
           code?: string | null
           created_at?: string
           discount: string
+          estimated_click_value_cents?: number
           event_match?: string | null
           expires?: string | null
           id?: string
@@ -3386,6 +3388,7 @@ export type Database = {
           code?: string | null
           created_at?: string
           discount?: string
+          estimated_click_value_cents?: number
           event_match?: string | null
           expires?: string | null
           id?: string
@@ -3884,6 +3887,7 @@ export type Database = {
           tent_number: string
         }[]
       }
+      promo_engagement_summary: { Args: { _since: string }; Returns: Json }
     }
     Enums: {
       app_role: "admin" | "rider" | "crew"
