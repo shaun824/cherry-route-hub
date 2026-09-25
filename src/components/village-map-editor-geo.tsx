@@ -114,9 +114,20 @@ function trueMarkerLatLng(marker: L.Marker): { lat: number; lng: number } {
   return { lat: ll.lat, lng: ll.lng };
 }
 
-function ClickCatcher({ onClick }: { onClick: (lat: number, lng: number) => void }) {
+function ClickCatcher({
+  onClick,
+  debounceMs = 0,
+}: {
+  onClick: (lat: number, lng: number) => void;
+  debounceMs?: number;
+}) {
+  const last = useRef(0);
   useMapEvents({
     click(e) {
+      // Touch/trackpad can fire a second synthetic click for one tap.
+      const now = Date.now();
+      if (debounceMs && now - last.current < debounceMs) return;
+      last.current = now;
       onClick(e.latlng.lat, e.latlng.lng);
     },
   });
@@ -628,6 +639,7 @@ export default function VillageMapEditorGeo({
           {placing ? <ClickCatcher onClick={onPlace} /> : null}
           {tentMode && onPlaceTent ? (
             <ClickCatcher
+              debounceMs={600}
               onClick={(lat, lng) => {
                 // Never stack a second tent on one that's already there: a tap
                 // on (or right next to) an existing tent selects it instead.
