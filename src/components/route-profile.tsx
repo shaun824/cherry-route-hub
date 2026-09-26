@@ -267,11 +267,11 @@ export function RouteProfile({
         <div className="flex gap-3 text-[11px] font-semibold text-ink">
           <span className="inline-flex items-center gap-1">
             <TrendingUp className="h-3.5 w-3.5 text-cherry" />
-            {climbM.toLocaleString("en-ZA")} m climbing
+            {String(climbM).replace(/\B(?=(\d{3})+(?!\d))/g, ",")} m climbing
           </span>
           <span className="inline-flex items-center gap-1">
             <Mountain className="h-3.5 w-3.5 text-cherry" />
-            {Math.round(chart.maxEle).toLocaleString("en-ZA")} m high point
+            {String(Math.round(chart.maxEle)).replace(/\B(?=(\d{3})+(?!\d))/g, ",")} m high point
           </span>
         </div>
       </div>
