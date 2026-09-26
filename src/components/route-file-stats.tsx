@@ -79,7 +79,7 @@ export function RouteFileStats({ route }: { route: EventRoute }) {
       {shownGain ? (
         <span className="inline-flex items-center gap-1">
           <Mountain className="h-3.5 w-3.5 text-cherry" />
-          {Math.round(shownGain).toLocaleString("en-ZA")} m climbing
+          {String(Math.round(shownGain)).replace(/\B(?=(\d{3})+(?!\d))/g, ",")} m climbing
         </span>
       ) : null}
     </div>
