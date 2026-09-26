@@ -191,7 +191,7 @@ export function PePlettJourney({
               <span className="text-[9px] font-extrabold uppercase opacity-70">Stage {index + 1}</span>
               <span className="mt-1 block text-xs font-bold leading-tight">{route.name}</span>
               <span className="mt-2 block text-[10px] opacity-75">
-                {route.distanceKm.toFixed(1)} km · {(route.elevationM ?? 0).toLocaleString("en-ZA")} m
+                {route.distanceKm.toFixed(1)} km · {String(route.elevationM ?? 0).replace(/\B(?=(\d{3})+(?!\d))/g, ",")} m
               </span>
             </button>
           );

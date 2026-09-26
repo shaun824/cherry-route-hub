@@ -14,4 +14,4 @@
 - [x] Improve mobile tent visibility and add per-section map-name controls
 - [x] Track supplier promo engagement, estimated ROI, CSV reporting, and admin assistant access
 - [x] Add Red Cherry branding, countdown, website imagery, and trust signals to rental client pages
-- [ ] Bring the official PE Plett 2027 journey, route animation, imagery, and sponsor colours into the rider Routes section
+- [x] Bring the official PE Plett 2027 journey, route animation, imagery, and sponsor colours into the rider Routes section
