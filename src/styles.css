@@ -35,6 +35,11 @@
   --color-brand-green: var(--brand-green);
   --color-brand-blue: var(--brand-blue);
   --color-brand-orange: var(--brand-orange);
+  --color-pe-plett: var(--pe-plett);
+  --color-pe-plett-deep: var(--pe-plett-deep);
+  --color-pe-plett-foreground: var(--pe-plett-foreground);
+  --color-pe-plett-accent: var(--pe-plett-accent);
+  --color-pe-plett-accent-foreground: var(--pe-plett-accent-foreground);
   --color-ink: var(--ink);
   --color-ink-soft: var(--ink-soft);
   --font-display: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
@@ -56,6 +61,13 @@
   --brand-green: oklch(0.74 0.18 132);   /* #7CB342 */
   --brand-blue: oklch(0.58 0.16 240);    /* #1E88CC */
   --brand-orange: oklch(0.72 0.185 55);  /* #F58220 */
+
+  /* PE Plett journey palette — official website deep teal and M&G green. */
+  --pe-plett: oklch(0.3 0.065 197);
+  --pe-plett-deep: oklch(0.22 0.045 194);
+  --pe-plett-foreground: oklch(0.98 0.006 160);
+  --pe-plett-accent: oklch(0.73 0.13 132);
+  --pe-plett-accent-foreground: oklch(0.22 0.045 194);
 
   /* Primary accent = warm orange (kept as "cherry" token for API stability) */
   --cherry: oklch(0.72 0.185 55);
@@ -164,6 +176,15 @@
 
 @utility animate-promo-line-in {
   animation: promo-line-in 0.45s ease-out both;
+}
+
+@keyframes pe-plett-route-draw {
+  from { stroke-dasharray: 1; stroke-dashoffset: 1; opacity: 0.35; }
+  to { stroke-dasharray: 1; stroke-dashoffset: 0; opacity: 1; }
+}
+
+@utility animate-pe-plett-route {
+  animation: pe-plett-route-draw 2.4s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 

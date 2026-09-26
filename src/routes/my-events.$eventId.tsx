@@ -52,6 +52,7 @@ import { getEventSport } from "@/lib/event-sport";
 import { RouteMap } from "@/components/route-map";
 import { RouteFileStats } from "@/components/route-file-stats";
 import { RouteProfile } from "@/components/route-profile";
+import { isPePlettJourney, PePlettJourney } from "@/components/pe-plett-journey";
 
 import { fetchMyRooming, fetchVenues } from "@/lib/rooming";
 import { AccommodationTimeline, useMyNights } from "@/components/accommodation-timeline";
@@ -600,6 +601,7 @@ function RoutesPanel({
   const allRoutes = days.flatMap((d) => d.routes ?? []);
   const hasMap = allRoutes.some((r) => (r.kmlUrls ?? []).length > 0);
   const [activeDay, setActiveDay] = useState<string>("all");
+  const pePlettJourney = isPePlettJourney(eventId);
   const shownDays =
     activeDay === "all" ? routeDays : routeDays.filter((d) => d.id === activeDay);
   const mapDayIds = activeDay === "all" ? undefined : [activeDay];
@@ -614,6 +616,9 @@ function RoutesPanel({
   return (
     <div className="space-y-5">
       <FuelNotice eventName={eventName ?? event.name} />
+      {pePlettJourney ? (
+        <PePlettJourney days={days} activeDay={activeDay} onSelectDay={setActiveDay} />
+      ) : null}
       {routeDays.length > 1 ? (
         <div className="flex gap-1 overflow-x-auto rounded-full bg-secondary p-1">
           {[{ id: "all", label: "All days" }, ...routeDays.map((d) => ({ id: d.id, label: d.label || d.id }))].map(
