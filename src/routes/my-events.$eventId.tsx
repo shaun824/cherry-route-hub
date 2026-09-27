@@ -583,14 +583,16 @@ function RoutesPanel({
 }) {
   const { user, loading } = useSession();
   const locked = !loading && !user;
-  // Route files are for entered riders only.
+  // Route files are for entered riders who have paid in full.
   const entryQ = useQuery({
     queryKey: ["my-event", eventId],
     queryFn: () => fetchMyEventById(eventId),
     enabled: !!user,
   });
-  const isEntrant = !!entryQ.data;
-  const downloadsLocked = locked || (!!user && !entryQ.isLoading && !isEntrant);
+  const myEntry = entryQ.data ?? null;
+  const myPayment = myEntry ? paymentStatus(myEntry) : null;
+  const isPaidEntrant = !!myEntry && myPayment?.state === "paid";
+  const downloadsLocked = locked || (!!user && !entryQ.isLoading && !isPaidEntrant);
   // Rider offers live inside the routes — the most-viewed part of the page.
   const promos = useShuffledPromos(useEventPromos(eventName ?? event.name ?? ""));
   const days: EventDay[] = withRegistrationDayLabels(
