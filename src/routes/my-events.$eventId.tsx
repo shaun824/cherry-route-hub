@@ -79,6 +79,7 @@ import { LockedSection } from "@/components/locked-section";
 import { buildMapEmbedSrc, buildMapLink, resolveVenuePoint } from "@/lib/map-embed";
 import { VenueMiniMap } from "@/components/venue-mini-map";
 import { PaymentStatusCard } from "@/components/payment-status-card";
+import { paymentStatus } from "@/lib/payment-status";
 import { GroupPaymentCard } from "@/components/group-payment-card";
 import { priceEntry } from "@/lib/entry-pricing";
 import { fetchPriceBook } from "@/lib/price-book";
@@ -583,14 +584,16 @@ function RoutesPanel({
 }) {
   const { user, loading } = useSession();
   const locked = !loading && !user;
-  // Route files are for entered riders only.
+  // Route files are for entered riders who have paid in full.
   const entryQ = useQuery({
     queryKey: ["my-event", eventId],
     queryFn: () => fetchMyEventById(eventId),
     enabled: !!user,
   });
-  const isEntrant = !!entryQ.data;
-  const downloadsLocked = locked || (!!user && !entryQ.isLoading && !isEntrant);
+  const myEntry = entryQ.data ?? null;
+  const myPayment = myEntry ? paymentStatus(myEntry) : null;
+  const isPaidEntrant = !!myEntry && myPayment?.state === "paid";
+  const downloadsLocked = locked || (!!user && !entryQ.isLoading && !isPaidEntrant);
   // Rider offers live inside the routes — the most-viewed part of the page.
   const promos = useShuffledPromos(useEventPromos(eventName ?? event.name ?? ""));
   const days: EventDay[] = withRegistrationDayLabels(
@@ -724,7 +727,9 @@ function RoutesPanel({
                       downloadsLocked && !locked ? (
                         <p className="mt-3 flex items-center gap-1.5 rounded-xl bg-muted/60 px-3 py-2 text-[11px] font-medium text-ink-soft">
                           <LockIcon className="h-3.5 w-3.5 text-cherry" />
-                          Route files are available to entered riders only.
+                          {myEntry
+                            ? "Route files unlock once your entry is paid in full."
+                            : "Route files are available to fully paid entered riders only."}
                         </p>
                       ) : (
                         <LockedSection locked={locked} message="Sign in to download route files">
