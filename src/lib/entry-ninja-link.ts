@@ -13,5 +13,5 @@ export function entryNinjaRegistrationId(ref: string | null | undefined): string
 
 export function entryNinjaRegistrationUrl(ref: string | null | undefined): string | null {
   const id = entryNinjaRegistrationId(ref);
-  return id ? `https://entries.redcherryevents.co.za/registrations/${id}` : null;
+  return id ? `https://www.entryninja.com/registrations/${id}` : null;
 }
