@@ -84,7 +84,7 @@ export async function buildRiderContext(
         const regUrl = entryNinjaRegistrationUrl(e.registration_ref);
         if (regUrl)
           lines.push(
-            `- To add merchandise or extras, or change sizes, the rider opens their own Entry Ninja registration: ${regUrl} (always give this exact link when they ask how to add merch, extras or upgrades)`,
+            `- The rider's own Entry Ninja registration page: ${regUrl} — ALWAYS give this exact link as a markdown link whenever they ask how to edit their entry, add members/people to their entry, add merchandise or extras, or change sizes. Each event has its own registration link; use the one for the event they're asking about.`,
           );
       }
       if (e.category) lines.push(`- Category: ${e.category}`);
