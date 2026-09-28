@@ -21,13 +21,7 @@ export type EventPromo = {
 
 /** Maps an admin-managed promo row onto the rider-facing card shape. */
 export function toEventPromo(p: Promo): EventPromo {
-  const expiryBlurb = p.expires
-    ? `Expires ${new Date(p.expires).toLocaleDateString(undefined, {
-        day: "numeric",
-        month: "short",
-        year: "numeric",
-      })}`
-    : undefined;
+  const expiryBlurb = undefined;
   return {
     id: p.id,
     brand: p.brand,
@@ -54,12 +48,12 @@ export function promoMatchesEvent(p: Promo, eventName: string | null | undefined
   return keywords.some((k) => n.includes(k));
 }
 
-/** Live offers only (active and not expired). */
+/**
+ * Business rule: a promo on an event never expires — it runs for as long as
+ * the event does. Only the admin "Visible to riders" switch hides it.
+ */
 export function isPromoLive(p: Promo): boolean {
-  if (p.active === false) return false;
-  if (!p.expires) return true;
-  const t = new Date(`${p.expires}T23:59:59`).getTime();
-  return Number.isNaN(t) || t >= Date.now();
+  return p.active !== false;
 }
 
 /** Offers to show for an event, from the admin-managed list. */

@@ -31,7 +31,7 @@ function blank(): Promo {
     title: "",
     code: "",
     discount: "10% off",
-    expires: new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10),
+    expires: "",
     accent: "oklch(0.55 0.2 25)",
     blurb: "",
     redeem: "",
