@@ -34,6 +34,7 @@ import { fetchVillageTents } from "@/lib/village-tents";
 import { useIsCrew } from "@/lib/auth";
 import { useLockPageZoom } from "@/lib/use-lock-page-zoom";
 import { supabase } from "@/integrations/supabase/client";
+import { trackAction } from "@/lib/event-analytics";
 
 
 
@@ -386,6 +387,13 @@ export function VillageMapView({
       setFilter(null);
     }
   }, [focusSpotId]);
+
+  useEffect(() => {
+    if (selected) trackAction("village_point_tapped", { kind: "spot_or_tent" });
+  }, [selected]);
+  useEffect(() => {
+    if (selectedZone) trackAction("village_zone_tapped");
+  }, [selectedZone]);
 
   const map = q.data;
 

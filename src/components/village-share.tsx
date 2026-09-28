@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { trackAction } from "@/lib/event-analytics";
 import { toast } from "sonner";
 import { Check, Share2, Users } from "lucide-react";
 
@@ -26,6 +27,7 @@ export function buildVillageShareUrl(opts: {
 }
 
 async function shareUrl(url: string, title: string) {
+  trackAction("village_share_used", { crew: url.includes("view=crew") });
   try {
     if (typeof navigator !== "undefined" && navigator.share) {
       await navigator.share({ title, url });
