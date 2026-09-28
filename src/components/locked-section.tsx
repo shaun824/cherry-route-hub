@@ -3,6 +3,8 @@
 // see that the information exists.
 import { Link, useRouterState } from "@tanstack/react-router";
 import { Lock } from "lucide-react";
+import { useEffect } from "react";
+import { trackAction, trackActionOnce } from "@/lib/event-analytics";
 
 export function LockedSection({
   locked,
@@ -14,6 +16,9 @@ export function LockedSection({
   children: React.ReactNode;
 }) {
   const next = useRouterState({ select: (s) => s.location.href });
+  useEffect(() => {
+    if (locked) trackActionOnce("locked_section_seen", message, { wall: message.slice(0, 80) });
+  }, [locked, message]);
   if (!locked) return <>{children}</>;
   return (
     <div className="relative min-h-[7rem] overflow-hidden rounded-2xl">
@@ -32,6 +37,7 @@ export function LockedSection({
           <Link
             to="/auth"
             search={{ next }}
+            onClick={() => trackAction("sign_in_prompt_clicked", { wall: message.slice(0, 80) })}
             className="mt-2 inline-flex items-center rounded-xl cherry-gradient px-4 py-2 text-xs font-bold text-white"
           >
             Sign in

@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Activity, Users, Eye, Timer, RefreshCw, MonitorSmartphone, Download, MousePointerClick, Copy } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { InsideEventsAnalytics } from "@/components/inside-events-analytics";
 
 export const Route = createFileRoute("/admin/analytics")({
   component: AdminAnalytics,
@@ -274,6 +275,8 @@ function AdminAnalytics() {
               </div>
             </Card>
           </div>
+
+          <InsideEventsAnalytics since={since} rangeKey={rangeKey} />
 
           <Card title="Recent visitor journeys">
             <p className="mb-3 text-xs text-ink-soft">

@@ -71,6 +71,27 @@
       "when": 1790365188036,
       "tag": "0009_allow_sending_status_email_sends",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1790621249820,
+      "tag": "0010_inside_events_analytics",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1790621563819,
+      "tag": "0011_fix_inside_events_summary",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1790621613988,
+      "tag": "0012_fix_inside_events_summary_grouping",
+      "breakpoints": true
     }
   ]
 }

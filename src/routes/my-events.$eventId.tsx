@@ -6,7 +6,8 @@ import { isBotMiss } from "@/lib/bot-handoff";
 import { splitFollowUps } from "@/lib/bot-followups";
 import ReactMarkdown from "react-markdown";
 
-import { createFileRoute, Link, notFound, useRouterState } from "@tanstack/react-router";
+import { createFileRoute, Link, notFound, useNavigate, useRouterState } from "@tanstack/react-router";
+import { trackAction, trackActionThrottled, useClickTracking, useSectionTracking, useTabTracking, type TabSource } from "@/lib/event-analytics";
 import { useServerFn } from "@tanstack/react-start";
 import { askEventBot } from "@/lib/event-bot.functions";
 import { fetchEventSponsors } from "@/lib/event-sponsors.functions";
@@ -148,7 +149,29 @@ function MyEventDetail() {
   const { event } = Route.useLoaderData();
   const { user } = useSession();
   const { tab: initialTab } = Route.useSearch();
+  const navigate = useNavigate({ from: "/my-events/$eventId" });
   const [tab, setTab] = useState<Tab>(initialTab ?? "info");
+  const [tabSource, setTabSource] = useState<TabSource>(initialTab ? "deep_link" : "initial");
+  const pageRef = useRef<HTMLDivElement | null>(null);
+  const infoRef = useRef<HTMLDivElement | null>(null);
+  useTabTracking(event.id, event.name, tab, tabSource);
+  useClickTracking(pageRef);
+  useSectionTracking(infoRef, tab === "info" ? `info-${event.id}` : "off", { tab: "info" });
+  // Keep ?tab= in sync (replace, so history stays clean)…
+  useEffect(() => {
+    if ((initialTab ?? "info") === tab) return;
+    void navigate({ search: (s: Record<string, unknown>) => ({ ...s, tab: tab === "info" ? undefined : tab }), replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tab]);
+  // …and follow it when the URL changes underneath us (back/forward, deep links).
+  useEffect(() => {
+    const t = initialTab ?? "info";
+    if (t !== tab) {
+      setTabSource("back");
+      setTab(t);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialTab]);
   const tabNavRef = useRef<HTMLElement | null>(null);
   /** Switching tabs should always land you at the top of the new section. */
   const scrollToTabTop = useCallback(() => {
@@ -156,7 +179,8 @@ function MyEventDetail() {
     window.scrollTo({ top: 0, behavior: "auto" });
   }, []);
   const selectTab = useCallback(
-    (next: Tab) => {
+    (next: Tab, source: TabSource = "tab_bar") => {
+      setTabSource(source);
       setTab(next);
       scrollToTabTop();
       // Panels mount lazily and can shift layout — re-anchor over the next moments,
@@ -183,7 +207,9 @@ function MyEventDetail() {
 
   const [villageFocus, setVillageFocus] = useState<{ zoneId?: string | null; spotId?: string | null; tentId?: string | null; venueId?: string | null }>({});
   const focusVillage = useCallback((f: { zoneId?: string | null; spotId?: string | null; tentId?: string | null; venueId?: string | null }) => {
+    trackAction("show_on_village_map");
     setVillageFocus(f);
+    setTabSource("village_focus");
     setTab("village");
     if (typeof window === "undefined") return;
     window.scrollTo({ top: 0, behavior: "auto" });
@@ -223,7 +249,7 @@ function MyEventDetail() {
 
   return (
     <VillageFocusContext.Provider value={focusVillage}>
-    <div>
+    <div ref={pageRef}>
       <div
         style={brandHeader(event.hero_color).style}
         className={`relative overflow-hidden ${brandHeader(event.hero_color).className} px-5 pb-5 pt-14 text-white`}
@@ -296,14 +322,14 @@ function MyEventDetail() {
 
       <div className="px-5 py-4">
         {tab === "info" && (
-          <div className="space-y-5">
-            <section>
+          <div ref={infoRef} className="space-y-5">
+            <section data-section="assistant">
               <SectionTitle>Ask the assistant</SectionTitle>
               <div className="mt-2">
                 <AskAdminPanel eventId={event.id} userId={user?.id ?? null} eventName={event.name} compact />
               </div>
             </section>
-            <InfoPanel eventId={event.id} description={event.description} distanceKm={event.distance_km} event={event} isLive={event.status === "live"} eventName={event.name} onTabChange={selectTab} hasFreshNews={hasFreshNews} hasNightly={hasNightly} signedIn={Boolean(user)} />
+            <InfoPanel eventId={event.id} description={event.description} distanceKm={event.distance_km} event={event} isLive={event.status === "live"} eventName={event.name} onTabChange={(t) => selectTab(t, "quick_link")} hasFreshNews={hasFreshNews} hasNightly={hasNightly} signedIn={Boolean(user)} />
           </div>
         )}
         {tab === "accommodation" && (
@@ -325,6 +351,15 @@ function MyEventDetail() {
         {tab === "village" && (
           <section id="village-map-section" className="scroll-mt-16 space-y-3">
             <SectionTitle>Race village</SectionTitle>
+            <div
+              onWheel={() => trackActionThrottled("village_map_zoomed")}
+              onTouchMove={(e) =>
+                trackActionThrottled(e.touches.length > 1 ? "village_map_zoomed" : "village_map_panned")
+              }
+              onPointerMove={(e) => {
+                if (e.pointerType === "mouse" && e.buttons === 1) trackActionThrottled("village_map_panned");
+              }}
+            >
             <VillageMapView
               eventId={event.id}
               focusZoneId={villageFocus.zoneId ?? null}
@@ -333,6 +368,7 @@ function MyEventDetail() {
               venueId={villageFocus.venueId ?? null}
               riderOnly
             />
+            </div>
             <OfflinePackCard event={event as never} />
           </section>
         )}
@@ -535,7 +571,7 @@ function EventNewsPanel({ posts }: { posts: FeedPost[] }) {
             </span>
           </div>
           <h3 className="mt-2 font-display text-base font-bold leading-snug text-ink">{p.title}</h3>
-          <FeedPostBody post={p} />
+          <div data-track-action="news_post_opened" data-track-post={p.id}><FeedPostBody post={p} /></div>
           <p className="mt-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
             {p.author}
           </p>
@@ -620,7 +656,7 @@ function RoutesPanel({
     <div className="space-y-5">
       <FuelNotice eventName={eventName ?? event.name} />
       {pePlettJourney ? (
-        <PePlettJourney days={days} activeDay={activeDay} onSelectDay={setActiveDay} />
+        <PePlettJourney days={days} activeDay={activeDay} onSelectDay={(d) => { trackAction("route_day_changed", { day: d }); setActiveDay(d); }} />
       ) : null}
       {routeDays.length > 1 ? (
         <div className="flex gap-1 overflow-x-auto rounded-full bg-secondary p-1">
@@ -631,7 +667,10 @@ function RoutesPanel({
                 <button
                   key={t.id}
                   type="button"
-                  onClick={() => setActiveDay(t.id)}
+                  onClick={() => {
+                    trackAction("route_day_changed", { day: t.id });
+                    setActiveDay(t.id);
+                  }}
                   className={`whitespace-nowrap rounded-full px-3.5 py-1.5 text-xs font-bold transition ${
                     on ? "bg-cherry text-white shadow-sm" : "text-ink-soft"
                   }`}
@@ -649,12 +688,18 @@ function RoutesPanel({
           <SectionTitle>Interactive map</SectionTitle>
           <div className="mt-2">
             <LockedSection locked={locked} message="Sign in to view the interactive route map">
-              <RouteMap event={event as never} height="320px" dayIds={mapDayIds} />
+              <div
+                onPointerDown={() => trackActionThrottled("route_map_interacted", 30000, { day: activeDay })}
+                onWheel={() => trackActionThrottled("route_map_interacted", 30000, { day: activeDay })}
+              >
+                <RouteMap event={event as never} height="320px" dayIds={mapDayIds} />
+              </div>
             </LockedSection>
             {!locked ? (
               <Link
                 to="/events/$eventId/map"
                 params={{ eventId }}
+                data-track-action="route_map_fullscreen_opened"
                 className="mt-2 inline-block text-[11px] font-semibold text-cherry"
               >
                 Open fullscreen map →
@@ -733,7 +778,7 @@ function RoutesPanel({
                         </p>
                       ) : (
                         <LockedSection locked={locked} message="Sign in to download route files">
-                          <div className="mt-3 flex flex-wrap gap-2">
+                          <div className="mt-3 flex flex-wrap gap-2" data-day={day.id} data-route={r.tier || r.name}>
                             {kmls.map((u, i) => (
                               <DownloadLink
                                 key={u}
@@ -826,7 +871,7 @@ function InfoPanel({
   return (
     <div className="space-y-4">
       {isLive ? (
-        <section>
+        <section data-section="live_tracking">
           <SectionTitle>Live tracking & SOS</SectionTitle>
           <div className="mt-2">
             <TrackerPanel eventId={eventId} eventName={eventName} />
@@ -838,33 +883,35 @@ function InfoPanel({
 
 
       {showWeather ? (
-        <EventWeatherCard
+        <div data-section="weather"><EventWeatherCard
           eventName={eventName}
           location={event.location ?? ""}
           mapQuery={event.map_query}
           eventDate={event.event_date ?? undefined}
-        />
+        /></div>
       ) : null}
 
+      <div data-section={signedIn ? "entry_status" : "locked_entry"}>
       <YourEntryCard
         eventId={eventId}
         entryUrl={event.entry_ninja_url ?? event.website_url ?? null}
       />
+      </div>
 
       {hasNightly ? (
-        <AccommodationTimeline
+        <div data-section="accommodation"><AccommodationTimeline
           eventId={eventId}
           days={Array.isArray(event.days) ? (event.days as EventDay[]) : []}
           schedule={schedule}
           variant="compact"
           enabled={signedIn}
           finishLocation={info?.finish_location}
-        />
+        /></div>
       ) : null}
 
 
       {riderOffers.length > 0 ? (
-        <section>
+        <section data-section="rider_offers">
           <SectionTitle>Rider offers</SectionTitle>
           <div className="mt-2">
             <PromoCarousel promos={riderOffers} />
@@ -875,7 +922,7 @@ function InfoPanel({
 
 
       {aboutText ? (
-        <section>
+        <section data-section="about">
           <SectionTitle>About</SectionTitle>
           <p className="mt-1.5 text-sm leading-relaxed text-ink-soft">
             {isLongAbout && !aboutExpanded
@@ -885,7 +932,10 @@ function InfoPanel({
           {isLongAbout ? (
             <button
               type="button"
-              onClick={() => setAboutExpanded((v) => !v)}
+              onClick={() => {
+                if (!aboutExpanded) trackAction("about_expanded");
+                setAboutExpanded((v) => !v);
+              }}
               className="mt-2 text-xs font-semibold text-cherry"
             >
               {aboutExpanded ? "Show less" : "Learn more"}
@@ -895,23 +945,23 @@ function InfoPanel({
       ) : null}
 
       {schedule.length > 0 ? (
-        <section>
+        <section data-section="schedule">
           <SectionTitle>Schedule</SectionTitle>
           <ScheduleView schedule={schedule} days={days} />
         </section>
       ) : null}
 
-      <EventSectionNav
+      <div data-section="quick_links"><EventSectionNav
         onSelectTab={onTabChange}
         hasRoutes={days.some((d) => (d.routes ?? []).length > 0)}
         hasFreshNews={hasFreshNews}
         hasAccommodation={hasNightly}
-      />
+      /></div>
 
 
 
       {info?.reg_venue_name || info?.reg_venue_address ? (
-        <section>
+        <section data-section="registration">
           <SectionTitle>Registration / check-in</SectionTitle>
           {(() => {
             const regAddress = info.reg_venue_address ?? info.reg_venue_name ?? "";
@@ -958,7 +1008,7 @@ function InfoPanel({
         </section>
       ) : null}
 
-      <section>
+      <section data-section="venue_map">
         <SectionTitle>{info?.reg_venue_name || info?.reg_venue_address ? "Event venue" : "Venue"}</SectionTitle>
 
         {(() => {
@@ -1033,22 +1083,22 @@ function InfoPanel({
       </section>
 
 
-      <section className="flex flex-wrap items-center justify-between gap-2 rounded-2xl bg-card p-3 ring-1 ring-border">
+      <section data-section="contact_team" className="flex flex-wrap items-center justify-between gap-2 rounded-2xl bg-card p-3 ring-1 ring-border">
         <p className="min-w-0 flex-1 text-xs text-ink-soft">
           Can&apos;t find what you need? Message the Red Cherry team directly.
         </p>
         <WhatsappButton size="sm" context={eventName} />
       </section>
 
-      <FollowSection links={(event.social_links as SocialLinks | null) ?? undefined} />
+      <div data-section="socials"><FollowSection links={(event.social_links as SocialLinks | null) ?? undefined} /></div>
 
 
 
-      <SponsorsBlock eventName={eventName} />
+      <div data-section="sponsors"><SponsorsBlock eventName={eventName} /></div>
 
 
       {info?.rules_md ? (
-        <section>
+        <section data-section="rules">
           <SectionTitle>Rules</SectionTitle>
           <p className="mt-1.5 whitespace-pre-line rounded-xl bg-card p-3 text-sm text-ink-soft ring-1 ring-border">
             {info.rules_md}
@@ -1159,6 +1209,10 @@ function PackingPanel({
   async function toggle(key: string) {
     if (!userId) return;
     const current = Boolean(stateQ.data?.[key]);
+    trackAction(current ? "packing_item_unticked" : "packing_item_ticked", { item: key.slice(0, 60) });
+    if (!current && items.length > 0 && items.every((it) => it.key === key || stateQ.data?.[it.key])) {
+      trackAction("packing_list_completed", { items: items.length });
+    }
     qc.setQueryData(["packing-state", eventId, userId], {
       ...(stateQ.data ?? {}),
       [key]: !current,
@@ -1419,6 +1473,7 @@ function ChatPanel({ eventId, userId }: { eventId: string; userId: string | null
       .from("event_chat_messages")
       .insert({ event_id: eventId, author_id: userId, body });
     if (error) console.warn(error);
+    trackAction("chat_message_sent", { ok: !error });
     setBusy(false);
   }
 
@@ -1557,6 +1612,7 @@ function AskAdminPanel({
     setText("");
 
     try {
+      trackAction("ask_admin_message_sent");
       await askBot({ data: { eventId, question: body } });
       await qc.invalidateQueries({ queryKey: ["qa-thread", eventId, userId] });
       await qc.invalidateQueries({ queryKey: ["qa-messages", threadQ.data?.id] });
@@ -2242,14 +2298,15 @@ function YourEntryCard({ eventId, entryUrl = null }: { eventId: string; entryUrl
         </div>
       ) : null}
 
-      <PaymentStatusCard
+      <div data-section="payment_status"><PaymentStatusCard
         info={{ ...row, priced_total_cents: pricing.totalCents, priced_complete: pricing.complete }}
         entryUrl={entryUrl}
         lines={row.amount_due_cents == null ? pricing.lines : []}
-      />
+      /></div>
 
       <GroupPaymentCard eventId={eventId} entryUrl={entryUrl} />
 
+      <div data-section="inclusions">
       <EntryInclusions
         eventId={eventId}
         extras={row.extras}
@@ -2262,6 +2319,7 @@ function YourEntryCard({ eventId, entryUrl = null }: { eventId: string; entryUrl
           "https://entries.redcherryevents.co.za/"
         }
       />
+      </div>
 
 
 

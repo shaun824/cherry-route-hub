@@ -3834,6 +3834,10 @@ export type Database = {
     }
     Functions: {
       analytics_summary: { Args: { _since: string }; Returns: Json }
+      inside_events_summary: {
+        Args: { _event_id?: string; _since: string }
+        Returns: Json
+      }
       live_tracking_identity: {
         Args: { _event_id: string }
         Returns: {
