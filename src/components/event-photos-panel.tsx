@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { trackAction } from "@/lib/event-analytics";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { getEventPhotos, type EventPhoto } from "@/lib/event-photos.functions";
@@ -57,7 +58,10 @@ export function EventPhotosPanel({ eventId }: { eventId: string }) {
             <li key={p.id}>
               <button
                 type="button"
-                onClick={() => setOpen(i)}
+                onClick={() => {
+                  trackAction("photo_opened", { index: i });
+                  setOpen(i);
+                }}
                 className="block w-full overflow-hidden rounded-lg ring-1 ring-border"
               >
                 <img
