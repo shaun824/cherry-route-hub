@@ -30,6 +30,7 @@ import { Route as SpectateEventIdRouteImport } from './routes/spectate.$eventId'
 import { Route as RentalTokenRouteImport } from './routes/rental.$token'
 import { Route as MyEventsEventIdRouteImport } from './routes/my-events.$eventId'
 import { Route as EventsEventIdRouteImport } from './routes/events.$eventId'
+import { Route as EmbedConnectRouteImport } from './routes/embed.connect'
 import { Route as EmbedChatRouteImport } from './routes/embed.chat'
 import { Route as CrewTrackingRouteImport } from './routes/crew.tracking'
 import { Route as CrewRunSheetRouteImport } from './routes/crew.run-sheet'
@@ -219,6 +220,11 @@ const MyEventsEventIdRoute = MyEventsEventIdRouteImport.update({
 const EventsEventIdRoute = EventsEventIdRouteImport.update({
   id: '/events/$eventId',
   path: '/events/$eventId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EmbedConnectRoute = EmbedConnectRouteImport.update({
+  id: '/embed/connect',
+  path: '/embed/connect',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EmbedChatRoute = EmbedChatRouteImport.update({
@@ -721,6 +727,7 @@ export interface FileRoutesByFullPath {
   '/crew/run-sheet': typeof CrewRunSheetRoute
   '/crew/tracking': typeof CrewTrackingRoute
   '/embed/chat': typeof EmbedChatRoute
+  '/embed/connect': typeof EmbedConnectRoute
   '/events/$eventId': typeof EventsEventIdRouteWithChildren
   '/my-events/$eventId': typeof MyEventsEventIdRoute
   '/rental/$token': typeof RentalTokenRoute
@@ -826,6 +833,7 @@ export interface FileRoutesByTo {
   '/crew/run-sheet': typeof CrewRunSheetRoute
   '/crew/tracking': typeof CrewTrackingRoute
   '/embed/chat': typeof EmbedChatRoute
+  '/embed/connect': typeof EmbedConnectRoute
   '/my-events/$eventId': typeof MyEventsEventIdRoute
   '/rental/$token': typeof RentalTokenRoute
   '/spectate/$eventId': typeof SpectateEventIdRoute
@@ -934,6 +942,7 @@ export interface FileRoutesById {
   '/crew/run-sheet': typeof CrewRunSheetRoute
   '/crew/tracking': typeof CrewTrackingRoute
   '/embed/chat': typeof EmbedChatRoute
+  '/embed/connect': typeof EmbedConnectRoute
   '/events/$eventId': typeof EventsEventIdRouteWithChildren
   '/my-events/$eventId': typeof MyEventsEventIdRoute
   '/rental/$token': typeof RentalTokenRoute
@@ -1044,6 +1053,7 @@ export interface FileRouteTypes {
     | '/crew/run-sheet'
     | '/crew/tracking'
     | '/embed/chat'
+    | '/embed/connect'
     | '/events/$eventId'
     | '/my-events/$eventId'
     | '/rental/$token'
@@ -1149,6 +1159,7 @@ export interface FileRouteTypes {
     | '/crew/run-sheet'
     | '/crew/tracking'
     | '/embed/chat'
+    | '/embed/connect'
     | '/my-events/$eventId'
     | '/rental/$token'
     | '/spectate/$eventId'
@@ -1256,6 +1267,7 @@ export interface FileRouteTypes {
     | '/crew/run-sheet'
     | '/crew/tracking'
     | '/embed/chat'
+    | '/embed/connect'
     | '/events/$eventId'
     | '/my-events/$eventId'
     | '/rental/$token'
@@ -1335,6 +1347,7 @@ export interface RootRouteChildren {
   CrewRunSheetRoute: typeof CrewRunSheetRoute
   CrewTrackingRoute: typeof CrewTrackingRoute
   EmbedChatRoute: typeof EmbedChatRoute
+  EmbedConnectRoute: typeof EmbedConnectRoute
   EventsEventIdRoute: typeof EventsEventIdRouteWithChildren
   RentalTokenRoute: typeof RentalTokenRoute
   CrewIndexRoute: typeof CrewIndexRoute
@@ -1523,6 +1536,13 @@ declare module '@tanstack/react-router' {
       path: '/events/$eventId'
       fullPath: '/events/$eventId'
       preLoaderRoute: typeof EventsEventIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/embed/connect': {
+      id: '/embed/connect'
+      path: '/embed/connect'
+      fullPath: '/embed/connect'
+      preLoaderRoute: typeof EmbedConnectRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/embed/chat': {
@@ -2285,6 +2305,7 @@ const rootRouteChildren: RootRouteChildren = {
   CrewRunSheetRoute: CrewRunSheetRoute,
   CrewTrackingRoute: CrewTrackingRoute,
   EmbedChatRoute: EmbedChatRoute,
+  EmbedConnectRoute: EmbedConnectRoute,
   EventsEventIdRoute: EventsEventIdRouteWithChildren,
   RentalTokenRoute: RentalTokenRoute,
   CrewIndexRoute: CrewIndexRoute,
