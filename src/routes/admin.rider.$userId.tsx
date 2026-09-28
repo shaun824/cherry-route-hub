@@ -54,7 +54,65 @@ type ActivityRow = {
   duration_ms: number | null;
   device: string | null;
   created_at: string;
+  props: Record<string, unknown> | null;
 };
+
+type ActivityGroup = {
+  id: string;
+  label: string;
+  device: string | null;
+  created_at: string;
+  duration: number | null;
+  children: string[];
+};
+
+function fmtDur(ms: number | null) {
+  if (!ms || ms < 1000) return "";
+  const s = Math.round(ms / 1000);
+  return s < 60 ? `${s}s` : `${Math.floor(s / 60)}m ${s % 60}s`;
+}
+const pretty = (v: unknown) => String(v ?? "").replaceAll("_", " ");
+const cap = (v: string) => v.charAt(0).toUpperCase() + v.slice(1);
+
+/** Pageviews and tab views become rows; sections and actions nest under them. */
+function groupActivity(rows: ActivityRow[]): ActivityGroup[] {
+  const asc = [...rows].sort((a, b) => a.created_at.localeCompare(b.created_at));
+  const groups: ActivityGroup[] = [];
+  const openTab = new Map<string, ActivityGroup>();
+  for (const r of asc) {
+    const p = r.props ?? {};
+    const route = r.route_label ?? r.path;
+    if (r.event_name === "pageview") {
+      groups.push({ id: r.id, label: route, device: r.device, created_at: r.created_at, duration: null, children: [] });
+    } else if (r.event_name === "tab_view") {
+      const g = {
+        id: r.id,
+        label: `${route} › ${String(p.event_name ?? "Event")} › ${cap(pretty(p.tab))}`,
+        device: r.device,
+        created_at: r.created_at,
+        duration: null,
+        children: [] as string[],
+      };
+      groups.push(g);
+      openTab.set(`${p.event_id}|${p.tab}`, g);
+    } else if (r.event_name === "tab_exit") {
+      const g = openTab.get(`${p.event_id}|${p.tab}`);
+      if (g && g.duration == null) g.duration = r.duration_ms;
+    } else {
+      const g = groups[groups.length - 1];
+      if (!g) continue;
+      if (r.event_name === "section_view") g.children.push(`Read ${pretty(p.section)}`);
+      else if (r.event_name === "action") {
+        const extra = ["day", "target", "file_type", "groups", "item"]
+          .map((k) => (p[k] ? pretty(p[k]) : ""))
+          .filter(Boolean)
+          .join(", ");
+        g.children.push(`${cap(pretty(p.action))}${extra ? ` (${extra})` : ""}${p.ok === false ? " — failed" : ""}`);
+      }
+    }
+  }
+  return groups.reverse();
+}
 
 function fmtDate(v: string | null | undefined) {
   if (!v) return "—";
@@ -104,17 +162,17 @@ function RiderProfile() {
 
       const { data: acts } = await supabase
         .from("analytics_events")
-        .select("id,event_name,path,route_label,duration_ms,device,created_at")
+        .select("id,event_name,path,route_label,duration_ms,device,created_at,props")
         .eq("user_id", userId)
-        .eq("event_name", "pageview")
+        .in("event_name", ["pageview", "tab_view", "tab_exit", "section_view", "action"])
         .order("created_at", { ascending: false })
-        .limit(100);
+        .limit(400);
 
       return {
         profile: (profile ?? null) as Profile | null,
         entries,
         rooming,
-        activity: (acts ?? []) as ActivityRow[],
+        activity: groupActivity((acts ?? []) as ActivityRow[]),
       };
     },
   });
@@ -231,9 +289,17 @@ function RiderProfile() {
                   </tr>
                 </thead>
                 <tbody>
-                  {d.activity.slice(0, 40).map((a) => (
-                    <tr key={a.id} className="border-t border-border">
-                      <td className="py-2 pr-3">{a.route_label ?? a.path}</td>
+                  {d.activity.slice(0, 60).map((a) => (
+                    <tr key={a.id} className="border-t border-border align-top">
+                      <td className="py-2 pr-3">
+                        <span className="font-medium">{a.label}</span>
+                        {a.duration ? <span className="text-ink-soft"> · {fmtDur(a.duration)}</span> : null}
+                        {a.children.length ? (
+                          <ul className="mt-1 space-y-0.5 border-l-2 border-border pl-3 text-xs text-ink-soft">
+                            {a.children.slice(0, 12).map((c, i) => <li key={i}>{c}</li>)}
+                          </ul>
+                        ) : null}
+                      </td>
                       <td className="py-2 capitalize text-ink-soft">{a.device ?? "—"}</td>
                       <td className="py-2 text-right text-xs text-ink-soft">
                         {new Date(a.created_at).toLocaleString()}
