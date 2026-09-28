@@ -6,7 +6,8 @@ import { isBotMiss } from "@/lib/bot-handoff";
 import { splitFollowUps } from "@/lib/bot-followups";
 import ReactMarkdown from "react-markdown";
 
-import { createFileRoute, Link, notFound, useRouterState } from "@tanstack/react-router";
+import { createFileRoute, Link, notFound, useNavigate, useRouterState } from "@tanstack/react-router";
+import { trackAction, trackActionThrottled, useClickTracking, useSectionTracking, useTabTracking, type TabSource } from "@/lib/event-analytics";
 import { useServerFn } from "@tanstack/react-start";
 import { askEventBot } from "@/lib/event-bot.functions";
 import { fetchEventSponsors } from "@/lib/event-sponsors.functions";
@@ -148,7 +149,28 @@ function MyEventDetail() {
   const { event } = Route.useLoaderData();
   const { user } = useSession();
   const { tab: initialTab } = Route.useSearch();
+  const navigate = useNavigate({ from: "/my-events/$eventId" });
   const [tab, setTab] = useState<Tab>(initialTab ?? "info");
+  const [tabSource, setTabSource] = useState<TabSource>(initialTab ? "deep_link" : "initial");
+  const pageRef = useRef<HTMLDivElement | null>(null);
+  const infoRef = useRef<HTMLDivElement | null>(null);
+  useTabTracking(event.id, event.name, tab, tabSource);
+  useClickTracking(pageRef);
+  useSectionTracking(infoRef, tab === "info" ? `info-${event.id}` : "off", { tab: "info" });
+  // Keep ?tab= in sync (replace, so history stays clean)…
+  useEffect(() => {
+    if ((initialTab ?? "info") === tab) return;
+    void navigate({ search: (s: Record<string, unknown>) => ({ ...s, tab: tab === "info" ? undefined : tab }), replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tab]);
+  // …and follow it when the URL changes underneath us (back/forward, deep links).
+  useEffect(() => {
+    const t = initialTab ?? "info";
+    setTab((cur) => {
+      if (cur !== t) setTabSource("back");
+      return t;
+    });
+  }, [initialTab]);
   const tabNavRef = useRef<HTMLElement | null>(null);
   /** Switching tabs should always land you at the top of the new section. */
   const scrollToTabTop = useCallback(() => {
@@ -156,7 +178,8 @@ function MyEventDetail() {
     window.scrollTo({ top: 0, behavior: "auto" });
   }, []);
   const selectTab = useCallback(
-    (next: Tab) => {
+    (next: Tab, source: TabSource = "tab_bar") => {
+      setTabSource(source);
       setTab(next);
       scrollToTabTop();
       // Panels mount lazily and can shift layout — re-anchor over the next moments,
@@ -183,7 +206,9 @@ function MyEventDetail() {
 
   const [villageFocus, setVillageFocus] = useState<{ zoneId?: string | null; spotId?: string | null; tentId?: string | null; venueId?: string | null }>({});
   const focusVillage = useCallback((f: { zoneId?: string | null; spotId?: string | null; tentId?: string | null; venueId?: string | null }) => {
+    trackAction("show_on_village_map");
     setVillageFocus(f);
+    setTabSource("village_focus");
     setTab("village");
     if (typeof window === "undefined") return;
     window.scrollTo({ top: 0, behavior: "auto" });
