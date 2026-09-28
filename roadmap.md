@@ -17,3 +17,5 @@
 - [x] Bring the official PE Plett 2027 journey, route animation, imagery, and sponsor colours into the rider Routes section
 
 - [x] Remove Woodridge activity stations and add the safety and disaster plan to its client page
+
+- [x] Inside-event analytics: tab/section/action tracking, rider activity detail, Admin → Analytics "Inside events"
