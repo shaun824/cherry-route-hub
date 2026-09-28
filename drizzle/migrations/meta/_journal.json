@@ -78,6 +78,13 @@
       "when": 1790621249820,
       "tag": "0010_inside_events_analytics",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1790621563819,
+      "tag": "0011_fix_inside_events_summary",
+      "breakpoints": true
     }
   ]
 }
