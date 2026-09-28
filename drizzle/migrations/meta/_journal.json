@@ -71,6 +71,13 @@
       "when": 1790365188036,
       "tag": "0009_allow_sending_status_email_sends",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1790621249820,
+      "tag": "0010_inside_events_analytics",
+      "breakpoints": true
     }
   ]
 }
