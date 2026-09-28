@@ -16,7 +16,6 @@ async function isStaff(userId: string | null): Promise<boolean> {
   return (await adminCheck) ?? false;
 }
 
-
 const SESSION_KEY = "rce_analytics_session";
 
 export function getSessionId(): string {
@@ -51,17 +50,56 @@ type TrackInput = {
   props?: Record<string, unknown>;
 };
 
-export async function track({ eventName, path, durationMs, props }: TrackInput) {
-  if (typeof window === "undefined") return;
+type QueuedRow = {
+  session_id: string;
+  event_name: string;
+  path: string;
+  route_label: string;
+  referrer: string | null;
+  duration_ms: number | null;
+  viewport_width: number;
+  device: string;
+  user_agent: string;
+  props: Record<string, unknown>;
+};
+
+// Events are batched: one insert every few seconds (or when the page hides),
+// so busy screens never fire a request per tap.
+let queue: QueuedRow[] = [];
+let flushTimer: number | null = null;
+let hideHooked = false;
+
+async function flush() {
+  if (flushTimer) {
+    window.clearTimeout(flushTimer);
+    flushTimer = null;
+  }
+  if (queue.length === 0) return;
+  const rows = queue;
+  queue = [];
   try {
     const { data } = await supabase.auth.getSession();
     const uid = data.session?.user.id ?? null;
     if (await isStaff(uid)) return;
-    const pathname = path ?? window.location.pathname;
+    await supabase
+      .from("analytics_events")
+      .insert(rows.map((r) => ({ ...r, user_id: uid, props: r.props as never })));
+  } catch {
+    /* analytics must never break the app */
+  }
+}
 
-    await supabase.from("analytics_events").insert({
+export function flushAnalytics() {
+  if (typeof window === "undefined") return;
+  void flush();
+}
+
+export function track({ eventName, path, durationMs, props }: TrackInput) {
+  if (typeof window === "undefined") return;
+  try {
+    const pathname = path ?? window.location.pathname;
+    queue.push({
       session_id: getSessionId(),
-      user_id: data.session?.user.id ?? null,
       event_name: eventName,
       path: pathname,
       route_label: routeLabel(pathname),
@@ -70,10 +108,19 @@ export async function track({ eventName, path, durationMs, props }: TrackInput) 
       viewport_width: window.innerWidth,
       device: deviceType(window.innerWidth),
       user_agent: navigator.userAgent.slice(0, 300),
-      props: (props ?? {}) as never,
+      props: props ?? {},
     });
+    if (!hideHooked) {
+      hideHooked = true;
+      document.addEventListener("visibilitychange", () => {
+        if (document.visibilityState === "hidden") void flush();
+      });
+      window.addEventListener("pagehide", () => void flush());
+    }
+    if (queue.length >= 25) void flush();
+    else if (!flushTimer) flushTimer = window.setTimeout(() => void flush(), 4000);
   } catch {
-    /* analytics must never break the app */
+    /* never throw */
   }
 }
 
@@ -88,7 +135,7 @@ export function usePageTracking() {
 
     const now = Date.now();
     if (previous.current && startedAt.current) {
-      void track({
+      track({
         eventName: "page_exit",
         path: previous.current,
         durationMs: now - startedAt.current,
@@ -96,16 +143,18 @@ export function usePageTracking() {
     }
     previous.current = pathname;
     startedAt.current = now;
-    void track({ eventName: "pageview", path: pathname });
+    track({ eventName: "pageview", path: pathname });
 
     const onHide = () => {
       if (document.visibilityState === "hidden" && previous.current && startedAt.current) {
-        void track({
+        track({
           eventName: "page_exit",
           path: previous.current,
           durationMs: Date.now() - startedAt.current,
         });
         startedAt.current = 0;
+      } else if (document.visibilityState === "visible" && !startedAt.current) {
+        startedAt.current = Date.now();
       }
     };
     document.addEventListener("visibilitychange", onHide);
