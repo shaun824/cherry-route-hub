@@ -31,7 +31,7 @@ export function InsideEventsAnalytics({ since, rangeKey }: { since: string; rang
   const { data, isLoading } = useQuery({
     queryKey: ["inside-events-summary", rangeKey, eventId],
     queryFn: async (): Promise<Summary> => {
-      const rpc = supabase.rpc as unknown as (
+      const rpc = supabase.rpc.bind(supabase) as unknown as (
         n: string,
         a: Record<string, unknown>,
       ) => Promise<{ data: unknown; error: { message: string } | null }>;
