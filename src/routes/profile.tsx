@@ -1,5 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { trackAction, useSectionTracking, useClickTracking } from "@/lib/event-analytics";
 import { PageHeader } from "@/components/ui-bits";
 import { supabase } from "@/integrations/supabase/client";
 import { useSession, signOut, useIsCrew, useIsAdmin } from "@/lib/auth";
@@ -58,6 +59,10 @@ function Profile() {
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState<{ kind: "ok" | "err"; text: string } | null>(null);
   const [accounts, setAccounts] = useState<KnownAccount[]>([]);
+  const loaded = useRef<ProfileForm>(empty);
+  const pageRef = useRef<HTMLDivElement | null>(null);
+  useSectionTracking(pageRef, user && !initialLoad ? "profile" : "off", { tab: "profile" });
+  useClickTracking(pageRef);
 
   useEffect(() => {
     if (user?.email) rememberAccount(user.email, form.full_name || null);
@@ -87,6 +92,15 @@ function Profile() {
         .eq("id", user.id)
         .maybeSingle();
       if (!error && data) {
+        loaded.current = {
+          full_name: data.full_name ?? "",
+          phone: data.phone ?? "",
+          emergency_contact_name: data.emergency_contact_name ?? "",
+          emergency_contact_phone: data.emergency_contact_phone ?? "",
+          jacket_size: data.jacket_size ?? "",
+          tshirt_size: data.tshirt_size ?? "",
+          entry_ninja_id: data.entry_ninja_id ?? "",
+        };
         setForm({
           full_name: data.full_name ?? "",
           phone: data.phone ?? "",
@@ -117,6 +131,16 @@ function Profile() {
       })
       .eq("id", user.id);
     setSaving(false);
+    // Which field groups changed — never the values themselves.
+    const prev = loaded.current;
+    const groups = [
+      (form.full_name !== prev.full_name || form.phone !== prev.phone) && "personal",
+      (form.emergency_contact_name !== prev.emergency_contact_name ||
+        form.emergency_contact_phone !== prev.emergency_contact_phone) && "emergency_contact",
+      form.entry_ninja_id !== prev.entry_ninja_id && "entry_ninja_id",
+    ].filter(Boolean) as string[];
+    trackAction("profile_saved", { groups: groups.join(",") || "none", ok: !error });
+    if (!error) loaded.current = { ...form };
     if (error) setMsg({ kind: "err", text: error.message });
     else setMsg({ kind: "ok", text: "Profile saved." });
   }
@@ -153,7 +177,7 @@ function Profile() {
   }
 
   return (
-    <div className="pb-24">
+    <div ref={pageRef} className="pb-24">
       <PageHeader
         title="Profile"
         subtitle={user.email ?? "Rider profile"}
@@ -167,7 +191,7 @@ function Profile() {
         }
       />
 
-      <div className="mx-5 mt-4 flex items-center gap-3 rounded-2xl bg-card p-4 ring-1 ring-border">
+      <div data-section="identity" className="mx-5 mt-4 flex items-center gap-3 rounded-2xl bg-card p-4 ring-1 ring-border">
         <span className="grid h-12 w-12 place-items-center rounded-full bg-accent text-cherry-deep">
           <UserIcon className="h-6 w-6" />
         </span>
@@ -177,13 +201,13 @@ function Profile() {
         </div>
       </div>
 
-      <RewardsSummary />
+      <div data-section="rewards"><RewardsSummary /></div>
 
 
 
 
       {/* Account switcher */}
-      <section className="mx-5 mt-4 rounded-2xl bg-card p-4 ring-1 ring-border">
+      <section data-section="switch_account" className="mx-5 mt-4 rounded-2xl bg-card p-4 ring-1 ring-border">
         <div className="flex items-center gap-2">
           <Repeat className="h-4 w-4 text-cherry" />
           <h2 className="font-display text-sm font-bold">Switch account</h2>
@@ -253,7 +277,7 @@ function Profile() {
       <AdminShortcut />
       <CrewShortcut />
 
-      <form onSubmit={handleSave} className="mx-5 mt-4 space-y-4 rounded-2xl bg-card p-4 ring-1 ring-border">
+      <form data-section="details_form" onSubmit={handleSave} className="mx-5 mt-4 space-y-4 rounded-2xl bg-card p-4 ring-1 ring-border">
         <Field label="Full name">
           <input
             className="input"
@@ -344,9 +368,9 @@ function Profile() {
         </div>
       </form>
 
-      <RiderEventHistory userId={user.id} />
+      <div data-section="event_history"><RiderEventHistory userId={user.id} /></div>
 
-      <div className="mt-4">
+      <div data-section="notifications" className="mt-4">
         <NotificationSettings />
       </div>
 
