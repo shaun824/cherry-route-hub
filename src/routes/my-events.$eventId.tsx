@@ -249,7 +249,7 @@ function MyEventDetail() {
 
   return (
     <VillageFocusContext.Provider value={focusVillage}>
-    <div>
+    <div ref={pageRef}>
       <div
         style={brandHeader(event.hero_color).style}
         className={`relative overflow-hidden ${brandHeader(event.hero_color).className} px-5 pb-5 pt-14 text-white`}
@@ -322,14 +322,14 @@ function MyEventDetail() {
 
       <div className="px-5 py-4">
         {tab === "info" && (
-          <div className="space-y-5">
-            <section>
+          <div ref={infoRef} className="space-y-5">
+            <section data-section="assistant">
               <SectionTitle>Ask the assistant</SectionTitle>
               <div className="mt-2">
                 <AskAdminPanel eventId={event.id} userId={user?.id ?? null} eventName={event.name} compact />
               </div>
             </section>
-            <InfoPanel eventId={event.id} description={event.description} distanceKm={event.distance_km} event={event} isLive={event.status === "live"} eventName={event.name} onTabChange={selectTab} hasFreshNews={hasFreshNews} hasNightly={hasNightly} signedIn={Boolean(user)} />
+            <InfoPanel eventId={event.id} description={event.description} distanceKm={event.distance_km} event={event} isLive={event.status === "live"} eventName={event.name} onTabChange={(t) => selectTab(t, "quick_link")} hasFreshNews={hasFreshNews} hasNightly={hasNightly} signedIn={Boolean(user)} />
           </div>
         )}
         {tab === "accommodation" && (
@@ -351,6 +351,15 @@ function MyEventDetail() {
         {tab === "village" && (
           <section id="village-map-section" className="scroll-mt-16 space-y-3">
             <SectionTitle>Race village</SectionTitle>
+            <div
+              onWheel={() => trackActionThrottled("village_map_zoomed")}
+              onTouchMove={(e) =>
+                trackActionThrottled(e.touches.length > 1 ? "village_map_zoomed" : "village_map_panned")
+              }
+              onPointerMove={(e) => {
+                if (e.pointerType === "mouse" && e.buttons === 1) trackActionThrottled("village_map_panned");
+              }}
+            >
             <VillageMapView
               eventId={event.id}
               focusZoneId={villageFocus.zoneId ?? null}
@@ -359,6 +368,7 @@ function MyEventDetail() {
               venueId={villageFocus.venueId ?? null}
               riderOnly
             />
+            </div>
             <OfflinePackCard event={event as never} />
           </section>
         )}
