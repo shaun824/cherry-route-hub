@@ -2306,7 +2306,7 @@ function YourEntryCard({ eventId, entryUrl = null }: { eventId: string; entryUrl
 
       <GroupPaymentCard eventId={eventId} entryUrl={entryUrl} />
 
-      <div data-section="inclusions" className="contents" />
+      <div data-section="inclusions">
       <EntryInclusions
         eventId={eventId}
         extras={row.extras}
@@ -2319,6 +2319,7 @@ function YourEntryCard({ eventId, entryUrl = null }: { eventId: string; entryUrl
           "https://entries.redcherryevents.co.za/"
         }
       />
+      </div>
 
 
 
