@@ -2302,10 +2302,11 @@ function YourEntryCard({ eventId, entryUrl = null }: { eventId: string; entryUrl
         info={{ ...row, priced_total_cents: pricing.totalCents, priced_complete: pricing.complete }}
         entryUrl={entryUrl}
         lines={row.amount_due_cents == null ? pricing.lines : []}
-      />
+      /></div>
 
       <GroupPaymentCard eventId={eventId} entryUrl={entryUrl} />
 
+      <div data-section="inclusions" className="contents" />
       <EntryInclusions
         eventId={eventId}
         extras={row.extras}

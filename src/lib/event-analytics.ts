@@ -198,7 +198,8 @@ export function useClickTracking(containerRef: React.RefObject<HTMLElement | nul
         if (a.hasAttribute("download")) {
           const file = a.getAttribute("download") || a.href.split("/").pop() || "";
           const ext = (file.split(".").pop() || "").toLowerCase().slice(0, 5);
-          trackAction("file_download", { file_type: ext, label: file.slice(0, 80), day: a.dataset.day, route: a.dataset.route });
+          const ctx = a.closest<HTMLElement>("[data-day]");
+          trackAction("file_download", { file_type: ext, label: file.slice(0, 80), day: ctx?.dataset.day, route: ctx?.dataset.route });
           return;
         }
         const kind = classifyOutbound(a.href);
