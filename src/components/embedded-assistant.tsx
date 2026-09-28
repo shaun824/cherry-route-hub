@@ -18,6 +18,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { submitFeedback } from "@/lib/feedback.functions";
 import { askAppBot } from "@/lib/app-bot.functions";
 import { getSessionId } from "@/lib/analytics";
+import { supabase } from "@/integrations/supabase/client";
 
 const categories = [
   { value: "issue", label: "Something's broken" },
@@ -49,6 +50,21 @@ export function EmbeddedAssistant() {
 
   const listRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
+
+  const [signedInEmail, setSignedInEmail] = useState<string | null>(null);
+  useEffect(() => {
+    void supabase.auth.getSession().then(({ data }) => setSignedInEmail(data.session?.user.email ?? null));
+    const onMsg = async (e: MessageEvent) => {
+      if (e.origin !== window.location.origin || e.data?.type !== "rce-embed-session") return;
+      const { data } = await supabase.auth.setSession({
+        access_token: String(e.data.access_token),
+        refresh_token: String(e.data.refresh_token),
+      });
+      setSignedInEmail(data.session?.user.email ?? null);
+    };
+    window.addEventListener("message", onMsg);
+    return () => window.removeEventListener("message", onMsg);
+  }, []);
 
   useEffect(() => {
     listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: "smooth" });
@@ -214,17 +230,24 @@ export function EmbeddedAssistant() {
           </div>
         ) : null}
 
-        <p className="pt-1 text-center text-[11px] text-ink-soft">
-          <a
-            href={`${typeof window !== "undefined" ? window.location.origin : ""}/auth`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="font-bold text-cherry underline underline-offset-2"
-          >
-            Sign in
-          </a>{" "}
-          on the Rider Hub to ask about your own entry, tent or balance.
-        </p>
+        {signedInEmail ? (
+          <p className="pt-1 text-center text-[11px] text-ink-soft">
+            Signed in as <span className="font-bold">{signedInEmail}</span>
+          </p>
+        ) : (
+          <p className="pt-1 text-center text-[11px] text-ink-soft">
+            <button
+              type="button"
+              onClick={() =>
+                window.open("/embed/connect", "rce-embed-connect", "width=480,height=720")
+              }
+              className="font-bold text-cherry underline underline-offset-2"
+            >
+              Sign in
+            </button>{" "}
+            with your Rider Hub account to ask about your own entry, tent or balance.
+          </p>
+        )}
       </div>
 
       <div className="min-w-0 max-h-[62%] shrink-0 overflow-y-auto overflow-x-hidden border-t border-border p-3">
