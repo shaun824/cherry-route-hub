@@ -571,7 +571,7 @@ function EventNewsPanel({ posts }: { posts: FeedPost[] }) {
             </span>
           </div>
           <h3 className="mt-2 font-display text-base font-bold leading-snug text-ink">{p.title}</h3>
-          <FeedPostBody post={p} />
+          <div data-track-action="news_post_opened" data-track-post={p.id}><FeedPostBody post={p} /></div>
           <p className="mt-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
             {p.author}
           </p>
@@ -656,7 +656,7 @@ function RoutesPanel({
     <div className="space-y-5">
       <FuelNotice eventName={eventName ?? event.name} />
       {pePlettJourney ? (
-        <PePlettJourney days={days} activeDay={activeDay} onSelectDay={setActiveDay} />
+        <PePlettJourney days={days} activeDay={activeDay} onSelectDay={(d) => { trackAction("route_day_changed", { day: d }); setActiveDay(d); }} />
       ) : null}
       {routeDays.length > 1 ? (
         <div className="flex gap-1 overflow-x-auto rounded-full bg-secondary p-1">
@@ -667,7 +667,10 @@ function RoutesPanel({
                 <button
                   key={t.id}
                   type="button"
-                  onClick={() => setActiveDay(t.id)}
+                  onClick={() => {
+                    trackAction("route_day_changed", { day: t.id });
+                    setActiveDay(t.id);
+                  }}
                   className={`whitespace-nowrap rounded-full px-3.5 py-1.5 text-xs font-bold transition ${
                     on ? "bg-cherry text-white shadow-sm" : "text-ink-soft"
                   }`}
@@ -685,12 +688,18 @@ function RoutesPanel({
           <SectionTitle>Interactive map</SectionTitle>
           <div className="mt-2">
             <LockedSection locked={locked} message="Sign in to view the interactive route map">
-              <RouteMap event={event as never} height="320px" dayIds={mapDayIds} />
+              <div
+                onPointerDown={() => trackActionThrottled("route_map_interacted", 30000, { day: activeDay })}
+                onWheel={() => trackActionThrottled("route_map_interacted", 30000, { day: activeDay })}
+              >
+                <RouteMap event={event as never} height="320px" dayIds={mapDayIds} />
+              </div>
             </LockedSection>
             {!locked ? (
               <Link
                 to="/events/$eventId/map"
                 params={{ eventId }}
+                data-track-action="route_map_fullscreen_opened"
                 className="mt-2 inline-block text-[11px] font-semibold text-cherry"
               >
                 Open fullscreen map →
@@ -769,7 +778,7 @@ function RoutesPanel({
                         </p>
                       ) : (
                         <LockedSection locked={locked} message="Sign in to download route files">
-                          <div className="mt-3 flex flex-wrap gap-2">
+                          <div className="mt-3 flex flex-wrap gap-2" data-day={day.id} data-route={r.tier || r.name}>
                             {kmls.map((u, i) => (
                               <DownloadLink
                                 key={u}
@@ -862,7 +871,7 @@ function InfoPanel({
   return (
     <div className="space-y-4">
       {isLive ? (
-        <section>
+        <section data-section="live_tracking">
           <SectionTitle>Live tracking & SOS</SectionTitle>
           <div className="mt-2">
             <TrackerPanel eventId={eventId} eventName={eventName} />
@@ -874,33 +883,35 @@ function InfoPanel({
 
 
       {showWeather ? (
-        <EventWeatherCard
+        <div data-section="weather"><EventWeatherCard
           eventName={eventName}
           location={event.location ?? ""}
           mapQuery={event.map_query}
           eventDate={event.event_date ?? undefined}
-        />
+        /></div>
       ) : null}
 
+      <div data-section={signedIn ? "entry_status" : "locked_entry"}>
       <YourEntryCard
         eventId={eventId}
         entryUrl={event.entry_ninja_url ?? event.website_url ?? null}
       />
+      </div>
 
       {hasNightly ? (
-        <AccommodationTimeline
+        <div data-section="accommodation"><AccommodationTimeline
           eventId={eventId}
           days={Array.isArray(event.days) ? (event.days as EventDay[]) : []}
           schedule={schedule}
           variant="compact"
           enabled={signedIn}
           finishLocation={info?.finish_location}
-        />
+        /></div>
       ) : null}
 
 
       {riderOffers.length > 0 ? (
-        <section>
+        <section data-section="rider_offers">
           <SectionTitle>Rider offers</SectionTitle>
           <div className="mt-2">
             <PromoCarousel promos={riderOffers} />
@@ -911,7 +922,7 @@ function InfoPanel({
 
 
       {aboutText ? (
-        <section>
+        <section data-section="about">
           <SectionTitle>About</SectionTitle>
           <p className="mt-1.5 text-sm leading-relaxed text-ink-soft">
             {isLongAbout && !aboutExpanded
@@ -921,7 +932,10 @@ function InfoPanel({
           {isLongAbout ? (
             <button
               type="button"
-              onClick={() => setAboutExpanded((v) => !v)}
+              onClick={() => {
+                if (!aboutExpanded) trackAction("about_expanded");
+                setAboutExpanded((v) => !v);
+              }}
               className="mt-2 text-xs font-semibold text-cherry"
             >
               {aboutExpanded ? "Show less" : "Learn more"}
@@ -931,23 +945,23 @@ function InfoPanel({
       ) : null}
 
       {schedule.length > 0 ? (
-        <section>
+        <section data-section="schedule">
           <SectionTitle>Schedule</SectionTitle>
           <ScheduleView schedule={schedule} days={days} />
         </section>
       ) : null}
 
-      <EventSectionNav
+      <div data-section="quick_links"><EventSectionNav
         onSelectTab={onTabChange}
         hasRoutes={days.some((d) => (d.routes ?? []).length > 0)}
         hasFreshNews={hasFreshNews}
         hasAccommodation={hasNightly}
-      />
+      /></div>
 
 
 
       {info?.reg_venue_name || info?.reg_venue_address ? (
-        <section>
+        <section data-section="registration">
           <SectionTitle>Registration / check-in</SectionTitle>
           {(() => {
             const regAddress = info.reg_venue_address ?? info.reg_venue_name ?? "";
@@ -994,7 +1008,7 @@ function InfoPanel({
         </section>
       ) : null}
 
-      <section>
+      <section data-section="venue_map">
         <SectionTitle>{info?.reg_venue_name || info?.reg_venue_address ? "Event venue" : "Venue"}</SectionTitle>
 
         {(() => {
@@ -1069,22 +1083,22 @@ function InfoPanel({
       </section>
 
 
-      <section className="flex flex-wrap items-center justify-between gap-2 rounded-2xl bg-card p-3 ring-1 ring-border">
+      <section data-section="contact_team" className="flex flex-wrap items-center justify-between gap-2 rounded-2xl bg-card p-3 ring-1 ring-border">
         <p className="min-w-0 flex-1 text-xs text-ink-soft">
           Can&apos;t find what you need? Message the Red Cherry team directly.
         </p>
         <WhatsappButton size="sm" context={eventName} />
       </section>
 
-      <FollowSection links={(event.social_links as SocialLinks | null) ?? undefined} />
+      <div data-section="socials"><FollowSection links={(event.social_links as SocialLinks | null) ?? undefined} /></div>
 
 
 
-      <SponsorsBlock eventName={eventName} />
+      <div data-section="sponsors"><SponsorsBlock eventName={eventName} /></div>
 
 
       {info?.rules_md ? (
-        <section>
+        <section data-section="rules">
           <SectionTitle>Rules</SectionTitle>
           <p className="mt-1.5 whitespace-pre-line rounded-xl bg-card p-3 text-sm text-ink-soft ring-1 ring-border">
             {info.rules_md}
@@ -1195,6 +1209,10 @@ function PackingPanel({
   async function toggle(key: string) {
     if (!userId) return;
     const current = Boolean(stateQ.data?.[key]);
+    trackAction(current ? "packing_item_unticked" : "packing_item_ticked", { item: key.slice(0, 60) });
+    if (!current && items.length > 0 && items.every((it) => it.key === key || stateQ.data?.[it.key])) {
+      trackAction("packing_list_completed", { items: items.length });
+    }
     qc.setQueryData(["packing-state", eventId, userId], {
       ...(stateQ.data ?? {}),
       [key]: !current,
@@ -1455,6 +1473,7 @@ function ChatPanel({ eventId, userId }: { eventId: string; userId: string | null
       .from("event_chat_messages")
       .insert({ event_id: eventId, author_id: userId, body });
     if (error) console.warn(error);
+    trackAction("chat_message_sent", { ok: !error });
     setBusy(false);
   }
 
@@ -1593,6 +1612,7 @@ function AskAdminPanel({
     setText("");
 
     try {
+      trackAction("ask_admin_message_sent");
       await askBot({ data: { eventId, question: body } });
       await qc.invalidateQueries({ queryKey: ["qa-thread", eventId, userId] });
       await qc.invalidateQueries({ queryKey: ["qa-messages", threadQ.data?.id] });
@@ -2278,7 +2298,7 @@ function YourEntryCard({ eventId, entryUrl = null }: { eventId: string; entryUrl
         </div>
       ) : null}
 
-      <PaymentStatusCard
+      <div data-section="payment_status"><PaymentStatusCard
         info={{ ...row, priced_total_cents: pricing.totalCents, priced_complete: pricing.complete }}
         entryUrl={entryUrl}
         lines={row.amount_due_cents == null ? pricing.lines : []}
