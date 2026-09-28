@@ -78,7 +78,7 @@ export function useTabTracking(eventId: string, eventName: string, tab: string, 
     return () => {
       document.removeEventListener("visibilitychange", onVis);
       exit();
-      setAnalyticsScope({});
+      if (scope.event_id === eventId && scope.tab === tab) setAnalyticsScope({});
     };
     // source intentionally excluded — it describes how this tab was reached.
     // eslint-disable-next-line react-hooks/exhaustive-deps
