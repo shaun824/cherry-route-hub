@@ -166,10 +166,11 @@ function MyEventDetail() {
   // …and follow it when the URL changes underneath us (back/forward, deep links).
   useEffect(() => {
     const t = initialTab ?? "info";
-    setTab((cur) => {
-      if (cur !== t) setTabSource("back");
-      return t;
-    });
+    if (t !== tab) {
+      setTabSource("back");
+      setTab(t);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialTab]);
   const tabNavRef = useRef<HTMLElement | null>(null);
   /** Switching tabs should always land you at the top of the new section. */
