@@ -1,6 +1,6 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { CalendarDays, ClipboardList, MapPin, Package, Phone, ShieldCheck, Sparkles, Truck } from "lucide-react";
+import { AlertTriangle, CalendarDays, ClipboardList, Download, Flame, HeartPulse, MapPin, Package, Phone, ShieldCheck, Sparkles, Truck, Wind } from "lucide-react";
 import { getRentalByToken } from "@/lib/rentals.functions";
 import { VillageMapView } from "@/components/village-map-view";
 import bedouinImage from "@/assets/rentals/bed-one.jpg.asset.json";
@@ -9,6 +9,9 @@ import tentInteriorImage from "@/assets/rentals/lux-double.jpg.asset.json";
 import chillZoneImage from "@/assets/rentals/odds.jpg.asset.json";
 import showerImage from "@/assets/rentals/shower.jpg.asset.json";
 import redCherryLogo from "@/assets/rentals/red-cherry-events-logo.png.asset.json";
+import woodridgeSafetyPlan from "@/assets/rentals/woodridge-safety-plan.docx.asset.json";
+
+const WOODRIDGE_RENTAL_ID = "598a0fe7-4bf9-45ed-a107-bdf7627417cf";
 
 export const Route = createFileRoute("/rental/$token")({
   loader: async ({ params }) => {
@@ -225,6 +228,8 @@ function RentalPage() {
             </ul>
           )}
         </Card>
+
+        {event.id === WOODRIDGE_RENTAL_ID ? <WoodridgeSafetyPlan /> : null}
       </main>
 
       <section className="bg-foreground px-5 py-12 text-center text-background">
@@ -247,6 +252,67 @@ function RentalPage() {
         </div>
       </section>
     </div>
+  );
+}
+
+function WoodridgeSafetyPlan() {
+  const measures = [
+    {
+      icon: <Wind className="h-5 w-5" />,
+      title: "Wind and severe weather",
+      text: "Tent clusters are arranged in protective circles and secured with eight 100 mm pegs per tent. Red Cherry crew will remain on standby and carry out regular stability checks.",
+    },
+    {
+      icon: <Flame className="h-5 w-5" />,
+      title: "Gas and fire",
+      text: "The shower units use ventilated 6 L/min gas geysers with correctly installed flues. Four fire extinguishers and directional signs will be positioned around the showers.",
+    },
+    {
+      icon: <HeartPulse className="h-5 w-5" />,
+      title: "Medical emergency",
+      text: "East Cape Medical Rescue will be on standby for emergencies relating to the Red Cherry infrastructure. Chief Medical Officer: Eugene Muller — 082 448 3231 / 086 017 7277.",
+    },
+    {
+      icon: <ShieldCheck className="h-5 w-5" />,
+      title: "Site supervision and power",
+      text: "An appointed Red Cherry janitor will monitor the toilets and showers. Backup generators will be available during load shedding.",
+    },
+  ];
+
+  return (
+    <section className="overflow-hidden rounded-lg border border-border bg-card" aria-labelledby="woodridge-safety-title">
+      <div className="bg-foreground px-4 py-5 text-background sm:px-5">
+        <div className="flex items-start gap-3">
+          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground">
+            <AlertTriangle className="h-5 w-5" />
+          </span>
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-primary">13–19 December 2026</p>
+            <h2 id="woodridge-safety-title" className="mt-1 font-display text-xl font-bold">Safety &amp; disaster plan</h2>
+            <p className="mt-2 max-w-2xl text-sm text-background/75">The key controls for the Woodridge Church Build at Rushmere Field.</p>
+          </div>
+        </div>
+      </div>
+      <div className="grid gap-px bg-border sm:grid-cols-2">
+        {measures.map((measure) => (
+          <article key={measure.title} className="bg-card p-4 sm:p-5">
+            <div className="text-primary">{measure.icon}</div>
+            <h3 className="mt-3 text-sm font-bold text-ink">{measure.title}</h3>
+            <p className="mt-1 text-sm leading-relaxed text-ink-soft">{measure.text}</p>
+          </article>
+        ))}
+      </div>
+      <div className="flex flex-col gap-3 border-t border-border p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
+        <p className="text-sm text-ink-soft">Safety contact: Mike Glover — 083 601 3287 · mike@redcherryevents.co.za</p>
+        <a
+          href={woodridgeSafetyPlan.url}
+          download
+          className="inline-flex shrink-0 items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-bold text-primary-foreground"
+        >
+          <Download className="h-4 w-4" /> Download full plan
+        </a>
+      </div>
+    </section>
   );
 }
 
