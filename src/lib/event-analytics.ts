@@ -9,8 +9,18 @@ export type TabSource = "tab_bar" | "quick_link" | "deep_link" | "village_focus"
 type Scope = { event_id?: string; event_name?: string; tab?: string };
 let scope: Scope = {};
 
+const onceKeys = new Set<string>();
 export function setAnalyticsScope(next: Scope) {
+  if (next.event_id !== scope.event_id || next.tab !== scope.tab) onceKeys.clear();
   scope = next;
+}
+
+/** Log an action at most once per tab visit for a given key (e.g. a sign-in wall). */
+export function trackActionOnce(action: string, key: string, details?: Record<string, string | number | boolean | null | undefined>) {
+  const k = `${action}:${key}`;
+  if (onceKeys.has(k)) return;
+  onceKeys.add(k);
+  trackAction(action, details);
 }
 export function getAnalyticsScope(): Scope {
   return scope;
@@ -41,6 +51,10 @@ export function trackActionThrottled(action: string, ms = 15000, details?: Recor
  */
 export function useTabTracking(eventId: string, eventName: string, tab: string, source: TabSource) {
   const startedAt = useRef(0);
+  // Set during render so child effects (which run before this one) see the right tab.
+  if (typeof window !== "undefined" && (scope.event_id !== eventId || scope.tab !== tab)) {
+    setAnalyticsScope({ event_id: eventId, event_name: eventName, tab });
+  }
   useEffect(() => {
     if (typeof window === "undefined") return;
     setAnalyticsScope({ event_id: eventId, event_name: eventName, tab });

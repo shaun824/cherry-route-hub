@@ -4,7 +4,7 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { Lock } from "lucide-react";
 import { useEffect } from "react";
-import { trackAction } from "@/lib/event-analytics";
+import { trackAction, trackActionOnce } from "@/lib/event-analytics";
 
 export function LockedSection({
   locked,
@@ -17,7 +17,7 @@ export function LockedSection({
 }) {
   const next = useRouterState({ select: (s) => s.location.href });
   useEffect(() => {
-    if (locked) trackAction("locked_section_seen", { wall: message.slice(0, 80) });
+    if (locked) trackActionOnce("locked_section_seen", message, { wall: message.slice(0, 80) });
   }, [locked, message]);
   if (!locked) return <>{children}</>;
   return (
