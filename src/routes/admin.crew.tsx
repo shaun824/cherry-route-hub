@@ -38,11 +38,12 @@ function AdminCrewPage() {
   const [fullName, setFullName] = useState("");
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteName, setInviteName] = useState("");
+  const [inviteAdmin, setInviteAdmin] = useState(false);
 
   const q = useQuery({ queryKey: ["crew-logins"], queryFn: () => list() });
 
   const inviteM = useMutation({
-    mutationFn: () => invite({ data: { email: inviteEmail, full_name: inviteName } }),
+    mutationFn: () => invite({ data: { email: inviteEmail, full_name: inviteName, admin: inviteAdmin } }),
     onSuccess: (r: { emailed: boolean; temp_password: string | null; email: string }) => {
       toast.success(
         r.emailed
@@ -127,6 +128,10 @@ function AdminCrewPage() {
             />
           </label>
         </div>
+        <label className="flex items-center gap-2 text-xs font-semibold text-ink">
+          <input type="checkbox" checked={inviteAdmin} onChange={(e) => setInviteAdmin(e.target.checked)} />
+          Also make them a super admin (full backend access)
+        </label>
         <p className="text-[11px] text-ink-soft">
           Creates their crew portal account and emails them a sign-in plus a link to start the training and tests.
         </p>
