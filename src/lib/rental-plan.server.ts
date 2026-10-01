@@ -68,7 +68,7 @@ export async function draftRentalPlan(text: string, att?: PlanAttachment | null,
     }
   }
   if (!body && !content.length) throw new Error("Add the plan text or upload a file.");
-  content.unshift({ type: "input_text", text: body || "Read the attached plan of action." });
+  content.unshift({ type: "input_text", text: `Return the plan as a json object.\n\n${body || "Read the attached plan of action."}` });
 
   const res = await fetch(`${GATEWAY}/responses`, {
     method: "POST",
