@@ -56,7 +56,7 @@ import ZoneDuplicator from "@/components/zone-duplicator";
 import { BrandingToPlace } from "@/components/branding-to-place";
 import { toast } from "sonner";
 
-import { fetchVillageTents, TENT_TYPES, type TentType } from "@/lib/village-tents";
+import { fetchVillageTents, tentTypeMeta, TENT_TYPES, type TentType } from "@/lib/village-tents";
 
 const VillageMapEditorGeo = lazy(() => import("@/components/village-map-editor-geo"));
 
@@ -358,6 +358,56 @@ function VillageEditor() {
     const { error } = await supabase.from("event_village_tents").update(patch).in("id", ids);
     if (error) toast.error(error.message);
     else toast.success(msg);
+    await qc.invalidateQueries({ queryKey: ["village-tents", event.id, venueId] });
+  }
+
+  /**
+   * Change a selected block's tent product while keeping its layout compact.
+   * When every selected tent has the same current size, their centre points are
+   * scaled around the block centre by the footprint-size ratio. A 4 m grid
+   * therefore becomes a uniform 3.25 m grid without drifting to one side.
+   */
+  async function bulkChangeTentType(ids: string[], type: TentType) {
+    if (ids.length === 0) return;
+    const selected = tents.filter((tent) => ids.includes(tent.id) && (tent.kind ?? "tent") !== "marker");
+    if (selected.length === 0) return;
+
+    const sourceSizes = new Set(selected.map((tent) => tentTypeMeta(tent.tent_type).sizeM));
+    const targetSize = tentTypeMeta(type).sizeM;
+    const canScaleLayout = selected.length > 1 && sourceSizes.size === 1;
+    const sourceSize = canScaleLayout ? [...sourceSizes][0] : targetSize;
+    const scale = sourceSize > 0 ? targetSize / sourceSize : 1;
+    const centreLat = selected.reduce((sum, tent) => sum + tent.lat, 0) / selected.length;
+    const centreLng = selected.reduce((sum, tent) => sum + tent.lng, 0) / selected.length;
+    const updates = selected.map((tent) => ({
+      id: tent.id,
+      tent_type: type,
+      lat: canScaleLayout ? +(centreLat + (tent.lat - centreLat) * scale).toFixed(7) : tent.lat,
+      lng: canScaleLayout ? +(centreLng + (tent.lng - centreLng) * scale).toFixed(7) : tent.lng,
+    }));
+
+    qc.setQueryData(
+      ["village-tents", event.id, venueId],
+      (current: typeof tents | undefined) =>
+        current?.map((tent) => {
+          const update = updates.find((item) => item.id === tent.id);
+          return update ? { ...tent, ...update } : tent;
+        }) ?? current,
+    );
+    const results = await Promise.all(
+      updates.map((update) =>
+        supabase
+          .from("event_village_tents")
+          .update({ tent_type: update.tent_type, lat: update.lat, lng: update.lng })
+          .eq("id", update.id),
+      ),
+    );
+    const error = results.find((result) => result.error)?.error;
+    if (error) toast.error(error.message);
+    else {
+      const compacted = canScaleLayout && scale !== 1;
+      toast.success(`${selected.length} tents changed to ${tentTypeMeta(type).name}${compacted ? " and spacing adjusted" : ""}`);
+    }
     await qc.invalidateQueries({ queryKey: ["village-tents", event.id, venueId] });
   }
 
@@ -945,9 +995,7 @@ function VillageEditor() {
             {TENT_TYPES.map((t) => (
               <button
                 key={t.id}
-                onClick={() =>
-                  void bulkPatchTents(multiTents, { tent_type: t.id }, `${multiTents.length} tents changed to ${t.name}`)
-                }
+                onClick={() => void bulkChangeTentType(multiTents, t.id)}
                 className="rounded-lg bg-background px-2 py-1 text-ink ring-1 ring-border hover:bg-muted"
               >
                 {t.name} ({t.sizeM}×{t.sizeM}m)
