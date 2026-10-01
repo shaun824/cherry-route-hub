@@ -23,9 +23,25 @@ export const Route = createFileRoute('/api/public/entry-count')({
           )
         }
         const capParam = Number(url.searchParams.get('cap'))
-        const cap = Number.isFinite(capParam) && capParam > 0 ? Math.min(Math.floor(capParam), 100000) : 250
+        const capOverride = Number.isFinite(capParam) && capParam > 0 ? Math.min(Math.floor(capParam), 100000) : null
 
         const { supabaseAdmin } = await import('@/integrations/supabase/client.server')
+        const { getClassAvailability } = await import('@/lib/class-availability.server')
+
+        // Same Entry Ninja numbers as /api/public/class-availability, so the hero
+        // counter and the pricing section always agree.
+        let availability = null
+        try {
+          availability = await getClassAvailability(supabaseAdmin, eventParam)
+        } catch {
+          availability = null
+        }
+        if (availability) {
+          return Response.json(
+            { event: availability.event, taken: availability.totals.taken, cap: capOverride ?? availability.totals.cap },
+            { headers: { ...corsHeaders, 'cache-control': 'public, max-age=60' } },
+          )
+        }
 
         const { data: eventRow } = await supabaseAdmin
           .from('events')
@@ -39,13 +55,15 @@ export const Route = createFileRoute('/api/public/entry-count')({
           )
         }
 
+        // Fallback for events not linked to Entry Ninja: roster count without test/placeholder rows.
         const { count } = await supabaseAdmin
           .from('event_entrants')
           .select('id', { count: 'exact', head: true })
           .eq('event_id', eventParam)
+          .not('category', 'in', '("Test Entry","Placeholder entry")')
 
         return Response.json(
-          { event: eventRow.name, taken: count ?? 0, cap },
+          { event: eventRow.name, taken: count ?? 0, cap: capOverride ?? 250 },
           {
             headers: {
               ...corsHeaders,
