@@ -92,6 +92,13 @@
       "when": 1790621613988,
       "tag": "0012_fix_inside_events_summary_grouping",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1790860044588,
+      "tag": "0013_add_luxury_tent_without_veranda_type",
+      "breakpoints": true
     }
   ]
 }

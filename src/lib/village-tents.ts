@@ -17,17 +17,18 @@ export type VillageTent = {
   /** 'tent' = a real tent number pin shown to riders.
    *  'marker' = a helper point used only to draw an area — never rendered publicly. */
   kind: "tent" | "marker";
-  /** Tent product placed on the field. Luxury tents are 4m x 4m, RCE tents 2m x 2m. */
+  /** Tent product placed on the field. Footprint size comes from TENT_TYPES. */
   tent_type: TentType;
   /** Direction the tent faces, in degrees clockwise from north. */
   rotation: number;
 };
 
-export type TentType = "rce" | "luxury";
+export type TentType = "rce" | "luxury" | "luxury_no_veranda";
 
 export const TENT_TYPES: { id: TentType; name: string; sizeM: number }[] = [
   { id: "rce", name: "RCE tent", sizeM: 2 },
   { id: "luxury", name: "Luxury tent", sizeM: 4 },
+  { id: "luxury_no_veranda", name: "Luxury tent — no veranda", sizeM: 3.25 },
 ];
 
 export function tentTypeMeta(type: string | null | undefined) {
@@ -111,7 +112,10 @@ async function fetchVillageTentsLive(eventId: string, venueId: string | null): P
   return ((data ?? []) as VillageTent[]).map((t) => ({
     ...t,
     kind: t.kind === "marker" ? "marker" : "tent",
-    tent_type: t.tent_type === "luxury" ? "luxury" : "rce",
+    tent_type:
+      t.tent_type === "luxury" || t.tent_type === "luxury_no_veranda"
+        ? t.tent_type
+        : "rce",
     rotation: Number(t.rotation ?? 0) || 0,
   }));
 }

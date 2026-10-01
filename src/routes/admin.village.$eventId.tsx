@@ -133,7 +133,7 @@ function VillageEditor() {
   // 'tent' drops a real tent number (shown to riders); 'marker' drops a helper
   // point used only for drawing areas — never rendered on rider-facing maps.
   const [tentKind, setTentKind] = useState<"tent" | "marker">("tent");
-  // Luxury (4x4m) and RCE (2x2m) tents share ONE number sequence — no duplicates.
+  // All tent products share ONE number sequence — no duplicates.
   const [tentType, setTentType] = useState<TentType>("rce");
   const qc = useQueryClient();
   const tentsQ = useQuery({
@@ -330,7 +330,7 @@ function VillageEditor() {
   }
 
 
-  /** Swap a pin between the 2x2m standard tent and the 4x4m luxury tent. */
+  /** Change the product and mapped footprint for an existing tent pin. */
   async function setTentTypeFor(id: string, type: TentType) {
     await patchTent(id, { tent_type: type });
   }
