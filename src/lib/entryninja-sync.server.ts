@@ -191,6 +191,24 @@ export async function syncEnEvent(
     }
   }
 
+  // Entries cancelled/moved on Entry Ninja disappear from its feed — drop their
+  // synced rows so the roster matches. Manual adds (no external_id) are kept.
+  // Only runs on a complete, non-empty fetch with no row errors.
+  if (entries.length > 0 && errors.length === 0) {
+    try {
+      const liveIds = new Set(entries.map((e) => String(e.id)));
+      const { data: synced } = await supabase
+        .from("event_entrants")
+        .select("id, external_id")
+        .eq("event_id", eventId)
+        .not("external_id", "is", null);
+      const stale = (synced ?? []).filter((r: any) => !liveIds.has(String(r.external_id))).map((r: any) => r.id);
+      if (stale.length) await supabase.from("event_entrants").delete().in("id", stale);
+    } catch (err) {
+      errors.push(`cleanup: ${(err as Error).message}`);
+    }
+  }
+
   // Entry Ninja has no money fields — price each entry from the event price
   // book so amounts owing / paid are prefilled from the registration itself.
   try {
