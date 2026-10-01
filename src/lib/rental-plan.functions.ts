@@ -12,13 +12,14 @@ export const draftRentalPlanFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) =>
     z.object({
       text: z.string().max(60_000).default(""),
+      mode: z.enum(["import", "edit"]).default("import"),
       attachment: z.object({ mimeType: z.string(), dataBase64: z.string().max(20_000_000), filename: z.string().nullish() }).nullish(),
     }).parse(d),
   )
   .handler(async ({ data, context }) => {
     if (!(await checkIsAdmin(context.supabase))) throw new Error("Admins only");
     const { draftRentalPlan } = await import("./rental-plan.server");
-    return await draftRentalPlan(data.text, data.attachment ?? null);
+    return await draftRentalPlan(data.text, data.attachment ?? null, data.mode);
   });
 
 const draftSchema = z.object({
@@ -89,4 +90,56 @@ export const applyRentalPlanFn = createServerFn({ method: "POST" })
       if (error) throw new Error(error.message);
     }
     return { eventId: eventId! };
+  });
+
+const sastDate = (iso: string | null) =>
+  iso ? new Date(new Date(iso).getTime() + 2 * 3600_000).toISOString().slice(0, 10) : "";
+const hm = (t: string | null) => (t ? String(t).slice(0, 5) : "");
+
+/** Build an editable raw-text plan (with headings) from what is live on the rental page now. */
+export const getLivePlanTextFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ eventId: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    if (!(await checkIsAdmin(context.supabase))) throw new Error("Admins only");
+    const sb = context.supabase as any;
+    const { data: ev, error } = await sb.from("events")
+      .select("name, client_name, client_contact, location, event_date, build_date, breakdown_date, description")
+      .eq("id", data.eventId).eq("event_type", "rental").maybeSingle();
+    if (error) throw new Error(error.message);
+    if (!ev) throw new Error("Rental not found.");
+    const [{ data: tasks }, { data: gear }] = await Promise.all([
+      sb.from("run_sheet_tasks").select("day_label, day_index, start_time, end_time, task, detail, location, sort_order")
+        .eq("event_id", data.eventId).order("day_index").order("sort_order"),
+      sb.from("event_branding_bookings").select("name, qty, qty_label, size_spec, sort_order")
+        .eq("event_id", data.eventId).eq("category", "infrastructure").order("sort_order"),
+    ]);
+    const L: string[] = [
+      "# EVENT DETAILS",
+      `Event name: ${ev.name ?? ""}`,
+      `Client: ${ev.client_name ?? ""}`,
+      `Client contact: ${ev.client_contact ?? ""}`,
+      `Venue: ${ev.location ?? ""}`,
+      `Build date: ${ev.build_date ?? ""}`,
+      `Event date (guests arrive): ${sastDate(ev.event_date)}`,
+      `Breakdown date: ${ev.breakdown_date ?? ""}`,
+      "",
+      "# CLIENT DESCRIPTION",
+      (ev.description ?? "").trim(),
+      "",
+      "# RUN SHEET",
+      "(One task per line: time – time | task | detail | location. Leave times blank if unknown.)",
+    ];
+    let day = "";
+    for (const t of tasks ?? []) {
+      if (t.day_label !== day) { day = t.day_label; L.push("", `## ${day}`); }
+      const time = [hm(t.start_time), hm(t.end_time)].filter(Boolean).join(" – ");
+      L.push(`- ${[time, t.task, t.detail ?? "", t.location ?? ""].join(" | ").replace(/( \| )+$/, "")}`);
+    }
+    L.push("", "# EQUIPMENT", "(One item per line: quantity unit × item (size/spec))");
+    for (const g of gear ?? []) {
+      L.push(`- ${[g.qty ?? "", g.qty_label ?? ""].join(" ").trim()} × ${g.name}${g.size_spec ? ` (${g.size_spec})` : ""}`);
+    }
+    L.push("", "# EXTRA NOTES FOR THE AI", "(Add any new information here — it will be worked into the page.)", "");
+    return { text: L.join("\n") };
   });

@@ -43,9 +43,12 @@ function docxText(b64: string): string {
 
 const INSTRUCTIONS = `You read a Red Cherry Events infrastructure-rental plan of action (weddings, camps, corporate days) and return ONLY a JSON object:
 {"name":string,"client_name":string|null,"client_contact":string|null,"location":string|null,"event_date":"YYYY-MM-DD"|null,"build_date":"YYYY-MM-DD"|null,"breakdown_date":"YYYY-MM-DD"|null,"description":string,"runSheet":[{"day_label":string,"start_time":"HH:MM"|null,"end_time":"HH:MM"|null,"task":string,"detail":string|null,"location":string|null}],"equipment":[{"name":string,"qty":number|null,"qty_label":string|null,"size_spec":string|null}]}
-Rules: event_date is the first day guests arrive. description is a client-friendly overview in short paragraphs (dates, venue, capacity, what is supplied) — never prices, costs or internal crew notes. runSheet lists build, event and strike tasks in order. equipment lists physical kit supplied. Only use facts in the document; use null when unknown. Never invent times.`;
+Rules: event_date is the first day guests arrive. description is a client-friendly overview in short paragraphs (dates, venue, capacity, what is supplied) — never prices, costs or internal crew notes. runSheet lists build, event and strike tasks in order. equipment lists physical kit supplied. Only use facts in the document; use null when unknown. Never invent times.
+Be as detailed as possible: the description should cover every client-relevant fact in the document (dates, arrival/departure, venue, capacity, layout, accommodation, bedding, ablutions, services, safety, contacts), and runSheet/equipment must include every task and item mentioned — never drop or summarise away detail.`;
 
-export async function draftRentalPlan(text: string, att?: PlanAttachment | null): Promise<RentalPlanDraft> {
+const EDIT_INSTRUCTIONS = `\nThis input is the CURRENT LIVE PLAN, edited by staff, in sections (# EVENT DETAILS, # CLIENT DESCRIPTION, # RUN SHEET, # EQUIPMENT, # EXTRA NOTES FOR THE AI). Treat it as the full source of truth: keep every existing fact, task and equipment line unless staff removed it, apply their edits exactly, and work any EXTRA NOTES into the right fields. Keep run-sheet day headings (## ...) as day_label and keep task order. Rewrite the description to be fuller and well structured, but never add facts that are not in the text.`;
+
+export async function draftRentalPlan(text: string, att?: PlanAttachment | null, mode: "import" | "edit" = "import"): Promise<RentalPlanDraft> {
   const key = process.env["LOVABLE_API_KEY"];
   if (!key) throw new Error("Missing LOVABLE_API_KEY");
   const content: any[] = [];
@@ -65,14 +68,14 @@ export async function draftRentalPlan(text: string, att?: PlanAttachment | null)
     }
   }
   if (!body && !content.length) throw new Error("Add the plan text or upload a file.");
-  content.unshift({ type: "input_text", text: body || "Read the attached plan of action." });
+  content.unshift({ type: "input_text", text: `Return the plan as a json object.\n\n${body || "Read the attached plan of action."}` });
 
   const res = await fetch(`${GATEWAY}/responses`, {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
     body: JSON.stringify({
       model: MODEL,
-      instructions: INSTRUCTIONS,
+      instructions: mode === "edit" ? INSTRUCTIONS + EDIT_INSTRUCTIONS : INSTRUCTIONS,
       reasoning: { effort: "low" },
       text: { format: { type: "json_object" } },
       input: [{ role: "user", content }],
