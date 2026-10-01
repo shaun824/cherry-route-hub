@@ -9,6 +9,8 @@ const inviteSchema = z.object({
   email: z.string().trim().email(),
   full_name: z.string().trim().max(120).optional().default(""),
   password: z.string().min(8).max(72).optional(),
+  /** Also grant full admin (super admin) access. */
+  admin: z.boolean().optional().default(false),
 });
 
 const SITE_URL = "https://riderapp.redcherryevents.co.za";
@@ -51,8 +53,9 @@ export const inviteCrewMember = createServerFn({ method: "POST" })
       user = created.user!;
     }
 
+    const roles = data.admin ? ["crew", "admin"] : ["crew"];
     await supabaseAdmin.from("user_roles").upsert(
-      { user_id: user.id, role: "crew" },
+      roles.map((role) => ({ user_id: user!.id, role: role as "crew" | "admin" })),
       { onConflict: "user_id,role", ignoreDuplicates: true },
     );
 

@@ -6,6 +6,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { ClipboardList, Copy, MapPin, Package, Plus, RefreshCw, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getRentalShareToken } from "@/lib/rentals.functions";
+import { RentalPlanImport } from "@/components/rental-plan-import";
 
 export const Route = createFileRoute("/admin/rentals")({
   head: () => ({
@@ -132,6 +133,11 @@ function AdminRentals() {
       </header>
 
       {msg ? <p className="break-all rounded-xl bg-muted p-3 text-sm text-ink">{msg}</p> : null}
+
+      <RentalPlanImport
+        rentals={(q.data ?? []).map((r) => ({ id: r.id, name: r.name }))}
+        onDone={(m) => { setMsg(m); qc.invalidateQueries({ queryKey: ["admin-rentals"] }); }}
+      />
 
       {editing ? (
         <div className="space-y-3 rounded-2xl border border-border bg-card p-4">
