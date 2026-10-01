@@ -126,6 +126,8 @@ function VillageEditor() {
   const [selectedZone, setSelectedZone] = useState<string | null>(null);
   const [tentMode, setTentMode] = useState(false);
   const [selectedTent, setSelectedTent] = useState<string | null>(null);
+  const [multiTents, setMultiTents] = useState<string[]>([]);
+  const [boxSelect, setBoxSelect] = useState(false);
   /** Live rotation while the slider is being dragged — saved once on release. */
   const [rotDraft, setRotDraft] = useState<number | null>(null);
   const [nextTentLabel, setNextTentLabel] = useState("1");
@@ -329,6 +331,68 @@ function VillageEditor() {
     await qc.invalidateQueries({ queryKey: ["village-tents", event.id, venueId] });
   }
 
+
+  function selectTents(ids: string[], additive: boolean) {
+    setSelectedTent(null);
+    setMultiTents((cur) => {
+      if (!additive) return ids;
+      const set = new Set(cur);
+      if (ids.length === 1 && set.has(ids[0])) set.delete(ids[0]);
+      else ids.forEach((i) => set.add(i));
+      return [...set];
+    });
+  }
+
+  function selectAllTents() {
+    setSelectedTent(null);
+    setMultiTents(tents.filter((t) => (t.kind ?? "tent") !== "marker").map((t) => t.id));
+  }
+
+  async function bulkPatchTents(ids: string[], patch: { tent_type?: TentType; rotation?: number }, msg: string) {
+    if (ids.length === 0) return;
+    qc.setQueryData(
+      ["village-tents", event.id, venueId],
+      (current: typeof tents | undefined) =>
+        current?.map((t) => (ids.includes(t.id) ? { ...t, ...patch } : t)) ?? current,
+    );
+    const { error } = await supabase.from("event_village_tents").update(patch).in("id", ids);
+    if (error) toast.error(error.message);
+    else toast.success(msg);
+    await qc.invalidateQueries({ queryKey: ["village-tents", event.id, venueId] });
+  }
+
+  async function moveTents(moves: { id: string; lat: number; lng: number }[]) {
+    const withZone = moves.map((m) => ({
+      ...m,
+      zone_id: zones.find((z) => pointInZone({ lat: m.lat, lng: m.lng }, z))?.id ?? null,
+    }));
+    qc.setQueryData(
+      ["village-tents", event.id, venueId],
+      (current: typeof tents | undefined) =>
+        current?.map((t) => {
+          const m = withZone.find((x) => x.id === t.id);
+          return m ? { ...t, lat: m.lat, lng: m.lng, zone_id: m.zone_id } : t;
+        }) ?? current,
+    );
+    const results = await Promise.all(
+      withZone.map((m) =>
+        supabase.from("event_village_tents").update({ lat: m.lat, lng: m.lng, zone_id: m.zone_id }).eq("id", m.id),
+      ),
+    );
+    const err = results.find((r) => r.error)?.error;
+    if (err) toast.error(err.message);
+    else toast.success(`Moved ${moves.length} tents`);
+    await qc.invalidateQueries({ queryKey: ["village-tents", event.id, venueId] });
+  }
+
+  async function deleteTents(ids: string[]) {
+    if (ids.length === 0 || !window.confirm(`Delete ${ids.length} tent pins?`)) return;
+    const { error } = await supabase.from("event_village_tents").delete().in("id", ids);
+    if (error) toast.error(error.message);
+    else toast.success(`Deleted ${ids.length} tent pins`);
+    setMultiTents([]);
+    await qc.invalidateQueries({ queryKey: ["village-tents", event.id, venueId] });
+  }
 
   /** Change the product and mapped footprint for an existing tent pin. */
   async function setTentTypeFor(id: string, type: TentType) {
@@ -858,6 +922,49 @@ function VillageEditor() {
             ))}
           </div>
         ) : null}
+        <button
+          onClick={() => setBoxSelect((b) => !b)}
+          disabled={usingImage || !centre}
+          className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold disabled:opacity-50 ${
+            boxSelect ? "bg-cherry text-white" : "bg-muted text-ink"
+          }`}
+        >
+          <Square className="h-3.5 w-3.5" /> {boxSelect ? "Drag a box over tents…" : "Box-select tents"}
+        </button>
+        <button
+          onClick={selectAllTents}
+          disabled={usingImage || !centre}
+          className="inline-flex items-center gap-1.5 rounded-lg bg-muted px-3 py-1.5 text-xs font-bold text-ink disabled:opacity-50"
+        >
+          <Tent className="h-3.5 w-3.5" /> Select all tents
+        </button>
+        {multiTents.length > 0 ? (
+          <div className="flex w-full flex-wrap items-center gap-2 rounded-xl bg-secondary p-2 text-[11px] font-bold text-ink-soft">
+            <span className="rounded bg-background px-2 py-1 text-ink">{multiTents.length} tents selected</span>
+            <span>Change to:</span>
+            {TENT_TYPES.map((t) => (
+              <button
+                key={t.id}
+                onClick={() =>
+                  void bulkPatchTents(multiTents, { tent_type: t.id }, `${multiTents.length} tents changed to ${t.name}`)
+                }
+                className="rounded-lg bg-background px-2 py-1 text-ink ring-1 ring-border hover:bg-muted"
+              >
+                {t.name} ({t.sizeM}×{t.sizeM}m)
+              </button>
+            ))}
+            <span className="text-ink-soft">· Drag any selected tent to move them all</span>
+            <button
+              onClick={() => void deleteTents(multiTents)}
+              className="inline-flex items-center gap-1 rounded-lg bg-muted px-2 py-1 text-ink"
+            >
+              <Trash2 className="h-3.5 w-3.5" /> Delete
+            </button>
+            <button onClick={() => setMultiTents([])} className="inline-flex items-center gap-1 rounded-lg bg-muted px-2 py-1 text-ink">
+              <X className="h-3.5 w-3.5" /> Clear
+            </button>
+          </div>
+        ) : null}
         {tentMode ? (
           <label className="inline-flex items-center gap-1.5 rounded-lg bg-secondary px-2 py-1 text-[11px] font-bold text-ink-soft">
             {tentKind === "tent" ? "Next tent" : "Marker label"}
@@ -1204,8 +1311,15 @@ function VillageEditor() {
               tentMode={tentMode}
               onPlaceTent={placeTent}
               onMoveTent={moveTent}
-              onSelectTent={setSelectedTent}
+              onSelectTent={(id) => {
+                setSelectedTent(id);
+                setMultiTents([]);
+              }}
               selectedTent={selectedTent}
+              boxSelect={boxSelect}
+              selectedTents={multiTents}
+              onSelectTents={selectTents}
+              onMoveTents={(m) => void moveTents(m)}
               onDeleteTent={deleteTent}
               onToggleTentKind={(id) => void toggleTentKind(id)}
               onDeleteHotspot={(id) => {
