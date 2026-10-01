@@ -25,7 +25,7 @@ export const Route = createFileRoute('/api/public/class-availability')({
         try {
           const data = await getClassAvailability(supabaseAdmin, eventId)
           if (!data) return Response.json({ error: 'unknown event' }, { status: 404, headers: noStore })
-          return Response.json(data, { headers: { ...corsHeaders, 'cache-control': 'public, max-age=60' } })
+          return Response.json(data, { headers: { ...corsHeaders, 'cache-control': 'public, max-age=3600' } })
         } catch {
           return Response.json({ error: 'temporarily unavailable' }, { status: 503, headers: noStore })
         }
