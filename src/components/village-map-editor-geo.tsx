@@ -2,7 +2,7 @@
 // satellite map of the venue — no plan image required. Also supports drawing
 // measured areas (zones) so the field layout can be planned to the metre.
 import { Fragment, useEffect, useMemo, useRef, useState } from "react";
-import { MapContainer, TileLayer, Marker, Polygon, Polyline, Popup, Tooltip, useMap, useMapEvents } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Polygon, Polyline, Popup, Rectangle, Tooltip, useMap, useMapEvents } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 // Bearing support so the build can be laid out "the right way round" — the
@@ -132,6 +132,53 @@ function ClickCatcher({
     },
   });
   return null;
+}
+
+/** Drag a box on the map to pick every tent inside it (map panning paused). */
+function BoxSelector({ onBox }: { onBox: (b: L.LatLngBounds, additive: boolean) => void }) {
+  const map = useMap();
+  const [box, setBox] = useState<L.LatLngBounds | null>(null);
+  useEffect(() => {
+    const el = map.getContainer();
+    map.dragging.disable();
+    let start: L.LatLng | null = null;
+    let additive = false;
+    const ll = (e: PointerEvent) => map.mouseEventToLatLng(e as unknown as MouseEvent);
+    const down = (e: PointerEvent) => {
+      if ((e.target as HTMLElement).closest(".leaflet-control")) return;
+      start = ll(e);
+      additive = e.shiftKey || e.metaKey || e.ctrlKey;
+      el.setPointerCapture?.(e.pointerId);
+      e.preventDefault();
+    };
+    const move = (e: PointerEvent) => {
+      if (!start) return;
+      setBox(L.latLngBounds(start, ll(e)));
+    };
+    const up = (e: PointerEvent) => {
+      if (!start) return;
+      const b = L.latLngBounds(start, ll(e));
+      start = null;
+      setBox(null);
+      onBox(b, additive);
+    };
+    el.addEventListener("pointerdown", down);
+    el.addEventListener("pointermove", move);
+    el.addEventListener("pointerup", up);
+    el.style.cursor = "crosshair";
+    el.style.touchAction = "none";
+    return () => {
+      el.removeEventListener("pointerdown", down);
+      el.removeEventListener("pointermove", move);
+      el.removeEventListener("pointerup", up);
+      el.style.cursor = "";
+      el.style.touchAction = "";
+      map.dragging.enable();
+    };
+  }, [map, onBox]);
+  return box ? (
+    <Rectangle bounds={box} pathOptions={{ color: "#c8102e", weight: 1.5, dashArray: "4 4", fillOpacity: 0.1, interactive: false }} />
+  ) : null;
 }
 
 function MouseTracker({ onMove }: { onMove: (p: ZonePoint) => void }) {
@@ -303,6 +350,10 @@ export default function VillageMapEditorGeo({
   onDeleteTent,
   onToggleTentKind,
   onDeleteHotspot,
+  boxSelect = false,
+  selectedTents = [],
+  onSelectTents,
+  onMoveTents,
   defaultBearing = 0,
   onSaveBearing,
 }: {
@@ -338,6 +389,10 @@ export default function VillageMapEditorGeo({
   onDeleteTent?: (id: string) => Promise<void>;
   onToggleTentKind?: (id: string) => void;
   onDeleteHotspot?: (id: string) => void;
+  boxSelect?: boolean;
+  selectedTents?: string[];
+  onSelectTents?: (ids: string[], additive: boolean) => void;
+  onMoveTents?: (moves: { id: string; lat: number; lng: number }[]) => void;
 }) {
   const [draft, setDraft] = useState<ZonePoint[]>([]);
   const [cursor, setCursor] = useState<ZonePoint | null>(null);
@@ -378,7 +433,18 @@ export default function VillageMapEditorGeo({
       // Keep the footprint at the dropped spot until the parent state confirms
       // the save — otherwise the square snaps back and the move looks lost.
       setTentLive(next);
-      onMoveTent?.(id, next.lat, next.lng);
+      const orig = tents.find((t) => t.id === id);
+      if (orig && selectedTents.length > 1 && selectedTents.includes(id) && onMoveTents) {
+        const dLat = next.lat - orig.lat;
+        const dLng = next.lng - orig.lng;
+        onMoveTents(
+          tents
+            .filter((t) => selectedTents.includes(t.id))
+            .map((t) => ({ id: t.id, lat: +(t.lat + dLat).toFixed(7), lng: +(t.lng + dLng).toFixed(7) })),
+        );
+      } else {
+        onMoveTent?.(id, next.lat, next.lng);
+      }
     } else {
       setTentLive(null);
     }
@@ -549,6 +615,20 @@ export default function VillageMapEditorGeo({
     if (same) setLive(null);
   }, [zones, live]);
 
+  const tentsRef = useRef(tents);
+  tentsRef.current = tents;
+  const selectTentsRef = useRef(onSelectTents);
+  selectTentsRef.current = onSelectTents;
+  const boxHandler = useMemo(
+    () => (b: L.LatLngBounds, additive: boolean) => {
+      const ids = tentsRef.current
+        .filter((t) => (t.kind ?? "tent") !== "marker" && b.contains([t.lat, t.lng]))
+        .map((t) => t.id);
+      selectTentsRef.current?.(ids, additive);
+    },
+    [],
+  );
+
   const zonePoints = (z: VillageZone) => (live && live.id === z.id ? live.points : z.points);
 
 
@@ -578,7 +658,7 @@ export default function VillageMapEditorGeo({
   // common workflow (drop, adjust, remove) appears broken until the mode is
   // manually switched off.
   const locked = placing || drawing || tentMode;
-  const tentsLocked = placing || drawing;
+  const tentsLocked = placing || drawing || boxSelect;
 
   // Editing areas is disabled in add-pin / draw modes — drop any selection.
   useEffect(() => {
@@ -637,7 +717,12 @@ export default function VillageMapEditorGeo({
           <FitToContent points={contentPoints} token={fitToken} />
 
           {placing ? <ClickCatcher onClick={onPlace} /> : null}
-          {tentMode && onPlaceTent ? (
+          {boxSelect && onSelectTents ? (
+            <BoxSelector
+              onBox={boxHandler}
+            />
+          ) : null}
+          {tentMode && onPlaceTent && !boxSelect ? (
             <ClickCatcher
               debounceMs={600}
               onClick={(lat, lng) => {
@@ -669,9 +754,15 @@ export default function VillageMapEditorGeo({
                   key={`fp-${t.id}`}
                   positions={tentFootprintCorners(pos.lat, pos.lng, meta.sizeM, t.rotation ?? 0)}
                   bubblingMouseEvents={false}
-                  eventHandlers={{ click: () => onSelectTent?.(t.id) }}
+                  eventHandlers={{
+                    click: (e) => {
+                      const oe = e.originalEvent as MouseEvent | undefined;
+                      if (oe && (oe.shiftKey || oe.metaKey || oe.ctrlKey) && onSelectTents) onSelectTents([t.id], true);
+                      else onSelectTent?.(t.id);
+                    },
+                  }}
                   pathOptions={{
-                    color: selectedTent === t.id ? "#c8102e" : meta.id === "luxury" ? "#f59e0b" : "#38bdf8",
+                    color: selectedTent === t.id || selectedTents.includes(t.id) ? "#c8102e" : meta.id === "luxury" ? "#f59e0b" : "#38bdf8",
                     weight: 1.5,
                     fillOpacity: 0.18,
                     interactive: true,
@@ -693,7 +784,11 @@ export default function VillageMapEditorGeo({
               // immediately closes the popup the rider just tapped.
               icon={tentPinIcon(t.label, false, t.kind === "marker")}
               eventHandlers={{
-                click: () => onSelectTent?.(t.id),
+                click: (e) => {
+                  const oe = e.originalEvent as MouseEvent | undefined;
+                  if (oe && (oe.shiftKey || oe.metaKey || oe.ctrlKey) && onSelectTents) onSelectTents([t.id], true);
+                  else onSelectTent?.(t.id);
+                },
                 drag: (e) => {
                   const ll = trueMarkerLatLng(e.target as L.Marker);
                   paintTent(t.id, ll.lat, ll.lng);
