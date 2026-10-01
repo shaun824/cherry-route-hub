@@ -1,9 +1,9 @@
 // Server-only: per-class "places left" straight from Entry Ninja (source of truth),
-// cached in site_settings for 5 minutes so website traffic never hits Entry Ninja directly.
+// cached in site_settings for 24 hours so website traffic never hits Entry Ninja directly.
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 type AnyClient = SupabaseClient<any, any, any>;
-const TTL_MS = 5 * 60 * 1000;
+const TTL_MS = 24 * 60 * 60 * 1000;
 
 // Friendly keys for PE Plett classes; unknown classes fall back to "class-<id>".
 const CLASS_KEYS: Record<number, string> = {
