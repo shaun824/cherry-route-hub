@@ -114,6 +114,7 @@ function AdminRunSheet() {
     start_time: string | null;
     end_time: string | null;
     task: string;
+    kind: string;
     detail: string | null;
     owner: string | null;
     location: string | null;
@@ -126,7 +127,7 @@ function AdminRunSheet() {
     queryFn: async () => {
       const { data } = await supabase
         .from("run_sheet_tasks")
-        .select("id, department_id, day_label, day_index, start_time, end_time, task, detail, owner, location, notes, sort_order")
+        .select("id, department_id, day_label, day_index, start_time, end_time, task, kind, detail, owner, location, notes, sort_order")
         .eq("event_id", eventId)
         .order("day_index")
         .order("sort_order");
