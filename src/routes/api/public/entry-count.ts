@@ -60,7 +60,7 @@ export const Route = createFileRoute('/api/public/entry-count')({
           .from('event_entrants')
           .select('id', { count: 'exact', head: true })
           .eq('event_id', eventParam)
-          .not('category', 'in', '("Test Entry","Placeholder entry")')
+          .or('category.is.null,category.not.in.("Test Entry","Placeholder entry")')
 
         return Response.json(
           { event: eventRow.name, taken: count ?? 0, cap: capOverride ?? 250 },
