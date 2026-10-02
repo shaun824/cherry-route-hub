@@ -2,7 +2,8 @@ import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState, type
 import { createPortal } from "react-dom";
 import { useQuery } from "@tanstack/react-query";
 import { ClientOnly } from "@tanstack/react-router";
-import { Maximize2, Minimize2, Minus, Plus, X } from "lucide-react";
+import { MapPin, Maximize2, Minimize2, Minus, Plus, X } from "lucide-react";
+import { buildMapLink } from "@/lib/map-embed";
 import {
   VILLAGE_LAYERS,
   categoryMeta,
