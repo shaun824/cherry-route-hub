@@ -9,163 +9,118 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as SpectateRouteImport } from './routes/spectate'
-import { Route as RewardsRouteImport } from './routes/rewards'
-import { Route as ResetPasswordRouteImport } from './routes/reset-password'
-import { Route as PromosRouteImport } from './routes/promos'
-import { Route as ProfileRouteImport } from './routes/profile'
-import { Route as MyEventsRouteImport } from './routes/my-events'
-import { Route as McpRouteImport } from './routes/mcp'
-import { Route as GalleryRouteImport } from './routes/gallery'
-import { Route as FeedRouteImport } from './routes/feed'
-import { Route as AuthRouteImport } from './routes/auth'
-import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as SpectateIndexRouteImport } from './routes/spectate.index'
-import { Route as MyEventsIndexRouteImport } from './routes/my-events.index'
-import { Route as EventsIndexRouteImport } from './routes/events.index'
-import { Route as CrewIndexRouteImport } from './routes/crew.index'
-import { Route as AdminIndexRouteImport } from './routes/admin.index'
-import { Route as SpectateEventIdRouteImport } from './routes/spectate.$eventId'
-import { Route as RentalTokenRouteImport } from './routes/rental.$token'
-import { Route as MyEventsEventIdRouteImport } from './routes/my-events.$eventId'
-import { Route as EventsEventIdRouteImport } from './routes/events.$eventId'
-import { Route as EmbedConnectRouteImport } from './routes/embed.connect'
-import { Route as EmbedChatRouteImport } from './routes/embed.chat'
-import { Route as CrewTrackingRouteImport } from './routes/crew.tracking'
-import { Route as CrewRunSheetRouteImport } from './routes/crew.run-sheet'
-import { Route as CrewRoomingRouteImport } from './routes/crew.rooming'
-import { Route as CrewRentalsRouteImport } from './routes/crew.rentals'
-import { Route as CrewLoginRouteImport } from './routes/crew.login'
-import { Route as CrewInventoryRouteImport } from './routes/crew.inventory'
-import { Route as CrewBuildRouteImport } from './routes/crew.build'
-import { Route as AdminTrackingRouteImport } from './routes/admin.tracking'
-import { Route as AdminSponsorsRouteImport } from './routes/admin.sponsors'
-import { Route as AdminSocialRouteImport } from './routes/admin.social'
-import { Route as AdminSignInsRouteImport } from './routes/admin.sign-ins'
-import { Route as AdminSettingsRouteImport } from './routes/admin.settings'
-import { Route as AdminScheduleSyncRouteImport } from './routes/admin.schedule-sync'
-import { Route as AdminRunSheetRouteImport } from './routes/admin.run-sheet'
-import { Route as AdminRosterRouteImport } from './routes/admin.roster'
-import { Route as AdminRoomingRouteImport } from './routes/admin.rooming'
-import { Route as AdminRidersRouteImport } from './routes/admin.riders'
-import { Route as AdminResultsRouteImport } from './routes/admin.results'
-import { Route as AdminRentalsRouteImport } from './routes/admin.rentals'
-import { Route as AdminPromosRouteImport } from './routes/admin.promos'
-import { Route as AdminPricingRouteImport } from './routes/admin.pricing'
-import { Route as AdminNotificationsRouteImport } from './routes/admin.notifications'
-import { Route as AdminMessagesRouteImport } from './routes/admin.messages'
-import { Route as AdminMerchandiseRouteImport } from './routes/admin.merchandise'
-import { Route as AdminLoyaltyRouteImport } from './routes/admin.loyalty'
-import { Route as AdminLearnRouteImport } from './routes/admin.learn'
-import { Route as AdminKnowledgeRouteImport } from './routes/admin.knowledge'
-import { Route as AdminFeedRouteImport } from './routes/admin.feed'
-import { Route as AdminEventsRouteImport } from './routes/admin.events'
-import { Route as AdminEntryNinjaRouteImport } from './routes/admin.entry-ninja'
-import { Route as AdminEmailsRouteImport } from './routes/admin.emails'
-import { Route as AdminEmailWorkflowsRouteImport } from './routes/admin.email-workflows'
-import { Route as AdminEmailContentRouteImport } from './routes/admin.email-content'
-import { Route as AdminCrewRouteImport } from './routes/admin.crew'
-import { Route as AdminBotLogRouteImport } from './routes/admin.bot-log'
-import { Route as AdminAuditRouteImport } from './routes/admin.audit'
-import { Route as AdminAnalyticsRouteImport } from './routes/admin.analytics'
-import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
+import { Route as AdminRouteImport } from './routes/admin'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as FeedRouteImport } from './routes/feed'
+import { Route as GalleryRouteImport } from './routes/gallery'
+import { Route as McpRouteImport } from './routes/mcp'
+import { Route as MyEventsRouteImport } from './routes/my-events'
+import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as PromosRouteImport } from './routes/promos'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as RewardsRouteImport } from './routes/rewards'
+import { Route as SpectateRouteImport } from './routes/spectate'
 import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
-import { Route as EventsEventIdIndexRouteImport } from './routes/events.$eventId.index'
-import { Route as CrewLearnIndexRouteImport } from './routes/crew.learn.index'
-import { Route as AdminVillageIndexRouteImport } from './routes/admin.village.index'
-import { Route as AdminEventInfoIndexRouteImport } from './routes/admin.event-info.index'
-import { Route as MyEventsEventIdReportRouteImport } from './routes/my-events_.$eventId_.report'
-import { Route as EventsEventIdMapRouteImport } from './routes/events.$eventId.map'
-import { Route as EventsEventIdEnterRouteImport } from './routes/events.$eventId.enter'
-import { Route as EmbedVillageEventIdRouteImport } from './routes/embed.village.$eventId'
-import { Route as CrewLearnCalendarRouteImport } from './routes/crew.learn.calendar'
-import { Route as CrewLearnCourseIdRouteImport } from './routes/crew.learn.$courseId'
-import { Route as CrewDepartmentDeptIdRouteImport } from './routes/crew.department.$deptId'
-import { Route as ApiPublicEntryCountRouteImport } from './routes/api/public/entry-count'
-import { Route as ApiPublicClassAvailabilityRouteImport } from './routes/api/public/class-availability'
-import { Route as AdminVillageEventIdRouteImport } from './routes/admin.village.$eventId'
-import { Route as AdminRiderUserIdRouteImport } from './routes/admin.rider.$userId'
-import { Route as AdminEventInfoEventIdRouteImport } from './routes/admin.event-info.$eventId'
-import { Route as AdminEmailBuilderStepIdRouteImport } from './routes/admin.email-builder.$stepId'
-import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
+import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
+import { Route as AdminIndexRouteImport } from './routes/admin.index'
+import { Route as AdminAnalyticsRouteImport } from './routes/admin.analytics'
+import { Route as AdminAuditRouteImport } from './routes/admin.audit'
+import { Route as AdminBotLogRouteImport } from './routes/admin.bot-log'
+import { Route as AdminCrewRouteImport } from './routes/admin.crew'
+import { Route as AdminEmailContentRouteImport } from './routes/admin.email-content'
+import { Route as AdminEmailWorkflowsRouteImport } from './routes/admin.email-workflows'
+import { Route as AdminEmailsRouteImport } from './routes/admin.emails'
+import { Route as AdminEntryNinjaRouteImport } from './routes/admin.entry-ninja'
+import { Route as AdminEventsRouteImport } from './routes/admin.events'
+import { Route as AdminFeedRouteImport } from './routes/admin.feed'
+import { Route as AdminKnowledgeRouteImport } from './routes/admin.knowledge'
+import { Route as AdminLearnRouteImport } from './routes/admin.learn'
+import { Route as AdminLoyaltyRouteImport } from './routes/admin.loyalty'
+import { Route as AdminMerchandiseRouteImport } from './routes/admin.merchandise'
+import { Route as AdminMessagesRouteImport } from './routes/admin.messages'
+import { Route as AdminNotificationsRouteImport } from './routes/admin.notifications'
+import { Route as AdminPricingRouteImport } from './routes/admin.pricing'
+import { Route as AdminPromosRouteImport } from './routes/admin.promos'
+import { Route as AdminRentalsRouteImport } from './routes/admin.rentals'
+import { Route as AdminResultsRouteImport } from './routes/admin.results'
+import { Route as AdminRidersRouteImport } from './routes/admin.riders'
+import { Route as AdminRoomingRouteImport } from './routes/admin.rooming'
+import { Route as AdminRosterRouteImport } from './routes/admin.roster'
+import { Route as AdminRunSheetRouteImport } from './routes/admin.run-sheet'
+import { Route as AdminScheduleSyncRouteImport } from './routes/admin.schedule-sync'
+import { Route as AdminSettingsRouteImport } from './routes/admin.settings'
+import { Route as AdminSignInsRouteImport } from './routes/admin.sign-ins'
+import { Route as AdminSocialRouteImport } from './routes/admin.social'
+import { Route as AdminSponsorsRouteImport } from './routes/admin.sponsors'
+import { Route as AdminTrackingRouteImport } from './routes/admin.tracking'
+import { Route as CrewIndexRouteImport } from './routes/crew.index'
+import { Route as CrewBuildRouteImport } from './routes/crew.build'
+import { Route as CrewInventoryRouteImport } from './routes/crew.inventory'
+import { Route as CrewLoginRouteImport } from './routes/crew.login'
+import { Route as CrewRentalsRouteImport } from './routes/crew.rentals'
+import { Route as CrewRoomingRouteImport } from './routes/crew.rooming'
+import { Route as CrewRunSheetRouteImport } from './routes/crew.run-sheet'
+import { Route as CrewTrackingRouteImport } from './routes/crew.tracking'
+import { Route as EmbedChatRouteImport } from './routes/embed.chat'
+import { Route as EmbedConnectRouteImport } from './routes/embed.connect'
+import { Route as EventsIndexRouteImport } from './routes/events.index'
+import { Route as EventsEventIdRouteImport } from './routes/events.$eventId'
+import { Route as MyEventsIndexRouteImport } from './routes/my-events.index'
+import { Route as MyEventsEventIdRouteImport } from './routes/my-events.$eventId'
+import { Route as RentalTokenRouteImport } from './routes/rental.$token'
+import { Route as SpectateIndexRouteImport } from './routes/spectate.index'
+import { Route as SpectateEventIdRouteImport } from './routes/spectate.$eventId'
 import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
-import { Route as SpectateEventIdRiderEntrantIdRouteImport } from './routes/spectate_.$eventId_.rider.$entrantId'
-import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
-import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
-import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
-import { Route as ApiPublicHooksWhatsappRouteImport } from './routes/api/public/hooks/whatsapp'
-import { Route as ApiPublicHooksVenueSyncRouteImport } from './routes/api/public/hooks/venue-sync'
-import { Route as ApiPublicHooksScheduleSyncRouteImport } from './routes/api/public/hooks/schedule-sync'
-import { Route as ApiPublicHooksRunSheetSyncRouteImport } from './routes/api/public/hooks/run-sheet-sync'
-import { Route as ApiPublicHooksRoomingSheetSyncRouteImport } from './routes/api/public/hooks/rooming-sheet-sync'
-import { Route as ApiPublicHooksNotificationCronRouteImport } from './routes/api/public/hooks/notification-cron'
-import { Route as ApiPublicHooksNotificationClickRouteImport } from './routes/api/public/hooks/notification-click'
-import { Route as ApiPublicHooksNewsSyncRouteImport } from './routes/api/public/hooks/news-sync'
-import { Route as ApiPublicHooksMerchSyncRouteImport } from './routes/api/public/hooks/merch-sync'
-import { Route as ApiPublicHooksLoyaltyExpiryRouteImport } from './routes/api/public/hooks/loyalty-expiry'
-import { Route as ApiPublicHooksLearnSyncRouteImport } from './routes/api/public/hooks/learn-sync'
-import { Route as ApiPublicHooksKnowledgeEmailRouteImport } from './routes/api/public/hooks/knowledge-email'
-import { Route as ApiPublicHooksInviteRiderRouteImport } from './routes/api/public/hooks/invite-rider'
-import { Route as ApiPublicHooksFaqSuggestRouteImport } from './routes/api/public/hooks/faq-suggest'
-import { Route as ApiPublicHooksEventBotRefreshRouteImport } from './routes/api/public/hooks/event-bot-refresh'
-import { Route as ApiPublicHooksEntryWelcomeRouteImport } from './routes/api/public/hooks/entry-welcome'
-import { Route as ApiPublicHooksEntryNinjaSyncRouteImport } from './routes/api/public/hooks/entry-ninja-sync'
-import { Route as ApiPublicHooksEntryNinjaArchiveRouteImport } from './routes/api/public/hooks/entry-ninja-archive'
-import { Route as ApiPublicHooksEmailWorkflowRouteImport } from './routes/api/public/hooks/email-workflow'
-import { Route as ApiPublicHooksContentAuditRouteImport } from './routes/api/public/hooks/content-audit'
+import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
+import { Route as AdminEmailBuilderStepIdRouteImport } from './routes/admin.email-builder.$stepId'
+import { Route as AdminEventInfoIndexRouteImport } from './routes/admin.event-info.index'
+import { Route as AdminEventInfoEventIdRouteImport } from './routes/admin.event-info.$eventId'
+import { Route as AdminRiderUserIdRouteImport } from './routes/admin.rider.$userId'
+import { Route as AdminVillageIndexRouteImport } from './routes/admin.village.index'
+import { Route as AdminVillageEventIdRouteImport } from './routes/admin.village.$eventId'
+import { Route as ApiPublicClassAvailabilityRouteImport } from './routes/api/public/class-availability'
+import { Route as ApiPublicEntryCountRouteImport } from './routes/api/public/entry-count'
+import { Route as CrewDepartmentDeptIdRouteImport } from './routes/crew.department.$deptId'
+import { Route as CrewLearnIndexRouteImport } from './routes/crew.learn.index'
+import { Route as CrewLearnCourseIdRouteImport } from './routes/crew.learn.$courseId'
+import { Route as CrewLearnCalendarRouteImport } from './routes/crew.learn.calendar'
+import { Route as EmbedVillageEventIdRouteImport } from './routes/embed.village.$eventId'
+import { Route as EventsEventIdIndexRouteImport } from './routes/events.$eventId.index'
+import { Route as EventsEventIdEnterRouteImport } from './routes/events.$eventId.enter'
+import { Route as EventsEventIdMapRouteImport } from './routes/events.$eventId.map'
+import { Route as MyEventsEventIdReportRouteImport } from './routes/my-events_.$eventId_.report'
 import { Route as AdminLoyaltyRiderEntrantIdRouteImport } from './routes/admin.loyalty.rider.$entrantId'
-import { Route as ApiPublicEOIdRouteImport } from './routes/api/public/e/o/$id'
+import { Route as ApiPublicHooksContentAuditRouteImport } from './routes/api/public/hooks/content-audit'
+import { Route as ApiPublicHooksEmailWorkflowRouteImport } from './routes/api/public/hooks/email-workflow'
+import { Route as ApiPublicHooksEntryNinjaArchiveRouteImport } from './routes/api/public/hooks/entry-ninja-archive'
+import { Route as ApiPublicHooksEntryNinjaSyncRouteImport } from './routes/api/public/hooks/entry-ninja-sync'
+import { Route as ApiPublicHooksEntryWelcomeRouteImport } from './routes/api/public/hooks/entry-welcome'
+import { Route as ApiPublicHooksEventBotRefreshRouteImport } from './routes/api/public/hooks/event-bot-refresh'
+import { Route as ApiPublicHooksFaqSuggestRouteImport } from './routes/api/public/hooks/faq-suggest'
+import { Route as ApiPublicHooksInviteRiderRouteImport } from './routes/api/public/hooks/invite-rider'
+import { Route as ApiPublicHooksKnowledgeEmailRouteImport } from './routes/api/public/hooks/knowledge-email'
+import { Route as ApiPublicHooksLearnSyncRouteImport } from './routes/api/public/hooks/learn-sync'
+import { Route as ApiPublicHooksLoyaltyExpiryRouteImport } from './routes/api/public/hooks/loyalty-expiry'
+import { Route as ApiPublicHooksMerchSyncRouteImport } from './routes/api/public/hooks/merch-sync'
+import { Route as ApiPublicHooksNewsSyncRouteImport } from './routes/api/public/hooks/news-sync'
+import { Route as ApiPublicHooksNotificationClickRouteImport } from './routes/api/public/hooks/notification-click'
+import { Route as ApiPublicHooksNotificationCronRouteImport } from './routes/api/public/hooks/notification-cron'
+import { Route as ApiPublicHooksRoomingSheetSyncRouteImport } from './routes/api/public/hooks/rooming-sheet-sync'
+import { Route as ApiPublicHooksRunSheetSyncRouteImport } from './routes/api/public/hooks/run-sheet-sync'
+import { Route as ApiPublicHooksScheduleSyncRouteImport } from './routes/api/public/hooks/schedule-sync'
+import { Route as ApiPublicHooksVenueSyncRouteImport } from './routes/api/public/hooks/venue-sync'
+import { Route as ApiPublicHooksWhatsappRouteImport } from './routes/api/public/hooks/whatsapp'
+import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
+import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
+import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
+import { Route as SpectateEventIdRiderEntrantIdRouteImport } from './routes/spectate_.$eventId_.rider.$entrantId'
 import { Route as ApiPublicECIdRouteImport } from './routes/api/public/e/c/$id'
+import { Route as ApiPublicEOIdRouteImport } from './routes/api/public/e/o/$id'
 
-const SpectateRoute = SpectateRouteImport.update({
-  id: '/spectate',
-  path: '/spectate',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const RewardsRoute = RewardsRouteImport.update({
-  id: '/rewards',
-  path: '/rewards',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ResetPasswordRoute = ResetPasswordRouteImport.update({
-  id: '/reset-password',
-  path: '/reset-password',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PromosRoute = PromosRouteImport.update({
-  id: '/promos',
-  path: '/promos',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ProfileRoute = ProfileRouteImport.update({
-  id: '/profile',
-  path: '/profile',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const MyEventsRoute = MyEventsRouteImport.update({
-  id: '/my-events',
-  path: '/my-events',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const McpRoute = McpRouteImport.update({
-  id: '/mcp',
-  path: '/mcp',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const GalleryRoute = GalleryRouteImport.update({
-  id: '/gallery',
-  path: '/gallery',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const FeedRoute = FeedRouteImport.update({
-  id: '/feed',
-  path: '/feed',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthRoute = AuthRouteImport.update({
-  id: '/auth',
-  path: '/auth',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminRoute = AdminRouteImport.update({
@@ -173,244 +128,71 @@ const AdminRoute = AdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
-const SpectateIndexRoute = SpectateIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => SpectateRoute,
-} as any)
-const MyEventsIndexRoute = MyEventsIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => MyEventsRoute,
-} as any)
-const EventsIndexRoute = EventsIndexRouteImport.update({
-  id: '/events/',
-  path: '/events/',
+const FeedRoute = FeedRouteImport.update({
+  id: '/feed',
+  path: '/feed',
   getParentRoute: () => rootRouteImport,
 } as any)
-const CrewIndexRoute = CrewIndexRouteImport.update({
-  id: '/crew/',
-  path: '/crew/',
+const GalleryRoute = GalleryRouteImport.update({
+  id: '/gallery',
+  path: '/gallery',
   getParentRoute: () => rootRouteImport,
 } as any)
+const McpRoute = McpRouteImport.update({
+  id: '/mcp',
+  path: '/mcp',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MyEventsRoute = MyEventsRouteImport.update({
+  id: '/my-events',
+  path: '/my-events',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProfileRoute = ProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PromosRoute = PromosRouteImport.update({
+  id: '/promos',
+  path: '/promos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RewardsRoute = RewardsRouteImport.update({
+  id: '/rewards',
+  path: '/rewards',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SpectateRoute = SpectateRouteImport.update({
+  id: '/spectate',
+  path: '/spectate',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const Char91DotmcpChar93ListToolsRoute =
+  Char91DotmcpChar93ListToolsRouteImport.update({
+    id: '/.mcp/list-tools',
+    path: '/.mcp/list-tools',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const Char91DotwellKnownChar93OauthProtectedResourceRoute =
+  Char91DotwellKnownChar93OauthProtectedResourceRouteImport.update({
+    id: '/.well-known/oauth-protected-resource',
+    path: '/.well-known/oauth-protected-resource',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => AdminRoute,
-} as any)
-const SpectateEventIdRoute = SpectateEventIdRouteImport.update({
-  id: '/$eventId',
-  path: '/$eventId',
-  getParentRoute: () => SpectateRoute,
-} as any)
-const RentalTokenRoute = RentalTokenRouteImport.update({
-  id: '/rental/$token',
-  path: '/rental/$token',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const MyEventsEventIdRoute = MyEventsEventIdRouteImport.update({
-  id: '/$eventId',
-  path: '/$eventId',
-  getParentRoute: () => MyEventsRoute,
-} as any)
-const EventsEventIdRoute = EventsEventIdRouteImport.update({
-  id: '/events/$eventId',
-  path: '/events/$eventId',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const EmbedConnectRoute = EmbedConnectRouteImport.update({
-  id: '/embed/connect',
-  path: '/embed/connect',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const EmbedChatRoute = EmbedChatRouteImport.update({
-  id: '/embed/chat',
-  path: '/embed/chat',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CrewTrackingRoute = CrewTrackingRouteImport.update({
-  id: '/crew/tracking',
-  path: '/crew/tracking',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CrewRunSheetRoute = CrewRunSheetRouteImport.update({
-  id: '/crew/run-sheet',
-  path: '/crew/run-sheet',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CrewRoomingRoute = CrewRoomingRouteImport.update({
-  id: '/crew/rooming',
-  path: '/crew/rooming',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CrewRentalsRoute = CrewRentalsRouteImport.update({
-  id: '/crew/rentals',
-  path: '/crew/rentals',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CrewLoginRoute = CrewLoginRouteImport.update({
-  id: '/crew/login',
-  path: '/crew/login',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CrewInventoryRoute = CrewInventoryRouteImport.update({
-  id: '/crew/inventory',
-  path: '/crew/inventory',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CrewBuildRoute = CrewBuildRouteImport.update({
-  id: '/crew/build',
-  path: '/crew/build',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AdminTrackingRoute = AdminTrackingRouteImport.update({
-  id: '/tracking',
-  path: '/tracking',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminSponsorsRoute = AdminSponsorsRouteImport.update({
-  id: '/sponsors',
-  path: '/sponsors',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminSocialRoute = AdminSocialRouteImport.update({
-  id: '/social',
-  path: '/social',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminSignInsRoute = AdminSignInsRouteImport.update({
-  id: '/sign-ins',
-  path: '/sign-ins',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminSettingsRoute = AdminSettingsRouteImport.update({
-  id: '/settings',
-  path: '/settings',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminScheduleSyncRoute = AdminScheduleSyncRouteImport.update({
-  id: '/schedule-sync',
-  path: '/schedule-sync',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminRunSheetRoute = AdminRunSheetRouteImport.update({
-  id: '/run-sheet',
-  path: '/run-sheet',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminRosterRoute = AdminRosterRouteImport.update({
-  id: '/roster',
-  path: '/roster',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminRoomingRoute = AdminRoomingRouteImport.update({
-  id: '/rooming',
-  path: '/rooming',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminRidersRoute = AdminRidersRouteImport.update({
-  id: '/riders',
-  path: '/riders',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminResultsRoute = AdminResultsRouteImport.update({
-  id: '/results',
-  path: '/results',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminRentalsRoute = AdminRentalsRouteImport.update({
-  id: '/rentals',
-  path: '/rentals',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminPromosRoute = AdminPromosRouteImport.update({
-  id: '/promos',
-  path: '/promos',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminPricingRoute = AdminPricingRouteImport.update({
-  id: '/pricing',
-  path: '/pricing',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminNotificationsRoute = AdminNotificationsRouteImport.update({
-  id: '/notifications',
-  path: '/notifications',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminMessagesRoute = AdminMessagesRouteImport.update({
-  id: '/messages',
-  path: '/messages',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminMerchandiseRoute = AdminMerchandiseRouteImport.update({
-  id: '/merchandise',
-  path: '/merchandise',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminLoyaltyRoute = AdminLoyaltyRouteImport.update({
-  id: '/loyalty',
-  path: '/loyalty',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminLearnRoute = AdminLearnRouteImport.update({
-  id: '/learn',
-  path: '/learn',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminKnowledgeRoute = AdminKnowledgeRouteImport.update({
-  id: '/knowledge',
-  path: '/knowledge',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminFeedRoute = AdminFeedRouteImport.update({
-  id: '/feed',
-  path: '/feed',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminEventsRoute = AdminEventsRouteImport.update({
-  id: '/events',
-  path: '/events',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminEntryNinjaRoute = AdminEntryNinjaRouteImport.update({
-  id: '/entry-ninja',
-  path: '/entry-ninja',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminEmailsRoute = AdminEmailsRouteImport.update({
-  id: '/emails',
-  path: '/emails',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminEmailWorkflowsRoute = AdminEmailWorkflowsRouteImport.update({
-  id: '/email-workflows',
-  path: '/email-workflows',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminEmailContentRoute = AdminEmailContentRouteImport.update({
-  id: '/email-content',
-  path: '/email-content',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminCrewRoute = AdminCrewRouteImport.update({
-  id: '/crew',
-  path: '/crew',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminBotLogRoute = AdminBotLogRouteImport.update({
-  id: '/bot-log',
-  path: '/bot-log',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminAuditRoute = AdminAuditRouteImport.update({
-  id: '/audit',
-  path: '/audit',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminAnalyticsRoute = AdminAnalyticsRouteImport.update({
@@ -418,103 +200,240 @@ const AdminAnalyticsRoute = AdminAnalyticsRouteImport.update({
   path: '/analytics',
   getParentRoute: () => AdminRoute,
 } as any)
-const Char91DotwellKnownChar93OauthProtectedResourceRoute =
-  Char91DotwellKnownChar93OauthProtectedResourceRouteImport.update({
-    id: '/.well-known/oauth-protected-resource',
-    path: '/.well-known/oauth-protected-resource',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const Char91DotmcpChar93ListToolsRoute =
-  Char91DotmcpChar93ListToolsRouteImport.update({
-    id: '/.mcp/list-tools',
-    path: '/.mcp/list-tools',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const EventsEventIdIndexRoute = EventsEventIdIndexRouteImport.update({
+const AdminAuditRoute = AdminAuditRouteImport.update({
+  id: '/audit',
+  path: '/audit',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminBotLogRoute = AdminBotLogRouteImport.update({
+  id: '/bot-log',
+  path: '/bot-log',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminCrewRoute = AdminCrewRouteImport.update({
+  id: '/crew',
+  path: '/crew',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminEmailContentRoute = AdminEmailContentRouteImport.update({
+  id: '/email-content',
+  path: '/email-content',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminEmailWorkflowsRoute = AdminEmailWorkflowsRouteImport.update({
+  id: '/email-workflows',
+  path: '/email-workflows',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminEmailsRoute = AdminEmailsRouteImport.update({
+  id: '/emails',
+  path: '/emails',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminEntryNinjaRoute = AdminEntryNinjaRouteImport.update({
+  id: '/entry-ninja',
+  path: '/entry-ninja',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminEventsRoute = AdminEventsRouteImport.update({
+  id: '/events',
+  path: '/events',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminFeedRoute = AdminFeedRouteImport.update({
+  id: '/feed',
+  path: '/feed',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminKnowledgeRoute = AdminKnowledgeRouteImport.update({
+  id: '/knowledge',
+  path: '/knowledge',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminLearnRoute = AdminLearnRouteImport.update({
+  id: '/learn',
+  path: '/learn',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminLoyaltyRoute = AdminLoyaltyRouteImport.update({
+  id: '/loyalty',
+  path: '/loyalty',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminMerchandiseRoute = AdminMerchandiseRouteImport.update({
+  id: '/merchandise',
+  path: '/merchandise',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminMessagesRoute = AdminMessagesRouteImport.update({
+  id: '/messages',
+  path: '/messages',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminNotificationsRoute = AdminNotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminPricingRoute = AdminPricingRouteImport.update({
+  id: '/pricing',
+  path: '/pricing',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminPromosRoute = AdminPromosRouteImport.update({
+  id: '/promos',
+  path: '/promos',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminRentalsRoute = AdminRentalsRouteImport.update({
+  id: '/rentals',
+  path: '/rentals',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminResultsRoute = AdminResultsRouteImport.update({
+  id: '/results',
+  path: '/results',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminRidersRoute = AdminRidersRouteImport.update({
+  id: '/riders',
+  path: '/riders',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminRoomingRoute = AdminRoomingRouteImport.update({
+  id: '/rooming',
+  path: '/rooming',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminRosterRoute = AdminRosterRouteImport.update({
+  id: '/roster',
+  path: '/roster',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminRunSheetRoute = AdminRunSheetRouteImport.update({
+  id: '/run-sheet',
+  path: '/run-sheet',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminScheduleSyncRoute = AdminScheduleSyncRouteImport.update({
+  id: '/schedule-sync',
+  path: '/schedule-sync',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminSettingsRoute = AdminSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminSignInsRoute = AdminSignInsRouteImport.update({
+  id: '/sign-ins',
+  path: '/sign-ins',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminSocialRoute = AdminSocialRouteImport.update({
+  id: '/social',
+  path: '/social',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminSponsorsRoute = AdminSponsorsRouteImport.update({
+  id: '/sponsors',
+  path: '/sponsors',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminTrackingRoute = AdminTrackingRouteImport.update({
+  id: '/tracking',
+  path: '/tracking',
+  getParentRoute: () => AdminRoute,
+} as any)
+const CrewIndexRoute = CrewIndexRouteImport.update({
+  id: '/crew/',
+  path: '/crew/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CrewBuildRoute = CrewBuildRouteImport.update({
+  id: '/crew/build',
+  path: '/crew/build',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CrewInventoryRoute = CrewInventoryRouteImport.update({
+  id: '/crew/inventory',
+  path: '/crew/inventory',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CrewLoginRoute = CrewLoginRouteImport.update({
+  id: '/crew/login',
+  path: '/crew/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CrewRentalsRoute = CrewRentalsRouteImport.update({
+  id: '/crew/rentals',
+  path: '/crew/rentals',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CrewRoomingRoute = CrewRoomingRouteImport.update({
+  id: '/crew/rooming',
+  path: '/crew/rooming',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CrewRunSheetRoute = CrewRunSheetRouteImport.update({
+  id: '/crew/run-sheet',
+  path: '/crew/run-sheet',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CrewTrackingRoute = CrewTrackingRouteImport.update({
+  id: '/crew/tracking',
+  path: '/crew/tracking',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EmbedChatRoute = EmbedChatRouteImport.update({
+  id: '/embed/chat',
+  path: '/embed/chat',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EmbedConnectRoute = EmbedConnectRouteImport.update({
+  id: '/embed/connect',
+  path: '/embed/connect',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EventsIndexRoute = EventsIndexRouteImport.update({
+  id: '/events/',
+  path: '/events/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EventsEventIdRoute = EventsEventIdRouteImport.update({
+  id: '/events/$eventId',
+  path: '/events/$eventId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MyEventsIndexRoute = MyEventsIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => EventsEventIdRoute,
+  getParentRoute: () => MyEventsRoute,
 } as any)
-const CrewLearnIndexRoute = CrewLearnIndexRouteImport.update({
-  id: '/crew/learn/',
-  path: '/crew/learn/',
+const MyEventsEventIdRoute = MyEventsEventIdRouteImport.update({
+  id: '/$eventId',
+  path: '/$eventId',
+  getParentRoute: () => MyEventsRoute,
+} as any)
+const RentalTokenRoute = RentalTokenRouteImport.update({
+  id: '/rental/$token',
+  path: '/rental/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AdminVillageIndexRoute = AdminVillageIndexRouteImport.update({
-  id: '/village/',
-  path: '/village/',
-  getParentRoute: () => AdminRoute,
+const SpectateIndexRoute = SpectateIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => SpectateRoute,
 } as any)
-const AdminEventInfoIndexRoute = AdminEventInfoIndexRouteImport.update({
-  id: '/event-info/',
-  path: '/event-info/',
-  getParentRoute: () => AdminRoute,
+const SpectateEventIdRoute = SpectateEventIdRouteImport.update({
+  id: '/$eventId',
+  path: '/$eventId',
+  getParentRoute: () => SpectateRoute,
 } as any)
-const MyEventsEventIdReportRoute = MyEventsEventIdReportRouteImport.update({
-  id: '/my-events_/$eventId_/report',
-  path: '/my-events/$eventId/report',
+const DotlovableOauthConsentRoute = DotlovableOauthConsentRouteImport.update({
+  id: '/.lovable/oauth/consent',
+  path: '/.lovable/oauth/consent',
   getParentRoute: () => rootRouteImport,
-} as any)
-const EventsEventIdMapRoute = EventsEventIdMapRouteImport.update({
-  id: '/map',
-  path: '/map',
-  getParentRoute: () => EventsEventIdRoute,
-} as any)
-const EventsEventIdEnterRoute = EventsEventIdEnterRouteImport.update({
-  id: '/enter',
-  path: '/enter',
-  getParentRoute: () => EventsEventIdRoute,
-} as any)
-const EmbedVillageEventIdRoute = EmbedVillageEventIdRouteImport.update({
-  id: '/embed/village/$eventId',
-  path: '/embed/village/$eventId',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CrewLearnCalendarRoute = CrewLearnCalendarRouteImport.update({
-  id: '/crew/learn/calendar',
-  path: '/crew/learn/calendar',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CrewLearnCourseIdRoute = CrewLearnCourseIdRouteImport.update({
-  id: '/crew/learn/$courseId',
-  path: '/crew/learn/$courseId',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CrewDepartmentDeptIdRoute = CrewDepartmentDeptIdRouteImport.update({
-  id: '/crew/department/$deptId',
-  path: '/crew/department/$deptId',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicEntryCountRoute = ApiPublicEntryCountRouteImport.update({
-  id: '/api/public/entry-count',
-  path: '/api/public/entry-count',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicClassAvailabilityRoute =
-  ApiPublicClassAvailabilityRouteImport.update({
-    id: '/api/public/class-availability',
-    path: '/api/public/class-availability',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const AdminVillageEventIdRoute = AdminVillageEventIdRouteImport.update({
-  id: '/village/$eventId',
-  path: '/village/$eventId',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminRiderUserIdRoute = AdminRiderUserIdRouteImport.update({
-  id: '/rider/$userId',
-  path: '/rider/$userId',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminEventInfoEventIdRoute = AdminEventInfoEventIdRouteImport.update({
-  id: '/event-info/$eventId',
-  path: '/event-info/$eventId',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminEmailBuilderStepIdRoute = AdminEmailBuilderStepIdRouteImport.update({
-  id: '/email-builder/$stepId',
-  path: '/email-builder/$stepId',
-  getParentRoute: () => AdminRoute,
 } as any)
 const Char91DotmcpChar93InvokeToolToolRoute =
   Char91DotmcpChar93InvokeToolToolRouteImport.update({
@@ -522,134 +441,102 @@ const Char91DotmcpChar93InvokeToolToolRoute =
     path: '/.mcp/invoke-tool/$tool',
     getParentRoute: () => rootRouteImport,
   } as any)
-const DotlovableOauthConsentRoute = DotlovableOauthConsentRouteImport.update({
-  id: '/.lovable/oauth/consent',
-  path: '/.lovable/oauth/consent',
+const AdminEmailBuilderStepIdRoute = AdminEmailBuilderStepIdRouteImport.update({
+  id: '/email-builder/$stepId',
+  path: '/email-builder/$stepId',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminEventInfoIndexRoute = AdminEventInfoIndexRouteImport.update({
+  id: '/event-info/',
+  path: '/event-info/',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminEventInfoEventIdRoute = AdminEventInfoEventIdRouteImport.update({
+  id: '/event-info/$eventId',
+  path: '/event-info/$eventId',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminRiderUserIdRoute = AdminRiderUserIdRouteImport.update({
+  id: '/rider/$userId',
+  path: '/rider/$userId',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminVillageIndexRoute = AdminVillageIndexRouteImport.update({
+  id: '/village/',
+  path: '/village/',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminVillageEventIdRoute = AdminVillageEventIdRouteImport.update({
+  id: '/village/$eventId',
+  path: '/village/$eventId',
+  getParentRoute: () => AdminRoute,
+} as any)
+const ApiPublicClassAvailabilityRoute =
+  ApiPublicClassAvailabilityRouteImport.update({
+    id: '/api/public/class-availability',
+    path: '/api/public/class-availability',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicEntryCountRoute = ApiPublicEntryCountRouteImport.update({
+  id: '/api/public/entry-count',
+  path: '/api/public/entry-count',
   getParentRoute: () => rootRouteImport,
 } as any)
-const SpectateEventIdRiderEntrantIdRoute =
-  SpectateEventIdRiderEntrantIdRouteImport.update({
-    id: '/spectate_/$eventId_/rider/$entrantId',
-    path: '/spectate/$eventId/rider/$entrantId',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const LovableEmailTransactionalPreviewRoute =
-  LovableEmailTransactionalPreviewRouteImport.update({
-    id: '/lovable/email/transactional/preview',
-    path: '/lovable/email/transactional/preview',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const LovableEmailAuthWebhookRoute = LovableEmailAuthWebhookRouteImport.update({
-  id: '/lovable/email/auth/webhook',
-  path: '/lovable/email/auth/webhook',
+const CrewDepartmentDeptIdRoute = CrewDepartmentDeptIdRouteImport.update({
+  id: '/crew/department/$deptId',
+  path: '/crew/department/$deptId',
   getParentRoute: () => rootRouteImport,
 } as any)
-const LovableEmailAuthPreviewRoute = LovableEmailAuthPreviewRouteImport.update({
-  id: '/lovable/email/auth/preview',
-  path: '/lovable/email/auth/preview',
+const CrewLearnIndexRoute = CrewLearnIndexRouteImport.update({
+  id: '/crew/learn/',
+  path: '/crew/learn/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiPublicHooksWhatsappRoute = ApiPublicHooksWhatsappRouteImport.update({
-  id: '/api/public/hooks/whatsapp',
-  path: '/api/public/hooks/whatsapp',
+const CrewLearnCourseIdRoute = CrewLearnCourseIdRouteImport.update({
+  id: '/crew/learn/$courseId',
+  path: '/crew/learn/$courseId',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiPublicHooksVenueSyncRoute = ApiPublicHooksVenueSyncRouteImport.update({
-  id: '/api/public/hooks/venue-sync',
-  path: '/api/public/hooks/venue-sync',
+const CrewLearnCalendarRoute = CrewLearnCalendarRouteImport.update({
+  id: '/crew/learn/calendar',
+  path: '/crew/learn/calendar',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiPublicHooksScheduleSyncRoute =
-  ApiPublicHooksScheduleSyncRouteImport.update({
-    id: '/api/public/hooks/schedule-sync',
-    path: '/api/public/hooks/schedule-sync',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicHooksRunSheetSyncRoute =
-  ApiPublicHooksRunSheetSyncRouteImport.update({
-    id: '/api/public/hooks/run-sheet-sync',
-    path: '/api/public/hooks/run-sheet-sync',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicHooksRoomingSheetSyncRoute =
-  ApiPublicHooksRoomingSheetSyncRouteImport.update({
-    id: '/api/public/hooks/rooming-sheet-sync',
-    path: '/api/public/hooks/rooming-sheet-sync',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicHooksNotificationCronRoute =
-  ApiPublicHooksNotificationCronRouteImport.update({
-    id: '/api/public/hooks/notification-cron',
-    path: '/api/public/hooks/notification-cron',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicHooksNotificationClickRoute =
-  ApiPublicHooksNotificationClickRouteImport.update({
-    id: '/api/public/hooks/notification-click',
-    path: '/api/public/hooks/notification-click',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicHooksNewsSyncRoute = ApiPublicHooksNewsSyncRouteImport.update({
-  id: '/api/public/hooks/news-sync',
-  path: '/api/public/hooks/news-sync',
+const EmbedVillageEventIdRoute = EmbedVillageEventIdRouteImport.update({
+  id: '/embed/village/$eventId',
+  path: '/embed/village/$eventId',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiPublicHooksMerchSyncRoute = ApiPublicHooksMerchSyncRouteImport.update({
-  id: '/api/public/hooks/merch-sync',
-  path: '/api/public/hooks/merch-sync',
+const EventsEventIdIndexRoute = EventsEventIdIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => EventsEventIdRoute,
+} as any)
+const EventsEventIdEnterRoute = EventsEventIdEnterRouteImport.update({
+  id: '/enter',
+  path: '/enter',
+  getParentRoute: () => EventsEventIdRoute,
+} as any)
+const EventsEventIdMapRoute = EventsEventIdMapRouteImport.update({
+  id: '/map',
+  path: '/map',
+  getParentRoute: () => EventsEventIdRoute,
+} as any)
+const MyEventsEventIdReportRoute = MyEventsEventIdReportRouteImport.update({
+  id: '/my-events_/$eventId_/report',
+  path: '/my-events/$eventId/report',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiPublicHooksLoyaltyExpiryRoute =
-  ApiPublicHooksLoyaltyExpiryRouteImport.update({
-    id: '/api/public/hooks/loyalty-expiry',
-    path: '/api/public/hooks/loyalty-expiry',
-    getParentRoute: () => rootRouteImport,
+const AdminLoyaltyRiderEntrantIdRoute =
+  AdminLoyaltyRiderEntrantIdRouteImport.update({
+    id: '/rider/$entrantId',
+    path: '/rider/$entrantId',
+    getParentRoute: () => AdminLoyaltyRoute,
   } as any)
-const ApiPublicHooksLearnSyncRoute = ApiPublicHooksLearnSyncRouteImport.update({
-  id: '/api/public/hooks/learn-sync',
-  path: '/api/public/hooks/learn-sync',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicHooksKnowledgeEmailRoute =
-  ApiPublicHooksKnowledgeEmailRouteImport.update({
-    id: '/api/public/hooks/knowledge-email',
-    path: '/api/public/hooks/knowledge-email',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicHooksInviteRiderRoute =
-  ApiPublicHooksInviteRiderRouteImport.update({
-    id: '/api/public/hooks/invite-rider',
-    path: '/api/public/hooks/invite-rider',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicHooksFaqSuggestRoute =
-  ApiPublicHooksFaqSuggestRouteImport.update({
-    id: '/api/public/hooks/faq-suggest',
-    path: '/api/public/hooks/faq-suggest',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicHooksEventBotRefreshRoute =
-  ApiPublicHooksEventBotRefreshRouteImport.update({
-    id: '/api/public/hooks/event-bot-refresh',
-    path: '/api/public/hooks/event-bot-refresh',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicHooksEntryWelcomeRoute =
-  ApiPublicHooksEntryWelcomeRouteImport.update({
-    id: '/api/public/hooks/entry-welcome',
-    path: '/api/public/hooks/entry-welcome',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicHooksEntryNinjaSyncRoute =
-  ApiPublicHooksEntryNinjaSyncRouteImport.update({
-    id: '/api/public/hooks/entry-ninja-sync',
-    path: '/api/public/hooks/entry-ninja-sync',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicHooksEntryNinjaArchiveRoute =
-  ApiPublicHooksEntryNinjaArchiveRouteImport.update({
-    id: '/api/public/hooks/entry-ninja-archive',
-    path: '/api/public/hooks/entry-ninja-archive',
+const ApiPublicHooksContentAuditRoute =
+  ApiPublicHooksContentAuditRouteImport.update({
+    id: '/api/public/hooks/content-audit',
+    path: '/api/public/hooks/content-audit',
     getParentRoute: () => rootRouteImport,
   } as any)
 const ApiPublicHooksEmailWorkflowRoute =
@@ -658,26 +545,139 @@ const ApiPublicHooksEmailWorkflowRoute =
     path: '/api/public/hooks/email-workflow',
     getParentRoute: () => rootRouteImport,
   } as any)
-const ApiPublicHooksContentAuditRoute =
-  ApiPublicHooksContentAuditRouteImport.update({
-    id: '/api/public/hooks/content-audit',
-    path: '/api/public/hooks/content-audit',
+const ApiPublicHooksEntryNinjaArchiveRoute =
+  ApiPublicHooksEntryNinjaArchiveRouteImport.update({
+    id: '/api/public/hooks/entry-ninja-archive',
+    path: '/api/public/hooks/entry-ninja-archive',
     getParentRoute: () => rootRouteImport,
   } as any)
-const AdminLoyaltyRiderEntrantIdRoute =
-  AdminLoyaltyRiderEntrantIdRouteImport.update({
-    id: '/rider/$entrantId',
-    path: '/rider/$entrantId',
-    getParentRoute: () => AdminLoyaltyRoute,
+const ApiPublicHooksEntryNinjaSyncRoute =
+  ApiPublicHooksEntryNinjaSyncRouteImport.update({
+    id: '/api/public/hooks/entry-ninja-sync',
+    path: '/api/public/hooks/entry-ninja-sync',
+    getParentRoute: () => rootRouteImport,
   } as any)
-const ApiPublicEOIdRoute = ApiPublicEOIdRouteImport.update({
-  id: '/api/public/e/o/$id',
-  path: '/api/public/e/o/$id',
+const ApiPublicHooksEntryWelcomeRoute =
+  ApiPublicHooksEntryWelcomeRouteImport.update({
+    id: '/api/public/hooks/entry-welcome',
+    path: '/api/public/hooks/entry-welcome',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicHooksEventBotRefreshRoute =
+  ApiPublicHooksEventBotRefreshRouteImport.update({
+    id: '/api/public/hooks/event-bot-refresh',
+    path: '/api/public/hooks/event-bot-refresh',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicHooksFaqSuggestRoute =
+  ApiPublicHooksFaqSuggestRouteImport.update({
+    id: '/api/public/hooks/faq-suggest',
+    path: '/api/public/hooks/faq-suggest',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicHooksInviteRiderRoute =
+  ApiPublicHooksInviteRiderRouteImport.update({
+    id: '/api/public/hooks/invite-rider',
+    path: '/api/public/hooks/invite-rider',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicHooksKnowledgeEmailRoute =
+  ApiPublicHooksKnowledgeEmailRouteImport.update({
+    id: '/api/public/hooks/knowledge-email',
+    path: '/api/public/hooks/knowledge-email',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicHooksLearnSyncRoute = ApiPublicHooksLearnSyncRouteImport.update({
+  id: '/api/public/hooks/learn-sync',
+  path: '/api/public/hooks/learn-sync',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicHooksLoyaltyExpiryRoute =
+  ApiPublicHooksLoyaltyExpiryRouteImport.update({
+    id: '/api/public/hooks/loyalty-expiry',
+    path: '/api/public/hooks/loyalty-expiry',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicHooksMerchSyncRoute = ApiPublicHooksMerchSyncRouteImport.update({
+  id: '/api/public/hooks/merch-sync',
+  path: '/api/public/hooks/merch-sync',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicHooksNewsSyncRoute = ApiPublicHooksNewsSyncRouteImport.update({
+  id: '/api/public/hooks/news-sync',
+  path: '/api/public/hooks/news-sync',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicHooksNotificationClickRoute =
+  ApiPublicHooksNotificationClickRouteImport.update({
+    id: '/api/public/hooks/notification-click',
+    path: '/api/public/hooks/notification-click',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicHooksNotificationCronRoute =
+  ApiPublicHooksNotificationCronRouteImport.update({
+    id: '/api/public/hooks/notification-cron',
+    path: '/api/public/hooks/notification-cron',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicHooksRoomingSheetSyncRoute =
+  ApiPublicHooksRoomingSheetSyncRouteImport.update({
+    id: '/api/public/hooks/rooming-sheet-sync',
+    path: '/api/public/hooks/rooming-sheet-sync',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicHooksRunSheetSyncRoute =
+  ApiPublicHooksRunSheetSyncRouteImport.update({
+    id: '/api/public/hooks/run-sheet-sync',
+    path: '/api/public/hooks/run-sheet-sync',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicHooksScheduleSyncRoute =
+  ApiPublicHooksScheduleSyncRouteImport.update({
+    id: '/api/public/hooks/schedule-sync',
+    path: '/api/public/hooks/schedule-sync',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicHooksVenueSyncRoute = ApiPublicHooksVenueSyncRouteImport.update({
+  id: '/api/public/hooks/venue-sync',
+  path: '/api/public/hooks/venue-sync',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicHooksWhatsappRoute = ApiPublicHooksWhatsappRouteImport.update({
+  id: '/api/public/hooks/whatsapp',
+  path: '/api/public/hooks/whatsapp',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LovableEmailAuthPreviewRoute = LovableEmailAuthPreviewRouteImport.update({
+  id: '/lovable/email/auth/preview',
+  path: '/lovable/email/auth/preview',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LovableEmailAuthWebhookRoute = LovableEmailAuthWebhookRouteImport.update({
+  id: '/lovable/email/auth/webhook',
+  path: '/lovable/email/auth/webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LovableEmailTransactionalPreviewRoute =
+  LovableEmailTransactionalPreviewRouteImport.update({
+    id: '/lovable/email/transactional/preview',
+    path: '/lovable/email/transactional/preview',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const SpectateEventIdRiderEntrantIdRoute =
+  SpectateEventIdRiderEntrantIdRouteImport.update({
+    id: '/spectate_/$eventId_/rider/$entrantId',
+    path: '/spectate/$eventId/rider/$entrantId',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicECIdRoute = ApiPublicECIdRouteImport.update({
   id: '/api/public/e/c/$id',
   path: '/api/public/e/c/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicEOIdRoute = ApiPublicEOIdRouteImport.update({
+  id: '/api/public/e/o/$id',
+  path: '/api/public/e/o/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
 
@@ -1405,74 +1405,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/spectate': {
-      id: '/spectate'
-      path: '/spectate'
-      fullPath: '/spectate'
-      preLoaderRoute: typeof SpectateRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/rewards': {
-      id: '/rewards'
-      path: '/rewards'
-      fullPath: '/rewards'
-      preLoaderRoute: typeof RewardsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/reset-password': {
-      id: '/reset-password'
-      path: '/reset-password'
-      fullPath: '/reset-password'
-      preLoaderRoute: typeof ResetPasswordRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/promos': {
-      id: '/promos'
-      path: '/promos'
-      fullPath: '/promos'
-      preLoaderRoute: typeof PromosRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/profile': {
-      id: '/profile'
-      path: '/profile'
-      fullPath: '/profile'
-      preLoaderRoute: typeof ProfileRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/my-events': {
-      id: '/my-events'
-      path: '/my-events'
-      fullPath: '/my-events'
-      preLoaderRoute: typeof MyEventsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/mcp': {
-      id: '/mcp'
-      path: '/mcp'
-      fullPath: '/mcp'
-      preLoaderRoute: typeof McpRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/gallery': {
-      id: '/gallery'
-      path: '/gallery'
-      fullPath: '/gallery'
-      preLoaderRoute: typeof GalleryRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/feed': {
-      id: '/feed'
-      path: '/feed'
-      fullPath: '/feed'
-      preLoaderRoute: typeof FeedRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/auth': {
-      id: '/auth'
-      path: '/auth'
-      fullPath: '/auth'
-      preLoaderRoute: typeof AuthRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin': {
@@ -1482,354 +1419,74 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/spectate/': {
-      id: '/spectate/'
-      path: '/'
-      fullPath: '/spectate/'
-      preLoaderRoute: typeof SpectateIndexRouteImport
-      parentRoute: typeof SpectateRoute
-    }
-    '/my-events/': {
-      id: '/my-events/'
-      path: '/'
-      fullPath: '/my-events/'
-      preLoaderRoute: typeof MyEventsIndexRouteImport
-      parentRoute: typeof MyEventsRoute
-    }
-    '/events/': {
-      id: '/events/'
-      path: '/events'
-      fullPath: '/events/'
-      preLoaderRoute: typeof EventsIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/crew/': {
-      id: '/crew/'
-      path: '/crew'
-      fullPath: '/crew/'
-      preLoaderRoute: typeof CrewIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin/': {
-      id: '/admin/'
-      path: '/'
-      fullPath: '/admin/'
-      preLoaderRoute: typeof AdminIndexRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/spectate/$eventId': {
-      id: '/spectate/$eventId'
-      path: '/$eventId'
-      fullPath: '/spectate/$eventId'
-      preLoaderRoute: typeof SpectateEventIdRouteImport
-      parentRoute: typeof SpectateRoute
-    }
-    '/rental/$token': {
-      id: '/rental/$token'
-      path: '/rental/$token'
-      fullPath: '/rental/$token'
-      preLoaderRoute: typeof RentalTokenRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/my-events/$eventId': {
-      id: '/my-events/$eventId'
-      path: '/$eventId'
-      fullPath: '/my-events/$eventId'
-      preLoaderRoute: typeof MyEventsEventIdRouteImport
-      parentRoute: typeof MyEventsRoute
-    }
-    '/events/$eventId': {
-      id: '/events/$eventId'
-      path: '/events/$eventId'
-      fullPath: '/events/$eventId'
-      preLoaderRoute: typeof EventsEventIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/embed/connect': {
-      id: '/embed/connect'
-      path: '/embed/connect'
-      fullPath: '/embed/connect'
-      preLoaderRoute: typeof EmbedConnectRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/embed/chat': {
-      id: '/embed/chat'
-      path: '/embed/chat'
-      fullPath: '/embed/chat'
-      preLoaderRoute: typeof EmbedChatRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/crew/tracking': {
-      id: '/crew/tracking'
-      path: '/crew/tracking'
-      fullPath: '/crew/tracking'
-      preLoaderRoute: typeof CrewTrackingRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/crew/run-sheet': {
-      id: '/crew/run-sheet'
-      path: '/crew/run-sheet'
-      fullPath: '/crew/run-sheet'
-      preLoaderRoute: typeof CrewRunSheetRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/crew/rooming': {
-      id: '/crew/rooming'
-      path: '/crew/rooming'
-      fullPath: '/crew/rooming'
-      preLoaderRoute: typeof CrewRoomingRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/crew/rentals': {
-      id: '/crew/rentals'
-      path: '/crew/rentals'
-      fullPath: '/crew/rentals'
-      preLoaderRoute: typeof CrewRentalsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/crew/login': {
-      id: '/crew/login'
-      path: '/crew/login'
-      fullPath: '/crew/login'
-      preLoaderRoute: typeof CrewLoginRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/crew/inventory': {
-      id: '/crew/inventory'
-      path: '/crew/inventory'
-      fullPath: '/crew/inventory'
-      preLoaderRoute: typeof CrewInventoryRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/crew/build': {
-      id: '/crew/build'
-      path: '/crew/build'
-      fullPath: '/crew/build'
-      preLoaderRoute: typeof CrewBuildRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin/tracking': {
-      id: '/admin/tracking'
-      path: '/tracking'
-      fullPath: '/admin/tracking'
-      preLoaderRoute: typeof AdminTrackingRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/sponsors': {
-      id: '/admin/sponsors'
-      path: '/sponsors'
-      fullPath: '/admin/sponsors'
-      preLoaderRoute: typeof AdminSponsorsRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/social': {
-      id: '/admin/social'
-      path: '/social'
-      fullPath: '/admin/social'
-      preLoaderRoute: typeof AdminSocialRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/sign-ins': {
-      id: '/admin/sign-ins'
-      path: '/sign-ins'
-      fullPath: '/admin/sign-ins'
-      preLoaderRoute: typeof AdminSignInsRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/settings': {
-      id: '/admin/settings'
-      path: '/settings'
-      fullPath: '/admin/settings'
-      preLoaderRoute: typeof AdminSettingsRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/schedule-sync': {
-      id: '/admin/schedule-sync'
-      path: '/schedule-sync'
-      fullPath: '/admin/schedule-sync'
-      preLoaderRoute: typeof AdminScheduleSyncRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/run-sheet': {
-      id: '/admin/run-sheet'
-      path: '/run-sheet'
-      fullPath: '/admin/run-sheet'
-      preLoaderRoute: typeof AdminRunSheetRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/roster': {
-      id: '/admin/roster'
-      path: '/roster'
-      fullPath: '/admin/roster'
-      preLoaderRoute: typeof AdminRosterRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/rooming': {
-      id: '/admin/rooming'
-      path: '/rooming'
-      fullPath: '/admin/rooming'
-      preLoaderRoute: typeof AdminRoomingRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/riders': {
-      id: '/admin/riders'
-      path: '/riders'
-      fullPath: '/admin/riders'
-      preLoaderRoute: typeof AdminRidersRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/results': {
-      id: '/admin/results'
-      path: '/results'
-      fullPath: '/admin/results'
-      preLoaderRoute: typeof AdminResultsRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/rentals': {
-      id: '/admin/rentals'
-      path: '/rentals'
-      fullPath: '/admin/rentals'
-      preLoaderRoute: typeof AdminRentalsRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/promos': {
-      id: '/admin/promos'
-      path: '/promos'
-      fullPath: '/admin/promos'
-      preLoaderRoute: typeof AdminPromosRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/pricing': {
-      id: '/admin/pricing'
-      path: '/pricing'
-      fullPath: '/admin/pricing'
-      preLoaderRoute: typeof AdminPricingRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/notifications': {
-      id: '/admin/notifications'
-      path: '/notifications'
-      fullPath: '/admin/notifications'
-      preLoaderRoute: typeof AdminNotificationsRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/messages': {
-      id: '/admin/messages'
-      path: '/messages'
-      fullPath: '/admin/messages'
-      preLoaderRoute: typeof AdminMessagesRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/merchandise': {
-      id: '/admin/merchandise'
-      path: '/merchandise'
-      fullPath: '/admin/merchandise'
-      preLoaderRoute: typeof AdminMerchandiseRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/loyalty': {
-      id: '/admin/loyalty'
-      path: '/loyalty'
-      fullPath: '/admin/loyalty'
-      preLoaderRoute: typeof AdminLoyaltyRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/learn': {
-      id: '/admin/learn'
-      path: '/learn'
-      fullPath: '/admin/learn'
-      preLoaderRoute: typeof AdminLearnRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/knowledge': {
-      id: '/admin/knowledge'
-      path: '/knowledge'
-      fullPath: '/admin/knowledge'
-      preLoaderRoute: typeof AdminKnowledgeRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/feed': {
-      id: '/admin/feed'
+    '/feed': {
+      id: '/feed'
       path: '/feed'
-      fullPath: '/admin/feed'
-      preLoaderRoute: typeof AdminFeedRouteImport
-      parentRoute: typeof AdminRoute
+      fullPath: '/feed'
+      preLoaderRoute: typeof FeedRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/admin/events': {
-      id: '/admin/events'
-      path: '/events'
-      fullPath: '/admin/events'
-      preLoaderRoute: typeof AdminEventsRouteImport
-      parentRoute: typeof AdminRoute
+    '/gallery': {
+      id: '/gallery'
+      path: '/gallery'
+      fullPath: '/gallery'
+      preLoaderRoute: typeof GalleryRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/admin/entry-ninja': {
-      id: '/admin/entry-ninja'
-      path: '/entry-ninja'
-      fullPath: '/admin/entry-ninja'
-      preLoaderRoute: typeof AdminEntryNinjaRouteImport
-      parentRoute: typeof AdminRoute
+    '/mcp': {
+      id: '/mcp'
+      path: '/mcp'
+      fullPath: '/mcp'
+      preLoaderRoute: typeof McpRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/admin/emails': {
-      id: '/admin/emails'
-      path: '/emails'
-      fullPath: '/admin/emails'
-      preLoaderRoute: typeof AdminEmailsRouteImport
-      parentRoute: typeof AdminRoute
+    '/my-events': {
+      id: '/my-events'
+      path: '/my-events'
+      fullPath: '/my-events'
+      preLoaderRoute: typeof MyEventsRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/admin/email-workflows': {
-      id: '/admin/email-workflows'
-      path: '/email-workflows'
-      fullPath: '/admin/email-workflows'
-      preLoaderRoute: typeof AdminEmailWorkflowsRouteImport
-      parentRoute: typeof AdminRoute
+    '/profile': {
+      id: '/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/admin/email-content': {
-      id: '/admin/email-content'
-      path: '/email-content'
-      fullPath: '/admin/email-content'
-      preLoaderRoute: typeof AdminEmailContentRouteImport
-      parentRoute: typeof AdminRoute
+    '/promos': {
+      id: '/promos'
+      path: '/promos'
+      fullPath: '/promos'
+      preLoaderRoute: typeof PromosRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/admin/crew': {
-      id: '/admin/crew'
-      path: '/crew'
-      fullPath: '/admin/crew'
-      preLoaderRoute: typeof AdminCrewRouteImport
-      parentRoute: typeof AdminRoute
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/admin/bot-log': {
-      id: '/admin/bot-log'
-      path: '/bot-log'
-      fullPath: '/admin/bot-log'
-      preLoaderRoute: typeof AdminBotLogRouteImport
-      parentRoute: typeof AdminRoute
+    '/rewards': {
+      id: '/rewards'
+      path: '/rewards'
+      fullPath: '/rewards'
+      preLoaderRoute: typeof RewardsRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/admin/audit': {
-      id: '/admin/audit'
-      path: '/audit'
-      fullPath: '/admin/audit'
-      preLoaderRoute: typeof AdminAuditRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/analytics': {
-      id: '/admin/analytics'
-      path: '/analytics'
-      fullPath: '/admin/analytics'
-      preLoaderRoute: typeof AdminAnalyticsRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/.well-known/oauth-protected-resource': {
-      id: '/.well-known/oauth-protected-resource'
-      path: '/.well-known/oauth-protected-resource'
-      fullPath: '/.well-known/oauth-protected-resource'
-      preLoaderRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRouteImport
+    '/spectate': {
+      id: '/spectate'
+      path: '/spectate'
+      fullPath: '/spectate'
+      preLoaderRoute: typeof SpectateRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/.mcp/list-tools': {
@@ -1839,25 +1496,368 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof Char91DotmcpChar93ListToolsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/events/$eventId/': {
-      id: '/events/$eventId/'
-      path: '/'
-      fullPath: '/events/$eventId/'
-      preLoaderRoute: typeof EventsEventIdIndexRouteImport
-      parentRoute: typeof EventsEventIdRoute
-    }
-    '/crew/learn/': {
-      id: '/crew/learn/'
-      path: '/crew/learn'
-      fullPath: '/crew/learn/'
-      preLoaderRoute: typeof CrewLearnIndexRouteImport
+    '/.well-known/oauth-protected-resource': {
+      id: '/.well-known/oauth-protected-resource'
+      path: '/.well-known/oauth-protected-resource'
+      fullPath: '/.well-known/oauth-protected-resource'
+      preLoaderRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/admin/village/': {
-      id: '/admin/village/'
-      path: '/village'
-      fullPath: '/admin/village/'
-      preLoaderRoute: typeof AdminVillageIndexRouteImport
+    '/admin/': {
+      id: '/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/analytics': {
+      id: '/admin/analytics'
+      path: '/analytics'
+      fullPath: '/admin/analytics'
+      preLoaderRoute: typeof AdminAnalyticsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/audit': {
+      id: '/admin/audit'
+      path: '/audit'
+      fullPath: '/admin/audit'
+      preLoaderRoute: typeof AdminAuditRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/bot-log': {
+      id: '/admin/bot-log'
+      path: '/bot-log'
+      fullPath: '/admin/bot-log'
+      preLoaderRoute: typeof AdminBotLogRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/crew': {
+      id: '/admin/crew'
+      path: '/crew'
+      fullPath: '/admin/crew'
+      preLoaderRoute: typeof AdminCrewRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/email-content': {
+      id: '/admin/email-content'
+      path: '/email-content'
+      fullPath: '/admin/email-content'
+      preLoaderRoute: typeof AdminEmailContentRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/email-workflows': {
+      id: '/admin/email-workflows'
+      path: '/email-workflows'
+      fullPath: '/admin/email-workflows'
+      preLoaderRoute: typeof AdminEmailWorkflowsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/emails': {
+      id: '/admin/emails'
+      path: '/emails'
+      fullPath: '/admin/emails'
+      preLoaderRoute: typeof AdminEmailsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/entry-ninja': {
+      id: '/admin/entry-ninja'
+      path: '/entry-ninja'
+      fullPath: '/admin/entry-ninja'
+      preLoaderRoute: typeof AdminEntryNinjaRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/events': {
+      id: '/admin/events'
+      path: '/events'
+      fullPath: '/admin/events'
+      preLoaderRoute: typeof AdminEventsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/feed': {
+      id: '/admin/feed'
+      path: '/feed'
+      fullPath: '/admin/feed'
+      preLoaderRoute: typeof AdminFeedRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/knowledge': {
+      id: '/admin/knowledge'
+      path: '/knowledge'
+      fullPath: '/admin/knowledge'
+      preLoaderRoute: typeof AdminKnowledgeRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/learn': {
+      id: '/admin/learn'
+      path: '/learn'
+      fullPath: '/admin/learn'
+      preLoaderRoute: typeof AdminLearnRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/loyalty': {
+      id: '/admin/loyalty'
+      path: '/loyalty'
+      fullPath: '/admin/loyalty'
+      preLoaderRoute: typeof AdminLoyaltyRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/merchandise': {
+      id: '/admin/merchandise'
+      path: '/merchandise'
+      fullPath: '/admin/merchandise'
+      preLoaderRoute: typeof AdminMerchandiseRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/messages': {
+      id: '/admin/messages'
+      path: '/messages'
+      fullPath: '/admin/messages'
+      preLoaderRoute: typeof AdminMessagesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/notifications': {
+      id: '/admin/notifications'
+      path: '/notifications'
+      fullPath: '/admin/notifications'
+      preLoaderRoute: typeof AdminNotificationsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/pricing': {
+      id: '/admin/pricing'
+      path: '/pricing'
+      fullPath: '/admin/pricing'
+      preLoaderRoute: typeof AdminPricingRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/promos': {
+      id: '/admin/promos'
+      path: '/promos'
+      fullPath: '/admin/promos'
+      preLoaderRoute: typeof AdminPromosRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/rentals': {
+      id: '/admin/rentals'
+      path: '/rentals'
+      fullPath: '/admin/rentals'
+      preLoaderRoute: typeof AdminRentalsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/results': {
+      id: '/admin/results'
+      path: '/results'
+      fullPath: '/admin/results'
+      preLoaderRoute: typeof AdminResultsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/riders': {
+      id: '/admin/riders'
+      path: '/riders'
+      fullPath: '/admin/riders'
+      preLoaderRoute: typeof AdminRidersRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/rooming': {
+      id: '/admin/rooming'
+      path: '/rooming'
+      fullPath: '/admin/rooming'
+      preLoaderRoute: typeof AdminRoomingRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/roster': {
+      id: '/admin/roster'
+      path: '/roster'
+      fullPath: '/admin/roster'
+      preLoaderRoute: typeof AdminRosterRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/run-sheet': {
+      id: '/admin/run-sheet'
+      path: '/run-sheet'
+      fullPath: '/admin/run-sheet'
+      preLoaderRoute: typeof AdminRunSheetRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/schedule-sync': {
+      id: '/admin/schedule-sync'
+      path: '/schedule-sync'
+      fullPath: '/admin/schedule-sync'
+      preLoaderRoute: typeof AdminScheduleSyncRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/settings': {
+      id: '/admin/settings'
+      path: '/settings'
+      fullPath: '/admin/settings'
+      preLoaderRoute: typeof AdminSettingsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/sign-ins': {
+      id: '/admin/sign-ins'
+      path: '/sign-ins'
+      fullPath: '/admin/sign-ins'
+      preLoaderRoute: typeof AdminSignInsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/social': {
+      id: '/admin/social'
+      path: '/social'
+      fullPath: '/admin/social'
+      preLoaderRoute: typeof AdminSocialRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/sponsors': {
+      id: '/admin/sponsors'
+      path: '/sponsors'
+      fullPath: '/admin/sponsors'
+      preLoaderRoute: typeof AdminSponsorsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/tracking': {
+      id: '/admin/tracking'
+      path: '/tracking'
+      fullPath: '/admin/tracking'
+      preLoaderRoute: typeof AdminTrackingRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/crew/': {
+      id: '/crew/'
+      path: '/crew'
+      fullPath: '/crew/'
+      preLoaderRoute: typeof CrewIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/crew/build': {
+      id: '/crew/build'
+      path: '/crew/build'
+      fullPath: '/crew/build'
+      preLoaderRoute: typeof CrewBuildRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/crew/inventory': {
+      id: '/crew/inventory'
+      path: '/crew/inventory'
+      fullPath: '/crew/inventory'
+      preLoaderRoute: typeof CrewInventoryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/crew/login': {
+      id: '/crew/login'
+      path: '/crew/login'
+      fullPath: '/crew/login'
+      preLoaderRoute: typeof CrewLoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/crew/rentals': {
+      id: '/crew/rentals'
+      path: '/crew/rentals'
+      fullPath: '/crew/rentals'
+      preLoaderRoute: typeof CrewRentalsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/crew/rooming': {
+      id: '/crew/rooming'
+      path: '/crew/rooming'
+      fullPath: '/crew/rooming'
+      preLoaderRoute: typeof CrewRoomingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/crew/run-sheet': {
+      id: '/crew/run-sheet'
+      path: '/crew/run-sheet'
+      fullPath: '/crew/run-sheet'
+      preLoaderRoute: typeof CrewRunSheetRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/crew/tracking': {
+      id: '/crew/tracking'
+      path: '/crew/tracking'
+      fullPath: '/crew/tracking'
+      preLoaderRoute: typeof CrewTrackingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/embed/chat': {
+      id: '/embed/chat'
+      path: '/embed/chat'
+      fullPath: '/embed/chat'
+      preLoaderRoute: typeof EmbedChatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/embed/connect': {
+      id: '/embed/connect'
+      path: '/embed/connect'
+      fullPath: '/embed/connect'
+      preLoaderRoute: typeof EmbedConnectRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/events/': {
+      id: '/events/'
+      path: '/events'
+      fullPath: '/events/'
+      preLoaderRoute: typeof EventsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/events/$eventId': {
+      id: '/events/$eventId'
+      path: '/events/$eventId'
+      fullPath: '/events/$eventId'
+      preLoaderRoute: typeof EventsEventIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/my-events/': {
+      id: '/my-events/'
+      path: '/'
+      fullPath: '/my-events/'
+      preLoaderRoute: typeof MyEventsIndexRouteImport
+      parentRoute: typeof MyEventsRoute
+    }
+    '/my-events/$eventId': {
+      id: '/my-events/$eventId'
+      path: '/$eventId'
+      fullPath: '/my-events/$eventId'
+      preLoaderRoute: typeof MyEventsEventIdRouteImport
+      parentRoute: typeof MyEventsRoute
+    }
+    '/rental/$token': {
+      id: '/rental/$token'
+      path: '/rental/$token'
+      fullPath: '/rental/$token'
+      preLoaderRoute: typeof RentalTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/spectate/': {
+      id: '/spectate/'
+      path: '/'
+      fullPath: '/spectate/'
+      preLoaderRoute: typeof SpectateIndexRouteImport
+      parentRoute: typeof SpectateRoute
+    }
+    '/spectate/$eventId': {
+      id: '/spectate/$eventId'
+      path: '/$eventId'
+      fullPath: '/spectate/$eventId'
+      preLoaderRoute: typeof SpectateEventIdRouteImport
+      parentRoute: typeof SpectateRoute
+    }
+    '/.lovable/oauth/consent': {
+      id: '/.lovable/oauth/consent'
+      path: '/.lovable/oauth/consent'
+      fullPath: '/.lovable/oauth/consent'
+      preLoaderRoute: typeof DotlovableOauthConsentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/.mcp/invoke-tool/$tool': {
+      id: '/.mcp/invoke-tool/$tool'
+      path: '/.mcp/invoke-tool/$tool'
+      fullPath: '/.mcp/invoke-tool/$tool'
+      preLoaderRoute: typeof Char91DotmcpChar93InvokeToolToolRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/email-builder/$stepId': {
+      id: '/admin/email-builder/$stepId'
+      path: '/email-builder/$stepId'
+      fullPath: '/admin/email-builder/$stepId'
+      preLoaderRoute: typeof AdminEmailBuilderStepIdRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/event-info/': {
@@ -1867,74 +1867,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminEventInfoIndexRouteImport
       parentRoute: typeof AdminRoute
     }
-    '/my-events_/$eventId_/report': {
-      id: '/my-events_/$eventId_/report'
-      path: '/my-events/$eventId/report'
-      fullPath: '/my-events/$eventId/report'
-      preLoaderRoute: typeof MyEventsEventIdReportRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/events/$eventId/map': {
-      id: '/events/$eventId/map'
-      path: '/map'
-      fullPath: '/events/$eventId/map'
-      preLoaderRoute: typeof EventsEventIdMapRouteImport
-      parentRoute: typeof EventsEventIdRoute
-    }
-    '/events/$eventId/enter': {
-      id: '/events/$eventId/enter'
-      path: '/enter'
-      fullPath: '/events/$eventId/enter'
-      preLoaderRoute: typeof EventsEventIdEnterRouteImport
-      parentRoute: typeof EventsEventIdRoute
-    }
-    '/embed/village/$eventId': {
-      id: '/embed/village/$eventId'
-      path: '/embed/village/$eventId'
-      fullPath: '/embed/village/$eventId'
-      preLoaderRoute: typeof EmbedVillageEventIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/crew/learn/calendar': {
-      id: '/crew/learn/calendar'
-      path: '/crew/learn/calendar'
-      fullPath: '/crew/learn/calendar'
-      preLoaderRoute: typeof CrewLearnCalendarRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/crew/learn/$courseId': {
-      id: '/crew/learn/$courseId'
-      path: '/crew/learn/$courseId'
-      fullPath: '/crew/learn/$courseId'
-      preLoaderRoute: typeof CrewLearnCourseIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/crew/department/$deptId': {
-      id: '/crew/department/$deptId'
-      path: '/crew/department/$deptId'
-      fullPath: '/crew/department/$deptId'
-      preLoaderRoute: typeof CrewDepartmentDeptIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/entry-count': {
-      id: '/api/public/entry-count'
-      path: '/api/public/entry-count'
-      fullPath: '/api/public/entry-count'
-      preLoaderRoute: typeof ApiPublicEntryCountRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/class-availability': {
-      id: '/api/public/class-availability'
-      path: '/api/public/class-availability'
-      fullPath: '/api/public/class-availability'
-      preLoaderRoute: typeof ApiPublicClassAvailabilityRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin/village/$eventId': {
-      id: '/admin/village/$eventId'
-      path: '/village/$eventId'
-      fullPath: '/admin/village/$eventId'
-      preLoaderRoute: typeof AdminVillageEventIdRouteImport
+    '/admin/event-info/$eventId': {
+      id: '/admin/event-info/$eventId'
+      path: '/event-info/$eventId'
+      fullPath: '/admin/event-info/$eventId'
+      preLoaderRoute: typeof AdminEventInfoEventIdRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/rider/$userId': {
@@ -1944,200 +1881,95 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminRiderUserIdRouteImport
       parentRoute: typeof AdminRoute
     }
-    '/admin/event-info/$eventId': {
-      id: '/admin/event-info/$eventId'
-      path: '/event-info/$eventId'
-      fullPath: '/admin/event-info/$eventId'
-      preLoaderRoute: typeof AdminEventInfoEventIdRouteImport
+    '/admin/village/': {
+      id: '/admin/village/'
+      path: '/village'
+      fullPath: '/admin/village/'
+      preLoaderRoute: typeof AdminVillageIndexRouteImport
       parentRoute: typeof AdminRoute
     }
-    '/admin/email-builder/$stepId': {
-      id: '/admin/email-builder/$stepId'
-      path: '/email-builder/$stepId'
-      fullPath: '/admin/email-builder/$stepId'
-      preLoaderRoute: typeof AdminEmailBuilderStepIdRouteImport
+    '/admin/village/$eventId': {
+      id: '/admin/village/$eventId'
+      path: '/village/$eventId'
+      fullPath: '/admin/village/$eventId'
+      preLoaderRoute: typeof AdminVillageEventIdRouteImport
       parentRoute: typeof AdminRoute
     }
-    '/.mcp/invoke-tool/$tool': {
-      id: '/.mcp/invoke-tool/$tool'
-      path: '/.mcp/invoke-tool/$tool'
-      fullPath: '/.mcp/invoke-tool/$tool'
-      preLoaderRoute: typeof Char91DotmcpChar93InvokeToolToolRouteImport
+    '/api/public/class-availability': {
+      id: '/api/public/class-availability'
+      path: '/api/public/class-availability'
+      fullPath: '/api/public/class-availability'
+      preLoaderRoute: typeof ApiPublicClassAvailabilityRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/.lovable/oauth/consent': {
-      id: '/.lovable/oauth/consent'
-      path: '/.lovable/oauth/consent'
-      fullPath: '/.lovable/oauth/consent'
-      preLoaderRoute: typeof DotlovableOauthConsentRouteImport
+    '/api/public/entry-count': {
+      id: '/api/public/entry-count'
+      path: '/api/public/entry-count'
+      fullPath: '/api/public/entry-count'
+      preLoaderRoute: typeof ApiPublicEntryCountRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/spectate_/$eventId_/rider/$entrantId': {
-      id: '/spectate_/$eventId_/rider/$entrantId'
-      path: '/spectate/$eventId/rider/$entrantId'
-      fullPath: '/spectate/$eventId/rider/$entrantId'
-      preLoaderRoute: typeof SpectateEventIdRiderEntrantIdRouteImport
+    '/crew/department/$deptId': {
+      id: '/crew/department/$deptId'
+      path: '/crew/department/$deptId'
+      fullPath: '/crew/department/$deptId'
+      preLoaderRoute: typeof CrewDepartmentDeptIdRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/lovable/email/transactional/preview': {
-      id: '/lovable/email/transactional/preview'
-      path: '/lovable/email/transactional/preview'
-      fullPath: '/lovable/email/transactional/preview'
-      preLoaderRoute: typeof LovableEmailTransactionalPreviewRouteImport
+    '/crew/learn/': {
+      id: '/crew/learn/'
+      path: '/crew/learn'
+      fullPath: '/crew/learn/'
+      preLoaderRoute: typeof CrewLearnIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/lovable/email/auth/webhook': {
-      id: '/lovable/email/auth/webhook'
-      path: '/lovable/email/auth/webhook'
-      fullPath: '/lovable/email/auth/webhook'
-      preLoaderRoute: typeof LovableEmailAuthWebhookRouteImport
+    '/crew/learn/$courseId': {
+      id: '/crew/learn/$courseId'
+      path: '/crew/learn/$courseId'
+      fullPath: '/crew/learn/$courseId'
+      preLoaderRoute: typeof CrewLearnCourseIdRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/lovable/email/auth/preview': {
-      id: '/lovable/email/auth/preview'
-      path: '/lovable/email/auth/preview'
-      fullPath: '/lovable/email/auth/preview'
-      preLoaderRoute: typeof LovableEmailAuthPreviewRouteImport
+    '/crew/learn/calendar': {
+      id: '/crew/learn/calendar'
+      path: '/crew/learn/calendar'
+      fullPath: '/crew/learn/calendar'
+      preLoaderRoute: typeof CrewLearnCalendarRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/hooks/whatsapp': {
-      id: '/api/public/hooks/whatsapp'
-      path: '/api/public/hooks/whatsapp'
-      fullPath: '/api/public/hooks/whatsapp'
-      preLoaderRoute: typeof ApiPublicHooksWhatsappRouteImport
+    '/embed/village/$eventId': {
+      id: '/embed/village/$eventId'
+      path: '/embed/village/$eventId'
+      fullPath: '/embed/village/$eventId'
+      preLoaderRoute: typeof EmbedVillageEventIdRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/hooks/venue-sync': {
-      id: '/api/public/hooks/venue-sync'
-      path: '/api/public/hooks/venue-sync'
-      fullPath: '/api/public/hooks/venue-sync'
-      preLoaderRoute: typeof ApiPublicHooksVenueSyncRouteImport
-      parentRoute: typeof rootRouteImport
+    '/events/$eventId/': {
+      id: '/events/$eventId/'
+      path: '/'
+      fullPath: '/events/$eventId/'
+      preLoaderRoute: typeof EventsEventIdIndexRouteImport
+      parentRoute: typeof EventsEventIdRoute
     }
-    '/api/public/hooks/schedule-sync': {
-      id: '/api/public/hooks/schedule-sync'
-      path: '/api/public/hooks/schedule-sync'
-      fullPath: '/api/public/hooks/schedule-sync'
-      preLoaderRoute: typeof ApiPublicHooksScheduleSyncRouteImport
-      parentRoute: typeof rootRouteImport
+    '/events/$eventId/enter': {
+      id: '/events/$eventId/enter'
+      path: '/enter'
+      fullPath: '/events/$eventId/enter'
+      preLoaderRoute: typeof EventsEventIdEnterRouteImport
+      parentRoute: typeof EventsEventIdRoute
     }
-    '/api/public/hooks/run-sheet-sync': {
-      id: '/api/public/hooks/run-sheet-sync'
-      path: '/api/public/hooks/run-sheet-sync'
-      fullPath: '/api/public/hooks/run-sheet-sync'
-      preLoaderRoute: typeof ApiPublicHooksRunSheetSyncRouteImport
-      parentRoute: typeof rootRouteImport
+    '/events/$eventId/map': {
+      id: '/events/$eventId/map'
+      path: '/map'
+      fullPath: '/events/$eventId/map'
+      preLoaderRoute: typeof EventsEventIdMapRouteImport
+      parentRoute: typeof EventsEventIdRoute
     }
-    '/api/public/hooks/rooming-sheet-sync': {
-      id: '/api/public/hooks/rooming-sheet-sync'
-      path: '/api/public/hooks/rooming-sheet-sync'
-      fullPath: '/api/public/hooks/rooming-sheet-sync'
-      preLoaderRoute: typeof ApiPublicHooksRoomingSheetSyncRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/hooks/notification-cron': {
-      id: '/api/public/hooks/notification-cron'
-      path: '/api/public/hooks/notification-cron'
-      fullPath: '/api/public/hooks/notification-cron'
-      preLoaderRoute: typeof ApiPublicHooksNotificationCronRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/hooks/notification-click': {
-      id: '/api/public/hooks/notification-click'
-      path: '/api/public/hooks/notification-click'
-      fullPath: '/api/public/hooks/notification-click'
-      preLoaderRoute: typeof ApiPublicHooksNotificationClickRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/hooks/news-sync': {
-      id: '/api/public/hooks/news-sync'
-      path: '/api/public/hooks/news-sync'
-      fullPath: '/api/public/hooks/news-sync'
-      preLoaderRoute: typeof ApiPublicHooksNewsSyncRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/hooks/merch-sync': {
-      id: '/api/public/hooks/merch-sync'
-      path: '/api/public/hooks/merch-sync'
-      fullPath: '/api/public/hooks/merch-sync'
-      preLoaderRoute: typeof ApiPublicHooksMerchSyncRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/hooks/loyalty-expiry': {
-      id: '/api/public/hooks/loyalty-expiry'
-      path: '/api/public/hooks/loyalty-expiry'
-      fullPath: '/api/public/hooks/loyalty-expiry'
-      preLoaderRoute: typeof ApiPublicHooksLoyaltyExpiryRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/hooks/learn-sync': {
-      id: '/api/public/hooks/learn-sync'
-      path: '/api/public/hooks/learn-sync'
-      fullPath: '/api/public/hooks/learn-sync'
-      preLoaderRoute: typeof ApiPublicHooksLearnSyncRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/hooks/knowledge-email': {
-      id: '/api/public/hooks/knowledge-email'
-      path: '/api/public/hooks/knowledge-email'
-      fullPath: '/api/public/hooks/knowledge-email'
-      preLoaderRoute: typeof ApiPublicHooksKnowledgeEmailRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/hooks/invite-rider': {
-      id: '/api/public/hooks/invite-rider'
-      path: '/api/public/hooks/invite-rider'
-      fullPath: '/api/public/hooks/invite-rider'
-      preLoaderRoute: typeof ApiPublicHooksInviteRiderRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/hooks/faq-suggest': {
-      id: '/api/public/hooks/faq-suggest'
-      path: '/api/public/hooks/faq-suggest'
-      fullPath: '/api/public/hooks/faq-suggest'
-      preLoaderRoute: typeof ApiPublicHooksFaqSuggestRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/hooks/event-bot-refresh': {
-      id: '/api/public/hooks/event-bot-refresh'
-      path: '/api/public/hooks/event-bot-refresh'
-      fullPath: '/api/public/hooks/event-bot-refresh'
-      preLoaderRoute: typeof ApiPublicHooksEventBotRefreshRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/hooks/entry-welcome': {
-      id: '/api/public/hooks/entry-welcome'
-      path: '/api/public/hooks/entry-welcome'
-      fullPath: '/api/public/hooks/entry-welcome'
-      preLoaderRoute: typeof ApiPublicHooksEntryWelcomeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/hooks/entry-ninja-sync': {
-      id: '/api/public/hooks/entry-ninja-sync'
-      path: '/api/public/hooks/entry-ninja-sync'
-      fullPath: '/api/public/hooks/entry-ninja-sync'
-      preLoaderRoute: typeof ApiPublicHooksEntryNinjaSyncRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/hooks/entry-ninja-archive': {
-      id: '/api/public/hooks/entry-ninja-archive'
-      path: '/api/public/hooks/entry-ninja-archive'
-      fullPath: '/api/public/hooks/entry-ninja-archive'
-      preLoaderRoute: typeof ApiPublicHooksEntryNinjaArchiveRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/hooks/email-workflow': {
-      id: '/api/public/hooks/email-workflow'
-      path: '/api/public/hooks/email-workflow'
-      fullPath: '/api/public/hooks/email-workflow'
-      preLoaderRoute: typeof ApiPublicHooksEmailWorkflowRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/hooks/content-audit': {
-      id: '/api/public/hooks/content-audit'
-      path: '/api/public/hooks/content-audit'
-      fullPath: '/api/public/hooks/content-audit'
-      preLoaderRoute: typeof ApiPublicHooksContentAuditRouteImport
+    '/my-events_/$eventId_/report': {
+      id: '/my-events_/$eventId_/report'
+      path: '/my-events/$eventId/report'
+      fullPath: '/my-events/$eventId/report'
+      preLoaderRoute: typeof MyEventsEventIdReportRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/loyalty/rider/$entrantId': {
@@ -2147,11 +1979,172 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminLoyaltyRiderEntrantIdRouteImport
       parentRoute: typeof AdminLoyaltyRoute
     }
-    '/api/public/e/o/$id': {
-      id: '/api/public/e/o/$id'
-      path: '/api/public/e/o/$id'
-      fullPath: '/api/public/e/o/$id'
-      preLoaderRoute: typeof ApiPublicEOIdRouteImport
+    '/api/public/hooks/content-audit': {
+      id: '/api/public/hooks/content-audit'
+      path: '/api/public/hooks/content-audit'
+      fullPath: '/api/public/hooks/content-audit'
+      preLoaderRoute: typeof ApiPublicHooksContentAuditRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/email-workflow': {
+      id: '/api/public/hooks/email-workflow'
+      path: '/api/public/hooks/email-workflow'
+      fullPath: '/api/public/hooks/email-workflow'
+      preLoaderRoute: typeof ApiPublicHooksEmailWorkflowRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/entry-ninja-archive': {
+      id: '/api/public/hooks/entry-ninja-archive'
+      path: '/api/public/hooks/entry-ninja-archive'
+      fullPath: '/api/public/hooks/entry-ninja-archive'
+      preLoaderRoute: typeof ApiPublicHooksEntryNinjaArchiveRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/entry-ninja-sync': {
+      id: '/api/public/hooks/entry-ninja-sync'
+      path: '/api/public/hooks/entry-ninja-sync'
+      fullPath: '/api/public/hooks/entry-ninja-sync'
+      preLoaderRoute: typeof ApiPublicHooksEntryNinjaSyncRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/entry-welcome': {
+      id: '/api/public/hooks/entry-welcome'
+      path: '/api/public/hooks/entry-welcome'
+      fullPath: '/api/public/hooks/entry-welcome'
+      preLoaderRoute: typeof ApiPublicHooksEntryWelcomeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/event-bot-refresh': {
+      id: '/api/public/hooks/event-bot-refresh'
+      path: '/api/public/hooks/event-bot-refresh'
+      fullPath: '/api/public/hooks/event-bot-refresh'
+      preLoaderRoute: typeof ApiPublicHooksEventBotRefreshRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/faq-suggest': {
+      id: '/api/public/hooks/faq-suggest'
+      path: '/api/public/hooks/faq-suggest'
+      fullPath: '/api/public/hooks/faq-suggest'
+      preLoaderRoute: typeof ApiPublicHooksFaqSuggestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/invite-rider': {
+      id: '/api/public/hooks/invite-rider'
+      path: '/api/public/hooks/invite-rider'
+      fullPath: '/api/public/hooks/invite-rider'
+      preLoaderRoute: typeof ApiPublicHooksInviteRiderRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/knowledge-email': {
+      id: '/api/public/hooks/knowledge-email'
+      path: '/api/public/hooks/knowledge-email'
+      fullPath: '/api/public/hooks/knowledge-email'
+      preLoaderRoute: typeof ApiPublicHooksKnowledgeEmailRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/learn-sync': {
+      id: '/api/public/hooks/learn-sync'
+      path: '/api/public/hooks/learn-sync'
+      fullPath: '/api/public/hooks/learn-sync'
+      preLoaderRoute: typeof ApiPublicHooksLearnSyncRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/loyalty-expiry': {
+      id: '/api/public/hooks/loyalty-expiry'
+      path: '/api/public/hooks/loyalty-expiry'
+      fullPath: '/api/public/hooks/loyalty-expiry'
+      preLoaderRoute: typeof ApiPublicHooksLoyaltyExpiryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/merch-sync': {
+      id: '/api/public/hooks/merch-sync'
+      path: '/api/public/hooks/merch-sync'
+      fullPath: '/api/public/hooks/merch-sync'
+      preLoaderRoute: typeof ApiPublicHooksMerchSyncRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/news-sync': {
+      id: '/api/public/hooks/news-sync'
+      path: '/api/public/hooks/news-sync'
+      fullPath: '/api/public/hooks/news-sync'
+      preLoaderRoute: typeof ApiPublicHooksNewsSyncRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/notification-click': {
+      id: '/api/public/hooks/notification-click'
+      path: '/api/public/hooks/notification-click'
+      fullPath: '/api/public/hooks/notification-click'
+      preLoaderRoute: typeof ApiPublicHooksNotificationClickRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/notification-cron': {
+      id: '/api/public/hooks/notification-cron'
+      path: '/api/public/hooks/notification-cron'
+      fullPath: '/api/public/hooks/notification-cron'
+      preLoaderRoute: typeof ApiPublicHooksNotificationCronRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/rooming-sheet-sync': {
+      id: '/api/public/hooks/rooming-sheet-sync'
+      path: '/api/public/hooks/rooming-sheet-sync'
+      fullPath: '/api/public/hooks/rooming-sheet-sync'
+      preLoaderRoute: typeof ApiPublicHooksRoomingSheetSyncRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/run-sheet-sync': {
+      id: '/api/public/hooks/run-sheet-sync'
+      path: '/api/public/hooks/run-sheet-sync'
+      fullPath: '/api/public/hooks/run-sheet-sync'
+      preLoaderRoute: typeof ApiPublicHooksRunSheetSyncRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/schedule-sync': {
+      id: '/api/public/hooks/schedule-sync'
+      path: '/api/public/hooks/schedule-sync'
+      fullPath: '/api/public/hooks/schedule-sync'
+      preLoaderRoute: typeof ApiPublicHooksScheduleSyncRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/venue-sync': {
+      id: '/api/public/hooks/venue-sync'
+      path: '/api/public/hooks/venue-sync'
+      fullPath: '/api/public/hooks/venue-sync'
+      preLoaderRoute: typeof ApiPublicHooksVenueSyncRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/whatsapp': {
+      id: '/api/public/hooks/whatsapp'
+      path: '/api/public/hooks/whatsapp'
+      fullPath: '/api/public/hooks/whatsapp'
+      preLoaderRoute: typeof ApiPublicHooksWhatsappRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lovable/email/auth/preview': {
+      id: '/lovable/email/auth/preview'
+      path: '/lovable/email/auth/preview'
+      fullPath: '/lovable/email/auth/preview'
+      preLoaderRoute: typeof LovableEmailAuthPreviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lovable/email/auth/webhook': {
+      id: '/lovable/email/auth/webhook'
+      path: '/lovable/email/auth/webhook'
+      fullPath: '/lovable/email/auth/webhook'
+      preLoaderRoute: typeof LovableEmailAuthWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lovable/email/transactional/preview': {
+      id: '/lovable/email/transactional/preview'
+      path: '/lovable/email/transactional/preview'
+      fullPath: '/lovable/email/transactional/preview'
+      preLoaderRoute: typeof LovableEmailTransactionalPreviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/spectate_/$eventId_/rider/$entrantId': {
+      id: '/spectate_/$eventId_/rider/$entrantId'
+      path: '/spectate/$eventId/rider/$entrantId'
+      fullPath: '/spectate/$eventId/rider/$entrantId'
+      preLoaderRoute: typeof SpectateEventIdRiderEntrantIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/e/c/$id': {
@@ -2159,6 +2152,13 @@ declare module '@tanstack/react-router' {
       path: '/api/public/e/c/$id'
       fullPath: '/api/public/e/c/$id'
       preLoaderRoute: typeof ApiPublicECIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/e/o/$id': {
+      id: '/api/public/e/o/$id'
+      path: '/api/public/e/o/$id'
+      fullPath: '/api/public/e/o/$id'
+      preLoaderRoute: typeof ApiPublicEOIdRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
