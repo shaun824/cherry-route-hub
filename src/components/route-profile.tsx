@@ -2,6 +2,7 @@
 // builds a distance/elevation series (from KML altitudes when present, otherwise
 // from the terrain lookup server function) and draws a hoverable SVG chart.
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { Mountain, TrendingUp } from "lucide-react";
 import {
   gainFromSeries,
