@@ -183,6 +183,22 @@
   to { stroke-dasharray: 1; stroke-dashoffset: 0; opacity: 1; }
 }
 
+@keyframes pe-plett-profile-in {
+  from { clip-path: inset(0 100% 0 0); opacity: 0.45; }
+  to { clip-path: inset(0 0 0 0); opacity: 1; }
+}
+
+@utility animate-pe-plett-profile {
+  animation: pe-plett-profile-in 1.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-pe-plett-profile,
+  .animate-pe-plett-route {
+    animation: none;
+  }
+}
+
 @utility animate-pe-plett-route {
   animation: pe-plett-route-draw 2.4s cubic-bezier(0.22, 1, 0.36, 1) both;
 }

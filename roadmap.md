@@ -1,21 +1,7 @@
 # Roadmap
 
-- [x] Add available PE Plett extras section with Entry Ninja and website links to booked-extras email
-
-- [x] Add PE Plett header, configure a paused two-day new-entry extras workflow, and resend test
-
-- [x] Complete the Village Map interaction, fullscreen, labels, and crew readability pass
-
-- [x] Open shared Village Map links full screen and simplify mobile location controls
-
-- [x] Add a one-tap return to the village while live location stays active
-
-- [x] Upgrade rider tracking using the best of Roof of Africa, including a 1 km race-village start check
-- [x] Improve mobile tent visibility and add per-section map-name controls
-- [x] Track supplier promo engagement, estimated ROI, CSV reporting, and admin assistant access
-- [x] Add Red Cherry branding, countdown, website imagery, and trust signals to rental client pages
-- [x] Bring the official PE Plett 2027 journey, route animation, imagery, and sponsor colours into the rider Routes section
-
-- [x] Remove Woodridge activity stations and add the safety and disaster plan to its client page
-
-- [x] Inside-event analytics: tab/section/action tracking, rider activity detail, Admin → Analytics "Inside events"
+- [x] Make the PE Plett route map the main Routes experience.
+- [x] Add larger smooth zoom controls and a full-route recenter action.
+- [x] Keep every configured route point visible on the interactive map.
+- [x] Replace cropped route imagery with responsive animated SVG elevation profiles.
+- [ ] Verify the PE Plett Routes experience on phone and desktop.

@@ -658,7 +658,7 @@ function RoutesPanel({
       {pePlettJourney ? (
         <PePlettJourney days={days} activeDay={activeDay} onSelectDay={(d) => { trackAction("route_day_changed", { day: d }); setActiveDay(d); }} />
       ) : null}
-      {routeDays.length > 1 ? (
+      {routeDays.length > 1 && !pePlettJourney ? (
         <div className="flex gap-1 overflow-x-auto rounded-full bg-secondary p-1">
           {[{ id: "all", label: "All days" }, ...routeDays.map((d) => ({ id: d.id, label: d.label || d.id }))].map(
             (t) => {
@@ -684,15 +684,18 @@ function RoutesPanel({
       ) : null}
 
       {hasMap ? (
-        <section>
-          <SectionTitle>Interactive map</SectionTitle>
-          <div className="mt-2">
+        <section className={pePlettJourney ? "overflow-hidden rounded-2xl bg-pe-plett-deep text-pe-plett-foreground" : ""}>
+          <div className={pePlettJourney ? "grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-4 pt-4" : ""}>
+            <SectionTitle>Interactive map</SectionTitle>
+            {pePlettJourney ? <span className="shrink-0 text-[10px] font-bold uppercase text-pe-plett-accent">Tap any point for details</span> : null}
+          </div>
+          <div className={pePlettJourney ? "mt-2" : "mt-2"}>
             <LockedSection locked={locked} message="Sign in to view the interactive route map">
               <div
                 onPointerDown={() => trackActionThrottled("route_map_interacted", 30000, { day: activeDay })}
                 onWheel={() => trackActionThrottled("route_map_interacted", 30000, { day: activeDay })}
               >
-                <RouteMap event={event as never} height="320px" dayIds={mapDayIds} />
+                <RouteMap event={event as never} height={pePlettJourney ? "clamp(380px, 62vh, 620px)" : "320px"} dayIds={mapDayIds} showToggles={!pePlettJourney} showStats={!pePlettJourney} immersive={pePlettJourney} />
               </div>
             </LockedSection>
             {!locked ? (
@@ -700,7 +703,7 @@ function RoutesPanel({
                 to="/events/$eventId/map"
                 params={{ eventId }}
                 data-track-action="route_map_fullscreen_opened"
-                className="mt-2 inline-block text-[11px] font-semibold text-cherry"
+                className={pePlettJourney ? "mx-4 mb-4 mt-1 inline-block rounded-md bg-pe-plett-accent px-3 py-2 text-xs font-bold text-pe-plett-accent-foreground" : "mt-2 inline-block text-[11px] font-semibold text-cherry"}
               >
                 Open fullscreen map →
               </Link>
@@ -727,7 +730,7 @@ function RoutesPanel({
             <SectionTitle>
               {day.label || (day.date ? new Date(day.date).toDateString() : `Day ${di + 1}`)}
             </SectionTitle>
-            {day.imageUrl ? (
+            {day.imageUrl && !pePlettJourney ? (
               <img
                 src={day.imageUrl}
                 alt={`${day.label || `Day ${di + 1}`} riding`}
@@ -751,7 +754,7 @@ function RoutesPanel({
                     : null;
                 return (
                   <Fragment key={r.id || ri}>
-                  <li className="rounded-2xl bg-card p-4 ring-1 ring-border">
+                  <li className={pePlettJourney ? "rounded-2xl bg-pe-plett p-4 text-pe-plett-foreground ring-1 ring-pe-plett-accent/25" : "rounded-2xl bg-card p-4 ring-1 ring-border"}>
                     <div className="flex items-center gap-2">
                       <span
                         className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white"
@@ -760,13 +763,13 @@ function RoutesPanel({
                         <RouteIcon className="h-3 w-3" />
                         {r.tier}
                       </span>
-                      <p className="text-sm font-semibold text-ink">{r.name}</p>
+                       <p className={pePlettJourney ? "text-sm font-semibold text-pe-plett-foreground" : "text-sm font-semibold text-ink"}>{r.name}</p>
                     </div>
                     <RouteFileStats route={r} />
-                    <RouteProfile route={r} color={r.color} markers={dayMarkers} />
+                     <RouteProfile route={r} color={r.color} markers={dayMarkers} pePlett={pePlettJourney} />
 
                     {r.description ? (
-                      <p className="mt-2 text-xs leading-relaxed text-ink-soft">{r.description}</p>
+                       <p className={pePlettJourney ? "mt-3 text-xs leading-relaxed text-pe-plett-foreground/75" : "mt-2 text-xs leading-relaxed text-ink-soft"}>{r.description}</p>
                     ) : null}
                     {kmls.length > 0 || r.gpxUrl ? (
                       downloadsLocked && !locked ? (

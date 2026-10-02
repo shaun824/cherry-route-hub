@@ -11,7 +11,7 @@
 
 - Village section names use `VillageZone.showLabel` and default to visible when unset, preserving existing maps.
 - Supplier promo ROI is an engagement estimate from outbound clicks, never a confirmed redemption or sale.
-- PE Plett's Routes tab reuses the generic route system with a PE Plett-only journey header, keeping other events unchanged.
+- PE Plett's Routes tab reuses generic route data but presents a PE Plett-only map-first journey and vector profile, keeping other events unchanged.
 
 - In-event analytics go through `src/lib/event-analytics.ts` (batched `track()` queue, `data-section` / `data-track-action` markers) — one fire-and-forget path, no personal data in props.
 - Rental plan edits regenerate an editable text plan from live rental data (not stored separately, since site_settings is publicly readable) and re-run it through the AI draft step before applying — keeps one source of truth.
