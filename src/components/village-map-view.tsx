@@ -603,6 +603,10 @@ export function VillageMapView({
     return (
       <div className="space-y-3">
         {venueTabs}
+        {selectedVenue?.notes ? (
+          <p className="text-xs leading-relaxed text-ink-soft">{selectedVenue.notes}</p>
+        ) : null}
+        <OpenMapsButton venue={selectedVenue} />
         <div className="rounded-2xl border border-dashed border-border p-6 text-center text-sm text-ink-soft">
           The village map for this venue hasn't been published yet — check back closer to race week.
         </div>
@@ -615,6 +619,10 @@ export function VillageMapView({
   return (
     <div className="space-y-3">
       {venueTabs}
+      {selectedVenue?.notes ? (
+        <p className="text-xs leading-relaxed text-ink-soft">{selectedVenue.notes}</p>
+      ) : null}
+      <OpenMapsButton venue={selectedVenue} />
       <VillageShare eventId={eventId} venueId={venueId} isCrew={isCrew} />
       {focusZone ? (
         <p className="rounded-xl bg-accent px-3 py-2 text-xs font-semibold text-cherry-deep">
