@@ -15,6 +15,7 @@ import {
   type NightStay,
 } from "@/lib/accommodation";
 import { buildMapLink } from "@/lib/map-embed";
+import { fetchVillageMaps, hasVenueCentre } from "@/lib/village-map";
 import { VillageFocusContext } from "@/lib/village-focus";
 import type { EventDay, ScheduleItem } from "@/lib/mock-data";
 
@@ -101,6 +102,21 @@ export function AccommodationTimeline({ eventId, days, schedule, variant = "comp
     staleTime: 5 * 60_000,
     enabled,
   });
+  // Verified village pins — directions must use these, not an address text
+  // search, which can land on a same-named venue in the wrong town.
+  const mapsQ = useQuery({
+    queryKey: ["village-maps", eventId],
+    queryFn: () => fetchVillageMaps(eventId),
+    staleTime: 5 * 60_000,
+    enabled,
+  });
+  const pins = useMemo(() => {
+    const map = new Map<string, { lat: number; lng: number }>();
+    for (const m of mapsQ.data ?? []) {
+      if (m.venue_id && hasVenueCentre(m.geo)) map.set(m.venue_id, { lat: m.geo.lat, lng: m.geo.lng });
+    }
+    return map;
+  }, [mapsQ.data]);
   const hotels = useMemo(() => hotelNightMap(nights, choiceQ.data ?? null), [nights, choiceQ.data]);
 
   if (!enabled) return null;
@@ -117,7 +133,7 @@ export function AccommodationTimeline({ eventId, days, schedule, variant = "comp
       </p>
       <ol className="mt-3 space-y-2">
         {nights.map((n) => (
-          <NightRow key={n.index} night={n} variant={variant} hotel={hotels.get(n.index) ?? null} />
+          <NightRow key={n.index} night={n} variant={variant} hotel={hotels.get(n.index) ?? null} pin={n.venue ? (pins.get(n.venue.id) ?? null) : null} />
         ))}
       </ol>
       <p className="mt-2 text-[11px] text-ink-soft">
@@ -134,17 +150,25 @@ function NightRow({
   night,
   variant,
   hotel,
+  pin,
 }: {
   night: NightStay;
   variant: "compact" | "full";
   hotel?: NightHotel | null;
+  pin?: { lat: number; lng: number } | null;
 }) {
   const focusVillage = useContext(VillageFocusContext);
   const a = night.allocation;
   const v = night.venue;
   const tonight = isTonight(night.date);
   const stayName = hotel?.hotel ?? v?.name ?? null;
-  const mapLink = buildMapLink({ address: hotel ? hotel.hotel : (v?.address ?? v?.name ?? null) });
+  const mapLink = buildMapLink(
+    hotel
+      ? { address: hotel.hotel }
+      : pin
+        ? { lat: pin.lat, lng: pin.lng }
+        : { address: v?.address ?? v?.name ?? null },
+  );
   const canFocus = Boolean(a?.village_tent_id || a?.village_zone_id || a?.village_spot_id || v?.village_spot_id);
 
   return (
