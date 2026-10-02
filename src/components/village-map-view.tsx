@@ -254,6 +254,7 @@ export function VillageMapView({
     if (venueIdProp) setVenuePick(venueIdProp);
   }, [venueIdProp]);
   const venueId = venuePick ?? venues[0]?.id ?? null;
+  const selectedVenue = venues.find((v) => v.id === venueId) ?? null;
 
   const q = useQuery({
     queryKey: ["village-map", eventId, venueId],
@@ -505,7 +506,7 @@ export function VillageMapView({
               venueId === v.id ? "bg-cherry text-white" : "bg-muted text-ink-soft"
             }`}
           >
-            {v.name}
+            {v.name}{/finish/i.test(v.notes ?? "") ? " · Finish" : ""}
           </button>
         ))}
       </div>
