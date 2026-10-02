@@ -93,7 +93,7 @@ export function RentalPlanImport({
     setDraft((d) => (d ? { ...d, [k]: e.target.value || null } : d));
 
   return (
-    <section className="space-y-3 rounded-2xl border border-border bg-card p-4">
+    <section ref={rootRef} className="space-y-3 rounded-2xl border border-border bg-card p-4">
       <div>
         <h2 className="flex items-center gap-2 font-display text-base font-bold text-ink"><Sparkles className="h-4 w-4 text-cherry" /> Load a plan of action</h2>
         <p className="text-xs text-ink-soft">Upload the plan (PDF, Word, photo) or paste it. We fill in the event page, run sheet and equipment — check it, then save.</p>
