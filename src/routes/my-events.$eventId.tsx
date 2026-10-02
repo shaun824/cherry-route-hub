@@ -766,9 +766,10 @@ function RoutesPanel({
               />
             ) : null}
             {day.summary ? (
-              <p className="mt-2 whitespace-pre-line text-xs leading-relaxed text-ink-soft">
-                {day.summary}
-              </p>
+              <ReadMoreText
+                text={day.summary}
+                className="mt-2 whitespace-pre-line text-xs leading-relaxed text-ink-soft"
+              />
             ) : null}
             <ul className="mt-2 space-y-3">
               {routes.map((r: EventRoute, ri) => {
@@ -796,7 +797,11 @@ function RoutesPanel({
                      <RouteProfile route={r} color={r.color} markers={dayMarkers} pePlett={pePlettJourney} />
 
                     {r.description ? (
-                       <p className={pePlettJourney ? "mt-3 text-xs leading-relaxed text-pe-plett-foreground/90" : "mt-2 text-xs leading-relaxed text-ink-soft"}>{r.description}</p>
+                       <ReadMoreText
+                         text={r.description}
+                         className={pePlettJourney ? "mt-3 whitespace-pre-line text-xs leading-relaxed text-pe-plett-foreground/90" : "mt-2 whitespace-pre-line text-xs leading-relaxed text-ink-soft"}
+                         buttonClassName={pePlettJourney ? "mt-1 text-[11px] font-semibold text-pe-plett-accent" : undefined}
+                       />
                     ) : null}
                     {downloadsDisabled ? (
                       <p className={pePlettJourney ? "mt-3 rounded-xl bg-pe-plett-deep/70 px-3 py-2 text-[11px] font-medium text-pe-plett-foreground/90" : "mt-3 rounded-xl bg-muted/60 px-3 py-2 text-[11px] font-medium text-ink-soft"}>
