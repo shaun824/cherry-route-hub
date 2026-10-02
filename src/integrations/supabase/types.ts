@@ -3509,6 +3509,7 @@ export type Database = {
           end_time: string | null
           event_id: string
           id: string
+          kind: string
           location: string | null
           notes: string | null
           owner: string | null
@@ -3526,6 +3527,7 @@ export type Database = {
           end_time?: string | null
           event_id: string
           id?: string
+          kind?: string
           location?: string | null
           notes?: string | null
           owner?: string | null
@@ -3543,6 +3545,7 @@ export type Database = {
           end_time?: string | null
           event_id?: string
           id?: string
+          kind?: string
           location?: string | null
           notes?: string | null
           owner?: string | null
