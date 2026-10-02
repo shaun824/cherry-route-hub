@@ -133,7 +133,7 @@ export function AccommodationTimeline({ eventId, days, schedule, variant = "comp
       </p>
       <ol className="mt-3 space-y-2">
         {nights.map((n) => (
-          <NightRow key={n.index} night={n} variant={variant} hotel={hotels.get(n.index) ?? null} />
+          <NightRow key={n.index} night={n} variant={variant} hotel={hotels.get(n.index) ?? null} pin={n.venue ? (pins.get(n.venue.id) ?? null) : null} />
         ))}
       </ol>
       <p className="mt-2 text-[11px] text-ink-soft">
