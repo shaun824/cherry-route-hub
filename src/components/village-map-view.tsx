@@ -2,7 +2,8 @@ import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState, type
 import { createPortal } from "react-dom";
 import { useQuery } from "@tanstack/react-query";
 import { ClientOnly } from "@tanstack/react-router";
-import { Maximize2, Minimize2, Minus, Plus, X } from "lucide-react";
+import { MapPin, Maximize2, Minimize2, Minus, Plus, X } from "lucide-react";
+import { buildMapLink } from "@/lib/map-embed";
 import {
   VILLAGE_LAYERS,
   categoryMeta,
@@ -96,6 +97,27 @@ function Pin({
         style={{ backgroundColor: color }}
       />
     </button>
+  );
+}
+
+/** Google Maps link for a venue — opens the venue's location in Google Maps. */
+function venueMapsUrl(v: { name: string; address: string | null }): string | null {
+  return buildMapLink({ address: (v.address ?? "").trim() || v.name });
+}
+
+function OpenMapsButton({ venue, label = "Open in Google Maps" }: { venue: { name: string; address: string | null } | null; label?: string }) {
+  const url = venue ? venueMapsUrl(venue) : null;
+  if (!url) return null;
+  return (
+    <a
+      href={url}
+      target="_blank"
+      rel="noopener noreferrer"
+      onClick={() => trackAction("village_maps_opened")}
+      className="inline-flex w-fit items-center gap-1.5 rounded-full bg-accent px-3 py-1.5 text-[11px] font-bold text-cherry-deep ring-1 ring-border"
+    >
+      <MapPin className="h-3.5 w-3.5" /> {label}
+    </a>
   );
 }
 
@@ -210,19 +232,20 @@ export function VillageMapView({
   // Pinch on the village map must zoom the map only — never the page itself.
   useLockPageZoom();
   // Multi-day events run more than one race village — one per venue.
+  // Venues without a published map (e.g. the finish venue) still get a tab,
+  // because riders need to know where the day ends up.
   const venuesQ = useQuery({
     queryKey: ["village-venues", eventId],
     queryFn: async () => {
-      const [{ data: venues }, maps] = await Promise.all([
+      const [venues, maps] = await Promise.all([
         supabase
           .from("event_venues")
-          .select("id, name, sort_order")
+          .select("id, name, address, notes, sort_order")
           .eq("event_id", eventId)
           .order("sort_order", { ascending: true }),
         fetchVillageMaps(eventId),
       ]);
-      const withMaps = new Set(maps.map((m) => m.venue_id).filter(Boolean) as string[]);
-      return (venues ?? []).filter((v) => withMaps.has(v.id));
+      return (venues.data ?? []) as { id: string; name: string; address: string | null; notes: string | null; sort_order: number }[];
     },
   });
   const venues = venuesQ.data ?? [];
@@ -231,6 +254,7 @@ export function VillageMapView({
     if (venueIdProp) setVenuePick(venueIdProp);
   }, [venueIdProp]);
   const venueId = venuePick ?? venues[0]?.id ?? null;
+  const selectedVenue = venues.find((v) => v.id === venueId) ?? null;
 
   const q = useQuery({
     queryKey: ["village-map", eventId, venueId],
@@ -482,7 +506,7 @@ export function VillageMapView({
               venueId === v.id ? "bg-cherry text-white" : "bg-muted text-ink-soft"
             }`}
           >
-            {v.name}
+            {v.name}{/finish/i.test(v.notes ?? "") ? " · Finish" : ""}
           </button>
         ))}
       </div>
@@ -579,6 +603,10 @@ export function VillageMapView({
     return (
       <div className="space-y-3">
         {venueTabs}
+        {selectedVenue?.notes ? (
+          <p className="text-xs leading-relaxed text-ink-soft">{selectedVenue.notes}</p>
+        ) : null}
+        <OpenMapsButton venue={selectedVenue} />
         <div className="rounded-2xl border border-dashed border-border p-6 text-center text-sm text-ink-soft">
           The village map for this venue hasn't been published yet — check back closer to race week.
         </div>
@@ -591,6 +619,10 @@ export function VillageMapView({
   return (
     <div className="space-y-3">
       {venueTabs}
+      {selectedVenue?.notes ? (
+        <p className="text-xs leading-relaxed text-ink-soft">{selectedVenue.notes}</p>
+      ) : null}
+      <OpenMapsButton venue={selectedVenue} />
       <VillageShare eventId={eventId} venueId={venueId} isCrew={isCrew} />
       {focusZone ? (
         <p className="rounded-xl bg-accent px-3 py-2 text-xs font-semibold text-cherry-deep">
