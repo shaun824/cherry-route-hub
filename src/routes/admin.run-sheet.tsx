@@ -495,7 +495,9 @@ function AdminRunSheet() {
 
             {editTask || addingFor ? (
               <div className="mt-4 space-y-2 rounded-xl border border-primary/40 bg-background p-3">
-                <p className="text-sm font-semibold">{editTask ? "Edit task" : "New task"}</p>
+                <p className="text-sm font-semibold">
+                  {editTask ? (taskForm.kind === "header" ? "Edit header" : "Edit task") : taskForm.kind === "header" ? "New header" : "New task"}
+                </p>
                 <div className="grid grid-cols-2 gap-2">
                   <input
                     value={taskForm.day_label}
@@ -503,40 +505,44 @@ function AdminRunSheet() {
                     placeholder="Day (e.g. Build day 1)"
                     className="rounded-lg border border-border bg-card px-3 py-2 text-sm"
                   />
-                  <input
-                    value={taskForm.start_time}
-                    onChange={(e) => setTaskForm({ ...taskForm, start_time: e.target.value })}
-                    placeholder="Start time (e.g. 08:00)"
-                    className="rounded-lg border border-border bg-card px-3 py-2 text-sm"
-                  />
+                  {taskForm.kind !== "header" ? (
+                    <input
+                      value={taskForm.start_time}
+                      onChange={(e) => setTaskForm({ ...taskForm, start_time: e.target.value })}
+                      placeholder="Start time (e.g. 08:00)"
+                      className="rounded-lg border border-border bg-card px-3 py-2 text-sm"
+                    />
+                  ) : null}
                 </div>
                 <input
                   value={taskForm.task}
                   onChange={(e) => setTaskForm({ ...taskForm, task: e.target.value })}
-                  placeholder="Task"
+                  placeholder={taskForm.kind === "header" ? "Header (e.g. Tent build)" : "Task"}
                   className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm"
                 />
                 <textarea
                   value={taskForm.detail}
                   onChange={(e) => setTaskForm({ ...taskForm, detail: e.target.value })}
-                  placeholder="Detail (optional)"
+                  placeholder={taskForm.kind === "header" ? "Detail under this header (optional)" : "Detail (optional)"}
                   rows={2}
                   className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm"
                 />
-                <div className="grid grid-cols-2 gap-2">
-                  <input
-                    value={taskForm.owner}
-                    onChange={(e) => setTaskForm({ ...taskForm, owner: e.target.value })}
-                    placeholder="Owner (optional)"
-                    className="rounded-lg border border-border bg-card px-3 py-2 text-sm"
-                  />
-                  <input
-                    value={taskForm.location}
-                    onChange={(e) => setTaskForm({ ...taskForm, location: e.target.value })}
-                    placeholder="Location (optional)"
-                    className="rounded-lg border border-border bg-card px-3 py-2 text-sm"
-                  />
-                </div>
+                {taskForm.kind !== "header" ? (
+                  <div className="grid grid-cols-2 gap-2">
+                    <input
+                      value={taskForm.owner}
+                      onChange={(e) => setTaskForm({ ...taskForm, owner: e.target.value })}
+                      placeholder="Owner (optional)"
+                      className="rounded-lg border border-border bg-card px-3 py-2 text-sm"
+                    />
+                    <input
+                      value={taskForm.location}
+                      onChange={(e) => setTaskForm({ ...taskForm, location: e.target.value })}
+                      placeholder="Location (optional)"
+                      className="rounded-lg border border-border bg-card px-3 py-2 text-sm"
+                    />
+                  </div>
+                ) : null}
                 <div className="flex gap-2">
                   <button
                     type="button"
@@ -544,7 +550,7 @@ function AdminRunSheet() {
                     disabled={taskSaveM.isPending}
                     className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-50"
                   >
-                    {taskSaveM.isPending ? "Saving…" : editTask ? "Save changes" : "Add task"}
+                    {taskSaveM.isPending ? "Saving…" : editTask ? "Save changes" : taskForm.kind === "header" ? "Add header" : "Add task"}
                   </button>
                   <button
                     type="button"
