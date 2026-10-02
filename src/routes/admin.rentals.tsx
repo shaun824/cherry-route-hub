@@ -3,7 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { ClipboardList, Copy, MapPin, Package, Plus, RefreshCw, Trash2 } from "lucide-react";
+import { ClipboardList, Copy, FileText, MapPin, Package, Plus, RefreshCw, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getRentalShareToken } from "@/lib/rentals.functions";
 import { RentalPlanImport } from "@/components/rental-plan-import";
@@ -44,6 +44,7 @@ function AdminRentals() {
   const [editing, setEditing] = useState<string | "new" | null>(null);
   const [form, setForm] = useState<Form>(blank);
   const [msg, setMsg] = useState<string | null>(null);
+  const [editPlan, setEditPlan] = useState<{ id: string; nonce: number } | null>(null);
   const shareFn = useServerFn(getRentalShareToken);
 
   const q = useQuery({
