@@ -5,7 +5,7 @@ import { visibleInBackend } from "@/lib/event-window";
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Check, ClipboardList, Eye, Loader2, RefreshCw, ShieldCheck, X } from "lucide-react";
+import { Check, ClipboardList, Eye, Loader2, Pencil, Plus, RefreshCw, ShieldCheck, Trash2, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { previewRunSheet, syncRunSheet } from "@/lib/run-sheet.functions";
 
@@ -104,6 +104,101 @@ function AdminRunSheet() {
         .order("sort_order");
       return (data ?? []) as { id: string; name: string; lead_name: string | null; contact: string | null }[];
     },
+  });
+
+  type TaskRow = {
+    id: string;
+    department_id: string;
+    day_label: string;
+    day_index: number;
+    start_time: string | null;
+    end_time: string | null;
+    task: string;
+    detail: string | null;
+    owner: string | null;
+    location: string | null;
+    notes: string | null;
+    sort_order: number;
+  };
+  const tasksQ = useQuery({
+    queryKey: ["admin-run-tasks", eventId],
+    enabled: !!eventId,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("run_sheet_tasks")
+        .select("id, department_id, day_label, day_index, start_time, end_time, task, detail, owner, location, notes, sort_order")
+        .eq("event_id", eventId)
+        .order("day_index")
+        .order("sort_order");
+      return (data ?? []) as TaskRow[];
+    },
+  });
+  const [editTask, setEditTask] = useState<TaskRow | null>(null);
+  const [addingFor, setAddingFor] = useState<string | null>(null);
+  const [taskForm, setTaskForm] = useState({ day_label: "", start_time: "", task: "", detail: "", owner: "", location: "" });
+
+  const openTaskEdit = (t: TaskRow) => {
+    setEditTask(t);
+    setTaskForm({
+      day_label: t.day_label,
+      start_time: t.start_time ?? "",
+      task: t.task,
+      detail: t.detail ?? "",
+      owner: t.owner ?? "",
+      location: t.location ?? "",
+    });
+  };
+  const openTaskAdd = (deptId: string) => {
+    setAddingFor(deptId);
+    setEditTask(null);
+    setTaskForm({ day_label: "", start_time: "", task: "", detail: "", owner: "", location: "" });
+  };
+
+  const taskSaveM = useMutation({
+    mutationFn: async () => {
+      const row = {
+        day_label: taskForm.day_label.trim() || "Day 1",
+        start_time: taskForm.start_time.trim() || null,
+        task: taskForm.task.trim(),
+        detail: taskForm.detail.trim() || null,
+        owner: taskForm.owner.trim() || null,
+        location: taskForm.location.trim() || null,
+      };
+      if (!row.task) throw new Error("Task text is required.");
+      if (editTask) {
+        const { error } = await supabase.from("run_sheet_tasks").update(row).eq("id", editTask.id);
+        if (error) throw error;
+      } else if (addingFor) {
+        const maxDay = Math.max(0, ...(tasksQ.data ?? []).map((t) => t.day_index));
+        const { error } = await supabase.from("run_sheet_tasks").insert({
+          ...row,
+          event_id: eventId,
+          department_id: addingFor,
+          day_index: maxDay || 1,
+          sort_order: 999,
+        });
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      setMsg(editTask ? "Task updated." : "Task added.");
+      setEditTask(null);
+      setAddingFor(null);
+      qc.invalidateQueries({ queryKey: ["admin-run-tasks", eventId] });
+    },
+    onError: (e: Error) => setMsg(e.message),
+  });
+
+  const taskDeleteM = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("run_sheet_tasks").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      setMsg("Task deleted.");
+      qc.invalidateQueries({ queryKey: ["admin-run-tasks", eventId] });
+    },
+    onError: (e: Error) => setMsg(e.message),
   });
 
   const suggQ = useQuery({
@@ -329,6 +424,124 @@ function AdminRunSheet() {
               ))}
               {deptQ.data?.length === 0 ? <li>Nothing synced yet.</li> : null}
             </ul>
+          </div>
+
+          <div className="rounded-2xl border border-border bg-card p-4">
+            <h2 className="font-display text-base font-bold">Tasks</h2>
+            <p className="mt-1 text-xs text-ink-soft">
+              Edit tasks here directly, or change the Google Sheet and sync again (a sync replaces these).
+            </p>
+            {(deptQ.data ?? []).map((d) => {
+              const tasks = (tasksQ.data ?? []).filter((t) => t.department_id === d.id);
+              return (
+                <div key={d.id} className="mt-4">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-semibold">{d.name}</p>
+                    <button
+                      type="button"
+                      onClick={() => openTaskAdd(d.id)}
+                      className="inline-flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-xs font-semibold"
+                    >
+                      <Plus className="h-3 w-3" /> Add task
+                    </button>
+                  </div>
+                  <ul className="mt-2 space-y-1.5">
+                    {tasks.map((t) => (
+                      <li key={t.id} className="flex items-start justify-between gap-2 rounded-lg border border-border px-3 py-2 text-sm">
+                        <div>
+                          <p className="font-medium">{t.task}</p>
+                          <p className="text-xs text-ink-soft">
+                            {t.day_label}
+                            {t.start_time ? ` · ${t.start_time}` : ""}
+                            {t.owner ? ` · ${t.owner}` : ""}
+                            {t.location ? ` · ${t.location}` : ""}
+                          </p>
+                          {t.detail ? <p className="mt-0.5 text-xs text-ink-soft">{t.detail}</p> : null}
+                        </div>
+                        <div className="flex shrink-0 gap-1">
+                          <button type="button" onClick={() => openTaskEdit(t)} className="rounded-lg border border-border p-1.5" aria-label="Edit task">
+                            <Pencil className="h-3.5 w-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => { if (confirm(`Delete "${t.task}"?`)) taskDeleteM.mutate(t.id); }}
+                            className="rounded-lg border border-border p-1.5 text-destructive"
+                            aria-label="Delete task"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      </li>
+                    ))}
+                    {tasks.length === 0 ? <li className="text-xs text-ink-soft">No tasks yet.</li> : null}
+                  </ul>
+                </div>
+              );
+            })}
+
+            {editTask || addingFor ? (
+              <div className="mt-4 space-y-2 rounded-xl border border-primary/40 bg-background p-3">
+                <p className="text-sm font-semibold">{editTask ? "Edit task" : "New task"}</p>
+                <div className="grid grid-cols-2 gap-2">
+                  <input
+                    value={taskForm.day_label}
+                    onChange={(e) => setTaskForm({ ...taskForm, day_label: e.target.value })}
+                    placeholder="Day (e.g. Build day 1)"
+                    className="rounded-lg border border-border bg-card px-3 py-2 text-sm"
+                  />
+                  <input
+                    value={taskForm.start_time}
+                    onChange={(e) => setTaskForm({ ...taskForm, start_time: e.target.value })}
+                    placeholder="Start time (e.g. 08:00)"
+                    className="rounded-lg border border-border bg-card px-3 py-2 text-sm"
+                  />
+                </div>
+                <input
+                  value={taskForm.task}
+                  onChange={(e) => setTaskForm({ ...taskForm, task: e.target.value })}
+                  placeholder="Task"
+                  className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm"
+                />
+                <textarea
+                  value={taskForm.detail}
+                  onChange={(e) => setTaskForm({ ...taskForm, detail: e.target.value })}
+                  placeholder="Detail (optional)"
+                  rows={2}
+                  className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm"
+                />
+                <div className="grid grid-cols-2 gap-2">
+                  <input
+                    value={taskForm.owner}
+                    onChange={(e) => setTaskForm({ ...taskForm, owner: e.target.value })}
+                    placeholder="Owner (optional)"
+                    className="rounded-lg border border-border bg-card px-3 py-2 text-sm"
+                  />
+                  <input
+                    value={taskForm.location}
+                    onChange={(e) => setTaskForm({ ...taskForm, location: e.target.value })}
+                    placeholder="Location (optional)"
+                    className="rounded-lg border border-border bg-card px-3 py-2 text-sm"
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => taskSaveM.mutate()}
+                    disabled={taskSaveM.isPending}
+                    className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-50"
+                  >
+                    {taskSaveM.isPending ? "Saving…" : editTask ? "Save changes" : "Add task"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setEditTask(null); setAddingFor(null); }}
+                    className="rounded-xl border border-border px-4 py-2 text-sm font-semibold"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : null}
           </div>
         </section>
       ) : null}
