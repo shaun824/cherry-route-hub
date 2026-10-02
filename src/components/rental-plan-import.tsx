@@ -46,12 +46,29 @@ export function RentalPlanImport({
     } catch (e) { setErr((e as Error).message); } finally { setBusy(null); }
   }
 
-  async function openLive() {
-    if (target === "new") return;
+  async function openLiveFor(id: string) {
+    if (id === "new") return;
     setErr(null); setBusy("live"); setDraft(null);
-    try { setLiveText((await liveFn({ data: { eventId: target } })).text); }
+    try { setLiveText((await liveFn({ data: { eventId: id } })).text); }
     catch (e) { setErr((e as Error).message); } finally { setBusy(null); }
   }
+
+  async function openLive() {
+    await openLiveFor(target);
+  }
+
+  // "Edit plan" on a rental card: preselect that event, open its live plan, scroll here.
+  const lastNonce = useRef(0);
+  useEffect(() => {
+    if (!editRequest || editRequest.nonce === lastNonce.current) return;
+    lastNonce.current = editRequest.nonce;
+    setTarget(editRequest.id);
+    setLiveText(null);
+    setDraft(null);
+    rootRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    void openLiveFor(editRequest.id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editRequest]);
 
   async function applyLive() {
     if (!liveText?.trim()) return;
