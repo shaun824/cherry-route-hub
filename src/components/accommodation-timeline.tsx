@@ -102,6 +102,21 @@ export function AccommodationTimeline({ eventId, days, schedule, variant = "comp
     staleTime: 5 * 60_000,
     enabled,
   });
+  // Verified village pins — directions must use these, not an address text
+  // search, which can land on a same-named venue in the wrong town.
+  const mapsQ = useQuery({
+    queryKey: ["village-maps", eventId],
+    queryFn: () => fetchVillageMaps(eventId),
+    staleTime: 5 * 60_000,
+    enabled,
+  });
+  const pins = useMemo(() => {
+    const map = new Map<string, { lat: number; lng: number }>();
+    for (const m of mapsQ.data ?? []) {
+      if (m.venue_id && hasVenueCentre(m.geo)) map.set(m.venue_id, { lat: m.geo.lat, lng: m.geo.lng });
+    }
+    return map;
+  }, [mapsQ.data]);
   const hotels = useMemo(() => hotelNightMap(nights, choiceQ.data ?? null), [nights, choiceQ.data]);
 
   if (!enabled) return null;
