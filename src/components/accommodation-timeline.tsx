@@ -15,6 +15,7 @@ import {
   type NightStay,
 } from "@/lib/accommodation";
 import { buildMapLink } from "@/lib/map-embed";
+import { fetchVillageMaps, hasVenueCentre, type VillageMap } from "@/lib/village-map";
 import { VillageFocusContext } from "@/lib/village-focus";
 import type { EventDay, ScheduleItem } from "@/lib/mock-data";
 
