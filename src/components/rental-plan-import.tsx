@@ -1,5 +1,5 @@
 // Admin: upload a plan of action and turn it into (or update) a rental event page.
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { FileText, FileUp, Loader2, Sparkles } from "lucide-react";
 import { applyRentalPlanFn, draftRentalPlanFn, getLivePlanTextFn, type RentalPlanDraft } from "@/lib/rental-plan.functions";
@@ -16,9 +16,12 @@ function fileToBase64(f: File): Promise<string> {
 export function RentalPlanImport({
   rentals,
   onDone,
+  editRequest,
 }: {
   rentals: { id: string; name: string }[];
   onDone: (msg: string) => void;
+  /** When set (with a fresh nonce), preselect that rental and open its live plan for editing. */
+  editRequest?: { id: string; nonce: number } | null;
 }) {
   const draftFn = useServerFn(draftRentalPlanFn);
   const applyFn = useServerFn(applyRentalPlanFn);
@@ -30,6 +33,7 @@ export function RentalPlanImport({
   const [draft, setDraft] = useState<RentalPlanDraft | null>(null);
   const [busy, setBusy] = useState<"read" | "save" | "live" | null>(null);
   const [err, setErr] = useState<string | null>(null);
+  const rootRef = useRef<HTMLElement | null>(null);
   const input = "w-full rounded-xl border border-border bg-background px-3 py-2 text-sm";
 
   async function read() {
@@ -42,12 +46,29 @@ export function RentalPlanImport({
     } catch (e) { setErr((e as Error).message); } finally { setBusy(null); }
   }
 
-  async function openLive() {
-    if (target === "new") return;
+  async function openLiveFor(id: string) {
+    if (id === "new") return;
     setErr(null); setBusy("live"); setDraft(null);
-    try { setLiveText((await liveFn({ data: { eventId: target } })).text); }
+    try { setLiveText((await liveFn({ data: { eventId: id } })).text); }
     catch (e) { setErr((e as Error).message); } finally { setBusy(null); }
   }
+
+  async function openLive() {
+    await openLiveFor(target);
+  }
+
+  // "Edit plan" on a rental card: preselect that event, open its live plan, scroll here.
+  const lastNonce = useRef(0);
+  useEffect(() => {
+    if (!editRequest || editRequest.nonce === lastNonce.current) return;
+    lastNonce.current = editRequest.nonce;
+    setTarget(editRequest.id);
+    setLiveText(null);
+    setDraft(null);
+    rootRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    void openLiveFor(editRequest.id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editRequest]);
 
   async function applyLive() {
     if (!liveText?.trim()) return;
@@ -72,7 +93,7 @@ export function RentalPlanImport({
     setDraft((d) => (d ? { ...d, [k]: e.target.value || null } : d));
 
   return (
-    <section className="space-y-3 rounded-2xl border border-border bg-card p-4">
+    <section ref={rootRef} className="space-y-3 rounded-2xl border border-border bg-card p-4">
       <div>
         <h2 className="flex items-center gap-2 font-display text-base font-bold text-ink"><Sparkles className="h-4 w-4 text-cherry" /> Load a plan of action</h2>
         <p className="text-xs text-ink-soft">Upload the plan (PDF, Word, photo) or paste it. We fill in the event page, run sheet and equipment — check it, then save.</p>
