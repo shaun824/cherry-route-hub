@@ -1,5 +1,5 @@
 // Admin: upload a plan of action and turn it into (or update) a rental event page.
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { FileText, FileUp, Loader2, Sparkles } from "lucide-react";
 import { applyRentalPlanFn, draftRentalPlanFn, getLivePlanTextFn, type RentalPlanDraft } from "@/lib/rental-plan.functions";
