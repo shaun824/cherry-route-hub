@@ -42,7 +42,15 @@ export function RentalPlanImport({
       const attachment = file
         ? { mimeType: file.type || "application/octet-stream", filename: file.name, dataBase64: await fileToBase64(file) }
         : null;
-      setDraft(await draftFn({ data: { text, attachment } }));
+      if (target !== "new") {
+        // Updating: start from the live plan and apply the request on top of it.
+        if (!text.trim() && !attachment) throw new Error("Type what you want to change.");
+        const live = (await liveFn({ data: { eventId: target } })).text;
+        const merged = `${live}\n\n# CHANGE REQUEST\n${text.trim() || "Work the attached document into the plan."}`;
+        setDraft(await draftFn({ data: { text: merged, attachment, mode: "edit" } }));
+      } else {
+        setDraft(await draftFn({ data: { text, attachment } }));
+      }
     } catch (e) { setErr((e as Error).message); } finally { setBusy(null); }
   }
 
@@ -102,14 +110,18 @@ export function RentalPlanImport({
         <option value="new">Create a new rental event</option>
         {rentals.map((r) => <option key={r.id} value={r.id}>Update: {r.name}</option>)}
       </select>
+      {target !== "new" && liveText === null ? (
+        <p className="text-xs text-ink-soft">Just type what should change — e.g. "move the dates to 20–26 Dec", "make it 220 people", "add 4 more showers". The assistant updates the live plan and tells you what changed.</p>
+      ) : null}
       {target !== "new" ? (
-        <div className="space-y-2 rounded-xl border border-border bg-muted/40 p-3">
+        <details className="rounded-xl border border-border bg-muted/40 p-3" open={liveText !== null}>
+          <summary className="cursor-pointer text-xs font-semibold text-ink-soft">Advanced: edit the full plan text</summary>
+          <div className="mt-2 space-y-2">
           <button onClick={openLive} disabled={busy !== null} className="flex items-center gap-1 rounded-xl border border-border bg-background px-3 py-2 text-sm font-semibold text-ink disabled:opacity-60">
             {busy === "live" ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileText className="h-4 w-4" />} {liveText === null ? "Edit the live plan as text" : "Reload live plan"}
           </button>
           {liveText !== null ? (
             <>
-              <p className="text-xs text-ink-soft">Change anything under the headings, or add new info under "Extra notes". The assistant reworks it into a full, detailed page for you to check before it goes live.</p>
               <textarea aria-label="Live plan text" className={`${input} font-mono text-xs`} rows={22} value={liveText} onChange={(e) => setLiveText(e.target.value)} />
               <div className="flex gap-2">
                 <button onClick={applyLive} disabled={busy !== null} className="flex items-center gap-1 rounded-xl cherry-gradient px-4 py-2 text-sm font-bold text-white disabled:opacity-60">
@@ -119,23 +131,40 @@ export function RentalPlanImport({
               </div>
             </>
           ) : null}
-        </div>
+          </div>
+        </details>
       ) : null}
       {liveText === null ? (<>
       <label className="flex cursor-pointer items-center gap-2 rounded-xl border border-dashed border-border px-3 py-3 text-sm text-ink-soft">
         <FileUp className="h-4 w-4" />
-        <span className="truncate">{file ? file.name : "Choose plan file (PDF, .docx, image, text)"}</span>
+        <span className="truncate">{file ? file.name : target === "new" ? "Choose plan file (PDF, .docx, image, text)" : "Optional: attach a new document"}</span>
         <input type="file" className="hidden" accept=".pdf,.docx,.txt,image/*,application/pdf" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
       </label>
-      <textarea className={input} rows={3} placeholder="…or paste the plan / extra notes here" value={text} onChange={(e) => setText(e.target.value)} />
+      <textarea className={input} rows={3} placeholder={target === "new" ? "…or paste the plan / extra notes here" : "What do you want to change?"} value={text} onChange={(e) => setText(e.target.value)} />
       <button onClick={read} disabled={busy !== null} className="flex items-center gap-1 rounded-xl cherry-gradient px-4 py-2 text-sm font-bold text-white disabled:opacity-60">
-        {busy === "read" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} {busy === "read" ? "Reading plan…" : "Read plan"}
+        {busy === "read" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} {busy === "read" ? (target === "new" ? "Reading plan…" : "Updating plan…") : target === "new" ? "Read plan" : "Make changes"}
       </button>
       </>) : null}
       {err ? <p className="text-sm text-cherry">{err}</p> : null}
 
       {draft ? (
         <div className="space-y-3 border-t border-border pt-3">
+          {draft.changes?.length || draft.needs?.length ? (
+            <div className="grid gap-3 sm:grid-cols-2">
+              {draft.changes?.length ? (
+                <div className="rounded-xl border border-border bg-muted/40 p-3 text-sm">
+                  <p className="font-semibold text-ink">What changed</p>
+                  <ul className="mt-1 list-disc space-y-1 pl-5 text-xs text-ink-soft">{draft.changes.map((c, i) => <li key={i}>{c}</li>)}</ul>
+                </div>
+              ) : null}
+              {draft.needs?.length ? (
+                <div className="rounded-xl border border-cherry/40 bg-cherry/5 p-3 text-sm">
+                  <p className="font-semibold text-ink">Still to sort out</p>
+                  <ul className="mt-1 list-disc space-y-1 pl-5 text-xs text-ink-soft">{draft.needs.map((c, i) => <li key={i}>{c}</li>)}</ul>
+                </div>
+              ) : null}
+            </div>
+          ) : null}
           <input className={input} value={draft.name} onChange={set("name")} placeholder="Event name" />
           <div className="grid gap-3 sm:grid-cols-2">
             <input className={input} value={draft.client_name ?? ""} onChange={set("client_name")} placeholder="Client name" />

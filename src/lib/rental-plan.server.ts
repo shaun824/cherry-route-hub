@@ -18,6 +18,8 @@ export type RentalPlanDraft = {
   description: string;
   runSheet: { day_label: string; start_time: string | null; end_time: string | null; task: string; detail: string | null; location: string | null }[];
   equipment: { name: string; qty: number | null; qty_label: string | null; size_spec: string | null }[];
+  changes?: string[];
+  needs?: string[];
 };
 
 function b64ToBytes(b64: string) {
@@ -46,7 +48,8 @@ const INSTRUCTIONS = `You read a Red Cherry Events infrastructure-rental plan of
 Rules: event_date is the first day guests arrive. description is a client-friendly overview in short paragraphs (dates, venue, capacity, what is supplied) — never prices, costs or internal crew notes. runSheet lists build, event and strike tasks in order. equipment lists physical kit supplied. Only use facts in the document; use null when unknown. Never invent times.
 Be as detailed as possible: the description should cover every client-relevant fact in the document (dates, arrival/departure, venue, capacity, layout, accommodation, bedding, ablutions, services, safety, contacts), and runSheet/equipment must include every task and item mentioned — never drop or summarise away detail.`;
 
-const EDIT_INSTRUCTIONS = `\nThis input is the CURRENT LIVE PLAN, edited by staff, in sections (# EVENT DETAILS, # CLIENT DESCRIPTION, # RUN SHEET, # EQUIPMENT, # EXTRA NOTES FOR THE AI). Treat it as the full source of truth: keep every existing fact, task and equipment line unless staff removed it, apply their edits exactly, and work any EXTRA NOTES into the right fields. Keep run-sheet day headings (## ...) as day_label and keep task order. Rewrite the description to be fuller and well structured, but never add facts that are not in the text.`;
+const EDIT_INSTRUCTIONS = `\nThis input is the CURRENT LIVE PLAN in sections (# EVENT DETAILS, # CLIENT DESCRIPTION, # RUN SHEET, # EQUIPMENT, # EXTRA NOTES FOR THE AI), possibly followed by a # CHANGE REQUEST written by staff in plain words. Treat the live plan as the source of truth: keep every existing fact, task and equipment line unless staff changed or removed it. Apply the CHANGE REQUEST and any EXTRA NOTES exactly and consistently everywhere they matter (e.g. new dates move the run sheet days and description; new headcount updates capacity, tents, beds and equipment quantities only where the request makes the numbers clear). Keep run-sheet day headings (## ...) as day_label and keep task order. Keep the description full and well structured, but never add facts that are not in the text.
+Also add two fields to the JSON: "changes": string[] — short plain-English bullets of exactly what you changed versus the live plan (e.g. "Event date moved from 13 Dec to 20 Dec"); "needs": string[] — short bullets of follow-ups staff must sort out because of the change (e.g. "Order 10 more beds", "Confirm new strike times") or details still missing. Use [] when none.`;
 
 export async function draftRentalPlan(text: string, att?: PlanAttachment | null, mode: "import" | "edit" = "import"): Promise<RentalPlanDraft> {
   const key = process.env["LOVABLE_API_KEY"];
@@ -114,5 +117,7 @@ export async function draftRentalPlan(text: string, att?: PlanAttachment | null,
       name: str(g.name)!, qty: Number.isFinite(Number(g.qty)) && g.qty !== null ? Math.round(Number(g.qty)) : null,
       qty_label: str(g.qty_label), size_spec: str(g.size_spec),
     })),
+    changes: (Array.isArray(d.changes) ? d.changes : []).map(str).filter(Boolean).slice(0, 30) as string[],
+    needs: (Array.isArray(d.needs) ? d.needs : []).map(str).filter(Boolean).slice(0, 30) as string[],
   };
 }
