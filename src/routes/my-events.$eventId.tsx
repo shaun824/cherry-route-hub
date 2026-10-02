@@ -53,6 +53,26 @@ import { getEventSport } from "@/lib/event-sport";
 import { RouteMap } from "@/components/route-map";
 import { RouteFileStats } from "@/components/route-file-stats";
 import { RouteProfile } from "@/components/route-profile";
+
+/** Long text collapsed to a few lines with a Read more / Show less toggle. */
+function ReadMoreText({ text, className, buttonClassName }: { text: string; className?: string; buttonClassName?: string }) {
+  const [open, setOpen] = useState(false);
+  const long = text.length > 220;
+  return (
+    <div>
+      <p className={`${className ?? ""} ${!open && long ? "line-clamp-3" : ""}`}>{text}</p>
+      {long ? (
+        <button
+          type="button"
+          onClick={() => setOpen((v) => !v)}
+          className={buttonClassName ?? "mt-1 text-[11px] font-semibold text-cherry"}
+        >
+          {open ? "Show less" : "Read more"}
+        </button>
+      ) : null}
+    </div>
+  );
+}
 import { isPePlettJourney, PePlettJourney } from "@/components/pe-plett-journey";
 
 import { fetchMyRooming, fetchVenues } from "@/lib/rooming";
