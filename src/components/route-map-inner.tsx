@@ -9,6 +9,8 @@ import { MapContainer, TileLayer, Polyline, Marker, Popup, useMap } from "react-
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { useServerFn } from "@tanstack/react-start";
+import { LocateFixed, Minus, Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import type { CustomMarker, Event, EventRoute } from "@/lib/mock-data";
 import {
   boundsFromCoords,
@@ -97,9 +99,46 @@ type Props = {
   height?: string;
   showToggles?: boolean;
   showStats?: boolean;
+  immersive?: boolean;
   /** Only render routes belonging to these day ids (undefined = all days). */
   dayIds?: string[];
 };
+
+function MapControls({ bounds }: { bounds: [[number, number], [number, number]] | null }) {
+  const map = useMap();
+  const controlRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const node = controlRef.current;
+    if (!node) return;
+    L.DomEvent.disableClickPropagation(node);
+    L.DomEvent.disableScrollPropagation(node);
+  }, []);
+
+  return (
+    <div ref={controlRef} className="leaflet-top leaflet-right !m-3">
+      <div className="leaflet-control flex flex-col gap-2 !border-0 !bg-transparent !shadow-none">
+        <Button type="button" size="icon" variant="secondary" className="h-11 w-11 shadow-lg" onClick={() => map.zoomIn(0.5)} aria-label="Zoom in">
+          <Plus className="h-5 w-5" />
+        </Button>
+        <Button type="button" size="icon" variant="secondary" className="h-11 w-11 shadow-lg" onClick={() => map.zoomOut(0.5)} aria-label="Zoom out">
+          <Minus className="h-5 w-5" />
+        </Button>
+        <Button
+          type="button"
+          size="icon"
+          variant="secondary"
+          className="h-11 w-11 shadow-lg"
+          onClick={() => bounds && map.fitBounds(bounds, { padding: [28, 28], animate: true, duration: 0.6 })}
+          aria-label="Show the full route"
+          disabled={!bounds}
+        >
+          <LocateFixed className="h-5 w-5" />
+        </Button>
+      </div>
+    </div>
+  );
+}
 
 /** Shows where the rider is hovering on an elevation profile below the map. */
 function HoverMarker() {
@@ -162,6 +201,7 @@ export default function RouteMapInner({
   height = "360px",
   showToggles = true,
   showStats = true,
+  immersive = false,
   dayIds,
 }: Props) {
   const [loaded, setLoaded] = useState<Loaded[]>([]);
@@ -359,10 +399,10 @@ export default function RouteMapInner({
   const fill = height === "100%";
 
   return (
-    <div className={fill ? "flex h-full flex-col gap-3 p-3" : "space-y-3"}>
+    <div className={fill ? "flex h-full flex-col gap-3 p-3" : immersive ? "space-y-3 bg-pe-plett-deep p-3" : "space-y-3"}>
 
       {showToggles && loaded.length > 1 && (
-        <div className="flex flex-wrap gap-2">
+        <div className="flex gap-2 overflow-x-auto pb-1">
           {loaded.map((l) => {
             const on = enabled[l.route.id];
             return (
@@ -370,7 +410,7 @@ export default function RouteMapInner({
                 key={l.route.id}
                 type="button"
                 onClick={() => setEnabled((e) => ({ ...e, [l.route.id]: !on }))}
-                className={`flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold transition ${
+                 className={`flex shrink-0 items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold transition ${
                   on
                     ? "border-transparent text-white shadow-sm"
                     : "border-border bg-card text-ink-soft"
@@ -390,7 +430,7 @@ export default function RouteMapInner({
       )}
 
       <div
-        className={`overflow-hidden rounded-2xl ring-1 ring-border ${fill ? "min-h-0 flex-1" : ""}`}
+        className={`overflow-hidden rounded-2xl ring-1 ${immersive ? "ring-pe-plett-accent/30" : "ring-border"} ${fill ? "min-h-0 flex-1" : ""}`}
       >
 
         <MapContainer
@@ -398,10 +438,11 @@ export default function RouteMapInner({
           center={bounds ? undefined : [-33.9249, 18.4241]}
           zoom={bounds ? undefined : 9}
           style={{ height, width: "100%" }}
+           zoomControl={false}
           scrollWheelZoom
           zoomSnap={0}
-          zoomDelta={0.35}
-          wheelPxPerZoomLevel={220}
+           zoomDelta={0.5}
+           wheelPxPerZoomLevel={180}
           zoomAnimation
           markerZoomAnimation
           bounceAtZoomLimits={false}
@@ -419,6 +460,7 @@ export default function RouteMapInner({
             maxNativeZoom={19}
           />
           <FitToBounds bounds={bounds} />
+           <MapControls bounds={bounds} />
           <HoverMarker />
           {visible.map((l) =>
             l.lines.map((line, i) => (

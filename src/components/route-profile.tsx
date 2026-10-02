@@ -14,6 +14,7 @@ import {
 import type { CustomMarker, EventRoute } from "@/lib/mock-data";
 import { PRECOMPUTED_ROUTE_ELEVATIONS } from "@/lib/precomputed-route-elevations";
 import { setRouteHover } from "@/lib/route-hover";
+import { getRouteElevation } from "@/lib/elevation.functions";
 
 type Point = { km: number; ele: number; lat: number; lng: number };
 type Pin = { id: string; name: string; km: number; color?: string; logoUrl?: string; icon?: CustomMarker["icon"] };
@@ -93,11 +94,13 @@ export function RouteProfile({
   route,
   color,
   markers,
+  pePlett = false,
 }: {
   route: EventRoute;
   color?: string;
   /** Extra day-level markers (water points, marshals) to project onto this route. */
   markers?: CustomMarker[];
+  pePlett?: boolean;
 }) {
   const kmls = route.kmlUrls ?? [];
   const [series, setSeries] = useState<Point[] | null>(null);
@@ -106,6 +109,7 @@ export function RouteProfile({
   const [failed, setFailed] = useState(false);
   const [hover, setHover] = useState<number | null>(null);
   const svgRef = useRef<SVGSVGElement | null>(null);
+  const fetchElevation = useServerFn(getRouteElevation);
 
   useEffect(() => {
     if (kmls.length === 0) return;
@@ -180,6 +184,9 @@ export function RouteProfile({
       const sampledCoords = idx.map((i) => [merged[i][0], merged[i][1]] as [number, number]);
       const profile =
         precomputedElevations(kmls, idx.length) ??
+        (await fetchElevation({ data: { coords: sampledCoords } })
+          .then((result) => result.available ? result.profile : null)
+          .catch(() => null)) ??
         (await fetchBrowserElevations(sampledCoords));
       if (cancelled) return;
       if (!profile || profile.length !== idx.length) {
@@ -199,7 +206,7 @@ export function RouteProfile({
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [kmls.join("|"), (markers ?? []).map((m) => m.id).join("|")]);
+  }, [kmls.join("|"), (markers ?? []).map((m) => m.id).join("|"), fetchElevation]);
 
 
   const chart = useMemo(() => {
@@ -227,7 +234,7 @@ export function RouteProfile({
   }
 
   if (!series || !chart) {
-    return <div className="mt-3 h-[160px] animate-pulse rounded-xl bg-secondary/50" />;
+    return <div className={`mt-3 h-[180px] animate-pulse rounded-xl ${pePlett ? "bg-pe-plett-foreground/10" : "bg-secondary/50"}`} />;
   }
 
   const stroke = color || route.color || "#b91c1c";
@@ -261,16 +268,16 @@ export function RouteProfile({
   };
 
   return (
-    <div className="mt-3 rounded-xl bg-secondary/40 p-3 ring-1 ring-border">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="text-[10px] font-bold uppercase tracking-wider text-ink-soft">Route profile</p>
-        <div className="flex gap-3 text-[11px] font-semibold text-ink">
+    <div className={`mt-3 overflow-hidden rounded-xl p-3 ring-1 ${pePlett ? "bg-pe-plett-deep text-pe-plett-foreground ring-pe-plett-accent/25" : "bg-secondary/40 ring-border"}`}>
+      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-2">
+        <p className={`text-[10px] font-bold uppercase tracking-wider ${pePlett ? "text-pe-plett-foreground/60" : "text-ink-soft"}`}>Elevation profile</p>
+        <div className={`flex shrink-0 gap-3 text-[10px] font-semibold ${pePlett ? "text-pe-plett-foreground" : "text-ink"}`}>
           <span className="inline-flex items-center gap-1">
-            <TrendingUp className="h-3.5 w-3.5 text-cherry" />
+            <TrendingUp className={`h-3.5 w-3.5 ${pePlett ? "text-pe-plett-accent" : "text-cherry"}`} />
             {String(climbM).replace(/\B(?=(\d{3})+(?!\d))/g, ",")} m climbing
           </span>
           <span className="inline-flex items-center gap-1">
-            <Mountain className="h-3.5 w-3.5 text-cherry" />
+            <Mountain className={`h-3.5 w-3.5 ${pePlett ? "text-pe-plett-accent" : "text-cherry"}`} />
             {String(Math.round(chart.maxEle)).replace(/\B(?=(\d{3})+(?!\d))/g, ",")} m high point
           </span>
         </div>
@@ -309,7 +316,7 @@ export function RouteProfile({
       <svg
         ref={svgRef}
         viewBox={`0 0 ${chart.W} ${chart.H}`}
-        className="mt-2 w-full touch-none"
+         className={`mt-2 h-auto w-full touch-none ${pePlett ? "animate-pe-plett-profile" : ""}`}
         role="img"
         aria-label={`Elevation profile for ${route.name}`}
         onMouseMove={(e) => onMove(e.clientX)}
@@ -336,10 +343,10 @@ export function RouteProfile({
                 y1={yy}
                 y2={yy}
                 stroke="currentColor"
-                className="text-border"
+                 className={pePlett ? "text-pe-plett-foreground/10" : "text-border"}
                 strokeWidth="1"
               />
-              <text x={2} y={yy + 3} className="fill-current text-ink-soft" fontSize="9">
+               <text x={2} y={yy + 3} className={`fill-current ${pePlett ? "text-pe-plett-foreground/50" : "text-ink-soft"}`} fontSize="9">
                 {Math.round(ele)}
               </text>
             </g>
@@ -355,7 +362,7 @@ export function RouteProfile({
             x={chart.x(chart.maxKm * f)}
             y={chart.H - 5}
             textAnchor={f === 0 ? "start" : f === 1 ? "end" : "middle"}
-            className="fill-current text-ink-soft"
+             className={`fill-current ${pePlett ? "text-pe-plett-foreground/50" : "text-ink-soft"}`}
             fontSize="9"
           >
             {(chart.maxKm * f).toFixed(f === 0 ? 0 : 1)} km
@@ -370,7 +377,7 @@ export function RouteProfile({
             y1={chart.pad.t}
             y2={chart.H - chart.pad.b}
             stroke="currentColor"
-            className="text-ink-soft/40"
+             className={pePlett ? "text-pe-plett-foreground/30" : "text-ink-soft/40"}
             strokeWidth="1"
             strokeDasharray="2 3"
           />
@@ -393,7 +400,7 @@ export function RouteProfile({
       </svg>
       </div>
 
-      <p className="mt-1 text-[11px] font-semibold text-ink">
+      <p className={`mt-1 text-[11px] font-semibold ${pePlett ? "text-pe-plett-foreground/80" : "text-ink"}`}>
         {hoverPoint
           ? `${hoverPoint.km.toFixed(1)} km · ${Math.round(hoverPoint.ele)} m`
           : "Hover or drag across the profile to read distance and altitude"}

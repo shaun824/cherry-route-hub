@@ -11,6 +11,7 @@ type Props = {
   height?: string;
   showToggles?: boolean;
   showStats?: boolean;
+  immersive?: boolean;
   /** Only render routes belonging to these day ids (undefined = all days). */
   dayIds?: string[];
 };
