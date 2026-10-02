@@ -150,17 +150,25 @@ function NightRow({
   night,
   variant,
   hotel,
+  pin,
 }: {
   night: NightStay;
   variant: "compact" | "full";
   hotel?: NightHotel | null;
+  pin?: { lat: number; lng: number } | null;
 }) {
   const focusVillage = useContext(VillageFocusContext);
   const a = night.allocation;
   const v = night.venue;
   const tonight = isTonight(night.date);
   const stayName = hotel?.hotel ?? v?.name ?? null;
-  const mapLink = buildMapLink({ address: hotel ? hotel.hotel : (v?.address ?? v?.name ?? null) });
+  const mapLink = buildMapLink(
+    hotel
+      ? { address: hotel.hotel }
+      : pin
+        ? { lat: pin.lat, lng: pin.lng }
+        : { address: v?.address ?? v?.name ?? null },
+  );
   const canFocus = Boolean(a?.village_tent_id || a?.village_zone_id || a?.village_spot_id || v?.village_spot_id);
 
   return (
