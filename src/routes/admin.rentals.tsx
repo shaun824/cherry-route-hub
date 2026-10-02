@@ -7,6 +7,7 @@ import { ClipboardList, Copy, FileText, MapPin, Package, Plus, RefreshCw, Trash2
 import { supabase } from "@/integrations/supabase/client";
 import { getRentalShareToken } from "@/lib/rentals.functions";
 import { RentalPlanImport } from "@/components/rental-plan-import";
+import { RentalPlanChat } from "@/components/rental-plan-chat";
 
 export const Route = createFileRoute("/admin/rentals")({
   head: () => ({
@@ -44,7 +45,7 @@ function AdminRentals() {
   const [editing, setEditing] = useState<string | "new" | null>(null);
   const [form, setForm] = useState<Form>(blank);
   const [msg, setMsg] = useState<string | null>(null);
-  const [editPlan, setEditPlan] = useState<{ id: string; nonce: number } | null>(null);
+  const [chatFor, setChatFor] = useState<string | null>(null);
   const shareFn = useServerFn(getRentalShareToken);
 
   const q = useQuery({
@@ -138,7 +139,6 @@ function AdminRentals() {
       <RentalPlanImport
         rentals={(q.data ?? []).map((r) => ({ id: r.id, name: r.name }))}
         onDone={(m) => { setMsg(m); qc.invalidateQueries({ queryKey: ["admin-rentals"] }); }}
-        editRequest={editPlan}
       />
 
       {editing ? (
@@ -190,11 +190,14 @@ function AdminRentals() {
             <div className="mt-3 flex flex-wrap gap-2 text-xs font-semibold">
               <button onClick={() => copyLink(r.id)} className="flex items-center gap-1 rounded-full bg-cherry px-3 py-1.5 text-white"><Copy className="h-3.5 w-3.5" /> Copy client link</button>
               <button onClick={() => copyLink(r.id, true)} className="flex items-center gap-1 rounded-full border border-border px-3 py-1.5"><RefreshCw className="h-3.5 w-3.5" /> Reset link</button>
-              <button onClick={() => setEditPlan({ id: r.id, nonce: Date.now() })} className="flex items-center gap-1 rounded-full border border-border px-3 py-1.5"><FileText className="h-3.5 w-3.5" /> Edit plan</button>
+              <button onClick={() => setChatFor(chatFor === r.id ? null : r.id)} className={`flex items-center gap-1 rounded-full border px-3 py-1.5 ${chatFor === r.id ? "border-ink bg-ink text-background" : "border-border"}`}><FileText className="h-3.5 w-3.5" /> Edit plan</button>
               <Link to="/admin/village/$eventId" params={{ eventId: r.id }} className="flex items-center gap-1 rounded-full border border-border px-3 py-1.5"><MapPin className="h-3.5 w-3.5" /> Village map</Link>
               <Link to="/admin/run-sheet" search={{ event: r.id }} className="flex items-center gap-1 rounded-full border border-border px-3 py-1.5"><ClipboardList className="h-3.5 w-3.5" /> Run sheet</Link>
               <Link to="/crew/inventory" onClick={() => localStorage.setItem("rce:crew-event", r.id)} className="flex items-center gap-1 rounded-full border border-border px-3 py-1.5"><Package className="h-3.5 w-3.5" /> Equipment</Link>
             </div>
+            {chatFor === r.id ? (
+              <RentalPlanChat eventId={r.id} onClose={() => setChatFor(null)} onSaved={() => qc.invalidateQueries({ queryKey: ["admin-rentals"] })} />
+            ) : null}
           </li>
         ))}
       </ul>
