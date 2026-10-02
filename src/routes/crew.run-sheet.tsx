@@ -204,6 +204,12 @@ function RunSheetPage() {
       {day ? (
         <ul className="mt-4 space-y-3">
           {day.tasks.map((t) => (
+            t.kind === "header" ? (
+              <li key={t.id} className="pt-2">
+                <p className="font-display text-base font-bold">{t.task}</p>
+                {t.detail ? <p className="mt-0.5 text-sm text-ink-soft">{t.detail}</p> : null}
+              </li>
+            ) : (
             <li key={t.id} className="rounded-2xl border border-border bg-card p-4">
               <div className="flex items-start gap-3">
                 <input

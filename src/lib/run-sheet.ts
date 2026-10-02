@@ -23,6 +23,7 @@ export type RunSheetTask = {
   start_time: string | null;
   end_time: string | null;
   task: string;
+  kind: string;
   detail: string | null;
   owner: string | null;
   location: string | null;
