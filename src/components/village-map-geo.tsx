@@ -306,7 +306,7 @@ function LabelLayout({ candidates, zoom, onLayout }: {
       const occupied: L.Bounds[] = [];
       const ordered = [...candidates].sort((a, b) => Number(b.selected) - Number(a.selected) || b.priority - a.priority);
       for (const item of ordered) {
-        if (!item.selected && zoom < (item.kind === "zone" ? 19.25 : item.kind === "obstacle" ? 0 : 18.75)) continue;
+        if (!item.selected && zoom < (item.kind === "zone" ? 19.25 : item.kind === "obstacle" ? 19 : 18.75)) continue;
         const p = map.latLngToContainerPoint(item.position);
         const box = L.bounds(
           L.point(p.x - item.width / 2, p.y + 15),
