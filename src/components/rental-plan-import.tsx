@@ -16,9 +16,12 @@ function fileToBase64(f: File): Promise<string> {
 export function RentalPlanImport({
   rentals,
   onDone,
+  editRequest,
 }: {
   rentals: { id: string; name: string }[];
   onDone: (msg: string) => void;
+  /** When set (with a fresh nonce), preselect that rental and open its live plan for editing. */
+  editRequest?: { id: string; nonce: number } | null;
 }) {
   const draftFn = useServerFn(draftRentalPlanFn);
   const applyFn = useServerFn(applyRentalPlanFn);
@@ -30,6 +33,7 @@ export function RentalPlanImport({
   const [draft, setDraft] = useState<RentalPlanDraft | null>(null);
   const [busy, setBusy] = useState<"read" | "save" | "live" | null>(null);
   const [err, setErr] = useState<string | null>(null);
+  const rootRef = useRef<HTMLElement | null>(null);
   const input = "w-full rounded-xl border border-border bg-background px-3 py-2 text-sm";
 
   async function read() {
