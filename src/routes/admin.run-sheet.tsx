@@ -5,7 +5,7 @@ import { visibleInBackend } from "@/lib/event-window";
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Check, ClipboardList, Eye, Loader2, RefreshCw, ShieldCheck, X } from "lucide-react";
+import { Check, ClipboardList, Eye, Loader2, Pencil, Plus, RefreshCw, ShieldCheck, Trash2, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { previewRunSheet, syncRunSheet } from "@/lib/run-sheet.functions";
 
@@ -104,6 +104,101 @@ function AdminRunSheet() {
         .order("sort_order");
       return (data ?? []) as { id: string; name: string; lead_name: string | null; contact: string | null }[];
     },
+  });
+
+  type TaskRow = {
+    id: string;
+    department_id: string;
+    day_label: string;
+    day_index: number;
+    start_time: string | null;
+    end_time: string | null;
+    task: string;
+    detail: string | null;
+    owner: string | null;
+    location: string | null;
+    notes: string | null;
+    sort_order: number;
+  };
+  const tasksQ = useQuery({
+    queryKey: ["admin-run-tasks", eventId],
+    enabled: !!eventId,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("run_sheet_tasks")
+        .select("id, department_id, day_label, day_index, start_time, end_time, task, detail, owner, location, notes, sort_order")
+        .eq("event_id", eventId)
+        .order("day_index")
+        .order("sort_order");
+      return (data ?? []) as TaskRow[];
+    },
+  });
+  const [editTask, setEditTask] = useState<TaskRow | null>(null);
+  const [addingFor, setAddingFor] = useState<string | null>(null);
+  const [taskForm, setTaskForm] = useState({ day_label: "", start_time: "", task: "", detail: "", owner: "", location: "" });
+
+  const openTaskEdit = (t: TaskRow) => {
+    setEditTask(t);
+    setTaskForm({
+      day_label: t.day_label,
+      start_time: t.start_time ?? "",
+      task: t.task,
+      detail: t.detail ?? "",
+      owner: t.owner ?? "",
+      location: t.location ?? "",
+    });
+  };
+  const openTaskAdd = (deptId: string) => {
+    setAddingFor(deptId);
+    setEditTask(null);
+    setTaskForm({ day_label: "", start_time: "", task: "", detail: "", owner: "", location: "" });
+  };
+
+  const taskSaveM = useMutation({
+    mutationFn: async () => {
+      const row = {
+        day_label: taskForm.day_label.trim() || "Day 1",
+        start_time: taskForm.start_time.trim() || null,
+        task: taskForm.task.trim(),
+        detail: taskForm.detail.trim() || null,
+        owner: taskForm.owner.trim() || null,
+        location: taskForm.location.trim() || null,
+      };
+      if (!row.task) throw new Error("Task text is required.");
+      if (editTask) {
+        const { error } = await supabase.from("run_sheet_tasks").update(row).eq("id", editTask.id);
+        if (error) throw error;
+      } else if (addingFor) {
+        const maxDay = Math.max(0, ...(tasksQ.data ?? []).map((t) => t.day_index));
+        const { error } = await supabase.from("run_sheet_tasks").insert({
+          ...row,
+          event_id: eventId,
+          department_id: addingFor,
+          day_index: maxDay || 1,
+          sort_order: 999,
+        });
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      setMsg(editTask ? "Task updated." : "Task added.");
+      setEditTask(null);
+      setAddingFor(null);
+      qc.invalidateQueries({ queryKey: ["admin-run-tasks", eventId] });
+    },
+    onError: (e: Error) => setMsg(e.message),
+  });
+
+  const taskDeleteM = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("run_sheet_tasks").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      setMsg("Task deleted.");
+      qc.invalidateQueries({ queryKey: ["admin-run-tasks", eventId] });
+    },
+    onError: (e: Error) => setMsg(e.message),
   });
 
   const suggQ = useQuery({
