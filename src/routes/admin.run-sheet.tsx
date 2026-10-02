@@ -136,11 +136,13 @@ function AdminRunSheet() {
   });
   const [editTask, setEditTask] = useState<TaskRow | null>(null);
   const [addingFor, setAddingFor] = useState<string | null>(null);
-  const [taskForm, setTaskForm] = useState({ day_label: "", start_time: "", task: "", detail: "", owner: "", location: "" });
+  const [taskForm, setTaskForm] = useState({ kind: "task", day_label: "", start_time: "", task: "", detail: "", owner: "", location: "" });
 
   const openTaskEdit = (t: TaskRow) => {
     setEditTask(t);
+    setAddingFor(null);
     setTaskForm({
+      kind: t.kind,
       day_label: t.day_label,
       start_time: t.start_time ?? "",
       task: t.task,
@@ -149,23 +151,25 @@ function AdminRunSheet() {
       location: t.location ?? "",
     });
   };
-  const openTaskAdd = (deptId: string) => {
+  const openTaskAdd = (deptId: string, kind = "task") => {
     setAddingFor(deptId);
     setEditTask(null);
-    setTaskForm({ day_label: "", start_time: "", task: "", detail: "", owner: "", location: "" });
+    setTaskForm({ kind, day_label: "", start_time: "", task: "", detail: "", owner: "", location: "" });
   };
 
   const taskSaveM = useMutation({
     mutationFn: async () => {
+      const isHeader = taskForm.kind === "header";
       const row = {
+        kind: taskForm.kind,
         day_label: taskForm.day_label.trim() || "Day 1",
-        start_time: taskForm.start_time.trim() || null,
+        start_time: isHeader ? null : taskForm.start_time.trim() || null,
         task: taskForm.task.trim(),
         detail: taskForm.detail.trim() || null,
-        owner: taskForm.owner.trim() || null,
-        location: taskForm.location.trim() || null,
+        owner: isHeader ? null : taskForm.owner.trim() || null,
+        location: isHeader ? null : taskForm.location.trim() || null,
       };
-      if (!row.task) throw new Error("Task text is required.");
+      if (!row.task) throw new Error(isHeader ? "Header text is required." : "Task text is required.");
       if (editTask) {
         const { error } = await supabase.from("run_sheet_tasks").update(row).eq("id", editTask.id);
         if (error) throw error;
