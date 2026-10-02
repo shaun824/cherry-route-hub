@@ -100,6 +100,27 @@ function Pin({
   );
 }
 
+/** Google Maps link for a venue — opens the venue's location in Google Maps. */
+function venueMapsUrl(v: { name: string; address: string | null }): string | null {
+  return buildMapLink({ address: (v.address ?? "").trim() || v.name });
+}
+
+function OpenMapsButton({ venue, label = "Open in Google Maps" }: { venue: { name: string; address: string | null } | null; label?: string }) {
+  const url = venue ? venueMapsUrl(venue) : null;
+  if (!url) return null;
+  return (
+    <a
+      href={url}
+      target="_blank"
+      rel="noopener noreferrer"
+      onClick={() => trackAction("village_maps_opened")}
+      className="inline-flex w-fit items-center gap-1.5 rounded-full bg-accent px-3 py-1.5 text-[11px] font-bold text-cherry-deep ring-1 ring-border"
+    >
+      <MapPin className="h-3.5 w-3.5" /> {label}
+    </a>
+  );
+}
+
 // Shared spot-detail body — used by the card under the map and by the bottom
 // sheet in plan full screen, so rider and crew see the identical layout.
 function SpotDetailBody({
@@ -211,19 +232,20 @@ export function VillageMapView({
   // Pinch on the village map must zoom the map only — never the page itself.
   useLockPageZoom();
   // Multi-day events run more than one race village — one per venue.
+  // Venues without a published map (e.g. the finish venue) still get a tab,
+  // because riders need to know where the day ends up.
   const venuesQ = useQuery({
     queryKey: ["village-venues", eventId],
     queryFn: async () => {
-      const [{ data: venues }, maps] = await Promise.all([
+      const [venues, maps] = await Promise.all([
         supabase
           .from("event_venues")
-          .select("id, name, sort_order")
+          .select("id, name, address, notes, sort_order")
           .eq("event_id", eventId)
           .order("sort_order", { ascending: true }),
         fetchVillageMaps(eventId),
       ]);
-      const withMaps = new Set(maps.map((m) => m.venue_id).filter(Boolean) as string[]);
-      return (venues ?? []).filter((v) => withMaps.has(v.id));
+      return (venues.data ?? []) as { id: string; name: string; address: string | null; notes: string | null; sort_order: number }[];
     },
   });
   const venues = venuesQ.data ?? [];
