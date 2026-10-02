@@ -74,7 +74,6 @@ export function RentalPlanImport({
     setLiveText(null);
     setDraft(null);
     rootRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-    void openLiveFor(editRequest.id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editRequest]);
 
