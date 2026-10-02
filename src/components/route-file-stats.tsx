@@ -14,7 +14,7 @@ import {
 import { getRouteElevation } from "@/lib/elevation.functions";
 import type { EventRoute } from "@/lib/mock-data";
 
-export function RouteFileStats({ route }: { route: EventRoute }) {
+export function RouteFileStats({ route, tone = "default" }: { route: EventRoute; tone?: "default" | "pePlett" }) {
   const kmls = route.kmlUrls ?? [];
   const [distanceKm, setDistanceKm] = useState<number | null>(null);
   const [gainM, setGainM] = useState<number | null>(null);
@@ -69,16 +69,16 @@ export function RouteFileStats({ route }: { route: EventRoute }) {
   if (!shownDistance && !shownGain) return null;
 
   return (
-    <div className="mt-2 flex flex-wrap gap-3 text-xs text-ink-soft">
+    <div className={`mt-2 flex flex-wrap gap-3 text-xs ${tone === "pePlett" ? "font-semibold text-pe-plett-foreground" : "text-ink-soft"}`}>
       {shownDistance ? (
         <span className="inline-flex items-center gap-1">
-          <Activity className="h-3.5 w-3.5 text-cherry" />
+          <Activity className={`h-3.5 w-3.5 ${tone === "pePlett" ? "text-pe-plett-accent" : "text-cherry"}`} />
           {shownDistance.toFixed(1)} km
         </span>
       ) : null}
       {shownGain ? (
         <span className="inline-flex items-center gap-1">
-          <Mountain className="h-3.5 w-3.5 text-cherry" />
+          <Mountain className={`h-3.5 w-3.5 ${tone === "pePlett" ? "text-pe-plett-accent" : "text-cherry"}`} />
           {String(Math.round(shownGain)).replace(/\B(?=(\d{3})+(?!\d))/g, ",")} m climbing
         </span>
       ) : null}

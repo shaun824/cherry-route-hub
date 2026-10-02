@@ -641,9 +641,16 @@ function RoutesPanel({
   const hasMap = allRoutes.some((r) => (r.kmlUrls ?? []).length > 0);
   const [activeDay, setActiveDay] = useState<string>("all");
   const pePlettJourney = isPePlettJourney(eventId);
+  // PE Plett always shows the full map plus every day beneath it.
+  const effectiveDay = pePlettJourney ? "all" : activeDay;
   const shownDays =
-    activeDay === "all" ? routeDays : routeDays.filter((d) => d.id === activeDay);
-  const mapDayIds = activeDay === "all" ? undefined : [activeDay];
+    effectiveDay === "all" ? routeDays : routeDays.filter((d) => d.id === effectiveDay);
+  const mapDayIds = effectiveDay === "all" ? undefined : [effectiveDay];
+  // Route files aren't final for PE Plett / Weekend Warrior — no downloads.
+  const lowerName = (eventName ?? event.name ?? "").toLowerCase();
+  const downloadsDisabled = pePlettJourney || lowerName.includes("weekend warrior");
+  // PE Plett routes are public: map + descriptions visible signed out.
+  const mapLocked = pePlettJourney ? false : locked;
   // Running counter so offers are spaced evenly across every day's route cards.
   let cardCount = 0;
 
@@ -656,7 +663,7 @@ function RoutesPanel({
     <div className="space-y-5">
       <FuelNotice eventName={eventName ?? event.name} />
       {pePlettJourney ? (
-        <PePlettJourney days={days} activeDay={activeDay} onSelectDay={(d) => { trackAction("route_day_changed", { day: d }); setActiveDay(d); }} />
+        <PePlettJourney days={days} activeDay={activeDay} onSelectDay={(d) => { trackAction("route_day_changed", { day: d }); if (typeof document !== "undefined") document.getElementById(`route-day-${d}`)?.scrollIntoView({ behavior: "smooth", block: "start" }); }} />
       ) : null}
       {routeDays.length > 1 && !pePlettJourney ? (
         <div className="flex gap-1 overflow-x-auto rounded-full bg-secondary p-1">
@@ -690,7 +697,7 @@ function RoutesPanel({
             {pePlettJourney ? <span className="shrink-0 text-[10px] font-bold uppercase text-pe-plett-accent">Tap any point for details</span> : null}
           </div>
           <div className={pePlettJourney ? "mt-2" : "mt-2"}>
-            <LockedSection locked={locked} message="Sign in to view the interactive route map">
+            <LockedSection locked={mapLocked} message="Sign in to view the interactive route map">
               <div
                 onPointerDown={() => trackActionThrottled("route_map_interacted", 30000, { day: activeDay })}
                 onWheel={() => trackActionThrottled("route_map_interacted", 30000, { day: activeDay })}
@@ -698,7 +705,7 @@ function RoutesPanel({
                 <RouteMap event={event as never} height={pePlettJourney ? "clamp(380px, 62vh, 620px)" : "320px"} dayIds={mapDayIds} showToggles={!pePlettJourney} showStats={!pePlettJourney} immersive={pePlettJourney} />
               </div>
             </LockedSection>
-            {!locked ? (
+            {!mapLocked ? (
               <Link
                 to="/events/$eventId/map"
                 params={{ eventId }}
@@ -726,7 +733,7 @@ function RoutesPanel({
         // day — the profile only keeps the ones a given route actually passes.
         const dayMarkers = routes.flatMap((r: EventRoute) => r.customMarkers ?? []);
         return (
-          <section key={day.id || di}>
+          <section key={day.id || di} id={`route-day-${day.id}`} className="scroll-mt-20">
             <SectionTitle>
               {day.label || (day.date ? new Date(day.date).toDateString() : `Day ${di + 1}`)}
             </SectionTitle>
@@ -765,13 +772,17 @@ function RoutesPanel({
                       </span>
                        <p className={pePlettJourney ? "text-sm font-semibold text-pe-plett-foreground" : "text-sm font-semibold text-ink"}>{r.name}</p>
                     </div>
-                    <RouteFileStats route={r} />
+                    <RouteFileStats route={r} tone={pePlettJourney ? "pePlett" : "default"} />
                      <RouteProfile route={r} color={r.color} markers={dayMarkers} pePlett={pePlettJourney} />
 
                     {r.description ? (
-                       <p className={pePlettJourney ? "mt-3 text-xs leading-relaxed text-pe-plett-foreground/75" : "mt-2 text-xs leading-relaxed text-ink-soft"}>{r.description}</p>
+                       <p className={pePlettJourney ? "mt-3 text-xs leading-relaxed text-pe-plett-foreground/90" : "mt-2 text-xs leading-relaxed text-ink-soft"}>{r.description}</p>
                     ) : null}
-                    {kmls.length > 0 || r.gpxUrl ? (
+                    {downloadsDisabled ? (
+                      <p className={pePlettJourney ? "mt-3 rounded-xl bg-pe-plett-deep/70 px-3 py-2 text-[11px] font-medium text-pe-plett-foreground/90" : "mt-3 rounded-xl bg-muted/60 px-3 py-2 text-[11px] font-medium text-ink-soft"}>
+                        Route files will be available to download once the routes are final.
+                      </p>
+                    ) : kmls.length > 0 || r.gpxUrl ? (
                       downloadsLocked && !locked ? (
                         <p className="mt-3 flex items-center gap-1.5 rounded-xl bg-muted/60 px-3 py-2 text-[11px] font-medium text-ink-soft">
                           <LockIcon className="h-3.5 w-3.5 text-cherry" />
