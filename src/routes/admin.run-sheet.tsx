@@ -442,19 +442,28 @@ function AdminRunSheet() {
                 <div key={d.id} className="mt-4">
                   <div className="flex items-center justify-between">
                     <p className="text-sm font-semibold">{d.name}</p>
-                    <button
-                      type="button"
-                      onClick={() => openTaskAdd(d.id)}
-                      className="inline-flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-xs font-semibold"
-                    >
-                      <Plus className="h-3 w-3" /> Add task
-                    </button>
+                    <div className="flex gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => openTaskAdd(d.id, "header")}
+                        className="inline-flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-xs font-semibold"
+                      >
+                        <Plus className="h-3 w-3" /> Add header
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => openTaskAdd(d.id)}
+                        className="inline-flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-xs font-semibold"
+                      >
+                        <Plus className="h-3 w-3" /> Add task
+                      </button>
+                    </div>
                   </div>
                   <ul className="mt-2 space-y-1.5">
                     {tasks.map((t) => (
-                      <li key={t.id} className="flex items-start justify-between gap-2 rounded-lg border border-border px-3 py-2 text-sm">
+                      <li key={t.id} className={`flex items-start justify-between gap-2 rounded-lg px-3 py-2 text-sm ${t.kind === "header" ? "border border-primary/40 bg-primary/5" : "border border-border"}`}>
                         <div>
-                          <p className="font-medium">{t.task}</p>
+                          <p className={t.kind === "header" ? "font-display font-bold" : "font-medium"}>{t.task}</p>
                           <p className="text-xs text-ink-soft">
                             {t.day_label}
                             {t.start_time ? ` · ${t.start_time}` : ""}
