@@ -235,10 +235,26 @@ export async function processDueWorkflowEmails(
 
     const { data: sentRows } = await admin
       .from("event_email_sends")
-      .select("step_id, email")
+      .select("step_id, email, status")
       .eq("campaign_id", campaign.id)
       .limit(20000);
     const done = new Set(((sentRows ?? []) as any[]).map((r) => `${r.step_id}|${r.email}`));
+    const delivered = new Set(
+      ((sentRows ?? []) as any[]).filter((r) => r.status === "sent").map((r) => `${r.step_id}|${r.email}`),
+    );
+
+    // Reminder steps only go to riders who received the previous step and
+    // have not opened any copy of that guide yet.
+    let openedSea = new Set<string>();
+    if (steps.some((s) => s.template_name === "sea-to-sea-pre-event-reminder")) {
+      const { data: opened } = await admin
+        .from("email_sends")
+        .select("recipient")
+        .eq("template", "sea-to-sea-pre-event")
+        .not("opened_at", "is", null)
+        .limit(20000);
+      openedSea = new Set(((opened ?? []) as any[]).map((r) => String(r.recipient).toLowerCase()));
+    }
 
 
     for (let i = 0; i < steps.length; i++) {
