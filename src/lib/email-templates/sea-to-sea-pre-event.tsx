@@ -276,7 +276,10 @@ export const SeaToSeaPreEventEmail = ({
 
 export const template = {
   component: SeaToSeaPreEventEmail,
-  subject: 'JBFE Sea to Sea — your pre-event guide',
+  subject: (data: Record<string, any>) =>
+    data?.reminder
+      ? "You missed this: your JBFE Sea to Sea pre-event guide"
+      : 'JBFE Sea to Sea — your pre-event guide',
   displayName: 'JBFE Sea to Sea pre-event guide',
   previewData: {
     firstName: 'Shaun',
