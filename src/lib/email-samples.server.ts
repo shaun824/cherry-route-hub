@@ -95,7 +95,7 @@ export async function sendEmailSamples(opts: { to: string; eventId?: string | nu
     },
     {
       template: "sea-to-sea-pre-event",
-      label: "Sea to Sea pre-event guide",
+      label: "JBFE Sea to Sea pre-event guide",
       data: {
         firstName: "Shaun",
         eventName: "JBFE Sea to Sea North 2026",

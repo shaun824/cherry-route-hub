@@ -1,8 +1,33 @@
 import * as React from 'react'
-import { Button, Heading, Img, Link, Section, Text } from '@react-email/components'
+import { Button, Column, Heading, Img, Link, Row, Section, Text } from '@react-email/components'
 
 import type { TemplateEntry } from './registry'
 import { EmailShell, brand, button, footer, h1, link, text } from './theme'
+import ecmLogo from '@/assets/sea-to-sea-sponsors/ecm-william-moffett-ford.png.asset.json'
+import enjoyLogo from '@/assets/sea-to-sea-sponsors/enjoy.png.asset.json'
+import greenMotionLogo from '@/assets/sea-to-sea-sponsors/green-motion.png.asset.json'
+import jbfeLogo from '@/assets/sea-to-sea-sponsors/jbfe.png.asset.json'
+import oTyresLogo from '@/assets/sea-to-sea-sponsors/otyres.png.asset.json'
+import redCherryLogo from '@/assets/sea-to-sea-sponsors/red-cherry.png.asset.json'
+import supermoistLogo from '@/assets/sea-to-sea-sponsors/supermoist.png.asset.json'
+
+const SITE_URL = 'https://riderapp.redcherryevents.co.za'
+
+const SPONSORS = [
+  { name: 'Supermoist', logo: supermoistLogo.url, url: 'https://supermoist.co.za/' },
+  { name: 'Green Motion', logo: greenMotionLogo.url, url: 'https://www.greenmotion.com/' },
+  { name: 'ECM William Moffett Ford', logo: ecmLogo.url, url: 'https://easterncapemotors.co.za/' },
+  { name: 'Enjoy', logo: enjoyLogo.url, url: 'https://www.instagram.com/enjoy.branding/' },
+  { name: 'Red Cherry Events', logo: redCherryLogo.url, url: 'https://redcherryevents.co.za/' },
+  { name: 'O-Tyres', logo: oTyresLogo.url, url: 'https://www.google.com/search?q=O-Tyres+South+Africa' },
+] as const
+
+const SOCIALS = [
+  { label: 'JBFE Sea to Sea on Facebook', url: 'https://www.facebook.com/seatoseaepic/' },
+  { label: 'JBFE Sea to Sea on Instagram', url: 'https://www.instagram.com/sea_to_sea_za/' },
+  { label: 'Red Cherry Events on Facebook', url: 'https://www.facebook.com/redcherryeventsza' },
+  { label: 'Red Cherry Events on Instagram', url: 'https://www.instagram.com/redcherryevents_za/' },
+] as const
 
 export interface SeaToSeaPreEventProps {
   firstName?: string | null
@@ -53,6 +78,19 @@ function InfoCard({ heading, lines }: { heading: string; lines: string[] }) {
   )
 }
 
+function SponsorLogo({ name, logo, url }: { name: string; logo: string; url: string }) {
+  return (
+    <Link href={url} style={{ display: 'block', textDecoration: 'none' }}>
+      <Img
+        src={`${SITE_URL}${logo}`}
+        alt={name}
+        width="130"
+        style={{ display: 'block', height: '64px', margin: '0 auto', maxWidth: '100%', objectFit: 'contain' as const }}
+      />
+    </Link>
+  )
+}
+
 export const SeaToSeaPreEventEmail = ({
   firstName,
   eventName = 'JBFE Sea to Sea North 2026',
@@ -61,8 +99,8 @@ export const SeaToSeaPreEventEmail = ({
   directionsUrl = 'https://www.google.com/maps/dir/?api=1&destination=-31.9806207%2C29.1524639',
 }: SeaToSeaPreEventProps) => (
   <EmailShell
-    preview="Directions, fuel, packing, hotels and your full Sea to Sea schedule"
-    siteName="JBFE Sea to Sea North"
+    preview="Directions, fuel, packing, hotels and your full JBFE Sea to Sea schedule"
+    siteName="JBFE Sea to Sea"
   >
     {coverUrl ? (
       <Img
@@ -73,7 +111,7 @@ export const SeaToSeaPreEventEmail = ({
       />
     ) : null}
 
-    <Heading style={h1}>{firstName ? `${firstName}, Sea to Sea is nearly here` : 'Sea to Sea is nearly here'}</Heading>
+    <Heading style={h1}>{firstName ? `${firstName}, JBFE Sea to Sea is nearly here` : 'JBFE Sea to Sea is nearly here'}</Heading>
     <Text style={text}>
       Here is your essential pre-event information for <strong>{eventName}</strong>. Please read it
       before travelling and keep this email handy for arrival day.
@@ -166,13 +204,65 @@ export const SeaToSeaPreEventEmail = ({
     <InfoCard
       heading="Final checks"
       lines={[
-        'Service your bike and test it before event week.',
+        'Service your bike and test it before event week. RAD KTM is offering JBFE Sea to Sea riders service specials in Cape Town and Johannesburg.',
         'Save the Ocean View directions for offline use before entering areas with limited signal.',
         'Check the Rider Hub for the latest schedule, packing list and event notices.',
         'Tell the Red Cherry team before departure if your travel plans change.',
       ]}
     />
-    <Button style={button} href={eventUrl}>Open Sea to Sea in the Rider Hub</Button>
+    <Section style={{ margin: '0 0 18px' }}>
+      <Button style={{ ...button, marginRight: '8px' }} href="https://www.google.com/maps?cid=442704172566113175">RAD KTM Cape Town</Button>
+      <Button style={button} href="https://www.google.com/maps?cid=1756262450875323945">RAD KTM Johannesburg</Button>
+    </Section>
+    <Button style={button} href={eventUrl}>Open JBFE Sea to Sea in the Rider Hub</Button>
+
+    <Text style={eyebrow}>Our vehicle partner</Text>
+    <Section style={{ ...card, borderLeft: `4px solid ${brand.green}` }}>
+      <Img
+        src={`${SITE_URL}${ecmLogo.url}`}
+        alt="ECM William Moffett Ford"
+        width="220"
+        style={{ display: 'block', height: 'auto', margin: '0 auto 12px', maxWidth: '100%' }}
+      />
+      <Text style={{ ...copy, color: brand.ink, margin: '0', textAlign: 'center' as const }}>
+        <strong>ECM William Moffett Ford</strong> are our proud vehicle providers, supplying the
+        backup Ford vehicles that support the JBFE Sea to Sea team and riders throughout the event.
+      </Text>
+    </Section>
+
+    <Text style={eyebrow}>Proudly supported by</Text>
+    <Section style={{ ...card, textAlign: 'center' as const }}>
+      <Link href="https://www.jbfe.co.za/" style={{ display: 'block', textDecoration: 'none' }}>
+        <Img
+          src={`${SITE_URL}${jbfeLogo.url}`}
+          alt="JBFE — title sponsor"
+          width="210"
+          style={{ display: 'block', height: '92px', margin: '0 auto', maxWidth: '100%', objectFit: 'contain' as const }}
+        />
+      </Link>
+      <Text style={{ ...copy, color: brand.ink, fontWeight: 700, margin: '4px 0 18px', textAlign: 'center' as const }}>
+        JBFE · Title sponsor
+      </Text>
+      {[0, 2, 4].map((start) => (
+        <Row key={start} style={{ margin: '0 0 12px' }}>
+          {SPONSORS.slice(start, start + 2).map((sponsor, index) => (
+            <Column key={sponsor.name} style={{ padding: index === 0 ? '0 7px 0 0' : '0 0 0 7px', width: '50%' }}>
+              <SponsorLogo name={sponsor.name} logo={sponsor.logo} url={sponsor.url} />
+            </Column>
+          ))}
+        </Row>
+      ))}
+    </Section>
+
+    <Text style={eyebrow}>Follow the event</Text>
+    <Text style={{ ...text, textAlign: 'center' as const }}>
+      {SOCIALS.map((social, index) => (
+        <React.Fragment key={social.label}>
+          {index ? ' · ' : ''}
+          <Link href={social.url} style={link}>{social.label}</Link>
+        </React.Fragment>
+      ))}
+    </Text>
 
     <Text style={{ ...text, margin: '22px 0 0' }}>
       We cannot wait to welcome you to Coffee Bay. Ride safe and see you at Ocean View.
@@ -186,8 +276,8 @@ export const SeaToSeaPreEventEmail = ({
 
 export const template = {
   component: SeaToSeaPreEventEmail,
-  subject: 'Sea to Sea North — your pre-event guide',
-  displayName: 'Sea to Sea pre-event guide',
+  subject: 'JBFE Sea to Sea — your pre-event guide',
+  displayName: 'JBFE Sea to Sea pre-event guide',
   previewData: {
     firstName: 'Shaun',
     eventName: 'JBFE Sea to Sea North 2026',
