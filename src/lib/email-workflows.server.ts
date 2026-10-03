@@ -113,9 +113,19 @@ export async function sendWorkflowEmail(
   const { event, step } = opts;
   const eventUrl = `${APP_URL}/my-events/${event.id}`;
   const isPePlettExtras = step.template_name === "pe-plett-extras";
-  const result = await sendTemplateEmail(isPePlettExtras ? "pe-plett-extras" : "event-update", opts.to, {
+  const isSeaToSea = String(step.template_name ?? "").startsWith("sea-to-sea-pre-event");
+  const templateName = isSeaToSea ? "sea-to-sea-pre-event" : isPePlettExtras ? "pe-plett-extras" : "event-update";
+  const result = await sendTemplateEmail(templateName, opts.to, {
     idempotencyKey: `workflow-${opts.stepId}-${opts.to}`,
-    templateData: isPePlettExtras
+    templateData: isSeaToSea
+      ? {
+          firstName: firstName(opts.name),
+          eventName: event.name,
+          coverUrl: absoluteLogo(event.cover_url),
+          eventUrl,
+          reminder: step.template_name === "sea-to-sea-pre-event-reminder",
+        }
+      : isPePlettExtras
       ? buildPePlettExtrasEmailData({
           firstName: firstName(opts.name) ?? undefined,
           eventName: event.name,
@@ -225,10 +235,26 @@ export async function processDueWorkflowEmails(
 
     const { data: sentRows } = await admin
       .from("event_email_sends")
-      .select("step_id, email")
+      .select("step_id, email, status")
       .eq("campaign_id", campaign.id)
       .limit(20000);
     const done = new Set(((sentRows ?? []) as any[]).map((r) => `${r.step_id}|${r.email}`));
+    const delivered = new Set(
+      ((sentRows ?? []) as any[]).filter((r) => r.status === "sent").map((r) => `${r.step_id}|${r.email}`),
+    );
+
+    // Reminder steps only go to riders who received the previous step and
+    // have not opened any copy of that guide yet.
+    let openedSea = new Set<string>();
+    if (steps.some((s) => s.template_name === "sea-to-sea-pre-event-reminder")) {
+      const { data: opened } = await admin
+        .from("email_sends")
+        .select("recipient")
+        .eq("template", "sea-to-sea-pre-event")
+        .not("opened_at", "is", null)
+        .limit(20000);
+      openedSea = new Set(((opened ?? []) as any[]).map((r) => String(r.recipient).toLowerCase()));
+    }
 
 
     for (let i = 0; i < steps.length; i++) {
@@ -245,6 +271,22 @@ export async function processDueWorkflowEmails(
             ? new Date(rider.enteredAt)
             : new Date(Math.max(anchorActivation!.getTime(), new Date(rider.enteredAt).getTime()));
         if (now.getTime() < anchor.getTime() + offsetMs) continue;
+
+        if (step.template_name === "sea-to-sea-pre-event-reminder") {
+          const prev = steps[i - 1];
+          if (!prev || !delivered.has(`${prev.id}|${rider.email}`)) continue;
+          if (openedSea.has(rider.email)) {
+            await admin.from("event_email_sends").insert({
+              step_id: step.id,
+              campaign_id: campaign.id,
+              event_id: event.id,
+              email: rider.email,
+              status: "skipped",
+            });
+            done.add(`${step.id}|${rider.email}`);
+            continue;
+          }
+        }
 
         touched = true;
         // Claim this (step, email) pair before sending so two overlapping runs
