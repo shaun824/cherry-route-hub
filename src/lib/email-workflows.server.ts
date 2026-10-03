@@ -272,6 +272,22 @@ export async function processDueWorkflowEmails(
             : new Date(Math.max(anchorActivation!.getTime(), new Date(rider.enteredAt).getTime()));
         if (now.getTime() < anchor.getTime() + offsetMs) continue;
 
+        if (step.template_name === "sea-to-sea-pre-event-reminder") {
+          const prev = steps[i - 1];
+          if (!prev || !delivered.has(`${prev.id}|${rider.email}`)) continue;
+          if (openedSea.has(rider.email)) {
+            await admin.from("event_email_sends").insert({
+              step_id: step.id,
+              campaign_id: campaign.id,
+              event_id: event.id,
+              email: rider.email,
+              status: "skipped",
+            });
+            done.add(`${step.id}|${rider.email}`);
+            continue;
+          }
+        }
+
         touched = true;
         // Claim this (step, email) pair before sending so two overlapping runs
         // (e.g. cron and a manual trigger) can never send the same mail twice.
