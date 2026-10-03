@@ -94,6 +94,16 @@ export async function sendEmailSamples(opts: { to: string; eventId?: string | nu
       },
     },
     {
+      template: "sea-to-sea-pre-event",
+      label: "Sea to Sea pre-event guide",
+      data: {
+        firstName: "Shaun",
+        eventName: "JBFE Sea to Sea North 2026",
+        coverUrl: "https://riderapp.redcherryevents.co.za/__l5e/assets-v1/c862c4d7-29e0-48bf-a2f0-9c025d386814/sea-to-sea-2026-cover.png",
+        eventUrl: `${SITE_URL}/my-events/cb6a0064-aa7e-4e26-928d-6a67d0a9722d`,
+      },
+    },
+    {
       template: "crew-training-invite",
       label: "Crew portal invite + training",
       data: {
