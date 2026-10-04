@@ -39,6 +39,7 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'event-update': eventUpdate,
   'pe-plett-extras': pePlettExtras,
   'sea-to-sea-pre-event': seaToSeaPreEvent,
+  'sea-to-sea-pre-event-reminder': seaToSeaPreEvent,
   // Auth emails are sent live by the Supabase auth webhook (see
   // src/routes/lovable/email/auth/webhook.ts). They are registered here only so
   // admins can send themselves an exact copy of what riders receive.

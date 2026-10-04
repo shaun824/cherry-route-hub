@@ -113,17 +113,24 @@ export async function sendWorkflowEmail(
   const { event, step } = opts;
   const eventUrl = `${APP_URL}/my-events/${event.id}`;
   const isPePlettExtras = step.template_name === "pe-plett-extras";
-  const isSeaToSea = String(step.template_name ?? "").startsWith("sea-to-sea-pre-event");
-  const templateName = isSeaToSea ? "sea-to-sea-pre-event" : isPePlettExtras ? "pe-plett-extras" : "event-update";
+  const isSeaToSeaReminder = step.template_name === "sea-to-sea-pre-event-reminder";
+  const isSeaToSea = step.template_name === "sea-to-sea-pre-event" || isSeaToSeaReminder;
+  const templateName = isSeaToSeaReminder
+    ? "sea-to-sea-pre-event-reminder"
+    : isSeaToSea
+      ? "sea-to-sea-pre-event"
+      : isPePlettExtras
+        ? "pe-plett-extras"
+        : "event-update";
   const result = await sendTemplateEmail(templateName, opts.to, {
-    idempotencyKey: `workflow-${opts.stepId}-${opts.to}`,
+    idempotencyKey: `workflow-${opts.stepId}-${templateName}-${opts.to}`,
     templateData: isSeaToSea
       ? {
           firstName: firstName(opts.name),
           eventName: event.name,
           coverUrl: absoluteLogo(event.cover_url),
           eventUrl,
-          reminder: step.template_name === "sea-to-sea-pre-event-reminder",
+          reminder: isSeaToSeaReminder,
         }
       : isPePlettExtras
       ? buildPePlettExtrasEmailData({
