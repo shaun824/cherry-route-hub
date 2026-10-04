@@ -123,7 +123,7 @@ export async function sendWorkflowEmail(
         ? "pe-plett-extras"
         : "event-update";
   const result = await sendTemplateEmail(templateName, opts.to, {
-    idempotencyKey: `workflow-${opts.stepId}-${opts.to}`,
+    idempotencyKey: `workflow-${opts.stepId}-${templateName}-${opts.to}`,
     templateData: isSeaToSea
       ? {
           firstName: firstName(opts.name),
