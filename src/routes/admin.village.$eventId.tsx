@@ -1,7 +1,7 @@
 import { createFileRoute, ClientOnly, Link, notFound, useBlocker, useRouter } from "@tanstack/react-router";
 import { Suspense, lazy, useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Eye, Loader2, MapPin, PencilRuler, Save, Sparkles, Square, Tent, Trash2, Upload, X } from "lucide-react";
+import { ArrowLeft, Eye, Loader2, MapPin, PencilRuler, Save, Sparkles, Square, Tent, Trash2, Undo2, Upload, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   BUILD_CATEGORIES,
@@ -55,6 +55,7 @@ import {
 import ZoneDuplicator from "@/components/zone-duplicator";
 import { BrandingToPlace } from "@/components/branding-to-place";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 
 import { fetchVillageTents, tentTypeMeta, TENT_TYPES, type TentType } from "@/lib/village-tents";
 
@@ -143,6 +144,13 @@ function VillageEditor() {
     queryFn: () => fetchVillageTents(event.id, venueId),
   });
   const tents = tentsQ.data ?? [];
+  type MoveSnapshot = {
+    hotspots: { id: string; x: number; y: number; lat?: number; lng?: number }[];
+    zones: { id: string; points: ZonePoint[] }[];
+    tents: { id: string; lat: number; lng: number; zone_id: string | null }[];
+  };
+  const moveHistoryRef = useRef<MoveSnapshot[]>([]);
+  const [moveHistoryCount, setMoveHistoryCount] = useState(0);
 
   // Unsaved-changes guard: the snapshot of the last loaded/saved map. Any edit
   // makes `dirty` true and blocks navigation until the admin saves or confirms
@@ -168,7 +176,55 @@ function VillageEditor() {
     setSelected(null);
     setSelectedZone(null);
     setSelectedTent(null);
+    moveHistoryRef.current = [];
+    setMoveHistoryCount(0);
   }, [venueId, event.id]);
+
+  function captureMoveSnapshot() {
+    moveHistoryRef.current = [
+      ...moveHistoryRef.current.slice(-19),
+      {
+        hotspots: map.hotspots.map((spot) => ({ id: spot.id, x: spot.x, y: spot.y, lat: spot.lat, lng: spot.lng })),
+        zones: zones.map((zone) => ({ id: zone.id, points: zone.points.map((point) => ({ ...point })) })),
+        tents: tents.map((tent) => ({ id: tent.id, lat: tent.lat, lng: tent.lng, zone_id: tent.zone_id ?? null })),
+      },
+    ];
+    setMoveHistoryCount(moveHistoryRef.current.length);
+  }
+
+  async function undoLastMove() {
+    const snapshot = moveHistoryRef.current.pop();
+    if (!snapshot) return;
+    setMoveHistoryCount(moveHistoryRef.current.length);
+    const hotspotPositions = new Map(snapshot.hotspots.map((spot) => [spot.id, spot]));
+    const zonePositions = new Map(snapshot.zones.map((zone) => [zone.id, zone.points]));
+    setMap((current) => ({
+      ...current,
+      hotspots: current.hotspots.map((spot) => {
+        const previous = hotspotPositions.get(spot.id);
+        return previous ? { ...spot, x: previous.x, y: previous.y, lat: previous.lat, lng: previous.lng } : spot;
+      }),
+      zones: current.zones.map((zone) => {
+        const previous = zonePositions.get(zone.id);
+        return previous ? { ...zone, points: previous.map((point) => ({ ...point })) } : zone;
+      }),
+    }));
+    qc.setQueryData(
+      ["village-tents", event.id, venueId],
+      (current: typeof tents | undefined) => current?.map((tent) => {
+        const previous = snapshot.tents.find((item) => item.id === tent.id);
+        return previous ? { ...tent, ...previous } : tent;
+      }) ?? current,
+    );
+    const results = await Promise.all(
+      snapshot.tents.map((tent) =>
+        supabase.from("event_village_tents").update({ lat: tent.lat, lng: tent.lng, zone_id: tent.zone_id }).eq("id", tent.id),
+      ),
+    );
+    const error = results.find((result) => result.error)?.error;
+    if (error) toast.error(`The map was restored, but tent positions could not be saved: ${error.message}`);
+    else toast.success("Last move undone");
+  }
 
 
   /** Lowest unused number across BOTH tent types. */
@@ -799,6 +855,18 @@ function VillageEditor() {
           </p>
           <h1 className="font-display text-xl font-bold text-ink">Interactive village map</h1>
         </div>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => void undoLastMove()}
+          disabled={moveHistoryCount === 0}
+          title="Undo the last point, tent, group or area move"
+          className="shrink-0"
+        >
+          <Undo2 className="h-3.5 w-3.5" />
+          <span className="hidden sm:inline">Undo move</span>
+        </Button>
         <button
           onClick={() => void save()}
           disabled={saving}
@@ -1302,6 +1370,7 @@ function VillageEditor() {
                   key={s.id}
                   onMouseDown={(e) => {
                     e.stopPropagation();
+                    captureMoveSnapshot();
                     dragRef.current = s.id;
                   }}
                   onClick={(e) => {
@@ -1368,6 +1437,7 @@ function VillageEditor() {
               selectedTents={multiTents}
               onSelectTents={selectTents}
               onMoveTents={(m) => void moveTents(m)}
+              onBeforeMove={captureMoveSnapshot}
               onDeleteTent={deleteTent}
               onToggleTentKind={(id) => void toggleTentKind(id)}
               onDeleteHotspot={(id) => {

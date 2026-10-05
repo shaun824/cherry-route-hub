@@ -230,10 +230,10 @@ export type MapTent = { id: string; label: string; lat: number; lng: number; kin
 
 
 /** Facility marker: a clean coloured icon puck, with its name shown once tapped. */
-function facilityIcon(spot: VillageHotspot, active: boolean, showLabel: boolean) {
+function facilityIcon(spot: VillageHotspot, active: boolean, showLabel: boolean, crewReadable = false) {
   const color = spotColor(spot);
-  const glyph = villageIconSvg(spotIcon(spot), active ? 15 : 13, "#fff");
-  const size = active ? 32 : 26;
+  const glyph = villageIconSvg(spotIcon(spot), active ? 16 : crewReadable ? 15 : 13, "#fff");
+  const size = active ? 34 : crewReadable ? 30 : 26;
   return L.divIcon({
     className: "rce-village-facility",
     html: `<div style="display:flex;flex-direction:column;align-items:center;gap:2px">
@@ -242,7 +242,7 @@ function facilityIcon(spot: VillageHotspot, active: boolean, showLabel: boolean)
       } solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.4)">${glyph}</span>
       ${
         showLabel
-          ? `<span style="background:#0f172a;color:#fff;font-size:10px;font-weight:800;padding:2px 7px;border-radius:7px;white-space:nowrap;border:1.5px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.35)">${escapeHtml(
+          ? `<span style="background:#0f172a;color:#fff;font-size:${crewReadable ? 12 : 10}px;font-weight:800;padding:${crewReadable ? "3px 8px" : "2px 7px"};border-radius:7px;white-space:nowrap;border:1.5px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.5)">${escapeHtml(
               spot.title,
             )}</span>`
           : ""
@@ -432,6 +432,7 @@ export default function VillageMapGeo({
   highlightTentId = null,
   fullscreenDetail = null,
   fullscreenControls = null,
+  fullscreenAction = null,
   initialFullscreen = false,
 }: {
   imageUrl?: string | null;
@@ -451,6 +452,8 @@ export default function VillageMapGeo({
   fullscreenDetail?: ReactNode;
   /** Crew layer controls repeated inside the full-screen portal. */
   fullscreenControls?: ReactNode;
+  /** A shared-map action kept clear of location controls and detail sheets. */
+  fullscreenAction?: ReactNode;
   /** Start as a viewport-filling map without requiring an extra tap. */
   initialFullscreen?: boolean;
 }) {
@@ -946,7 +949,7 @@ export default function VillageMapGeo({
                 autoPanOnFocus={false}
                 key={`spot-${spot.id}`}
                 position={pos}
-                icon={facilityIcon(spot, active, active || facilityLabels.has(spot.id))}
+                icon={facilityIcon(spot, active, active || facilityLabels.has(spot.id), zonesInteractive)}
                 zIndexOffset={active ? 1000 : 400}
                 eventHandlers={{ click: () => onSelect(active ? null : spot.id) }}
               />
@@ -1076,6 +1079,15 @@ export default function VillageMapGeo({
             {locating ? "Finding you…" : me ? "Hide my location" : "Show my location"}
           </button>
         </div>
+
+        {fullscreen && fullscreenAction ? (
+          <div
+            className="pointer-events-auto absolute left-[max(0.75rem,env(safe-area-inset-left))] z-[650]"
+            style={{ bottom: fullscreenDetail ? detailSheetHeight + 12 : "max(0.75rem, env(safe-area-inset-bottom))" }}
+          >
+            {fullscreenAction}
+          </div>
+        ) : null}
 
         {/* Full-screen detail sheet: docked to the bottom strip, well clear of
             the tapped point, so you can read about it and keep using the map. */}

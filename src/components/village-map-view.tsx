@@ -206,6 +206,7 @@ export function VillageMapView({
   riderOnly = false,
   crewView = false,
   startFullscreen = false,
+  fullscreenAction = null,
 }: {
   eventId: string;
   focusSpotId?: string | null;
@@ -228,6 +229,8 @@ export function VillageMapView({
   crewView?: boolean;
   /** Open directly as a viewport-filling map, used by public share links. */
   startFullscreen?: boolean;
+  /** Optional action shown inside a shared full-screen map. */
+  fullscreenAction?: React.ReactNode;
 }) {
   // Pinch on the village map must zoom the map only — never the page itself.
   useLockPageZoom();
@@ -741,6 +744,7 @@ export function VillageMapView({
                 ) : null
               }
               fullscreenControls={layerControls}
+              fullscreenAction={fullscreenAction}
               initialFullscreen={startFullscreen}
             />
           </Suspense>

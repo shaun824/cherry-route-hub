@@ -393,6 +393,7 @@ export default function VillageMapEditorGeo({
   selectedTents?: string[];
   onSelectTents?: (ids: string[], additive: boolean) => void;
   onMoveTents?: (moves: { id: string; lat: number; lng: number }[]) => void;
+  onBeforeMove?: () => void;
 }) {
   const [draft, setDraft] = useState<ZonePoint[]>([]);
   const [cursor, setCursor] = useState<ZonePoint | null>(null);
@@ -566,6 +567,7 @@ export default function VillageMapEditorGeo({
   function beginZoneDrag(z: VillageZone, e: L.LeafletMouseEvent) {
     const map = (e.target as unknown as { _map?: L.Map })._map;
     if (!map || zoneDrag.current) return;
+    onBeforeMove?.();
     const inside = zoneContents(z);
     zoneDrag.current = {
       id: z.id,
@@ -793,6 +795,7 @@ export default function VillageMapEditorGeo({
                   const ll = trueMarkerLatLng(e.target as L.Marker);
                   paintTent(t.id, ll.lat, ll.lng);
                 },
+                dragstart: () => onBeforeMove?.(),
                 dragend: () => commitTent(t.id),
               }}
             >
@@ -935,6 +938,7 @@ export default function VillageMapEditorGeo({
                       draggable
                       eventHandlers={{
                         dragstart: () => {
+                          onBeforeMove?.();
                           handleContents.current = zoneContents(z);
                         },
                         drag: (e) => {
@@ -968,6 +972,7 @@ export default function VillageMapEditorGeo({
                         zIndexOffset={2000}
                         draggable
                         eventHandlers={{
+                          dragstart: () => onBeforeMove?.(),
                           drag: (e) => {
                             const ll = trueMarkerLatLng(e.target as L.Marker);
                             paint(
@@ -1043,6 +1048,7 @@ export default function VillageMapEditorGeo({
                 icon={pinIcon(spotColor(s), s.title, selected === s.id, spotIcon(s))}
                 eventHandlers={{
                   click: () => onSelect(s.id),
+                  dragstart: () => onBeforeMove?.(),
                   dragend: (e) => {
                     const { lat, lng } = trueMarkerLatLng(e.target as L.Marker);
                     onMove(s.id, +lat.toFixed(6), +lng.toFixed(6));
