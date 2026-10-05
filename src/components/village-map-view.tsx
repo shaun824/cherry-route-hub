@@ -230,7 +230,7 @@ export function VillageMapView({
   /** Open directly as a viewport-filling map, used by public share links. */
   startFullscreen?: boolean;
   /** Optional action shown inside a shared full-screen map. */
-  fullscreenAction?: React.ReactNode;
+  fullscreenAction?: ReactNode;
 }) {
   // Pinch on the village map must zoom the map only — never the page itself.
   useLockPageZoom();
