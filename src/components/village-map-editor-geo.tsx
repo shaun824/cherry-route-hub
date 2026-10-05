@@ -354,6 +354,7 @@ export default function VillageMapEditorGeo({
   selectedTents = [],
   onSelectTents,
   onMoveTents,
+  onBeforeMove,
   defaultBearing = 0,
   onSaveBearing,
 }: {
@@ -393,6 +394,7 @@ export default function VillageMapEditorGeo({
   selectedTents?: string[];
   onSelectTents?: (ids: string[], additive: boolean) => void;
   onMoveTents?: (moves: { id: string; lat: number; lng: number }[]) => void;
+  onBeforeMove?: () => void;
 }) {
   const [draft, setDraft] = useState<ZonePoint[]>([]);
   const [cursor, setCursor] = useState<ZonePoint | null>(null);
@@ -500,6 +502,7 @@ export default function VillageMapEditorGeo({
         tents: { id: string; lat: number; lng: number }[];
         spots: { id: string; lat: number; lng: number }[];
         moved: boolean;
+        undoCaptured: boolean;
       }
   >(null);
 
@@ -508,7 +511,13 @@ export default function VillageMapEditorGeo({
     if (!d) return;
     const dLat = e.latlng.lat - d.start.lat;
     const dLng = e.latlng.lng - d.start.lng;
-    if (Math.abs(dLat) > 1e-8 || Math.abs(dLng) > 1e-8) d.moved = true;
+    if (Math.abs(dLat) > 1e-8 || Math.abs(dLng) > 1e-8) {
+      if (!d.undoCaptured) {
+        onBeforeMove?.();
+        d.undoCaptured = true;
+      }
+      d.moved = true;
+    }
     paint(
       d.id,
       d.points.map((p) => ({ lat: +(p.lat + dLat).toFixed(7), lng: +(p.lng + dLng).toFixed(7) })),
@@ -575,6 +584,7 @@ export default function VillageMapEditorGeo({
       tents: inside.tents,
       spots: inside.spots,
       moved: false,
+      undoCaptured: false,
     };
     map.dragging.disable();
     map.on("mousemove", zoneDragMove);
@@ -793,6 +803,7 @@ export default function VillageMapEditorGeo({
                   const ll = trueMarkerLatLng(e.target as L.Marker);
                   paintTent(t.id, ll.lat, ll.lng);
                 },
+                dragstart: () => onBeforeMove?.(),
                 dragend: () => commitTent(t.id),
               }}
             >
@@ -935,6 +946,7 @@ export default function VillageMapEditorGeo({
                       draggable
                       eventHandlers={{
                         dragstart: () => {
+                          onBeforeMove?.();
                           handleContents.current = zoneContents(z);
                         },
                         drag: (e) => {
@@ -968,6 +980,7 @@ export default function VillageMapEditorGeo({
                         zIndexOffset={2000}
                         draggable
                         eventHandlers={{
+                          dragstart: () => onBeforeMove?.(),
                           drag: (e) => {
                             const ll = trueMarkerLatLng(e.target as L.Marker);
                             paint(
@@ -1043,6 +1056,7 @@ export default function VillageMapEditorGeo({
                 icon={pinIcon(spotColor(s), s.title, selected === s.id, spotIcon(s))}
                 eventHandlers={{
                   click: () => onSelect(s.id),
+                  dragstart: () => onBeforeMove?.(),
                   dragend: (e) => {
                     const { lat, lng } = trueMarkerLatLng(e.target as L.Marker);
                     onMove(s.id, +lat.toFixed(6), +lng.toFixed(6));

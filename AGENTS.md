@@ -17,3 +17,4 @@
 - Rental plan edits regenerate an editable text plan from live rental data (not stored separately, since site_settings is publicly readable) and re-run it through the AI draft step before applying — keeps one source of truth.
 - Sea to Sea pre-event guidance uses a dedicated registered email template so its fixed fuel, hotel, route-loading, and timetable instructions cannot drift through free-form workflow edits.
 - Always name the event “JBFE Sea to Sea” in rider-facing copy; JBFE is the title sponsor.
+- Village editor movement history stores position-only snapshots so undo never overwrites later text or styling edits.
