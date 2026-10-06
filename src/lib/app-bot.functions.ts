@@ -20,6 +20,7 @@ const AskInput = z.object({
     .max(16)
     .default([]),
   sessionId: z.string().trim().max(100).optional(),
+  eventId: z.string().uuid().optional(),
 });
 
 /**
@@ -57,6 +58,7 @@ export const askAppBot = createServerFn({ method: "POST" })
       userId,
       isAdmin,
       isStaff,
+      eventId: data.eventId ?? null,
     });
 
 
@@ -65,7 +67,7 @@ export const askAppBot = createServerFn({ method: "POST" })
 Be friendly, concise and specific — 2 to 5 sentences, or a short bulleted list. Markdown is supported.
 
 Rules:
-- "How do I…" questions about the app are answered from HOW THE APP WORKS.
+${data.eventId ? "- This chat is opened for one specific event (the first EVENT DETAIL block). Assume every question is about that event unless the person clearly names another.\n" : ""}- "How do I…" questions about the app are answered from HOW THE APP WORKS.
 - Personal questions ("what tent am I in?", "what's my race number?", "do I owe anything?") must be answered from THIS PERSON'S OWN RECORDS. ${
       userId
         ? "That block is the truth for anything personal — never send them elsewhere when the answer is there."
