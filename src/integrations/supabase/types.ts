@@ -379,6 +379,33 @@ export type Database = {
           },
         ]
       }
+      crew_locations: {
+        Row: {
+          device_id: string
+          event_id: string
+          lat: number
+          lng: number
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          device_id: string
+          event_id: string
+          lat: number
+          lng: number
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          device_id?: string
+          event_id?: string
+          lat?: number
+          lng?: number
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       crew_task_state: {
         Row: {
           done: boolean

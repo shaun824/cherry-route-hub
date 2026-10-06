@@ -113,6 +113,13 @@
       "when": 1791006939075,
       "tag": "0015_sea_to_sea_workflow_templates",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1791298793680,
+      "tag": "0016_crew_locations",
+      "breakpoints": true
     }
   ]
 }

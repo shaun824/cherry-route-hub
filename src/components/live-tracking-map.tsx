@@ -13,7 +13,9 @@ export function LiveTrackingMap({
   riderMode,
   onFocusedProgress,
   currentPosition,
+  fieldToken,
 }: {
+  fieldToken?: string;
   eventId: string;
   isCrew?: boolean;
   focusUserId?: string | null;
@@ -38,6 +40,7 @@ export function LiveTrackingMap({
           riderMode={riderMode}
           onFocusedProgress={onFocusedProgress}
           currentPosition={currentPosition}
+          fieldToken={fieldToken}
         />
       </Suspense>
 
