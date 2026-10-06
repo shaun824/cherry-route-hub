@@ -461,6 +461,12 @@ export default function LiveTrackingMapInner({
       attribution: "&copy; OpenStreetMap contributors",
       maxZoom: 19,
     }).addTo(map);
+    // Crew use this outdoors in bright sun — lift the base map so routes and
+    // markers stay readable on a dim phone screen.
+    if (isCrew) {
+      const tilePane = map.getPane("tilePane");
+      if (tilePane) tilePane.style.filter = "brightness(1.18) saturate(1.2) contrast(1.05)";
+    }
 
     // Cluster ordinary riders so 300 dots stay readable; SOS pins are added to
     // the map directly so they can never be swallowed by a cluster bubble.
@@ -651,8 +657,8 @@ export default function LiveTrackingMapInner({
         for (const ll of latlngs) bounds.push(ll);
         return L.polyline(latlngs, {
           color: c.color,
-          weight: routeUnknown ? 3 : 5,
-          opacity: routeUnknown ? 0.45 : 0.85,
+          weight: routeUnknown ? 3 : isCrew ? 6 : 5,
+          opacity: routeUnknown ? 0.45 : isCrew ? 1 : 0.85,
         })
           .addTo(map)
           .bindTooltip(`${c.route.name} · ${c.dayLabel}`, { sticky: true });
@@ -669,7 +675,7 @@ export default function LiveTrackingMapInner({
       for (const [, polys] of routeLayersRef.current) polys.forEach((p) => p.remove());
       routeLayersRef.current.clear();
     };
-  }, [matchedRoutes, routeUnknown]);
+  }, [matchedRoutes, routeUnknown, isCrew]);
 
   // Course line used for progress + off-course checks: the followed rider's route.
   const course: CourseLine | null = useMemo(() => {
