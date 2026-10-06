@@ -202,3 +202,43 @@ export const fetchRaceStatusCrew = createServerFn({ method: "POST" })
     const { buildRaceStatus } = await import("@/lib/race-status.server");
     return buildRaceStatus(data.eventId, data.day ?? null);
   });
+
+// ---- Start times (from the published schedule) -----------------------------
+const startsInput = z.object({ eventId: z.string().uuid(), token: z.string().max(80).optional() });
+
+async function readStarts(eventId: string) {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data: e } = await (supabaseAdmin as any).from("events").select("schedule, days").eq("id", eventId).maybeSingle();
+  const days: any[] = Array.isArray(e?.days) ? e.days : [];
+  const dayById = new Map(days.map((d) => [String(d.id), d]));
+  const out: { dayLabel: string; label: string; details: string | null; at: string }[] = [];
+  for (const s of Array.isArray(e?.schedule) ? e.schedule : []) {
+    const label = String(s?.label ?? "");
+    if (!/start/i.test(label)) continue;
+    const m = /^(\d{1,2}):(\d{2})/.exec(String(s?.time ?? "").trim());
+    const day = dayById.get(String(s?.dayId ?? ""));
+    if (!m || !day?.date) continue;
+    out.push({
+      dayLabel: String(day.label ?? day.date),
+      label,
+      details: s?.details ? String(s.details) : null,
+      at: `${day.date}T${m[1].padStart(2, "0")}:${m[2]}:00+02:00`,
+    });
+  }
+  return out.sort((a, b) => a.at.localeCompare(b.at));
+}
+
+export const fetchStartsField = createServerFn({ method: "POST" })
+  .inputValidator((i) => startsInput.parse(i))
+  .handler(async ({ data }) => {
+    if (!data.token || !(await verify(data.eventId, data.token))) return [];
+    return readStarts(data.eventId);
+  });
+
+export const fetchStartsCrew = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i) => startsInput.parse(i))
+  .handler(async ({ data, context }) => {
+    if (!(await isCrewUser(context.supabase, context.userId))) return [];
+    return readStarts(data.eventId);
+  });
