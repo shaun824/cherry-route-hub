@@ -182,3 +182,23 @@ export const fetchTeamLocationsCrew = createServerFn({ method: "POST" })
     if (!(await isCrewUser(context.supabase, context.userId))) return [];
     return readLocs(data.eventId);
   });
+
+// ---- Finished / still out (from the results system) ------------------------
+const statusInput = z.object({ eventId: z.string().uuid(), token: z.string().max(80).optional(), day: z.string().max(60).nullable().optional() });
+
+export const fetchRaceStatusField = createServerFn({ method: "POST" })
+  .inputValidator((i) => statusInput.parse(i))
+  .handler(async ({ data }) => {
+    if (!data.token || !(await verify(data.eventId, data.token))) throw new Error("Link expired");
+    const { buildRaceStatus } = await import("@/lib/race-status.server");
+    return buildRaceStatus(data.eventId, data.day ?? null);
+  });
+
+export const fetchRaceStatusCrew = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i) => statusInput.parse(i))
+  .handler(async ({ data, context }) => {
+    if (!(await isCrewUser(context.supabase, context.userId))) throw new Error("Forbidden");
+    const { buildRaceStatus } = await import("@/lib/race-status.server");
+    return buildRaceStatus(data.eventId, data.day ?? null);
+  });
