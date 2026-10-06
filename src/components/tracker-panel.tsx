@@ -481,13 +481,15 @@ export function TrackerPanel({
   function triggerSos() {
     setError(null);
     const send = (pos: GeolocationPosition | null) => {
-      setSosHadLocation(Boolean(pos));
+      // No fresh fix (bad signal)? Fall back to the last tracked position.
+      const last = pos ? null : coords;
+      setSosHadLocation(Boolean(pos || last));
       void sendSos({
         data: {
           eventId,
-          lat: pos?.coords.latitude ?? null,
-          lng: pos?.coords.longitude ?? null,
-          accuracyM: pos ? Math.round(pos.coords.accuracy) : null,
+          lat: pos?.coords.latitude ?? last?.lat ?? null,
+          lng: pos?.coords.longitude ?? last?.lng ?? null,
+          accuracyM: pos ? Math.round(pos.coords.accuracy) : last ? Math.round(last.accuracy) : null,
           reason: sosReason,
           message: sosNote.trim() ? sosNote.trim() : null,
         },
