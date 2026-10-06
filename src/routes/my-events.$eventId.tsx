@@ -1,4 +1,5 @@
 import { entryNinjaRegistrationUrl } from "@/lib/entry-ninja-link";
+import { RaceWeekBanner } from "@/components/race-week-banner";
 import { RedCherrySocials } from "@/components/social-links-card";
 import { WhatsappButton } from "@/components/whatsapp-button";
 import { EntrySupportComposer } from "@/components/entry-support-composer";
@@ -339,6 +340,15 @@ function MyEventDetail() {
           );
         })}
       </nav>
+
+      <div className="px-5 pt-4">
+        <RaceWeekBanner
+          eventId={event.id}
+          eventName={event.name}
+          eventDate={event.event_date}
+          days={event.days}
+        />
+      </div>
 
       <div className="px-5 py-4">
         {tab === "info" && (

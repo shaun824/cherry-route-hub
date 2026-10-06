@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 
 import { BrandMark, SectionTitle, TypeBadge } from "@/components/ui-bits";
+import { RaceWeekBanner, isRaceWeek } from "@/components/race-week-banner";
 import { SponsorScroller } from "@/components/sponsor-scroller";
 import { RedCherrySocials } from "@/components/social-links-card";
 import { InstallPrompt, PushOptIn } from "@/components/push-optin";
@@ -191,6 +192,10 @@ function Home() {
     .filter((e) => !hiddenIds.has(e.id) && getEventSport(e.discipline, e.name) === "mtb")
     .slice(0, 4);
 
+  // Race-week module: any published event in its race week pushes people to
+  // live tracking & results.
+  const raceWeekEvents = upcoming.filter((e) => isRaceWeek(e.date, e.days));
+
   const notifications = [pinned, ...feed.filter((p) => !p.pinned)].filter(Boolean).slice(0, 8);
   const hasUnread = notifications.length > 0;
   
@@ -247,6 +252,20 @@ function Home() {
         </div>
 
       </div>
+
+      {raceWeekEvents.length > 0 ? (
+        <div className="mt-4 space-y-2 px-5">
+          {raceWeekEvents.map((e) => (
+            <RaceWeekBanner
+              key={e.id}
+              eventId={e.id}
+              eventName={e.name}
+              eventDate={e.date}
+              days={e.days}
+            />
+          ))}
+        </div>
+      ) : null}
 
       {/* Primary: for signed-in riders their own next event; guests get the
           event that matters right now, with no sign-in wall. */}
