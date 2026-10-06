@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { LiveTrackingMap } from "@/components/live-tracking-map";
+import { RaceStatusPanel } from "@/components/race-status-panel";
 import { createCrewFieldLink } from "@/lib/crew-field-link.functions";
 import {
   acknowledgeSosAlert,
@@ -338,6 +339,8 @@ export function RaceControlPanel({
       ) : (
         <p className="text-sm text-muted-foreground">Pick an event to see live rider positions.</p>
       )}
+
+      {selected ? <RaceStatusPanel eventId={selected} /> : null}
 
       {alerts.filter((a) => a.status !== "active" && a.status !== "acknowledged").length > 0 ? (
         <details className="rounded-2xl bg-card p-4 ring-1 ring-border">
