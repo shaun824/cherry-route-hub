@@ -10,7 +10,24 @@ import "leaflet.markercluster";
 import "leaflet.markercluster/dist/MarkerCluster.css";
 import { useQuery } from "@tanstack/react-query";
 import { fetchLiveTracking, type LiveRiderPosition } from "@/lib/tracking.functions";
-import { Crosshair, Layers, MapPin, Maximize2, Route as RouteIcon, Search, Star, X } from "lucide-react";
+import { Crosshair, Layers, LocateFixed, MapPin, Maximize2, Navigation, Route as RouteIcon, Search, Star, X } from "lucide-react";
+import type { CustomMarker } from "@/lib/mock-data";
+
+type FieldPoint = { key: string; name: string; lat: number; lng: number; icon: string; routes: string[] };
+
+function metres(a: { lat: number; lng: number }, b: { lat: number; lng: number }) {
+  const R = 6371000;
+  const dLat = ((b.lat - a.lat) * Math.PI) / 180;
+  const dLng = ((b.lng - a.lng) * Math.PI) / 180;
+  const s =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((a.lat * Math.PI) / 180) * Math.cos((b.lat * Math.PI) / 180) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.atan2(Math.sqrt(s), Math.sqrt(1 - s));
+}
+
+function fmtDist(m: number) {
+  return m < 1000 ? `${Math.round(m)} m` : `${(m / 1000).toFixed(1)} km`;
+}
 import { useAdminStore } from "@/lib/store";
 import { withRegistrationDayLabels } from "@/lib/event-days";
 import { parseKml, simplifyPolyline, capPolyline, type LatLngAlt } from "@/lib/geo";
@@ -273,7 +290,7 @@ export default function LiveTrackingMapInner({
   const [fullscreen, setFullscreen] = useState(false);
   const [sheetTall, setSheetTall] = useState(false);
   const [routesOpen, setRoutesOpen] = useState(false);
-  const [tab, setTab] = useState<"all" | "fav" | "finished">("all");
+  const [tab, setTab] = useState<"all" | "fav" | "finished" | "points">("all");
   const [favs, setFavs] = useState<string[]>([]);
   useEffect(() => {
     try {
@@ -389,22 +406,53 @@ export default function LiveTrackingMapInner({
     );
   }, [riders, search]);
 
-  // Viewer location for crew distance/bearing and guide line.
-  useEffect(() => {
-    if (!isCrew || typeof navigator === "undefined" || !navigator.geolocation) return;
-    let watch: number | undefined;
-    navigator.geolocation.getCurrentPosition(
-      (p) => setViewerLoc({ lat: p.coords.latitude, lng: p.coords.longitude }),
-      () => {},
-    );
-    watch = navigator.geolocation.watchPosition(
-      (p) => setViewerLoc({ lat: p.coords.latitude, lng: p.coords.longitude }),
-      () => {},
-    );
-    return () => {
-      if (watch != null) navigator.geolocation.clearWatch(watch);
+  // Viewer location for crew distance/bearing, guide line and the "me" dot.
+  const crewTools = isCrew && !riderMode;
+  const [locError, setLocError] = useState<string | null>(null);
+  const watchRef = useRef<number | null>(null);
+  const requestLocation = useCallback((centre: boolean) => {
+    if (typeof navigator === "undefined" || !navigator.geolocation) {
+      setLocError("This phone can't share its location.");
+      return;
+    }
+    const onPos = (p: GeolocationPosition) => {
+      setLocError(null);
+      setViewerLoc({ lat: p.coords.latitude, lng: p.coords.longitude });
     };
-  }, [isCrew]);
+    const onErr = (e: GeolocationPositionError) =>
+      setLocError(
+        e.code === 1
+          ? "Location is blocked. Allow location for this site in your browser settings, then tap again."
+          : "Couldn't get your location yet — step outside or tap again.",
+      );
+    navigator.geolocation.getCurrentPosition(
+      (p) => {
+        onPos(p);
+        const map = mapRef.current;
+        if (centre && map) {
+          setFollowPaused(true);
+          programmaticMoveRef.current = true;
+          map.setView([p.coords.latitude, p.coords.longitude], Math.max(map.getZoom(), 16));
+          window.setTimeout(() => (programmaticMoveRef.current = false), 700);
+        }
+      },
+      onErr,
+      { enableHighAccuracy: true, timeout: 15000 },
+    );
+    if (watchRef.current == null) {
+      watchRef.current = navigator.geolocation.watchPosition(onPos, () => {}, {
+        enableHighAccuracy: true,
+      });
+    }
+  }, []);
+  useEffect(() => {
+    if (!isCrew) return;
+    requestLocation(false);
+    return () => {
+      if (watchRef.current != null) navigator.geolocation.clearWatch(watchRef.current);
+      watchRef.current = null;
+    };
+  }, [isCrew, requestLocation]);
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
@@ -670,6 +718,102 @@ export default function LiveTrackingMapInner({
       window.setTimeout(() => (programmaticMoveRef.current = false), 700);
     }
   }, [posLat, posLng, followPaused, riderMode]);
+
+  // ---- Crew tools: "me" dot + waterpoints/aid stations -----------------
+  const meMarkerRef = useRef<L.Marker | null>(null);
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !crewTools || !viewerLoc) return;
+    if (!meMarkerRef.current) {
+      meMarkerRef.current = L.marker([viewerLoc.lat, viewerLoc.lng], {
+        icon: L.divIcon({
+          className: "",
+          html: `<div style="width:18px;height:18px;border-radius:9999px;background:#0284c7;border:3px solid #fff;box-shadow:0 0 0 6px rgba(2,132,199,.3)"></div>`,
+          iconSize: [18, 18],
+          iconAnchor: [9, 9],
+        }),
+        zIndexOffset: 950,
+      })
+        .addTo(map)
+        .bindTooltip("You", { permanent: true, direction: "top", offset: [0, -10] });
+    } else {
+      meMarkerRef.current.setLatLng([viewerLoc.lat, viewerLoc.lng]);
+    }
+  }, [viewerLoc, crewTools]);
+
+  const fieldPoints = useMemo(() => {
+    if (!crewTools) return [] as FieldPoint[];
+    const byKey = new Map<string, FieldPoint>();
+    for (const c of dayCandidates) {
+      for (const m of (c.route.customMarkers ?? []) as CustomMarker[]) {
+        if (!["water", "aid", "food", "start", "finish"].includes(m.icon ?? "")) continue;
+        const key = `${m.name}|${m.lat.toFixed(4)}|${m.lng.toFixed(4)}`;
+        const ex = byKey.get(key);
+        if (ex) ex.routes.push(c.route.name);
+        else byKey.set(key, { key, name: m.name, lat: m.lat, lng: m.lng, icon: m.icon ?? "water", routes: [c.route.name] });
+      }
+    }
+    return [...byKey.values()];
+  }, [crewTools, dayCandidates]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || fieldPoints.length === 0) return;
+    const layer = L.layerGroup(
+      fieldPoints.map((pt) => {
+        const glyph = pt.icon === "water" ? "💧" : pt.icon === "aid" ? "✚" : pt.icon === "food" ? "🍌" : "⚑";
+        const wrap = document.createElement("div");
+        wrap.className = "font-sans text-sm";
+        const t = document.createElement("p");
+        t.className = "font-bold";
+        t.textContent = pt.name;
+        const a = document.createElement("a");
+        a.href = navUrl(pt.lat, pt.lng);
+        a.target = "_blank";
+        a.rel = "noreferrer";
+        a.textContent = "Navigate here →";
+        a.style.cssText = "display:inline-block;margin-top:6px;font-weight:700;color:#e11d48";
+        wrap.append(t, a);
+        return L.marker([pt.lat, pt.lng], {
+          icon: L.divIcon({
+            className: "",
+            html: `<div style="width:26px;height:26px;border-radius:8px;background:#fff;border:2px solid #0284c7;display:flex;align-items:center;justify-content:center;font-size:14px;box-shadow:0 1px 6px rgba(0,0,0,.35)">${glyph}</div>`,
+            iconSize: [26, 26],
+            iconAnchor: [13, 13],
+          }),
+          zIndexOffset: 500,
+        })
+          .bindTooltip(pt.name, { direction: "top", offset: [0, -12] })
+          .bindPopup(wrap);
+      }),
+    ).addTo(map);
+    return () => {
+      layer.remove();
+    };
+  }, [fieldPoints]);
+
+  const focusPoint = (pt: FieldPoint) => {
+    const map = mapRef.current;
+    if (!map) return;
+    setFollowPaused(true);
+    programmaticMoveRef.current = true;
+    map.setView([pt.lat, pt.lng], Math.max(map.getZoom(), 16));
+    window.setTimeout(() => (programmaticMoveRef.current = false), 700);
+    if (fullscreen) setSheetTall(false);
+  };
+
+  const centreOnMe = () => {
+    const map = mapRef.current;
+    if (viewerLoc && map) {
+      setFollowPaused(true);
+      programmaticMoveRef.current = true;
+      map.setView([viewerLoc.lat, viewerLoc.lng], Math.max(map.getZoom(), 16));
+      window.setTimeout(() => (programmaticMoveRef.current = false), 700);
+      return;
+    }
+    requestLocation(true);
+  };
+
 
   // Off-course watch list for race control (soft warning — never an alarm).
   useEffect(() => {
@@ -990,6 +1134,20 @@ export default function LiveTrackingMapInner({
               <Layers className="h-3.5 w-3.5 text-cherry" /> Routes
             </button>
           ) : null}
+          {crewTools ? (
+            <button
+              type="button"
+              onClick={centreOnMe}
+              className="inline-flex items-center gap-1 rounded-full bg-card px-3 py-2 text-xs font-bold text-ink shadow-lg ring-1 ring-border"
+            >
+              <LocateFixed className="h-3.5 w-3.5 text-sky-600" /> {viewerLoc ? "Centre on me" : "Show my location"}
+            </button>
+          ) : null}
+          {crewTools && locError ? (
+            <p className="max-w-[14rem] rounded-xl bg-card px-3 py-2 text-[11px] text-ink shadow-lg ring-1 ring-border">
+              {locError}
+            </p>
+          ) : null}
           {follow && followPaused ? (
             <button
               type="button"
@@ -1081,19 +1239,20 @@ export default function LiveTrackingMapInner({
                 className="w-full rounded-xl bg-background py-2 pl-9 pr-3 text-sm text-ink ring-1 ring-border focus:outline-none focus:ring-2 focus:ring-cherry"
               />
             </div>
-            <div className="mt-2 flex gap-1.5">
+            <div className="mt-2 flex gap-1.5 overflow-x-auto">
               {(
                 [
                   ["all", `All (${riders.length})`],
                   ["fav", `★ Favourites (${favs.length})`],
                   ["finished", `Finished (${finishedCount})`],
+                  ...(crewTools ? ([["points", `Waterpoints (${fieldPoints.length})`]] as const) : []),
                 ] as const
               ).map(([k, label]) => (
                 <button
                   key={k}
                   type="button"
                   onClick={() => setTab(k)}
-                  className={`rounded-full px-3 py-1 text-xs font-semibold ring-1 ${
+                  className={`shrink-0 rounded-full px-3 py-1 text-xs font-semibold ring-1 ${
                     tab === k ? "bg-cherry text-white ring-cherry" : "bg-card text-ink ring-border"
                   }`}
                 >
@@ -1101,10 +1260,42 @@ export default function LiveTrackingMapInner({
                 </button>
               ))}
             </div>
-            {routeUnknown ? (
+            {routeUnknown && tab !== "points" ? (
               <p className="mt-2 text-[11px] text-muted-foreground">Route unknown for this rider — choose one under Routes.</p>
             ) : null}
           </div>
+          {tab === "points" ? (
+            <ul className="mt-2 min-h-0 flex-1 divide-y divide-border overflow-y-auto px-3">
+              {fieldPoints.length === 0 ? (
+                <li className="py-6 text-center text-xs text-muted-foreground">
+                  No waterpoints or aid stations on today's routes yet.
+                </li>
+              ) : null}
+              {[...fieldPoints]
+                .sort((a, b) => (viewerLoc ? metres(viewerLoc, a) - metres(viewerLoc, b) : 0))
+                .map((pt) => (
+                  <li key={pt.key} className="flex items-center gap-2 py-2">
+                    <button type="button" onClick={() => focusPoint(pt)} className="min-w-0 flex-1 text-left">
+                      <p className="truncate text-sm font-semibold text-ink">{pt.name}</p>
+                      <p className="truncate text-[11px] text-muted-foreground">
+                        {[pt.routes.join(", "), viewerLoc ? `${fmtDist(metres(viewerLoc, pt))} from you` : null]
+                          .filter(Boolean)
+                          .join(" · ")}
+                      </p>
+                    </button>
+                    <a
+                      href={navUrl(pt.lat, pt.lng)}
+                      target="_blank"
+                      rel="noreferrer"
+                      aria-label={`Navigate to ${pt.name}`}
+                      className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-cherry text-white"
+                    >
+                      <Navigation className="h-4 w-4" />
+                    </a>
+                  </li>
+                ))}
+            </ul>
+          ) : (
           <ul className="mt-2 min-h-0 flex-1 divide-y divide-border overflow-y-auto px-3">
             {sheetList.length === 0 ? (
               <li className="py-6 text-center text-xs text-muted-foreground">
@@ -1131,14 +1322,32 @@ export default function LiveTrackingMapInner({
                       {r.bib ? <span className="text-muted-foreground"> #{r.bib}</span> : null}
                     </p>
                     <p className="truncate text-[11px] text-muted-foreground">
-                      {[r.category, p && p.offCourseM < 1000 ? formatProgress(p) : null].filter(Boolean).join(" · ")}
+                      {[
+                        r.category,
+                        p && p.offCourseM < 1000 ? formatProgress(p) : null,
+                        crewTools && viewerLoc ? `${fmtDist(metres(viewerLoc, r))} from you` : null,
+                      ]
+                        .filter(Boolean)
+                        .join(" · ")}
                     </p>
                   </button>
                   {freshness(r)}
+                  {crewTools ? (
+                    <a
+                      href={navUrl(r.lat, r.lng)}
+                      target="_blank"
+                      rel="noreferrer"
+                      aria-label={`Navigate to ${r.riderName ?? "rider"}`}
+                      className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-cherry text-white"
+                    >
+                      <Navigation className="h-4 w-4" />
+                    </a>
+                  ) : null}
                 </li>
               );
             })}
           </ul>
+          )}
         </div>
       ) : null}
 
