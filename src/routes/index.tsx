@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 
 import { BrandMark, SectionTitle, TypeBadge } from "@/components/ui-bits";
+import { RaceWeekBanner, isRaceWeek } from "@/components/race-week-banner";
 import { SponsorScroller } from "@/components/sponsor-scroller";
 import { RedCherrySocials } from "@/components/social-links-card";
 import { InstallPrompt, PushOptIn } from "@/components/push-optin";
