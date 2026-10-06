@@ -303,7 +303,7 @@ function toRow(raw: Record<string, any>, set: RawSet): ResultRow {
 
 export type MyriadNormalised = { sets: ResultSet[]; rows: ResultRow[] };
 
-function normalise(raceEventName: string, sets: RawSet[], baseOrder: number): MyriadNormalised {
+function normalise(raceEventName: string, sets: RawSet[], baseOrder: number, startTime: string | null = null): MyriadNormalised {
   const outSets: ResultSet[] = [];
   const outRows: ResultRow[] = [];
   sets.forEach((set, i) => {
@@ -316,6 +316,7 @@ function normalise(raceEventName: string, sets: RawSet[], baseOrder: number): My
       kind: set.preliminary_results === "T" ? "provisional" : "overall",
       sort_order: baseOrder * 100 + Number(set.sort_order ?? i),
       imported_at: new Date().toISOString(),
+      start_time: startTime,
     });
     outRows.push(...rows);
   });
@@ -330,7 +331,7 @@ export async function fetchRaceResults(raceId: string): Promise<MyriadNormalised
   const parts = await mapLimit(race.events, 4, async (ev, i) => {
     try {
       const sets = await fetchAllPages(raceId, ev.event_id);
-      return normalise(ev.name, sets, i);
+      return normalise(ev.name, sets, i, ev.start_time);
     } catch (err) {
       // Empty start groups often stall for ~40s; give the real ones a slower second try.
       if (err instanceof MyriadError && err.timedOut) stalled.push({ ev, i });
@@ -342,7 +343,7 @@ export async function fetchRaceResults(raceId: string): Promise<MyriadNormalised
     const retried = await mapLimit(stalled, 3, async ({ ev, i }) => {
       try {
         const sets = await fetchAllPages(raceId, ev.event_id, { timeoutMs: 45_000 });
-        return { i, part: normalise(ev.name, sets, i) };
+        return { i, part: normalise(ev.name, sets, i, ev.start_time) };
       } catch {
         return null;
       }

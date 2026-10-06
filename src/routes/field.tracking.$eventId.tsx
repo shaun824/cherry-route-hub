@@ -5,6 +5,7 @@ import { Navigation, Radar, Siren } from "lucide-react";
 import { z } from "zod";
 import { LiveTrackingMap } from "@/components/live-tracking-map";
 import { fetchFieldLinkSos } from "@/lib/crew-field-link.functions";
+import { RaceStatusPanel } from "@/components/race-status-panel";
 import { useHydratedStore } from "@/lib/use-hydrated-store";
 
 export const Route = createFileRoute("/field/tracking/$eventId")({
@@ -85,6 +86,7 @@ function FieldTrackingPage() {
         </div>
       ) : null}
       <LiveTrackingMap eventId={eventId} isCrew fieldToken={k} />
+      <RaceStatusPanel eventId={eventId} fieldToken={k} />
       <p className="text-xs text-ink-soft">
         Tap Full screen to search riders, see waterpoints and navigate. To acknowledge an SOS, crew must sign in.
       </p>
