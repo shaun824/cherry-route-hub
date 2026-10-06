@@ -5,6 +5,7 @@ import { Navigation, Radar, Siren } from "lucide-react";
 import { z } from "zod";
 import { LiveTrackingMap } from "@/components/live-tracking-map";
 import { fetchFieldLinkSos } from "@/lib/crew-field-link.functions";
+import { useHydratedStore } from "@/lib/use-hydrated-store";
 
 export const Route = createFileRoute("/field/tracking/$eventId")({
   validateSearch: z.object({ k: z.string().optional() }),
@@ -23,6 +24,8 @@ export const Route = createFileRoute("/field/tracking/$eventId")({
 });
 
 function FieldTrackingPage() {
+  // Load event data (routes, waterpoints) — this page skips the normal app shell.
+  useHydratedStore();
   const { eventId } = Route.useParams();
   const { k } = Route.useSearch();
   const q = useQuery({
