@@ -1291,15 +1291,19 @@ export default function LiveTrackingMapInner({
             <button
               type="button"
               onClick={toggleSharing}
-              className={`inline-flex items-center gap-1 rounded-full px-3 py-2 text-xs font-bold shadow-lg ring-1 ring-border ${sharing && nearCourse ? "bg-violet-600 text-white" : "bg-card text-ink"}`}
+              disabled={!sharing && viewerLoc != null && !nearCourse}
+              className={`inline-flex items-center gap-1 rounded-full px-3 py-2 text-xs font-bold shadow-lg ring-1 ring-border disabled:opacity-60 ${sharing && nearCourse ? "bg-violet-600 text-white" : "bg-card text-ink"}`}
             >
               <MapPin className="h-3.5 w-3.5" />
-              {!sharing ? "Share with team" : nearCourse ? "Sharing with team" : "Sharing paused"}
+              {viewerLoc && !nearCourse
+                ? sharing ? "Off site · paused" : "Off site · sharing locked"
+                : !sharing ? "Share with team" : nearCourse ? "Sharing with team" : "Sharing paused"}
             </button>
           ) : null}
-          {crewTools && sharing && viewerLoc && !nearCourse && distToCourse != null ? (
+          {crewTools && viewerLoc && !nearCourse ? (
             <p className="max-w-[14rem] rounded-xl bg-card px-3 py-2 text-[11px] text-ink shadow-lg ring-1 ring-border">
-              You're {fmtDist(distToCourse)} from the routes. Your location is only shared with the team within 2 km of a route.
+              {distToCourse != null ? `You're ${fmtDist(distToCourse)} from the routes. ` : "Routes not loaded yet. "}
+              Team sharing unlocks within 2 km of a route — nothing is sent until then.
             </p>
           ) : null}
           {crewTools && locError ? (
