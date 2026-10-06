@@ -392,10 +392,13 @@ export function TrackerPanel({
   useEffect(() => {
     if (!tracking || !courseProgress) return;
     const remaining = courseProgress.totalM - courseProgress.alongM;
-    if (courseProgress.pct >= 90 && remaining <= FINISH_RADIUS_M && courseProgress.offCourseM <= 150) {
+    // Start and finish share a spot on loop courses, so also require the rider
+    // to have actually ridden most of the distance before auto-stopping.
+    const ridden = distanceM >= courseProgress.totalM * 0.7;
+    if (ridden && courseProgress.pct >= 90 && remaining <= FINISH_RADIUS_M && courseProgress.offCourseM <= 150) {
       endSession("You've finished — tracking stopped. Well ridden!");
     }
-  }, [tracking, courseProgress, endSession]);
+  }, [tracking, courseProgress, endSession, distanceM]);
 
   // Enforce the window: stop the GPS watch the moment tracking closes.
   useEffect(() => {
@@ -424,7 +427,18 @@ export function TrackerPanel({
   // Periodic flush + flush when the app comes back to the foreground / online.
   useEffect(() => {
     if (!tracking) return;
-    const interval = window.setInterval(() => void flush(), FLUSH_INTERVAL_MS);
+    const interval = window.setInterval(() => {
+      // Phones only report GPS when the rider moves. A stopped rider (crash,
+      // mechanical) must still check in, so ask for a fix after 30s of silence.
+      if (Date.now() - lastPointAtRef.current > 30_000 && "geolocation" in navigator) {
+        navigator.geolocation.getCurrentPosition(addPoint, () => {}, {
+          enableHighAccuracy: true,
+          maximumAge: 10_000,
+          timeout: 15_000,
+        });
+      }
+      void flush();
+    }, FLUSH_INTERVAL_MS);
     const onOnline = () => void flush();
     const onVisible = () => {
       if (document.visibilityState === "visible") void flush();
@@ -470,13 +484,15 @@ export function TrackerPanel({
   function triggerSos() {
     setError(null);
     const send = (pos: GeolocationPosition | null) => {
-      setSosHadLocation(Boolean(pos));
+      // No fresh fix (bad signal)? Fall back to the last tracked position.
+      const last = pos ? null : coords;
+      setSosHadLocation(Boolean(pos || last));
       void sendSos({
         data: {
           eventId,
-          lat: pos?.coords.latitude ?? null,
-          lng: pos?.coords.longitude ?? null,
-          accuracyM: pos ? Math.round(pos.coords.accuracy) : null,
+          lat: pos?.coords.latitude ?? last?.lat ?? null,
+          lng: pos?.coords.longitude ?? last?.lng ?? null,
+          accuracyM: pos ? Math.round(pos.coords.accuracy) : last ? Math.round(last.accuracy) : null,
           reason: sosReason,
           message: sosNote.trim() ? sosNote.trim() : null,
         },
