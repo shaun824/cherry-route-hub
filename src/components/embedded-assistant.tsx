@@ -5,7 +5,9 @@ import { useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import { WhatsappButton } from "@/components/whatsapp-button";
 import {
+  ArrowLeft,
   ArrowRight,
+  MessageCircle,
   Bot,
   Check,
   Loader2,
@@ -19,6 +21,20 @@ import { submitFeedback } from "@/lib/feedback.functions";
 import { askAppBot } from "@/lib/app-bot.functions";
 import { getSessionId } from "@/lib/analytics";
 import { supabase } from "@/integrations/supabase/client";
+import { Link } from "@tanstack/react-router";
+
+const WA_NUMBER = "27415815335";
+export function eventWaLink(eventName?: string) {
+  const text = eventName ? `Hi, I have a question about ${eventName}: ` : "Hi, I have a question: ";
+  return `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(text)}`;
+}
+
+const EVENT_STARTERS = [
+  "When do I collect my number?",
+  "Where do I park?",
+  "Where are the waterpoints?",
+  "What should I pack?",
+];
 
 const categories = [
   { value: "issue", label: "Something's broken" },
@@ -39,7 +55,8 @@ const GREETING =
 
 type ChatMsg = { role: "user" | "assistant"; content: string; followUps?: string[] };
 
-export function EmbeddedAssistant() {
+/** With `event`, the chat is scoped to one event and opened as a standalone page (/ask/$eventId). */
+export function EmbeddedAssistant({ event }: { event?: { id: string; name: string } } = {}) {
   const ask = useServerFn(askAppBot);
 
   const [messages, setMessages] = useState<ChatMsg[]>([]);
@@ -78,7 +95,7 @@ export function EmbeddedAssistant() {
     setInput("");
     setThinking(true);
     try {
-      const res = await ask({ data: { question: q, history, sessionId: getSessionId() } });
+      const res = await ask({ data: { question: q, history, sessionId: getSessionId(), ...(event ? { eventId: event.id } : {}) } });
       setMessages((m) => [
         ...m,
         { role: "assistant", content: res.answer, followUps: res.followUps ?? [] },
@@ -118,16 +135,22 @@ export function EmbeddedAssistant() {
 
   return (
     <div className="flex h-full w-full min-w-0 flex-col overflow-hidden bg-card shadow-xl">
-      <div className="flex items-start justify-between gap-3 border-b border-border bg-card p-4">
-        <div className="flex items-center gap-2">
+      <div className="flex items-start justify-between gap-3 border-b border-border bg-card p-4 pt-[max(1rem,env(safe-area-inset-top))]">
+        <div className="flex min-w-0 items-center gap-2">
+          {event ? (
+            <Link to="/my-events/$eventId" params={{ eventId: event.id }} aria-label="Back to event" className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-secondary text-ink">
+              <ArrowLeft className="h-4 w-4" />
+            </Link>
+          ) : null}
           <span className="grid h-9 w-9 place-items-center rounded-full bg-cherry text-white">
             <Sparkles className="h-4 w-4" />
           </span>
           <div>
-            <h2 className="font-display text-base font-bold">Ask Red Cherry</h2>
-            <p className="text-[11px] text-ink-soft">App help &amp; event questions</p>
+            <h2 className="font-display text-base font-bold">{event ? `Ask about ${event.name}` : "Ask Red Cherry"}</h2>
+            <p className="text-[11px] text-ink-soft">{event ? "Times, parking, routes, your entry" : <>App help &amp; event questions</>}</p>
           </div>
         </div>
+        {event ? null : (
         <button
           type="button"
           aria-label="Close"
@@ -136,6 +159,7 @@ export function EmbeddedAssistant() {
         >
           <X className="h-4 w-4" />
         </button>
+        )}
       </div>
 
       <div ref={listRef} className="min-w-0 flex-1 space-y-3 overflow-y-auto overflow-x-hidden p-4">
@@ -143,7 +167,7 @@ export function EmbeddedAssistant() {
 
         {messages.length === 0 ? (
           <div className="flex flex-wrap gap-2 pt-1">
-            {STARTERS.map((s) => (
+            {(event ? EVENT_STARTERS : STARTERS).map((s) => (
               <button
                 key={s}
                 type="button"
@@ -224,6 +248,12 @@ export function EmbeddedAssistant() {
             })()
           : null}
 
+        {event && escalated && !thinking ? (
+          <a href={eventWaLink(event.name)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2.5 text-sm font-bold text-primary-foreground">
+            <MessageCircle className="h-4 w-4" /> Chat to us on WhatsApp
+          </a>
+        ) : null}
+
         {thinking ? (
           <div className="flex max-w-[60%] items-center gap-2 rounded-2xl bg-secondary px-3 py-2 text-sm text-ink-soft">
             <Loader2 className="h-3.5 w-3.5 animate-spin" /> Thinking…
@@ -286,10 +316,15 @@ export function EmbeddedAssistant() {
               {showReport ? "Hide report form" : "Report a problem instead"}
             </span>
           </button>
-          {escalated ? (
+          {escalated && !event ? (
             <div className="shrink-0">
               <WhatsappButton context="the Rider Hub app" size="sm" />
             </div>
+          ) : null}
+          {event ? (
+            <a href={eventWaLink(event.name)} target="_blank" rel="noopener noreferrer" className="shrink-0 text-[11px] font-semibold text-ink-soft underline underline-offset-2 hover:text-cherry">
+              Still stuck? WhatsApp us
+            </a>
           ) : null}
         </div>
 

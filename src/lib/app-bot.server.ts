@@ -155,7 +155,7 @@ export type GlobalBotContext = { text: string; focusEventIds: string[] };
 
 export async function buildGlobalBotContext(
   admin: AnyClient,
-  opts: { question: string; userId: string | null; isAdmin?: boolean; isStaff?: boolean },
+  opts: { question: string; userId: string | null; isAdmin?: boolean; isStaff?: boolean; eventId?: string | null },
 ): Promise<GlobalBotContext> {
   const { data: events } = await admin
     .from("events")
@@ -201,6 +201,9 @@ export async function buildGlobalBotContext(
   });
 
   let focus = scored.filter((s) => s.score > 0).sort((a, b) => b.score - a.score).slice(0, 3);
+  // Event-scoped chat (/ask/$eventId): that event always comes first.
+  const pinned = opts.eventId ? all.find((e: any) => e.id === opts.eventId) : null;
+  if (pinned) focus = [{ event: pinned, score: 99 }];
   if (!focus.length) {
     // No named event — default to the next upcoming one so "when does it start" works.
     const now = Date.now();
