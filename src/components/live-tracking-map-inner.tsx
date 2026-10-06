@@ -301,11 +301,25 @@ export default function LiveTrackingMapInner({
   const [follow, setFollow] = useState<string | null>(null);
   const [followPaused, setFollowPaused] = useState(false);
   const [fullscreen, setFullscreen] = useState(false);
+  const [fsTools, setFsTools] = useState(false);
   const [sheetTall, setSheetTall] = useState(false);
   const [routesOpen, setRoutesOpen] = useState(false);
   const [baseLayer, setBaseLayer] = useState("Street");
-  const baseLayersRef = useRef<Record<string, L.TileLayer>>({});
+  // (lines kept)
   const [resolving, setResolving] = useState(false);
+  const resolveSos = async (r: { userId: string; riderName?: string | null }) => {
+    if (!onResolveRiderSos) return;
+    if (!window.confirm(`Mark the SOS for ${r.riderName ?? "this rider"} as sorted?`)) return;
+    setResolving(true);
+    try {
+      await onResolveRiderSos(r.userId);
+      toast.success("SOS marked sorted — your name is recorded");
+    } catch {
+      toast.error("Couldn't resolve SOS — try again");
+    } finally {
+      setResolving(false);
+    }
+  };
   const [tab, setTab] = useState<"all" | "fav" | "finished" | "points">("all");
   const [favs, setFavs] = useState<string[]>([]);
   useEffect(() => {
@@ -1229,6 +1243,7 @@ export default function LiveTrackingMapInner({
         </div>
       ) : null}
 
+      {!fullscreen || fsTools ? (
         <div className="flex shrink-0 flex-wrap items-center gap-2 border-b border-border bg-background p-2" aria-label="Map controls">
           <label className="flex items-center gap-2 text-xs font-semibold text-ink">
             Map
@@ -1409,7 +1424,7 @@ export default function LiveTrackingMapInner({
           : "relative space-y-2"
       }
     >
-      {headerAndControls}
+      {renderHeader()}
       <div className={fullscreen ? "relative min-h-0 flex-1" : "relative"}>
         <div
           ref={hostRef}
