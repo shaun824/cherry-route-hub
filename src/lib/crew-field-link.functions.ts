@@ -116,3 +116,69 @@ export const fetchFieldLinkSos = createServerFn({ method: "GET" })
       })),
     };
   });
+
+// ---- Team locations (crew + field-link holders see each other) -------------
+const locInput = z.object({
+  eventId: z.string().uuid(),
+  token: z.string().max(80).optional(),
+  deviceId: z.string().min(8).max(64),
+  name: z.string().trim().min(1).max(60),
+  lat: z.number().min(-90).max(90),
+  lng: z.number().min(-180).max(180),
+});
+const readInput = z.object({ eventId: z.string().uuid(), token: z.string().max(80).optional() });
+
+async function isCrewUser(supabase: any, userId: string) {
+  const { data } = await supabase.from("user_roles").select("role").eq("user_id", userId).in("role", ["admin", "crew"]).limit(1);
+  return Boolean(data && data.length);
+}
+
+async function writeLoc(d: z.infer<typeof locInput>) {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  await (supabaseAdmin as any).from("crew_locations").upsert({
+    event_id: d.eventId, device_id: d.deviceId, name: d.name, lat: d.lat, lng: d.lng, updated_at: new Date().toISOString(),
+  });
+  return { ok: true };
+}
+
+async function readLocs(eventId: string) {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const since = new Date(Date.now() - 10 * 60 * 1000).toISOString();
+  const { data } = await (supabaseAdmin as any)
+    .from("crew_locations")
+    .select("device_id, name, lat, lng, updated_at")
+    .eq("event_id", eventId)
+    .gte("updated_at", since)
+    .limit(200);
+  return (data ?? []).map((r: any) => ({ deviceId: r.device_id as string, name: r.name as string, lat: r.lat as number, lng: r.lng as number, updatedAt: r.updated_at as string }));
+}
+
+export const shareTeamLocationField = createServerFn({ method: "POST" })
+  .inputValidator((i) => locInput.parse(i))
+  .handler(async ({ data }) => {
+    if (!data.token || !(await verify(data.eventId, data.token))) throw new Error("Link expired");
+    return writeLoc(data);
+  });
+
+export const shareTeamLocationCrew = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i) => locInput.parse(i))
+  .handler(async ({ data, context }) => {
+    if (!(await isCrewUser(context.supabase, context.userId))) throw new Error("Forbidden");
+    return writeLoc(data);
+  });
+
+export const fetchTeamLocationsField = createServerFn({ method: "POST" })
+  .inputValidator((i) => readInput.parse(i))
+  .handler(async ({ data }) => {
+    if (!data.token || !(await verify(data.eventId, data.token))) return [];
+    return readLocs(data.eventId);
+  });
+
+export const fetchTeamLocationsCrew = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i) => readInput.parse(i))
+  .handler(async ({ data, context }) => {
+    if (!(await isCrewUser(context.supabase, context.userId))) return [];
+    return readLocs(data.eventId);
+  });
