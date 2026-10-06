@@ -12,6 +12,14 @@ import { useQuery } from "@tanstack/react-query";
 import { fetchLiveTracking, type LiveRiderPosition } from "@/lib/tracking.functions";
 import { Crosshair, Layers, LocateFixed, MapPin, Maximize2, Navigation, Route as RouteIcon, Search, Star, X } from "lucide-react";
 import type { CustomMarker } from "@/lib/mock-data";
+import {
+  fetchTeamLocationsCrew,
+  fetchTeamLocationsField,
+  shareTeamLocationCrew,
+  shareTeamLocationField,
+} from "@/lib/crew-field-link.functions";
+
+const SHARE_RADIUS_M = 2000;
 
 type FieldPoint = { key: string; name: string; lat: number; lng: number; icon: string; routes: string[] };
 
@@ -248,7 +256,10 @@ export default function LiveTrackingMapInner({
   riderMode = false,
   onFocusedProgress,
   currentPosition = null,
+  fieldToken,
 }: {
+  /** No-sign-in field link token (medics/marshals). */
+  fieldToken?: string;
   eventId: string;
   isCrew?: boolean;
   /** Race control can jump the map to a specific rider. */
@@ -747,6 +758,120 @@ export default function LiveTrackingMapInner({
     }
   }, [viewerLoc, crewTools]);
 
+  // ---- Open on the course: fit every route once they load ---------------
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || fittedRef.current || candidates.length === 0) return;
+    const b: [number, number][] = [];
+    for (const c of candidates) for (const line of c.lines) for (const [lng, lat] of line) b.push([lat, lng]);
+    if (b.length === 0) return;
+    programmaticMoveRef.current = true;
+    map.fitBounds(L.latLngBounds(b).pad(0.08));
+    fittedRef.current = true;
+    window.setTimeout(() => (programmaticMoveRef.current = false), 700);
+  }, [candidates]);
+
+  // ---- Team locations: crew see each other; sharing only near the course ----
+  const distToCourse = useMemo(() => {
+    if (!viewerLoc || candidates.length === 0) return null;
+    let best = Infinity;
+    for (const c of candidates)
+      for (const line of c.lines)
+        for (const [lng, lat] of line) {
+          const d = metres(viewerLoc, { lat, lng });
+          if (d < best) best = d;
+        }
+    return best;
+  }, [viewerLoc, candidates]);
+  const nearCourse = distToCourse != null && distToCourse <= SHARE_RADIUS_M;
+  const [sharing, setSharing] = useState(false);
+  const [teamName, setTeamName] = useState("");
+  const [deviceId, setDeviceId] = useState("");
+  useEffect(() => {
+    try {
+      let id = localStorage.getItem("rc-team-device");
+      if (!id) {
+        id = crypto.randomUUID();
+        localStorage.setItem("rc-team-device", id);
+      }
+      setDeviceId(id);
+      setTeamName(localStorage.getItem("rc-team-name") ?? "");
+      setSharing(localStorage.getItem(`rc-team-share:${eventId}`) === "1");
+    } catch {
+      /* ignore */
+    }
+  }, [eventId]);
+  const toggleSharing = () => {
+    if (!sharing) {
+      let name = teamName;
+      if (!name) {
+        name = (window.prompt("Your name (shown to the team on the map)") ?? "").trim().slice(0, 60);
+        if (!name) return;
+        setTeamName(name);
+        try { localStorage.setItem("rc-team-name", name); } catch { /* ignore */ }
+      }
+      if (!viewerLoc) requestLocation(false);
+    }
+    const next = !sharing;
+    setSharing(next);
+    try { localStorage.setItem(`rc-team-share:${eventId}`, next ? "1" : "0"); } catch { /* ignore */ }
+  };
+  const lastSentRef = useRef(0);
+  useEffect(() => {
+    if (!crewTools || !sharing || !nearCourse || !viewerLoc || !deviceId || !teamName) return;
+    if (Date.now() - lastSentRef.current < 15_000) return;
+    lastSentRef.current = Date.now();
+    const payload = { data: { eventId, token: fieldToken, deviceId, name: teamName, lat: viewerLoc.lat, lng: viewerLoc.lng } };
+    (fieldToken ? shareTeamLocationField(payload) : shareTeamLocationCrew(payload)).catch(() => {});
+  }, [crewTools, sharing, nearCourse, viewerLoc, deviceId, teamName, eventId, fieldToken]);
+  const { data: team } = useQuery({
+    queryKey: ["team-locations", eventId, fieldToken ?? ""],
+    queryFn: () =>
+      fieldToken
+        ? fetchTeamLocationsField({ data: { eventId, token: fieldToken } })
+        : fetchTeamLocationsCrew({ data: { eventId } }),
+    enabled: crewTools,
+    refetchInterval: 15_000,
+  });
+  const teamMarkersRef = useRef<Map<string, L.Marker>>(new Map());
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    const seen = new Set<string>();
+    for (const t of team ?? []) {
+      if (t.deviceId === deviceId) continue;
+      seen.add(t.deviceId);
+      const label = `${t.name} · crew`;
+      const ex = teamMarkersRef.current.get(t.deviceId);
+      if (ex) {
+        ex.setLatLng([t.lat, t.lng]);
+        ex.setTooltipContent(label);
+      } else {
+        const m = L.marker([t.lat, t.lng], {
+          icon: L.divIcon({
+            className: "",
+            html: `<div style="width:16px;height:16px;border-radius:4px;background:#7c3aed;border:3px solid #fff;box-shadow:0 0 0 4px rgba(124,58,237,.3)"></div>`,
+            iconSize: [16, 16],
+            iconAnchor: [8, 8],
+          }),
+          zIndexOffset: 940,
+        })
+          .addTo(map)
+          .bindTooltip(label, { permanent: true, direction: "top", offset: [0, -10] })
+          .bindPopup(
+            `<b>${t.name.replace(/[<>&]/g, "")}</b><br/><a href="https://www.google.com/maps/dir/?api=1&destination=${t.lat},${t.lng}" target="_blank" rel="noreferrer">Navigate</a>`,
+          );
+        teamMarkersRef.current.set(t.deviceId, m);
+      }
+    }
+    for (const [id, m] of teamMarkersRef.current) {
+      if (!seen.has(id)) {
+        m.remove();
+        teamMarkersRef.current.delete(id);
+      }
+    }
+  }, [team, deviceId]);
+
   const fieldPoints = useMemo(() => {
     if (!crewTools) return [] as FieldPoint[];
     const byKey = new Map<string, FieldPoint>();
@@ -1148,6 +1273,21 @@ export default function LiveTrackingMapInner({
             >
               <LocateFixed className="h-3.5 w-3.5 text-sky-600" /> {viewerLoc ? "Centre on me" : "Show my location"}
             </button>
+          ) : null}
+          {crewTools ? (
+            <button
+              type="button"
+              onClick={toggleSharing}
+              className={`inline-flex items-center gap-1 rounded-full px-3 py-2 text-xs font-bold shadow-lg ring-1 ring-border ${sharing && nearCourse ? "bg-violet-600 text-white" : "bg-card text-ink"}`}
+            >
+              <MapPin className="h-3.5 w-3.5" />
+              {!sharing ? "Share with team" : nearCourse ? "Sharing with team" : "Sharing paused"}
+            </button>
+          ) : null}
+          {crewTools && sharing && viewerLoc && !nearCourse && distToCourse != null ? (
+            <p className="max-w-[14rem] rounded-xl bg-card px-3 py-2 text-[11px] text-ink shadow-lg ring-1 ring-border">
+              You're {fmtDist(distToCourse)} from the routes. Your location is only shared with the team within 2 km of a route.
+            </p>
           ) : null}
           {crewTools && locError ? (
             <p className="max-w-[14rem] rounded-xl bg-card px-3 py-2 text-[11px] text-ink shadow-lg ring-1 ring-border">

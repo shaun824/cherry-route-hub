@@ -84,7 +84,7 @@ function FieldTrackingPage() {
           ))}
         </div>
       ) : null}
-      <LiveTrackingMap eventId={eventId} isCrew />
+      <LiveTrackingMap eventId={eventId} isCrew fieldToken={k} />
       <p className="text-xs text-ink-soft">
         Tap Full screen to search riders, see waterpoints and navigate. To acknowledge an SOS, crew must sign in.
       </p>
