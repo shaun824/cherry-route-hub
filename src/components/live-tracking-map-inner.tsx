@@ -468,10 +468,23 @@ export default function LiveTrackingMapInner({
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
     const map = L.map(containerRef.current, { zoomControl: true }).setView([-29.5, 24.5], 6);
-    L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    const streetLayer = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
       attribution: "&copy; OpenStreetMap contributors",
       maxZoom: 19,
     }).addTo(map);
+    const satelliteLayer = L.tileLayer(
+      "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+      {
+        attribution: "Imagery &copy; Esri &mdash; Source: Esri, Maxar, Earthstar Geographics",
+        maxZoom: 19,
+      },
+    );
+    L.control
+      .layers({ Street: streetLayer, Satellite: satelliteLayer }, undefined, {
+        position: "topright",
+        collapsed: true,
+      })
+      .addTo(map);
     // Crew use this outdoors in bright sun — lift the base map so routes and
     // markers stay readable on a dim phone screen.
     if (isCrew) {
