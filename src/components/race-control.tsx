@@ -10,9 +10,12 @@ import {
   Map as MapIcon,
   Radar,
   RefreshCw,
+  Share2,
   Siren,
 } from "lucide-react";
+import { toast } from "sonner";
 import { LiveTrackingMap } from "@/components/live-tracking-map";
+import { createCrewFieldLink } from "@/lib/crew-field-link.functions";
 import {
   acknowledgeSosAlert,
   escalateSosAlert,
@@ -64,6 +67,7 @@ export function RaceControlPanel({
   const [offCourse, setOffCourse] = useState<Record<string, number>>({});
 
   const resolve = useServerFn(resolveSosAlert);
+  const mintLink = useServerFn(createCrewFieldLink);
   const acknowledge = useServerFn(acknowledgeSosAlert);
   const escalate = useServerFn(escalateSosAlert);
 
@@ -211,6 +215,28 @@ export function RaceControlPanel({
           >
             <RefreshCw className="h-3.5 w-3.5" /> Refresh
           </button>
+          {selected ? (
+            <button
+              type="button"
+              onClick={async () => {
+                const { token } = await mintLink({ data: { eventId: selected } });
+                const url = `${window.location.origin}/field/tracking/${selected}?k=${encodeURIComponent(token)}`;
+                const name = events.find((e) => e.id === selected)?.name ?? "Race control";
+                try {
+                  if (navigator.share) await navigator.share({ title: `${name} · race control`, url });
+                  else {
+                    await navigator.clipboard.writeText(url);
+                    toast.success("Link copied — works without sign-in for 5 days");
+                  }
+                } catch {
+                  /* share cancelled */
+                }
+              }}
+              className="flex items-center gap-1.5 rounded-xl bg-cherry px-3 py-2 text-xs font-semibold text-white"
+            >
+              <Share2 className="h-3.5 w-3.5" /> Share link
+            </button>
+          ) : null}
         </div>
       </div>
 
