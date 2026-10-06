@@ -353,7 +353,7 @@ export function RaceControlPanel({
       {alerts.filter((a) => a.status !== "active" && a.status !== "acknowledged").length > 0 ? (
         <details className="rounded-2xl bg-card p-4 ring-1 ring-border">
           <summary className="cursor-pointer text-xs font-bold uppercase tracking-wider text-ink-soft">
-            Closed alerts ({alerts.length - open.length})
+            Sorted alerts ({alerts.length - open.length})
           </summary>
           <div className="mt-3 space-y-2">
             {alerts
@@ -363,6 +363,8 @@ export function RaceControlPanel({
                   {a.riderName ?? "Unknown rider"} · {reasonLabel(a.reason)} · {a.status} ·{" "}
                   {new Date(a.createdAt).toLocaleString()}
                   {a.acknowledgedByName ? ` · seen by ${a.acknowledgedByName}` : ""}
+                  {a.resolvedByName ? ` · sorted by ${a.resolvedByName}` : ""}
+                  {a.resolvedAt ? ` at ${new Date(a.resolvedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}` : ""}
                 </p>
               ))}
           </div>
