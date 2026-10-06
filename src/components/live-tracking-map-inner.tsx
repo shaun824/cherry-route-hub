@@ -2,6 +2,7 @@
 // Leaflet map. Public — uses the same read path as the spectate page.
 // The event's KML course is overlaid underneath, picked by cross-referencing the
 // riders' entry category / position against the event's routes.
+import { useHydratedStore } from "@/lib/use-hydrated-store";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import L from "leaflet";
@@ -536,6 +537,7 @@ export default function LiveTrackingMapInner({
 
 
   // ---- Course overlay -------------------------------------------------
+  useHydratedStore();
   const event = useAdminStore((s) => s.events.find((e) => e.id === eventId));
   const [candidates, setCandidates] = useState<RouteCandidate[]>([]);
   const routeLayersRef = useRef<Map<string, L.Polyline[]>>(new Map());
