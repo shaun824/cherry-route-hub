@@ -18,6 +18,8 @@ export type ResultSet = {
   kind: string;
   sort_order: number;
   imported_at: string | null;
+  /** Gun start for this result set (Myriad only), used for finish times of day. */
+  start_time?: string | null;
 };
 
 export type ResultRow = {
