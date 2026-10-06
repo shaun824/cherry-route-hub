@@ -16,6 +16,7 @@ import {
 import { toast } from "sonner";
 import { LiveTrackingMap } from "@/components/live-tracking-map";
 import { RaceStatusPanel } from "@/components/race-status-panel";
+import { StartCountdownPanel } from "@/components/start-countdown-panel";
 import { createCrewFieldLink } from "@/lib/crew-field-link.functions";
 import {
   acknowledgeSosAlert,
@@ -340,6 +341,7 @@ export function RaceControlPanel({
         <p className="text-sm text-muted-foreground">Pick an event to see live rider positions.</p>
       )}
 
+      {selected ? <StartCountdownPanel eventId={selected} /> : null}
       {selected ? <RaceStatusPanel eventId={selected} /> : null}
 
       {alerts.filter((a) => a.status !== "active" && a.status !== "acknowledged").length > 0 ? (
