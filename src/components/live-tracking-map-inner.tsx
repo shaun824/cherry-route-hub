@@ -1362,7 +1362,12 @@ export default function LiveTrackingMapInner({
             </div>
           ) : null}
         </div>
-      {crewTools && selectedRider ? (
+      ) : null}
+      {!fullscreen ? riderCard : null}
+    </>
+  );
+
+  const riderCard = crewTools && selectedRider ? (
         <div className={fullscreen ? "absolute inset-x-2 bottom-2 z-[1001] rounded-xl bg-card px-3 py-2 shadow-xl ring-1 ring-border" : "shrink-0 border-b border-border bg-card px-3 py-2"} aria-label="Selected rider">
           <div className="flex items-start gap-2">
             <div className="min-w-0 flex-1">
@@ -1380,9 +1385,7 @@ export default function LiveTrackingMapInner({
             {selectedRider.sos && fieldToken ? <span className="self-center text-xs text-muted-foreground">Crew sign-in required to resolve SOS</span> : null}
           </div>
         </div>
-      ) : null}
-    </>
-  );
+      ) : null;
 
   const sosRiders = crewTools ? allRiders.filter((r) => r.sos) : [];
   const sosPopups = sosRiders.length > 0 ? (
