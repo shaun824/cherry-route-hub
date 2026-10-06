@@ -9,7 +9,8 @@ import { MapContainer, TileLayer, Polyline, Marker, Popup, useMap } from "react-
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { useServerFn } from "@tanstack/react-start";
-import { LocateFixed, Minus, Plus } from "lucide-react";
+import { LocateFixed, Maximize2, Minus, Plus, X } from "lucide-react";
+import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/button";
 import type { CustomMarker, Event, EventRoute } from "@/lib/mock-data";
 import {
@@ -206,6 +207,35 @@ export default function RouteMapInner({
 }: Props) {
   const [loaded, setLoaded] = useState<Loaded[]>([]);
   const [enabled, setEnabled] = useState<Record<string, boolean>>({});
+  const [fs, setFs] = useState(false);
+  const [sheetOpen, setSheetOpen] = useState(true);
+  const [flyTarget, setFlyTarget] = useState<{ lat: number; lng: number; n: number } | null>(null);
+  const openFs = () => {
+    setFs(true);
+    try {
+      window.history.pushState({ rmFs: true }, "");
+    } catch {
+      /* ignore */
+    }
+  };
+  const closeFs = () => {
+    if (window.history.state?.rmFs) window.history.back();
+    else setFs(false);
+  };
+  useEffect(() => {
+    if (!fs) return;
+    const onPop = () => setFs(false);
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && closeFs();
+    window.addEventListener("popstate", onPop);
+    window.addEventListener("keydown", onKey);
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("popstate", onPop);
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prev;
+    };
+  }, [fs]);
   const [gainByRoute, setGainByRoute] = useState<Record<string, number | null>>({});
   const fetchElev = useServerFn(getRouteElevation);
   const elevationRequested = useRef(new Set<string>());
@@ -398,163 +428,278 @@ export default function RouteMapInner({
   // the toggles/stats keep their natural height.
   const fill = height === "100%";
 
-  return (
-    <div className={fill ? "flex h-full flex-col gap-3 p-3" : immersive ? "space-y-3 bg-pe-plett-deep p-3" : "space-y-3"}>
+  const dayLabels = [...new Set(loaded.map((l) => l.dayLabel))];
+  const showOnlyDay = (day: string | null) =>
+    setEnabled(Object.fromEntries(loaded.map((l) => [l.route.id, day === null || l.dayLabel === day])));
+  const activeDay =
+    visible.length > 0 && visible.every((l) => l.dayLabel === visible[0].dayLabel) &&
+    visible.length === loaded.filter((l) => l.dayLabel === visible[0].dayLabel).length &&
+    dayLabels.length > 1
+      ? visible[0].dayLabel
+      : visible.length === loaded.length
+        ? "all"
+        : null;
+  const pointOrder: Record<string, number> = { water: 0, aid: 1, food: 2, start: 3, finish: 4 };
+  const listMarkers = [...shownMarkers].sort(
+    (a, b) =>
+      (pointOrder[a.marker.icon ?? ""] ?? 9) - (pointOrder[b.marker.icon ?? ""] ?? 9) ||
+      a.owner.dayLabel.localeCompare(b.owner.dayLabel) ||
+      ((markerLegs[`${a.owner.route.id}-${a.marker.id}`]?.[0]?.km ?? 0) -
+        (markerLegs[`${b.owner.route.id}-${b.marker.id}`]?.[0]?.km ?? 0)),
+  );
 
-      {showToggles && loaded.length > 1 && (
-        <div className="flex gap-2 overflow-x-auto pb-1">
-          {loaded.map((l) => {
-            const on = enabled[l.route.id];
-            return (
-              <button
-                key={l.route.id}
-                type="button"
-                onClick={() => setEnabled((e) => ({ ...e, [l.route.id]: !on }))}
-                 className={`flex shrink-0 items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold transition ${
-                  on
-                    ? "border-transparent text-white shadow-sm"
-                    : "border-border bg-card text-ink-soft"
-                }`}
-                style={on ? { backgroundColor: l.color } : undefined}
-              >
-                <span
-                  className="inline-block h-2 w-2 rounded-full"
-                  style={{ backgroundColor: l.color }}
-                />
-                {l.route.name || l.route.tier}
+  const routeChips = (dark: boolean) =>
+    loaded.length > 1 ? (
+      <div className="flex gap-2 overflow-x-auto pb-1">
+        {loaded.map((l) => {
+          const on = enabled[l.route.id];
+          return (
+            <button
+              key={l.route.id}
+              type="button"
+              onClick={() => setEnabled((e) => ({ ...e, [l.route.id]: !on }))}
+              className={`flex shrink-0 items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold transition ${
+                on ? "border-transparent text-white shadow-sm" : dark ? "border-border bg-background text-ink-soft" : "border-border bg-card text-ink-soft"
+              }`}
+              style={on ? { backgroundColor: l.color } : undefined}
+            >
+              <span className="inline-block h-2 w-2 rounded-full ring-1 ring-white/70" style={{ backgroundColor: l.color }} />
+              {l.route.name || l.route.tier}
+              {dayLabels.length > 1 && !(l.route.name ?? "").includes(l.dayLabel) ? (
                 <span className="opacity-70">· {l.dayLabel}</span>
-              </button>
-            );
-          })}
-        </div>
-      )}
+              ) : null}
+            </button>
+          );
+        })}
+      </div>
+    ) : null;
 
-      <div
-        className={`overflow-hidden rounded-2xl ring-1 ${immersive ? "ring-pe-plett-accent/30" : "ring-border"} ${fill ? "min-h-0 flex-1" : ""}`}
-      >
-
-        <MapContainer
-          key={loaded.map((l) => l.route.id).join(",")}
-          center={bounds ? undefined : [-33.9249, 18.4241]}
-          zoom={bounds ? undefined : 9}
-          style={{ height, width: "100%" }}
-           zoomControl={false}
-          scrollWheelZoom
-          zoomSnap={0}
-           zoomDelta={0.5}
-           wheelPxPerZoomLevel={180}
-          zoomAnimation
-          markerZoomAnimation
-          bounceAtZoomLimits={false}
-          touchZoom
-          doubleClickZoom
-          maxZoom={24}
-          preferCanvas
-
-        >
-          <TileLayer
-            crossOrigin="anonymous"
-            attribution='&copy; <a href="https://openstreetmap.org">OpenStreetMap</a>'
-            url="https://a.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            maxZoom={24}
-            maxNativeZoom={19}
+  const renderMap = (h: string, keySuffix: string) => (
+    <MapContainer
+      key={loaded.map((l) => l.route.id).join(",") + keySuffix}
+      center={bounds ? undefined : [-33.9249, 18.4241]}
+      zoom={bounds ? undefined : 9}
+      style={{ height: h, width: "100%" }}
+      zoomControl={false}
+      scrollWheelZoom
+      zoomSnap={0}
+      zoomDelta={0.5}
+      wheelPxPerZoomLevel={180}
+      zoomAnimation
+      markerZoomAnimation
+      bounceAtZoomLimits={false}
+      touchZoom
+      doubleClickZoom
+      maxZoom={24}
+      preferCanvas
+    >
+      <TileLayer
+        crossOrigin="anonymous"
+        attribution='&copy; <a href="https://openstreetmap.org">OpenStreetMap</a>'
+        url="https://a.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        maxZoom={24}
+        maxNativeZoom={19}
+      />
+      <FitToBounds bounds={bounds} />
+      <MapControls bounds={bounds} />
+      <HoverMarker />
+      {keySuffix === "-fs" ? <FlyTo target={flyTarget} /> : null}
+      {visible.map((l) =>
+        l.lines.map((line, i) => (
+          <Polyline
+            key={`${l.route.id}-line-${i}`}
+            positions={line.map(([lng, lat]) => [lat, lng]) as [number, number][]}
+            pathOptions={{ color: l.color, weight: 5, opacity: 0.9 }}
           />
-          <FitToBounds bounds={bounds} />
-           <MapControls bounds={bounds} />
-          <HoverMarker />
-          {visible.map((l) =>
-            l.lines.map((line, i) => (
-              <Polyline
-                key={`${l.route.id}-line-${i}`}
-                positions={line.map(([lng, lat]) => [lat, lng]) as [number, number][]}
-                pathOptions={{ color: l.color, weight: 5, opacity: 0.9 }}
-              />
-            )),
-          )}
-          {shownMarkers.map(({ owner: l, marker: m }) => {
-              const color = m.color || l.color;
-              const legs = (markerLegs[`${l.route.id}-${m.id}`] ?? []).filter(
-                (leg) => enabled[leg.routeId],
-              );
-              return (
-                <Marker
-                  key={`${l.route.id}-mk-${m.id}`}
-                  position={[m.lat, m.lng] as [number, number]}
-                  icon={customIcon(color, m.icon, m.logoUrl)}
+        )),
+      )}
+      {shownMarkers.map(({ owner: l, marker: m }) => {
+        const color = m.color || l.color;
+        const legs = (markerLegs[`${l.route.id}-${m.id}`] ?? []).filter((leg) => enabled[leg.routeId]);
+        return (
+          <Marker
+            key={`${l.route.id}-mk-${m.id}`}
+            position={[m.lat, m.lng] as [number, number]}
+            icon={customIcon(color, m.icon, m.logoUrl)}
+          >
+            <Popup>
+              <div className="max-w-[260px] space-y-2">
+                <div className="flex items-start gap-2">
+                  <span
+                    className="mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full text-sm"
+                    style={{ backgroundColor: color }}
+                  >
+                    {MARKER_GLYPH[m.icon ?? "pin"]}
+                  </span>
+                  <div className="min-w-0">
+                    <p className="font-semibold text-ink">{m.name}</p>
+                    <p className="text-[10px] uppercase tracking-wider text-ink-soft/70">{l.dayLabel}</p>
+                  </div>
+                </div>
+                {m.description ? <p className="whitespace-pre-line text-xs text-ink-soft">{m.description}</p> : null}
+                {legs.length > 0 ? (
+                  <div className="space-y-1 rounded-lg bg-secondary/60 p-2">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-ink-soft">How far into each route</p>
+                    {legs.map((leg) => (
+                      <div key={leg.routeId} className="flex items-center justify-between gap-2 text-xs">
+                        <span className="flex min-w-0 items-center gap-1.5">
+                          <span className="inline-block h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: leg.color }} />
+                          <span className="truncate text-ink">{leg.name}</span>
+                        </span>
+                        <span className="shrink-0 font-semibold text-ink">
+                          {leg.km.toFixed(1)} km
+                          <span className="font-normal text-ink-soft"> / {leg.totalKm.toFixed(0)} km</span>
+                        </span>
+                      </div>
+                    ))}
+                    {legs.some((leg) => leg.remainingKm > 0) && (
+                      <p className="text-[10px] text-ink-soft">
+                        {legs.length === 1
+                          ? `${legs[0].remainingKm.toFixed(1)} km still to ride after this point.`
+                          : "Distances are measured from each route's start."}
+                      </p>
+                    )}
+                  </div>
+                ) : null}
+                <a
+                  href={`https://www.google.com/maps/dir/?api=1&destination=${m.lat},${m.lng}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-1 inline-block rounded-md bg-ink px-2 py-1 text-[11px] font-semibold text-white"
                 >
+                  Navigate
+                </a>
+              </div>
+            </Popup>
+          </Marker>
+        );
+      })}
+    </MapContainer>
+  );
 
-                  <Popup>
-                    <div className="max-w-[260px] space-y-2">
-                      <div className="flex items-start gap-2">
+  const fullscreenView = fs
+    ? createPortal(
+        <div className="fixed inset-0 z-[1000] flex flex-col bg-background">
+          <div className="space-y-2 border-b border-border bg-card px-3 pb-2 pt-[max(0.6rem,env(safe-area-inset-top))]">
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={closeFs}
+                aria-label="Close full screen"
+                className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-secondary text-ink"
+              >
+                <X className="h-4 w-4" />
+              </button>
+              <div className="min-w-0 flex-1">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-ink-soft">Route map</p>
+                <p className="truncate font-display text-sm font-bold text-ink">{event.name}</p>
+              </div>
+              <p className="shrink-0 text-xs font-semibold text-ink-soft">
+                {totalDistance.toFixed(1)} km · {visible.length}/{loaded.length} routes
+              </p>
+            </div>
+            {dayLabels.length > 1 ? (
+              <div className="flex gap-1.5 overflow-x-auto">
+                {[["all", "All days"] as const, ...dayLabels.map((d) => [d, d] as const)].map(([k, label]) => (
+                  <button
+                    key={k}
+                    type="button"
+                    onClick={() => showOnlyDay(k === "all" ? null : k)}
+                    className={`shrink-0 rounded-full px-3 py-1 text-xs font-bold ring-1 ${
+                      activeDay === k ? "bg-cherry text-white ring-cherry" : "bg-background text-ink ring-border"
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            ) : null}
+            {routeChips(true)}
+          </div>
+          <div className="relative min-h-0 flex-1">{renderMap("100%", "-fs")}</div>
+          <div
+            className={`flex flex-col border-t border-border bg-card pb-[env(safe-area-inset-bottom)] shadow-[0_-8px_24px_rgba(0,0,0,.12)] ${
+              sheetOpen ? "h-[42dvh]" : ""
+            }`}
+          >
+            <button
+              type="button"
+              onClick={() => setSheetOpen((o) => !o)}
+              className="flex w-full items-center justify-between px-4 py-3 text-left"
+            >
+              <span className="font-display text-sm font-bold text-ink">
+                💧 Waterpoints &amp; stops ({listMarkers.length})
+              </span>
+              <span className="text-xs font-semibold text-cherry">{sheetOpen ? "Hide" : "Show list"}</span>
+            </button>
+            {sheetOpen ? (
+              <ul className="min-h-0 flex-1 divide-y divide-border overflow-y-auto px-3">
+                {listMarkers.length === 0 ? (
+                  <li className="py-6 text-center text-xs text-ink-soft">Switch on a route to see its stops.</li>
+                ) : null}
+                {listMarkers.map(({ owner, marker: m }) => {
+                  const legs = (markerLegs[`${owner.route.id}-${m.id}`] ?? []).filter((leg) => enabled[leg.routeId]);
+                  return (
+                    <li key={`${owner.route.id}-${m.id}`} className="flex items-center gap-3 py-2.5">
+                      <button
+                        type="button"
+                        onClick={() => setFlyTarget({ lat: m.lat, lng: m.lng, n: Date.now() })}
+                        className="flex min-w-0 flex-1 items-start gap-2.5 text-left"
+                      >
                         <span
-                          className="mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full text-sm"
-                          style={{ backgroundColor: color }}
+                          className="mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-full text-sm"
+                          style={{ backgroundColor: m.color || owner.color }}
                         >
                           {MARKER_GLYPH[m.icon ?? "pin"]}
                         </span>
-                        <div className="min-w-0">
-                          <p className="font-semibold text-ink">{m.name}</p>
-                          <p className="text-[10px] uppercase tracking-wider text-ink-soft/70">
-                            {l.dayLabel}
-                          </p>
-                        </div>
-                      </div>
-
-                      {m.description ? (
-                        <p className="whitespace-pre-line text-xs text-ink-soft">{m.description}</p>
-                      ) : null}
-
-                      {legs.length > 0 ? (
-                        <div className="space-y-1 rounded-lg bg-secondary/60 p-2">
-                          <p className="text-[10px] font-bold uppercase tracking-wider text-ink-soft">
-                            How far into each route
-                          </p>
-                          {legs.map((leg) => (
-                            <div key={leg.routeId} className="flex items-center justify-between gap-2 text-xs">
-                              <span className="flex min-w-0 items-center gap-1.5">
-                                <span
-                                  className="inline-block h-2 w-2 shrink-0 rounded-full"
-                                  style={{ backgroundColor: leg.color }}
-                                />
-                                <span className="truncate text-ink">{leg.name}</span>
-                              </span>
-                              <span className="shrink-0 font-semibold text-ink">
+                        <span className="min-w-0">
+                          <span className="block truncate text-sm font-semibold text-ink">{m.name}</span>
+                          <span className="flex flex-wrap gap-x-2 gap-y-0.5 text-[11px] text-ink-soft">
+                            {dayLabels.length > 1 ? <span>{owner.dayLabel}</span> : null}
+                            {legs.map((leg) => (
+                              <span key={leg.routeId} className="inline-flex items-center gap-1">
+                                <span className="inline-block h-2 w-2 rounded-full" style={{ backgroundColor: leg.color }} />
                                 {leg.km.toFixed(1)} km
-                                <span className="font-normal text-ink-soft">
-                                  {" "}
-                                  / {leg.totalKm.toFixed(0)} km
-                                </span>
                               </span>
-                            </div>
-                          ))}
-                          {legs.some((leg) => leg.remainingKm > 0) && (
-                            <p className="text-[10px] text-ink-soft">
-                              {legs.length === 1
-                                ? `${legs[0].remainingKm.toFixed(1)} km still to ride after this point.`
-                                : "Distances are measured from each route's start."}
-                            </p>
-                          )}
-                        </div>
-                      ) : null}
-
+                            ))}
+                          </span>
+                        </span>
+                      </button>
                       <a
                         href={`https://www.google.com/maps/dir/?api=1&destination=${m.lat},${m.lng}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="mt-1 inline-block rounded-md bg-ink px-2 py-1 text-[11px] font-semibold text-white"
+                        className="shrink-0 rounded-full bg-ink px-3 py-1.5 text-[11px] font-bold text-white"
                       >
                         Navigate
                       </a>
-                    </div>
-                  </Popup>
-                </Marker>
-              );
-          })}
+                    </li>
+                  );
+                })}
+              </ul>
+            ) : null}
+          </div>
+        </div>,
+        document.body,
+      )
+    : null;
 
+  return (
+    <div className={fill ? "flex h-full flex-col gap-3 p-3" : immersive ? "space-y-3 bg-pe-plett-deep p-3" : "space-y-3"}>
+      {showToggles && routeChips(false)}
 
-        </MapContainer>
+      <div
+        className={`relative overflow-hidden rounded-2xl ring-1 ${immersive ? "ring-pe-plett-accent/30" : "ring-border"} ${fill ? "min-h-0 flex-1" : ""}`}
+      >
+        {fs ? <div style={{ height }} className="bg-secondary/40" /> : renderMap(height, "")}
+        <button
+          type="button"
+          onClick={openFs}
+          className="absolute left-3 top-3 z-[500] inline-flex items-center gap-1.5 rounded-full bg-card px-3 py-2 text-xs font-bold text-ink shadow-lg ring-1 ring-border"
+        >
+          <Maximize2 className="h-3.5 w-3.5" /> Full screen
+        </button>
       </div>
-
 
       {showStats && visible.length > 0 && (
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
@@ -567,8 +712,17 @@ export default function RouteMapInner({
           <Stat label="Routes shown" value={`${visible.length} of ${loaded.length}`} />
         </div>
       )}
+      {fullscreenView}
     </div>
   );
+}
+
+function FlyTo({ target }: { target: { lat: number; lng: number; n: number } | null }) {
+  const map = useMap();
+  useEffect(() => {
+    if (target) map.flyTo([target.lat, target.lng], Math.max(map.getZoom(), 16), { duration: 0.6 });
+  }, [target, map]);
+  return null;
 }
 
 function Stat({ label, value, hint }: { label: string; value: string; hint?: string }) {
