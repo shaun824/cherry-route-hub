@@ -1154,14 +1154,8 @@ export default function LiveTrackingMapInner({
   const legendRoutes = matchedRoutes;
   const selectedRider = allRiders.find((r) => r.userId === selectedId);
 
-  const tree = (
-    <div
-      className={
-        fullscreen
-          ? "fixed inset-0 z-[1000] flex flex-col bg-background"
-          : "relative space-y-2"
-      }
-    >
+  const renderHeader = () => (
+    <>
       {fullscreen ? (
         <div className="flex items-center gap-2 border-b border-border bg-card px-3 pb-2 pt-[max(0.5rem,env(safe-area-inset-top))]">
           <button
@@ -1178,6 +1172,9 @@ export default function LiveTrackingMapInner({
               {dayOptions.find((d) => d.id === activeDayId)?.label ?? "Live"} · {riders.length} on course
             </p>
           </div>
+          <Button variant={fsTools ? "default" : "outline"} size="sm" type="button" onClick={() => setFsTools((t) => !t)}>
+            <Search className="h-3.5 w-3.5" /> {fsTools ? "Hide tools" : "Riders & tools"}
+          </Button>
         </div>
       ) : null}
 
