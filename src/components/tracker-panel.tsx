@@ -392,10 +392,13 @@ export function TrackerPanel({
   useEffect(() => {
     if (!tracking || !courseProgress) return;
     const remaining = courseProgress.totalM - courseProgress.alongM;
-    if (courseProgress.pct >= 90 && remaining <= FINISH_RADIUS_M && courseProgress.offCourseM <= 150) {
+    // Start and finish share a spot on loop courses, so also require the rider
+    // to have actually ridden most of the distance before auto-stopping.
+    const ridden = distanceM >= courseProgress.totalM * 0.7;
+    if (ridden && courseProgress.pct >= 90 && remaining <= FINISH_RADIUS_M && courseProgress.offCourseM <= 150) {
       endSession("You've finished — tracking stopped. Well ridden!");
     }
-  }, [tracking, courseProgress, endSession]);
+  }, [tracking, courseProgress, endSession, distanceM]);
 
   // Enforce the window: stop the GPS watch the moment tracking closes.
   useEffect(() => {
