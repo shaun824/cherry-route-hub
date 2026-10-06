@@ -436,6 +436,8 @@ export type SosAlert = {
   createdAt: string;
   acknowledgedAt: string | null;
   acknowledgedByName: string | null;
+  resolvedAt: string | null;
+  resolvedByName: string | null;
   escalatedAt: string | null;
 };
 
@@ -484,7 +486,7 @@ export const fetchSosAlerts = createServerFn({ method: "GET" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     let q = table(supabaseAdmin, "tracking_sos")
       .select(
-        "id, event_id, user_id, lat, lng, reason, note, message, status, created_at, acknowledged_at, acknowledged_by, escalated_at",
+        "id, event_id, user_id, lat, lng, reason, note, message, status, created_at, acknowledged_at, acknowledged_by, escalated_at, resolved_at, resolved_by",
       )
       .order("created_at", { ascending: false })
       .limit(100);
@@ -506,11 +508,14 @@ export const fetchSosAlerts = createServerFn({ method: "GET" })
       acknowledged_at: string | null;
       acknowledged_by: string | null;
       escalated_at: string | null;
+      resolved_at: string | null;
+      resolved_by: string | null;
     }[];
     const userIds: string[] = [
       ...new Set([
         ...sosRows.map((r) => r.user_id),
         ...sosRows.map((r) => r.acknowledged_by).filter((v): v is string => Boolean(v)),
+        ...sosRows.map((r) => r.resolved_by).filter((v): v is string => Boolean(v)),
       ]),
     ];
     const names = new Map<string, string>();
@@ -558,6 +563,8 @@ export const fetchSosAlerts = createServerFn({ method: "GET" })
       createdAt: r.created_at,
       acknowledgedAt: r.acknowledged_at,
       acknowledgedByName: r.acknowledged_by ? (names.get(r.acknowledged_by) ?? "Crew") : null,
+      resolvedAt: r.resolved_at,
+      resolvedByName: r.resolved_by ? (names.get(r.resolved_by) ?? "Crew") : null,
       escalatedAt: r.escalated_at,
     }));
     return { alerts };

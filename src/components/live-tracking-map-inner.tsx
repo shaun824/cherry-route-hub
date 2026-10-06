@@ -301,11 +301,25 @@ export default function LiveTrackingMapInner({
   const [follow, setFollow] = useState<string | null>(null);
   const [followPaused, setFollowPaused] = useState(false);
   const [fullscreen, setFullscreen] = useState(false);
+  const [fsTools, setFsTools] = useState(false);
   const [sheetTall, setSheetTall] = useState(false);
   const [routesOpen, setRoutesOpen] = useState(false);
   const [baseLayer, setBaseLayer] = useState("Street");
   const baseLayersRef = useRef<Record<string, L.TileLayer>>({});
   const [resolving, setResolving] = useState(false);
+  const resolveSos = async (r: { userId: string; riderName?: string | null }) => {
+    if (!onResolveRiderSos) return;
+    if (!window.confirm(`Mark the SOS for ${r.riderName ?? "this rider"} as sorted?`)) return;
+    setResolving(true);
+    try {
+      await onResolveRiderSos(r.userId);
+      toast.success("SOS marked sorted — your name is recorded");
+    } catch {
+      toast.error("Couldn't resolve SOS — try again");
+    } finally {
+      setResolving(false);
+    }
+  };
   const [tab, setTab] = useState<"all" | "fav" | "finished" | "points">("all");
   const [favs, setFavs] = useState<string[]>([]);
   useEffect(() => {
@@ -362,7 +376,7 @@ export default function LiveTrackingMapInner({
   useEffect(() => {
     const t = window.setTimeout(() => mapRef.current?.invalidateSize(), 60);
     return () => window.clearTimeout(t);
-  }, [fullscreen, sheetTall]);
+  }, [fullscreen, sheetTall, fsTools]);
   const [search, setSearch] = useState("");
   const [showFinished, setShowFinished] = useState(false);
   const [viewerLoc, setViewerLoc] = useState<{ lat: number; lng: number } | null>(null);
@@ -1154,14 +1168,8 @@ export default function LiveTrackingMapInner({
   const legendRoutes = matchedRoutes;
   const selectedRider = allRiders.find((r) => r.userId === selectedId);
 
-  const tree = (
-    <div
-      className={
-        fullscreen
-          ? "fixed inset-0 z-[1000] flex flex-col bg-background"
-          : "relative space-y-2"
-      }
-    >
+  const renderHeader = () => (
+    <>
       {fullscreen ? (
         <div className="flex items-center gap-2 border-b border-border bg-card px-3 pb-2 pt-[max(0.5rem,env(safe-area-inset-top))]">
           <button
@@ -1178,6 +1186,9 @@ export default function LiveTrackingMapInner({
               {dayOptions.find((d) => d.id === activeDayId)?.label ?? "Live"} · {riders.length} on course
             </p>
           </div>
+          <Button variant={fsTools ? "default" : "outline"} size="sm" type="button" onClick={() => setFsTools((t) => !t)}>
+            <Search className="h-3.5 w-3.5" /> {fsTools ? "Hide tools" : "Riders & tools"}
+          </Button>
         </div>
       ) : null}
 
@@ -1232,6 +1243,7 @@ export default function LiveTrackingMapInner({
         </div>
       ) : null}
 
+      {!fullscreen || fsTools ? (
         <div className="flex shrink-0 flex-wrap items-center gap-2 border-b border-border bg-background p-2" aria-label="Map controls">
           <label className="flex items-center gap-2 text-xs font-semibold text-ink">
             Map
@@ -1362,8 +1374,13 @@ export default function LiveTrackingMapInner({
             </div>
           ) : null}
         </div>
-      {crewTools && selectedRider ? (
-        <div className="shrink-0 border-b border-border bg-card px-3 py-2" aria-label="Selected rider">
+      ) : null}
+      {!fullscreen ? riderCard : null}
+    </>
+  );
+
+  const riderCard = crewTools && selectedRider ? (
+        <div className={fullscreen ? "absolute inset-x-2 bottom-2 z-[1001] rounded-xl bg-card px-3 py-2 shadow-xl ring-1 ring-border" : "shrink-0 border-b border-border bg-card px-3 py-2"} aria-label="Selected rider">
           <div className="flex items-start gap-2">
             <div className="min-w-0 flex-1">
               <p className="break-words text-sm font-bold text-ink">{selectedRider.sos ? <span className="mr-2 text-destructive">SOS · {selectedRider.sosReason ?? "Help"}</span> : null}{selectedRider.riderName ?? "Rider"}{selectedRider.bib ? ` · #${selectedRider.bib}` : ""}</p>
@@ -1376,20 +1393,48 @@ export default function LiveTrackingMapInner({
             <Button variant="outline" size="icon" title="Copy rider location" aria-label="Copy rider location" onClick={() => { void navigator.clipboard.writeText(navUrl(selectedRider.lat, selectedRider.lng)).then(() => toast.success("Location copied")).catch(() => toast.error("Couldn't copy location")); }}><Copy /></Button>
             <Button variant="outline" size="icon" title="Share rider location" aria-label="Share rider location" onClick={async () => { const url = navUrl(selectedRider.lat, selectedRider.lng); try { if (navigator.share) await navigator.share({ title: selectedRider.riderName ?? "Rider location", url }); else { await navigator.clipboard.writeText(url); toast.success("Location link copied"); } } catch { /* cancelled */ } }}><Share2 /></Button>
             <Button variant="outline" size="sm" onClick={() => focusRider(selectedRider)}><Crosshair />Locate rider</Button>
-            {selectedRider.sos && onResolveRiderSos ? <Button variant="destructive" size="sm" disabled={resolving} onClick={async () => { if (!window.confirm(`Mark the SOS for ${selectedRider.riderName ?? "this rider"} as resolved?`)) return; setResolving(true); try { await onResolveRiderSos(selectedRider.userId); toast.success("SOS resolved"); } catch { toast.error("Couldn't resolve SOS — try again"); } finally { setResolving(false); } }}><Check />{resolving ? "Resolving…" : "Mark resolved"}</Button> : null}
+            {selectedRider.sos && onResolveRiderSos ? <Button variant="destructive" size="sm" disabled={resolving} onClick={() => void resolveSos(selectedRider)}><Check />{resolving ? "Resolving…" : "Mark sorted"}</Button> : null}
             {selectedRider.sos && fieldToken ? <span className="self-center text-xs text-muted-foreground">Crew sign-in required to resolve SOS</span> : null}
           </div>
         </div>
-      ) : null}
+      ) : null;
+
+  const sosRiders = crewTools ? allRiders.filter((r) => r.sos) : [];
+  const sosPopups = sosRiders.length > 0 ? (
+    <div className="pointer-events-none absolute inset-x-2 top-2 z-[1001] max-h-[45%] space-y-1.5 overflow-y-auto">
+      {sosRiders.map((r) => (
+        <div key={r.userId} className="pointer-events-auto flex items-center gap-2 rounded-xl border-2 border-destructive bg-card p-2 shadow-xl">
+          <button type="button" onClick={() => { setSelectedId(r.userId); focusRider(r); }} className="min-w-0 flex-1 text-left">
+            <p className="truncate text-xs font-black text-destructive">SOS · {r.sosReason ?? "Help"}</p>
+            <p className="truncate text-sm font-bold text-ink">{r.riderName ?? "Rider"}{r.bib ? ` · #${r.bib}` : ""}</p>
+            <p className="truncate text-[11px] text-muted-foreground">{formatAgo(r.recordedAt)}{viewerLoc ? ` · ${fmtDist(metres(viewerLoc, r))} from you` : ""}</p>
+          </button>
+          <Button asChild size="sm"><a href={navUrl(r.lat, r.lng)} target="_blank" rel="noopener noreferrer"><Navigation />Go</a></Button>
+          {onResolveRiderSos ? <Button variant="outline" size="sm" disabled={resolving} onClick={() => void resolveSos(r)}><Check />Sorted</Button> : null}
+        </div>
+      ))}
+    </div>
+  ) : null;
+
+  const tree = (
+    <div
+      className={
+        fullscreen
+          ? "fixed inset-0 z-[1000] flex flex-col bg-background"
+          : "relative space-y-2"
+      }
+    >
+      {renderHeader()}
       <div className={fullscreen ? "relative min-h-0 flex-1" : "relative"}>
         <div
           ref={hostRef}
           className={`${fullscreen ? "h-full" : riderMode ? "h-[52dvh] min-h-80 rounded-2xl ring-1 ring-border" : "h-96 rounded-2xl ring-1 ring-border"} w-full overflow-hidden`}
         />
-
+        {sosPopups}
+        {fullscreen && crewTools && selectedRider ? riderCard : null}
       </div>
 
-      {fullscreen ? (
+      {fullscreen && fsTools ? (
         <div
           className={`flex flex-col border-t border-border bg-card pb-[env(safe-area-inset-bottom)] shadow-[0_-8px_24px_rgba(0,0,0,.12)] ${
             sheetTall ? "h-[60dvh]" : "h-[34dvh]"
