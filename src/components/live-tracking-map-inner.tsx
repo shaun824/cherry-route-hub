@@ -461,6 +461,12 @@ export default function LiveTrackingMapInner({
       attribution: "&copy; OpenStreetMap contributors",
       maxZoom: 19,
     }).addTo(map);
+    // Crew use this outdoors in bright sun — lift the base map so routes and
+    // markers stay readable on a dim phone screen.
+    if (isCrew) {
+      const tilePane = map.getPane("tilePane");
+      if (tilePane) tilePane.style.filter = "brightness(1.18) saturate(1.2) contrast(1.05)";
+    }
 
     // Cluster ordinary riders so 300 dots stay readable; SOS pins are added to
     // the map directly so they can never be swallowed by a cluster bubble.
