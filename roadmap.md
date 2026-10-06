@@ -1,5 +1,8 @@
 # Roadmap
 
+- [x] Move crew map controls and selected-rider actions above the map; add Google Maps and signed-in SOS resolution.
+- [x] Verify the clean map and rider actions in signed-in race control and the unsigned medic view; resolution confirmation tested without changing a live alert.
+
 - [x] Make the PE Plett route map the main Routes experience.
 - [x] Add larger smooth zoom controls and a full-route recenter action.
 - [x] Keep every configured route point visible on the interactive map.

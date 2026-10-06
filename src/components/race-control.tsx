@@ -333,6 +333,12 @@ export function RaceControlPanel({
             isCrew
             focusUserId={focusRider}
             onOffCourse={setOffCourse}
+            onResolveRiderSos={async (userId) => {
+              const matching = open.filter((a) => a.userId === userId);
+              if (matching.length === 0) throw new Error("No open SOS found. Refresh and try again.");
+              await Promise.all(matching.map((a) => resolve({ data: { id: a.id } })));
+              refreshAll();
+            }}
           />
         ) : (
           <TriageList riders={riders} alerts={open} onFocus={(u) => { setFocusRider(u); setView("map"); }} />
