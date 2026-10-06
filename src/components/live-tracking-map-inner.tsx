@@ -305,7 +305,7 @@ export default function LiveTrackingMapInner({
   const [sheetTall, setSheetTall] = useState(false);
   const [routesOpen, setRoutesOpen] = useState(false);
   const [baseLayer, setBaseLayer] = useState("Street");
-  // (lines kept)
+  const baseLayersRef = useRef<Record<string, L.TileLayer>>({});
   const [resolving, setResolving] = useState(false);
   const resolveSos = async (r: { userId: string; riderName?: string | null }) => {
     if (!onResolveRiderSos) return;
@@ -376,7 +376,7 @@ export default function LiveTrackingMapInner({
   useEffect(() => {
     const t = window.setTimeout(() => mapRef.current?.invalidateSize(), 60);
     return () => window.clearTimeout(t);
-  }, [fullscreen, sheetTall]);
+  }, [fullscreen, sheetTall, fsTools]);
   const [search, setSearch] = useState("");
   const [showFinished, setShowFinished] = useState(false);
   const [viewerLoc, setViewerLoc] = useState<{ lat: number; lng: number } | null>(null);
