@@ -11,7 +11,9 @@ import "leaflet.markercluster";
 import "leaflet.markercluster/dist/MarkerCluster.css";
 import { useQuery } from "@tanstack/react-query";
 import { fetchLiveTracking, type LiveRiderPosition } from "@/lib/tracking.functions";
-import { Crosshair, Layers, LocateFixed, MapPin, Maximize2, Navigation, Route as RouteIcon, Search, Star, X } from "lucide-react";
+import { Crosshair, Layers, LocateFixed, MapPin, Maximize2, Navigation, Copy, Share2, Check, Route as RouteIcon, Search, Star, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 import type { CustomMarker } from "@/lib/mock-data";
 import {
   fetchTeamLocationsCrew,
@@ -137,9 +139,6 @@ function bearingText(lat1: number, lng1: number, lat2: number, lng2: number): st
 }
 
 function navUrl(lat: number, lng: number): string {
-  const isIOS =
-    typeof navigator !== "undefined" && /iPad|iPhone|iPod/.test(navigator.userAgent);
-  if (isIOS) return `maps://?daddr=${lat},${lng}`;
   return `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`;
 }
 
@@ -258,9 +257,11 @@ export default function LiveTrackingMapInner({
   onFocusedProgress,
   currentPosition = null,
   fieldToken,
+  onResolveRiderSos,
 }: {
   /** No-sign-in field link token (medics/marshals). */
   fieldToken?: string;
+  onResolveRiderSos?: (userId: string) => Promise<void>;
   eventId: string;
   isCrew?: boolean;
   /** Race control can jump the map to a specific rider. */
@@ -302,6 +303,9 @@ export default function LiveTrackingMapInner({
   const [fullscreen, setFullscreen] = useState(false);
   const [sheetTall, setSheetTall] = useState(false);
   const [routesOpen, setRoutesOpen] = useState(false);
+  const [baseLayer, setBaseLayer] = useState("Street");
+  const baseLayersRef = useRef<Record<string, L.TileLayer>>({});
+  const [resolving, setResolving] = useState(false);
   const [tab, setTab] = useState<"all" | "fav" | "finished" | "points">("all");
   const [favs, setFavs] = useState<string[]>([]);
   useEffect(() => {
@@ -480,12 +484,7 @@ export default function LiveTrackingMapInner({
         maxZoom: 19,
       },
     );
-    L.control
-      .layers({ Street: streetLayer, Satellite: satelliteLayer }, undefined, {
-        position: "topright",
-        collapsed: true,
-      })
-      .addTo(map);
+    baseLayersRef.current = { Street: streetLayer, Satellite: satelliteLayer };
     // Crew use this outdoors in bright sun — lift the base map so routes and
     // markers stay readable on a dim phone screen.
     if (isCrew) {
@@ -1020,51 +1019,26 @@ export default function LiveTrackingMapInner({
           existing.remove();
           cluster.addLayer(existing);
         }
-        if (selectedId === r.userId) {
+        if (!crewTools && selectedId === r.userId) {
           existing.setPopupContent(popupContent(r, isCrew, viewerLoc, progressText));
-          existing.openPopup();
         }
       } else {
-        const m = L.marker([r.lat, r.lng], { icon: markerIcon(signal, r.sos, favs.includes(r.userId)) }).bindPopup(
-          popupContent(r, isCrew, viewerLoc, progressText),
-        );
+        const m = L.marker([r.lat, r.lng], { icon: markerIcon(signal, r.sos, favs.includes(r.userId)) });
+        if (crewTools) {
+          m.on("click", () => { setSelectedId(r.userId); setFollowPaused(true); });
+          m.bindTooltip(r.riderName || r.bib || "Rider", { direction: "top" });
+        } else {
+          m.bindPopup(popupContent(r, isCrew, viewerLoc, progressText));
+          m.on("popupopen", () => setSelectedId(r.userId));
+          m.on("popupclose", () => setSelectedId((id) => id === r.userId ? null : id));
+        }
         if (r.sos) m.addTo(map);
         else cluster.addLayer(m);
-        m.on("popupopen", () => {
-          setSelectedId(r.userId);
-          const el = m.getPopup()?.getElement();
-          if (!el) return;
-          const copyBtn = el.querySelector('[data-action="copy"]') as HTMLButtonElement | null;
-          const shareBtn = el.querySelector('[data-action="share"]') as HTMLButtonElement | null;
-          copyBtn?.addEventListener("click", () => {
-            const text = `${r.lat.toFixed(6)}, ${r.lng.toFixed(6)}`;
-            navigator.clipboard?.writeText(text).catch(() => {});
-            copyBtn.textContent = "Copied";
-            window.setTimeout(() => (copyBtn.textContent = "Copy"), 1500);
-          });
-          shareBtn?.addEventListener("click", async () => {
-            const text = `Rider ${r.riderName || r.bib || ""} at ${r.lat.toFixed(6)}, ${r.lng.toFixed(6)}`;
-            if (navigator.share) {
-              try {
-                await navigator.share({ title: "Rider location", text });
-              } catch {
-                // user cancelled
-              }
-            } else {
-              navigator.clipboard?.writeText(text).catch(() => {});
-              shareBtn.textContent = "Copied";
-              window.setTimeout(() => (shareBtn.textContent = "Share"), 1500);
-            }
-          });
-        });
-        m.on("popupclose", () => {
-          setSelectedId((id) => (id === r.userId ? null : id));
-        });
         markersRef.current.set(r.userId, m);
       }
 
       // Faint accuracy halo so viewers can tell a sharp fix from a rough one.
-      if (r.accuracyM != null && r.accuracyM > 25) {
+      if ((!crewTools || selectedId === r.userId) && r.accuracyM != null && r.accuracyM > 25) {
         const circle = circlesRef.current.get(r.userId);
         if (circle) circle.setLatLng([r.lat, r.lng]).setRadius(r.accuracyM);
         else
@@ -1125,7 +1099,7 @@ export default function LiveTrackingMapInner({
       guideLineRef.current.remove();
       guideLineRef.current = null;
     }
-    if (!isCrew || !viewerLoc || !selectedId) return;
+    if (crewTools || !isCrew || !viewerLoc || !selectedId) return;
     const rider = riders.find((r) => r.userId === selectedId);
     if (!rider) return;
     guideLineRef.current = L.polyline(
@@ -1144,6 +1118,7 @@ export default function LiveTrackingMapInner({
   }, [isCrew, viewerLoc, selectedId, riders]);
 
   const focusRider = (r: LiveRiderPosition) => {
+    setSelectedId(r.userId);
     startFollowing(r.userId);
     const map = mapRef.current;
     if (map) {
@@ -1177,6 +1152,7 @@ export default function LiveTrackingMapInner({
   };
 
   const legendRoutes = matchedRoutes;
+  const selectedRider = allRiders.find((r) => r.userId === selectedId);
 
   const tree = (
     <div
@@ -1256,93 +1232,100 @@ export default function LiveTrackingMapInner({
         </div>
       ) : null}
 
-      <div className={fullscreen ? "relative min-h-0 flex-1" : "relative"}>
-        <div
-          ref={hostRef}
-          className={`${fullscreen ? "h-full" : riderMode ? "h-[52dvh] min-h-80 rounded-2xl ring-1 ring-border" : "h-96 rounded-2xl ring-1 ring-border"} w-full overflow-hidden`}
-        />
-        <div className={`absolute right-3 z-[600] flex flex-col items-end gap-2 ${riderMode && !fullscreen ? "top-24" : "top-3"}`}>
+        <div className="flex shrink-0 flex-wrap items-center gap-2 border-b border-border bg-background p-2" aria-label="Map controls">
+          <label className="flex items-center gap-2 text-xs font-semibold text-ink">
+            Map
+            <select aria-label="Map view" value={baseLayer} onChange={(e) => {
+              const map = mapRef.current;
+              if (!map) return;
+              Object.values(baseLayersRef.current).forEach((layer) => map.removeLayer(layer));
+              baseLayersRef.current[e.target.value]?.addTo(map);
+              setBaseLayer(e.target.value);
+            }} className="h-8 rounded-md border border-border bg-card px-2 text-ink">
+              <option>Street</option><option>Satellite</option>
+            </select>
+          </label>
           {!fullscreen ? (
-            <button
+            <Button variant="outline" size="sm"
               type="button"
               onClick={openFullscreen}
-              className="inline-flex items-center gap-1 rounded-full bg-card px-3 py-2 text-xs font-bold text-ink shadow-lg ring-1 ring-border"
+              className="inline-flex items-center gap-1 rounded-md bg-card px-3 py-2 text-xs font-bold text-ink ring-1 ring-border"
             >
               <Maximize2 className="h-3.5 w-3.5" /> Full screen
-            </button>
+            </Button>
           ) : null}
           {candidates.length > 0 ? (
-            <button
+            <Button variant="outline" size="sm"
               type="button"
               onClick={() => setRoutesOpen((o) => !o)}
-              className="inline-flex items-center gap-1 rounded-full bg-card px-3 py-2 text-xs font-bold text-ink shadow-lg ring-1 ring-border"
+              className="inline-flex items-center gap-1 rounded-md bg-card px-3 py-2 text-xs font-bold text-ink ring-1 ring-border"
             >
               <Layers className="h-3.5 w-3.5 text-cherry" /> Routes
-            </button>
+            </Button>
           ) : null}
           {crewTools ? (
-            <button
+            <Button variant="outline" size="sm"
               type="button"
               onClick={centreOnMe}
-              className="inline-flex items-center gap-1 rounded-full bg-card px-3 py-2 text-xs font-bold text-ink shadow-lg ring-1 ring-border"
+              className="inline-flex items-center gap-1 rounded-md bg-card px-3 py-2 text-xs font-bold text-ink ring-1 ring-border"
             >
-              <LocateFixed className="h-3.5 w-3.5 text-sky-600" /> {viewerLoc ? "Centre on me" : "Show my location"}
-            </button>
+              <LocateFixed className="h-3.5 w-3.5 text-primary" /> {viewerLoc ? "Centre on me" : "Show my location"}
+            </Button>
           ) : null}
           {crewTools ? (
-            <button
+            <Button variant="outline" size="sm"
               type="button"
               onClick={toggleSharing}
               disabled={!sharing && viewerLoc != null && !nearCourse}
-              className={`inline-flex items-center gap-1 rounded-full px-3 py-2 text-xs font-bold shadow-lg ring-1 ring-border disabled:opacity-60 ${sharing && nearCourse ? "bg-violet-600 text-white" : "bg-card text-ink"}`}
+              className={`inline-flex items-center gap-1 rounded-md px-3 py-2 text-xs font-bold ring-1 ring-border disabled:opacity-60 ${sharing && nearCourse ? "bg-primary text-primary-foreground" : "bg-card text-ink"}`}
             >
               <MapPin className="h-3.5 w-3.5" />
               {viewerLoc && !nearCourse
                 ? sharing ? "Off site · paused" : "Off site · sharing locked"
                 : !sharing ? "Share with team" : nearCourse ? "Sharing with team" : "Sharing paused"}
-            </button>
+            </Button>
           ) : null}
           {crewTools && viewerLoc && !nearCourse ? (
-            <p className="max-w-[14rem] rounded-xl bg-card px-3 py-2 text-[11px] text-ink shadow-lg ring-1 ring-border">
+            <p className="max-w-[14rem] rounded-xl bg-card px-3 py-2 text-[11px] text-ink ring-1 ring-border">
               {distToCourse != null ? `You're ${fmtDist(distToCourse)} from the routes. ` : "Routes not loaded yet. "}
               Team sharing unlocks within 2 km of a route — nothing is sent until then.
             </p>
           ) : null}
           {crewTools && locError ? (
-            <p className="max-w-[14rem] rounded-xl bg-card px-3 py-2 text-[11px] text-ink shadow-lg ring-1 ring-border">
+            <p className="max-w-[14rem] rounded-xl bg-card px-3 py-2 text-[11px] text-ink ring-1 ring-border">
               {locError}
             </p>
           ) : null}
           {follow && followPaused ? (
-            <button
+            <Button variant="outline" size="sm"
               type="button"
               onClick={() => setFollowPaused(false)}
-              className="inline-flex items-center gap-1 rounded-full bg-cherry px-3 py-2 text-xs font-bold text-white shadow-lg"
+              className="inline-flex items-center gap-1 rounded-md bg-cherry px-3 py-2 text-xs font-bold text-primary-foreground shadow-lg"
             >
               <Crosshair className="h-3.5 w-3.5" /> Re-centre
-            </button>
+            </Button>
           ) : null}
           {routesOpen ? (
-            <div className="w-64 max-w-[80vw] rounded-2xl bg-card p-3 text-xs shadow-xl ring-1 ring-border">
+            <div className="w-full rounded-lg bg-card p-3 text-xs ring-1 ring-border">
               <div className="mb-2 flex items-center justify-between">
                 <p className="font-bold text-ink">Route overlays</p>
-                <button type="button" onClick={() => setRoutesOpen(false)} aria-label="Close routes">
+                <Button variant="outline" size="sm" type="button" onClick={() => setRoutesOpen(false)} aria-label="Close routes">
                   <X className="h-3.5 w-3.5 text-muted-foreground" />
-                </button>
+                </Button>
               </div>
               {dayOptions.length > 1 ? (
                 <div className="mb-2 flex flex-wrap gap-1">
                   {dayOptions.map((d) => (
-                    <button
+                    <Button variant="outline" size="sm"
                       key={d.id}
                       type="button"
                       onClick={() => setPickedDay(d.id)}
-                      className={`rounded-full px-2.5 py-1 font-semibold ring-1 ${
-                        d.id === activeDayId ? "bg-cherry text-white ring-cherry" : "bg-card text-ink ring-border"
+                      className={`rounded-md px-2.5 py-1 font-semibold ring-1 ${
+                        d.id === activeDayId ? "bg-primary text-primary-foreground ring-cherry" : "bg-card text-ink ring-border"
                       }`}
                     >
                       {d.label}
-                    </button>
+                    </Button>
                   ))}
                 </div>
               ) : null}
@@ -1350,35 +1333,60 @@ export default function LiveTrackingMapInner({
                 {dayCandidates.map((c) => {
                   const on = matchedIds.includes(c.route.id);
                   return (
-                    <button
+                    <Button variant="outline" size="sm"
                       key={c.route.id}
                       type="button"
                       onClick={() => toggleRoute(c.route.id)}
                       className={`flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left ${on ? "bg-accent" : ""}`}
                     >
                       <span
-                        className={`grid h-4 w-4 place-items-center rounded border ${on ? "border-cherry bg-cherry text-white" : "border-border"}`}
+                        className={`grid h-4 w-4 place-items-center rounded border ${on ? "border-cherry bg-primary text-primary-foreground" : "border-border"}`}
                       >
                         {on ? "✓" : ""}
                       </span>
-                      <span className="inline-block h-2 w-5 rounded-full" style={{ backgroundColor: c.color }} />
+                      <span className="inline-block h-2 w-5 rounded-md" style={{ backgroundColor: c.color }} />
                       <span className="font-medium text-ink">{c.route.name}</span>
-                    </button>
+                    </Button>
                   );
                 })}
               </div>
               {manualRoutes ? (
-                <button
+                <Button variant="outline" size="sm"
                   type="button"
                   onClick={() => saveManual(null)}
-                  className="mt-2 w-full rounded-full bg-secondary px-3 py-1.5 font-semibold text-secondary-foreground"
+                  className="mt-2 w-full rounded-md bg-secondary px-3 py-1.5 font-semibold text-secondary-foreground"
                 >
                   Reset to rider's route
-                </button>
+                </Button>
               ) : null}
             </div>
           ) : null}
         </div>
+      {crewTools && selectedRider ? (
+        <div className="shrink-0 border-b border-border bg-card px-3 py-2" aria-label="Selected rider">
+          <div className="flex items-start gap-2">
+            <div className="min-w-0 flex-1">
+              <p className="break-words text-sm font-bold text-ink">{selectedRider.sos ? <span className="mr-2 text-destructive">SOS · {selectedRider.sosReason ?? "Help"}</span> : null}{selectedRider.riderName ?? "Rider"}{selectedRider.bib ? ` · #${selectedRider.bib}` : ""}</p>
+              <p className="text-xs text-muted-foreground">{[selectedRider.category, `${signalOf(selectedRider.recordedAt)} · ${formatAgo(selectedRider.recordedAt)}`, selectedRider.batteryPct != null ? `Battery ${selectedRider.batteryPct}%` : null, viewerLoc ? `${fmtDist(metres(viewerLoc, selectedRider))} from you` : null].filter(Boolean).join(" · ")}</p>
+            </div>
+            <Button variant="ghost" size="icon" aria-label="Close rider details" onClick={() => { setSelectedId(null); startFollowing(null); }}><X /></Button>
+          </div>
+          <div className="mt-2 flex flex-wrap gap-2">
+            <Button asChild size="sm"><a href={navUrl(selectedRider.lat, selectedRider.lng)} target="_blank" rel="noopener noreferrer"><Navigation />Google Maps</a></Button>
+            <Button variant="outline" size="icon" title="Copy rider location" aria-label="Copy rider location" onClick={() => { void navigator.clipboard.writeText(navUrl(selectedRider.lat, selectedRider.lng)).then(() => toast.success("Location copied")).catch(() => toast.error("Couldn't copy location")); }}><Copy /></Button>
+            <Button variant="outline" size="icon" title="Share rider location" aria-label="Share rider location" onClick={async () => { const url = navUrl(selectedRider.lat, selectedRider.lng); try { if (navigator.share) await navigator.share({ title: selectedRider.riderName ?? "Rider location", url }); else { await navigator.clipboard.writeText(url); toast.success("Location link copied"); } } catch { /* cancelled */ } }}><Share2 /></Button>
+            <Button variant="outline" size="sm" onClick={() => focusRider(selectedRider)}><Crosshair />Locate rider</Button>
+            {selectedRider.sos && onResolveRiderSos ? <Button variant="destructive" size="sm" disabled={resolving} onClick={async () => { if (!window.confirm(`Mark the SOS for ${selectedRider.riderName ?? "this rider"} as resolved?`)) return; setResolving(true); try { await onResolveRiderSos(selectedRider.userId); toast.success("SOS resolved"); } catch { toast.error("Couldn't resolve SOS — try again"); } finally { setResolving(false); } }}><Check />{resolving ? "Resolving…" : "Mark resolved"}</Button> : null}
+            {selectedRider.sos && fieldToken ? <span className="self-center text-xs text-muted-foreground">Crew sign-in required to resolve SOS</span> : null}
+          </div>
+        </div>
+      ) : null}
+      <div className={fullscreen ? "relative min-h-0 flex-1" : "relative"}>
+        <div
+          ref={hostRef}
+          className={`${fullscreen ? "h-full" : riderMode ? "h-[52dvh] min-h-80 rounded-2xl ring-1 ring-border" : "h-96 rounded-2xl ring-1 ring-border"} w-full overflow-hidden`}
+        />
+
       </div>
 
       {fullscreen ? (
