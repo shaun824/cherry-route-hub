@@ -424,7 +424,18 @@ export function TrackerPanel({
   // Periodic flush + flush when the app comes back to the foreground / online.
   useEffect(() => {
     if (!tracking) return;
-    const interval = window.setInterval(() => void flush(), FLUSH_INTERVAL_MS);
+    const interval = window.setInterval(() => {
+      // Phones only report GPS when the rider moves. A stopped rider (crash,
+      // mechanical) must still check in, so ask for a fix after 30s of silence.
+      if (Date.now() - lastPointAtRef.current > 30_000 && "geolocation" in navigator) {
+        navigator.geolocation.getCurrentPosition(addPoint, () => {}, {
+          enableHighAccuracy: true,
+          maximumAge: 10_000,
+          timeout: 15_000,
+        });
+      }
+      void flush();
+    }, FLUSH_INTERVAL_MS);
     const onOnline = () => void flush();
     const onVisible = () => {
       if (document.visibilityState === "visible") void flush();
