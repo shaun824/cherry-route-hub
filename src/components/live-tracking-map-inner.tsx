@@ -657,8 +657,8 @@ export default function LiveTrackingMapInner({
         for (const ll of latlngs) bounds.push(ll);
         return L.polyline(latlngs, {
           color: c.color,
-          weight: routeUnknown ? 3 : 5,
-          opacity: routeUnknown ? 0.45 : 0.85,
+          weight: routeUnknown ? 3 : isCrew ? 6 : 5,
+          opacity: routeUnknown ? 0.45 : isCrew ? 1 : 0.85,
         })
           .addTo(map)
           .bindTooltip(`${c.route.name} · ${c.dayLabel}`, { sticky: true });
