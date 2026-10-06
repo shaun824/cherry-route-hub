@@ -10,6 +10,7 @@
 <!-- LOVABLE:END -->
 
 - Village section names use `VillageZone.showLabel` and default to visible when unset, preserving existing maps.
+- Crew live-map controls and selected-rider actions render outside the map; SOS resolution uses the signed-in race-control callback so field links remain read-only.
 - Supplier promo ROI is an engagement estimate from outbound clicks, never a confirmed redemption or sale.
 - PE Plett's Routes tab reuses generic route data but presents a PE Plett-only map-first journey and vector profile, keeping other events unchanged.
 
