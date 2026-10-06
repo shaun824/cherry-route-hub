@@ -89,6 +89,7 @@ import { Route as EmbedVillageEventIdRouteImport } from './routes/embed.village.
 import { Route as EventsEventIdIndexRouteImport } from './routes/events.$eventId.index'
 import { Route as EventsEventIdEnterRouteImport } from './routes/events.$eventId.enter'
 import { Route as EventsEventIdMapRouteImport } from './routes/events.$eventId.map'
+import { Route as FieldTrackingEventIdRouteImport } from './routes/field.tracking.$eventId'
 import { Route as MyEventsEventIdReportRouteImport } from './routes/my-events_.$eventId_.report'
 import { Route as AdminLoyaltyRiderEntrantIdRouteImport } from './routes/admin.loyalty.rider.$entrantId'
 import { Route as ApiPublicHooksContentAuditRouteImport } from './routes/api/public/hooks/content-audit'
@@ -522,6 +523,11 @@ const EventsEventIdMapRoute = EventsEventIdMapRouteImport.update({
   path: '/map',
   getParentRoute: () => EventsEventIdRoute,
 } as any)
+const FieldTrackingEventIdRoute = FieldTrackingEventIdRouteImport.update({
+  id: '/field/tracking/$eventId',
+  path: '/field/tracking/$eventId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const MyEventsEventIdReportRoute = MyEventsEventIdReportRouteImport.update({
   id: '/my-events_/$eventId_/report',
   path: '/my-events/$eventId/report',
@@ -758,6 +764,7 @@ export interface FileRoutesByFullPath {
   '/embed/village/$eventId': typeof EmbedVillageEventIdRoute
   '/events/$eventId/enter': typeof EventsEventIdEnterRoute
   '/events/$eventId/map': typeof EventsEventIdMapRoute
+  '/field/tracking/$eventId': typeof FieldTrackingEventIdRoute
   '/my-events/$eventId/report': typeof MyEventsEventIdReportRoute
   '/admin/event-info/': typeof AdminEventInfoIndexRoute
   '/admin/village/': typeof AdminVillageIndexRoute
@@ -864,6 +871,7 @@ export interface FileRoutesByTo {
   '/embed/village/$eventId': typeof EmbedVillageEventIdRoute
   '/events/$eventId/enter': typeof EventsEventIdEnterRoute
   '/events/$eventId/map': typeof EventsEventIdMapRoute
+  '/field/tracking/$eventId': typeof FieldTrackingEventIdRoute
   '/my-events/$eventId/report': typeof MyEventsEventIdReportRoute
   '/admin/event-info': typeof AdminEventInfoIndexRoute
   '/admin/village': typeof AdminVillageIndexRoute
@@ -975,6 +983,7 @@ export interface FileRoutesById {
   '/embed/village/$eventId': typeof EmbedVillageEventIdRoute
   '/events/$eventId/enter': typeof EventsEventIdEnterRoute
   '/events/$eventId/map': typeof EventsEventIdMapRoute
+  '/field/tracking/$eventId': typeof FieldTrackingEventIdRoute
   '/my-events_/$eventId_/report': typeof MyEventsEventIdReportRoute
   '/admin/event-info/': typeof AdminEventInfoIndexRoute
   '/admin/village/': typeof AdminVillageIndexRoute
@@ -1087,6 +1096,7 @@ export interface FileRouteTypes {
     | '/embed/village/$eventId'
     | '/events/$eventId/enter'
     | '/events/$eventId/map'
+    | '/field/tracking/$eventId'
     | '/my-events/$eventId/report'
     | '/admin/event-info/'
     | '/admin/village/'
@@ -1193,6 +1203,7 @@ export interface FileRouteTypes {
     | '/embed/village/$eventId'
     | '/events/$eventId/enter'
     | '/events/$eventId/map'
+    | '/field/tracking/$eventId'
     | '/my-events/$eventId/report'
     | '/admin/event-info'
     | '/admin/village'
@@ -1303,6 +1314,7 @@ export interface FileRouteTypes {
     | '/embed/village/$eventId'
     | '/events/$eventId/enter'
     | '/events/$eventId/map'
+    | '/field/tracking/$eventId'
     | '/my-events_/$eventId_/report'
     | '/admin/event-info/'
     | '/admin/village/'
@@ -1373,6 +1385,7 @@ export interface RootRouteChildren {
   CrewLearnCourseIdRoute: typeof CrewLearnCourseIdRoute
   CrewLearnCalendarRoute: typeof CrewLearnCalendarRoute
   EmbedVillageEventIdRoute: typeof EmbedVillageEventIdRoute
+  FieldTrackingEventIdRoute: typeof FieldTrackingEventIdRoute
   MyEventsEventIdReportRoute: typeof MyEventsEventIdReportRoute
   CrewLearnIndexRoute: typeof CrewLearnIndexRoute
   ApiPublicHooksContentAuditRoute: typeof ApiPublicHooksContentAuditRoute
@@ -1965,6 +1978,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EventsEventIdMapRouteImport
       parentRoute: typeof EventsEventIdRoute
     }
+    '/field/tracking/$eventId': {
+      id: '/field/tracking/$eventId'
+      path: '/field/tracking/$eventId'
+      fullPath: '/field/tracking/$eventId'
+      preLoaderRoute: typeof FieldTrackingEventIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/my-events_/$eventId_/report': {
       id: '/my-events_/$eventId_/report'
       path: '/my-events/$eventId/report'
@@ -2339,6 +2359,7 @@ const rootRouteChildren: RootRouteChildren = {
   CrewLearnCourseIdRoute: CrewLearnCourseIdRoute,
   CrewLearnCalendarRoute: CrewLearnCalendarRoute,
   EmbedVillageEventIdRoute: EmbedVillageEventIdRoute,
+  FieldTrackingEventIdRoute: FieldTrackingEventIdRoute,
   MyEventsEventIdReportRoute: MyEventsEventIdReportRoute,
   CrewLearnIndexRoute: CrewLearnIndexRoute,
   ApiPublicHooksContentAuditRoute: ApiPublicHooksContentAuditRoute,
