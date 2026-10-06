@@ -54,6 +54,7 @@ import { Route as AdminSignInsRouteImport } from './routes/admin.sign-ins'
 import { Route as AdminSocialRouteImport } from './routes/admin.social'
 import { Route as AdminSponsorsRouteImport } from './routes/admin.sponsors'
 import { Route as AdminTrackingRouteImport } from './routes/admin.tracking'
+import { Route as AskEventIdRouteImport } from './routes/ask.$eventId'
 import { Route as CrewIndexRouteImport } from './routes/crew.index'
 import { Route as CrewBuildRouteImport } from './routes/crew.build'
 import { Route as CrewInventoryRouteImport } from './routes/crew.inventory'
@@ -345,6 +346,11 @@ const AdminTrackingRoute = AdminTrackingRouteImport.update({
   id: '/tracking',
   path: '/tracking',
   getParentRoute: () => AdminRoute,
+} as any)
+const AskEventIdRoute = AskEventIdRouteImport.update({
+  id: '/ask/$eventId',
+  path: '/ask/$eventId',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const CrewIndexRoute = CrewIndexRouteImport.update({
   id: '/crew/',
@@ -732,6 +738,7 @@ export interface FileRoutesByFullPath {
   '/admin/social': typeof AdminSocialRoute
   '/admin/sponsors': typeof AdminSponsorsRoute
   '/admin/tracking': typeof AdminTrackingRoute
+  '/ask/$eventId': typeof AskEventIdRoute
   '/crew/build': typeof CrewBuildRoute
   '/crew/inventory': typeof CrewInventoryRoute
   '/crew/login': typeof CrewLoginRoute
@@ -840,6 +847,7 @@ export interface FileRoutesByTo {
   '/admin/social': typeof AdminSocialRoute
   '/admin/sponsors': typeof AdminSponsorsRoute
   '/admin/tracking': typeof AdminTrackingRoute
+  '/ask/$eventId': typeof AskEventIdRoute
   '/crew/build': typeof CrewBuildRoute
   '/crew/inventory': typeof CrewInventoryRoute
   '/crew/login': typeof CrewLoginRoute
@@ -951,6 +959,7 @@ export interface FileRoutesById {
   '/admin/social': typeof AdminSocialRoute
   '/admin/sponsors': typeof AdminSponsorsRoute
   '/admin/tracking': typeof AdminTrackingRoute
+  '/ask/$eventId': typeof AskEventIdRoute
   '/crew/build': typeof CrewBuildRoute
   '/crew/inventory': typeof CrewInventoryRoute
   '/crew/login': typeof CrewLoginRoute
@@ -1064,6 +1073,7 @@ export interface FileRouteTypes {
     | '/admin/social'
     | '/admin/sponsors'
     | '/admin/tracking'
+    | '/ask/$eventId'
     | '/crew/build'
     | '/crew/inventory'
     | '/crew/login'
@@ -1172,6 +1182,7 @@ export interface FileRouteTypes {
     | '/admin/social'
     | '/admin/sponsors'
     | '/admin/tracking'
+    | '/ask/$eventId'
     | '/crew/build'
     | '/crew/inventory'
     | '/crew/login'
@@ -1282,6 +1293,7 @@ export interface FileRouteTypes {
     | '/admin/social'
     | '/admin/sponsors'
     | '/admin/tracking'
+    | '/ask/$eventId'
     | '/crew/build'
     | '/crew/inventory'
     | '/crew/login'
@@ -1364,6 +1376,7 @@ export interface RootRouteChildren {
   SpectateRoute: typeof SpectateRouteWithChildren
   Char91DotmcpChar93ListToolsRoute: typeof Char91DotmcpChar93ListToolsRoute
   Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
+  AskEventIdRoute: typeof AskEventIdRoute
   CrewBuildRoute: typeof CrewBuildRoute
   CrewInventoryRoute: typeof CrewInventoryRoute
   CrewLoginRoute: typeof CrewLoginRoute
@@ -1732,6 +1745,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/tracking'
       preLoaderRoute: typeof AdminTrackingRouteImport
       parentRoute: typeof AdminRoute
+    }
+    '/ask/$eventId': {
+      id: '/ask/$eventId'
+      path: '/ask/$eventId'
+      fullPath: '/ask/$eventId'
+      preLoaderRoute: typeof AskEventIdRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/crew/': {
       id: '/crew/'
@@ -2338,6 +2358,7 @@ const rootRouteChildren: RootRouteChildren = {
   Char91DotmcpChar93ListToolsRoute: Char91DotmcpChar93ListToolsRoute,
   Char91DotwellKnownChar93OauthProtectedResourceRoute:
     Char91DotwellKnownChar93OauthProtectedResourceRoute,
+  AskEventIdRoute: AskEventIdRoute,
   CrewBuildRoute: CrewBuildRoute,
   CrewInventoryRoute: CrewInventoryRoute,
   CrewLoginRoute: CrewLoginRoute,
