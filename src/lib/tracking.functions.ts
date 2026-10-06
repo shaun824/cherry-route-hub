@@ -168,6 +168,8 @@ export const sendTrackingSos = createServerFn({ method: "POST" })
         reason: data.reason ?? null,
         note: data.message ?? null,
         message: data.message ?? null,
+        // Column default is "open", which race control never treats as live.
+        status: "active",
       })
       .select("id")
       .single();
