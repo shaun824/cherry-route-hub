@@ -675,7 +675,7 @@ export default function LiveTrackingMapInner({
       for (const [, polys] of routeLayersRef.current) polys.forEach((p) => p.remove());
       routeLayersRef.current.clear();
     };
-  }, [matchedRoutes, routeUnknown]);
+  }, [matchedRoutes, routeUnknown, isCrew]);
 
   // Course line used for progress + off-course checks: the followed rider's route.
   const course: CourseLine | null = useMemo(() => {
