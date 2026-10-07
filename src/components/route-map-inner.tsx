@@ -48,14 +48,30 @@ const MARKER_GLYPH: Record<NonNullable<CustomMarker["icon"]>, string> = {
   water: "💧",
 };
 
-function customIcon(color: string, icon: CustomMarker["icon"], logoUrl?: string) {
-  if (logoUrl) {
+/** Sponsor logos only appear once riders zoom in — zoomed out they'd bury the route. */
+const LOGO_MIN_ZOOM = 15;
+
+function ZoomWatcher({ onZoom }: { onZoom: (z: number) => void }) {
+  const map = useMap();
+  useEffect(() => {
+    const h = () => onZoom(map.getZoom());
+    h();
+    map.on("zoomend", h);
+    return () => {
+      map.off("zoomend", h);
+    };
+  }, [map, onZoom]);
+  return null;
+}
+
+function customIcon(color: string, icon: CustomMarker["icon"], logoUrl?: string, zoom = 99) {
+  if (logoUrl && zoom >= LOGO_MIN_ZOOM) {
     // Sponsor logos are mostly wide lock-ups, so use a wide rounded plate
     // instead of a circle — a circle shrinks wordmarks until they're unreadable.
     // NOTE: Leaflet's stylesheet forces `.leaflet-marker-pane img { max-width: none !important }`,
     // so the image MUST be sized with explicit width/height, not max-width.
-    const W = 108;
-    const H = 44;
+    const W = 84;
+    const H = 34;
     return L.divIcon({
       className: "rce-custom-marker",
       html: `<div style="border-color:${color};width:${W}px;height:${H}px;" class="flex items-center justify-center overflow-hidden rounded-xl border-2 bg-white px-1.5 py-1 shadow-lg"><img src="${logoUrl}" alt="" style="width:100%;height:100%;object-fit:contain;display:block;" /></div>`,
@@ -68,10 +84,10 @@ function customIcon(color: string, icon: CustomMarker["icon"], logoUrl?: string)
   const glyph = MARKER_GLYPH[icon ?? "pin"];
   return L.divIcon({
     className: "rce-custom-marker",
-    html: `<div style="background:${color};" class="flex h-8 w-8 items-center justify-center rounded-full text-base ring-2 ring-white shadow-lg">${glyph}</div>`,
-    iconSize: [32, 32],
-    iconAnchor: [16, 16],
-    popupAnchor: [0, -16],
+    html: `<div style="background:${color};" class="flex h-7 w-7 items-center justify-center rounded-full text-sm ring-2 ring-white shadow-md">${glyph}</div>`,
+    iconSize: [28, 28],
+    iconAnchor: [14, 14],
+    popupAnchor: [0, -14],
   });
 }
 
@@ -302,6 +318,7 @@ export default function RouteMapInner({
   const [loaded, setLoaded] = useState<Loaded[]>([]);
   const [enabled, setEnabled] = useState<Record<string, boolean>>({});
   const [fs, setFs] = useState(false);
+  const [zoom, setZoom] = useState(12);
   const [sheetOpen, setSheetOpen] = useState(true);
   const [flyTarget, setFlyTarget] = useState<{ lat: number; lng: number; n: number } | null>(null);
   const openFs = () => {
@@ -603,6 +620,7 @@ export default function RouteMapInner({
         maxNativeZoom={19}
       />
       <FitToBounds bounds={bounds} />
+      <ZoomWatcher onZoom={setZoom} />
       <MapControls bounds={bounds} />
       <HoverMarker />
       <DirectionArrows lines={arrowLines} />
@@ -623,7 +641,7 @@ export default function RouteMapInner({
           <Marker
             key={`${l.route.id}-mk-${m.id}`}
             position={[m.lat, m.lng] as [number, number]}
-            icon={customIcon(color, m.icon, m.logoUrl)}
+            icon={customIcon(color, m.icon, m.logoUrl, zoom)}
           >
             <Popup>
               <div className="max-w-[260px] space-y-2">
