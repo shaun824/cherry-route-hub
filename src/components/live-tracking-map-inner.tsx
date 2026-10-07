@@ -15,6 +15,7 @@ import { Crosshair, Layers, LocateFixed, MapPin, Maximize2, Navigation, Copy, Sh
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import type { CustomMarker } from "@/lib/mock-data";
+import { RouteProfile } from "@/components/route-profile";
 import {
   fetchTeamLocationsCrew,
   fetchTeamLocationsField,
@@ -1509,6 +1510,41 @@ export default function LiveTrackingMapInner({
       }
     >
       {renderHeader()}
+      {!fullscreen && candidates.length > 0 ? (
+        <div className="space-y-1.5">
+          {dayOptions.length > 1 ? (
+            <div className="flex flex-wrap gap-1.5">
+              {dayOptions.map((d) => (
+                <button
+                  key={d.id}
+                  type="button"
+                  onClick={() => pickDay(d.id)}
+                  className={`rounded-full px-3 py-1.5 text-xs font-bold ring-1 ring-border ${d.id === activeDayId ? "bg-ink text-background" : "bg-card text-ink"}`}
+                >
+                  {d.label ?? d.date}
+                </button>
+              ))}
+            </div>
+          ) : null}
+          <div className="flex flex-wrap gap-1.5">
+            {dayCandidates.map((c) => {
+              const on = matchedIds.includes(c.route.id);
+              return (
+                <button
+                  key={c.route.id}
+                  type="button"
+                  aria-pressed={on}
+                  onClick={() => toggleRoute(c.route.id)}
+                  className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold ring-1 ring-border ${on ? "bg-card text-ink" : "bg-background text-ink-soft opacity-60"}`}
+                >
+                  <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ backgroundColor: c.color }} />
+                  {c.route.name}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      ) : null}
       <div className={fullscreen ? "relative min-h-0 flex-1" : "relative"}>
         <div
           ref={hostRef}
