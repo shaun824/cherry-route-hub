@@ -172,7 +172,8 @@ export const PePlettExtrasEmail = ({
 
 export const template = {
   component: PePlettExtrasEmail,
-  subject: (data: Record<string, any>) => `Your booked extras for ${data['eventName'] ?? 'PE Plett'}`,
+  subject: (data: Record<string, any>) =>
+    data['subjectOverride'] ? String(data['subjectOverride']) : `Your booked extras for ${data['eventName'] ?? 'PE Plett'}`,
   displayName: 'PE Plett booked extras',
   previewData: {
     firstName: 'Shaun',
