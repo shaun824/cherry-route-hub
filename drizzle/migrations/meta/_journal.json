@@ -127,6 +127,13 @@
       "when": 1791356480994,
       "tag": "0017_event_apparel_size_flags",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1791402475871,
+      "tag": "0018_migration",
+      "breakpoints": true
     }
   ]
 }

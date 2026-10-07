@@ -3727,6 +3727,7 @@ export type Database = {
           escalated_at: string | null
           event_id: string
           id: string
+          incident_report: string | null
           lat: number | null
           lng: number | null
           message: string | null
@@ -3746,6 +3747,7 @@ export type Database = {
           escalated_at?: string | null
           event_id: string
           id?: string
+          incident_report?: string | null
           lat?: number | null
           lng?: number | null
           message?: string | null
@@ -3765,6 +3767,7 @@ export type Database = {
           escalated_at?: string | null
           event_id?: string
           id?: string
+          incident_report?: string | null
           lat?: number | null
           lng?: number | null
           message?: string | null
