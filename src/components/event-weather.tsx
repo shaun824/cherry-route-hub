@@ -124,6 +124,62 @@ export function EventWeatherCard({
           );
         })}
       </ul>
+
+      <button
+        type="button"
+        onClick={() => setExpanded((v) => !v)}
+        className="mt-3 flex w-full items-center justify-center gap-1 rounded-xl bg-secondary/60 py-2 text-[11px] font-bold text-ink-soft transition active:scale-[0.99]"
+      >
+        {expanded ? (
+          <>
+            Show less <ChevronUp className="h-3.5 w-3.5" />
+          </>
+        ) : (
+          <>
+            10-day forecast <ChevronDown className="h-3.5 w-3.5" />
+          </>
+        )}
+      </button>
+
+      {expanded ? (
+        <ul className="mt-2 space-y-1.5">
+          {w.daily.map((d) => {
+            const isRace = raceDay === d.date;
+            const date = new Date(`${d.date}T12:00:00`);
+            return (
+              <li
+                key={d.date}
+                className={`rounded-xl px-3 py-2 ring-1 ${
+                  isRace ? "bg-accent ring-cherry/40" : "bg-secondary/40 ring-transparent"
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <p className="w-16 shrink-0 text-[11px] font-bold text-ink">
+                    {date.toLocaleDateString("en-ZA", { weekday: "short", day: "numeric" })}
+                    {isRace ? <span className="ml-1 text-cherry">· Race</span> : null}
+                  </p>
+                  <WeatherIcon code={d.code} className="h-4 w-4 shrink-0 text-ink-soft" />
+                  <p className="min-w-0 flex-1 truncate text-[11px] text-muted-foreground">
+                    {weatherLabel(d.code)}
+                  </p>
+                  <p className="shrink-0 text-[11px] font-bold text-ink">
+                    {d.maxC}° <span className="font-normal text-muted-foreground">/ {d.minC}°</span>
+                  </p>
+                </div>
+                <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-1 text-[10px] font-semibold text-ink-soft">
+                  <span className="inline-flex items-center gap-1">
+                    <Wind className="h-3 w-3" /> up to {d.windKph} km/h
+                  </span>
+                  <span className="inline-flex items-center gap-1">
+                    <Droplets className="h-3 w-3" /> {d.rainChance}% rain
+                    {d.rainMm > 0 ? ` · ${d.rainMm} mm` : ""}
+                  </span>
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      ) : null}
     </div>
   );
 }
