@@ -63,6 +63,7 @@ export function EventWeatherCard({
   const w = q.data;
   if (!w) return null;
 
+  const [expanded, setExpanded] = useState(false);
   const raceDay = eventDate ? eventDate.slice(0, 10) : null;
   const days = w.daily.slice(0, 5);
   const raceForecast = raceDay ? w.daily.find((d) => d.date === raceDay) : undefined;
