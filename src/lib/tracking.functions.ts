@@ -439,6 +439,7 @@ export type SosAlert = {
   resolvedAt: string | null;
   resolvedByName: string | null;
   escalatedAt: string | null;
+  incidentReport: string | null;
 };
 
 
@@ -486,7 +487,7 @@ export const fetchSosAlerts = createServerFn({ method: "GET" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     let q = table(supabaseAdmin, "tracking_sos")
       .select(
-        "id, event_id, user_id, lat, lng, reason, note, message, status, created_at, acknowledged_at, acknowledged_by, escalated_at, resolved_at, resolved_by",
+        "id, event_id, user_id, lat, lng, reason, note, message, status, created_at, acknowledged_at, acknowledged_by, escalated_at, resolved_at, resolved_by, incident_report",
       )
       .order("created_at", { ascending: false })
       .limit(100);
@@ -566,6 +567,7 @@ export const fetchSosAlerts = createServerFn({ method: "GET" })
       resolvedAt: r.resolved_at,
       resolvedByName: r.resolved_by ? (names.get(r.resolved_by) ?? "Crew") : null,
       escalatedAt: r.escalated_at,
+      incidentReport: (r as { incident_report?: string | null }).incident_report ?? null,
     }));
     return { alerts };
   });
@@ -634,10 +636,12 @@ export const escalateSosAlert = createServerFn({ method: "POST" })
     return { ok: true as const, sent: ids.length > 0 };
   });
 
-/** Admin: mark an SOS alert resolved (closes the incident). */
+/** Admin: mark an SOS alert resolved (closes the incident) with an incident report. */
 export const resolveSosAlert = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input) => z.object({ id: z.string().uuid() }).parse(input))
+  .inputValidator((input) =>
+    z.object({ id: z.string().uuid(), incidentReport: z.string().trim().min(3).max(2000) }).parse(input),
+  )
   .handler(async ({ data, context }) => {
     await assertAdmin(context.supabase, context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -646,6 +650,7 @@ export const resolveSosAlert = createServerFn({ method: "POST" })
         status: "resolved",
         resolved_by: context.userId,
         resolved_at: new Date().toISOString(),
+        incident_report: data.incidentReport,
       })
       .eq("id", data.id);
     if (error) throw new Error(error.message);
