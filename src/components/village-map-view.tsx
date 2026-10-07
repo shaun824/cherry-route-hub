@@ -8,6 +8,7 @@ import {
   VILLAGE_LAYERS,
   categoryMeta,
   fetchVillageMap,
+  type VillageMap,
   fetchVillageMaps,
   hasVenueCentre,
   isPinnedSpot,
