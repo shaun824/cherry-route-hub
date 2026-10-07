@@ -230,13 +230,25 @@ async function readStarts(eventId: string) {
       at: `${day.date}T${m[1].padStart(2, "0")}:${m[2]}:00+02:00`,
     });
   }
-  return out.sort((a, b) => a.at.localeCompare(b.at));
+  out.sort((a, b) => a.at.localeCompare(b.at));
+  const counts = new Map<string, number>();
+  for (let from = 0; ; from += 1000) {
+    const { data: rows } = await (supabaseAdmin as any)
+      .from("event_entrants").select("category").eq("event_id", eventId).range(from, from + 999);
+    for (const r of rows ?? []) {
+      const c = String(r?.category ?? "").trim() || "Uncategorised";
+      counts.set(c, (counts.get(c) ?? 0) + 1);
+    }
+    if (!rows || rows.length < 1000) break;
+  }
+  const classes = [...counts.entries()].map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count);
+  return { starts: out, classes };
 }
 
 export const fetchStartsField = createServerFn({ method: "POST" })
   .inputValidator((i) => startsInput.parse(i))
   .handler(async ({ data }) => {
-    if (!data.token || !(await verify(data.eventId, data.token))) return [];
+    if (!data.token || !(await verify(data.eventId, data.token))) return { starts: [], classes: [] };
     return readStarts(data.eventId);
   });
 
@@ -244,6 +256,6 @@ export const fetchStartsCrew = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((i) => startsInput.parse(i))
   .handler(async ({ data, context }) => {
-    if (!(await isCrewUser(context.supabase, context.userId))) return [];
+    if (!(await isCrewUser(context.supabase, context.userId))) return { starts: [], classes: [] };
     return readStarts(data.eventId);
   });

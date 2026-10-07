@@ -1,7 +1,7 @@
 // Start-group countdowns for race control, read from the event's published schedule.
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Timer } from "lucide-react";
+import { Timer, Users } from "lucide-react";
 import { fetchStartsCrew, fetchStartsField } from "@/lib/crew-field-link.functions";
 
 function fmtLeft(ms: number) {
@@ -15,7 +15,7 @@ function fmtLeft(ms: number) {
 }
 
 export function StartCountdownPanel({ eventId, fieldToken }: { eventId: string; fieldToken?: string }) {
-  const { data = [] } = useQuery({
+  const { data: res } = useQuery({
     queryKey: ["race-starts", eventId, fieldToken ?? ""],
     queryFn: () =>
       fieldToken ? fetchStartsField({ data: { eventId, token: fieldToken } }) : fetchStartsCrew({ data: { eventId } }),
@@ -27,12 +27,17 @@ export function StartCountdownPanel({ eventId, fieldToken }: { eventId: string; 
     return () => window.clearInterval(t);
   }, []);
 
-  if (data.length === 0) return null;
+  const data = res?.starts ?? [];
+  const classes = res?.classes ?? [];
+  const total = classes.reduce((n, c) => n + c.count, 0);
+  if (data.length === 0 && classes.length === 0) return null;
   const nextIdx = data.findIndex((s) => new Date(s.at).getTime() > now);
   const byDay = new Map<string, typeof data>();
   for (const s of data) byDay.set(s.dayLabel, [...(byDay.get(s.dayLabel) ?? []), s]);
 
   return (
+    <div className="grid gap-3 md:grid-cols-2">
+    {data.length > 0 ? (
     <section className="rounded-2xl bg-card p-3 ring-1 ring-border">
       <h2 className="flex items-center gap-2 font-display font-bold text-ink">
         <Timer className="h-4 w-4 text-cherry" /> Start times
@@ -67,5 +72,23 @@ export function StartCountdownPanel({ eventId, fieldToken }: { eventId: string; 
         ))}
       </div>
     </section>
+    ) : null}
+    {classes.length > 0 ? (
+      <section className="rounded-2xl bg-card p-3 ring-1 ring-border">
+        <h2 className="flex items-center justify-between gap-2 font-display font-bold text-ink">
+          <span className="flex items-center gap-2"><Users className="h-4 w-4 text-cherry" /> Entries per class</span>
+          <span className="rounded-full bg-cherry px-2 py-0.5 text-xs text-white">{total} total</span>
+        </h2>
+        <ul className="mt-2 divide-y divide-border">
+          {classes.map((c) => (
+            <li key={c.name} className="flex items-center gap-3 py-2">
+              <span className="min-w-0 flex-1 truncate text-sm text-ink">{c.name}</span>
+              <span className="rounded-full bg-muted px-2 py-0.5 font-mono text-xs text-ink">{c.count}</span>
+            </li>
+          ))}
+        </ul>
+      </section>
+    ) : null}
+    </div>
   );
 }
