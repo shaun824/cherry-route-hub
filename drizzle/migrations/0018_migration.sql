@@ -1,0 +1,1 @@
+ALTER TABLE public.tracking_sos ADD COLUMN IF NOT EXISTS incident_report text;

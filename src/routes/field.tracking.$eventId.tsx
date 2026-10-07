@@ -5,6 +5,8 @@ import { Navigation, Radar, Siren } from "lucide-react";
 import { z } from "zod";
 import { LiveTrackingMap } from "@/components/live-tracking-map";
 import { fetchFieldLinkSos } from "@/lib/crew-field-link.functions";
+import { useIsAdmin } from "@/lib/auth";
+import { ResolveSosButton } from "@/components/resolve-sos-button";
 import { RaceStatusPanel } from "@/components/race-status-panel";
 import { StartCountdownPanel } from "@/components/start-countdown-panel";
 import { useHydratedStore } from "@/lib/use-hydrated-store";
@@ -30,6 +32,7 @@ function FieldTrackingPage() {
   useHydratedStore();
   const { eventId } = Route.useParams();
   const { k } = Route.useSearch();
+  const { isAdmin } = useIsAdmin();
   const q = useQuery({
     queryKey: ["field-link-sos", eventId, k],
     queryFn: () => fetchFieldLinkSos({ data: { eventId, token: k ?? "" } }),
@@ -63,11 +66,14 @@ function FieldTrackingPage() {
             <Siren className="h-5 w-5 text-cherry" /> {alerts.length} open SOS
           </p>
           {alerts.map((a) => (
-            <div key={a.id} className="flex items-center gap-2 rounded-xl bg-card p-2 ring-1 ring-border">
+            <div key={a.id} className="flex flex-wrap items-center gap-2 rounded-xl bg-card p-2 ring-1 ring-border">
               <div className="min-w-0 flex-1 text-sm">
                 <p className="font-bold text-ink">{a.riderName ?? "Unknown rider"}</p>
+                {a.note ? (
+                  <p className="mt-0.5 rounded-md bg-cherry/10 px-2 py-1 text-xs font-semibold text-ink">“{a.note}”</p>
+                ) : null}
                 <p className="text-xs text-ink-soft">
-                  {[a.reason, a.note, a.status === "acknowledged" ? "seen by race control" : "not yet acknowledged"]
+                  {[a.reason, a.status === "acknowledged" ? "seen by race control" : "not yet acknowledged"]
                     .filter(Boolean)
                     .join(" · ")}
                 </p>
@@ -82,6 +88,11 @@ function FieldTrackingPage() {
                   <Navigation className="h-3.5 w-3.5" /> Go
                 </a>
               ) : null}
+              {isAdmin ? (
+                <div className="basis-full">
+                  <ResolveSosButton id={a.id} onDone={() => void q.refetch()} />
+                </div>
+              ) : null}
             </div>
           ))}
         </div>
@@ -90,7 +101,7 @@ function FieldTrackingPage() {
       <StartCountdownPanel eventId={eventId} fieldToken={k} />
       <RaceStatusPanel eventId={eventId} fieldToken={k} />
       <p className="text-xs text-ink-soft">
-        Tap Full screen to search riders, see waterpoints and navigate. To acknowledge an SOS, crew must sign in.
+        Tap Full screen to search riders, see waterpoints and navigate. Anyone with this link can see SOS alerts and navigate to riders. Clearing an SOS needs an admin sign-in and an incident report.
       </p>
     </div>
   );

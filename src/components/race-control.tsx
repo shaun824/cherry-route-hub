@@ -1,5 +1,6 @@
 // Race control: live rider map + SOS alert list for a chosen event.
 // Shared by the admin console and the crew portal (crew + admin only).
+import { ResolveSosButton } from "@/components/resolve-sos-button";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -180,9 +181,7 @@ export function RaceControlPanel({
                 onAcknowledge={() =>
                   void acknowledge({ data: { id: a.id } }).then(() => void sosQ.refetch())
                 }
-                onResolve={() =>
-                  void resolve({ data: { id: a.id } }).then(() => void sosQ.refetch())
-                }
+                onResolved={() => void sosQ.refetch()}
               />
             ))}
           </div>
@@ -276,9 +275,7 @@ export function RaceControlPanel({
                   setFocusRider(a.userId);
                   setView("map");
                 }}
-                onResolve={() =>
-                  void resolve({ data: { id: a.id } }).then(() => void sosQ.refetch())
-                }
+                onResolved={() => void sosQ.refetch()}
               />
             ))}
         </div>
@@ -336,7 +333,9 @@ export function RaceControlPanel({
             onResolveRiderSos={async (userId) => {
               const matching = open.filter((a) => a.userId === userId);
               if (matching.length === 0) throw new Error("No open SOS found. Refresh and try again.");
-              await Promise.all(matching.map((a) => resolve({ data: { id: a.id } })));
+              const report = (window.prompt("Incident report — what happened and the outcome?") ?? "").trim();
+              if (report.length < 3) throw new Error("An incident report is needed to clear an SOS.");
+              await Promise.all(matching.map((a) => resolve({ data: { id: a.id, incidentReport: report } })));
               refreshAll();
             }}
           />
@@ -365,6 +364,7 @@ export function RaceControlPanel({
                   {a.acknowledgedByName ? ` · seen by ${a.acknowledgedByName}` : ""}
                   {a.resolvedByName ? ` · sorted by ${a.resolvedByName}` : ""}
                   {a.resolvedAt ? ` at ${new Date(a.resolvedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}` : ""}
+                  {a.incidentReport ? <span className="mt-0.5 block whitespace-pre-line text-ink">Report: {a.incidentReport}</span> : null}
                 </p>
               ))}
           </div>
@@ -377,16 +377,16 @@ export function RaceControlPanel({
 function AlertCard({
   alert,
   onAcknowledge,
-  onResolve,
+  onResolved,
   onFocus,
 }: {
   alert: SosAlert;
   onAcknowledge?: () => void;
-  onResolve: () => void;
+  onResolved: () => void;
   onFocus: () => void;
 }) {
   return (
-    <div className="flex items-start justify-between gap-3 rounded-xl bg-card p-3 ring-1 ring-cherry/30">
+    <div className="flex flex-wrap items-start justify-between gap-3 rounded-xl bg-card p-3 ring-1 ring-cherry/30">
       <button type="button" onClick={onFocus} className="text-left text-sm">
         <p className="font-black text-cherry">{reasonLabel(alert.reason)}</p>
         <p className="font-bold text-ink">
@@ -408,7 +408,9 @@ function AlertCard({
             "no GPS fix"
           )}
         </p>
-        {alert.note ? <p className="mt-1 text-xs text-ink">{alert.note}</p> : null}
+        {alert.note ? (
+          <p className="mt-1 rounded-md bg-cherry/10 px-2 py-1 text-xs font-semibold text-ink">“{alert.note}”</p>
+        ) : null}
         {alert.acknowledgedByName ? (
           <p className="mt-1 text-xs text-ink-soft">
             Acknowledged by {alert.acknowledgedByName}
@@ -426,13 +428,9 @@ function AlertCard({
             Acknowledge
           </button>
         ) : null}
-        <button
-          type="button"
-          onClick={onResolve}
-          className="rounded-lg bg-secondary px-2.5 py-1.5 text-xs font-bold text-secondary-foreground"
-        >
-          Resolve
-        </button>
+      </div>
+      <div className="basis-full">
+        <ResolveSosButton id={alert.id} onDone={onResolved} />
       </div>
     </div>
   );
