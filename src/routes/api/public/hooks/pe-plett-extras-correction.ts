@@ -1,7 +1,7 @@
 // One-off: resend the proper PE Plett extras email to riders who only got the plain fallback on 15 Sep.
 import { createFileRoute } from "@tanstack/react-router";
 
-const SUBJECT = "We're sorry the email was wrong last time. We made a mistake. Here are your confirmed extras.";
+const SUBJECT = "We apologize. Here is the right one.";
 const WRONG_SUBJECT = "Your booked extras for M&G Investments PE PLETT 2027";
 
 export const Route = createFileRoute("/api/public/hooks/pe-plett-extras-correction")({
@@ -23,7 +23,7 @@ export const Route = createFileRoute("/api/public/hooks/pe-plett-extras-correcti
         const { data: wrong } = await admin.from("email_sends").select("recipient").eq("subject", WRONG_SUBJECT).eq("template", "event-update").limit(1000);
         const { data: right } = await admin.from("email_sends").select("recipient").eq("template", "pe-plett-extras").limit(5000);
         const ok = new Set((right ?? []).map((r: any) => String(r.recipient).toLowerCase()));
-        const targets = Array.from(new Set((wrong ?? []).map((r: any) => String(r.recipient).toLowerCase()))).filter((e) => !ok.has(e as string)) as string[];
+        const targets = Array.from(new Set((wrong ?? []).map((r: any) => String(r.recipient).toLowerCase()))) as string[]; void ok;
 
         const { data: rows } = await admin.from("event_entrants").select("extras, registration_ref, entrants(full_name, email)").eq("event_id", event.id).limit(5000);
         const byEmail = new Map<string, any>();
@@ -52,9 +52,9 @@ export const Route = createFileRoute("/api/public/hooks/pe-plett-extras-correcti
           const r = byEmail.get(to);
           if (!r) { errors.push(`${to}: no entry`); continue; }
           try {
-            const res = await sendTemplateEmail("pe-plett-extras", to, { templateData: build(r), idempotencyKey: `pe-plett-extras-correction-${to}` });
+            const res = await sendTemplateEmail("pe-plett-extras", to, { templateData: build(r), idempotencyKey: `pe-plett-extras-apology-${to}` });
             res.sent ? sent++ : suppressed++;
-          } catch (e) { errors.push(`${to}: ${(e as Error).message}`); }
+          } catch (e) { errors.push(`${to}: ${(e as Error).message}`); if ((e as any)?.status === 429) break; }
         }
         return Response.json({ targets: targets.length, sent, suppressed, errors });
       },
