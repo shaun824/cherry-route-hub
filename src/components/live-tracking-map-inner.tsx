@@ -1180,6 +1180,20 @@ export default function LiveTrackingMapInner({
     };
   }, [isCrew, viewerLoc, selectedId, riders]);
 
+  // Re-centre on the course: the shown routes, or every route when none is matched yet.
+  const fitCourse = () => {
+    const map = mapRef.current;
+    if (!map) return;
+    const src = matchedRoutes.length ? matchedRoutes : candidates;
+    const b: [number, number][] = [];
+    for (const c of src) for (const line of c.lines) for (const [lng, lat] of line) b.push([lat, lng]);
+    if (!b.length) return;
+    setFollowPaused(true);
+    programmaticMoveRef.current = true;
+    map.fitBounds(L.latLngBounds(b).pad(0.08), { animate: true });
+    window.setTimeout(() => (programmaticMoveRef.current = false), 900);
+  };
+
   const focusRider = (r: LiveRiderPosition) => {
     setSelectedId(r.userId);
     startFollowing(r.userId);
@@ -1357,10 +1371,22 @@ export default function LiveTrackingMapInner({
               {locError}
             </p>
           ) : null}
+          <Button variant="outline" size="sm" type="button" onClick={fitCourse} className="inline-flex items-center gap-1 rounded-md px-3 py-2 text-xs font-bold shadow-lg">
+            <RouteIcon className="h-3.5 w-3.5" /> Show whole route
+          </Button>
           {follow && followPaused ? (
             <Button variant="outline" size="sm"
               type="button"
-              onClick={() => setFollowPaused(false)}
+              onClick={() => {
+                setFollowPaused(false);
+                const r = riders.find((x) => x.userId === follow);
+                const map = mapRef.current;
+                if (r && map) {
+                  programmaticMoveRef.current = true;
+                  map.setView([r.lat, r.lng], Math.max(map.getZoom(), 15), { animate: true });
+                  window.setTimeout(() => (programmaticMoveRef.current = false), 900);
+                }
+              }}
               className="inline-flex items-center gap-1 rounded-md bg-cherry px-3 py-2 text-xs font-bold text-primary-foreground shadow-lg"
             >
               <Crosshair className="h-3.5 w-3.5" /> Re-centre
