@@ -698,11 +698,13 @@ export function TrackerPanel({
                 </Button>
               ))}
             </div>
-            <input
+            <textarea
               value={sosNote}
-              onChange={(e) => setSosNote(e.target.value.slice(0, 200))}
-              placeholder="Add a short note (optional)"
-              className="mt-2 w-full rounded-xl bg-card px-3 py-2.5 text-sm text-ink ring-1 ring-border focus:outline-none focus:ring-2 focus:ring-cherry"
+              onChange={(e) => setSosNote(e.target.value.slice(0, 300))}
+              rows={2}
+              aria-label="What's wrong?"
+              placeholder="What's wrong? e.g. crashed, hurt wrist, bike broken (optional)"
+              className="mt-2 w-full resize-none rounded-xl bg-card px-3 py-2.5 text-sm text-ink ring-1 ring-border focus:outline-none focus:ring-2 focus:ring-cherry"
             />
             <Button
               onPointerDown={startHold}
