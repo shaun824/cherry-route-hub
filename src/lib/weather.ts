@@ -70,7 +70,7 @@ export async function fetchEventWeather(opts: {
     `https://api.open-meteo.com/v1/forecast?latitude=${point.lat}&longitude=${point.lng}` +
     `&current=temperature_2m,weather_code,wind_speed_10m` +
     `&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max,wind_speed_10m_max` +
-    `&timezone=auto&forecast_days=7`;
+    `&timezone=auto&forecast_days=10`;
   const res = await fetch(url);
   if (!res.ok) return null;
   const j = (await res.json()) as {
