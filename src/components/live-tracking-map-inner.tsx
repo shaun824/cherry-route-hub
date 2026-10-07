@@ -24,6 +24,18 @@ import {
 
 const SHARE_RADIUS_M = 2000;
 
+const POINT_TYPE: Record<string, { label: string; glyph: string; color: string }> = {
+  water: { label: "Waterpoints", glyph: "💧", color: "#0284c7" },
+  warning: { label: "Marshals", glyph: "🦺", color: "#f97316" },
+  aid: { label: "Medics", glyph: "✚", color: "#dc2626" },
+  food: { label: "Food", glyph: "🍌", color: "#16a34a" },
+  start: { label: "Start", glyph: "🚩", color: "#334155" },
+  finish: { label: "Finish", glyph: "🏁", color: "#334155" },
+  photo: { label: "Photo spots", glyph: "📷", color: "#7c3aed" },
+  pin: { label: "Other points", glyph: "📍", color: "#334155" },
+  sponsor: { label: "Sponsors", glyph: "★", color: "#0ea5e9" },
+};
+
 type FieldPoint = { key: string; name: string; lat: number; lng: number; icon: string; routes: string[] };
 
 function metres(a: { lat: number; lng: number }, b: { lat: number; lng: number }) {
@@ -41,6 +53,7 @@ function fmtDist(m: number) {
 }
 import { useAdminStore } from "@/lib/store";
 import { withRegistrationDayLabels } from "@/lib/event-days";
+import { addDirectionArrows } from "@/lib/map-direction-arrows";
 import { parseKml, simplifyPolyline, capPolyline, type LatLngAlt } from "@/lib/geo";
 import {
   buildCourseLine,
@@ -709,8 +722,15 @@ export default function LiveTrackingMapInner({
     if (!fittedRef.current && bounds.length > 0) {
       map.fitBounds(L.latLngBounds(bounds).pad(0.1));
     }
+    const stopArrows = routeUnknown
+      ? () => {}
+      : addDirectionArrows(
+          map,
+          matchedRoutes.flatMap((c) => c.lines.map((line) => ({ color: c.color, coords: line.map(([lng, lat]) => [lat, lng] as [number, number]) }))),
+        );
 
     return () => {
+      stopArrows();
       for (const [, polys] of routeLayersRef.current) polys.forEach((p) => p.remove());
       routeLayersRef.current.clear();
     };
@@ -915,41 +935,70 @@ export default function LiveTrackingMapInner({
     return [...byKey.values()];
   }, [crewTools, dayCandidates]);
 
+  // Every point dropped on the day's routes (marshals, waterpoints, sponsors…), for the map layer.
+  const mapPoints = useMemo(() => {
+    if (!crewTools) return [] as (FieldPoint & { logoUrl?: string; color?: string })[];
+    const byKey = new Map<string, FieldPoint & { logoUrl?: string; color?: string }>();
+    for (const c of dayCandidates) {
+      for (const m of (c.route.customMarkers ?? []) as CustomMarker[]) {
+        const key = `${m.name}|${m.lat.toFixed(4)}|${m.lng.toFixed(4)}`;
+        const ex = byKey.get(key);
+        if (ex) ex.routes.push(c.route.name);
+        else byKey.set(key, { key, name: m.name, lat: m.lat, lng: m.lng, icon: m.icon ?? "pin", routes: [c.route.name], logoUrl: m.logoUrl, color: m.color });
+      }
+    }
+    return [...byKey.values()];
+  }, [crewTools, dayCandidates]);
+  const [hiddenTypes, setHiddenTypes] = useState<string[]>([]);
+  const pointTypes = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const p of mapPoints) {
+      const t = p.logoUrl ? "sponsor" : p.icon;
+      counts.set(t, (counts.get(t) ?? 0) + 1);
+    }
+    return [...counts.entries()];
+  }, [mapPoints]);
+
   useEffect(() => {
     const map = mapRef.current;
-    if (!map || fieldPoints.length === 0) return;
+    if (!map || mapPoints.length === 0) return;
+    const shown = mapPoints.filter((p) => !hiddenTypes.includes(p.logoUrl ? "sponsor" : p.icon));
     const layer = L.layerGroup(
-      fieldPoints.map((pt) => {
-        const glyph = pt.icon === "water" ? "💧" : pt.icon === "aid" ? "✚" : pt.icon === "food" ? "🍌" : "⚑";
+      shown.map((pt) => {
+        const glyph = POINT_TYPE[pt.icon]?.glyph ?? "📍";
         const wrap = document.createElement("div");
         wrap.className = "font-sans text-sm";
         const t = document.createElement("p");
         t.className = "font-bold";
         t.textContent = pt.name;
+        const r = document.createElement("p");
+        r.className = "text-xs opacity-70";
+        r.textContent = pt.routes.join(" · ");
         const a = document.createElement("a");
         a.href = navUrl(pt.lat, pt.lng);
         a.target = "_blank";
         a.rel = "noreferrer";
-        a.textContent = "Navigate here →";
+        a.textContent = "Open in Google Maps →";
         a.style.cssText = "display:inline-block;margin-top:6px;font-weight:700;color:#e11d48";
-        wrap.append(t, a);
+        wrap.append(t, r, a);
+        const border = pt.color || POINT_TYPE[pt.icon]?.color || "#334155";
+        const html = pt.logoUrl
+          ? `<div style="width:56px;height:24px;border-radius:8px;background:#fff;border:2px solid ${border};display:flex;align-items:center;justify-content:center;padding:2px 4px;box-shadow:0 1px 6px rgba(0,0,0,.35)"><img src="${pt.logoUrl}" alt="" style="width:100%;height:100%;object-fit:contain"/></div>`
+          : `<div style="width:26px;height:26px;border-radius:8px;background:#fff;border:2px solid ${border};display:flex;align-items:center;justify-content:center;font-size:14px;box-shadow:0 1px 6px rgba(0,0,0,.35)">${glyph}</div>`;
+        const w = pt.logoUrl ? 56 : 26;
+        const h = pt.logoUrl ? 24 : 26;
         return L.marker([pt.lat, pt.lng], {
-          icon: L.divIcon({
-            className: "",
-            html: `<div style="width:26px;height:26px;border-radius:8px;background:#fff;border:2px solid #0284c7;display:flex;align-items:center;justify-content:center;font-size:14px;box-shadow:0 1px 6px rgba(0,0,0,.35)">${glyph}</div>`,
-            iconSize: [26, 26],
-            iconAnchor: [13, 13],
-          }),
+          icon: L.divIcon({ className: "", html, iconSize: [w, h], iconAnchor: [w / 2, h / 2] }),
           zIndexOffset: 500,
         })
-          .bindTooltip(pt.name, { direction: "top", offset: [0, -12] })
+          .bindTooltip(pt.name, { permanent: true, direction: "bottom", offset: [0, h / 2], className: "rce-marker-label rce-marker-label-sm" })
           .bindPopup(wrap);
       }),
     ).addTo(map);
     return () => {
       layer.remove();
     };
-  }, [fieldPoints]);
+  }, [mapPoints, hiddenTypes]);
 
   const focusPoint = (pt: FieldPoint) => {
     const map = mapRef.current;
@@ -1566,6 +1615,34 @@ export default function LiveTrackingMapInner({
             })}
           </ul>
           )}
+        </div>
+      ) : null}
+
+      {!fullscreen && crewTools && pointTypes.length > 0 ? (
+        <div className="flex flex-wrap items-center gap-1.5 rounded-xl bg-card p-2 ring-1 ring-border" aria-label="Map points">
+          <span className="px-1 text-xs font-semibold text-ink-soft">Points:</span>
+          {pointTypes.map(([t, n]) => {
+            const on = !hiddenTypes.includes(t);
+            const meta = POINT_TYPE[t] ?? POINT_TYPE.pin;
+            return (
+              <button
+                key={t}
+                type="button"
+                aria-pressed={on}
+                onClick={() => setHiddenTypes((h) => (on ? [...h, t] : h.filter((x) => x !== t)))}
+                className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold ring-1 ring-border transition ${on ? "bg-ink text-primary-foreground" : "bg-background text-ink-soft line-through"}`}
+              >
+                <span aria-hidden>{meta.glyph}</span> {meta.label} ({n})
+              </button>
+            );
+          })}
+          <button
+            type="button"
+            onClick={() => setHiddenTypes((h) => (h.length ? [] : pointTypes.map(([t]) => t)))}
+            className="ml-auto rounded-full px-2.5 py-1 text-xs font-semibold text-cherry"
+          >
+            {hiddenTypes.length ? "Show all" : "Hide all"}
+          </button>
         </div>
       ) : null}
 
