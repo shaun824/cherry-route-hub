@@ -322,6 +322,7 @@ export default function RouteMapInner({
   const [fs, setFs] = useState(false);
   const [zoom, setZoom] = useState(12);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [chipDay, setChipDay] = useState<string | null>(null);
   const [flyTarget, setFlyTarget] = useState<{ lat: number; lng: number; n: number } | null>(null);
   const openFs = () => {
     setFs(true);
@@ -552,7 +553,6 @@ export default function RouteMapInner({
   const fill = height === "100%";
 
   const dayLabels = [...new Set(loaded.map((l) => l.dayLabel))];
-  const [chipDay, setChipDay] = useState<string | null>(null);
   // Picking a day shows just that day's route buttons and turns on its first route.
   const showOnlyDay = (day: string | null) => {
     setChipDay(day);
