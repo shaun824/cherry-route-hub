@@ -72,7 +72,8 @@ export function AppPreloader({ routeLoading }: { routeLoading: boolean }) {
   const fillRef = useRef<SVGLineElement>(null);
   const bikeRef = useRef<SVGGElement>(null);
   const chassisRef = useRef<SVGGElement>(null);
-  const [visible, setVisible] = useState(false);
+  // Starts visible (server-rendered too) so the first screen never flashes before the loader.
+  const [visible, setVisible] = useState(true);
   const [leaving, setLeaving] = useState(false);
   const shownAt = useRef(0);
   const minUntil = useRef(0);
