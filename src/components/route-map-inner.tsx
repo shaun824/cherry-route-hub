@@ -423,6 +423,7 @@ export default function RouteMapInner({
       setLoaded(results);
       // Start on just the first route — all of them at once is too busy.
       setEnabled(Object.fromEntries(results.map((r, i) => [r.route.id, i === 0])));
+      setChipDay(results[0]?.dayLabel ?? null);
     })();
     return () => {
       cancelled = true;
@@ -744,7 +745,7 @@ export default function RouteMapInner({
                     type="button"
                     onClick={() => showOnlyDay(k === "all" ? null : k)}
                     className={`shrink-0 rounded-full px-3 py-1 text-xs font-bold ring-1 ${
-                      activeDay === k ? "bg-cherry text-white ring-cherry" : "bg-background text-ink ring-border"
+                      (chipDay ?? "all") === k ? "bg-cherry text-white ring-cherry" : "bg-background text-ink ring-border"
                     }`}
                   >
                     {label}
