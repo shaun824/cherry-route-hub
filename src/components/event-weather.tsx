@@ -56,6 +56,7 @@ export function EventWeatherCard({
     staleTime: 30 * 60_000,
     enabled: Boolean(location),
   });
+  const [expanded, setExpanded] = useState(false);
 
   if (q.isLoading) {
     return <div className="h-32 animate-pulse rounded-2xl bg-secondary" />;
@@ -63,7 +64,6 @@ export function EventWeatherCard({
   const w = q.data;
   if (!w) return null;
 
-  const [expanded, setExpanded] = useState(false);
   const raceDay = eventDate ? eventDate.slice(0, 10) : null;
   const days = w.daily.slice(0, 5);
   const raceForecast = raceDay ? w.daily.find((d) => d.date === raceDay) : undefined;
