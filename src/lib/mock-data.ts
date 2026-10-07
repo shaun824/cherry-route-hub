@@ -92,7 +92,9 @@ export type Event = {
   batches?: Batch[];         // admin-managed start batches / waves
   days?: EventDay[];         // multi-day itinerary with routes per day
   socialLinks?: SocialLinks; // per-event follow links
-  spectatorMode?: boolean;   // when true, event unlocks on the public Spectate tab
+  spectatorMode?: boolean;
+  collectsTshirtSize?: boolean;
+  collectsJacketSize?: boolean;   // when true, event unlocks on the public Spectate tab
   entryUrl?: string;         // external entry page (Entry Ninja / entries site) for this event
   websiteUrl?: string;       // official event website; assistant bot scans it for answers
   faqUrl?: string;           // optional dedicated FAQ page for the bot to prioritise
