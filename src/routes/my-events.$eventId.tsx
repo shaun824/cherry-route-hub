@@ -1,3 +1,5 @@
+import { eventApparel, missingSizes, type ApparelFlags } from "@/lib/apparel";
+import { MissingSizeCallout } from "@/components/missing-size-callout";
 import { entryNinjaRegistrationUrl } from "@/lib/entry-ninja-link";
 import { RaceWeekBanner } from "@/components/race-week-banner";
 import { RedCherrySocials } from "@/components/social-links-card";
@@ -944,6 +946,7 @@ function InfoPanel({
       <YourEntryCard
         eventId={eventId}
         entryUrl={event.entry_ninja_url ?? event.website_url ?? null}
+        apparel={eventApparel(event as never)}
       />
       </div>
 
@@ -2223,7 +2226,15 @@ function EnterEventCta({ entryUrl }: { entryUrl: string | null }) {
   );
 }
 
-function YourEntryCard({ eventId, entryUrl = null }: { eventId: string; entryUrl?: string | null }) {
+function YourEntryCard({
+  eventId,
+  entryUrl = null,
+  apparel = { tshirt: false, jacket: false },
+}: {
+  eventId: string;
+  entryUrl?: string | null;
+  apparel?: ApparelFlags;
+}) {
   const { user, loading: sessionLoading } = useSession();
   const signedIn = Boolean(user);
   const q = useQuery({
@@ -2346,6 +2357,11 @@ function YourEntryCard({ eventId, entryUrl = null }: { eventId: string; entryUrl
           ))}
         </div>
       ) : null}
+
+      <MissingSizeCallout
+        missing={missingSizes(apparel, row)}
+        href={entryNinjaRegistrationUrl(row.registration_ref) ?? entryUrl ?? "https://entries.redcherryevents.co.za/"}
+      />
 
       <div data-section="payment_status"><PaymentStatusCard
         info={{ ...row, priced_total_cents: pricing.totalCents, priced_complete: pricing.complete }}
