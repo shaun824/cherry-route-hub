@@ -4,6 +4,8 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { checkIsAdmin } from "@/lib/is-admin";
+import { inRaceLocationWindow } from "@/lib/location-window";
 
 const LINK_DAYS = 5;
 
@@ -157,14 +159,17 @@ export const shareTeamLocationField = createServerFn({ method: "POST" })
   .inputValidator((i) => locInput.parse(i))
   .handler(async ({ data }) => {
     if (!data.token || !(await verify(data.eventId, data.token))) throw new Error("Link expired");
-    return writeLoc(data);
+    // For now only signed-in admins may share their location.
+    throw new Error("Location sharing is limited to admins right now");
   });
 
 export const shareTeamLocationCrew = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((i) => locInput.parse(i))
   .handler(async ({ data, context }) => {
-    if (!(await isCrewUser(context.supabase, context.userId))) throw new Error("Forbidden");
+    if (!(await checkIsAdmin(context.supabase as never))) throw new Error("Location sharing is limited to admins right now");
+    const { data: ev } = await (context.supabase as any).from("events").select("event_date, days").eq("id", data.eventId).maybeSingle();
+    if (!ev || !inRaceLocationWindow(ev.event_date, ev.days)) throw new Error("Location sharing opens 3 days before race day");
     return writeLoc(data);
   });
 
