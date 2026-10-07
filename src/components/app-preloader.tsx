@@ -33,7 +33,7 @@ function makeCourse(count: number): Course {
   for (const j of jumps) {
     const lip = j.x0 + j.kick;
     const ls = lip + j.gap;
-    d += ` L ${j.x0},${GROUND} Q ${j.x0 + j.kick * 0.7},${GROUND} ${lip},${GROUND - j.h} L ${lip},${GROUND}`;
+    d += ` L ${j.x0},${GROUND} Q ${j.x0 + j.kick * 0.5},${GROUND} ${lip},${GROUND - j.h} L ${lip},${GROUND}`;
     d += ` M ${ls},${GROUND} L ${ls},${GROUND - j.h} L ${ls + j.land},${GROUND}`;
   }
   d += ` L ${END_X},${GROUND}`;
