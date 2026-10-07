@@ -1476,27 +1476,38 @@ function ScheduleView({ schedule, days: rawDays }: { schedule: ScheduleItem[]; d
   );
 }
 
+function waLink(phone: string) {
+  let d = phone.replace(/\D/g, "");
+  if (d.startsWith("0")) d = "27" + d.slice(1);
+  return `https://wa.me/${d}`;
+}
+
 function ChatPanel({ eventId, userId }: { eventId: string; userId: string | null }) {
   const qc = useQueryClient();
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
+  const [pin, setPin] = useState(false);
+  const [shareWa, setShareWa] = useState(true);
+  const [err, setErr] = useState<string | null>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
   const q = useQuery({
     queryKey: ["event-chat", eventId],
+    enabled: !!userId,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("event_chat_messages")
-        .select("id, event_id, author_id, body, created_at, profiles:profiles(full_name)")
+        .select("id, event_id, author_id, body, created_at, pinned, share_whatsapp, profiles:profiles(full_name)")
         .eq("event_id", eventId)
-        .order("created_at", { ascending: true })
-        .limit(200);
+        .order("created_at", { ascending: false })
+        .limit(300);
       if (error) throw error;
-      return data ?? [];
+      return (data ?? []).reverse();
     },
   });
 
   useEffect(() => {
+    if (!userId) return;
     const ch = supabase
       .channel(`chat-${eventId}`)
       .on(
@@ -1508,9 +1519,8 @@ function ChatPanel({ eventId, userId }: { eventId: string; userId: string | null
     return () => {
       supabase.removeChannel(ch);
     };
-  }, [eventId, qc]);
+  }, [eventId, qc, userId]);
 
-  // Always open/settle at the newest message.
   useEffect(() => {
     const el = listRef.current;
     if (el) el.scrollTop = el.scrollHeight;
@@ -1519,71 +1529,168 @@ function ChatPanel({ eventId, userId }: { eventId: string; userId: string | null
   async function send() {
     if (!text.trim() || !userId) return;
     setBusy(true);
+    setErr(null);
     const body = text.trim();
-    setText("");
     const { error } = await supabase
       .from("event_chat_messages")
-      .insert({ event_id: eventId, author_id: userId, body });
-    if (error) console.warn(error);
-    trackAction("chat_message_sent", { ok: !error });
+      .insert({ event_id: eventId, author_id: userId, body, pinned: pin, share_whatsapp: shareWa });
+    if (error) setErr("Only entered riders can post here. Check you're signed in with the email you entered with.");
+    else {
+      setText("");
+      setPin(false);
+    }
+    trackAction("chat_message_sent", { ok: !error, pinned: pin });
     setBusy(false);
   }
 
+  async function remove(id: string) {
+    await supabase.from("event_chat_messages").delete().eq("id", id);
+    qc.invalidateQueries({ queryKey: ["event-chat", eventId] });
+  }
+
+  async function openWhatsApp(id: string) {
+    const { data } = await supabase.rpc("chat_author_whatsapp", { _message_id: id });
+    if (data) window.open(waLink(String(data)), "_blank", "noopener");
+    else alert("This rider hasn't got a phone number on their profile yet.");
+  }
+
+  const Intro = (
+    <div className="rounded-2xl bg-secondary p-3 text-xs text-ink">
+      <p className="font-bold">💬 Rider chat &amp; lift board</p>
+      <ul className="mt-1 list-disc space-y-0.5 pl-4 text-ink-soft">
+        <li>Only signed-in, entered riders can read and post.</li>
+        <li>Messages stay here for good — tick <b>Pin to board</b> to keep a post at the top (great for lifts, bike racks or sharing accommodation).</li>
+        <li>Tap a rider's name to WhatsApp them directly, if they allowed it on their post.</li>
+        <li>Be kind — you can delete your own messages anytime.</li>
+      </ul>
+    </div>
+  );
+
+  if (!userId) {
+    return (
+      <div className="space-y-3">
+        {Intro}
+        <p className="rounded-2xl bg-card p-4 text-center text-sm text-ink ring-1 ring-border">
+          Sign in with the email you entered with to join the chat.
+        </p>
+      </div>
+    );
+  }
+
+  const all = (q.data ?? []) as any[];
+  const pinned = all.filter((m) => m.pinned);
+
+  function Name({ m, mine }: { m: any; mine: boolean }) {
+    const name = mine ? "You" : m.profiles?.full_name ?? "Rider";
+    if (!mine && m.share_whatsapp)
+      return (
+        <button
+          onClick={() => void openWhatsApp(m.id)}
+          className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-cherry underline"
+        >
+          {name} · WhatsApp
+        </button>
+      );
+    return <p className="text-[10px] font-bold uppercase tracking-wider opacity-70">{name}</p>;
+  }
+
   return (
-    <div className="flex h-[60vh] flex-col rounded-2xl bg-card ring-1 ring-border">
-      <div
-        ref={listRef}
-        className="flex-1 overflow-y-auto overscroll-y-auto p-3 [touch-action:pan-y]"
-      >
-        {(q.data ?? []).length === 0 ? (
-          <p className="mt-6 text-center text-xs text-ink-soft">
-            No messages yet. Say hi to your fellow riders 👋
-          </p>
-        ) : (
-          <ul className="space-y-2">
-            {(q.data ?? []).map((m: any) => {
+    <div className="space-y-3">
+      {Intro}
+      {pinned.length > 0 && (
+        <div className="rounded-2xl bg-card p-3 ring-1 ring-border">
+          <p className="text-[11px] font-bold uppercase tracking-wide text-ink-soft">📌 Board ({pinned.length})</p>
+          <ul className="mt-2 space-y-2">
+            {pinned.map((m) => {
               const mine = m.author_id === userId;
-              const name = m.profiles?.full_name ?? "Rider";
               return (
-                <li
-                  key={m.id}
-                  className={`max-w-[80%] rounded-2xl px-3 py-2 text-sm ${
-                    mine ? "ml-auto bg-cherry text-white" : "bg-secondary text-ink"
-                  }`}
-                >
-                  {!mine && (
-                    <p className="text-[10px] font-bold uppercase tracking-wider opacity-70">
-                      {name}
-                    </p>
-                  )}
+                <li key={m.id} className="rounded-xl bg-secondary px-3 py-2 text-sm text-ink">
+                  <div className="flex items-center justify-between gap-2">
+                    <Name m={m} mine={mine} />
+                    {mine && (
+                      <button onClick={() => void remove(m.id)} className="text-[10px] text-ink-soft underline">
+                        Delete
+                      </button>
+                    )}
+                  </div>
                   <p className="whitespace-pre-line">{m.body}</p>
+                  <p className="mt-0.5 text-[10px] text-ink-soft">{relativeTime(m.created_at)}</p>
                 </li>
               );
             })}
           </ul>
-        )}
-      </div>
-      <div className="flex items-center gap-2 border-t border-border p-2">
-        <input
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && !e.shiftKey) {
-              e.preventDefault();
-              void send();
-            }
-          }}
-          placeholder="Message the group…"
-          maxLength={1000}
-          className="flex-1 rounded-lg bg-background px-3 py-2 text-sm ring-1 ring-border focus:outline-none focus:ring-cherry"
-        />
-        <button
-          onClick={() => void send()}
-          disabled={busy || !text.trim()}
-          className="grid h-9 w-9 place-items-center rounded-full cherry-gradient text-white disabled:opacity-60"
-        >
-          <Send className="h-4 w-4" />
-        </button>
+        </div>
+      )}
+      <div className="flex h-[60vh] flex-col rounded-2xl bg-card ring-1 ring-border">
+        <div ref={listRef} className="flex-1 overflow-y-auto overscroll-y-auto p-3 [touch-action:pan-y]">
+          {q.isError ? (
+            <p className="mt-6 text-center text-xs text-ink-soft">
+              The chat is for entered riders only. Sign in with the email you entered with.
+            </p>
+          ) : all.length === 0 ? (
+            <p className="mt-6 text-center text-xs text-ink-soft">
+              No messages yet. Need a lift? Post it and pin it to the board 🚗
+            </p>
+          ) : (
+            <ul className="space-y-2">
+              {all.map((m) => {
+                const mine = m.author_id === userId;
+                return (
+                  <li
+                    key={m.id}
+                    className={`max-w-[80%] rounded-2xl px-3 py-2 text-sm ${
+                      mine ? "ml-auto bg-cherry text-white" : "bg-secondary text-ink"
+                    }`}
+                  >
+                    <Name m={m} mine={mine} />
+                    <p className="whitespace-pre-line">
+                      {m.pinned ? "📌 " : ""}
+                      {m.body}
+                    </p>
+                    {mine && (
+                      <button onClick={() => void remove(m.id)} className="mt-0.5 text-[10px] underline opacity-70">
+                        Delete
+                      </button>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
+        <div className="space-y-2 border-t border-border p-2">
+          <div className="flex flex-wrap gap-3 px-1 text-xs text-ink">
+            <label className="flex items-center gap-1">
+              <input type="checkbox" checked={pin} onChange={(e) => setPin(e.target.checked)} /> 📌 Pin to board
+            </label>
+            <label className="flex items-center gap-1">
+              <input type="checkbox" checked={shareWa} onChange={(e) => setShareWa(e.target.checked)} /> Let riders WhatsApp me
+            </label>
+          </div>
+          {err && <p className="px-1 text-xs text-cherry">{err}</p>}
+          <div className="flex items-center gap-2">
+            <input
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  void send();
+                }
+              }}
+              placeholder={pin ? "e.g. Lift from Durbanville Sat 6am, 1 seat + bike" : "Message the riders…"}
+              maxLength={1000}
+              className="flex-1 rounded-lg bg-background px-3 py-2 text-sm ring-1 ring-border focus:outline-none focus:ring-cherry"
+            />
+            <button
+              onClick={() => void send()}
+              disabled={busy || !text.trim()}
+              className="grid h-9 w-9 place-items-center rounded-full cherry-gradient text-white disabled:opacity-60"
+            >
+              <Send className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );
