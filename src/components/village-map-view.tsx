@@ -8,6 +8,7 @@ import {
   VILLAGE_LAYERS,
   categoryMeta,
   fetchVillageMap,
+  type VillageMap,
   fetchVillageMaps,
   hasVenueCentre,
   isPinnedSpot,
@@ -105,8 +106,35 @@ function venueMapsUrl(v: { name: string; address: string | null }): string | nul
   return buildMapLink({ address: (v.address ?? "").trim() || v.name });
 }
 
-function OpenMapsButton({ venue, label = "Open in Google Maps" }: { venue: { name: string; address: string | null } | null; label?: string }) {
-  const url = venue ? venueMapsUrl(venue) : null;
+/**
+ * Exact spot to open in Google Maps: the village registration pin, then the start
+ * line, then the village centre — the venue address is only a last resort.
+ */
+function villageAnchor(map: VillageMap | null | undefined): { lat: number; lng: number } | null {
+  if (!map) return null;
+  const pinned = (map.hotspots ?? []).filter((h) => Number.isFinite(h.lat) && Number.isFinite(h.lng));
+  const pick =
+    pinned.find((h) => h.category === "registration" && /regist/i.test(h.title ?? "")) ??
+    pinned.find((h) => /regist/i.test(h.title ?? "")) ??
+    pinned.find((h) => h.category === "start") ??
+    pinned.find((h) => /start/i.test(h.title ?? "")) ??
+    pinned.find((h) => h.category === "registration");
+  if (pick) return { lat: pick.lat as number, lng: pick.lng as number };
+  const g = map.geo;
+  if (g && Number.isFinite(g.lat) && Number.isFinite(g.lng) && (g.lat !== 0 || g.lng !== 0)) return { lat: g.lat, lng: g.lng };
+  return null;
+}
+
+function OpenMapsButton({
+  venue,
+  point,
+  label = "Open in Google Maps",
+}: {
+  venue: { name: string; address: string | null } | null;
+  point?: { lat: number; lng: number } | null;
+  label?: string;
+}) {
+  const url = point ? buildMapLink({ lat: point.lat, lng: point.lng }) : venue ? venueMapsUrl(venue) : null;
   if (!url) return null;
   return (
     <a
@@ -609,7 +637,7 @@ export function VillageMapView({
         {selectedVenue?.notes ? (
           <p className="text-xs leading-relaxed text-ink-soft">{selectedVenue.notes}</p>
         ) : null}
-        <OpenMapsButton venue={selectedVenue} />
+        <OpenMapsButton venue={selectedVenue} point={villageAnchor(map)} />
         <div className="rounded-2xl border border-dashed border-border p-6 text-center text-sm text-ink-soft">
           The village map for this venue hasn't been published yet — check back closer to race week.
         </div>
@@ -625,7 +653,7 @@ export function VillageMapView({
       {selectedVenue?.notes ? (
         <p className="text-xs leading-relaxed text-ink-soft">{selectedVenue.notes}</p>
       ) : null}
-      <OpenMapsButton venue={selectedVenue} />
+      <OpenMapsButton venue={selectedVenue} point={villageAnchor(map)} />
       <VillageShare eventId={eventId} venueId={venueId} isCrew={isCrew} />
       {focusZone ? (
         <p className="rounded-xl bg-accent px-3 py-2 text-xs font-semibold text-cherry-deep">
