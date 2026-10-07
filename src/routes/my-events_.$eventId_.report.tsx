@@ -10,14 +10,15 @@ import { supabase } from "@/integrations/supabase/client";
 import { fetchMyEventById, type MyEventRow } from "@/lib/my-events";
 import { flattenExtras } from "@/lib/extras-display";
 import { paymentStatus } from "@/lib/payment-status";
-import { eventHasTshirt } from "@/lib/apparel";
+import { eventApparel, hasSize, missingSizes } from "@/lib/apparel";
+import { MissingSizeCallout } from "@/components/missing-size-callout";
 import { fetchMyRooming } from "@/lib/rooming";
 
 export const Route = createFileRoute("/my-events_/$eventId_/report")({
   loader: async ({ params }) => {
     const { data, error } = await supabase
       .from("events")
-      .select("id, name, discipline, event_date, location")
+      .select("id, name, discipline, event_date, location, collects_tshirt_size, collects_jacket_size, entry_ninja_url, website_url")
       .eq("id", params.eventId)
       .maybeSingle();
     if (error || !data) throw notFound();
@@ -47,7 +48,13 @@ function ReportPage() {
   }, []);
 
   const row: MyEventRow | null = q.data ?? null;
-  const showTshirt = eventHasTshirt(event.name);
+  const apparel = eventApparel(event);
+  const missing = missingSizes(apparel, row);
+  const addSizeHref =
+    entryNinjaRegistrationUrl(row?.registration_ref) ??
+    event.entry_ninja_url ??
+    event.website_url ??
+    "https://entries.redcherryevents.co.za/";
 
   function downloadCsv() {
     const esc = (v: unknown) => `"${String(v ?? "").replace(/"/g, '""')}"`;
@@ -60,8 +67,8 @@ function ReportPage() {
       ["Category", row?.category ?? ""],
       ["Batch", row?.batch ?? ""],
       ["Bib number", row?.bib_number ?? ""],
-      ["Jacket size", row?.jacket_size ?? ""],
-      ...(showTshirt ? [["T-shirt size", row?.tshirt_size ?? ""]] : []),
+      ...(apparel.jacket ? [["Jacket size", hasSize(row?.jacket_size) ? row!.jacket_size! : "Not provided"]] : []),
+      ...(apparel.tshirt ? [["T-shirt size", hasSize(row?.tshirt_size) ? row!.tshirt_size! : "Not provided"]] : []),
       ["Accommodation venue", rooming?.venue?.name ?? ""],
       ["Tent / room number", rooming?.tent_number ?? ""],
       ["Room type", rooming?.room_type ?? ""],
@@ -144,11 +151,12 @@ function ReportPage() {
             </p>
           ) : (
             <>
+              <MissingSizeCallout missing={missing} href={addSizeHref} />
               <Row label="Category" value={row.category} />
               <Row label="Batch" value={row.batch} />
               <Row label="Bib number" value={row.bib_number ? `#${row.bib_number}` : null} />
-              <Row label="Jacket size" value={row.jacket_size} />
-              {showTshirt ? <Row label="T-shirt size" value={row.tshirt_size} /> : null}
+              {apparel.jacket ? <SizeRow label="Jacket size" value={row.jacket_size} /> : null}
+              {apparel.tshirt ? <SizeRow label="T-shirt size" value={row.tshirt_size} /> : null}
               <Row label="Payment status" value={paymentStatus(row)?.label ?? null} />
               <Row label="Notes" value={row.notes} />
 
@@ -207,9 +215,8 @@ function ReportPage() {
                       target="_blank"
                       rel="noreferrer"
                     >
-                      entries.redcherryevents.co.za/registrations/
+                      www.entryninja.com/registrations/
                       {entryNinjaRegistrationId(row.registration_ref)}
-
                     </a>
                   </p>
                 ) : null}
@@ -235,6 +242,18 @@ function Row({ label, value }: { label: string; value: string | null }) {
       </span>
       <span className="text-right text-sm font-semibold text-ink">
         {value && value.trim() ? value : "—"}
+      </span>
+    </div>
+  );
+}
+
+function SizeRow({ label, value }: { label: string; value: string | null }) {
+  if (hasSize(value)) return <Row label={label} value={value} />;
+  return (
+    <div className="mt-4 flex items-baseline justify-between gap-3 border-b border-border/50 pb-2">
+      <span className="text-[10px] font-bold uppercase tracking-widest text-ink-soft">{label}</span>
+      <span className="rounded bg-amber-100 px-2 py-0.5 text-xs font-bold text-amber-800 ring-1 ring-amber-300">
+        Not provided
       </span>
     </div>
   );
