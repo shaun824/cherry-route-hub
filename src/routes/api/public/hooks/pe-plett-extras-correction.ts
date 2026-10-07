@@ -48,7 +48,7 @@ export const Route = createFileRoute("/api/public/hooks/pe-plett-extras-correcti
           const res = await sendTemplateEmail("pe-plett-extras", String(body.testTo), { templateData: build(r) });
           return Response.json({ test: res, targets: targets.length });
         }
-        if (body.mode !== "send") return Response.json({ targets: targets.length, withEntry: targets.filter((t) => byEmail.has(t)).length });
+        if (body.mode !== "send") return Response.json({ pending: pending.length, targets: targets.length, withEntry: targets.filter((t) => byEmail.has(t)).length });
 
         let sent = 0, suppressed = 0; const errors: string[] = [];
         for (const to of pending) {
