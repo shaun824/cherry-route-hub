@@ -141,10 +141,32 @@ function MapControls({ bounds }: { bounds: [[number, number], [number, number]] 
   );
 }
 
-/** Shows where the rider is hovering on an elevation profile below the map. */
+/** Shows where the rider is on the elevation profile, as a direction arrow,
+ *  and keeps the map following from a comfortable distance. */
 function HoverMarker() {
   const hover = useRouteHover();
+  const map = useMap();
+  const scrubbing = useRef(false);
+  useEffect(() => {
+    if (!hover) {
+      scrubbing.current = false;
+      return;
+    }
+    const ll = L.latLng(hover.lat, hover.lng);
+    const FOLLOW_ZOOM = 14;
+    if (!scrubbing.current) {
+      scrubbing.current = true;
+      // Zoom in only to a mid-level so riders keep context around them.
+      if (map.getZoom() < FOLLOW_ZOOM - 1) {
+        map.setView(ll, FOLLOW_ZOOM, { animate: true });
+        return;
+      }
+    }
+    // Only pan once the point leaves the middle of the map — a calm follow.
+    if (!map.getBounds().pad(-0.3).contains(ll)) map.panTo(ll, { animate: true, duration: 0.35 });
+  }, [hover, map]);
   if (!hover) return null;
+  const rot = hover.bearing ?? 0;
   return (
     <Marker
       position={[hover.lat, hover.lng] as [number, number]}
@@ -152,12 +174,84 @@ function HoverMarker() {
       zIndexOffset={1000}
       icon={L.divIcon({
         className: "rce-hover-marker",
-        html: `<div style="width:18px;height:18px;border-radius:9999px;background:#e11d48;border:3px solid #fff;box-shadow:0 0 0 3px rgba(225,29,72,.35);"></div>`,
-        iconSize: [18, 18],
-        iconAnchor: [9, 9],
+        html: hover.bearing === undefined
+          ? `<div style="width:22px;height:22px;border-radius:9999px;background:#e11d48;border:3px solid #fff;box-shadow:0 0 0 3px rgba(225,29,72,.35);"></div>`
+          : `<div style="width:34px;height:34px;display:grid;place-items:center;border-radius:9999px;background:#e11d48;border:3px solid #fff;box-shadow:0 0 0 4px rgba(225,29,72,.3),0 2px 6px rgba(0,0,0,.35);transform:rotate(${rot}deg)"><svg width="16" height="16" viewBox="0 0 24 24"><path d="M12 2 L20 20 L12 15 L4 20 Z" fill="#fff"/></svg></div>`,
+        iconSize: [34, 34],
+        iconAnchor: [17, 17],
       })}
     />
   );
+}
+
+/** Animated chevrons that flow along each route in its riding direction. */
+function DirectionArrows({ lines }: { lines: { color: string; coords: [number, number][] }[] }) {
+  const map = useMap();
+  useEffect(() => {
+    const layer = L.layerGroup().addTo(map);
+    type Track = { cum: number[]; pts: L.LatLng[]; total: number; markers: { m: L.Marker; el?: HTMLElement }[] };
+    const tracks: Track[] = [];
+    for (const l of lines) {
+      if (l.coords.length < 2) continue;
+      const pts = l.coords.map(([lat, lng]) => L.latLng(lat, lng));
+      const cum = [0];
+      for (let i = 1; i < pts.length; i++) cum.push(cum[i - 1] + pts[i - 1].distanceTo(pts[i]));
+      const total = cum[cum.length - 1];
+      if (total < 50) continue;
+      const n = Math.max(3, Math.min(24, Math.round(total / 1500)));
+      const markers = Array.from({ length: n }, () => {
+        const m = L.marker(pts[0], {
+          interactive: false,
+          keyboard: false,
+          icon: L.divIcon({
+            className: "",
+            iconSize: [18, 18],
+            iconAnchor: [9, 9],
+            html: `<div data-arrow style="width:18px;height:18px;display:grid;place-items:center;border-radius:9999px;background:${l.color};border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.4)"><svg width="10" height="10" viewBox="0 0 24 24"><path d="M12 3 L21 19 L12 14 L3 19 Z" fill="#fff"/></svg></div>`,
+          }),
+        }).addTo(layer);
+        return { m };
+      });
+      tracks.push({ cum, pts, total, markers });
+    }
+    const at = (t: Track, d: number) => {
+      let lo = 0, hi = t.cum.length - 1;
+      while (lo < hi - 1) {
+        const mid = (lo + hi) >> 1;
+        if (t.cum[mid] <= d) lo = mid; else hi = mid;
+      }
+      const a = t.pts[lo], b = t.pts[hi];
+      const seg = t.cum[hi] - t.cum[lo] || 1;
+      const f = (d - t.cum[lo]) / seg;
+      const pa = map.project(a), pb = map.project(b);
+      const ang = (Math.atan2(pb.x - pa.x, pa.y - pb.y) * 180) / Math.PI;
+      return { ll: L.latLng(a.lat + (b.lat - a.lat) * f, a.lng + (b.lng - a.lng) * f), ang };
+    };
+    const reduce = typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    let raf = 0, last = 0;
+    const start = performance.now();
+    const tick = (now: number) => {
+      raf = requestAnimationFrame(tick);
+      if (now - last < 60) return;
+      last = now;
+      const phase = reduce ? 0 : ((now - start) / 6000) % 1; // one gap travelled every 6 s
+      for (const t of tracks) {
+        const gap = t.total / t.markers.length;
+        t.markers.forEach((mk, i) => {
+          const { ll, ang } = at(t, ((i + phase) * gap) % t.total);
+          mk.m.setLatLng(ll);
+          mk.el ??= (mk.m.getElement()?.querySelector("[data-arrow]") as HTMLElement | null) ?? undefined;
+          if (mk.el) mk.el.style.transform = `rotate(${ang}deg)`;
+        });
+      }
+    };
+    raf = requestAnimationFrame(tick);
+    return () => {
+      cancelAnimationFrame(raf);
+      layer.remove();
+    };
+  }, [lines, map]);
+  return null;
 }
 
 function FitToBounds({ bounds }: { bounds: [[number, number], [number, number]] | null }) {
@@ -382,6 +476,14 @@ export default function RouteMapInner({
 
 
   const visible = loaded.filter((l) => enabled[l.route.id]);
+  const arrowLines = useMemo(
+    () =>
+      visible.flatMap((l) =>
+        l.lines.map((line) => ({ color: l.color, coords: line.map(([lng, lat]) => [lat, lng] as [number, number]) })),
+      ),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [visible.map((l) => l.route.id).join(","), loaded],
+  );
 
   // Water points and other markers are usually captured against one route
   // (often Gold), but they serve every distance riding that day — so show them
@@ -503,6 +605,7 @@ export default function RouteMapInner({
       <FitToBounds bounds={bounds} />
       <MapControls bounds={bounds} />
       <HoverMarker />
+      <DirectionArrows lines={arrowLines} />
       {keySuffix === "-fs" ? <FlyTo target={flyTarget} /> : null}
       {visible.map((l) =>
         l.lines.map((line, i) => (

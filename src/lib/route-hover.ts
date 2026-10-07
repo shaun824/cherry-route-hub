@@ -2,7 +2,7 @@
 // which point on the route the rider is currently hovering.
 import { useSyncExternalStore } from "react";
 
-export type RouteHover = { routeId: string; lat: number; lng: number; km: number } | null;
+export type RouteHover = { routeId: string; lat: number; lng: number; km: number; bearing?: number } | null;
 
 let current: RouteHover = null;
 const listeners = new Set<() => void>();

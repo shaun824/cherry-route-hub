@@ -260,7 +260,14 @@ export function RouteProfile({
     }
     setHover(best);
     const p = series[best];
-    setRouteHover({ routeId: route.id, lat: p.lat, lng: p.lng, km: p.km });
+    const a = series[Math.max(0, best - 1)];
+    const b = series[Math.min(series.length - 1, best + 1)];
+    const y = Math.sin(((b.lng - a.lng) * Math.PI) / 180) * Math.cos((b.lat * Math.PI) / 180);
+    const x =
+      Math.cos((a.lat * Math.PI) / 180) * Math.sin((b.lat * Math.PI) / 180) -
+      Math.sin((a.lat * Math.PI) / 180) * Math.cos((b.lat * Math.PI) / 180) * Math.cos(((b.lng - a.lng) * Math.PI) / 180);
+    const bearing = a === b ? undefined : (Math.atan2(y, x) * 180) / Math.PI;
+    setRouteHover({ routeId: route.id, lat: p.lat, lng: p.lng, km: p.km, bearing });
   };
 
   const clearHover = () => {
@@ -399,6 +406,9 @@ export function RouteProfile({
           </g>
         ) : null}
       </svg>
+      <p className={`mt-1 text-center text-[10px] font-medium ${pePlett ? "text-pe-plett-foreground/60" : "text-ink-soft"}`}>
+        {hoverPoint ? `${hoverPoint.km.toFixed(1)} km · ${Math.round(hoverPoint.ele)} m` : "Slide your finger along the chart to follow the route on the map"}
+      </p>
       </div>
 
       <p className={`mt-1 text-[11px] font-semibold ${pePlett ? "text-pe-plett-foreground/80" : "text-ink"}`}>
