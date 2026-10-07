@@ -476,6 +476,14 @@ export default function RouteMapInner({
 
 
   const visible = loaded.filter((l) => enabled[l.route.id]);
+  const arrowLines = useMemo(
+    () =>
+      visible.flatMap((l) =>
+        l.lines.map((line) => ({ color: l.color, coords: line.map(([lng, lat]) => [lat, lng] as [number, number]) })),
+      ),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [visible.map((l) => l.route.id).join(","), loaded],
+  );
 
   // Water points and other markers are usually captured against one route
   // (often Gold), but they serve every distance riding that day — so show them
