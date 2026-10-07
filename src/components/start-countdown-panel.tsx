@@ -32,63 +32,100 @@ export function StartCountdownPanel({ eventId, fieldToken }: { eventId: string; 
   const total = classes.reduce((n, c) => n + c.count, 0);
   if (data.length === 0 && classes.length === 0) return null;
   const nextIdx = data.findIndex((s) => new Date(s.at).getTime() > now);
-  const byDay = new Map<string, typeof data>();
-  for (const s of data) byDay.set(s.dayLabel, [...(byDay.get(s.dayLabel) ?? []), s]);
+
+  // Assign each class to the start waves it rides in (tier + e-bike + optional weekday).
+  const TIERS = ["gold", "silver", "bronze"];
+  const WD = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
+  const matches = (cls: string, s: (typeof data)[number]) => {
+    const c = cls.toLowerCase();
+    const l = s.label.toLowerCase();
+    const tier = TIERS.find((t) => c.includes(t));
+    if (!tier) return false;
+    if (/e-?bike/.test(c) !== /e-?bike/.test(l)) return false;
+    if (TIERS.find((t) => l.includes(t)) !== tier) return false;
+    const only = WD.find((w) => c.includes(w));
+    if (only) {
+      const wd = new Date(s.at).toLocaleDateString("en-ZA", { weekday: "long", timeZone: "Africa/Johannesburg" }).toLowerCase();
+      if (wd !== only) return false;
+    }
+    return true;
+  };
+  const assigned = new Set<string>();
+  const waveClasses = data.map((s) => {
+    const list = classes.filter((c) => matches(c.name, s));
+    list.forEach((c) => assigned.add(c.name));
+    return list;
+  });
+  const unassigned = classes.filter((c) => !assigned.has(c.name));
+  const byDay = new Map<string, number[]>();
+  data.forEach((s, i) => byDay.set(s.dayLabel, [...(byDay.get(s.dayLabel) ?? []), i]));
 
   return (
-    <div className="grid gap-3 md:grid-cols-2">
-    {data.length > 0 ? (
     <section className="rounded-2xl bg-card p-3 ring-1 ring-border">
-      <h2 className="flex items-center gap-2 font-display font-bold text-ink">
-        <Timer className="h-4 w-4 text-cherry" /> Start times
+      <h2 className="flex items-center justify-between gap-2 font-display font-bold text-ink">
+        <span className="flex items-center gap-2"><Timer className="h-4 w-4 text-cherry" /> Start waves</span>
+        {total > 0 ? (
+          <span className="flex items-center gap-1 rounded-full bg-cherry px-2 py-0.5 text-xs text-white">
+            <Users className="h-3 w-3" /> {total} entered
+          </span>
+        ) : null}
       </h2>
       <div className="mt-2 space-y-3">
-        {[...byDay.entries()].map(([day, list]) => (
+        {[...byDay.entries()].map(([day, idxs]) => (
           <div key={day}>
             <p className="text-[11px] font-bold uppercase tracking-wide text-ink-soft">{day}</p>
             <ul className="mt-1 divide-y divide-border">
-              {list.map((s) => {
-                const t = new Date(s.at).getTime();
-                const left = t - now;
-                const isNext = data[nextIdx] === s;
+              {idxs.map((i) => {
+                const s = data[i];
+                const left = new Date(s.at).getTime() - now;
+                const isNext = i === nextIdx;
+                const wc = waveClasses[i];
+                const riders = wc.reduce((n, c) => n + c.count, 0);
                 return (
-                  <li key={s.at + s.label} className={`flex items-center gap-3 py-2 ${isNext ? "font-bold" : ""}`}>
-                    <span className="w-12 font-mono text-sm text-ink">
-                      {new Date(s.at).toLocaleTimeString("en-ZA", { hour: "2-digit", minute: "2-digit", timeZone: "Africa/Johannesburg" })}
-                    </span>
-                    <span className="min-w-0 flex-1 truncate text-sm text-ink">{s.label}</span>
-                    <span
-                      className={`rounded-full px-2 py-0.5 text-xs font-mono ${
-                        left <= 0 ? "bg-muted text-ink-soft" : isNext ? "bg-cherry text-white" : "bg-muted text-ink"
-                      }`}
-                    >
-                      {left <= 0 ? "Started" : fmtLeft(left)}
-                    </span>
+                  <li key={s.at + s.label} className="py-2">
+                    <div className={`flex items-center gap-2 ${isNext ? "font-bold" : ""}`}>
+                      <span className="w-12 font-mono text-sm text-ink">
+                        {new Date(s.at).toLocaleTimeString("en-ZA", { hour: "2-digit", minute: "2-digit", timeZone: "Africa/Johannesburg" })}
+                      </span>
+                      <span className="min-w-0 flex-1 truncate text-sm text-ink">{s.label}</span>
+                      <span className="rounded-full bg-ink px-2 py-0.5 font-mono text-xs font-bold text-background">
+                        {riders}
+                      </span>
+                      <span
+                        className={`rounded-full px-2 py-0.5 text-xs font-mono ${
+                          left <= 0 ? "bg-muted text-ink-soft" : isNext ? "bg-cherry text-white" : "bg-muted text-ink"
+                        }`}
+                      >
+                        {left <= 0 ? "Started" : fmtLeft(left)}
+                      </span>
+                    </div>
+                    {wc.length > 0 ? (
+                      <p className="mt-1 pl-14 text-xs text-ink-soft">
+                        {wc.map((c) => `${c.name.replace(/\s*Weekend Warrior\s*/i, "").trim()} (${c.count})`).join(" · ")}
+                      </p>
+                    ) : null}
                   </li>
                 );
               })}
             </ul>
           </div>
         ))}
+        {unassigned.length > 0 ? (
+          <div className="rounded-xl bg-muted p-2">
+            <p className="text-[11px] font-bold uppercase tracking-wide text-ink-soft">
+              Not in a wave yet · {unassigned.reduce((n, c) => n + c.count, 0)} riders
+            </p>
+            <ul className="mt-1 space-y-1">
+              {unassigned.map((c) => (
+                <li key={c.name} className="flex items-center justify-between text-xs text-ink">
+                  <span className="truncate">{c.name}</span>
+                  <span className="font-mono">{c.count}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
       </div>
     </section>
-    ) : null}
-    {classes.length > 0 ? (
-      <section className="rounded-2xl bg-card p-3 ring-1 ring-border">
-        <h2 className="flex items-center justify-between gap-2 font-display font-bold text-ink">
-          <span className="flex items-center gap-2"><Users className="h-4 w-4 text-cherry" /> Entries per class</span>
-          <span className="rounded-full bg-cherry px-2 py-0.5 text-xs text-white">{total} total</span>
-        </h2>
-        <ul className="mt-2 divide-y divide-border">
-          {classes.map((c) => (
-            <li key={c.name} className="flex items-center gap-3 py-2">
-              <span className="min-w-0 flex-1 truncate text-sm text-ink">{c.name}</span>
-              <span className="rounded-full bg-muted px-2 py-0.5 font-mono text-xs text-ink">{c.count}</span>
-            </li>
-          ))}
-        </ul>
-      </section>
-    ) : null}
-    </div>
   );
 }
