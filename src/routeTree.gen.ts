@@ -108,6 +108,7 @@ import { Route as ApiPublicHooksMerchSyncRouteImport } from './routes/api/public
 import { Route as ApiPublicHooksNewsSyncRouteImport } from './routes/api/public/hooks/news-sync'
 import { Route as ApiPublicHooksNotificationClickRouteImport } from './routes/api/public/hooks/notification-click'
 import { Route as ApiPublicHooksNotificationCronRouteImport } from './routes/api/public/hooks/notification-cron'
+import { Route as ApiPublicHooksPePlettExtrasCorrectionRouteImport } from './routes/api/public/hooks/pe-plett-extras-correction'
 import { Route as ApiPublicHooksRoomingSheetSyncRouteImport } from './routes/api/public/hooks/rooming-sheet-sync'
 import { Route as ApiPublicHooksRunSheetSyncRouteImport } from './routes/api/public/hooks/run-sheet-sync'
 import { Route as ApiPublicHooksScheduleSyncRouteImport } from './routes/api/public/hooks/schedule-sync'
@@ -632,6 +633,12 @@ const ApiPublicHooksNotificationCronRoute =
     path: '/api/public/hooks/notification-cron',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksPePlettExtrasCorrectionRoute =
+  ApiPublicHooksPePlettExtrasCorrectionRouteImport.update({
+    id: '/api/public/hooks/pe-plett-extras-correction',
+    path: '/api/public/hooks/pe-plett-extras-correction',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksRoomingSheetSyncRoute =
   ApiPublicHooksRoomingSheetSyncRouteImport.update({
     id: '/api/public/hooks/rooming-sheet-sync',
@@ -793,6 +800,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/news-sync': typeof ApiPublicHooksNewsSyncRoute
   '/api/public/hooks/notification-click': typeof ApiPublicHooksNotificationClickRoute
   '/api/public/hooks/notification-cron': typeof ApiPublicHooksNotificationCronRoute
+  '/api/public/hooks/pe-plett-extras-correction': typeof ApiPublicHooksPePlettExtrasCorrectionRoute
   '/api/public/hooks/rooming-sheet-sync': typeof ApiPublicHooksRoomingSheetSyncRoute
   '/api/public/hooks/run-sheet-sync': typeof ApiPublicHooksRunSheetSyncRoute
   '/api/public/hooks/schedule-sync': typeof ApiPublicHooksScheduleSyncRoute
@@ -901,6 +909,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/news-sync': typeof ApiPublicHooksNewsSyncRoute
   '/api/public/hooks/notification-click': typeof ApiPublicHooksNotificationClickRoute
   '/api/public/hooks/notification-cron': typeof ApiPublicHooksNotificationCronRoute
+  '/api/public/hooks/pe-plett-extras-correction': typeof ApiPublicHooksPePlettExtrasCorrectionRoute
   '/api/public/hooks/rooming-sheet-sync': typeof ApiPublicHooksRoomingSheetSyncRoute
   '/api/public/hooks/run-sheet-sync': typeof ApiPublicHooksRunSheetSyncRoute
   '/api/public/hooks/schedule-sync': typeof ApiPublicHooksScheduleSyncRoute
@@ -1014,6 +1023,7 @@ export interface FileRoutesById {
   '/api/public/hooks/news-sync': typeof ApiPublicHooksNewsSyncRoute
   '/api/public/hooks/notification-click': typeof ApiPublicHooksNotificationClickRoute
   '/api/public/hooks/notification-cron': typeof ApiPublicHooksNotificationCronRoute
+  '/api/public/hooks/pe-plett-extras-correction': typeof ApiPublicHooksPePlettExtrasCorrectionRoute
   '/api/public/hooks/rooming-sheet-sync': typeof ApiPublicHooksRoomingSheetSyncRoute
   '/api/public/hooks/run-sheet-sync': typeof ApiPublicHooksRunSheetSyncRoute
   '/api/public/hooks/schedule-sync': typeof ApiPublicHooksScheduleSyncRoute
@@ -1128,6 +1138,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/news-sync'
     | '/api/public/hooks/notification-click'
     | '/api/public/hooks/notification-cron'
+    | '/api/public/hooks/pe-plett-extras-correction'
     | '/api/public/hooks/rooming-sheet-sync'
     | '/api/public/hooks/run-sheet-sync'
     | '/api/public/hooks/schedule-sync'
@@ -1236,6 +1247,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/news-sync'
     | '/api/public/hooks/notification-click'
     | '/api/public/hooks/notification-cron'
+    | '/api/public/hooks/pe-plett-extras-correction'
     | '/api/public/hooks/rooming-sheet-sync'
     | '/api/public/hooks/run-sheet-sync'
     | '/api/public/hooks/schedule-sync'
@@ -1348,6 +1360,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/news-sync'
     | '/api/public/hooks/notification-click'
     | '/api/public/hooks/notification-cron'
+    | '/api/public/hooks/pe-plett-extras-correction'
     | '/api/public/hooks/rooming-sheet-sync'
     | '/api/public/hooks/run-sheet-sync'
     | '/api/public/hooks/schedule-sync'
@@ -1416,6 +1429,7 @@ export interface RootRouteChildren {
   ApiPublicHooksNewsSyncRoute: typeof ApiPublicHooksNewsSyncRoute
   ApiPublicHooksNotificationClickRoute: typeof ApiPublicHooksNotificationClickRoute
   ApiPublicHooksNotificationCronRoute: typeof ApiPublicHooksNotificationCronRoute
+  ApiPublicHooksPePlettExtrasCorrectionRoute: typeof ApiPublicHooksPePlettExtrasCorrectionRoute
   ApiPublicHooksRoomingSheetSyncRoute: typeof ApiPublicHooksRoomingSheetSyncRoute
   ApiPublicHooksRunSheetSyncRoute: typeof ApiPublicHooksRunSheetSyncRoute
   ApiPublicHooksScheduleSyncRoute: typeof ApiPublicHooksScheduleSyncRoute
@@ -2124,6 +2138,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksNotificationCronRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/pe-plett-extras-correction': {
+      id: '/api/public/hooks/pe-plett-extras-correction'
+      path: '/api/public/hooks/pe-plett-extras-correction'
+      fullPath: '/api/public/hooks/pe-plett-extras-correction'
+      preLoaderRoute: typeof ApiPublicHooksPePlettExtrasCorrectionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/rooming-sheet-sync': {
       id: '/api/public/hooks/rooming-sheet-sync'
       path: '/api/public/hooks/rooming-sheet-sync'
@@ -2398,6 +2419,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksNewsSyncRoute: ApiPublicHooksNewsSyncRoute,
   ApiPublicHooksNotificationClickRoute: ApiPublicHooksNotificationClickRoute,
   ApiPublicHooksNotificationCronRoute: ApiPublicHooksNotificationCronRoute,
+  ApiPublicHooksPePlettExtrasCorrectionRoute:
+    ApiPublicHooksPePlettExtrasCorrectionRoute,
   ApiPublicHooksRoomingSheetSyncRoute: ApiPublicHooksRoomingSheetSyncRoute,
   ApiPublicHooksRunSheetSyncRoute: ApiPublicHooksRunSheetSyncRoute,
   ApiPublicHooksScheduleSyncRoute: ApiPublicHooksScheduleSyncRoute,
