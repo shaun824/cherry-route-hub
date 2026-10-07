@@ -53,6 +53,8 @@ function fmtDist(m: number) {
 }
 import { useAdminStore } from "@/lib/store";
 import { withRegistrationDayLabels } from "@/lib/event-days";
+import { useIsAdmin } from "@/lib/auth";
+import { inRaceLocationWindow } from "@/lib/location-window";
 import { addDirectionArrows } from "@/lib/map-direction-arrows";
 import { parseKml, simplifyPolyline, capPolyline, type LatLngAlt } from "@/lib/geo";
 import {
@@ -833,6 +835,9 @@ export default function LiveTrackingMapInner({
   }, [viewerLoc, candidates]);
   const nearCourse = distToCourse != null && distToCourse <= SHARE_RADIUS_M;
   const [sharing, setSharing] = useState(false);
+  const { isAdmin } = useIsAdmin();
+  // Only admins, and only from 3 days before race day, can share their location.
+  const shareAllowed = !fieldToken && isAdmin && inRaceLocationWindow((event as { date?: string } | undefined)?.date, event?.days);
   const [teamName, setTeamName] = useState("");
   const [deviceId, setDeviceId] = useState("");
   useEffect(() => {
@@ -866,12 +871,12 @@ export default function LiveTrackingMapInner({
   };
   const lastSentRef = useRef(0);
   useEffect(() => {
-    if (!crewTools || !sharing || !nearCourse || !viewerLoc || !deviceId || !teamName) return;
+    if (!crewTools || !shareAllowed || !sharing || !nearCourse || !viewerLoc || !deviceId || !teamName) return;
     if (Date.now() - lastSentRef.current < 15_000) return;
     lastSentRef.current = Date.now();
     const payload = { data: { eventId, token: fieldToken, deviceId, name: teamName, lat: viewerLoc.lat, lng: viewerLoc.lng } };
     (fieldToken ? shareTeamLocationField(payload) : shareTeamLocationCrew(payload)).catch(() => {});
-  }, [crewTools, sharing, nearCourse, viewerLoc, deviceId, teamName, eventId, fieldToken]);
+  }, [crewTools, shareAllowed, sharing, nearCourse, viewerLoc, deviceId, teamName, eventId, fieldToken]);
   const { data: team } = useQuery({
     queryKey: ["team-locations", eventId, fieldToken ?? ""],
     queryFn: () =>
@@ -1347,7 +1352,7 @@ export default function LiveTrackingMapInner({
               <LocateFixed className="h-3.5 w-3.5 text-primary" /> {viewerLoc ? "Centre on me" : "Show my location"}
             </Button>
           ) : null}
-          {crewTools ? (
+          {crewTools && shareAllowed ? (
             <Button variant="outline" size="sm"
               type="button"
               onClick={toggleSharing}
