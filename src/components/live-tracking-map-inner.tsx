@@ -15,6 +15,7 @@ import { Crosshair, Layers, LocateFixed, MapPin, Maximize2, Navigation, Copy, Sh
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import type { CustomMarker } from "@/lib/mock-data";
+import { RouteProfile } from "@/components/route-profile";
 import {
   fetchTeamLocationsCrew,
   fetchTeamLocationsField,
@@ -683,21 +684,32 @@ export default function LiveTrackingMapInner({
     for (const c of dayCandidates) if (cats.some((cat) => categoryMatchesRoute(cat, c.route))) ids.add(c.route.id);
     return [...ids];
   }, [followedRider, riders, dayCandidates]);
-  const routeUnknown = !manualRoutes && autoIds.length === 0 && dayCandidates.length > 1;
+  // Like the route map: never dump every route faintly — default to the day's first (primary) route.
+  const routeUnknown = false;
   const matchedIds = useMemo(() => {
-    if (manualRoutes) return manualRoutes.filter((id) => candidates.some((c) => c.route.id === id));
-    return autoIds.length > 0 ? autoIds : dayCandidates.map((c) => c.route.id);
-  }, [manualRoutes, autoIds, dayCandidates, candidates]);
+    if (manualRoutes) {
+      const ids = manualRoutes.filter((id) => dayCandidates.some((c) => c.route.id === id));
+      if (ids.length) return ids;
+    }
+    if (followedRider && autoIds.length > 0) return autoIds;
+    return dayCandidates[0] ? [dayCandidates[0].route.id] : [];
+  }, [manualRoutes, autoIds, dayCandidates, followedRider]);
   const matchedRoutes = useMemo(
     () => candidates.filter((c) => matchedIds.includes(c.route.id)),
     [candidates, matchedIds],
   );
   const toggleRoute = (id: string) => {
-    const base = manualRoutes ?? matchedIds;
-    saveManual(base.includes(id) ? base.filter((x) => x !== id) : [...base, id]);
+    const base = matchedIds;
+    const next = base.includes(id) ? base.filter((x) => x !== id) : [...base, id];
+    saveManual(next.length ? next : [id]);
+  };
+  const pickDay = (id: string) => {
+    setPickedDay(id);
+    const first = candidates.find((c) => c.dayId === id);
+    saveManual(first ? [first.route.id] : null);
   };
 
-  // Draw the course underneath the rider markers.
+  // Draw the course underneath the rider markers (same style as the route map).
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
@@ -709,11 +721,7 @@ export default function LiveTrackingMapInner({
       const polys = c.lines.map((line) => {
         const latlngs = line.map(([lng, lat]) => [lat, lng] as [number, number]);
         for (const ll of latlngs) bounds.push(ll);
-        return L.polyline(latlngs, {
-          color: c.color,
-          weight: routeUnknown ? 3 : isCrew ? 6 : 5,
-          opacity: routeUnknown ? 0.45 : isCrew ? 1 : 0.85,
-        })
+        return L.polyline(latlngs, { color: c.color, weight: 5, opacity: 0.95 })
           .addTo(map)
           .bindTooltip(`${c.route.name} · ${c.dayLabel}`, { sticky: true });
       });
@@ -724,19 +732,17 @@ export default function LiveTrackingMapInner({
     if (!fittedRef.current && bounds.length > 0) {
       map.fitBounds(L.latLngBounds(bounds).pad(0.1));
     }
-    const stopArrows = routeUnknown
-      ? () => {}
-      : addDirectionArrows(
-          map,
-          matchedRoutes.flatMap((c) => c.lines.map((line) => ({ color: c.color, coords: line.map(([lng, lat]) => [lat, lng] as [number, number]) }))),
-        );
+    const stopArrows = addDirectionArrows(
+      map,
+      matchedRoutes.flatMap((c) => c.lines.map((line) => ({ color: c.color, coords: line.map(([lng, lat]) => [lat, lng] as [number, number]) }))),
+    );
 
     return () => {
       stopArrows();
       for (const [, polys] of routeLayersRef.current) polys.forEach((p) => p.remove());
       routeLayersRef.current.clear();
     };
-  }, [matchedRoutes, routeUnknown, isCrew]);
+  }, [matchedRoutes]);
 
   // Course line used for progress + off-course checks: the followed rider's route.
   const course: CourseLine | null = useMemo(() => {
@@ -942,7 +948,6 @@ export default function LiveTrackingMapInner({
 
   // Every point dropped on the day's routes (marshals, waterpoints, sponsors…), for the map layer.
   const mapPoints = useMemo(() => {
-    if (!crewTools) return [] as (FieldPoint & { logoUrl?: string; color?: string })[];
     const byKey = new Map<string, FieldPoint & { logoUrl?: string; color?: string }>();
     for (const c of dayCandidates) {
       for (const m of (c.route.customMarkers ?? []) as CustomMarker[]) {
@@ -1505,6 +1510,41 @@ export default function LiveTrackingMapInner({
       }
     >
       {renderHeader()}
+      {!fullscreen && candidates.length > 0 ? (
+        <div className="space-y-1.5">
+          {dayOptions.length > 1 ? (
+            <div className="flex flex-wrap gap-1.5">
+              {dayOptions.map((d) => (
+                <button
+                  key={d.id}
+                  type="button"
+                  onClick={() => pickDay(d.id)}
+                  className={`rounded-full px-3 py-1.5 text-xs font-bold ring-1 ring-border ${d.id === activeDayId ? "bg-ink text-background" : "bg-card text-ink"}`}
+                >
+                  {d.label ?? d.date}
+                </button>
+              ))}
+            </div>
+          ) : null}
+          <div className="flex flex-wrap gap-1.5">
+            {dayCandidates.map((c) => {
+              const on = matchedIds.includes(c.route.id);
+              return (
+                <button
+                  key={c.route.id}
+                  type="button"
+                  aria-pressed={on}
+                  onClick={() => toggleRoute(c.route.id)}
+                  className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold ring-1 ring-border ${on ? "bg-card text-ink" : "bg-background text-ink-soft opacity-60"}`}
+                >
+                  <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ backgroundColor: c.color }} />
+                  {c.route.name}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      ) : null}
       <div className={fullscreen ? "relative min-h-0 flex-1" : "relative"}>
         <div
           ref={hostRef}
@@ -1677,17 +1717,12 @@ export default function LiveTrackingMapInner({
         </div>
       ) : null}
 
-      {!fullscreen && legendRoutes.length > 0 ? (
-        <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-          <RouteIcon className="h-3.5 w-3.5 text-cherry" />
-          <span>{routeUnknown ? "Route unknown — showing all" : manualRoutes ? "Showing" : "Rider's route"}:</span>
-          {legendRoutes.map((c) => (
-            <span key={c.route.id} className="inline-flex items-center gap-1.5 font-medium text-ink">
-              <span className="inline-block h-2.5 w-6 rounded-full" style={{ backgroundColor: c.color }} />
-              {c.route.name} · {c.dayLabel}
-            </span>
-          ))}
-        </div>
+      {!fullscreen && matchedRoutes[0] ? (
+        <RouteProfile
+          route={matchedRoutes[0].route}
+          color={matchedRoutes[0].color}
+          markers={(matchedRoutes[0].route.customMarkers ?? []) as CustomMarker[]}
+        />
       ) : null}
 
       {!riderMode && !fullscreen ? (
