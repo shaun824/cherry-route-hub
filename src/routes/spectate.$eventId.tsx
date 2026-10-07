@@ -34,7 +34,8 @@ import { useSession } from "@/lib/auth";
 import { brandHeader } from "@/lib/event-brand";
 import { buildMapEmbedSrc, buildMapLink, resolveVenuePoint } from "@/lib/map-embed";
 import { VenueMiniMap } from "@/components/venue-mini-map";
-import { VillageMapView } from "@/components/village-map-view";
+import { VillageMapView, villageAnchor, villageParkingPin } from "@/components/village-map-view";
+import { fetchVillageMap } from "@/lib/village-map";
 import { LiveTrackingMap } from "@/components/live-tracking-map";
 import { TrackerPanel } from "@/components/tracker-panel";
 
@@ -79,6 +80,7 @@ function SpectatorEventPage() {
   const { eventId } = Route.useParams();
   const event = useAdminStore((s) => s.events.find((e) => e.id === eventId));
   const [tab, setTab] = useState<Tab>("riders");
+  const villageQ = useQuery({ queryKey: ["village-map", eventId, null], queryFn: () => fetchVillageMap(eventId, null) });
   const tabNavRef = useRef<HTMLDivElement | null>(null);
   /** Switching tabs should always land you at the top of the new section. */
   const selectTab = useCallback((next: Tab) => {
@@ -434,12 +436,13 @@ function SpectatorEventPage() {
             {(() => {
               const address = info?.venue_address || event.location || null;
               const mapUrl = event.mapQuery || info?.map_embed_url || null;
-              const mapLink = buildMapLink({ mapUrl, address });
+              const pin = villageAnchor(villageQ.data);
+              const mapLink = pin ? buildMapLink({ lat: pin.lat, lng: pin.lng }) : buildMapLink({ mapUrl, address });
               const embedSrc = buildMapEmbedSrc({ mapUrl, address });
-              const point =
-                info?.venue_lat != null && info?.venue_lng != null
+              const point = pin ??
+                (info?.venue_lat != null && info?.venue_lng != null
                   ? { lat: Number(info.venue_lat), lng: Number(info.venue_lng) }
-                  : resolveVenuePoint({ mapUrl });
+                  : resolveVenuePoint({ mapUrl }));
               if (!mapLink || (!embedSrc && !point))
                 return <p className="mt-3 text-xs text-ink-soft">No venue set yet.</p>;
               return (
@@ -489,6 +492,19 @@ function SpectatorEventPage() {
             {event.spectatorParking ??
               info?.parking_notes ??
               "Parking details will be shared closer to race day."}
+            {(() => {
+              const pk = villageParkingPin(villageQ.data);
+              return pk ? (
+                <a
+                  href={buildMapLink({ lat: pk.lat, lng: pk.lng }) ?? "#"}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-2 block font-semibold text-cherry"
+                >
+                  Navigate to {pk.title} ↗
+                </a>
+              ) : null;
+            })()}
           </FactCard>
 
           <FactCard icon={Coffee} title="Food & refreshments">
