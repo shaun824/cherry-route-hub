@@ -32,6 +32,7 @@ function FieldTrackingPage() {
   useHydratedStore();
   const { eventId } = Route.useParams();
   const { k } = Route.useSearch();
+  const { isAdmin } = useIsAdmin();
   const q = useQuery({
     queryKey: ["field-link-sos", eventId, k],
     queryFn: () => fetchFieldLinkSos({ data: { eventId, token: k ?? "" } }),
