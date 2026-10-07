@@ -5,7 +5,8 @@
 // Lovable connector). Waypoints are NOT parsed from KML — only admin-added
 // custom markers are rendered on top of the routes.
 import { useEffect, useMemo, useRef, useState } from "react";
-import { MapContainer, TileLayer, Polyline, Marker, Popup, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, Polyline, Marker, Popup, Tooltip, useMap } from "react-leaflet";
+import { RouteProfile } from "@/components/route-profile";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { useServerFn } from "@tanstack/react-start";
@@ -50,6 +51,8 @@ const MARKER_GLYPH: Record<NonNullable<CustomMarker["icon"]>, string> = {
 
 /** Sponsor logos only appear once riders zoom in — zoomed out they'd bury the route. */
 const LOGO_MIN_ZOOM = 15;
+/** Point names appear only when zoomed in close, so the map stays clean. */
+const LABEL_MIN_ZOOM = 15;
 
 function ZoomWatcher({ onZoom }: { onZoom: (z: number) => void }) {
   const map = useMap();
@@ -214,16 +217,16 @@ function DirectionArrows({ lines }: { lines: { color: string; coords: [number, n
       for (let i = 1; i < pts.length; i++) cum.push(cum[i - 1] + pts[i - 1].distanceTo(pts[i]));
       const total = cum[cum.length - 1];
       if (total < 50) continue;
-      const n = Math.max(3, Math.min(24, Math.round(total / 1500)));
+      const n = Math.max(2, Math.min(12, Math.round(total / 3500)));
       const markers = Array.from({ length: n }, () => {
         const m = L.marker(pts[0], {
           interactive: false,
           keyboard: false,
           icon: L.divIcon({
             className: "",
-            iconSize: [18, 18],
-            iconAnchor: [9, 9],
-            html: `<div data-arrow style="width:18px;height:18px;display:grid;place-items:center;border-radius:9999px;background:${l.color};border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.4)"><svg width="10" height="10" viewBox="0 0 24 24"><path d="M12 3 L21 19 L12 14 L3 19 Z" fill="#fff"/></svg></div>`,
+            iconSize: [14, 14],
+            iconAnchor: [7, 7],
+            html: `<div data-arrow style="width:14px;height:14px;opacity:.9;display:grid;place-items:center;border-radius:9999px;background:${l.color};border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.4)"><svg width="8" height="8" viewBox="0 0 24 24"><path d="M12 3 L21 19 L12 14 L3 19 Z" fill="#fff"/></svg></div>`,
           }),
         }).addTo(layer);
         return { m };
@@ -319,7 +322,7 @@ export default function RouteMapInner({
   const [enabled, setEnabled] = useState<Record<string, boolean>>({});
   const [fs, setFs] = useState(false);
   const [zoom, setZoom] = useState(12);
-  const [sheetOpen, setSheetOpen] = useState(true);
+  const [sheetOpen, setSheetOpen] = useState(false);
   const [flyTarget, setFlyTarget] = useState<{ lat: number; lng: number; n: number } | null>(null);
   const openFs = () => {
     setFs(true);
@@ -419,7 +422,8 @@ export default function RouteMapInner({
       }
       if (cancelled) return;
       setLoaded(results);
-      setEnabled(Object.fromEntries(results.map((r) => [r.route.id, true])));
+      // Start on just the first route — all of them at once is too busy.
+      setEnabled(Object.fromEntries(results.map((r, i) => [r.route.id, i === 0])));
     })();
     return () => {
       cancelled = true;
@@ -643,6 +647,11 @@ export default function RouteMapInner({
             position={[m.lat, m.lng] as [number, number]}
             icon={customIcon(color, m.icon, m.logoUrl, zoom)}
           >
+            {zoom >= LABEL_MIN_ZOOM && !(m.logoUrl && zoom >= LOGO_MIN_ZOOM) ? (
+              <Tooltip permanent direction="bottom" offset={[0, 12]} className="rce-marker-label">
+                {m.name}
+              </Tooltip>
+            ) : null}
             <Popup>
               <div className="max-w-[260px] space-y-2">
                 <div className="flex items-start gap-2">
@@ -738,9 +747,14 @@ export default function RouteMapInner({
             {routeChips(true)}
           </div>
           <div className="relative min-h-0 flex-1">{renderMap("100%", "-fs")}</div>
+          {visible[0] ? (
+            <div className="border-t border-border bg-card px-3 pb-1">
+              <RouteProfile route={visible[0].route} color={visible[0].color} markers={visible[0].markers} />
+            </div>
+          ) : null}
           <div
             className={`flex flex-col border-t border-border bg-card pb-[env(safe-area-inset-bottom)] shadow-[0_-8px_24px_rgba(0,0,0,.12)] ${
-              sheetOpen ? "h-[42dvh]" : ""
+              sheetOpen ? "h-[28dvh]" : ""
             }`}
           >
             <button

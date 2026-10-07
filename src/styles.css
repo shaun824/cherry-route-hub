@@ -512,3 +512,14 @@
 @media (prefers-reduced-motion: reduce) {
   .rce-sos-pin { animation: none; }
 }
+
+/* Compact point names on route maps (shown only when zoomed in) */
+.leaflet-tooltip.rce-marker-label {
+  padding: 1px 6px;
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.25);
+  white-space: nowrap;
+}
+.leaflet-tooltip.rce-marker-label::before { display: none; }
