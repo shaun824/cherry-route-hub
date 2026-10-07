@@ -551,8 +551,17 @@ export default function RouteMapInner({
   const fill = height === "100%";
 
   const dayLabels = [...new Set(loaded.map((l) => l.dayLabel))];
-  const showOnlyDay = (day: string | null) =>
-    setEnabled(Object.fromEntries(loaded.map((l) => [l.route.id, day === null || l.dayLabel === day])));
+  const [chipDay, setChipDay] = useState<string | null>(null);
+  // Picking a day shows just that day's route buttons and turns on its first route.
+  const showOnlyDay = (day: string | null) => {
+    setChipDay(day);
+    if (day === null) {
+      setEnabled(Object.fromEntries(loaded.map((l) => [l.route.id, true])));
+      return;
+    }
+    const firstId = loaded.find((l) => l.dayLabel === day)?.route.id;
+    setEnabled(Object.fromEntries(loaded.map((l) => [l.route.id, l.route.id === firstId])));
+  };
   const activeDay =
     visible.length > 0 && visible.every((l) => l.dayLabel === visible[0].dayLabel) &&
     visible.length === loaded.filter((l) => l.dayLabel === visible[0].dayLabel).length &&
@@ -573,7 +582,7 @@ export default function RouteMapInner({
   const routeChips = (dark: boolean) =>
     loaded.length > 1 ? (
       <div className="flex gap-2 overflow-x-auto pb-1">
-        {loaded.map((l) => {
+        {loaded.filter((l) => !chipDay || l.dayLabel === chipDay).map((l) => {
           const on = enabled[l.route.id];
           return (
             <button
