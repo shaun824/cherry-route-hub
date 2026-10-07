@@ -322,7 +322,7 @@ export default function RouteMapInner({
   const [enabled, setEnabled] = useState<Record<string, boolean>>({});
   const [fs, setFs] = useState(false);
   const [zoom, setZoom] = useState(12);
-  const [sheetOpen, setSheetOpen] = useState(true);
+  const [sheetOpen, setSheetOpen] = useState(false);
   const [flyTarget, setFlyTarget] = useState<{ lat: number; lng: number; n: number } | null>(null);
   const openFs = () => {
     setFs(true);
