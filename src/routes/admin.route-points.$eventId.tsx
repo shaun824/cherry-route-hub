@@ -20,7 +20,7 @@ export const Route = createFileRoute("/admin/route-points/$eventId")({
   },
   component: RoutePointsEditor,
   notFoundComponent: () => <p className="p-6 text-sm">Event not found.</p>,
-  errorComponent: ({ error }) => <p className="p-6 text-sm">Could not load: {error.message}</p>,
+  errorComponent: ({ error }) => <p className="p-6 text-sm">Could not load: {(error as Error).message}</p>,
 });
 
 type Group = {
