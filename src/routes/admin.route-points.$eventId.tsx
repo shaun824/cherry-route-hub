@@ -72,7 +72,7 @@ function groupsFromDay(day: EventDay): Group[] {
 function RoutePointsEditor() {
   const { event } = Route.useLoaderData();
   const days = useMemo(() => (Array.isArray(event.days) ? event.days : []), [event.days]);
-  const [dayIdx, setDayIdx] = useState(0);
+  const [dayIdx, setDayIdx] = useState(() => Math.max(0, days.findIndex((d) => (d.routes ?? []).length > 0)));
   const [groups, setGroups] = useState<Record<string, Group[]>>(() =>
     Object.fromEntries(days.map((d) => [d.id, groupsFromDay(d)])),
   );
