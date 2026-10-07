@@ -79,6 +79,7 @@ import { Route as AdminEventInfoIndexRouteImport } from './routes/admin.event-in
 import { Route as AdminEventInfoEventIdRouteImport } from './routes/admin.event-info.$eventId'
 import { Route as AdminRiderUserIdRouteImport } from './routes/admin.rider.$userId'
 import { Route as AdminRoutePointsIndexRouteImport } from './routes/admin.route-points.index'
+import { Route as AdminRoutePointsEventIdRouteImport } from './routes/admin.route-points.$eventId'
 import { Route as AdminVillageIndexRouteImport } from './routes/admin.village.index'
 import { Route as AdminVillageEventIdRouteImport } from './routes/admin.village.$eventId'
 import { Route as ApiPublicClassAvailabilityRouteImport } from './routes/api/public/class-availability'
@@ -474,6 +475,11 @@ const AdminRoutePointsIndexRoute = AdminRoutePointsIndexRouteImport.update({
   path: '/route-points/',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminRoutePointsEventIdRoute = AdminRoutePointsEventIdRouteImport.update({
+  id: '/route-points/$eventId',
+  path: '/route-points/$eventId',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminVillageIndexRoute = AdminVillageIndexRouteImport.update({
   id: '/village/',
   path: '/village/',
@@ -768,6 +774,7 @@ export interface FileRoutesByFullPath {
   '/admin/email-builder/$stepId': typeof AdminEmailBuilderStepIdRoute
   '/admin/event-info/$eventId': typeof AdminEventInfoEventIdRoute
   '/admin/rider/$userId': typeof AdminRiderUserIdRoute
+  '/admin/route-points/$eventId': typeof AdminRoutePointsEventIdRoute
   '/admin/village/$eventId': typeof AdminVillageEventIdRoute
   '/api/public/class-availability': typeof ApiPublicClassAvailabilityRoute
   '/api/public/entry-count': typeof ApiPublicEntryCountRoute
@@ -877,6 +884,7 @@ export interface FileRoutesByTo {
   '/admin/email-builder/$stepId': typeof AdminEmailBuilderStepIdRoute
   '/admin/event-info/$eventId': typeof AdminEventInfoEventIdRoute
   '/admin/rider/$userId': typeof AdminRiderUserIdRoute
+  '/admin/route-points/$eventId': typeof AdminRoutePointsEventIdRoute
   '/admin/village/$eventId': typeof AdminVillageEventIdRoute
   '/api/public/class-availability': typeof ApiPublicClassAvailabilityRoute
   '/api/public/entry-count': typeof ApiPublicEntryCountRoute
@@ -991,6 +999,7 @@ export interface FileRoutesById {
   '/admin/email-builder/$stepId': typeof AdminEmailBuilderStepIdRoute
   '/admin/event-info/$eventId': typeof AdminEventInfoEventIdRoute
   '/admin/rider/$userId': typeof AdminRiderUserIdRoute
+  '/admin/route-points/$eventId': typeof AdminRoutePointsEventIdRoute
   '/admin/village/$eventId': typeof AdminVillageEventIdRoute
   '/api/public/class-availability': typeof ApiPublicClassAvailabilityRoute
   '/api/public/entry-count': typeof ApiPublicEntryCountRoute
@@ -1106,6 +1115,7 @@ export interface FileRouteTypes {
     | '/admin/email-builder/$stepId'
     | '/admin/event-info/$eventId'
     | '/admin/rider/$userId'
+    | '/admin/route-points/$eventId'
     | '/admin/village/$eventId'
     | '/api/public/class-availability'
     | '/api/public/entry-count'
@@ -1215,6 +1225,7 @@ export interface FileRouteTypes {
     | '/admin/email-builder/$stepId'
     | '/admin/event-info/$eventId'
     | '/admin/rider/$userId'
+    | '/admin/route-points/$eventId'
     | '/admin/village/$eventId'
     | '/api/public/class-availability'
     | '/api/public/entry-count'
@@ -1328,6 +1339,7 @@ export interface FileRouteTypes {
     | '/admin/email-builder/$stepId'
     | '/admin/event-info/$eventId'
     | '/admin/rider/$userId'
+    | '/admin/route-points/$eventId'
     | '/admin/village/$eventId'
     | '/api/public/class-availability'
     | '/api/public/entry-count'
@@ -1933,6 +1945,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminRoutePointsIndexRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/route-points/$eventId': {
+      id: '/admin/route-points/$eventId'
+      path: '/route-points/$eventId'
+      fullPath: '/admin/route-points/$eventId'
+      preLoaderRoute: typeof AdminRoutePointsEventIdRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/village/': {
       id: '/admin/village/'
       path: '/village'
@@ -2270,6 +2289,7 @@ interface AdminRouteChildren {
   AdminEmailBuilderStepIdRoute: typeof AdminEmailBuilderStepIdRoute
   AdminEventInfoEventIdRoute: typeof AdminEventInfoEventIdRoute
   AdminRiderUserIdRoute: typeof AdminRiderUserIdRoute
+  AdminRoutePointsEventIdRoute: typeof AdminRoutePointsEventIdRoute
   AdminVillageEventIdRoute: typeof AdminVillageEventIdRoute
   AdminEventInfoIndexRoute: typeof AdminEventInfoIndexRoute
   AdminRoutePointsIndexRoute: typeof AdminRoutePointsIndexRoute
@@ -2311,6 +2331,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminEmailBuilderStepIdRoute: AdminEmailBuilderStepIdRoute,
   AdminEventInfoEventIdRoute: AdminEventInfoEventIdRoute,
   AdminRiderUserIdRoute: AdminRiderUserIdRoute,
+  AdminRoutePointsEventIdRoute: AdminRoutePointsEventIdRoute,
   AdminVillageEventIdRoute: AdminVillageEventIdRoute,
   AdminEventInfoIndexRoute: AdminEventInfoIndexRoute,
   AdminRoutePointsIndexRoute: AdminRoutePointsIndexRoute,
