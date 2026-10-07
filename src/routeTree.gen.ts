@@ -78,6 +78,7 @@ import { Route as AdminEmailBuilderStepIdRouteImport } from './routes/admin.emai
 import { Route as AdminEventInfoIndexRouteImport } from './routes/admin.event-info.index'
 import { Route as AdminEventInfoEventIdRouteImport } from './routes/admin.event-info.$eventId'
 import { Route as AdminRiderUserIdRouteImport } from './routes/admin.rider.$userId'
+import { Route as AdminRoutePointsIndexRouteImport } from './routes/admin.route-points.index'
 import { Route as AdminVillageIndexRouteImport } from './routes/admin.village.index'
 import { Route as AdminVillageEventIdRouteImport } from './routes/admin.village.$eventId'
 import { Route as ApiPublicClassAvailabilityRouteImport } from './routes/api/public/class-availability'
@@ -468,6 +469,11 @@ const AdminRiderUserIdRoute = AdminRiderUserIdRouteImport.update({
   path: '/rider/$userId',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminRoutePointsIndexRoute = AdminRoutePointsIndexRouteImport.update({
+  id: '/route-points/',
+  path: '/route-points/',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminVillageIndexRoute = AdminVillageIndexRouteImport.update({
   id: '/village/',
   path: '/village/',
@@ -774,6 +780,7 @@ export interface FileRoutesByFullPath {
   '/field/tracking/$eventId': typeof FieldTrackingEventIdRoute
   '/my-events/$eventId/report': typeof MyEventsEventIdReportRoute
   '/admin/event-info/': typeof AdminEventInfoIndexRoute
+  '/admin/route-points/': typeof AdminRoutePointsIndexRoute
   '/admin/village/': typeof AdminVillageIndexRoute
   '/crew/learn/': typeof CrewLearnIndexRoute
   '/events/$eventId/': typeof EventsEventIdIndexRoute
@@ -882,6 +889,7 @@ export interface FileRoutesByTo {
   '/field/tracking/$eventId': typeof FieldTrackingEventIdRoute
   '/my-events/$eventId/report': typeof MyEventsEventIdReportRoute
   '/admin/event-info': typeof AdminEventInfoIndexRoute
+  '/admin/route-points': typeof AdminRoutePointsIndexRoute
   '/admin/village': typeof AdminVillageIndexRoute
   '/crew/learn': typeof CrewLearnIndexRoute
   '/events/$eventId': typeof EventsEventIdIndexRoute
@@ -995,6 +1003,7 @@ export interface FileRoutesById {
   '/field/tracking/$eventId': typeof FieldTrackingEventIdRoute
   '/my-events_/$eventId_/report': typeof MyEventsEventIdReportRoute
   '/admin/event-info/': typeof AdminEventInfoIndexRoute
+  '/admin/route-points/': typeof AdminRoutePointsIndexRoute
   '/admin/village/': typeof AdminVillageIndexRoute
   '/crew/learn/': typeof CrewLearnIndexRoute
   '/events/$eventId/': typeof EventsEventIdIndexRoute
@@ -1109,6 +1118,7 @@ export interface FileRouteTypes {
     | '/field/tracking/$eventId'
     | '/my-events/$eventId/report'
     | '/admin/event-info/'
+    | '/admin/route-points/'
     | '/admin/village/'
     | '/crew/learn/'
     | '/events/$eventId/'
@@ -1217,6 +1227,7 @@ export interface FileRouteTypes {
     | '/field/tracking/$eventId'
     | '/my-events/$eventId/report'
     | '/admin/event-info'
+    | '/admin/route-points'
     | '/admin/village'
     | '/crew/learn'
     | '/events/$eventId'
@@ -1329,6 +1340,7 @@ export interface FileRouteTypes {
     | '/field/tracking/$eventId'
     | '/my-events_/$eventId_/report'
     | '/admin/event-info/'
+    | '/admin/route-points/'
     | '/admin/village/'
     | '/crew/learn/'
     | '/events/$eventId/'
@@ -1914,6 +1926,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminRiderUserIdRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/route-points/': {
+      id: '/admin/route-points/'
+      path: '/route-points'
+      fullPath: '/admin/route-points/'
+      preLoaderRoute: typeof AdminRoutePointsIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/village/': {
       id: '/admin/village/'
       path: '/village'
@@ -2253,6 +2272,7 @@ interface AdminRouteChildren {
   AdminRiderUserIdRoute: typeof AdminRiderUserIdRoute
   AdminVillageEventIdRoute: typeof AdminVillageEventIdRoute
   AdminEventInfoIndexRoute: typeof AdminEventInfoIndexRoute
+  AdminRoutePointsIndexRoute: typeof AdminRoutePointsIndexRoute
   AdminVillageIndexRoute: typeof AdminVillageIndexRoute
 }
 
@@ -2293,6 +2313,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminRiderUserIdRoute: AdminRiderUserIdRoute,
   AdminVillageEventIdRoute: AdminVillageEventIdRoute,
   AdminEventInfoIndexRoute: AdminEventInfoIndexRoute,
+  AdminRoutePointsIndexRoute: AdminRoutePointsIndexRoute,
   AdminVillageIndexRoute: AdminVillageIndexRoute,
 }
 

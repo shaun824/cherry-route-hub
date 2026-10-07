@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { createFileRoute, Outlet, Link, useRouterState, Navigate } from "@tanstack/react-router";
-import { LayoutDashboard, CalendarDays, Newspaper, Tag, Handshake, ArrowLeft, LogOut, Users, Settings, UserPlus, MessagesSquare, BedDouble, Plug, BarChart3 , Package, Tent, Brain, Bot, BellRing, ShieldCheck, HardHat, CalendarClock, KeyRound, Trophy, Medal, ClipboardList, Instagram, Wallet, GraduationCap, LogIn, Mail, Radar } from "lucide-react";
+import { LayoutDashboard, CalendarDays, Newspaper, Tag, Handshake, ArrowLeft, LogOut, Users, Settings, UserPlus, MessagesSquare, BedDouble, Plug, BarChart3 , Package, Tent, Brain, Bot, BellRing, ShieldCheck, HardHat, CalendarClock, KeyRound, Trophy, Medal, ClipboardList, Instagram, Wallet, GraduationCap, LogIn, Mail, Radar, MapPinned } from "lucide-react";
 import rceLogo from "@/assets/rce-logo.png.asset.json";
 import { useHydratedStore } from "@/lib/use-hydrated-store";
 import { useIsAdmin, signOut } from "@/lib/auth";
@@ -34,6 +34,7 @@ const navGroups: NavGroup[] = [
       { to: "/admin/events", label: "Events", icon: CalendarDays },
       { to: "/admin/event-info", label: "Rider info", icon: Newspaper },
       { to: "/admin/village", label: "Village maps", icon: Tent },
+      { to: "/admin/route-points", label: "Route points", icon: MapPinned },
       { to: "/admin/rentals", label: "Infrastructure rentals", icon: HardHat },
       { to: "/admin/results", label: "Results", icon: Trophy },
       { to: "/admin/schedule-sync", label: "Schedule sync", icon: CalendarClock },
