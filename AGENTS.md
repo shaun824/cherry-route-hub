@@ -19,3 +19,5 @@
 - Sea to Sea pre-event guidance uses a dedicated registered email template so its fixed fuel, hotel, route-loading, and timetable instructions cannot drift through free-form workflow edits.
 - Always name the event “JBFE Sea to Sea” in rider-facing copy; JBFE is the title sponsor.
 - Village editor movement history stores position-only snapshots so undo never overwrites later text or styling edits.
+
+- Apparel size rows on rider surfaces are driven by events.collects_tshirt_size/collects_jacket_size (src/lib/apparel.ts), never by event name — Entry Ninja syncs switch them on automatically so new events need no manual setup.
