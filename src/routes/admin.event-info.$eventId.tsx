@@ -13,6 +13,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { resolveMapLink } from "@/lib/map-link.functions";
 import { buildMapEmbedSrc, coordsFromMapInput, isShortMapLink, resolveVenuePoint } from "@/lib/map-embed";
 import { VenueMiniMap } from "@/components/venue-mini-map";
+import { MissingSizesCard } from "@/components/missing-sizes-card";
 
 export const Route = createFileRoute("/admin/event-info/$eventId")({
   loader: async ({ params }) => {
@@ -104,6 +105,7 @@ function EventInfoEditor() {
 
   return (
     <div className="space-y-6 pb-24">
+      <MissingSizesCard eventId={event.id} eventName={event.name} />
       <div className="flex items-center gap-3">
         <Link
           to="/admin/events"

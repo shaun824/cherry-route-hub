@@ -120,6 +120,13 @@
       "when": 1791298793680,
       "tag": "0016_crew_locations",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1791356480994,
+      "tag": "0017_event_apparel_size_flags",
+      "breakpoints": true
     }
   ]
 }

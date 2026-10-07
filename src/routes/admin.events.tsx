@@ -793,6 +793,29 @@ function EventEditor({
               <option value="archived">archived (hidden, kept in records)</option>
             </select>
           </Field>
+          <Field label="Apparel sizes collected">
+            <div className="space-y-1.5 rounded-md border border-border bg-background px-3 py-2 text-sm">
+              <label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={form.collectsTshirtSize ?? false}
+                  onChange={(e) => update("collectsTshirtSize", e.target.checked)}
+                />
+                <span>T-shirt size</span>
+              </label>
+              <label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={form.collectsJacketSize ?? false}
+                  onChange={(e) => update("collectsJacketSize", e.target.checked)}
+                />
+                <span>Jacket size</span>
+              </label>
+              <p className="text-[11px] text-ink-soft">
+                Riders only see size rows (and missing-size reminders) for items ticked here. Switches on automatically when Entry Ninja sends a size.
+              </p>
+            </div>
+          </Field>
           <Field label="Spectator mode">
             <label className="flex items-center gap-2 rounded-md border border-border bg-background px-3 py-2 text-sm">
               <input

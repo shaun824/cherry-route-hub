@@ -2202,6 +2202,8 @@ export type Database = {
           classes: Json
           client_contact: string | null
           client_name: string | null
+          collects_jacket_size: boolean
+          collects_tshirt_size: boolean
           cover_url: string | null
           created_at: string
           days: Json
@@ -2253,6 +2255,8 @@ export type Database = {
           classes?: Json
           client_contact?: string | null
           client_name?: string | null
+          collects_jacket_size?: boolean
+          collects_tshirt_size?: boolean
           cover_url?: string | null
           created_at?: string
           days?: Json
@@ -2304,6 +2308,8 @@ export type Database = {
           classes?: Json
           client_contact?: string | null
           client_name?: string | null
+          collects_jacket_size?: boolean
+          collects_tshirt_size?: boolean
           cover_url?: string | null
           created_at?: string
           days?: Json

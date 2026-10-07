@@ -201,7 +201,13 @@ export async function syncMyEntries(args: {
         },
         { onConflict: "event_id,entrant_id" },
       );
-      if (!error) saved++;
+      if (!error) {
+        saved++;
+        if (tshirt || jacket) {
+          const { markEventCollectsSizes } = await import("./apparel");
+          await markEventCollectsSizes(admin, eventId, { tshirt: Boolean(tshirt), jacket: Boolean(jacket) });
+        }
+      }
       break; // one entry per event
     }
   });

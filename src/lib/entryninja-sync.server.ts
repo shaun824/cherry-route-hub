@@ -81,6 +81,7 @@ export async function syncEnEvent(
   let linked = 0;
   let skipped = 0;
   const errors: string[] = [];
+  const seenSizes = { tshirt: false, jacket: false };
 
   for (const entry of entries) {
     const p = entry.entrant;
@@ -185,10 +186,19 @@ export async function syncEnEvent(
         { onConflict: "event_id,entrant_id" },
       );
       if (eeErr) throw eeErr;
+      if (tshirt) seenSizes.tshirt = true;
+      if (jacket) seenSizes.jacket = true;
       linked++;
     } catch (err) {
       if (errors.length < 20) errors.push(`${fullName || email}: ${(err as Error).message}`);
     }
+  }
+
+  try {
+    const { markEventCollectsSizes } = await import("./apparel");
+    await markEventCollectsSizes(supabase, eventId, seenSizes);
+  } catch {
+    /* non-fatal */
   }
 
   // Entries cancelled/moved on Entry Ninja disappear from its feed — drop their
