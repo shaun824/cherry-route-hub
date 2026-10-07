@@ -7,6 +7,7 @@ import { useSession } from "@/lib/auth";
 import { useAdminStore } from "@/lib/store";
 import { useHydratedStore } from "@/lib/use-hydrated-store";
 import { brandHeader } from "@/lib/event-brand";
+import { classStartTimes } from "@/lib/class-start-times";
 
 export const Route = createFileRoute("/spectate_/$eventId_/rider/$entrantId")({
   head: () => ({
@@ -54,6 +55,10 @@ function RiderDetailPage() {
     rider?.batch && event?.batches
       ? event.batches.find((b) => b.name === rider.batch)?.startTime ?? null
       : null;
+  const schedStarts = classStartTimes(rider?.category, event?.schedule, event?.days);
+  const schedText = schedStarts.length
+    ? schedStarts.map((x) => (schedStarts.length > 1 && x.dayLabel ? `${x.dayLabel.replace(/\s*[—-].*$/, "")}: ${x.time}` : x.time)).join(" · ")
+    : null;
   const startedAt = timeOnly(rider?.started_at ?? null);
   const finishedAt = timeOnly(rider?.finished_at ?? null);
   const sets = q.data?.sets ?? [];
@@ -110,7 +115,7 @@ function RiderDetailPage() {
               <StatCard
                 icon={Clock}
                 label="Start time"
-                value={batchStart || startedAt || "TBC"}
+                value={schedText || batchStart || startedAt || "TBC"}
               />
               <StatCard icon={Users} label="Start batch" value={rider?.batch || "—"} />
               <StatCard icon={Flag} label="Finished" value={finishedAt || "—"} />
