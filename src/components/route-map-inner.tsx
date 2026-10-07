@@ -49,10 +49,8 @@ const MARKER_GLYPH: Record<NonNullable<CustomMarker["icon"]>, string> = {
   water: "💧",
 };
 
-/** Sponsor logos only appear once riders zoom in — zoomed out they'd bury the route. */
+/** Sponsor logos grow to full size once riders zoom in close. */
 const LOGO_MIN_ZOOM = 15;
-/** Point names appear only when zoomed in close, so the map stays clean. */
-const LABEL_MIN_ZOOM = 15;
 
 function ZoomWatcher({ onZoom }: { onZoom: (z: number) => void }) {
   const map = useMap();
@@ -68,13 +66,14 @@ function ZoomWatcher({ onZoom }: { onZoom: (z: number) => void }) {
 }
 
 function customIcon(color: string, icon: CustomMarker["icon"], logoUrl?: string, zoom = 99) {
-  if (logoUrl && zoom >= LOGO_MIN_ZOOM) {
+  if (logoUrl) {
     // Sponsor logos are mostly wide lock-ups, so use a wide rounded plate
     // instead of a circle — a circle shrinks wordmarks until they're unreadable.
     // NOTE: Leaflet's stylesheet forces `.leaflet-marker-pane img { max-width: none !important }`,
     // so the image MUST be sized with explicit width/height, not max-width.
-    const W = 84;
-    const H = 34;
+    // Logos are always on, but scale with zoom so they never bury the route.
+    const W = zoom >= LOGO_MIN_ZOOM ? 84 : zoom >= 13 ? 64 : 52;
+    const H = zoom >= LOGO_MIN_ZOOM ? 34 : zoom >= 13 ? 26 : 22;
     return L.divIcon({
       className: "rce-custom-marker",
       html: `<div style="border-color:${color};width:${W}px;height:${H}px;" class="flex items-center justify-center overflow-hidden rounded-xl border-2 bg-white px-1.5 py-1 shadow-lg"><img src="${logoUrl}" alt="" style="width:100%;height:100%;object-fit:contain;display:block;" /></div>`,
@@ -647,8 +646,8 @@ export default function RouteMapInner({
             position={[m.lat, m.lng] as [number, number]}
             icon={customIcon(color, m.icon, m.logoUrl, zoom)}
           >
-            {zoom >= LABEL_MIN_ZOOM && !(m.logoUrl && zoom >= LOGO_MIN_ZOOM) ? (
-              <Tooltip permanent direction="bottom" offset={[0, 12]} className="rce-marker-label">
+            {m.name ? (
+              <Tooltip permanent direction="bottom" offset={[0, m.logoUrl ? (zoom >= LOGO_MIN_ZOOM ? 17 : 12) : 13]} className={`rce-marker-label${zoom < 14 ? " rce-marker-label-sm" : ""}`}>
                 {m.name}
               </Tooltip>
             ) : null}

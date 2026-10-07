@@ -536,3 +536,8 @@
   white-space: nowrap;
 }
 .leaflet-tooltip.rce-marker-label::before { display: none; }
+.leaflet-tooltip.rce-marker-label-sm {
+  padding: 0 4px;
+  font-size: 9.5px;
+  opacity: 0.92;
+}
