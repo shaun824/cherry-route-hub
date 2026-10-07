@@ -110,7 +110,7 @@ function venueMapsUrl(v: { name: string; address: string | null }): string | nul
  * Exact spot to open in Google Maps: the village registration pin, then the start
  * line, then the village centre — the venue address is only a last resort.
  */
-function villageAnchor(map: VillageMap | null | undefined): { lat: number; lng: number } | null {
+export function villageAnchor(map: VillageMap | null | undefined): { lat: number; lng: number } | null {
   if (!map) return null;
   const pinned = (map.hotspots ?? []).filter((h) => Number.isFinite(h.lat) && Number.isFinite(h.lng));
   const pick =
@@ -120,9 +120,18 @@ function villageAnchor(map: VillageMap | null | undefined): { lat: number; lng: 
     pinned.find((h) => /start/i.test(h.title ?? "")) ??
     pinned.find((h) => h.category === "registration");
   if (pick) return { lat: pick.lat as number, lng: pick.lng as number };
+  const park = pinned.find((h) => h.category === "parking");
+  if (park) return { lat: park.lat as number, lng: park.lng as number };
   const g = map.geo;
   if (g && Number.isFinite(g.lat) && Number.isFinite(g.lng) && (g.lat !== 0 || g.lng !== 0)) return { lat: g.lat, lng: g.lng };
   return null;
+}
+
+/** Main rider/spectator parking pin on the village map, if one is placed. */
+export function villageParkingPin(map: VillageMap | null | undefined): { lat: number; lng: number; title: string } | null {
+  const p = (map?.hotspots ?? []).filter((h) => h.category === "parking" && Number.isFinite(h.lat) && Number.isFinite(h.lng));
+  const pick = p.find((h) => /rider|spectat|day|main|public/i.test(h.title ?? "")) ?? p[0];
+  return pick ? { lat: pick.lat as number, lng: pick.lng as number, title: pick.title ?? "Parking" } : null;
 }
 
 function OpenMapsButton({
