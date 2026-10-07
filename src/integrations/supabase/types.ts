@@ -879,6 +879,8 @@ export type Database = {
           created_at: string
           event_id: string
           id: string
+          pinned: boolean
+          share_whatsapp: boolean
         }
         Insert: {
           author_id: string
@@ -886,6 +888,8 @@ export type Database = {
           created_at?: string
           event_id: string
           id?: string
+          pinned?: boolean
+          share_whatsapp?: boolean
         }
         Update: {
           author_id?: string
@@ -893,6 +897,8 @@ export type Database = {
           created_at?: string
           event_id?: string
           id?: string
+          pinned?: boolean
+          share_whatsapp?: boolean
         }
         Relationships: [
           {
@@ -3873,6 +3879,7 @@ export type Database = {
     }
     Functions: {
       analytics_summary: { Args: { _since: string }; Returns: Json }
+      chat_author_whatsapp: { Args: { _message_id: string }; Returns: string }
       inside_events_summary: {
         Args: { _event_id?: string; _since: string }
         Returns: Json
