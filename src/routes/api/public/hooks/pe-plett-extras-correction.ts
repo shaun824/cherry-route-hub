@@ -57,7 +57,14 @@ export const Route = createFileRoute("/api/public/hooks/pe-plett-extras-correcti
           try {
             const res = await sendTemplateEmail("pe-plett-extras", to, { templateData: build(r), idempotencyKey: `pe-plett-extras-apology-${to}` });
             res.sent ? sent++ : suppressed++;
-          } catch (e) { errors.push(`${to}: ${(e as Error).message}`); if ((e as any)?.status === 429) break; }
+          } catch (e) { errors.push(`${to}: ${(e as Error).message}`);
+            if ((e as any)?.status === 429) {
+              // The send was logged before the API refused it — drop that copy so the rider stays pending.
+              const { data: last } = await admin.from("email_sends").select("id").ilike("recipient", to).eq("subject", SUBJECT).order("sent_at", { ascending: false }).limit(1);
+              if (last?.[0]) await admin.from("email_sends").delete().eq("id", last[0].id);
+              break;
+            }
+          }
         }
         return Response.json({ targets: pending.length, sent, suppressed, errors });
       },
