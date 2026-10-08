@@ -757,6 +757,27 @@ export default function LiveTrackingMapInner({
     [course],
   );
 
+  // Race leaders: per entry class, who is furthest along their own route.
+  const leaders = useMemo(() => {
+    const courses = new Map<string, CourseLine | null>();
+    const groups = new Map<string, { r: LiveRiderPosition; km: number; totalKm: number }[]>();
+    for (const r of allRiders) {
+      if (r.finished) continue;
+      const cat = (r.category ?? "").trim() || "Uncategorised";
+      const cand = dayCandidates.find((c) => categoryMatchesRoute(r.category, c.route));
+      if (!cand) continue;
+      if (!courses.has(cand.route.id)) courses.set(cand.route.id, buildCourseLine(cand.lines));
+      const cl = courses.get(cand.route.id);
+      if (!cl) continue;
+      const p = progressOnCourse(cl, r.lat, r.lng);
+      if (!p || p.offCourseM > 500) continue;
+      groups.set(cat, [...(groups.get(cat) ?? []), { r, km: p.alongM / 1000, totalKm: p.totalM / 1000 }]);
+    }
+    return [...groups.entries()]
+      .map(([cat, list]) => ({ cat, list: list.sort((a, b) => b.km - a.km) }))
+      .sort((a, b) => a.cat.localeCompare(b.cat));
+  }, [allRiders, dayCandidates]);
+
   // Key on primitive coords so a fresh {lat,lng} object from the parent each
   // render doesn't recompute progress and loop through onFocusedProgress.
   const posLat = currentPosition?.lat ?? null;
@@ -1723,6 +1744,39 @@ export default function LiveTrackingMapInner({
           color={matchedRoutes[0].color}
           markers={(matchedRoutes[0].route.customMarkers ?? []) as CustomMarker[]}
         />
+      ) : null}
+
+      {!riderMode && !fullscreen && leaders.length > 0 ? (
+        <section className="rounded-2xl bg-card p-3 ring-1 ring-border">
+          <h3 className="font-display text-sm font-bold text-ink">🏁 Race leaders</h3>
+          <p className="text-[11px] text-ink-soft">Furthest along the course in each class. Tap a name to follow on the map.</p>
+          <ul className="mt-2 divide-y divide-border">
+            {leaders.map(({ cat, list }) => {
+              const lead = list[0];
+              const second = list[1];
+              return (
+                <li key={cat} className="py-2">
+                  <p className="text-[11px] font-bold uppercase tracking-wide text-ink-soft">{cat} · {list.length} on course</p>
+                  <ol className="mt-1 space-y-0.5">
+                    {list.slice(0, 3).map((x, i) => (
+                      <li key={x.r.userId} className="flex items-center gap-2 text-sm">
+                        <span className="w-5 font-bold text-cherry">{i + 1}.</span>
+                        <button type="button" onClick={() => { setFollow(x.r.userId); setFollowPaused(false); }} className="min-w-0 flex-1 truncate text-left font-semibold text-ink underline-offset-2 hover:underline">
+                          {x.r.riderName ?? "Rider"}
+                        </button>
+                        <span className="font-mono text-xs text-ink">{x.km.toFixed(1)} / {x.totalKm.toFixed(0)} km</span>
+                        <span className="w-16 text-right font-mono text-xs text-ink-soft">
+                          {i === 0 ? (second ? `+${(lead.km - second.km).toFixed(1)} km` : "leader") : `−${(lead.km - x.km).toFixed(1)} km`}
+                        </span>
+                      </li>
+                    ))}
+                  </ol>
+                </li>
+              );
+            })}
+          </ul>
+          <p className="mt-1 text-[10px] text-ink-soft">Based on live GPS along the route — official positions come from timing.</p>
+        </section>
       ) : null}
 
       {!riderMode && !fullscreen ? (
