@@ -87,10 +87,12 @@ export function EventWeatherCard({
   const mm = (v: number) => (v > 0 ? ` · ${v} mm` : "");
   const vibe = (() => {
     if (eventForecast.length === 0) return "Whatever the sky brings, the trails are calling — see you at the start line!";
-    const wet = eventForecast.some((d) => d.rainChance >= 40 || d.rainMm >= 1);
+    const maxMm = Math.max(...eventForecast.map((d) => d.rainMm));
+    const showery = eventForecast.some((d) => d.rainChance >= 30 || d.rainMm > 0);
     const hot = eventForecast.some((d) => d.maxC >= 28);
     const windy = eventForecast.some((d) => d.windKph >= 30);
-    if (wet) return "A splash of rain means tacky, grippy trails and epic mud-splattered photos — pack a rain shell and embrace it!";
+    if (maxMm >= 10) return "Some proper rain is forecast — we're watching it closely and will keep you posted. Pack a rain shell and we'll see you there!";
+    if (showery) return "Nothing to worry about — at most a light sprinkle, just enough to cool you down on the climbs. Great riding weather!";
     if (hot) return "Sunshine and warm trails ahead — bring extra water, sunscreen and your biggest smile!";
     if (windy) return "A bit of breeze to keep you cool on the climbs — perfect riding weather for Warriors!";
     return "Looking like great riding weather — cool, comfortable and made for a big weekend on the bike!";
