@@ -44,11 +44,14 @@ export function EventWeatherCard({
   location,
   mapQuery,
   eventDate,
+  eventDays,
 }: {
   eventName: string;
   location: string;
   mapQuery?: string | null;
   eventDate?: string;
+  /** Schedule days ({date,label}) — every one is marked on the forecast. */
+  eventDays?: unknown;
 }) {
   const q = useQuery({
     queryKey: ["event-weather", location, mapQuery ?? ""],
@@ -64,9 +67,34 @@ export function EventWeatherCard({
   const w = q.data;
   if (!w) return null;
 
-  const raceDay = eventDate ? eventDate.slice(0, 10) : null;
-  const days = w.daily.slice(0, 5);
+  // Every schedule day gets a tag: registration day says "Reg", riding days say "Race · Day N".
+  const dayTags = new Map<string, { tag: string; reg: boolean }>();
+  for (const d of Array.isArray(eventDays) ? (eventDays as { date?: string; label?: string }[]) : []) {
+    const date = String(d?.date ?? "").slice(0, 10);
+    if (!date) continue;
+    const label = String(d?.label ?? "");
+    const reg = /reg/i.test(label);
+    dayTags.set(date, { tag: reg ? "Registration" : `Race${label ? ` · ${label}` : ""}`, reg });
+  }
+  if (dayTags.size === 0 && eventDate) dayTags.set(eventDate.slice(0, 10), { tag: "Race", reg: false });
+  const raceDays = w.daily.filter((d) => dayTags.has(d.date) && !dayTags.get(d.date)!.reg);
+  const raceDay = raceDays[0]?.date ?? null;
+  const firstEventDay = w.daily.findIndex((d) => dayTags.has(d.date));
+  const start = firstEventDay > 4 ? Math.min(firstEventDay, Math.max(0, w.daily.length - 5)) : 0;
+  const days = w.daily.slice(start, start + 5);
   const raceForecast = raceDay ? w.daily.find((d) => d.date === raceDay) : undefined;
+  const eventForecast = w.daily.filter((d) => dayTags.has(d.date));
+  const mm = (v: number) => (v > 0 ? ` · ${v} mm` : "");
+  const vibe = (() => {
+    if (eventForecast.length === 0) return "Whatever the sky brings, the trails are calling — see you at the start line!";
+    const wet = eventForecast.some((d) => d.rainChance >= 40 || d.rainMm >= 1);
+    const hot = eventForecast.some((d) => d.maxC >= 28);
+    const windy = eventForecast.some((d) => d.windKph >= 30);
+    if (wet) return "A splash of rain means tacky, grippy trails and epic mud-splattered photos — pack a rain shell and embrace it!";
+    if (hot) return "Sunshine and warm trails ahead — bring extra water, sunscreen and your biggest smile!";
+    if (windy) return "A bit of breeze to keep you cool on the climbs — perfect riding weather for Warriors!";
+    return "Looking like great riding weather — cool, comfortable and made for a big weekend on the bike!";
+  })();
 
   return (
     <div className="rounded-2xl bg-card p-4 shadow-sm ring-1 ring-border">
@@ -99,14 +127,16 @@ export function EventWeatherCard({
         {raceForecast ? (
           <span className="inline-flex items-center gap-1 rounded-full bg-accent px-2 py-1 text-cherry-deep">
             <Droplets className="h-3.5 w-3.5" /> Race day {raceForecast.minC}°–{raceForecast.maxC}° ·{" "}
-            {raceForecast.rainChance}% rain
+            {raceForecast.rainChance}% rain{mm(raceForecast.rainMm)}
           </span>
         ) : null}
       </div>
+      <p className="mt-2 rounded-xl bg-accent/60 px-3 py-2 text-xs font-semibold text-ink">☀️ {vibe}</p>
 
       <ul className="mt-3 grid grid-cols-5 gap-1.5">
         {days.map((d) => {
-          const isRace = raceDay === d.date;
+          const tag = dayTags.get(d.date);
+          const isRace = !!tag;
           return (
             <li
               key={d.date}
@@ -120,6 +150,8 @@ export function EventWeatherCard({
               <WeatherIcon code={d.code} className="mx-auto my-1 h-4 w-4 text-ink-soft" />
               <p className="text-[11px] font-bold text-ink">{d.maxC}°</p>
               <p className="text-[10px] text-muted-foreground">{d.minC}°</p>
+              {d.rainMm > 0 ? <p className="text-[9px] font-semibold text-ink-soft">{d.rainMm} mm</p> : null}
+              {tag ? <p className="mt-0.5 text-[9px] font-bold uppercase text-cherry">{tag.reg ? "Reg" : "Race"}</p> : null}
             </li>
           );
         })}
@@ -144,7 +176,8 @@ export function EventWeatherCard({
       {expanded ? (
         <ul className="mt-2 space-y-1.5">
           {w.daily.map((d) => {
-            const isRace = raceDay === d.date;
+            const tag = dayTags.get(d.date);
+            const isRace = !!tag;
             const date = new Date(`${d.date}T12:00:00`);
             return (
               <li
@@ -154,9 +187,9 @@ export function EventWeatherCard({
                 }`}
               >
                 <div className="flex items-center gap-2">
-                  <p className="w-16 shrink-0 text-[11px] font-bold text-ink">
+                  <p className="w-20 shrink-0 text-[11px] font-bold text-ink">
                     {date.toLocaleDateString("en-ZA", { weekday: "short", day: "numeric" })}
-                    {isRace ? <span className="ml-1 text-cherry">· Race</span> : null}
+                    {tag ? <span className="block text-cherry">{tag.tag}</span> : null}
                   </p>
                   <WeatherIcon code={d.code} className="h-4 w-4 shrink-0 text-ink-soft" />
                   <p className="min-w-0 flex-1 truncate text-[11px] text-muted-foreground">
@@ -172,7 +205,7 @@ export function EventWeatherCard({
                   </span>
                   <span className="inline-flex items-center gap-1">
                     <Droplets className="h-3 w-3" /> {d.rainChance}% rain
-                    {d.rainMm > 0 ? ` · ${d.rainMm} mm` : ""}
+                    {mm(d.rainMm)}
                   </span>
                 </div>
               </li>
