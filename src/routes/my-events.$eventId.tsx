@@ -763,7 +763,7 @@ function RoutesPanel({
         if (routes.length === 0) return null;
         // Water points / marshals are physical stops shared by every route on the
         // day — the profile only keeps the ones a given route actually passes.
-        const dayMarkers = routes.flatMap((r: EventRoute) => r.customMarkers ?? []);
+        const dayMarkers = routes.flatMap((r: EventRoute) => (r.customMarkers ?? []).filter((m) => m.icon !== "warning"));
         return (
           <section key={day.id || di} id={`route-day-${day.id}`} className="scroll-mt-20">
             <SectionTitle>
