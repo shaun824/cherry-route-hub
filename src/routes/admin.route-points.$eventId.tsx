@@ -1,5 +1,5 @@
 // Super-admin editor: tap to add marshal spots / route points, drag waterpoints to move them.
-import { createFileRoute, ClientOnly, Link, notFound } from "@tanstack/react-router";
+import { createFileRoute, ClientOnly, Link, notFound, useRouter } from "@tanstack/react-router";
 import { Suspense, lazy, useEffect, useMemo, useState } from "react";
 import { ArrowLeft, Droplets, Loader2, MapPin, Save, ShieldAlert, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
@@ -80,6 +80,7 @@ function groupsFromDay(day: EventDay): Group[] {
 
 function RoutePointsEditor() {
   const { event } = Route.useLoaderData();
+  const router = useRouter();
   const days = useMemo(() => (Array.isArray(event.days) ? event.days : []), [event.days]);
   const [dayIdx, setDayIdx] = useState(() => Math.max(0, days.findIndex((d) => (d.routes ?? []).length > 0)));
   const [groups, setGroups] = useState<Record<string, Group[]>>(() =>
@@ -290,9 +291,16 @@ function RoutePointsEditor() {
                     <input
                       className="mt-1 w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm"
                       value={sel.name}
-                      onChange={(e) => update(sel.gid, { name: e.target.value })}
+                      onChange={(e) => update(sel.gid, { name: e.target.value, routeNames: {} })}
                     />
                   </label>
+                  {new Set(Object.values(sel.routeNames)).size > 1 && (
+                    <p className="text-[11px] text-ink-soft">
+                      Named differently per route:{" "}
+                      {(day?.routes ?? []).filter((r) => sel.routeNames[r.id]).map((r) => `${r.name}: ${sel.routeNames[r.id]}`).join(" · ")}
+                      . Typing a new name uses it on every route.
+                    </p>
+                  )}
                   <div>
                     <p className="text-xs font-semibold text-ink">Type</p>
                     <div className="mt-1 flex flex-wrap gap-1">
@@ -317,9 +325,14 @@ function RoutePointsEditor() {
                             checked={!!sel.routes[r.id]}
                             onChange={(e) => {
                               const routes = { ...sel.routes };
+                              const routeNames = { ...sel.routeNames };
                               if (e.target.checked) routes[r.id] = crypto.randomUUID();
-                              else delete routes[r.id];
-                              update(sel.gid, { routes });
+                              else {
+                                delete routes[r.id];
+                                delete routeNames[r.id];
+                              }
+                              if (Object.keys(routes).length === 0) return toast.error("A point must be on at least one route — delete it instead.");
+                              update(sel.gid, { routes, routeNames });
                             }}
                           />
                           {r.name}
