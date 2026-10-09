@@ -38,6 +38,15 @@ type Group = {
   routeNames: Record<string, string>;
 };
 
+const TYPES: { icon: Group["icon"]; label: string; defaultName: string }[] = [
+  { icon: "warning", label: "Marshal", defaultName: "Marshal" },
+  { icon: "water", label: "Waterpoint", defaultName: "Waterpoint" },
+  { icon: "pin", label: "Route point", defaultName: "Point" },
+  { icon: "aid", label: "Medic / aid", defaultName: "Medic" },
+];
+
+const ROUTE_COLORS: Record<string, string> = { Gold: "#d4a017", Silver: "#64748b", Bronze: "#b45309" };
+
 /** Metres between two points (equirectangular — plenty accurate at this scale). */
 function metres(aLat: number, aLng: number, bLat: number, bLng: number) {
   const x = ((bLng - aLng) * Math.PI) / 180 * Math.cos(((aLat + bLat) / 2) * Math.PI / 180);
