@@ -84,6 +84,7 @@ import { Route as AdminVillageIndexRouteImport } from './routes/admin.village.in
 import { Route as AdminVillageEventIdRouteImport } from './routes/admin.village.$eventId'
 import { Route as ApiPublicClassAvailabilityRouteImport } from './routes/api/public/class-availability'
 import { Route as ApiPublicEntryCountRouteImport } from './routes/api/public/entry-count'
+import { Route as ApiPublicMarketingSnapshotRouteImport } from './routes/api/public/marketing-snapshot'
 import { Route as CrewDepartmentDeptIdRouteImport } from './routes/crew.department.$deptId'
 import { Route as CrewLearnIndexRouteImport } from './routes/crew.learn.index'
 import { Route as CrewLearnCourseIdRouteImport } from './routes/crew.learn.$courseId'
@@ -501,6 +502,12 @@ const ApiPublicEntryCountRoute = ApiPublicEntryCountRouteImport.update({
   path: '/api/public/entry-count',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicMarketingSnapshotRoute =
+  ApiPublicMarketingSnapshotRouteImport.update({
+    id: '/api/public/marketing-snapshot',
+    path: '/api/public/marketing-snapshot',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const CrewDepartmentDeptIdRoute = CrewDepartmentDeptIdRouteImport.update({
   id: '/crew/department/$deptId',
   path: '/crew/department/$deptId',
@@ -778,6 +785,7 @@ export interface FileRoutesByFullPath {
   '/admin/village/$eventId': typeof AdminVillageEventIdRoute
   '/api/public/class-availability': typeof ApiPublicClassAvailabilityRoute
   '/api/public/entry-count': typeof ApiPublicEntryCountRoute
+  '/api/public/marketing-snapshot': typeof ApiPublicMarketingSnapshotRoute
   '/crew/department/$deptId': typeof CrewDepartmentDeptIdRoute
   '/crew/learn/$courseId': typeof CrewLearnCourseIdRoute
   '/crew/learn/calendar': typeof CrewLearnCalendarRoute
@@ -888,6 +896,7 @@ export interface FileRoutesByTo {
   '/admin/village/$eventId': typeof AdminVillageEventIdRoute
   '/api/public/class-availability': typeof ApiPublicClassAvailabilityRoute
   '/api/public/entry-count': typeof ApiPublicEntryCountRoute
+  '/api/public/marketing-snapshot': typeof ApiPublicMarketingSnapshotRoute
   '/crew/department/$deptId': typeof CrewDepartmentDeptIdRoute
   '/crew/learn/$courseId': typeof CrewLearnCourseIdRoute
   '/crew/learn/calendar': typeof CrewLearnCalendarRoute
@@ -1003,6 +1012,7 @@ export interface FileRoutesById {
   '/admin/village/$eventId': typeof AdminVillageEventIdRoute
   '/api/public/class-availability': typeof ApiPublicClassAvailabilityRoute
   '/api/public/entry-count': typeof ApiPublicEntryCountRoute
+  '/api/public/marketing-snapshot': typeof ApiPublicMarketingSnapshotRoute
   '/crew/department/$deptId': typeof CrewDepartmentDeptIdRoute
   '/crew/learn/$courseId': typeof CrewLearnCourseIdRoute
   '/crew/learn/calendar': typeof CrewLearnCalendarRoute
@@ -1119,6 +1129,7 @@ export interface FileRouteTypes {
     | '/admin/village/$eventId'
     | '/api/public/class-availability'
     | '/api/public/entry-count'
+    | '/api/public/marketing-snapshot'
     | '/crew/department/$deptId'
     | '/crew/learn/$courseId'
     | '/crew/learn/calendar'
@@ -1229,6 +1240,7 @@ export interface FileRouteTypes {
     | '/admin/village/$eventId'
     | '/api/public/class-availability'
     | '/api/public/entry-count'
+    | '/api/public/marketing-snapshot'
     | '/crew/department/$deptId'
     | '/crew/learn/$courseId'
     | '/crew/learn/calendar'
@@ -1343,6 +1355,7 @@ export interface FileRouteTypes {
     | '/admin/village/$eventId'
     | '/api/public/class-availability'
     | '/api/public/entry-count'
+    | '/api/public/marketing-snapshot'
     | '/crew/department/$deptId'
     | '/crew/learn/$courseId'
     | '/crew/learn/calendar'
@@ -1418,6 +1431,7 @@ export interface RootRouteChildren {
   Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
   ApiPublicClassAvailabilityRoute: typeof ApiPublicClassAvailabilityRoute
   ApiPublicEntryCountRoute: typeof ApiPublicEntryCountRoute
+  ApiPublicMarketingSnapshotRoute: typeof ApiPublicMarketingSnapshotRoute
   CrewDepartmentDeptIdRoute: typeof CrewDepartmentDeptIdRoute
   CrewLearnCourseIdRoute: typeof CrewLearnCourseIdRoute
   CrewLearnCalendarRoute: typeof CrewLearnCalendarRoute
@@ -1980,6 +1994,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicEntryCountRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/marketing-snapshot': {
+      id: '/api/public/marketing-snapshot'
+      path: '/api/public/marketing-snapshot'
+      fullPath: '/api/public/marketing-snapshot'
+      preLoaderRoute: typeof ApiPublicMarketingSnapshotRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/crew/department/$deptId': {
       id: '/crew/department/$deptId'
       path: '/crew/department/$deptId'
@@ -2418,6 +2439,7 @@ const rootRouteChildren: RootRouteChildren = {
   Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
   ApiPublicClassAvailabilityRoute: ApiPublicClassAvailabilityRoute,
   ApiPublicEntryCountRoute: ApiPublicEntryCountRoute,
+  ApiPublicMarketingSnapshotRoute: ApiPublicMarketingSnapshotRoute,
   CrewDepartmentDeptIdRoute: CrewDepartmentDeptIdRoute,
   CrewLearnCourseIdRoute: CrewLearnCourseIdRoute,
   CrewLearnCalendarRoute: CrewLearnCalendarRoute,
