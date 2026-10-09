@@ -194,6 +194,7 @@ export async function syncMyEntries(args: {
           registration_ref: entry.registration_reference || null,
           jacket_size: jacket,
           tshirt_size: tshirt,
+          gender: entry.entrant?.gender ? String(entry.entrant.gender).toLowerCase() : null,
           extras,
           paid: typeof entry.paid === "boolean" ? entry.paid : null,
           payment_synced_at: new Date().toISOString(),
