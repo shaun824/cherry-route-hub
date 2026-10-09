@@ -178,6 +178,7 @@ export async function syncEnEvent(
           registration_ref: entry.registration_reference || null,
           jacket_size: jacket,
           tshirt_size: tshirt,
+          gender: p?.gender ? String(p.gender).toLowerCase() : null,
           extras,
           paid: typeof entry.paid === "boolean" ? entry.paid : null,
           payment_synced_at: new Date().toISOString(),

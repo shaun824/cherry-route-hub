@@ -32,6 +32,7 @@ export type EnEntry = {
     id_number?: string | null;
     email?: string | null;
     cell_phone_number?: string | null;
+    gender?: string | null;
   } | null;
 };
 
