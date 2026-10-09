@@ -723,18 +723,18 @@ function RoutesPanel({
       ) : null}
 
       {hasMap ? (
-        <section className={pePlettJourney ? "overflow-hidden rounded-2xl bg-pe-plett-deep text-pe-plett-foreground" : ""}>
-          <div className={pePlettJourney ? "grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-4 pt-4" : ""}>
+        <section className={""}>
+          <div className={""}>
             <SectionTitle>Interactive map</SectionTitle>
-            {pePlettJourney ? <span className="shrink-0 text-[10px] font-bold uppercase text-pe-plett-accent">Tap any point for details</span> : null}
+            
           </div>
-          <div className={pePlettJourney ? "mt-2" : "mt-2"}>
+          <div className={"mt-2"}>
             <LockedSection locked={mapLocked} message="Sign in to view the interactive route map">
               <div
                 onPointerDown={() => trackActionThrottled("route_map_interacted", 30000, { day: activeDay })}
                 onWheel={() => trackActionThrottled("route_map_interacted", 30000, { day: activeDay })}
               >
-                <RouteMap event={event as never} height={pePlettJourney ? "clamp(380px, 62vh, 620px)" : "320px"} dayIds={mapDayIds} showToggles={!pePlettJourney} showStats={!pePlettJourney} immersive={pePlettJourney} />
+                <RouteMap event={event as never} height={"320px"} dayIds={mapDayIds}  />
               </div>
             </LockedSection>
             {!mapLocked ? (
@@ -742,7 +742,7 @@ function RoutesPanel({
                 to="/events/$eventId/map"
                 params={{ eventId }}
                 data-track-action="route_map_fullscreen_opened"
-                className={pePlettJourney ? "mx-4 mb-4 mt-1 inline-block rounded-md bg-pe-plett-accent px-3 py-2 text-xs font-bold text-pe-plett-accent-foreground" : "mt-2 inline-block text-[11px] font-semibold text-cherry"}
+                className={"mt-2 inline-block text-[11px] font-semibold text-cherry"}
               >
                 Open fullscreen map →
               </Link>
@@ -769,7 +769,7 @@ function RoutesPanel({
             <SectionTitle>
               {day.label || (day.date ? new Date(day.date).toDateString() : `Day ${di + 1}`)}
             </SectionTitle>
-            {day.imageUrl && !pePlettJourney ? (
+            {day.imageUrl ? (
               <img
                 src={day.imageUrl}
                 alt={`${day.label || `Day ${di + 1}`} riding`}
@@ -794,7 +794,7 @@ function RoutesPanel({
                     : null;
                 return (
                   <Fragment key={r.id || ri}>
-                  <li className={pePlettJourney ? "rounded-2xl bg-pe-plett p-4 text-pe-plett-foreground ring-1 ring-pe-plett-accent/25" : "rounded-2xl bg-card p-4 ring-1 ring-border"}>
+                  <li className={"rounded-2xl bg-card p-4 ring-1 ring-border"}>
                     <div className="flex items-center gap-2">
                       <span
                         className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white"
@@ -803,20 +803,20 @@ function RoutesPanel({
                         <RouteIcon className="h-3 w-3" />
                         {r.tier}
                       </span>
-                       <p className={pePlettJourney ? "text-sm font-semibold text-pe-plett-foreground" : "text-sm font-semibold text-ink"}>{r.name}</p>
+                       <p className={"text-sm font-semibold text-ink"}>{r.name}</p>
                     </div>
-                    <RouteFileStats route={r} tone={pePlettJourney ? "pePlett" : "default"} />
-                     <RouteProfile route={r} color={r.color} markers={dayMarkers} pePlett={pePlettJourney} />
+                    <RouteFileStats route={r}  />
+                     <RouteProfile route={r} color={r.color} markers={dayMarkers} />
 
                     {r.description ? (
                        <ReadMoreText
                          text={r.description}
-                         className={pePlettJourney ? "mt-3 whitespace-pre-line text-xs leading-relaxed text-pe-plett-foreground/90" : "mt-2 whitespace-pre-line text-xs leading-relaxed text-ink-soft"}
-                         buttonClassName={pePlettJourney ? "mt-1 text-[11px] font-semibold text-pe-plett-accent" : undefined}
+                         className={"mt-2 whitespace-pre-line text-xs leading-relaxed text-ink-soft"}
+                         buttonClassName={undefined}
                        />
                     ) : null}
                     {downloadsDisabled ? (
-                      <p className={pePlettJourney ? "mt-3 rounded-xl bg-pe-plett-deep/70 px-3 py-2 text-[11px] font-medium text-pe-plett-foreground/90" : "mt-3 rounded-xl bg-muted/60 px-3 py-2 text-[11px] font-medium text-ink-soft"}>
+                      <p className={"mt-3 rounded-xl bg-muted/60 px-3 py-2 text-[11px] font-medium text-ink-soft"}>
                         Route files will be available to download once the routes are final.
                       </p>
                     ) : kmls.length > 0 || r.gpxUrl ? (
