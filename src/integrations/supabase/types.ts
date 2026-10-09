@@ -1137,6 +1137,7 @@ export type Database = {
           external_id: string | null
           extras: Json
           finished_at: string | null
+          gender: string | null
           id: string
           jacket_size: string | null
           notes: string | null
@@ -1164,6 +1165,7 @@ export type Database = {
           external_id?: string | null
           extras?: Json
           finished_at?: string | null
+          gender?: string | null
           id?: string
           jacket_size?: string | null
           notes?: string | null
@@ -1191,6 +1193,7 @@ export type Database = {
           external_id?: string | null
           extras?: Json
           finished_at?: string | null
+          gender?: string | null
           id?: string
           jacket_size?: string | null
           notes?: string | null
@@ -1524,6 +1527,41 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "event_photos_cache_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: true
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_podiums: {
+        Row: {
+          event_id: string
+          final: Json
+          published_at: string | null
+          published_by: string | null
+          reveal_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          event_id: string
+          final?: Json
+          published_at?: string | null
+          published_by?: string | null
+          reveal_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          event_id?: string
+          final?: Json
+          published_at?: string | null
+          published_by?: string | null
+          reveal_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_podiums_event_id_fkey"
             columns: ["event_id"]
             isOneToOne: true
             referencedRelation: "events"
@@ -2232,6 +2270,7 @@ export type Database = {
           myriad_race_id: string | null
           name: string
           photos_album_url: string | null
+          podium_config: Json | null
           results_published: boolean
           results_rider_url_template: string | null
           results_url: string | null
@@ -2285,6 +2324,7 @@ export type Database = {
           myriad_race_id?: string | null
           name: string
           photos_album_url?: string | null
+          podium_config?: Json | null
           results_published?: boolean
           results_rider_url_template?: string | null
           results_url?: string | null
@@ -2338,6 +2378,7 @@ export type Database = {
           myriad_race_id?: string | null
           name?: string
           photos_album_url?: string | null
+          podium_config?: Json | null
           results_published?: boolean
           results_rider_url_template?: string | null
           results_url?: string | null

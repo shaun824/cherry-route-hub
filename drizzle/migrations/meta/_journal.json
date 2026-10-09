@@ -141,6 +141,13 @@
       "when": 1791402996169,
       "tag": "0019_chat_board_posts",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1791539253155,
+      "tag": "0020_podiums",
+      "breakpoints": true
     }
   ]
 }
