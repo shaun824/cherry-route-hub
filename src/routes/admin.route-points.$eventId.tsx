@@ -34,39 +34,48 @@ type Group = {
   logoUrl?: string;
   /** routeId -> marker id on that route */
   routes: Record<string, string>;
+  /** routeId -> route-specific name (e.g. "Waterpoint 2" on Silver, "Waterpoint 3" on Gold) */
+  routeNames: Record<string, string>;
 };
 
-const TYPES: { icon: Group["icon"]; label: string; defaultName: string }[] = [
-  { icon: "warning", label: "Marshal", defaultName: "Marshal" },
-  { icon: "water", label: "Waterpoint", defaultName: "Waterpoint" },
-  { icon: "pin", label: "Route point", defaultName: "Point" },
-  { icon: "aid", label: "Medic / aid", defaultName: "Medic" },
-];
+/** Metres between two points (equirectangular — plenty accurate at this scale). */
+function metres(aLat: number, aLng: number, bLat: number, bLng: number) {
+  const x = ((bLng - aLng) * Math.PI) / 180 * Math.cos(((aLat + bLat) / 2) * Math.PI / 180);
+  const y = ((bLat - aLat) * Math.PI) / 180;
+  return Math.sqrt(x * x + y * y) * 6371000;
+}
 
-const ROUTE_COLORS: Record<string, string> = { Gold: "#d4a017", Silver: "#64748b", Bronze: "#b45309" };
+// Copies of the same physical point on different routes are one pin in the editor,
+// even when each route numbers it differently or they sit a few metres apart.
+const SAME_SPOT_M = 30;
 
 function groupsFromDay(day: EventDay): Group[] {
-  const byKey = new Map<string, Group>();
+  const out: Group[] = [];
   for (const r of day.routes ?? []) {
     for (const m of r.customMarkers ?? []) {
-      const key = `${m.name}|${m.lat.toFixed(5)}|${m.lng.toFixed(5)}|${m.icon ?? "pin"}`;
-      const g = byKey.get(key);
-      if (g) g.routes[r.id] = m.id;
-      else
-        byKey.set(key, {
+      const icon = m.icon ?? "pin";
+      const g = out.find(
+        (x) => x.icon === icon && !x.routes[r.id] && metres(x.lat, x.lng, m.lat, m.lng) < SAME_SPOT_M,
+      );
+      if (g) {
+        g.routes[r.id] = m.id;
+        g.routeNames[r.id] = m.name;
+      } else
+        out.push({
           gid: crypto.randomUUID(),
           name: m.name,
-          icon: m.icon ?? "pin",
+          icon,
           lat: m.lat,
           lng: m.lng,
           description: m.description,
           color: m.color,
           logoUrl: m.logoUrl,
           routes: { [r.id]: m.id },
+          routeNames: { [r.id]: m.name },
         });
     }
   }
-  return [...byKey.values()];
+  return out;
 }
 
 function RoutePointsEditor() {
