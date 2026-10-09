@@ -147,6 +147,7 @@ function RoutePointsEditor() {
       lat: +lat.toFixed(6),
       lng: +lng.toFixed(6),
       routes: Object.fromEntries(routeIds.map((id) => [id, crypto.randomUUID()])),
+      routeNames: {},
     };
     patchDay((gs) => [...gs, g]);
     setSelected(g.gid);
@@ -155,8 +156,17 @@ function RoutePointsEditor() {
 
   async function save() {
     setSaving(true);
-    const nextDays = days.map((d) => {
-      const gs = groups[d.id] ?? [];
+    // Re-read the latest event days so edits made elsewhere (route files, names, schedule)
+    // since this page opened are kept — only the route points are replaced.
+    const { data: fresh, error: readErr } = await supabase.from("events").select("days").eq("id", event.id).maybeSingle();
+    if (readErr || !fresh) {
+      setSaving(false);
+      return toast.error(`Couldn't save: ${readErr?.message ?? "event not found"}`);
+    }
+    const latest = (Array.isArray(fresh.days) ? fresh.days : days) as EventDay[];
+    const nextDays = latest.map((d) => {
+      const gs = groups[d.id];
+      if (!gs) return d; // a day added elsewhere — leave untouched
       return {
         ...d,
         routes: (d.routes ?? []).map((r) => ({
@@ -164,7 +174,8 @@ function RoutePointsEditor() {
           customMarkers: gs
             .filter((g) => g.routes[r.id])
             .map((g) => {
-              const m: CustomMarker = { id: g.routes[r.id]!, name: g.name.trim() || "Point", lat: g.lat, lng: g.lng, icon: g.icon };
+              const name = (g.routeNames[r.id] ?? g.name).trim() || "Point";
+              const m: CustomMarker = { id: g.routes[r.id]!, name, lat: g.lat, lng: g.lng, icon: g.icon };
               if (g.description) m.description = g.description;
               if (g.color) m.color = g.color;
               if (g.logoUrl) m.logoUrl = g.logoUrl;
@@ -177,6 +188,7 @@ function RoutePointsEditor() {
     setSaving(false);
     if (error) return toast.error(`Couldn't save: ${error.message}`);
     setDirty(false);
+    void router.invalidate();
     toast.success("Route points saved — riders and crew see them straight away.");
   }
 
