@@ -1,5 +1,5 @@
 // Super-admin editor: tap to add marshal spots / route points, drag waterpoints to move them.
-import { createFileRoute, ClientOnly, Link, notFound } from "@tanstack/react-router";
+import { createFileRoute, ClientOnly, Link, notFound, useRouter } from "@tanstack/react-router";
 import { Suspense, lazy, useEffect, useMemo, useState } from "react";
 import { ArrowLeft, Droplets, Loader2, MapPin, Save, ShieldAlert, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
@@ -34,6 +34,8 @@ type Group = {
   logoUrl?: string;
   /** routeId -> marker id on that route */
   routes: Record<string, string>;
+  /** routeId -> route-specific name (e.g. "Waterpoint 2" on Silver, "Waterpoint 3" on Gold) */
+  routeNames: Record<string, string>;
 };
 
 const TYPES: { icon: Group["icon"]; label: string; defaultName: string }[] = [
@@ -45,32 +47,49 @@ const TYPES: { icon: Group["icon"]; label: string; defaultName: string }[] = [
 
 const ROUTE_COLORS: Record<string, string> = { Gold: "#d4a017", Silver: "#64748b", Bronze: "#b45309" };
 
+/** Metres between two points (equirectangular — plenty accurate at this scale). */
+function metres(aLat: number, aLng: number, bLat: number, bLng: number) {
+  const x = ((bLng - aLng) * Math.PI) / 180 * Math.cos(((aLat + bLat) / 2) * Math.PI / 180);
+  const y = ((bLat - aLat) * Math.PI) / 180;
+  return Math.sqrt(x * x + y * y) * 6371000;
+}
+
+// Copies of the same physical point on different routes are one pin in the editor,
+// even when each route numbers it differently or they sit a few metres apart.
+const SAME_SPOT_M = 30;
+
 function groupsFromDay(day: EventDay): Group[] {
-  const byKey = new Map<string, Group>();
+  const out: Group[] = [];
   for (const r of day.routes ?? []) {
     for (const m of r.customMarkers ?? []) {
-      const key = `${m.name}|${m.lat.toFixed(5)}|${m.lng.toFixed(5)}|${m.icon ?? "pin"}`;
-      const g = byKey.get(key);
-      if (g) g.routes[r.id] = m.id;
-      else
-        byKey.set(key, {
+      const icon = m.icon ?? "pin";
+      const g = out.find(
+        (x) => x.icon === icon && !x.routes[r.id] && metres(x.lat, x.lng, m.lat, m.lng) < SAME_SPOT_M,
+      );
+      if (g) {
+        g.routes[r.id] = m.id;
+        g.routeNames[r.id] = m.name;
+      } else
+        out.push({
           gid: crypto.randomUUID(),
           name: m.name,
-          icon: m.icon ?? "pin",
+          icon,
           lat: m.lat,
           lng: m.lng,
           description: m.description,
           color: m.color,
           logoUrl: m.logoUrl,
           routes: { [r.id]: m.id },
+          routeNames: { [r.id]: m.name },
         });
     }
   }
-  return [...byKey.values()];
+  return out;
 }
 
 function RoutePointsEditor() {
   const { event } = Route.useLoaderData();
+  const router = useRouter();
   const days = useMemo(() => (Array.isArray(event.days) ? event.days : []), [event.days]);
   const [dayIdx, setDayIdx] = useState(() => Math.max(0, days.findIndex((d) => (d.routes ?? []).length > 0)));
   const [groups, setGroups] = useState<Record<string, Group[]>>(() =>
@@ -138,6 +157,7 @@ function RoutePointsEditor() {
       lat: +lat.toFixed(6),
       lng: +lng.toFixed(6),
       routes: Object.fromEntries(routeIds.map((id) => [id, crypto.randomUUID()])),
+      routeNames: {},
     };
     patchDay((gs) => [...gs, g]);
     setSelected(g.gid);
@@ -146,8 +166,17 @@ function RoutePointsEditor() {
 
   async function save() {
     setSaving(true);
-    const nextDays = days.map((d) => {
-      const gs = groups[d.id] ?? [];
+    // Re-read the latest event days so edits made elsewhere (route files, names, schedule)
+    // since this page opened are kept — only the route points are replaced.
+    const { data: fresh, error: readErr } = await supabase.from("events").select("days").eq("id", event.id).maybeSingle();
+    if (readErr || !fresh) {
+      setSaving(false);
+      return toast.error(`Couldn't save: ${readErr?.message ?? "event not found"}`);
+    }
+    const latest = (Array.isArray(fresh.days) ? fresh.days : days) as EventDay[];
+    const nextDays = latest.map((d) => {
+      const gs = groups[d.id];
+      if (!gs) return d; // a day added elsewhere — leave untouched
       return {
         ...d,
         routes: (d.routes ?? []).map((r) => ({
@@ -155,7 +184,8 @@ function RoutePointsEditor() {
           customMarkers: gs
             .filter((g) => g.routes[r.id])
             .map((g) => {
-              const m: CustomMarker = { id: g.routes[r.id]!, name: g.name.trim() || "Point", lat: g.lat, lng: g.lng, icon: g.icon };
+              const name = (g.routeNames[r.id] ?? g.name).trim() || "Point";
+              const m: CustomMarker = { id: g.routes[r.id]!, name, lat: g.lat, lng: g.lng, icon: g.icon };
               if (g.description) m.description = g.description;
               if (g.color) m.color = g.color;
               if (g.logoUrl) m.logoUrl = g.logoUrl;
@@ -168,6 +198,7 @@ function RoutePointsEditor() {
     setSaving(false);
     if (error) return toast.error(`Couldn't save: ${error.message}`);
     setDirty(false);
+    void router.invalidate();
     toast.success("Route points saved — riders and crew see them straight away.");
   }
 
@@ -269,9 +300,16 @@ function RoutePointsEditor() {
                     <input
                       className="mt-1 w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm"
                       value={sel.name}
-                      onChange={(e) => update(sel.gid, { name: e.target.value })}
+                      onChange={(e) => update(sel.gid, { name: e.target.value, routeNames: {} })}
                     />
                   </label>
+                  {new Set(Object.values(sel.routeNames)).size > 1 && (
+                    <p className="text-[11px] text-ink-soft">
+                      Named differently per route:{" "}
+                      {(day?.routes ?? []).filter((r) => sel.routeNames[r.id]).map((r) => `${r.name}: ${sel.routeNames[r.id]}`).join(" · ")}
+                      . Typing a new name uses it on every route.
+                    </p>
+                  )}
                   <div>
                     <p className="text-xs font-semibold text-ink">Type</p>
                     <div className="mt-1 flex flex-wrap gap-1">
@@ -296,9 +334,14 @@ function RoutePointsEditor() {
                             checked={!!sel.routes[r.id]}
                             onChange={(e) => {
                               const routes = { ...sel.routes };
+                              const routeNames = { ...sel.routeNames };
                               if (e.target.checked) routes[r.id] = crypto.randomUUID();
-                              else delete routes[r.id];
-                              update(sel.gid, { routes });
+                              else {
+                                delete routes[r.id];
+                                delete routeNames[r.id];
+                              }
+                              if (Object.keys(routes).length === 0) return toast.error("A point must be on at least one route — delete it instead.");
+                              update(sel.gid, { routes, routeNames });
                             }}
                           />
                           {r.name}
