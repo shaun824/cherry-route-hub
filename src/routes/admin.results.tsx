@@ -6,6 +6,7 @@ import { useServerFn } from "@tanstack/react-start";
 import Papa from "papaparse";
 import { FileUp, Save, Trash2, Trophy } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { PodiumReview } from "@/components/podium-review";
 import {
   checkMyriadRace,
   deleteResultSet,
@@ -467,6 +468,7 @@ function ResultsAdminPage() {
               </ul>
             )}
           </section>
+          <PodiumReview eventId={eventId} />
         </>
       ) : null}
     </div>

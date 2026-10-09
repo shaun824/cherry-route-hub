@@ -1,3 +1,4 @@
+import { PodiumSection } from "@/components/podium-section";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { withRegistrationDayLabels } from "@/lib/event-days";
@@ -788,6 +789,7 @@ function SpectatorEventPage() {
 
       {tab === "results" ? (
         <div className="px-5 pt-4 pb-8 animate-fade-in">
+          <PodiumSection eventId={eventId} />
           {results?.results_url ? (
             <a
               href={results.results_url}
