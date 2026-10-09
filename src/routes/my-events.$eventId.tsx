@@ -939,6 +939,7 @@ function InfoPanel({
           location={event.location ?? ""}
           mapQuery={event.map_query}
           eventDate={event.event_date ?? undefined}
+          eventDays={(event as { days?: unknown }).days}
         /></div>
       ) : null}
 
