@@ -148,6 +148,13 @@
       "when": 1791539253155,
       "tag": "0020_podiums",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1791553177523,
+      "tag": "0021_marketing_snapshot",
+      "breakpoints": true
     }
   ]
 }
