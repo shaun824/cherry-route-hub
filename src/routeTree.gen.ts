@@ -16,11 +16,13 @@ import { Route as FeedRouteImport } from './routes/feed'
 import { Route as GalleryRouteImport } from './routes/gallery'
 import { Route as McpRouteImport } from './routes/mcp'
 import { Route as MyEventsRouteImport } from './routes/my-events'
+import { Route as PolicyRouteImport } from './routes/policy'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as PromosRouteImport } from './routes/promos'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as RewardsRouteImport } from './routes/rewards'
 import { Route as SpectateRouteImport } from './routes/spectate'
+import { Route as TermsOfServiceRouteImport } from './routes/terms-of-service'
 import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
 import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
@@ -158,6 +160,11 @@ const MyEventsRoute = MyEventsRouteImport.update({
   path: '/my-events',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PolicyRoute = PolicyRouteImport.update({
+  id: '/policy',
+  path: '/policy',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProfileRoute = ProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
@@ -181,6 +188,11 @@ const RewardsRoute = RewardsRouteImport.update({
 const SpectateRoute = SpectateRouteImport.update({
   id: '/spectate',
   path: '/spectate',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TermsOfServiceRoute = TermsOfServiceRouteImport.update({
+  id: '/terms-of-service',
+  path: '/terms-of-service',
   getParentRoute: () => rootRouteImport,
 } as any)
 const Char91DotmcpChar93ListToolsRoute =
@@ -720,11 +732,13 @@ export interface FileRoutesByFullPath {
   '/gallery': typeof GalleryRoute
   '/mcp': typeof McpRoute
   '/my-events': typeof MyEventsRouteWithChildren
+  '/policy': typeof PolicyRoute
   '/profile': typeof ProfileRoute
   '/promos': typeof PromosRoute
   '/reset-password': typeof ResetPasswordRoute
   '/rewards': typeof RewardsRoute
   '/spectate': typeof SpectateRouteWithChildren
+  '/terms-of-service': typeof TermsOfServiceRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
@@ -833,10 +847,12 @@ export interface FileRoutesByTo {
   '/feed': typeof FeedRoute
   '/gallery': typeof GalleryRoute
   '/mcp': typeof McpRoute
+  '/policy': typeof PolicyRoute
   '/profile': typeof ProfileRoute
   '/promos': typeof PromosRoute
   '/reset-password': typeof ResetPasswordRoute
   '/rewards': typeof RewardsRoute
+  '/terms-of-service': typeof TermsOfServiceRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
@@ -947,11 +963,13 @@ export interface FileRoutesById {
   '/gallery': typeof GalleryRoute
   '/mcp': typeof McpRoute
   '/my-events': typeof MyEventsRouteWithChildren
+  '/policy': typeof PolicyRoute
   '/profile': typeof ProfileRoute
   '/promos': typeof PromosRoute
   '/reset-password': typeof ResetPasswordRoute
   '/rewards': typeof RewardsRoute
   '/spectate': typeof SpectateRouteWithChildren
+  '/terms-of-service': typeof TermsOfServiceRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
@@ -1064,11 +1082,13 @@ export interface FileRouteTypes {
     | '/gallery'
     | '/mcp'
     | '/my-events'
+    | '/policy'
     | '/profile'
     | '/promos'
     | '/reset-password'
     | '/rewards'
     | '/spectate'
+    | '/terms-of-service'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
     | '/admin/analytics'
@@ -1177,10 +1197,12 @@ export interface FileRouteTypes {
     | '/feed'
     | '/gallery'
     | '/mcp'
+    | '/policy'
     | '/profile'
     | '/promos'
     | '/reset-password'
     | '/rewards'
+    | '/terms-of-service'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
     | '/admin/analytics'
@@ -1290,11 +1312,13 @@ export interface FileRouteTypes {
     | '/gallery'
     | '/mcp'
     | '/my-events'
+    | '/policy'
     | '/profile'
     | '/promos'
     | '/reset-password'
     | '/rewards'
     | '/spectate'
+    | '/terms-of-service'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
     | '/admin/analytics'
@@ -1406,11 +1430,13 @@ export interface RootRouteChildren {
   GalleryRoute: typeof GalleryRoute
   McpRoute: typeof McpRoute
   MyEventsRoute: typeof MyEventsRouteWithChildren
+  PolicyRoute: typeof PolicyRoute
   ProfileRoute: typeof ProfileRoute
   PromosRoute: typeof PromosRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   RewardsRoute: typeof RewardsRoute
   SpectateRoute: typeof SpectateRouteWithChildren
+  TermsOfServiceRoute: typeof TermsOfServiceRoute
   Char91DotmcpChar93ListToolsRoute: typeof Char91DotmcpChar93ListToolsRoute
   Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   AskEventIdRoute: typeof AskEventIdRoute
@@ -1518,6 +1544,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MyEventsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/policy': {
+      id: '/policy'
+      path: '/policy'
+      fullPath: '/policy'
+      preLoaderRoute: typeof PolicyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/profile': {
       id: '/profile'
       path: '/profile'
@@ -1551,6 +1584,13 @@ declare module '@tanstack/react-router' {
       path: '/spectate'
       fullPath: '/spectate'
       preLoaderRoute: typeof SpectateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/terms-of-service': {
+      id: '/terms-of-service'
+      path: '/terms-of-service'
+      fullPath: '/terms-of-service'
+      preLoaderRoute: typeof TermsOfServiceRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/.mcp/list-tools': {
@@ -2413,11 +2453,13 @@ const rootRouteChildren: RootRouteChildren = {
   GalleryRoute: GalleryRoute,
   McpRoute: McpRoute,
   MyEventsRoute: MyEventsRouteWithChildren,
+  PolicyRoute: PolicyRoute,
   ProfileRoute: ProfileRoute,
   PromosRoute: PromosRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   RewardsRoute: RewardsRoute,
   SpectateRoute: SpectateRouteWithChildren,
+  TermsOfServiceRoute: TermsOfServiceRoute,
   Char91DotmcpChar93ListToolsRoute: Char91DotmcpChar93ListToolsRoute,
   Char91DotwellKnownChar93OauthProtectedResourceRoute:
     Char91DotwellKnownChar93OauthProtectedResourceRoute,
