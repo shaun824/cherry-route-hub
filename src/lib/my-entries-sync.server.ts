@@ -10,6 +10,7 @@ import {
   extractTeam,
   type EnEntry,
 } from "./entryninja.server";
+import { ageBandFromSaId, normaliseGender } from "./age-band";
 import { hashIdNumber, idNumberLast4 } from "./id-hash.server";
 
 type AnyClient = SupabaseClient<any, any, any>;
@@ -149,6 +150,7 @@ export async function syncMyEntries(args: {
         ...(p.cell_phone_number ? { phone: p.cell_phone_number } : {}),
         ...(entEmail ? { email: entEmail } : {}),
         ...(entIdHash ? { id_number_hash: entIdHash, id_number_last4: idNumberLast4(entIdRaw) } : {}),
+        ...(ageBandFromSaId(entIdRaw) ? { age_band: ageBandFromSaId(entIdRaw) } : {}),
       };
 
       if (entrantId) {
@@ -194,7 +196,7 @@ export async function syncMyEntries(args: {
           registration_ref: entry.registration_reference || null,
           jacket_size: jacket,
           tshirt_size: tshirt,
-          gender: entry.entrant?.gender ? String(entry.entrant.gender).toLowerCase() : null,
+          gender: normaliseGender(entry.entrant?.gender),
           extras,
           paid: typeof entry.paid === "boolean" ? entry.paid : null,
           payment_synced_at: new Date().toISOString(),

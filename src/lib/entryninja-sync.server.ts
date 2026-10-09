@@ -1,6 +1,7 @@
 // Server-only: shared Entry Ninja -> app sync used by the admin action and the cron hook.
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { fetchEnEvents, fetchEnEntries, normaliseSize, toLineArray, linePrice, extractTeam, type EnEvent } from "./entryninja.server";
+import { ageBandFromSaId, normaliseGender } from "./age-band";
 import { hashIdNumber, idNumberLast4 } from "./id-hash.server";
 
 // The generated Database type isn't needed here; the callers pass typed clients.
@@ -144,6 +145,7 @@ export async function syncEnEvent(
         full_name: fullName,
         phone: p?.cell_phone_number || null,
         ...(idHash ? { id_number_hash: idHash, id_number_last4: idNumberLast4(idNumber) } : {}),
+        ...(ageBandFromSaId(idNumber) ? { age_band: ageBandFromSaId(idNumber) } : {}),
         // Never wipe an email a rider has already supplied in the app.
         ...(email ? { email } : {}),
       };
@@ -178,7 +180,7 @@ export async function syncEnEvent(
           registration_ref: entry.registration_reference || null,
           jacket_size: jacket,
           tshirt_size: tshirt,
-          gender: p?.gender ? String(p.gender).toLowerCase() : null,
+          gender: normaliseGender(p?.gender),
           extras,
           paid: typeof entry.paid === "boolean" ? entry.paid : null,
           payment_synced_at: new Date().toISOString(),

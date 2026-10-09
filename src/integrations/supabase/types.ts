@@ -616,6 +616,7 @@ export type Database = {
       }
       entrants: {
         Row: {
+          age_band: string | null
           created_at: string
           email: string | null
           full_name: string
@@ -628,6 +629,7 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          age_band?: string | null
           created_at?: string
           email?: string | null
           full_name: string
@@ -640,6 +642,7 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          age_band?: string | null
           created_at?: string
           email?: string | null
           full_name?: string
@@ -3133,6 +3136,39 @@ export type Database = {
           updated_at?: string
           valid_days?: number
           value_label?: string
+        }
+        Relationships: []
+      }
+      marketing_api_calls: {
+        Row: {
+          authorized: boolean
+          called_at: string
+          duration_ms: number | null
+          events_returned: number | null
+          id: string
+          ip: string | null
+          status: number
+          user_agent: string | null
+        }
+        Insert: {
+          authorized: boolean
+          called_at?: string
+          duration_ms?: number | null
+          events_returned?: number | null
+          id?: string
+          ip?: string | null
+          status: number
+          user_agent?: string | null
+        }
+        Update: {
+          authorized?: boolean
+          called_at?: string
+          duration_ms?: number | null
+          events_returned?: number | null
+          id?: string
+          ip?: string | null
+          status?: number
+          user_agent?: string | null
         }
         Relationships: []
       }
