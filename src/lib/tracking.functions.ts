@@ -317,7 +317,9 @@ export const fetchLiveTracking = createServerFn({ method: "GET" })
   .handler(async ({ data }): Promise<LiveTrackingPayload> => {
     const supabase = publishableClient();
     const since = currentDayStartIso();
-    const { data: points, error } = await table(supabase, "tracking_points")
+    // GPS history isn't publicly readable; read server-side and return only today's latest positions.
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: points, error } = await table(supabaseAdmin, "tracking_points")
       .select("user_id, entrant_id, lat, lng, accuracy_m, battery_pct, recorded_at")
       .eq("event_id", data.eventId)
       .gte("recorded_at", since)
