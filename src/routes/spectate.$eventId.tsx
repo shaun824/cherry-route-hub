@@ -16,11 +16,13 @@ import {
   MapPin,
   Navigation,
   Search,
+  Star,
   Toilet,
   Trophy,
   Users,
 } from "lucide-react";
 import { useAdminStore } from "@/lib/store";
+import { useRiderFavourites, matchesFav, type FavRider } from "@/lib/rider-favourites";
 import { useHydratedStore } from "@/lib/use-hydrated-store";
 import { formatDate, formatTime } from "@/lib/mock-data";
 import {
@@ -112,6 +114,13 @@ function SpectatorEventPage() {
   const [search, setSearch] = useState("");
 
   const { user } = useSession();
+  const favs = useRiderFavourites(eventId);
+  const [trackRider, setTrackRider] = useState<{ name: string; bib: string | null } | null>(null);
+  const trackLive = (name: string, bib: string | null) => {
+    setTrackRider({ name, bib });
+    selectTab("live");
+  };
+  const favOf = (r: TrackedRider): FavRider => ({ event_entrant_id: r.id, full_name: r.full_name, bib_number: r.bib_number, category: r.category });
   const fetchRiders = useServerFn(getEventRiders);
   const ridersQ = useQuery<RosterPayload>({
     queryKey: ["event-riders", eventId, user?.id ?? "guest"],
@@ -421,7 +430,12 @@ function SpectatorEventPage() {
             ) : null}
 
             <div className="mt-4">
-              <LiveTrackingMap eventId={eventId} isCrew={false} />
+              {trackRider ? (
+                <p className="mb-2 rounded-xl bg-accent px-3 py-2 text-xs text-cherry-deep">
+                  Following <b>{trackRider.name}</b> — the map jumps to them as soon as their tracking is on.
+                </p>
+              ) : null}
+              <LiveTrackingMap eventId={eventId} isCrew={false} trackRider={trackRider} />
             </div>
           </section>
         </div>
@@ -725,6 +739,7 @@ function SpectatorEventPage() {
             </div>
           ) : (
             <div className="mt-4 space-y-4">
+              <StarredBox favs={favs.list} onToggle={favs.toggle} onTrack={trackLive} eventId={eventId} signedIn={favs.signedIn} />
               <p className="text-[11px] font-semibold uppercase tracking-wider text-ink-soft">
                 {filtered.length} rider{filtered.length === 1 ? "" : "s"}
               </p>
@@ -753,11 +768,12 @@ function SpectatorEventPage() {
                       {g.rows.map((r) => {
                         const link = riderResultUrl(results?.results_rider_url_template ?? null, r.bib_number);
                         return (
-                          <li key={r.id}>
+                          <li key={r.id} className="flex items-center gap-1">
+                            <StarButton on={favs.isFav(r.id)} onClick={() => favs.toggle(favOf(r))} />
                             <Link
                               to="/spectate/$eventId/rider/$entrantId"
                               params={{ eventId, entrantId: r.id }}
-                              className="flex items-center gap-3 py-2 text-sm active:opacity-70"
+                              className="flex min-w-0 flex-1 items-center gap-3 py-2 text-sm active:opacity-70"
                             >
                               <span className="grid h-7 min-w-[2.75rem] place-items-center rounded-md bg-background px-1 font-mono text-[11px] font-semibold text-ink-soft ring-1 ring-border">
                                 {r.bib_number || "—"}
@@ -790,6 +806,17 @@ function SpectatorEventPage() {
       {tab === "results" ? (
         <div className="px-5 pt-4 pb-8 animate-fade-in">
           <PodiumSection eventId={eventId} />
+          <StarredBox
+            favs={favs.list}
+            onToggle={favs.toggle}
+            onTrack={trackLive}
+            eventId={eventId}
+            signedIn={favs.signedIn}
+            resultFor={(f) => {
+              const row = (results?.rows ?? []).find((x) => x.result_set_id === currentSetId && matchesFav(f, x.full_name, x.bib_number));
+              return row ? `${row.position ? `#${row.position} · ` : ""}${row.time_text ?? row.status ?? ""}` : null;
+            }}
+          />
           {results?.results_url ? (
             <a
               href={results.results_url}
@@ -884,6 +911,14 @@ function SpectatorEventPage() {
                                 <span className="font-mono text-xs font-semibold text-ink">
                                   {r.time_text ?? "—"}
                                 </span>
+                                {(() => {
+                                  const f = favs.list.find((x) => matchesFav(x, r.full_name, r.bib_number));
+                                  return f ? (
+                                    <button type="button" onClick={() => trackLive(r.full_name, r.bib_number)} className="rounded-full bg-cherry px-2 py-1 text-[10px] font-bold text-white">
+                                      ★ Track
+                                    </button>
+                                  ) : null;
+                                })()}
                               </li>
                             ))}
                           </ol>
@@ -898,6 +933,82 @@ function SpectatorEventPage() {
         </div>
       ) : null}
     </div>
+  );
+}
+
+function StarButton({ on, onClick }: { on: boolean; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      aria-label={on ? "Remove from starred riders" : "Star this rider"}
+      aria-pressed={on}
+      onClick={onClick}
+      className="grid h-9 w-9 shrink-0 place-items-center rounded-full active:scale-90"
+    >
+      <Star className={`h-4 w-4 ${on ? "fill-cherry text-cherry" : "text-ink-soft"}`} />
+    </button>
+  );
+}
+
+function StarredBox({
+  favs,
+  onToggle,
+  onTrack,
+  eventId,
+  signedIn,
+  resultFor,
+}: {
+  favs: FavRider[];
+  onToggle: (f: FavRider) => void;
+  onTrack: (name: string, bib: string | null) => void;
+  eventId: string;
+  signedIn: boolean;
+  resultFor?: (f: FavRider) => string | null;
+}) {
+  if (favs.length === 0) {
+    return (
+      <p className="mb-4 rounded-2xl bg-card px-3 py-2 text-xs text-ink-soft ring-1 ring-border">
+        <Star className="mr-1 inline h-3.5 w-3.5 text-cherry" />
+        Tap the star next to a rider to keep them at the top and track them live.
+      </p>
+    );
+  }
+  return (
+    <section className="mb-4 rounded-2xl bg-gradient-to-br from-cherry/10 to-accent p-3 ring-1 ring-cherry/20">
+      <h3 className="flex items-center gap-1.5 font-display text-sm font-bold text-ink">
+        <Star className="h-4 w-4 fill-cherry text-cherry" /> Your starred riders
+      </h3>
+      <ul className="mt-2 divide-y divide-border">
+        {favs.map((f) => {
+          const res = resultFor?.(f);
+          return (
+            <li key={f.event_entrant_id} className="flex items-center gap-2 py-2">
+              <StarButton on onClick={() => onToggle(f)} />
+              <Link
+                to="/spectate/$eventId/rider/$entrantId"
+                params={{ eventId, entrantId: f.event_entrant_id }}
+                className="min-w-0 flex-1"
+              >
+                <span className="block truncate text-sm font-semibold text-ink">{f.full_name}</span>
+                <span className="block truncate text-[11px] text-ink-soft">
+                  {[f.bib_number ? `#${f.bib_number}` : null, res ?? f.category].filter(Boolean).join(" · ")}
+                </span>
+              </Link>
+              <button
+                type="button"
+                onClick={() => onTrack(f.full_name, f.bib_number)}
+                className="inline-flex shrink-0 items-center gap-1 rounded-full bg-cherry px-3 py-1.5 text-xs font-bold text-white"
+              >
+                <Navigation className="h-3 w-3" /> Track live
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+      {!signedIn ? (
+        <p className="mt-1 text-[11px] text-ink-soft">Saved on this phone. Sign in to keep them on every device.</p>
+      ) : null}
+    </section>
   );
 }
 
