@@ -101,6 +101,7 @@ export async function computePodium(eventId: string, depth: number): Promise<Pod
   // Results: Myriad live feed first, else imported results.
   let rows: { full_name: string; bib_number: string | null; time_ms: number | null; result_set_id: string }[] = [];
   let setIds: string[] = [];
+  let setLabels = new Map<string, string>();
   const raceId = String(ev.myriad_race_id ?? "").trim();
   if (raceId) {
     try {
@@ -108,29 +109,46 @@ export async function computePodium(eventId: string, depth: number): Promise<Pod
       const live = await fetchRaceResults(raceId);
       rows = live.rows as any;
       setIds = live.sets.map((s: any) => String(s.id));
+      setLabels = new Map(live.sets.map((s: any) => [String(s.id), String(s.label ?? "")]));
     } catch {
       /* fall back */
     }
   }
   if (!rows.length) {
-    const { data: s } = await (supabaseAdmin as any).from("event_result_sets").select("id").eq("event_id", eventId);
+    const { data: s } = await (supabaseAdmin as any).from("event_result_sets").select("id, label").eq("event_id", eventId);
     const { data: r } = await (supabaseAdmin as any)
       .from("event_results").select("full_name, bib_number, time_ms, result_set_id").eq("event_id", eventId).limit(5000);
     rows = (r ?? []).map((x: any) => ({ ...x, result_set_id: String(x.result_set_id) }));
     setIds = (s ?? []).map((x: any) => String(x.id));
+    setLabels = new Map((s ?? []).map((x: any) => [String(x.id), String(x.label ?? "")]));
   }
-  const setsWith = new Set(rows.filter((r) => r.time_ms != null).map((r) => r.result_set_id));
-  const stagesWithResults = setsWith.size;
+  // A "stage" is a riding day. Result sets are split per race/start group (Gold,
+  // Silver, Bronze each get their own Day 1 set), so group sets by the day in
+  // their label; sets with no day label count as their own stage.
+  const stageOf = (setId: string) => {
+    const m = /day\s*(\d+)/i.exec(setLabels.get(setId) ?? "");
+    return m ? `day${m[1]}` : `set:${setId}`;
+  };
 
-  // Per rider: sum of stage times, number of stages completed.
-  const totals = new Map<string, { ms: number; n: number }>();
+  // Per rider, per stage: best time (a rider in both an overall and a category
+  // set for the same day is counted once, not twice).
+  const perRider = new Map<string, Map<string, number>>();
   for (const r of rows) {
     if (r.time_ms == null) continue;
     const k = r.bib_number ? `b:${norm(r.bib_number)}` : `n:${norm(r.full_name)}`;
-    const t = totals.get(k) ?? { ms: 0, n: 0 };
-    t.ms += r.time_ms;
-    t.n += 1;
-    totals.set(k, t);
+    const stages = perRider.get(k) ?? new Map<string, number>();
+    const st = stageOf(r.result_set_id);
+    const prev = stages.get(st);
+    if (prev == null || r.time_ms < prev) stages.set(st, r.time_ms);
+    perRider.set(k, stages);
+  }
+  const totals = new Map<string, { ms: number; n: number }>();
+  let stagesWithResults = 0;
+  for (const [k, stages] of perRider) {
+    let ms = 0;
+    for (const v of stages.values()) ms += v;
+    totals.set(k, { ms, n: stages.size });
+    stagesWithResults = Math.max(stagesWithResults, stages.size);
   }
 
   const byCat = new Map<string, PodiumRider[]>();
