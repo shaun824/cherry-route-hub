@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import type { CustomMarker } from "@/lib/mock-data";
 import { RouteProfile } from "@/components/route-profile";
+import { useRouteHover } from "@/lib/route-hover";
 import {
   fetchTeamLocationsCrew,
   fetchTeamLocationsField,
@@ -726,6 +727,44 @@ export default function LiveTrackingMapInner({
     const first = candidates.find((c) => c.dayId === id);
     saveManual(first ? [first.route.id] : null);
   };
+
+  // Follow the elevation-profile scrub on the map (mouse or finger), like the route map.
+  const profileHover = useRouteHover();
+  const hoverMarkerRef = useRef<L.Marker | null>(null);
+  const scrubbingRef = useRef(false);
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    if (!profileHover) {
+      scrubbingRef.current = false;
+      hoverMarkerRef.current?.remove();
+      hoverMarkerRef.current = null;
+      return;
+    }
+    const ll = L.latLng(profileHover.lat, profileHover.lng);
+    const rot = profileHover.bearing ?? 0;
+    const icon = L.divIcon({
+      className: "rce-hover-marker",
+      html: profileHover.bearing === undefined
+        ? `<div style="width:22px;height:22px;border-radius:9999px;background:#e11d48;border:3px solid #fff;box-shadow:0 0 0 3px rgba(225,29,72,.35);"></div>`
+        : `<div style="width:34px;height:34px;display:grid;place-items:center;border-radius:9999px;background:#e11d48;border:3px solid #fff;box-shadow:0 0 0 4px rgba(225,29,72,.3),0 2px 6px rgba(0,0,0,.35);transform:rotate(${rot}deg)"><svg width="16" height="16" viewBox="0 0 24 24"><path d="M12 2 L20 20 L12 15 L4 20 Z" fill="#fff"/></svg></div>`,
+      iconSize: [34, 34],
+      iconAnchor: [17, 17],
+    });
+    if (hoverMarkerRef.current) {
+      hoverMarkerRef.current.setLatLng(ll).setIcon(icon);
+    } else {
+      hoverMarkerRef.current = L.marker(ll, { icon, interactive: false, zIndexOffset: 2000 }).addTo(map);
+    }
+    if (!scrubbingRef.current) {
+      scrubbingRef.current = true;
+      if (map.getZoom() < 13) {
+        map.setView(ll, 14, { animate: true });
+        return;
+      }
+    }
+    if (!map.getBounds().pad(-0.3).contains(ll)) map.panTo(ll, { animate: true, duration: 0.35 });
+  }, [profileHover]);
 
   // Draw the course underneath the rider markers (same style as the route map).
   useEffect(() => {
