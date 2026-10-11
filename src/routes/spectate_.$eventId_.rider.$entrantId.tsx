@@ -121,6 +121,23 @@ function RiderDetailPage() {
               <StatCard icon={Flag} label="Finished" value={finishedAt || "—"} />
             </div>
 
+            {schedStarts.length > 0 ? (
+              <section>
+                <h2 className="font-display text-[13px] font-bold uppercase tracking-wider text-ink-soft">
+                  Start times by day
+                </h2>
+                <ul className="mt-3 grid gap-2 sm:grid-cols-2">
+                  {schedStarts.map((x, i) => (
+                    <li key={i} className="flex items-center gap-3 rounded-2xl bg-card p-3 ring-1 ring-border">
+                      <Clock className="h-4 w-4 text-cherry" />
+                      <span className="flex-1 text-sm font-semibold text-ink">{x.dayLabel || `Day ${i + 1}`}</span>
+                      <span className="font-mono text-base font-bold text-ink">{x.time}</span>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            ) : null}
+
             <section>
               <h2 className="font-display text-[13px] font-bold uppercase tracking-wider text-ink-soft">
                 Day-by-day results

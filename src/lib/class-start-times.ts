@@ -17,10 +17,14 @@ export function classStartTimes(
   const dayById = new Map((days ?? []).map((d) => [d.id, d]));
   const onlyDay = WEEKDAYS.find((w) => c.includes(w));
   const out: { dayLabel: string; time: string; sort: string }[] = [];
+  // E-bike classes without their own start row (e.g. Silver E-Bike) go off with their tier.
+  const hasEbikeRow = (dayId: string | undefined) =>
+    schedule.some((x) => x.dayId === dayId && /start/i.test(x.label) && /e-?bike/i.test(x.label) && TIERS.find((t) => x.label.toLowerCase().includes(t)) === tier);
   for (const s of schedule) {
     const l = s.label.toLowerCase();
     if (!/start/.test(l)) continue;
-    if (/e-?bike/.test(l) !== ebike) continue;
+    const isEbikeRow = /e-?bike/.test(l);
+    if (ebike ? isEbikeRow !== hasEbikeRow(s.dayId) : isEbikeRow) continue;
     const lt = TIERS.find((t) => l.includes(t));
     if (tier ? lt !== tier : !!lt) continue;
     const day = s.dayId ? dayById.get(s.dayId) : undefined;
