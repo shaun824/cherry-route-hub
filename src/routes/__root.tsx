@@ -228,6 +228,13 @@ function RootComponent() {
     void ensureOfflineWorker();
   }, []);
 
+  // App Store / Google Play app only (no-op on the website): background GPS,
+  // native push and the Android back button. See src/lib/native.ts.
+  useEffect(() => {
+    if (!(window as any).Capacitor?.isNativePlatform?.()) return;
+    void import("../lib/native").then((m) => m.initNative());
+  }, []);
+
 
   useEffect(() => {
     const { data: sub } = supabase.auth.onAuthStateChange((event) => {

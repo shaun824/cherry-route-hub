@@ -1,0 +1,251 @@
+# Builds the Rider Hub store apps and uploads them for testing.
+#
+#   • Android → signed .aab → Google Play "internal testing" track
+#   • iOS     → signed .ipa → TestFlight
+#
+# Everyday changes don't need this: the apps load the live site, so a Lovable
+# publish updates them instantly. Run this only when something in ios/,
+# android/, capacitor.config.ts or the Capacitor plugins changes.
+#
+# How to run:
+#   • Actions tab → "Native apps" → Run workflow (pick platform), or
+#   • push a tag like `app-v1.0.0` (the tag sets the version number).
+#
+# Secrets it needs are listed in docs/native-app.md. A job whose secrets are
+# missing still builds (unsigned / debug) so you can check the project compiles.
+
+name: Native apps
+
+on:
+  workflow_dispatch:
+    inputs:
+      platform:
+        description: Which app to build
+        type: choice
+        options: [both, android, ios]
+        default: both
+      version:
+        description: Version shown in the stores (e.g. 1.0.0). Leave blank to use the latest app-v* tag or 1.0.0.
+        type: string
+        required: false
+      play_status:
+        description: Google Play release status (use "draft" until the app's first review is approved)
+        type: choice
+        options: [draft, completed]
+        default: draft
+  push:
+    tags: ["app-v*"]
+  pull_request:
+    paths:
+      - "ios/**"
+      - "android/**"
+      - "capacitor.config.ts"
+      - "native-shell/**"
+      - ".github/workflows/native-apps.yml"
+
+concurrency:
+  group: native-apps-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: "22"
+  APP_ID: za.co.redcherryevents.riderhub
+
+jobs:
+  version:
+    runs-on: ubuntu-latest
+    outputs:
+      name: ${{ steps.v.outputs.name }}
+      code: ${{ steps.v.outputs.code }}
+    steps:
+      - id: v
+        shell: bash
+        run: |
+          name="${{ inputs.version }}"
+          if [[ -z "$name" && "${GITHUB_REF}" == refs/tags/app-v* ]]; then name="${GITHUB_REF#refs/tags/app-v}"; fi
+          [[ -z "$name" ]] && name="1.0.0"
+          # Build number must always go up; the run number does.
+          code=$(( ${{ github.run_number }} + 100 ))
+          echo "name=$name" >> "$GITHUB_OUTPUT"
+          echo "code=$code" >> "$GITHUB_OUTPUT"
+          echo "Version $name ($code)" >> "$GITHUB_STEP_SUMMARY"
+
+  android:
+    needs: version
+    if: github.event_name != 'workflow_dispatch' || inputs.platform != 'ios'
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      HAS_SIGNING: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}
+      HAS_PLAY: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON != '' }}
+      ANDROID_VERSION_CODE: ${{ needs.version.outputs.code }}
+      APP_VERSION_NAME: ${{ needs.version.outputs.name }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: gradle
+
+      - name: Install packages
+        run: npm install --no-audit --no-fund --ignore-scripts
+
+      - name: Add Firebase config
+        env:
+          GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
+        run: |
+          if [ -n "$GOOGLE_SERVICES_JSON" ]; then
+            printf '%s' "$GOOGLE_SERVICES_JSON" > android/app/google-services.json
+          else
+            echo "::warning::GOOGLE_SERVICES_JSON not set — push notifications won't work in this build."
+          fi
+
+      - name: Sync Capacitor
+        run: npx cap sync android
+
+      - name: Add upload key
+        if: env.HAS_SIGNING == 'true'
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/upload.jks"
+          echo "ANDROID_KEYSTORE_PATH=$RUNNER_TEMP/upload.jks" >> "$GITHUB_ENV"
+
+      - name: Build signed app bundle
+        if: env.HAS_SIGNING == 'true'
+        working-directory: android
+        env:
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: ./gradlew --no-daemon bundleRelease
+
+      - name: Build debug APK (no signing secrets yet)
+        if: env.HAS_SIGNING != 'true'
+        working-directory: android
+        run: ./gradlew --no-daemon assembleDebug
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: rider-hub-android-${{ needs.version.outputs.name }}-${{ needs.version.outputs.code }}
+          path: |
+            android/app/build/outputs/bundle/release/*.aab
+            android/app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
+
+      - name: Upload to Google Play (internal testing)
+        if: env.HAS_SIGNING == 'true' && env.HAS_PLAY == 'true' && github.event_name != 'pull_request'
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: ${{ env.APP_ID }}
+          releaseFiles: android/app/build/outputs/bundle/release/app-release.aab
+          track: internal
+          status: ${{ inputs.play_status || 'draft' }}
+          releaseName: ${{ needs.version.outputs.name }} (${{ needs.version.outputs.code }})
+
+  ios:
+    needs: version
+    if: github.event_name != 'workflow_dispatch' || inputs.platform != 'android'
+    # Apple requires uploads built with a current Xcode/iOS SDK; bump this
+    # runner image when GitHub publishes a newer macOS one.
+    runs-on: macos-15
+    timeout-minutes: 60
+    env:
+      HAS_SIGNING: ${{ secrets.APP_STORE_CONNECT_KEY_P8 != '' && secrets.APPLE_TEAM_ID != '' }}
+      MARKETING_VERSION: ${{ needs.version.outputs.name }}
+      BUILD_NUMBER: ${{ needs.version.outputs.code }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install packages
+        run: npm install --no-audit --no-fund --ignore-scripts
+
+      - name: Add Firebase config
+        env:
+          GOOGLE_SERVICE_INFO_PLIST: ${{ secrets.GOOGLE_SERVICE_INFO_PLIST }}
+        run: |
+          if [ -n "$GOOGLE_SERVICE_INFO_PLIST" ]; then
+            printf '%s' "$GOOGLE_SERVICE_INFO_PLIST" > ios/App/App/GoogleService-Info.plist
+          else
+            echo "::warning::GOOGLE_SERVICE_INFO_PLIST not set — using a placeholder, push won't work in this build."
+            cp ios/App/GoogleService-Info.placeholder.plist ios/App/App/GoogleService-Info.plist
+          fi
+
+      - name: Sync Capacitor
+        run: npx cap sync ios
+
+      - name: Add App Store Connect API key
+        if: env.HAS_SIGNING == 'true'
+        env:
+          APP_STORE_CONNECT_KEY_P8: ${{ secrets.APP_STORE_CONNECT_KEY_P8 }}
+        run: |
+          printf '%s' "$APP_STORE_CONNECT_KEY_P8" > "$RUNNER_TEMP/AuthKey.p8"
+          echo "ASC_KEY_PATH=$RUNNER_TEMP/AuthKey.p8" >> "$GITHUB_ENV"
+
+      - name: Check it compiles (no signing secrets yet)
+        if: env.HAS_SIGNING != 'true'
+        run: |
+          xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Release \
+            -destination 'generic/platform=iOS' CODE_SIGNING_ALLOWED=NO build | tail -n 40
+
+      - name: Archive
+        if: env.HAS_SIGNING == 'true'
+        env:
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+        run: |
+          set -o pipefail
+          xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Release \
+            -destination 'generic/platform=iOS' \
+            -archivePath "$RUNNER_TEMP/RiderHub.xcarchive" \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$ASC_KEY_PATH" \
+            -authenticationKeyID "$ASC_KEY_ID" \
+            -authenticationKeyIssuerID "$ASC_ISSUER_ID" \
+            DEVELOPMENT_TEAM="$APPLE_TEAM_ID" \
+            CODE_SIGN_STYLE=Automatic \
+            MARKETING_VERSION="$MARKETING_VERSION" \
+            CURRENT_PROJECT_VERSION="$BUILD_NUMBER" \
+            archive | tail -n 60
+
+      - name: Upload to TestFlight
+        if: env.HAS_SIGNING == 'true' && github.event_name != 'pull_request'
+        env:
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+        run: |
+          set -o pipefail
+          sed "s/__TEAM_ID__/$APPLE_TEAM_ID/" ios/App/ExportOptions.plist > "$RUNNER_TEMP/ExportOptions.plist"
+          # destination=upload in ExportOptions sends the build straight to App Store Connect.
+          xcodebuild -exportArchive \
+            -archivePath "$RUNNER_TEMP/RiderHub.xcarchive" \
+            -exportOptionsPlist "$RUNNER_TEMP/ExportOptions.plist" \
+            -exportPath "$RUNNER_TEMP/export" \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$ASC_KEY_PATH" \
+            -authenticationKeyID "$ASC_KEY_ID" \
+            -authenticationKeyIssuerID "$ASC_ISSUER_ID" | tail -n 40
+          echo "Uploaded $MARKETING_VERSION ($BUILD_NUMBER) to TestFlight — it appears in App Store Connect after processing (~10–30 min)." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Clean up key
+        if: always()
+        run: rm -f "$RUNNER_TEMP/AuthKey.p8"
