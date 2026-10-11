@@ -152,9 +152,17 @@ export function TrackingTutorial({ onTab }: { onTab?: (tab: string) => void }) {
     let scrolled = false;
     const measure = () => {
       const el = step.target();
-      if (el && !scrolled) {
-        scrolled = true;
-        el.scrollIntoView({ block: "center", behavior: "smooth" });
+      if (el) {
+        // Keep the feature on screen (re-scroll if a tab switch jumped the page to the top).
+        const r = el.getBoundingClientRect();
+        const h = window.innerHeight;
+        const offscreen = r.bottom < 80 || r.top > h - 80;
+        if (!scrolled || offscreen) {
+          scrolled = true;
+          const tall = r.height > h * 0.5;
+          const y = window.scrollY + r.top - (tall ? 90 : h / 2 - r.height / 2);
+          window.scrollTo({ top: Math.max(0, y), behavior: "auto" });
+        }
       }
       setVh(window.innerHeight);
       setSpot(boxOf(el));
