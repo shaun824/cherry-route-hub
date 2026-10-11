@@ -8,6 +8,7 @@ import { LogOut, Save, User as UserIcon, ShieldAlert, ShieldCheck, HardHat, Repe
 import { NotificationSettings } from "@/components/notification-settings";
 import { RiderEventHistory } from "@/components/rider-event-history";
 import { RewardsSummary } from "@/components/rewards-summary";
+import { StarredRidersCard } from "@/components/starred-riders-card";
 
 
 import {
@@ -202,6 +203,8 @@ function Profile() {
       </div>
 
       <div data-section="rewards"><RewardsSummary /></div>
+
+      <div data-section="starred_riders"><StarredRidersCard /></div>
 
 
 

@@ -268,6 +268,7 @@ export default function LiveTrackingMapInner({
   eventId,
   isCrew = false,
   focusUserId = null,
+  trackRider = null,
   onOffCourse,
   riderMode = false,
   onFocusedProgress,
@@ -282,6 +283,8 @@ export default function LiveTrackingMapInner({
   isCrew?: boolean;
   /** Race control can jump the map to a specific rider. */
   focusUserId?: string | null;
+  /** Follow a rider picked by name/race number (e.g. a starred rider from results). */
+  trackRider?: { name: string; bib: string | null } | null;
   /** Reports riders sitting far off the course line (metres), for the watch list. */
   onOffCourse?: (map: Record<string, number>) => void;
   /** Compact, map-first view embedded in the rider's own tracking controls. */
@@ -436,6 +439,21 @@ export default function LiveTrackingMapInner({
   });
 
   const allRiders = useMemo(() => data?.riders ?? [], [data]);
+  const trackedKeyRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!trackRider) return;
+    const key = `${trackRider.name}|${trackRider.bib ?? ""}`;
+    if (trackedKeyRef.current === key) return;
+    const n = (v: string | null | undefined) => (v ?? "").toLowerCase().replace(/[^a-z0-9]/g, "");
+    const hit = allRiders.find(
+      (r) => (trackRider.bib && r.bib && n(r.bib) === n(trackRider.bib)) || (r.riderName && n(r.riderName) === n(trackRider.name)),
+    );
+    if (hit) {
+      trackedKeyRef.current = key;
+      startFollowing(hit.userId);
+      setSelectedId(hit.userId);
+    }
+  }, [trackRider, allRiders, startFollowing]);
   const finishedCount = allRiders.filter((r) => r.finished).length;
   // Finished riders would otherwise sit on the map as grey clutter all day.
   const riders = useMemo(

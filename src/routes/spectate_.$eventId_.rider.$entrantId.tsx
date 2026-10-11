@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { ArrowLeft, Clock, Flag, Hash, Lock, Trophy, Users } from "lucide-react";
+import { ArrowLeft, Clock, Flag, Hash, Lock, Star, Trophy, Users } from "lucide-react";
+import { useRiderFavourites } from "@/lib/rider-favourites";
 import { getRiderDetail, type RiderDetailPayload } from "@/lib/results.functions";
 import { useSession } from "@/lib/auth";
 import { useAdminStore } from "@/lib/store";
@@ -51,6 +52,8 @@ function RiderDetailPage() {
   });
 
   const rider = q.data?.rider ?? null;
+  const favs = useRiderFavourites(eventId);
+  const starred = favs.isFav(entrantId);
   const batchStart =
     rider?.batch && event?.batches
       ? event.batches.find((b) => b.name === rider.batch)?.startTime ?? null
@@ -89,6 +92,16 @@ function RiderDetailPage() {
           {rider?.full_name ?? (q.isLoading ? "Loading…" : "Rider")}
         </h1>
         {rider?.category ? <p className="mt-1 text-sm opacity-90">{rider.category}</p> : null}
+        {rider ? (
+          <button
+            type="button"
+            onClick={() => favs.toggle({ event_entrant_id: entrantId, full_name: rider.full_name, bib_number: rider.bib_number, category: rider.category })}
+            className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1.5 text-xs font-bold backdrop-blur"
+          >
+            <Star className={`h-3.5 w-3.5 ${starred ? "fill-current" : ""}`} />
+            {starred ? "Starred" : "Star this rider"}
+          </button>
+        ) : null}
       </div>
 
       <div className="px-5 pt-5 space-y-4">
