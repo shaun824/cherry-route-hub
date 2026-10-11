@@ -3615,6 +3615,39 @@ export type Database = {
           },
         ]
       }
+      rider_favourites: {
+        Row: {
+          bib_number: string | null
+          category: string | null
+          created_at: string
+          event_entrant_id: string
+          event_id: string
+          full_name: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          bib_number?: string | null
+          category?: string | null
+          created_at?: string
+          event_entrant_id: string
+          event_id: string
+          full_name?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          bib_number?: string | null
+          category?: string | null
+          created_at?: string
+          event_entrant_id?: string
+          event_id?: string
+          full_name?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       run_sheet_tasks: {
         Row: {
           created_at: string
