@@ -371,7 +371,7 @@ function SpectatorEventPage() {
       </div>
 
       {/* Tabs */}
-      <div ref={tabNavRef} className="sticky top-0 z-20 -mt-3 px-5">
+      <div ref={tabNavRef} data-tour="tabs" className="sticky top-0 z-20 -mt-3 px-5">
         <div className="flex gap-1 rounded-2xl bg-card p-1 shadow-lg ring-1 ring-border">
           {([
             { id: "live", label: "Live", icon: MapPin },
@@ -385,6 +385,7 @@ function SpectatorEventPage() {
               <button
                 key={t.id}
                 type="button"
+                data-tour={`tab-${t.id}`}
                 onClick={() => selectTab(t.id)}
                 className={`flex flex-1 items-center justify-center gap-1.5 rounded-xl px-2 py-2 text-xs font-semibold transition-colors ${
                   active ? "bg-cherry text-white shadow-sm" : "text-ink-soft hover:text-ink"
@@ -424,7 +425,7 @@ function SpectatorEventPage() {
                     </p>
                   </div>
                 </div>
-                <div className="mt-4">
+                <div className="mt-4" data-tour="tracker">
                   <TrackerPanel eventId={eventId} eventName={event.name} />
                 </div>
               </div>
@@ -436,7 +437,7 @@ function SpectatorEventPage() {
                   Following <b>{trackRider.name}</b> — the map jumps to them as soon as their tracking is on.
                 </p>
               ) : null}
-              <LiveTrackingMap eventId={eventId} isCrew={false} trackRider={trackRider} />
+              <div data-tour="map"><LiveTrackingMap eventId={eventId} isCrew={false} trackRider={trackRider} /></div>
             </div>
           </section>
         </div>
@@ -698,7 +699,7 @@ function SpectatorEventPage() {
             </div>
           ) : (
           <>
-          <SearchBox value={search} onChange={setSearch} placeholder="Search rider name or race number…" />
+          <div data-tour="search"><SearchBox value={search} onChange={setSearch} placeholder="Search rider name or race number…" /></div>
           <div className="mt-3">
             <CategoryFilter categories={categories} value={categoryFilter} onChange={setCategoryFilter} />
           </div>
@@ -806,6 +807,7 @@ function SpectatorEventPage() {
 
       {tab === "results" ? (
         <div className="px-5 pt-4 pb-8 animate-fade-in">
+          <div data-tour="results" />
           <PodiumSection eventId={eventId} />
           <StarredBox
             favs={favs.list}
@@ -933,9 +935,9 @@ function SpectatorEventPage() {
           )}
         </div>
       ) : null}
-      <TrackingTutorial />
+      <TrackingTutorial onTab={(t) => selectTab(t as Tab)} />
       <div className="px-5 pb-6 text-center">
-        <button type="button" onClick={replayTrackingTutorial} className="text-xs font-semibold text-cherry underline underline-offset-2">
+        <button type="button" data-tour="replay" onClick={replayTrackingTutorial} className="text-xs font-semibold text-cherry underline underline-offset-2">
           Replay the tracking tutorial
         </button>
       </div>
