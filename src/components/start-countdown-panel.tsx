@@ -41,8 +41,11 @@ export function StartCountdownPanel({ eventId, fieldToken }: { eventId: string; 
     const l = s.label.toLowerCase();
     const tier = TIERS.find((t) => c.includes(t));
     if (!tier) return false;
-    if (/e-?bike/.test(c) !== /e-?bike/.test(l)) return false;
     if (TIERS.find((t) => l.includes(t)) !== tier) return false;
+    // E-bikes ride with their tier's main field unless the schedule has an e-bike wave for that tier.
+    const ebikeWave = data.some((x) => /e-?bike/i.test(x.label) && x.dayLabel === s.dayLabel && x.label.toLowerCase().includes(tier));
+    const ce = /e-?bike/.test(c), le = /e-?bike/.test(l);
+    if (ce ? le !== ebikeWave : le) return false;
     const only = WD.find((w) => c.includes(w));
     if (only) {
       const wd = new Date(s.at).toLocaleDateString("en-ZA", { weekday: "long", timeZone: "Africa/Johannesburg" }).toLowerCase();
