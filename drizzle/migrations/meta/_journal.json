@@ -162,6 +162,13 @@
       "when": 1791736505824,
       "tag": "0022_rider_favourites",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1791739979120,
+      "tag": "0023_race_critical_sos_gps",
+      "breakpoints": true
     }
   ]
 }
