@@ -22,6 +22,7 @@ import {
   Users,
 } from "lucide-react";
 import { useAdminStore } from "@/lib/store";
+import { TrackingTutorial, replayTrackingTutorial } from "@/components/tracking-tutorial";
 import { useRiderFavourites, matchesFav, type FavRider } from "@/lib/rider-favourites";
 import { useHydratedStore } from "@/lib/use-hydrated-store";
 import { formatDate, formatTime } from "@/lib/mock-data";
@@ -82,7 +83,7 @@ function SpectatorEventPage() {
   useHydratedStore();
   const { eventId } = Route.useParams();
   const event = useAdminStore((s) => s.events.find((e) => e.id === eventId));
-  const [tab, setTab] = useState<Tab>("riders");
+  const [tab, setTab] = useState<Tab>("live");
   const villageQ = useQuery({ queryKey: ["village-map", eventId, null], queryFn: () => fetchVillageMap(eventId, null) });
   const tabNavRef = useRef<HTMLDivElement | null>(null);
   /** Switching tabs should always land you at the top of the new section. */
@@ -932,6 +933,12 @@ function SpectatorEventPage() {
           )}
         </div>
       ) : null}
+      <TrackingTutorial />
+      <div className="px-5 pb-6 text-center">
+        <button type="button" onClick={replayTrackingTutorial} className="text-xs font-semibold text-cherry underline underline-offset-2">
+          Replay the tracking tutorial
+        </button>
+      </div>
     </div>
   );
 }
