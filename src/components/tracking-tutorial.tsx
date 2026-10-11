@@ -1,7 +1,7 @@
 // Interactive first-visit tour of the tracking page: switches to each tab, spotlights the
 // real feature and shows a tapping finger on what to press. Shown once per person
 // (device + account); replayable from the link at the bottom of the page.
-import { useCallback, useEffect, useLayoutEffect, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Pointer, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -109,6 +109,7 @@ export function TrackingTutorial({ onTab }: { onTab?: (tab: string) => void }) {
   const [spot, setSpot] = useState<Box | null>(null);
   const [tap, setTap] = useState<Box | null>(null);
   const [vh, setVh] = useState(800);
+  const lastTab = useRef<string | null>(null);
 
   useEffect(() => {
     let seen = false;
@@ -129,6 +130,7 @@ export function TrackingTutorial({ onTab }: { onTab?: (tab: string) => void }) {
 
   useEffect(() => {
     const replay = () => {
+      lastTab.current = null;
       setI(0);
       setOpen(true);
     };
@@ -140,7 +142,12 @@ export function TrackingTutorial({ onTab }: { onTab?: (tab: string) => void }) {
   useLayoutEffect(() => {
     if (!open) return;
     const step = STEPS[i];
-    if (step.tab) onTab?.(step.tab);
+    // Only switch tabs when needed — switching scrolls the page to the top.
+    const tabChanged = !!step.tab && step.tab !== lastTab.current;
+    if (tabChanged) {
+      onTab?.(step.tab!);
+      lastTab.current = step.tab!;
+    }
     setSpot(null);
     let scrolled = false;
     const measure = () => {
@@ -153,7 +160,14 @@ export function TrackingTutorial({ onTab }: { onTab?: (tab: string) => void }) {
       setSpot(boxOf(el));
       setTap(boxOf(step.tap?.() ?? el));
     };
-    const timers = [80, 400, 900].map((ms) => window.setTimeout(measure, ms));
+    const scrollAgain = () => {
+      scrolled = false;
+      measure();
+    };
+    // After a tab switch the page re-anchors to the top for ~300ms; scroll once it settles.
+    const timers = [tabChanged ? 380 : 60, tabChanged ? 700 : 400].map((ms, k) =>
+      window.setTimeout(k === 0 ? scrollAgain : measure, ms),
+    );
     const iv = window.setInterval(measure, 250);
     window.addEventListener("resize", measure);
     return () => {
