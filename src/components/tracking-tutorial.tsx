@@ -88,9 +88,9 @@ const STEPS: Step[] = [
   },
   {
     tab: "live",
-    target: q('[data-tour="replay"]'),
+    target: q('[data-tour="tab-live"]'),
     title: "You're all set!",
-    body: "You can replay this tour any time from this link at the bottom of the page. Enjoy the race!",
+    body: "You're back on the live map. Replay this tour any time with “Replay the tracking tutorial” at the bottom of this page. Enjoy the race!",
   },
 ];
 
