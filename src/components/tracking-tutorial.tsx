@@ -1,6 +1,7 @@
 // First-visit walkthrough of the tracking page. Shown once per person (device + account),
 // replayable from the link at the bottom of the tracking page.
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { HeartPulse, MapPinned, Navigation, Star, Trophy, Users, Radio, X, BellRing } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/lib/auth";
@@ -97,16 +98,17 @@ export function TrackingTutorial() {
   const Icon = step.icon;
   const last = i === STEPS.length - 1;
 
-  return (
+  // Portal to <body> so page transforms/animations can't push the popup off-screen.
+  return createPortal(
     <div
-      className="fixed inset-0 z-[9997] grid place-items-center bg-ink/60 px-4 py-6 backdrop-blur-sm"
+      className="fixed inset-0 z-[9997] flex items-center justify-center overflow-y-auto bg-ink/60 p-4 backdrop-blur-sm"
       role="dialog"
       aria-modal="true"
       aria-label="Tracking tutorial"
       onClick={() => (last ? close() : setI(i + 1))}
     >
       <div
-        className="relative w-full max-w-sm overflow-hidden rounded-3xl bg-card shadow-2xl ring-1 ring-border animate-fade-in"
+        className="relative my-auto flex max-h-[calc(100dvh-2rem)] w-full max-w-sm flex-col overflow-hidden rounded-3xl sm:max-w-md bg-card shadow-2xl ring-1 ring-border animate-fade-in"
         key={i}
       >
         <button
@@ -120,7 +122,7 @@ export function TrackingTutorial() {
         >
           <X className="h-4 w-4" />
         </button>
-        <div className="bg-gradient-to-br from-cherry to-cherry-deep px-6 pb-6 pt-8 text-primary-foreground">
+        <div className="shrink-0 bg-gradient-to-br from-cherry to-cherry-deep px-6 pb-5 pt-6 sm:pt-8 text-primary-foreground">
           <div className="grid h-14 w-14 place-items-center rounded-2xl bg-background/15">
             <Icon className="h-7 w-7" />
           </div>
@@ -129,7 +131,7 @@ export function TrackingTutorial() {
           </p>
           <h2 className="mt-1 font-display text-xl font-bold leading-tight">{step.title}</h2>
         </div>
-        <div className="px-6 py-5">
+        <div className="min-h-0 overflow-y-auto px-6 py-5">
           <p className="text-sm leading-relaxed text-ink">{step.body}</p>
           <div className="mt-5 flex items-center gap-1.5">
             {STEPS.map((_, n) => (
@@ -157,6 +159,7 @@ export function TrackingTutorial() {
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
