@@ -299,8 +299,8 @@ export function KnowledgeTeachChat({
   }
 
   return (
-    <div className="space-y-3">
-      <section className="rounded-2xl bg-card p-4 ring-1 ring-border">
+    <div className="min-w-0 space-y-3 overflow-x-hidden">
+      <section className="min-w-0 rounded-2xl bg-card p-4 ring-1 ring-border">
         <div className="flex items-center gap-2 pb-1">
           <Brain className="h-4 w-4 text-cherry" />
           <p className="text-xs font-bold uppercase tracking-wider text-ink-soft">Teach the assistant</p>
@@ -315,7 +315,7 @@ export function KnowledgeTeachChat({
           <select
             value={eventId}
             onChange={(e) => setEventId(e.target.value)}
-            className="rounded-lg border border-border bg-background px-2 py-1.5 text-xs"
+            className="w-full min-w-0 max-w-full truncate rounded-lg border border-border bg-background px-2 py-1.5 text-base sm:w-auto sm:text-xs"
           >
             <option value="">All events</option>
             {events.map((e) => (
@@ -327,7 +327,7 @@ export function KnowledgeTeachChat({
           <select
             value={tier}
             onChange={(e) => setTier(e.target.value as "" | Tier)}
-            className="rounded-lg border border-border bg-background px-2 py-1.5 text-xs"
+            className="w-full min-w-0 max-w-full truncate rounded-lg border border-border bg-background px-2 py-1.5 text-base sm:w-auto sm:text-xs"
           >
             <option value="">Let it decide who sees it</option>
             <option value="public">Riders can see it</option>
@@ -346,7 +346,7 @@ export function KnowledgeTeachChat({
 
         <div
           ref={listRef}
-          className={`space-y-3 overflow-y-auto rounded-xl bg-background p-3 ${compact ? "max-h-[46vh]" : "max-h-[52vh] min-h-[220px]"}`}
+          className={`space-y-3 overflow-y-auto rounded-xl bg-background p-3 ${compact ? "" : "max-h-[52vh] min-h-[220px]"}`}
         >
           {messages.length === 0 ? (
             <p className="py-6 text-center text-xs text-ink-soft">
@@ -428,7 +428,7 @@ export function KnowledgeTeachChat({
             }}
             rows={2}
             placeholder="Tell the assistant something it should know…"
-            className="min-w-0 flex-1 resize-none rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-cherry/40"
+            className="min-w-0 flex-1 resize-none rounded-xl border border-border bg-background px-3 py-2 outline-none focus:ring-2 focus:ring-cherry/40 text-base sm:text-sm"
           />
           <div className="flex shrink-0 items-center gap-1.5">
             <input

@@ -297,7 +297,7 @@ export function AssistantWidget() {
             ) : null}
 
             {mode === "teach" && isAdmin ? (
-              <div className="min-w-0 flex-1 overflow-y-auto p-3">
+              <div className="min-w-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain p-3">
                 <KnowledgeTeachChat compact events={teachEventsQ.data ?? []} />
               </div>
             ) : (
