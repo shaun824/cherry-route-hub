@@ -522,6 +522,19 @@ export default function LiveTrackingMapInner({
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
     const map = L.map(containerRef.current, { zoomControl: true }).setView([-29.5, 24.5], 6);
+    // On phones a one-finger swipe scrolls the page instead of getting trapped by
+    // the map; two fingers move/zoom the map.
+    if (window.matchMedia("(pointer: coarse)").matches) {
+      const el = containerRef.current;
+      map.dragging.disable();
+      el.style.touchAction = "pan-y";
+      const onTouch = (e: TouchEvent) => {
+        if (e.touches.length >= 2) map.dragging.enable();
+        else map.dragging.disable();
+      };
+      el.addEventListener("touchstart", onTouch, { passive: true });
+      el.addEventListener("touchend", onTouch, { passive: true });
+    }
     const streetLayer = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
       attribution: "&copy; OpenStreetMap contributors",
       maxZoom: 19,
