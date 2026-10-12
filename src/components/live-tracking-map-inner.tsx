@@ -63,7 +63,9 @@ import {
   buildCourseLine,
   formatProgress,
   progressOnCourse,
+  estimateRider,
   type CourseLine,
+  type RiderEstimate,
 } from "@/lib/course-progress";
 import {
   candidateDayIds,
@@ -122,6 +124,33 @@ function markerIcon(signal: Signal, sos: boolean, fav = false) {
 }
 
 
+function estimatedIcon(capped: boolean, fav = false) {
+  return L.divIcon({
+    className: "",
+    html: `<div style="
+      width:18px;height:18px;border-radius:9999px;background:rgba(255,255,255,.55);
+      border:2px dashed #e11d48;opacity:${capped ? 0.5 : 0.75};position:relative;">
+      <span style="position:absolute;top:-9px;left:12px;padding:0 3px;border-radius:4px;background:#fff;
+        color:#e11d48;font:800 8px/12px sans-serif;box-shadow:0 0 0 1px #e11d48;">EST</span>
+      ${fav ? `<span style="position:absolute;top:-12px;left:-4px;font-size:12px;color:#f59e0b;text-shadow:0 0 2px #fff;">★</span>` : ""}
+    </div>`,
+    iconSize: [18, 18],
+    iconAnchor: [9, 9],
+  });
+}
+
+function hhmm(iso: string) {
+  return new Date(iso).toLocaleTimeString("en-ZA", { hour: "2-digit", minute: "2-digit", timeZone: "Africa/Johannesburg" });
+}
+
+/** "Estimated position · last real fix 6 min ago at 14:05 · assuming 18 km/h average" */
+function estimateText(r: LiveRiderPosition, e: RiderEstimate): string {
+  if (e.capped) return `No signal for 45+ min · last real fix at ${hhmm(r.recordedAt)}`;
+  const mins = Math.max(1, Math.round((Date.now() - new Date(r.recordedAt).getTime()) / 60_000));
+  if (!e.moved) return `No recent signal · last real fix ${mins} min ago at ${hhmm(r.recordedAt)} · no route to estimate along`;
+  return `Estimated position · last real fix ${mins} min ago at ${hhmm(r.recordedAt)} · assuming ${Math.round(e.kph)} km/h average`;
+}
+
 function formatAgo(iso: string): string {
   const d = new Date(iso).getTime();
   const ago = Math.max(0, Date.now() - d);
@@ -164,6 +193,7 @@ function popupContent(
   isCrew: boolean,
   viewer: { lat: number; lng: number } | null,
   progressText: string | null,
+  est: RiderEstimate | null = null,
 ): HTMLElement {
   const wrap = document.createElement("div");
   wrap.className = "min-w-[180px] max-w-[260px] font-sans text-sm";
@@ -200,6 +230,18 @@ function popupContent(
     prog.className = "mt-1 text-xs font-semibold text-ink";
     prog.textContent = progressText;
     wrap.appendChild(prog);
+  }
+  if (est) {
+    const e = document.createElement("p");
+    e.className = "mt-1 text-xs font-semibold text-cherry-deep";
+    e.textContent = estimateText(r, est);
+    wrap.appendChild(e);
+    if (est.aheadM > 50) {
+      const n = document.createElement("p");
+      n.className = "text-[11px] text-muted-foreground";
+      n.textContent = `May now be ~${(est.aheadM / 1000).toFixed(1)} km further along the route. Navigate and SOS use the last confirmed position.`;
+      wrap.appendChild(n);
+    }
   }
 
 
@@ -827,6 +869,38 @@ export default function LiveTrackingMapInner({
     [course],
   );
 
+  // Display-only position estimates for riders whose phone has gone quiet.
+  const [estTick, setEstTick] = useState(0);
+  useEffect(() => {
+    const id = window.setInterval(() => setEstTick((t) => t + 1), 5_000);
+    return () => window.clearInterval(id);
+  }, []);
+  const riderCourses = useMemo(() => {
+    const m = new Map<string, CourseLine | null>();
+    for (const c of dayCandidates) m.set(c.route.id, buildCourseLine(c.lines));
+    return m;
+  }, [dayCandidates]);
+  const estimates = useMemo(() => {
+    void estTick;
+    const out = new Map<string, RiderEstimate>();
+    for (const r of riders) {
+      if (r.finished || r.sos) continue;
+      const cand = dayCandidates.find((c) => categoryMatchesRoute(r.category, c.route));
+      const cl = cand ? riderCourses.get(cand.route.id) ?? null : course;
+      const first = r.firstRecordedAt && r.firstLat != null && r.firstLng != null
+        ? { lat: r.firstLat, lng: r.firstLng, recordedAt: r.firstRecordedAt }
+        : null;
+      const e = estimateRider(cl, r, first);
+      if (e) out.set(r.userId, e);
+    }
+    return out;
+  }, [riders, dayCandidates, riderCourses, course, estTick]);
+  const estLinesRef = useRef(new Map<string, L.Polyline>());
+  const [estNoticeHidden, setEstNoticeHidden] = useState(false);
+  useEffect(() => {
+    try { setEstNoticeHidden(sessionStorage.getItem("rce-est-notice") === "1"); } catch { /* ignore */ }
+  }, []);
+
   // Race leaders: per entry class, who is furthest along their own route.
   const leaders = useMemo(() => {
     const courses = new Map<string, CourseLine | null>();
@@ -1169,12 +1243,26 @@ export default function LiveTrackingMapInner({
     for (const r of riders) {
       seen.add(r.userId);
       const signal = signalOf(r.recordedAt);
+      const est = estimates.get(r.userId) ?? null;
+      const showLat = est ? est.lat : r.lat;
+      const showLng = est ? est.lng : r.lng;
+      const icon = est ? estimatedIcon(est.capped, favs.includes(r.userId)) : markerIcon(signal, r.sos, favs.includes(r.userId));
+      const line = estLinesRef.current.get(r.userId);
+      if (est && est.moved && est.aheadM > 5) {
+        const pts: [number, number][] = [[r.lat, r.lng], [est.lat, est.lng]];
+        if (line) line.setLatLngs(pts);
+        else estLinesRef.current.set(r.userId, L.polyline(pts, { color: "#e11d48", weight: 2, opacity: 0.6, dashArray: "2 6", interactive: false }).addTo(map));
+      } else if (line) {
+        line.remove();
+        estLinesRef.current.delete(r.userId);
+      }
       const p = progressFor(r);
       const progressText = p && p.offCourseM < 1000 ? formatProgress(p) : null;
       const existing = markersRef.current.get(r.userId);
       if (existing) {
-        animateTo(r.userId, existing, r.lat, r.lng);
-        existing.setIcon(markerIcon(signal, r.sos, favs.includes(r.userId)));
+        if (est) existing.setLatLng([showLat, showLng]);
+        else animateTo(r.userId, existing, r.lat, r.lng);
+        existing.setIcon(icon);
         // An SOS pin must live outside the cluster group so it always shows.
         const inCluster = cluster.hasLayer(existing);
         if (r.sos && inCluster) {
@@ -1185,15 +1273,15 @@ export default function LiveTrackingMapInner({
           cluster.addLayer(existing);
         }
         if (!crewTools && selectedId === r.userId) {
-          existing.setPopupContent(popupContent(r, isCrew, viewerLoc, progressText));
+          existing.setPopupContent(popupContent(r, isCrew, viewerLoc, progressText, est));
         }
       } else {
-        const m = L.marker([r.lat, r.lng], { icon: markerIcon(signal, r.sos, favs.includes(r.userId)) });
+        const m = L.marker([showLat, showLng], { icon });
         if (crewTools) {
           m.on("click", () => { setSelectedId(r.userId); setFollowPaused(true); });
           m.bindTooltip(r.riderName || r.bib || "Rider", { direction: "top" });
         } else {
-          m.bindPopup(popupContent(r, isCrew, viewerLoc, progressText));
+          m.bindPopup(popupContent(r, isCrew, viewerLoc, progressText, est));
           m.on("popupopen", () => setSelectedId(r.userId));
           m.on("popupclose", () => setSelectedId((id) => id === r.userId ? null : id));
         }
@@ -1246,6 +1334,9 @@ export default function LiveTrackingMapInner({
         circlesRef.current.delete(id);
       }
     }
+    for (const [id, l] of estLinesRef.current) {
+      if (!seen.has(id)) { l.remove(); estLinesRef.current.delete(id); }
+    }
 
     if (!fittedRef.current && bounds.length > 0 && !follow) {
       programmaticMoveRef.current = true;
@@ -1253,7 +1344,7 @@ export default function LiveTrackingMapInner({
       fittedRef.current = true;
       window.setTimeout(() => (programmaticMoveRef.current = false), 700);
     }
-  }, [riders, follow, followPaused, isCrew, viewerLoc, selectedId, animateTo, progressFor, favs]);
+  }, [riders, follow, followPaused, isCrew, viewerLoc, selectedId, animateTo, progressFor, favs, estimates]);
 
 
   // Draw/refresh the dashed guide line from viewer to selected rider.
@@ -1552,6 +1643,13 @@ export default function LiveTrackingMapInner({
           ) : null}
         </div>
       ) : null}
+      {estimates.size > 0 && !estNoticeHidden ? (
+        <div className="flex items-start gap-2 border-b border-border bg-accent px-3 py-2 text-xs text-ink">
+          <span className="mt-0.5 grid h-4 w-7 shrink-0 place-items-center rounded border border-dashed border-cherry text-[8px] font-black text-cherry">EST</span>
+          <p className="min-w-0 flex-1">Some positions are estimates. Phones stop sharing location when the screen locks or the signal drops (common in valleys and forest). When that happens we move the rider along the route at their average speed so far, until a real update comes in. Estimated dots are hollow and marked EST. For SOS and rescue we always use the rider's last confirmed position.</p>
+          <button type="button" aria-label="Dismiss" className="shrink-0 text-ink-soft" onClick={() => { setEstNoticeHidden(true); try { sessionStorage.setItem("rce-est-notice", "1"); } catch { /* ignore */ } }}><X className="h-3.5 w-3.5" /></button>
+        </div>
+      ) : null}
       {!fullscreen ? riderCard : null}
     </>
   );
@@ -1562,6 +1660,9 @@ export default function LiveTrackingMapInner({
             <div className="min-w-0 flex-1">
               <p className="break-words text-sm font-bold text-ink">{selectedRider.sos ? <span className="mr-2 text-destructive">SOS · {selectedRider.sosReason ?? "Help"}</span> : null}{selectedRider.riderName ?? "Rider"}{selectedRider.bib ? ` · #${selectedRider.bib}` : ""}</p>
               <p className="text-xs text-muted-foreground">{[selectedRider.category, `${signalOf(selectedRider.recordedAt)} · ${formatAgo(selectedRider.recordedAt)}`, selectedRider.batteryPct != null ? `Battery ${selectedRider.batteryPct}%` : null, viewerLoc ? `${fmtDist(metres(viewerLoc, selectedRider))} from you` : null].filter(Boolean).join(" · ")}</p>
+              {estimates.get(selectedRider.userId) ? (() => { const e = estimates.get(selectedRider.userId)!; return (
+                <p className="mt-0.5 text-xs font-semibold text-cherry-deep">{estimateText(selectedRider, e)}{e.aheadM > 50 ? ` · may now be ~${(e.aheadM / 1000).toFixed(1)} km further along the route` : ""}. Navigate uses the last confirmed position.</p>
+              ); })() : null}
             </div>
             <Button variant="ghost" size="icon" aria-label="Close rider details" onClick={() => { setSelectedId(null); startFollowing(null); }}><X /></Button>
           </div>
