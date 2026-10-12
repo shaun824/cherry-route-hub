@@ -4048,6 +4048,7 @@ export type Database = {
         }[]
       }
       promo_engagement_summary: { Args: { _since: string }; Returns: Json }
+      verify_cron_key: { Args: { _key: string }; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "rider" | "crew"
