@@ -113,7 +113,7 @@ function SignedInState() {
           <SyncMyEntryButton className="mt-4" />
         </div>
       ) : (
-        <ul className="space-y-3 px-5 py-4">
+        <ul className="grid gap-3 px-5 py-4 lg:grid-cols-2">
           {upcoming.map((r) => (
             <EventRow key={r.event_entrant_id} r={r} />
           ))}

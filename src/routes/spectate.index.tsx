@@ -96,7 +96,7 @@ function SpectatePage() {
         })}
       </div>
 
-      <ul className="mx-5 mt-4 space-y-3">
+      <ul className="mx-5 mt-4 grid gap-3 lg:grid-cols-2">
         {visible.length === 0 ? (
           <li className="rounded-2xl bg-card p-6 text-center text-sm text-ink-soft ring-1 ring-border">
             {filter === "live"

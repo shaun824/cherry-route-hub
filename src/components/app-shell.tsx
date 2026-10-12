@@ -163,8 +163,8 @@ export function AppShell({ children }: { children: ReactNode }) {
       </aside>
 
       {/* Content column: phone-width on mobile, roomy centred column on larger screens */}
-      <div className="mx-auto flex min-h-screen w-full max-w-md flex-col bg-background md:max-w-3xl md:shadow-sm md:ring-1 md:ring-border/60 lg:max-w-4xl">
-        <main className="flex-1 pb-28 md:pb-10">
+      <div className="mx-auto flex min-h-screen w-full min-w-0 max-w-md flex-col bg-background md:mx-0 md:max-w-none md:flex-1">
+        <main className="mx-auto w-full flex-1 pb-28 md:max-w-3xl md:pb-10 lg:max-w-5xl xl:max-w-6xl">
           <div key={pathname} className="page-enter">{children}</div>
           <Footer />
         </main>
