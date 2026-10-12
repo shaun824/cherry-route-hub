@@ -21,3 +21,4 @@
 - Village editor movement history stores position-only snapshots so undo never overwrites later text or styling edits.
 
 - Apparel size rows on rider surfaces are driven by events.collects_tshirt_size/collects_jacket_size (src/lib/apparel.ts), never by event name — Entry Ninja syncs switch them on automatically so new events need no manual setup.
+- Live-map rider position estimates are computed client-side for display only (src/lib/course-progress.ts estimateRider); tracking_points stores real GPS fixes only, and SOS/navigation always use the last real fix — keeps rescue data trustworthy.
