@@ -9,6 +9,7 @@ import { useCrewMode } from "@/lib/crew-mode";
 import { Footer } from "@/components/footer";
 import { BrandMark } from "@/components/ui-bits";
 import { InstallAppPrompt } from "@/components/install-app-prompt";
+import { recordVisit } from "@/lib/feature-discovery";
 
 const LazyAssistantWidget = lazy(() =>
   import("@/components/assistant-widget").then((module) => ({ default: module.AssistantWidget })),
@@ -41,6 +42,10 @@ export function AppShell({ children }: { children: ReactNode }) {
   useEntryAutoSync(Boolean(user));
   const navRef = useRef<HTMLElement>(null);
   usePinToScreenBottom(navRef);
+
+  useEffect(() => {
+    recordVisit(pathname);
+  }, [pathname]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
