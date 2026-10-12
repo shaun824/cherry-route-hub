@@ -1,6 +1,7 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { Home, Ticket, Binoculars, User, LogIn, X, HardHat, BedDouble, Smartphone, ClipboardList, GraduationCap, RefreshCw } from "lucide-react";
-import { lazy, Suspense, useEffect, useState, type ReactNode } from "react";
+import { lazy, Suspense, useEffect, useRef, useState, type ReactNode } from "react";
+import { usePinToScreenBottom } from "@/lib/use-pin-to-screen-bottom";
 import { useSession, useIsCrew } from "@/lib/auth";
 import { usePullToRefresh } from "@/lib/use-pull-to-refresh";
 import { useEntryAutoSync } from "@/lib/use-entry-autosync";
@@ -38,6 +39,8 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [dismissed, setDismissed] = useState(false);
   const { pull, refreshing } = usePullToRefresh();
   useEntryAutoSync(Boolean(user));
+  const navRef = useRef<HTMLElement>(null);
+  usePinToScreenBottom(navRef);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -171,7 +174,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       {showSignInCta ? (
         <div
           className="fixed inset-x-0 z-30 mx-auto w-full max-w-md px-3 md:hidden"
-          style={{ bottom: "calc(env(safe-area-inset-bottom) + 68px)" }}
+          style={{ bottom: "calc(env(safe-area-inset-bottom) + 68px)", transform: "translate3d(0, var(--bottom-bar-shift, 0px), 0)" }}
         >
           <div className="flex items-center gap-2 rounded-2xl bg-ink px-3 py-2.5 text-white shadow-lg ring-1 ring-black/20">
             <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white/15">
@@ -204,7 +207,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       {showCrewReturn ? (
         <div
           className="fixed inset-x-0 z-30 mx-auto w-full max-w-md px-3 md:hidden"
-          style={{ bottom: "calc(env(safe-area-inset-bottom) + 68px)" }}
+          style={{ bottom: "calc(env(safe-area-inset-bottom) + 68px)", transform: "translate3d(0, var(--bottom-bar-shift, 0px), 0)" }}
         >
           <div className="flex items-center gap-2 rounded-2xl bg-ink px-3 py-2 text-white shadow-lg ring-1 ring-black/20">
             <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white/15">
@@ -228,6 +231,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       {/* Mobile-only bottom tab bar */}
       <nav
+        ref={navRef}
         aria-label="Primary"
         className="fixed inset-x-0 bottom-0 z-30 mx-auto w-full max-w-md border-t border-border/70 bg-card md:hidden"
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}

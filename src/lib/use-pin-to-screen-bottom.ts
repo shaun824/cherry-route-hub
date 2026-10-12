@@ -23,7 +23,11 @@ export function usePinToScreenBottom(ref: RefObject<HTMLElement | null>) {
       const naturalBottom = rect.bottom - shift;
       const next = Math.round(visibleBottom - naturalBottom);
       // Ignore tiny jitter; reset fully when nothing is wrong.
-      const target = Math.abs(next) < 2 ? 0 : next;
+      // Leave it alone while typing (keyboard open) or pinch-zoomed in.
+      const a = document.activeElement as HTMLElement | null;
+      const typing = !!a && (a.tagName === "INPUT" || a.tagName === "TEXTAREA" || a.isContentEditable);
+      const zoomed = !!vv && vv.scale > 1.01;
+      const target = typing || zoomed || Math.abs(next) < 2 ? 0 : next;
       if (target === shift) return;
       shift = target;
       const value = `${shift}px`;
