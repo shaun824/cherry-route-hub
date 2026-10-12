@@ -7,7 +7,8 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { checkIsAdmin } from "@/lib/is-admin";
 import { inRaceLocationWindow } from "@/lib/location-window";
 
-const LINK_DAYS = 5;
+// Field links never expire (signature still checked) so shared race-control links keep working.
+const LINK_DAYS = 3650;
 
 function b64url(buf: ArrayBuffer) {
   let s = "";
@@ -43,7 +44,7 @@ function safeEqual(a: string, b: string) {
 async function verify(eventId: string, token: string) {
   const [expStr, sig] = token.split(".");
   const exp = Number(expStr);
-  if (!exp || !sig || exp < Date.now()) return false;
+  if (!exp || !sig) return false;
   return safeEqual(sig, await sign(eventId, exp));
 }
 
