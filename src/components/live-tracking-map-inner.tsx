@@ -1418,6 +1418,10 @@ export default function LiveTrackingMapInner({
     const sig = signalOf(r.recordedAt);
     const label = sig === "live" ? formatAgo(r.recordedAt) : sig === "stale" ? `${formatAgo(r.recordedAt)}` : "signal lost";
     const cls = sig === "live" ? "bg-emerald-500/15 text-emerald-700" : sig === "stale" ? "bg-amber-500/15 text-amber-700" : "bg-muted text-muted-foreground";
+    const est = estimates.get(r.userId);
+    if (est) {
+      return <span title={estimateText(r, est)} className="rounded-full border border-dashed border-cherry px-2 py-0.5 text-[10px] font-bold text-cherry-deep">{est.capped ? "No signal 45+ min" : `EST · real fix ${formatAgo(r.recordedAt)}`}</span>;
+    }
     return <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${cls}`}>{label}</span>;
   };
 
