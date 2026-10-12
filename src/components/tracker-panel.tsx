@@ -14,6 +14,8 @@ import { haversineMeters } from "@/lib/geo";
 import { resolveVenuePoint } from "@/lib/map-embed";
 import { LiveTrackingMap } from "@/components/live-tracking-map";
 import { Button } from "@/components/ui/button";
+import { Lock } from "lucide-react";
+import { RidingModeOverlay, useScreenWakeLock } from "@/components/riding-mode-overlay";
 import type { ProgressResult } from "@/lib/course-progress";
 import {
   cancelMySos,
@@ -419,6 +421,7 @@ export function TrackerPanel({
       setElapsedNow(now);
       setDistanceM(0);
       startTracking();
+      setLocked(true);
     }
     setTracking((t) => !t);
     saveActive(eventId, !tracking);
@@ -537,6 +540,13 @@ export function TrackerPanel({
 
   useEffect(() => () => endHold(), []);
 
+  // Riding mode: keep the screen awake while tracking; lock the page on start.
+  const [locked, setLocked] = useState(false);
+  useEffect(() => {
+    if (!tracking) setLocked(false);
+  }, [tracking]);
+  const wakeSupported = useScreenWakeLock(tracking);
+
   // Background GPS only survives a locked screen in the installed app.
   const [needsInstall, setNeedsInstall] = useState(false);
   useEffect(() => setNeedsInstall(!isInstalledApp()), []);
@@ -559,6 +569,23 @@ export function TrackerPanel({
         : "Waiting for first upload";
   return (
     <div className="space-y-3">
+      {tracking && locked ? (
+        <RidingModeOverlay
+          elapsed={formatElapsed(elapsedNow - (startedAt ?? elapsedNow))}
+          distance={courseProgress ? `${(courseProgress.alongM / 1000).toFixed(1)} km` : `${(distanceM / 1000).toFixed(1)} km`}
+          gps={gpsQuality}
+          connection={connectionState}
+          onUnlock={() => setLocked(false)}
+          onSos={triggerSos}
+          sosSent={sosSent}
+          wakeSupported={wakeSupported}
+        />
+      ) : null}
+      {tracking && !locked ? (
+        <Button type="button" onClick={() => setLocked(true)} className="w-full gap-2 py-4 font-black">
+          <Lock className="h-4 w-4" /> Lock screen for riding
+        </Button>
+      ) : null}
       {autoStopNote && !tracking ? (
         <div className="rounded-xl bg-accent px-3 py-2 text-sm font-semibold text-ink ring-1 ring-border">{autoStopNote}</div>
       ) : null}
