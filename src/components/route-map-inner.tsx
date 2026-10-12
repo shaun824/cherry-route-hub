@@ -694,15 +694,18 @@ export default function RouteMapInner({
             ) : null}
             {routeChips(true)}
           </div>
+          <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
+          <div className="flex min-h-0 min-w-0 flex-1 flex-col">
           <div className="relative min-h-0 flex-1">{renderMap("100%", "-fs")}</div>
           {visible[0] ? (
             <div className="border-t border-border bg-card px-3 pb-1">
               <RouteProfile route={visible[0].route} color={visible[0].color} markers={visible[0].markers} />
             </div>
           ) : null}
+          </div>
           <div
-            className={`flex flex-col border-t border-border bg-card pb-[env(safe-area-inset-bottom)] shadow-[0_-8px_24px_rgba(0,0,0,.12)] ${
-              sheetOpen ? "h-[28dvh]" : ""
+            className={`flex flex-col border-t border-border bg-card pb-[env(safe-area-inset-bottom)] shadow-[0_-8px_24px_rgba(0,0,0,.12)] lg:h-auto lg:w-[340px] lg:shrink-0 lg:border-l lg:border-t-0 lg:shadow-none xl:w-[380px] ${
+              sheetOpen ? "h-[28dvh] md:h-[34dvh]" : ""
             }`}
           >
             <button
@@ -713,10 +716,10 @@ export default function RouteMapInner({
               <span className="font-display text-sm font-bold text-ink">
                 💧 Waterpoints &amp; stops ({listMarkers.length})
               </span>
-              <span className="text-xs font-semibold text-cherry">{sheetOpen ? "Hide" : "Show list"}</span>
+              <span className="text-xs font-semibold text-cherry lg:hidden">{sheetOpen ? "Hide" : "Show list"}</span>
             </button>
-            {sheetOpen ? (
-              <ul className="min-h-0 flex-1 divide-y divide-border overflow-y-auto px-3">
+            {true ? (
+              <ul className={`min-h-0 flex-1 divide-y ${sheetOpen ? "" : "hidden lg:block"} divide-border overflow-y-auto px-3`}>
                 {listMarkers.length === 0 ? (
                   <li className="py-6 text-center text-xs text-ink-soft">Switch on a route to see its stops.</li>
                 ) : null}
@@ -761,6 +764,7 @@ export default function RouteMapInner({
                 })}
               </ul>
             ) : null}
+          </div>
           </div>
         </div>,
         document.body,

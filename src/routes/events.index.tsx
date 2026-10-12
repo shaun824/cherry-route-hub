@@ -57,7 +57,7 @@ function Events() {
           );
         })}
       </div>
-      <ul className="space-y-3 px-5 py-5">
+      <ul className="grid gap-3 px-5 py-5 lg:grid-cols-2 lg:gap-4">
         {!hydrated && events.length === 0 ? (
           <>
             {[0, 1, 2].map((i) => (

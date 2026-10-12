@@ -110,6 +110,20 @@ export function RouteProfile({
   const [failed, setFailed] = useState(false);
   const [hover, setHover] = useState<number | null>(null);
   const svgRef = useRef<SVGSVGElement | null>(null);
+  // Chart is drawn at the real on-screen width so it stretches across wide
+  // screens without growing taller or blowing up its text.
+  const boxRef = useRef<HTMLDivElement | null>(null);
+  const [boxW, setBoxW] = useState(640);
+  useEffect(() => {
+    const el = boxRef.current;
+    if (!el || typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver(([e]) => {
+      const w = Math.round(e.contentRect.width);
+      if (w > 0) setBoxW(w);
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  });
   const fetchElevation = useServerFn(getRouteElevation);
 
   useEffect(() => {
@@ -212,8 +226,8 @@ export function RouteProfile({
 
   const chart = useMemo(() => {
     if (!series || series.length < 2) return null;
-    const W = 640;
-    const H = 160;
+    const W = Math.max(300, boxW);
+    const H = W >= 900 ? 180 : W >= 600 ? 170 : Math.round(Math.max(130, W / 3.4));
     const pad = { t: 10, r: 6, b: 18, l: 30 };
     const maxKm = series[series.length - 1].km || 1;
     const minEle = Math.min(...series.map((p) => p.ele));
@@ -224,7 +238,7 @@ export function RouteProfile({
     const line = series.map((p, i) => `${i === 0 ? "M" : "L"}${x(p.km).toFixed(1)},${y(p.ele).toFixed(1)}`).join(" ");
     const area = `${line} L${x(maxKm).toFixed(1)},${H - pad.b} L${pad.l},${H - pad.b} Z`;
     return { W, H, pad, maxKm, minEle, maxEle, x, y, line, area };
-  }, [series]);
+  }, [series, boxW]);
 
   if (kmls.length === 0) return null;
 
@@ -291,7 +305,7 @@ export function RouteProfile({
         </div>
       </div>
 
-      <div className="relative">
+      <div className="relative" ref={boxRef}>
       {pins.length > 0 ? (
         <div className="pointer-events-none relative mt-2 h-7">
           {pins.map((p) => (
@@ -324,7 +338,7 @@ export function RouteProfile({
       <svg
         ref={svgRef}
         viewBox={`0 0 ${chart.W} ${chart.H}`}
-         className={`mt-2 h-auto w-full touch-none ${pePlett ? "animate-pe-plett-profile" : ""}`}
+         className={`mt-2 block w-full touch-none ${pePlett ? "animate-pe-plett-profile" : ""}`}
         role="img"
         aria-label={`Elevation profile for ${route.name}`}
         onMouseMove={(e) => onMove(e.clientX)}
@@ -354,7 +368,7 @@ export function RouteProfile({
                  className={pePlett ? "text-pe-plett-foreground/10" : "text-border"}
                 strokeWidth="1"
               />
-               <text x={2} y={yy + 3} className={`fill-current ${pePlett ? "text-pe-plett-foreground/50" : "text-ink-soft"}`} fontSize="9">
+               <text x={2} y={yy + 3} className={`fill-current ${pePlett ? "text-pe-plett-foreground/50" : "text-ink-soft"}`} fontSize="10">
                 {Math.round(ele)}
               </text>
             </g>
@@ -371,7 +385,7 @@ export function RouteProfile({
             y={chart.H - 5}
             textAnchor={f === 0 ? "start" : f === 1 ? "end" : "middle"}
              className={`fill-current ${pePlett ? "text-pe-plett-foreground/50" : "text-ink-soft"}`}
-            fontSize="9"
+            fontSize="10"
           >
             {(chart.maxKm * f).toFixed(f === 0 ? 0 : 1)} km
           </text>
