@@ -368,7 +368,7 @@ export function RouteProfile({
                  className={pePlett ? "text-pe-plett-foreground/10" : "text-border"}
                 strokeWidth="1"
               />
-               <text x={2} y={yy + 3} className={`fill-current ${pePlett ? "text-pe-plett-foreground/50" : "text-ink-soft"}`} fontSize="9">
+               <text x={2} y={yy + 3} className={`fill-current ${pePlett ? "text-pe-plett-foreground/50" : "text-ink-soft"}`} fontSize="10">
                 {Math.round(ele)}
               </text>
             </g>
@@ -385,7 +385,7 @@ export function RouteProfile({
             y={chart.H - 5}
             textAnchor={f === 0 ? "start" : f === 1 ? "end" : "middle"}
              className={`fill-current ${pePlett ? "text-pe-plett-foreground/50" : "text-ink-soft"}`}
-            fontSize="9"
+            fontSize="10"
           >
             {(chart.maxKm * f).toFixed(f === 0 ? 0 : 1)} km
           </text>
