@@ -68,3 +68,63 @@ export function progressOnCourse(
 export function formatProgress(p: ProgressResult): string {
   return `${(p.alongM / 1000).toFixed(1)} km of ${(p.totalM / 1000).toFixed(0)} km · ~${Math.round(p.pct)}%`;
 }
+
+/** Point on the course `alongM` metres from the start (clamped to the line). */
+export function pointAtAlong(course: CourseLine, alongM: number): { lat: number; lng: number } {
+  const d = Math.max(0, Math.min(alongM, course.totalM));
+  const { cum, points } = course;
+  let i = 1;
+  while (i < cum.length - 1 && cum[i] < d) i += 1;
+  const seg = cum[i] - cum[i - 1];
+  const f = seg > 0 ? (d - cum[i - 1]) / seg : 0;
+  const a = points[i - 1];
+  const b = points[i];
+  return { lng: a[0] + (b[0] - a[0]) * f, lat: a[1] + (b[1] - a[1]) * f };
+}
+
+// ---- Dead-reckoning estimates for riders whose phone has gone quiet ----
+export const ESTIMATE_AFTER_MS = 60_000;
+export const ESTIMATE_MAX_MS = 45 * 60_000;
+const DEFAULT_KPH = 12;
+const MIN_HISTORY_MS = 3 * 60_000;
+
+export type RiderEstimate = {
+  lat: number;
+  lng: number;
+  kph: number;
+  /** metres beyond the last real fix along the route */
+  aheadM: number;
+  /** true once 45+ min without signal — dot is frozen */
+  capped: boolean;
+  /** false when there's no route, so the dot stays at the last fix */
+  moved: boolean;
+};
+
+/** Display-only estimate; never stored. Returns null while the fix is fresh. */
+export function estimateRider(
+  course: CourseLine | null,
+  last: { lat: number; lng: number; recordedAt: string },
+  first: { lat: number; lng: number; recordedAt: string } | null,
+  now = Date.now(),
+): RiderEstimate | null {
+  const lastT = new Date(last.recordedAt).getTime();
+  const age = now - lastT;
+  if (age < ESTIMATE_AFTER_MS) return null;
+  const capped = age >= ESTIMATE_MAX_MS;
+  if (!course) return { lat: last.lat, lng: last.lng, kph: DEFAULT_KPH, aheadM: 0, capped, moved: false };
+  const lp = progressOnCourse(course, last.lat, last.lng);
+  if (!lp || lp.offCourseM > 1000) return { lat: last.lat, lng: last.lng, kph: DEFAULT_KPH, aheadM: 0, capped, moved: false };
+  let kph = DEFAULT_KPH;
+  if (first) {
+    const dt = lastT - new Date(first.recordedAt).getTime();
+    const fp = progressOnCourse(course, first.lat, first.lng);
+    if (dt >= MIN_HISTORY_MS && fp) {
+      const v = ((lp.alongM - fp.alongM) / (dt / 1000)) * 3.6;
+      if (v > 1 && v < 60) kph = v;
+    }
+  }
+  const elapsedS = Math.min(age, ESTIMATE_MAX_MS) / 1000;
+  const along = Math.min(lp.alongM + (kph / 3.6) * elapsedS, course.totalM);
+  const pt = pointAtAlong(course, along);
+  return { ...pt, kph, aheadM: along - lp.alongM, capped, moved: true };
+}

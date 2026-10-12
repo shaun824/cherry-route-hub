@@ -269,6 +269,10 @@ export type LiveRiderPosition = {
   finished: boolean;
   /** Milliseconds this rider has been effectively stationary, else null. */
   stoppedForMs: number | null;
+  /** Earliest real fix today — used for the client-side average-speed estimate. */
+  firstLat?: number;
+  firstLng?: number;
+  firstRecordedAt?: string;
 };
 
 export type LiveTrackingPayload = {
@@ -351,7 +355,12 @@ export const fetchLiveTracking = createServerFn({ method: "GET" })
         });
         if (p.entrant_id) entrantIds.add(p.entrant_id);
       }
-      const newest = new Date(latest.get(p.user_id)!.recordedAt).getTime();
+      const cur = latest.get(p.user_id)!;
+      // Rows arrive newest-first, so the last one seen per rider is the earliest.
+      cur.firstLat = p.lat;
+      cur.firstLng = p.lng;
+      cur.firstRecordedAt = p.recorded_at;
+      const newest = new Date(cur.recordedAt).getTime();
       if (newest - t <= STOPPED_WINDOW_MS) {
         const arr = history.get(p.user_id) ?? [];
         arr.push({ lat: p.lat, lng: p.lng, t });
