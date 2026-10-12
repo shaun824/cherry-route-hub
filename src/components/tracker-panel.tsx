@@ -64,6 +64,8 @@ function queueKey(eventId: string) {
   return `rce-track-queue-${eventId}`;
 }
 
+const AWAKE_FIRST_MS = 10 * 60_000;
+
 function activeKey(eventId: string) {
   return `rce-track-active-${eventId}`;
 }
@@ -123,14 +125,18 @@ function saveQueue(eventId: string, points: TrackingPointInput[]) {
   }
 }
 
+// Battery Status API exists on Chrome/Android only — iPhone Safari never exposes
+// it, which is why most points store no battery level. Cache the manager once.
+let batteryMgr: Promise<{ level: number } | null> | null = null;
 async function batteryPct(): Promise<number | null> {
   try {
     const nav = navigator as Navigator & {
       getBattery?: () => Promise<{ level: number }>;
     };
     if (!nav.getBattery) return null;
-    const b = await nav.getBattery();
-    return Math.round(b.level * 100);
+    batteryMgr ??= nav.getBattery().catch(() => null);
+    const b = await batteryMgr;
+    return b ? Math.round(b.level * 100) : null;
   } catch {
     return null;
   }
@@ -545,7 +551,11 @@ export function TrackerPanel({
   useEffect(() => {
     if (!tracking) setLocked(false);
   }, [tracking]);
-  const wakeSupported = useScreenWakeLock(tracking);
+  // Keep the screen on for the first 10 minutes (or the whole ride if chosen,
+  // or while riding-mode lock is up) — browsers pause GPS once the phone locks.
+  const [keepAwakeAll, setKeepAwakeAll] = useState(false);
+  const awakeLeftMs = tracking && startedAt ? Math.max(0, startedAt + AWAKE_FIRST_MS - elapsedNow) : 0;
+  const wakeSupported = useScreenWakeLock(tracking && (keepAwakeAll || locked || awakeLeftMs > 0));
 
   // Background GPS only survives a locked screen in the installed app.
   const [needsInstall, setNeedsInstall] = useState(false);
@@ -580,6 +590,27 @@ export function TrackerPanel({
           sosSent={sosSent}
           wakeSupported={wakeSupported}
         />
+      ) : null}
+      {tracking ? (
+        <div className="space-y-2 rounded-xl bg-accent px-3 py-2 text-xs text-ink ring-1 ring-border">
+          {wakeSupported ? (
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="rounded-full bg-card px-2 py-0.5 font-bold ring-1 ring-border">
+                {keepAwakeAll
+                  ? "Screen kept awake · whole ride"
+                  : awakeLeftMs > 0
+                    ? `Screen kept awake · ${Math.floor(awakeLeftMs / 60_000)}:${String(Math.floor((awakeLeftMs % 60_000) / 1000)).padStart(2, "0")} left`
+                    : "Screen can now lock"}
+              </span>
+              <label className="flex items-center gap-1.5 font-semibold">
+                <input type="checkbox" checked={keepAwakeAll} onChange={(e) => setKeepAwakeAll(e.target.checked)} />
+                Keep awake for the whole ride
+              </label>
+              {keepAwakeAll ? <span className="w-full text-ink-soft">Uses more battery — roughly 10–20% per hour.</span> : null}
+            </div>
+          ) : null}
+          <p>Tip: keep this screen open or use the Rider Hub app. Locking your phone can pause live tracking, so your position may show as an estimate to race control and supporters.</p>
+        </div>
       ) : null}
       {tracking && !locked ? (
         <Button type="button" onClick={() => setLocked(true)} className="w-full gap-2 py-4 font-black">
