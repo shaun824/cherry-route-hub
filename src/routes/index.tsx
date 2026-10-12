@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import { todaysTips, bellLastSeen, markBellSeen, bellSeenToday, type DiscoverTip } from "@/lib/feature-discovery";
 import {
   Activity,
   Bell,
@@ -196,8 +197,24 @@ function Home() {
   // live tracking & results.
   const raceWeekEvents = upcoming.filter((e) => isRaceWeek(e.date, e.days));
 
-  const notifications = [pinned, ...feed.filter((p) => !p.pinned)].filter(Boolean).slice(0, 8);
-  const hasUnread = notifications.length > 0;
+  const nowMs = Date.now();
+  const notifications = [...feed]
+    .filter((p) => new Date(p.postedAt).getTime() <= nowMs)
+    .sort((a, b) => {
+      if (a.pinned !== b.pinned) return a.pinned ? -1 : 1;
+      return new Date(b.postedAt).getTime() - new Date(a.postedAt).getTime();
+    })
+    .slice(0, 20);
+  const [tips, setTips] = useState<DiscoverTip[]>([]);
+  const [lastSeen, setLastSeen] = useState<number>(Date.now());
+  const [seenToday, setSeenToday] = useState(true);
+  useEffect(() => {
+    setTips(todaysTips(Boolean(user)));
+    setLastSeen(bellLastSeen());
+    setSeenToday(bellSeenToday());
+  }, [user, notifOpen]);
+  const hasNewNews = notifications.some((p) => new Date(p.postedAt).getTime() > lastSeen);
+  const hasUnread = hasNewNews || (tips.length > 0 && !seenToday);
   
   // Website news (Red Cherry + PE Plett) shown to everyone on the home screen.
   const latestNews = feed
@@ -227,7 +244,10 @@ function Home() {
           </div>
           <button
             aria-label="Notifications"
-            onClick={() => setNotifOpen(true)}
+            onClick={() => {
+              setNotifOpen(true);
+              markBellSeen();
+            }}
             className="relative grid h-10 w-10 place-items-center rounded-full bg-white/15 backdrop-blur"
           >
             <Bell className="h-5 w-5" />
@@ -478,6 +498,8 @@ function Home() {
         open={notifOpen}
         onClose={() => setNotifOpen(false)}
         items={notifications}
+        tips={tips}
+        lastSeen={lastSeen}
       />
     </div>
   );
@@ -758,10 +780,14 @@ function NotificationsSheet({
   open,
   onClose,
   items,
+  tips,
+  lastSeen,
 }: {
   open: boolean;
   onClose: () => void;
   items: ReturnType<typeof useAdminStore.getState>["feed"];
+  tips: DiscoverTip[];
+  lastSeen: number;
 }) {
   const [expanded, setExpanded] = useState<string | null>(null);
   if (!open) return null;
@@ -776,7 +802,7 @@ function NotificationsSheet({
         <div className="flex items-center justify-between px-5 py-4 border-b border-border">
           <div className="flex items-center gap-2">
             <Bell className="h-5 w-5 text-cherry-deep" />
-            <p className="font-display text-lg font-bold text-ink">Notifications</p>
+            <p className="font-display text-lg font-bold text-ink">Latest news</p>
           </div>
           <button
             onClick={onClose}
@@ -787,6 +813,31 @@ function NotificationsSheet({
           </button>
         </div>
         <div className="overflow-y-auto px-4 py-3 space-y-2" style={{ maxHeight: "calc(80vh - 64px)" }}>
+          {tips.length > 0 ? (
+            <div className="space-y-2 pb-2">
+              <p className="px-1 text-[11px] font-bold uppercase tracking-widest text-ink-soft">
+                Try this today
+              </p>
+              {tips.map((t) => (
+                <Link
+                  key={t.id}
+                  to={t.to as never}
+                  onClick={onClose}
+                  className="flex items-start gap-3 rounded-2xl bg-accent p-3 ring-1 ring-border"
+                >
+                  <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-cherry-deep" />
+                  <span className="min-w-0 flex-1">
+                    <span className="block font-display text-sm font-bold text-ink">{t.title}</span>
+                    <span className="mt-0.5 block text-xs text-ink-soft">{t.body}</span>
+                  </span>
+                  <ChevronRight className="mt-0.5 h-4 w-4 shrink-0 text-cherry-deep" />
+                </Link>
+              ))}
+              <p className="px-1 pt-2 text-[11px] font-bold uppercase tracking-widest text-ink-soft">
+                News
+              </p>
+            </div>
+          ) : null}
           {items.length === 0 ? (
             <p className="py-10 text-center text-sm text-ink-soft">You're all caught up.</p>
           ) : (
@@ -806,6 +857,10 @@ function NotificationsSheet({
                     {p.pinned ? (
                       <span className="ml-auto text-[10px] font-bold uppercase tracking-widest text-cherry-deep">
                         Pinned
+                      </span>
+                    ) : new Date(p.postedAt).getTime() > lastSeen ? (
+                      <span className="ml-auto text-[10px] font-bold uppercase tracking-widest text-cherry-deep">
+                        New
                       </span>
                     ) : null}
                   </div>
