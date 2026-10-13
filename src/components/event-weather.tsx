@@ -98,7 +98,7 @@ export function EventWeatherCard({
   const clearsBeforeStart = eventForecast.filter((d) => {
     if (!rideStart.has(d.date)) return false;
     const r = ridingRain(d.date);
-    return r && d.rainMm >= 1 && r.mm < 1 && r.mm <= d.rainMm / 3;
+    return r && d.rainMm >= 1 && r.mm < 5 && r.mm <= d.rainMm * 0.4;
   });
   const dayName = (date: string) => new Date(`${date}T12:00:00`).toLocaleDateString("en-ZA", { weekday: "long" });
   const mm = (v: number) => (v > 0 ? ` · ${v} mm` : "");
@@ -109,8 +109,8 @@ export function EventWeatherCard({
     const showery = ride.some((r) => r.chance >= 30 || r.mm > 0);
     if (clearsBeforeStart.length && maxMm < 10) {
       const c = clearsBeforeStart[0]!;
-      const h = String(rideStart.get(c.date)).padStart(2, "0");
-      return `Great news — ${dayName(c.date)}'s morning showers clear up before we start riding at ${h}:${String(eventDays && (eventDays as { date?: string; rideStart?: string }[]).find((x) => String(x.date).startsWith(c.date))?.rideStart?.slice(3, 5) || "00")}, and the rest of the weekend looks good. Perfect riding weather, see you there!`;
+      const start = String((eventDays as { date?: string; rideStart?: string }[]).find((x) => String(x.date).startsWith(c.date))?.rideStart ?? "");
+      return `Good news: most of ${dayName(c.date)}'s rain falls in the morning and eases off by the time we start riding at ${start}. The rest of the weekend looks great. See you at the start line!`;
     }
     const hot = eventForecast.some((d) => d.maxC >= 28);
     const windy = eventForecast.some((d) => d.windKph >= 30);
@@ -153,7 +153,7 @@ export function EventWeatherCard({
           <span className="inline-flex items-center gap-1 rounded-full bg-accent px-2 py-1 text-cherry-deep">
             <Droplets className="h-3.5 w-3.5" /> Race day {raceForecast.minC}°–{raceForecast.maxC}° ·{" "}
             {clearsBeforeStart.some((d) => d.date === raceForecast.date)
-              ? "clearing by the start"
+              ? "rain easing by the start"
               : `${raceForecast.rainChance}% rain${mm(raceForecast.rainMm)}`}
           </span>
         ) : null}
@@ -235,7 +235,7 @@ export function EventWeatherCard({
                   <span className="inline-flex items-center gap-1">
                     <Droplets className="h-3 w-3" /> {d.rainChance}% rain
                     {mm(d.rainMm)}
-                    {clearsBeforeStart.some((c) => c.date === d.date) ? " · morning only, clearing by the start" : ""}
+                    {clearsBeforeStart.some((c) => c.date === d.date) ? " · mostly in the morning, easing by the start" : ""}
                   </span>
                 </div>
               </li>
