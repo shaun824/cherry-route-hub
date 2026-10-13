@@ -103,7 +103,7 @@ export const getStravaPanel = createServerFn({ method: "POST" })
     const segments: StravaSegmentRow[] = [];
     for (const [id, s] of bySeg) {
       // Ignore tiny or one-off segments only if the rider isn't on them.
-      const mineS = riderUser ? s.users.get(riderUser)?.s ?? null : null;
+      const mineS = isOwn && riderUser ? s.users.get(riderUser)?.s ?? null : null;
       const peers = [...s.users.values()].filter((u) => !cat || u.cat === cat).map((u) => u.s);
       if (mineS == null && s.users.size < 2) continue;
       segments.push({
