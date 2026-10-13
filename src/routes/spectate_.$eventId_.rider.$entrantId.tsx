@@ -92,7 +92,11 @@ function RiderDetailPage() {
         <h1 className="mt-1 font-display text-2xl font-bold leading-tight">
           {rider?.full_name ?? (q.isLoading ? "Loading…" : "Rider")}
         </h1>
-        {rider?.category ? <p className="mt-1 text-sm opacity-90">{rider.category}</p> : null}
+        {rider?.category || rider?.age_band ? (
+          <p className="mt-1 text-sm opacity-90">
+            {[rider?.category, rider?.age_band ? `Age ${rider.age_band}` : null].filter(Boolean).join(" · ")}
+          </p>
+        ) : null}
         {rider ? (
           <button
             type="button"

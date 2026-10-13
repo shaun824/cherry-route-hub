@@ -296,6 +296,31 @@ function SpectatorEventPage() {
       .sort((a, b) => (a.position ?? 9999) - (b.position ?? 9999));
   }, [results, currentSetId, categoryFilter, search]);
 
+  const normName = (x: string | null | undefined) => (x ?? "").toLowerCase().replace(/[^a-z0-9]/g, "");
+  const rosterFor = useCallback(
+    (name: string, bib: string | null) =>
+      roster.find((x) => bib && x.bib_number && normName(x.bib_number) === normName(bib)) ??
+      roster.find((x) => normName(x.full_name) === normName(name)) ??
+      null,
+    [roster],
+  );
+  const me = useMemo(() => roster.find((x) => x.is_me) ?? null, [roster]);
+  const myRow = useMemo(() => {
+    if (!me || !results || !currentSetId) return null;
+    return (
+      results.rows.find(
+        (r) => r.result_set_id === currentSetId && rosterFor(r.full_name, r.bib_number)?.id === me.id,
+      ) ?? null
+    );
+  }, [me, results, currentSetId, rosterFor]);
+  const myClassCount = useMemo(
+    () =>
+      myRow && results
+        ? results.rows.filter((r) => r.result_set_id === currentSetId && (r.category ?? "") === (myRow.category ?? "")).length
+        : 0,
+    [myRow, results, currentSetId],
+  );
+
   const resultGroups = useMemo(() => {
     const withGender = resultRows.map((r) => {
       const extras = (r.extras ?? {}) as Record<string, string>;
@@ -868,6 +893,35 @@ function SpectatorEventPage() {
                 </div>
               ) : null}
 
+              {myRow ? (
+                <div className="mt-2 rounded-2xl bg-accent p-3 ring-1 ring-cherry/30">
+                  <p className="text-[11px] font-bold uppercase tracking-wider text-cherry-deep">Your result</p>
+                  <div className="mt-1 flex items-center gap-3">
+                    <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-cherry text-sm font-bold text-primary-foreground">
+                      {myRow.position ?? "—"}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-semibold text-ink">
+                        {myRow.position ? `${myRow.position} of ${myClassCount}` : "Placed"} in {myRow.category ?? "your class"}
+                      </p>
+                      <p className="text-[11px] text-ink-soft">
+                        {myRow.time_text ?? myRow.status ?? ""}
+                        {myRow.gap_text ? ` · +${myRow.gap_text.replace(/^\+/, "")} to the leader` : ""}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSearch("");
+                        setCategoryFilter(myRow.category ?? "__all");
+                      }}
+                      className="shrink-0 rounded-full bg-cherry px-3 py-1.5 text-[11px] font-bold text-primary-foreground"
+                    >
+                      Compare my class
+                    </button>
+                  </div>
+                </div>
+              ) : null}
               <div className="mt-2">
                 <SearchBox value={search} onChange={setSearch} placeholder="Search rider name or bib…" />
               </div>
@@ -898,32 +952,46 @@ function SpectatorEventPage() {
                             </span>
                           </header>
                           <ol className="divide-y divide-border">
-                            {g.rows.map((r) => (
-                              <li key={r.id} className="flex items-center gap-3 py-2">
-                                <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-cherry text-[11px] font-bold text-white">
-                                  {r.position ?? "—"}
-                                </span>
-                                <div className="min-w-0 flex-1">
-                                  <p className="truncate text-sm font-semibold text-ink">{r.full_name}</p>
+                            {g.rows.map((r) => {
+                              const rr = rosterFor(r.full_name, r.bib_number);
+                              const mine = !!me && rr?.id === me.id;
+                              const f = favs.list.find((x) => matchesFav(x, r.full_name, r.bib_number));
+                              const body = (
+                                <>
+                                  <p className="truncate text-sm font-semibold text-ink">
+                                    {r.full_name}
+                                    {mine ? <span className="ml-1.5 rounded bg-cherry px-1.5 py-0.5 text-[9px] font-bold uppercase text-primary-foreground">You</span> : null}
+                                  </p>
                                   <p className="truncate text-[11px] text-ink-soft">
                                     {r.bib_number ? `#${r.bib_number} · ` : ""}
+                                    {rr?.age_band ? `Age ${rr.age_band} · ` : ""}
                                     {r.status ?? ""}
                                     {r.gap_text ? ` +${r.gap_text}` : ""}
                                   </p>
-                                </div>
-                                <span className="font-mono text-xs font-semibold text-ink">
-                                  {r.time_text ?? "—"}
-                                </span>
-                                {(() => {
-                                  const f = favs.list.find((x) => matchesFav(x, r.full_name, r.bib_number));
-                                  return f ? (
-                                    <button type="button" onClick={() => trackLive(r.full_name, r.bib_number)} className="rounded-full bg-cherry px-2 py-1 text-[10px] font-bold text-white">
-                                      ★ Track
+                                </>
+                              );
+                              return (
+                                <li key={r.id} className={`flex items-center gap-2 py-2 ${mine ? "-mx-2 rounded-xl bg-accent px-2" : ""}`}>
+                                  <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-cherry text-[11px] font-bold text-primary-foreground">
+                                    {r.position ?? "—"}
+                                  </span>
+                                  {rr ? (
+                                    <Link to="/spectate/$eventId/rider/$entrantId" params={{ eventId, entrantId: rr.id }} className="min-w-0 flex-1">
+                                      {body}
+                                    </Link>
+                                  ) : (
+                                    <div className="min-w-0 flex-1">{body}</div>
+                                  )}
+                                  <span className="font-mono text-xs font-semibold text-ink">{r.time_text ?? "—"}</span>
+                                  {rr ? <StarButton on={!!f} onClick={() => favs.toggle(f ?? favOf(rr))} /> : null}
+                                  {f ? (
+                                    <button type="button" onClick={() => trackLive(r.full_name, r.bib_number)} className="rounded-full bg-cherry px-2 py-1 text-[10px] font-bold text-primary-foreground">
+                                      Track
                                     </button>
-                                  ) : null;
-                                })()}
-                              </li>
-                            ))}
+                                  ) : null}
+                                </li>
+                              );
+                            })}
                           </ol>
                         </section>
                       </Fragment>

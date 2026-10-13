@@ -10,6 +10,10 @@ export type TrackedRider = {
   batch: string | null;
   started_at: string | null;
   finished_at: string | null;
+  /** Coarse age band (e.g. "35-44") — never the date of birth. */
+  age_band?: string | null;
+  /** True for the signed-in viewer's own entry. */
+  is_me?: boolean;
 };
 
 export type ResultSet = {
@@ -109,7 +113,7 @@ export const getEventRiders = createServerFn({ method: "GET" })
     const { data: rows, error } = await supabaseAdmin
       .from("event_entrants")
       .select(
-        "id, category, batch, bib_number, started_at, finished_at, entrants:entrants!inner(full_name)",
+        "id, category, batch, bib_number, started_at, finished_at, entrants:entrants!inner(full_name, age_band, user_id)",
       )
       .eq("event_id", data.eventId);
     if (error) throw new Error(error.message);
@@ -122,6 +126,8 @@ export const getEventRiders = createServerFn({ method: "GET" })
         batch: (r.batch as string | null) ?? null,
         started_at: (r.started_at as string | null) ?? null,
         finished_at: (r.finished_at as string | null) ?? null,
+        age_band: (r.entrants?.age_band as string | null) ?? null,
+        is_me: !!r.entrants?.user_id && r.entrants.user_id === userId,
       }))
       .filter((r) => r.full_name)
       .sort((a, b) => a.full_name.localeCompare(b.full_name));
@@ -454,7 +460,7 @@ export const getRiderDetail = createServerFn({ method: "GET" })
     const { data: row } = await supabaseAdmin
       .from("event_entrants")
       .select(
-        "id, category, batch, bib_number, started_at, finished_at, entrants:entrants!inner(full_name)",
+        "id, category, batch, bib_number, started_at, finished_at, entrants:entrants!inner(full_name, age_band)",
       )
       .eq("event_id", data.eventId)
       .eq("id", data.entrantId)
@@ -477,6 +483,7 @@ export const getRiderDetail = createServerFn({ method: "GET" })
       batch: (row.batch as string | null) ?? null,
       started_at: (row.started_at as string | null) ?? null,
       finished_at: (row.finished_at as string | null) ?? null,
+      age_band: ((row as any).entrants?.age_band as string | null) ?? null,
     };
 
     const { data: sets } = await supabaseAdmin
