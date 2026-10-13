@@ -15,6 +15,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { askEventBot } from "@/lib/event-bot.functions";
 import { fetchEventSponsors } from "@/lib/event-sponsors.functions";
 import { Fragment, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import s2sNorth2026Guide from "@/assets/s2s-routes/JBFE_Sea_to_Sea_North_2026_Routes.pdf.asset.json";
 import { EventWeatherCard } from "@/components/event-weather";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -626,6 +627,11 @@ function fileNameFromUrl(url: string, fallback: string) {
   }
 }
 
+// Printable route guides, shown next to the route files for signed-in riders.
+const ROUTE_GUIDE_PDFS: Record<string, string> = {
+  "cb6a0064-aa7e-4e26-928d-6a67d0a9722d": s2sNorth2026Guide.url,
+};
+
 function DownloadLink({ url, label }: { url: string; label: string }) {
   return (
     <a
@@ -721,6 +727,15 @@ function RoutesPanel({
             },
           )}
         </div>
+      ) : null}
+
+      {ROUTE_GUIDE_PDFS[eventId] && !downloadsDisabled ? (
+        <LockedSection locked={locked} message="Sign in to download the route guide">
+          <div className="flex flex-wrap items-center gap-2 rounded-2xl bg-card p-3 ring-1 ring-border">
+            <p className="min-w-0 flex-1 text-xs font-semibold text-ink">Printable route guide (PDF) — maps and climbing for every day</p>
+            <DownloadLink url={ROUTE_GUIDE_PDFS[eventId]!} label="Route-guide.pdf" />
+          </div>
+        </LockedSection>
       ) : null}
 
       {hasMap ? (
