@@ -125,9 +125,13 @@ export async function computePodium(eventId: string, depth: number): Promise<Pod
   // A "stage" is a riding day. Result sets are split per race/start group (Gold,
   // Silver, Bronze each get their own Day 1 set), so group sets by the day in
   // their label; sets with no day label count as their own stage.
+  const dayOf = (setId: string) => /day\s*(\d+)/i.exec(setLabels.get(setId) ?? "")?.[1] ?? null;
+  // Overall/GC sets are cumulative, not an extra day: ignore them when daily sets exist.
+  const hasDaySets = setIds.some((id) => dayOf(id) != null);
   const stageOf = (setId: string) => {
-    const m = /day\s*(\d+)/i.exec(setLabels.get(setId) ?? "");
-    return m ? `day${m[1]}` : `set:${setId}`;
+    const d = dayOf(setId);
+    if (d) return `day${d}`;
+    return hasDaySets ? null : `set:${setId}`;
   };
 
   // Per rider, per stage: best time (a rider in both an overall and a category
@@ -135,9 +139,10 @@ export async function computePodium(eventId: string, depth: number): Promise<Pod
   const perRider = new Map<string, Map<string, number>>();
   for (const r of rows) {
     if (r.time_ms == null) continue;
+    const st = stageOf(r.result_set_id);
+    if (!st) continue;
     const k = r.bib_number ? `b:${norm(r.bib_number)}` : `n:${norm(r.full_name)}`;
     const stages = perRider.get(k) ?? new Map<string, number>();
-    const st = stageOf(r.result_set_id);
     const prev = stages.get(st);
     if (prev == null || r.time_ms < prev) stages.set(st, r.time_ms);
     perRider.set(k, stages);
@@ -151,7 +156,7 @@ export async function computePodium(eventId: string, depth: number): Promise<Pod
     stagesWithResults = Math.max(stagesWithResults, stages.size);
   }
 
-  const byCat = new Map<string, PodiumRider[]>();
+  const pending = new Map<string, (PodiumRider & { n: number })[]>();
   const missingGender: PodiumComputed["missingGender"] = [];
   for (const p of roster) {
     if (!p.name || /test|placeholder/i.test(p.name)) continue;
@@ -161,9 +166,14 @@ export async function computePodium(eventId: string, depth: number): Promise<Pod
       continue;
     }
     const t = (p.bib && totals.get(`b:${norm(p.bib)}`)) || totals.get(`n:${norm(p.name)}`);
-    // Ranked only when they have a time on every stage that has results so far.
-    if (!t || t.n < stagesWithResults) continue;
-    byCat.set(cat.key, [...(byCat.get(cat.key) ?? []), { pos: 0, name: p.name, bib: p.bib, ms: t.ms, time: fmtMs(t.ms) }]);
+    if (!t) continue;
+    pending.set(cat.key, [...(pending.get(cat.key) ?? []), { pos: 0, name: p.name, bib: p.bib, ms: t.ms, time: fmtMs(t.ms), n: t.n }]);
+  }
+  // Ranked only when they have a time on every stage that this category has results for so far.
+  const byCat = new Map<string, PodiumRider[]>();
+  for (const [key, list] of pending) {
+    const need = Math.max(...list.map((r) => r.n));
+    byCat.set(key, list.filter((r) => r.n >= need).map(({ n: _n, ...r }) => r));
   }
   const standings = cats.map((c) => ({
     key: c.key,
