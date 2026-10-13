@@ -324,25 +324,28 @@ function normalise(raceEventName: string, sets: RawSet[], baseOrder: number, sta
 }
 
 /** Everything published for a race, normalised into the app's results shape. */
+/** Last good results per race + start group, so a feed hiccup never blanks results already seen. */
+const lastGoodGroup = new Map<string, MyriadNormalised>();
+
 export async function fetchRaceResults(raceId: string): Promise<MyriadNormalised> {
   const race = await fetchRace(raceId, { mostRecentOnly: true });
-  const stalled: { ev: MyriadRaceEvent; i: number }[] = [];
+  const failed: { ev: MyriadRaceEvent; i: number }[] = [];
 
   const parts = await mapLimit(race.events, 4, async (ev, i) => {
     try {
       const sets = await fetchAllPages(raceId, ev.event_id);
       return normalise(ev.name, sets, i, ev.start_time);
-    } catch (err) {
-      // Empty start groups often stall for ~40s; give the real ones a slower second try.
-      if (err instanceof MyriadError && err.timedOut) stalled.push({ ev, i });
-      return { sets: [], rows: [] } as MyriadNormalised;
+    } catch {
+      // Timeouts AND 5xx (Cloudflare 522/524) both get a slower second try.
+      failed.push({ ev, i });
+      return null;
     }
   });
 
-  if (stalled.length) {
-    const retried = await mapLimit(stalled, 3, async ({ ev, i }) => {
+  if (failed.length) {
+    const retried = await mapLimit(failed, 3, async ({ ev, i }) => {
       try {
-        const sets = await fetchAllPages(raceId, ev.event_id, { timeoutMs: 45_000 });
+        const sets = await fetchAllPages(raceId, ev.event_id, { timeoutMs: 30_000 });
         return { i, part: normalise(ev.name, sets, i, ev.start_time) };
       } catch {
         return null;
@@ -351,9 +354,19 @@ export async function fetchRaceResults(raceId: string): Promise<MyriadNormalised
     for (const r of retried) if (r) parts[r.i] = r.part;
   }
 
+  const final = race.events.map((ev, i) => {
+    const key = `${raceId}:${ev.event_id}`;
+    const part = parts[i];
+    if (part) {
+      if (part.rows.length > 0 || !lastGoodGroup.has(key)) lastGoodGroup.set(key, part);
+      return part.rows.length > 0 ? part : (lastGoodGroup.get(key) ?? part);
+    }
+    return lastGoodGroup.get(key) ?? ({ sets: [], rows: [] } as MyriadNormalised);
+  });
+
   return {
-    sets: parts.flatMap((p) => p.sets).sort((a, b) => a.sort_order - b.sort_order),
-    rows: parts.flatMap((p) => p.rows),
+    sets: final.flatMap((p) => p.sets).sort((a, b) => a.sort_order - b.sort_order),
+    rows: final.flatMap((p) => p.rows),
   };
 }
 
