@@ -66,11 +66,11 @@ export function StravaSegmentsPanel({ eventId, entrantId }: { eventId: string; e
         Strava segments
       </h2>
 
-      {d.isOwn ? (
+      {d.isOwn || !d.connected ? (
         <div className="mt-3 rounded-2xl bg-card p-4 ring-1 ring-border">
           {d.connected ? (
             <div className="flex flex-wrap items-center gap-2">
-              <p className="flex-1 text-sm text-ink">Strava connected. Your segment times on the event days show below.</p>
+              <p className="flex-1 text-sm text-ink">Strava connected. Your segment times show on your own rider page.</p>
               <button type="button" disabled={busy} onClick={runSync} className="inline-flex items-center gap-1.5 rounded-full bg-cherry px-4 py-2 text-xs font-bold text-primary-foreground disabled:opacity-60">
                 <RefreshCw className={`h-3.5 w-3.5 ${busy ? "animate-spin" : ""}`} /> {busy ? "Checking…" : "Update from Strava"}
               </button>
