@@ -141,11 +141,15 @@ export async function computePodium(eventId: string, depth: number): Promise<Pod
     if (r.time_ms == null) continue;
     const st = stageOf(r.result_set_id);
     if (!st) continue;
-    const k = r.bib_number ? `b:${norm(r.bib_number)}` : `n:${norm(r.full_name)}`;
-    const stages = perRider.get(k) ?? new Map<string, number>();
-    const prev = stages.get(st);
-    if (prev == null || r.time_ms < prev) stages.set(st, r.time_ms);
-    perRider.set(k, stages);
+    // Index by race number AND name: entries often have no race number yet.
+    const keys = [r.bib_number ? `b:${norm(r.bib_number)}` : null, r.full_name ? `n:${norm(r.full_name)}` : null];
+    for (const k of keys) {
+      if (!k) continue;
+      const stages = perRider.get(k) ?? new Map<string, number>();
+      const prev = stages.get(st);
+      if (prev == null || r.time_ms < prev) stages.set(st, r.time_ms);
+      perRider.set(k, stages);
+    }
   }
   const totals = new Map<string, { ms: number; n: number }>();
   let stagesWithResults = 0;
