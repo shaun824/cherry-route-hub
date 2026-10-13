@@ -139,7 +139,7 @@ function SpectatorEventPage() {
     queryFn: () => fetchResults({ data: { eventId } }),
     staleTime: 30_000,
     // Live-timed events keep refreshing themselves while the race is on.
-    refetchInterval: (q) => (q.state.data?.source === "myriad" ? 60_000 : false),
+    refetchInterval: (q) => (q.state.data?.myriad_race_id ? 60_000 : false),
   });
   const results = resultsQ.data;
 
