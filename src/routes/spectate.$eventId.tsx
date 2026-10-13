@@ -992,7 +992,6 @@ function SpectatorEventPage() {
                                 </li>
                               );
                             })}
-                            ))}
                           </ol>
                         </section>
                       </Fragment>
