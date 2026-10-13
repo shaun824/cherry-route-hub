@@ -1,4 +1,5 @@
 // Public prize-giving section on the results tab: categories -> provisional -> final podium.
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Trophy } from "lucide-react";
 import { getPodium } from "@/lib/podium.functions";
@@ -18,6 +19,7 @@ export function PodiumSection({ eventId }: { eventId: string }) {
     queryFn: () => getPodium({ data: { eventId } }),
     refetchInterval: 60_000,
   });
+  const [open, setOpen] = useState<Record<string, boolean>>({});
   if (!data?.enabled) return null;
   const reveal = data.revealAt
     ? new Date(data.revealAt).toLocaleString("en-ZA", { weekday: "long", hour: "2-digit", minute: "2-digit", timeZone: "Africa/Johannesburg" })
@@ -58,15 +60,24 @@ export function PodiumSection({ eventId }: { eventId: string }) {
                     <p className="mt-1 text-xs text-ink-soft">No times yet</p>
                   ) : (
                     <ol className="mt-1 space-y-0.5">
-                      {c.riders.slice(0, 3).map((r, i) => (
+                      {(open[c.key] ? c.riders : c.riders.slice(0, 3)).map((r, i) => (
                         <li key={r.name + i} className="flex items-center gap-2 text-sm">
-                          <span>{MEDAL[i]}</span>
+                          <span className="w-6 text-center text-xs font-bold text-ink-soft">{MEDAL[i] ?? i + 1}</span>
                           <span className="min-w-0 flex-1 truncate text-ink">{r.name}</span>
                           {r.time ? <span className="font-mono text-xs text-ink-soft">{r.time}</span> : null}
                         </li>
                       ))}
                     </ol>
                   )}
+                  {data.stage !== "preview" && c.riders.length > 3 ? (
+                    <button
+                      type="button"
+                      onClick={() => setOpen((o) => ({ ...o, [c.key]: !o[c.key] }))}
+                      className="mt-2 text-xs font-semibold text-cherry"
+                    >
+                      {open[c.key] ? "Show top 3" : `See full results (${c.riders.length})`}
+                    </button>
+                  ) : null}
                 </div>
               ))}
             </div>
