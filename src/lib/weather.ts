@@ -7,6 +7,8 @@ export type EventWeather = {
     windKph: number;
     code: number;
   };
+  /** Hourly rain, local venue time ("YYYY-MM-DDTHH:00"). */
+  hourly: { time: string; rainMm: number; rainChance: number }[];
   daily: {
     date: string;
     maxC: number;
@@ -70,11 +72,13 @@ export async function fetchEventWeather(opts: {
     `https://api.open-meteo.com/v1/forecast?latitude=${point.lat}&longitude=${point.lng}` +
     `&current=temperature_2m,weather_code,wind_speed_10m` +
     `&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max,wind_speed_10m_max` +
+    `&hourly=precipitation,precipitation_probability` +
     `&timezone=auto&forecast_days=10`;
   const res = await fetch(url);
   if (!res.ok) return null;
   const j = (await res.json()) as {
     current?: { temperature_2m: number; weather_code: number; wind_speed_10m: number };
+    hourly?: { time: string[]; precipitation: number[]; precipitation_probability: (number | null)[] };
     daily?: {
       time: string[];
       weather_code: number[];
@@ -94,6 +98,11 @@ export async function fetchEventWeather(opts: {
       windKph: Math.round(j.current.wind_speed_10m),
       code: j.current.weather_code,
     },
+    hourly: (j.hourly?.time ?? []).map((time, i) => ({
+      time,
+      rainMm: Math.round((j.hourly!.precipitation[i] ?? 0) * 10) / 10,
+      rainChance: Math.round(j.hourly!.precipitation_probability[i] ?? 0),
+    })),
     daily: j.daily.time.map((date, i) => ({
       date,
       maxC: Math.round(j.daily!.temperature_2m_max[i] ?? 0),
