@@ -178,7 +178,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       {/* Mobile-only sign-in banner */}
       {showSignInCta ? (
         <div
-          className="pointer-events-auto px-3 pb-2"
+          className="pointer-events-auto pb-2 pl-3 pr-[4.5rem]"
         >
           <div className="flex items-center gap-2 rounded-2xl bg-ink px-3 py-2.5 text-white shadow-lg ring-1 ring-black/20">
             <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white/15">
@@ -210,7 +210,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       {/* Mobile-only "back to crew tools" pill for signed-in crew browsing the rider app */}
       {showCrewReturn ? (
         <div
-          className="pointer-events-auto px-3 pb-2"
+          className="pointer-events-auto pb-2 pl-3 pr-[4.5rem]"
         >
           <div className="flex items-center gap-2 rounded-2xl bg-ink px-3 py-2 text-white shadow-lg ring-1 ring-black/20">
             <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white/15">
