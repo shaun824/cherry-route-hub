@@ -9,6 +9,7 @@ import { useAdminStore } from "@/lib/store";
 import { useHydratedStore } from "@/lib/use-hydrated-store";
 import { brandHeader } from "@/lib/event-brand";
 import { classStartTimes } from "@/lib/class-start-times";
+import { StravaSegmentsPanel } from "@/components/strava-segments-panel";
 
 export const Route = createFileRoute("/spectate_/$eventId_/rider/$entrantId")({
   head: () => ({
@@ -202,7 +203,10 @@ function RiderDetailPage() {
                 </ul>
               )}
             </section>
+
+            <StravaSegmentsPanel eventId={eventId} entrantId={entrantId} />
           </>
+
         )}
 
         <Link
