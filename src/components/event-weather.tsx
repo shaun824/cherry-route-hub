@@ -69,7 +69,11 @@ export function EventWeatherCard({
 
   // Every schedule day gets a tag: registration day says "Reg", riding days say "Race · Day N".
   const dayTags = new Map<string, { tag: string; reg: boolean }>();
-  for (const d of Array.isArray(eventDays) ? (eventDays as { date?: string; label?: string }[]) : []) {
+  // Optional "rideStart" ("HH:MM") on a day means only rain from that hour on matters to riders.
+  const rideStart = new Map<string, number>();
+  for (const d of Array.isArray(eventDays) ? (eventDays as { date?: string; label?: string; rideStart?: string }[]) : []) {
+    const rs = /^(\d{1,2}):/.exec(String(d?.rideStart ?? ""));
+    if (d?.date && rs) rideStart.set(String(d.date).slice(0, 10), Number(rs[1]));
     const date = String(d?.date ?? "").slice(0, 10);
     if (!date) continue;
     const label = String(d?.label ?? "");
@@ -84,11 +88,30 @@ export function EventWeatherCard({
   const days = w.daily.slice(start, start + 5);
   const raceForecast = raceDay ? w.daily.find((d) => d.date === raceDay) : undefined;
   const eventForecast = w.daily.filter((d) => dayTags.has(d.date));
+  // Rain while people are actually riding (06:00–18:00, or from the day's ride start).
+  const ridingRain = (date: string) => {
+    const from = rideStart.get(date) ?? 6;
+    const hrs = (w.hourly ?? []).filter((h) => h.time.startsWith(date) && +h.time.slice(11, 13) >= from && +h.time.slice(11, 13) < 18);
+    if (!hrs.length) return null;
+    return { mm: Math.round(hrs.reduce((a, h) => a + h.rainMm, 0) * 10) / 10, chance: Math.max(...hrs.map((h) => h.rainChance)) };
+  };
+  const clearsBeforeStart = eventForecast.filter((d) => {
+    if (!rideStart.has(d.date)) return false;
+    const r = ridingRain(d.date);
+    return r && d.rainMm >= 1 && r.mm < 5 && r.mm <= d.rainMm * 0.4;
+  });
+  const dayName = (date: string) => new Date(`${date}T12:00:00`).toLocaleDateString("en-ZA", { weekday: "long" });
   const mm = (v: number) => (v > 0 ? ` · ${v} mm` : "");
   const vibe = (() => {
     if (eventForecast.length === 0) return "Whatever the sky brings, the trails are calling — see you at the start line!";
-    const maxMm = Math.max(...eventForecast.map((d) => d.rainMm));
-    const showery = eventForecast.some((d) => d.rainChance >= 30 || d.rainMm > 0);
+    const ride = eventForecast.map((d) => ridingRain(d.date) ?? { mm: d.rainMm, chance: d.rainChance });
+    const maxMm = Math.max(...ride.map((r) => r.mm));
+    const showery = ride.some((r) => r.chance >= 30 || r.mm > 0);
+    if (clearsBeforeStart.length && maxMm < 10) {
+      const c = clearsBeforeStart[0]!;
+      const start = String((eventDays as { date?: string; rideStart?: string }[]).find((x) => String(x.date).startsWith(c.date))?.rideStart ?? "");
+      return `Good news: most of ${dayName(c.date)}'s rain falls in the morning and eases off by the time we start riding at ${start}. The rest of the weekend looks great. See you at the start line!`;
+    }
     const hot = eventForecast.some((d) => d.maxC >= 28);
     const windy = eventForecast.some((d) => d.windKph >= 30);
     if (maxMm >= 10) return "Some proper rain is forecast — we're watching it closely and will keep you posted. Pack a rain shell and we'll see you there!";
@@ -129,7 +152,9 @@ export function EventWeatherCard({
         {raceForecast ? (
           <span className="inline-flex items-center gap-1 rounded-full bg-accent px-2 py-1 text-cherry-deep">
             <Droplets className="h-3.5 w-3.5" /> Race day {raceForecast.minC}°–{raceForecast.maxC}° ·{" "}
-            {raceForecast.rainChance}% rain{mm(raceForecast.rainMm)}
+            {clearsBeforeStart.some((d) => d.date === raceForecast.date)
+              ? "rain easing by the start"
+              : `${raceForecast.rainChance}% rain${mm(raceForecast.rainMm)}`}
           </span>
         ) : null}
       </div>
@@ -152,7 +177,9 @@ export function EventWeatherCard({
               <WeatherIcon code={d.code} className="mx-auto my-1 h-4 w-4 text-ink-soft" />
               <p className="text-[11px] font-bold text-ink">{d.maxC}°</p>
               <p className="text-[10px] text-muted-foreground">{d.minC}°</p>
-              {d.rainMm > 0 ? <p className="text-[9px] font-semibold text-ink-soft">{d.rainMm} mm</p> : null}
+              {clearsBeforeStart.some((c) => c.date === d.date) ? (
+                <p className="text-[9px] font-semibold text-ink-soft">AM only</p>
+              ) : d.rainMm > 0 ? <p className="text-[9px] font-semibold text-ink-soft">{d.rainMm} mm</p> : null}
               {tag ? <p className="mt-0.5 text-[9px] font-bold uppercase text-cherry">{tag.reg ? "Reg" : "Race"}</p> : null}
             </li>
           );
@@ -208,6 +235,7 @@ export function EventWeatherCard({
                   <span className="inline-flex items-center gap-1">
                     <Droplets className="h-3 w-3" /> {d.rainChance}% rain
                     {mm(d.rainMm)}
+                    {clearsBeforeStart.some((c) => c.date === d.date) ? " · mostly in the morning, easing by the start" : ""}
                   </span>
                 </div>
               </li>
