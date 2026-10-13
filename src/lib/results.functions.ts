@@ -460,7 +460,7 @@ export const getRiderDetail = createServerFn({ method: "GET" })
     const { data: row } = await supabaseAdmin
       .from("event_entrants")
       .select(
-        "id, category, batch, bib_number, started_at, finished_at, entrants:entrants!inner(full_name)",
+        "id, category, batch, bib_number, started_at, finished_at, entrants:entrants!inner(full_name, age_band)",
       )
       .eq("event_id", data.eventId)
       .eq("id", data.entrantId)
@@ -483,6 +483,7 @@ export const getRiderDetail = createServerFn({ method: "GET" })
       batch: (row.batch as string | null) ?? null,
       started_at: (row.started_at as string | null) ?? null,
       finished_at: (row.finished_at as string | null) ?? null,
+      age_band: ((row as any).entrants?.age_band as string | null) ?? null,
     };
 
     const { data: sets } = await supabaseAdmin
