@@ -1,6 +1,6 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { Home, Ticket, Binoculars, User, LogIn, X, HardHat, BedDouble, Smartphone, ClipboardList, GraduationCap, RefreshCw } from "lucide-react";
-import { lazy, Suspense, useEffect, useRef, useState, type ReactNode } from "react";
+import { lazy, Suspense, useEffect, useState, type ReactNode } from "react";
 import { useSession, useIsCrew } from "@/lib/auth";
 import { usePullToRefresh } from "@/lib/use-pull-to-refresh";
 import { useEntryAutoSync } from "@/lib/use-entry-autosync";
@@ -267,6 +267,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           })}
         </ul>
       </nav>
+      </div>
 
       <InstallAppPrompt />
       <Suspense fallback={null}><LazyAssistantWidget /></Suspense>
