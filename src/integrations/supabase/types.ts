@@ -3780,6 +3780,87 @@ export type Database = {
         }
         Relationships: []
       }
+      strava_connections: {
+        Row: {
+          access_token: string
+          athlete_id: number
+          athlete_name: string | null
+          created_at: string
+          expires_at: string
+          refresh_token: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          access_token: string
+          athlete_id: number
+          athlete_name?: string | null
+          created_at?: string
+          expires_at: string
+          refresh_token: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          access_token?: string
+          athlete_id?: number
+          athlete_name?: string | null
+          created_at?: string
+          expires_at?: string
+          refresh_token?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      strava_segment_efforts: {
+        Row: {
+          activity_id: number
+          average_grade: number | null
+          category: string | null
+          created_at: string
+          distance_m: number | null
+          elapsed_s: number
+          event_entrant_id: string | null
+          event_id: string
+          id: number
+          segment_id: number
+          segment_name: string
+          start_date: string | null
+          user_id: string
+        }
+        Insert: {
+          activity_id: number
+          average_grade?: number | null
+          category?: string | null
+          created_at?: string
+          distance_m?: number | null
+          elapsed_s: number
+          event_entrant_id?: string | null
+          event_id: string
+          id: number
+          segment_id: number
+          segment_name: string
+          start_date?: string | null
+          user_id: string
+        }
+        Update: {
+          activity_id?: number
+          average_grade?: number | null
+          category?: string | null
+          created_at?: string
+          distance_m?: number | null
+          elapsed_s?: number
+          event_entrant_id?: string | null
+          event_id?: string
+          id?: number
+          segment_id?: number
+          segment_name?: string
+          start_date?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       tracking_points: {
         Row: {
           accuracy_m: number | null
