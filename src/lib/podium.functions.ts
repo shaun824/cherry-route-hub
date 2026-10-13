@@ -22,7 +22,7 @@ export const getPodium = createServerFn({ method: "GET" })
   .inputValidator((i: unknown) => In.parse(i))
   .handler(async ({ data }): Promise<PublicPodium> => {
     const { computePodium } = await import("@/lib/podium.server");
-    const c = await computePodium(data.eventId, 3);
+    const c = await computePodium(data.eventId, 1000);
     if (!c) return { enabled: false, stage: "preview", revealAt: null, stagesWithResults: 0, standings: [] };
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: row } = await (supabaseAdmin as any)
