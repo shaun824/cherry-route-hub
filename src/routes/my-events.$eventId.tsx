@@ -661,7 +661,8 @@ function RoutesPanel({
   const myEntry = entryQ.data ?? null;
   const myPayment = myEntry ? paymentStatus(myEntry) : null;
   const isPaidEntrant = !!myEntry && myPayment?.state === "paid";
-  const downloadsLocked = locked || (!!user && !entryQ.isLoading && !isPaidEntrant);
+  // Any signed-in rider can download route files.
+  const downloadsLocked = locked;
   // Rider offers live inside the routes — the most-viewed part of the page.
   const promos = useShuffledPromos(useEventPromos(eventName ?? event.name ?? ""));
   const days: EventDay[] = withRegistrationDayLabels(
