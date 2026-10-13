@@ -548,3 +548,11 @@
   50% { transform: translate(-2px, -6px) scale(0.92); }
 }
 .tour-tap { animation: tour-tap 1.1s ease-in-out infinite; }
+
+/* Bottom dock: own compositing layer so iOS Safari repaints it at the screen
+   bottom during toolbar collapse / momentum scroll instead of leaving it mid-page. */
+.bottom-dock {
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  backface-visibility: hidden;
+}
