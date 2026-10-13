@@ -833,6 +833,40 @@ function SpectatorEventPage() {
       {tab === "results" ? (
         <div className="px-5 pt-4 pb-8 animate-fade-in">
           <div data-tour="results" />
+          <div className="mb-4">
+            <SearchBox value={search} onChange={setSearch} placeholder="Search riders by name or race number…" />
+            {search.trim() ? (
+              rosterStatus === "signin" ? (
+                <p className="mt-2 text-xs text-ink-soft">
+                  <Link to="/auth" className="font-semibold text-cherry">Sign in</Link> to search riders.
+                </p>
+              ) : (
+                <ul className="mt-2 divide-y divide-border rounded-2xl bg-card ring-1 ring-border">
+                  {roster
+                    .filter((r) => {
+                      const q = search.trim().toLowerCase();
+                      return r.full_name.toLowerCase().includes(q) || (r.bib_number ?? "").toLowerCase().includes(q);
+                    })
+                    .slice(0, 12)
+                    .map((r) => {
+                      const on = favs.isFav(r.id);
+                      return (
+                        <li key={r.id} className="flex items-center gap-2 px-3 py-2">
+                          <Link to="/spectate/$eventId/rider/$entrantId" params={{ eventId, entrantId: r.id }} className="min-w-0 flex-1">
+                            <p className="truncate text-sm font-semibold text-ink">{r.full_name}</p>
+                            <p className="truncate text-[11px] text-ink-soft">
+                              {[r.bib_number ? `#${r.bib_number}` : null, r.category, r.age_band ? `Age ${r.age_band}` : null].filter(Boolean).join(" · ")}
+                            </p>
+                          </Link>
+                          <StarButton on={on} onClick={() => favs.toggle(favOf(r))} />
+                        </li>
+                      );
+                    })}
+                  {roster.length === 0 ? <li className="px-3 py-2 text-xs text-ink-soft">Rider list isn’t open yet.</li> : null}
+                </ul>
+              )
+            ) : null}
+          </div>
           <PodiumSection eventId={eventId} />
           <StarredBox
             favs={favs.list}
@@ -922,9 +956,6 @@ function SpectatorEventPage() {
                   </div>
                 </div>
               ) : null}
-              <div className="mt-2">
-                <SearchBox value={search} onChange={setSearch} placeholder="Search rider name or bib…" />
-              </div>
               <div className="mt-3">
                 <CategoryFilter categories={categories} value={categoryFilter} onChange={setCategoryFilter} />
               </div>
