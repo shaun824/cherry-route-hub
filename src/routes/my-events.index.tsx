@@ -1,3 +1,4 @@
+import { MyRegistrationCard } from "@/components/my-registration-card";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -120,6 +121,7 @@ function SignedInState() {
         </ul>
       )}
 
+      <MyRegistrationCard />
       {past.length > 0 && (
         <div className="px-5 pb-2">
           <button
