@@ -4128,6 +4128,20 @@ export type Database = {
           tent_number: string
         }[]
       }
+      my_registration_members: {
+        Args: never
+        Returns: {
+          batch: string
+          bib_number: string
+          category: string
+          event_date: string
+          event_id: string
+          event_name: string
+          full_name: string
+          group_ref: string
+          is_me: boolean
+        }[]
+      }
       promo_engagement_summary: { Args: { _since: string }; Returns: Json }
       verify_cron_key: { Args: { _key: string }; Returns: boolean }
     }

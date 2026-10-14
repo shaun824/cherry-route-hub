@@ -1,3 +1,4 @@
+import { MyRegistrationCard } from "@/components/my-registration-card";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { trackAction, useSectionTracking, useClickTracking } from "@/lib/event-analytics";
@@ -202,6 +203,7 @@ function Profile() {
         </div>
       </div>
 
+      <MyRegistrationCard />
       <div data-section="rewards"><RewardsSummary /></div>
 
       <div data-section="starred_riders"><StarredRidersCard /></div>
