@@ -88,6 +88,11 @@ function FieldTrackingPage() {
                   <Navigation className="h-3.5 w-3.5" /> Go
                 </a>
               ) : null}
+              {a.lat != null && a.lng != null ? (
+                <p className="basis-full select-all break-all rounded-md bg-muted px-2 py-1 font-mono text-xs font-semibold text-ink">
+                  {a.lat.toFixed(6)}, {a.lng.toFixed(6)}
+                </p>
+              ) : null}
               {isAdmin ? (
                 <div className="basis-full">
                   <ResolveSosButton id={a.id} onDone={() => void q.refetch()} />
