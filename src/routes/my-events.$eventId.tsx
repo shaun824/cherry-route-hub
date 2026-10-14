@@ -1,3 +1,4 @@
+import { scrollAppTo } from "@/lib/app-scroll";
 import { eventApparel, missingSizes, type ApparelFlags } from "@/lib/apparel";
 import { MissingSizeCallout } from "@/components/missing-size-callout";
 import { entryNinjaRegistrationUrl } from "@/lib/entry-ninja-link";
@@ -200,7 +201,7 @@ function MyEventDetail() {
   /** Switching tabs should always land you at the top of the new section. */
   const scrollToTabTop = useCallback(() => {
     if (typeof window === "undefined") return;
-    window.scrollTo({ top: 0, behavior: "auto" });
+    scrollAppTo(0, "auto");
   }, []);
   const selectTab = useCallback(
     (next: Tab, source: TabSource = "tab_bar") => {
@@ -236,7 +237,7 @@ function MyEventDetail() {
     setTabSource("village_focus");
     setTab("village");
     if (typeof window === "undefined") return;
-    window.scrollTo({ top: 0, behavior: "auto" });
+    scrollAppTo(0, "auto");
     // The map mounts lazily, so nudge it into view — but never fight the rider:
     // any touch/scroll of their own stops the nudging immediately.
     let tries = 0;

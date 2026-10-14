@@ -20,6 +20,8 @@ export const getRouter = () => {
     routeTree,
     context: { queryClient },
     scrollRestoration: true,
+    // Phones scroll inside #app-scroll (see src/lib/app-scroll.ts), not the window.
+    scrollToTopSelectors: ["#app-scroll"],
     // Warm up the next screen as soon as a tab/link is hovered or touched
     defaultPreload: "intent",
     defaultPreloadDelay: 40,

@@ -559,3 +559,14 @@
 
 /* Stop wide content from widening the page; on iPhone that shifts fixed bars mid-screen. */
 html, body { overflow-x: clip; max-width: 100%; }
+
+/* Phones: the document never scrolls; #app-scroll does. iOS 26 Safari misplaces
+   position:fixed bars while its toolbar collapses, so menus live in the frame's flow. */
+@media (max-width: 767px) {
+  html:has(.app-frame),
+  html:has(.app-frame) body {
+    height: 100%;
+    overflow: hidden;
+    overscroll-behavior: none;
+  }
+}

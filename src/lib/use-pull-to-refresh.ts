@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
+import { getScrollTop } from "@/lib/app-scroll";
 
 const TRIGGER_DISTANCE = 80;
 const MAX_PULL = 120;
@@ -23,7 +24,7 @@ export function usePullToRefresh() {
 
     const onTouchStart = (e: TouchEvent) => {
       if (refreshing) return;
-      if (window.scrollY <= 0 && e.touches.length === 1) {
+      if (getScrollTop() <= 0 && e.touches.length === 1) {
         startY.current = e.touches[0]!.clientY;
         pulling.current = true;
       } else {
@@ -35,7 +36,7 @@ export function usePullToRefresh() {
     const onTouchMove = (e: TouchEvent) => {
       if (!pulling.current || startY.current === null) return;
       const dy = e.touches[0]!.clientY - startY.current;
-      if (window.scrollY > 0 || dy <= 0) {
+      if (getScrollTop() > 0 || dy <= 0) {
         setPull(0);
         return;
       }

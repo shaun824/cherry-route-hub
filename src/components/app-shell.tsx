@@ -1,4 +1,4 @@
-import { BottomPortal } from "@/components/bottom-portal";
+import { APP_SCROLL_ID } from "@/lib/app-scroll";
 import { Link, useRouterState } from "@tanstack/react-router";
 import { Home, Ticket, Binoculars, User, LogIn, X, HardHat, BedDouble, Smartphone, ClipboardList, GraduationCap, RefreshCw } from "lucide-react";
 import { lazy, Suspense, useEffect, useState, type ReactNode } from "react";
@@ -70,7 +70,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
 
   return (
-    <div className="min-h-screen bg-secondary/30 md:flex">
+    <div className="app-frame flex h-[100dvh] flex-col overflow-hidden bg-secondary/30 md:h-auto md:min-h-screen md:flex-row md:overflow-visible">
       {/* Pull-to-refresh indicator (mobile) */}
       {pull > 0 || refreshing ? (
         <div
@@ -166,21 +166,24 @@ export function AppShell({ children }: { children: ReactNode }) {
       </aside>
 
       {/* Content column: phone-width on mobile, roomy centred column on larger screens */}
-      <div className="mx-auto flex min-h-screen w-full min-w-0 max-w-md flex-col bg-background md:mx-0 md:max-w-none md:flex-1">
-        <main className="mx-auto w-full flex-1 pb-28 md:max-w-3xl md:pb-10 lg:max-w-5xl xl:max-w-6xl">
+      <div
+        id={APP_SCROLL_ID}
+        data-scroll-restoration-id={APP_SCROLL_ID}
+        className="mx-auto flex min-h-0 w-full min-w-0 max-w-md flex-1 flex-col overflow-y-auto overscroll-contain bg-background md:mx-0 md:min-h-screen md:max-w-none md:overflow-visible"
+      >
+        <main className="mx-auto w-full flex-1 pb-6 md:max-w-3xl md:pb-10 lg:max-w-5xl xl:max-w-6xl">
           <div key={pathname} className="page-enter">{children}</div>
           <Footer />
         </main>
       </div>
 
-      {/* Mobile bottom stack: pills + tab bar share ONE fixed box pinned with bottom:0,
-          so nothing can drift apart or float mid-screen (no JS repositioning). */}
-      <BottomPortal>
-      <div className="bottom-dock pointer-events-none fixed inset-x-0 bottom-0 z-30 mx-auto w-full max-w-md md:hidden">
+      {/* Mobile bottom stack: an ordinary last row of a one-screen-tall frame (not
+          position:fixed), so iPhone Safari's toolbar can never strand it mid-screen. */}
+      <div className="relative z-30 mx-auto w-full max-w-md shrink-0 bg-background md:hidden">
       {/* Mobile-only sign-in banner */}
       {showSignInCta ? (
         <div
-          className="pointer-events-auto pb-2 pl-3 pr-[4.5rem]"
+          className="pb-2 pl-3 pr-[4.5rem]"
         >
           <div className="flex items-center gap-2 rounded-2xl bg-ink px-3 py-2.5 text-white shadow-lg ring-1 ring-black/20">
             <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white/15">
@@ -212,7 +215,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       {/* Mobile-only "back to crew tools" pill for signed-in crew browsing the rider app */}
       {showCrewReturn ? (
         <div
-          className="pointer-events-auto pb-2 pl-3 pr-[4.5rem]"
+          className="pb-2 pl-3 pr-[4.5rem]"
         >
           <div className="flex items-center gap-2 rounded-2xl bg-ink px-3 py-2 text-white shadow-lg ring-1 ring-black/20">
             <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white/15">
@@ -237,7 +240,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       {/* Mobile-only bottom tab bar */}
       <nav
         aria-label="Primary"
-        className="pointer-events-auto w-full border-t border-border/70 bg-card"
+        className="w-full border-t border-border/70 bg-card"
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       >
         <ul className={inCrewArea ? "grid grid-cols-5" : "grid grid-cols-4"}>
@@ -270,7 +273,6 @@ export function AppShell({ children }: { children: ReactNode }) {
         </ul>
       </nav>
       </div>
-      </BottomPortal>
 
       <InstallAppPrompt />
       <Suspense fallback={null}><LazyAssistantWidget /></Suspense>
