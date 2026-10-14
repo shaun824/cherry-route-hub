@@ -1,3 +1,4 @@
+import { scrollAppTo } from "@/lib/app-scroll";
 import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -166,7 +167,7 @@ function EmailWorkflowsPage() {
         onStartWorkflow={(id, name) => {
           setNewEventId(id);
           setNewName(name);
-          window.scrollTo({ top: 0, behavior: "smooth" });
+          scrollAppTo(0, "smooth");
         }}
       />
 

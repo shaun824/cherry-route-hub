@@ -179,7 +179,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       {/* Mobile bottom stack: an ordinary last row of a one-screen-tall frame (not
           position:fixed), so iPhone Safari's toolbar can never strand it mid-screen. */}
-      <div className="relative z-30 mx-auto w-full max-w-md shrink-0 bg-background pt-2 md:hidden">
+      <div className="relative z-30 mx-auto w-full max-w-md shrink-0 bg-background md:hidden">
       {/* Mobile-only sign-in banner */}
       {showSignInCta ? (
         <div

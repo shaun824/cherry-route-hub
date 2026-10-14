@@ -1,3 +1,4 @@
+import { scrollAppTo } from "@/lib/app-scroll";
 import { PodiumSection } from "@/components/podium-section";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -90,7 +91,7 @@ function SpectatorEventPage() {
   const selectTab = useCallback((next: Tab) => {
     setTab(next);
     if (typeof window === "undefined") return;
-    const scroll = () => window.scrollTo({ top: 0, behavior: "auto" });
+    const scroll = () => scrollAppTo(0, "auto");
     scroll();
     // Late panels can shift layout, so re-anchor briefly — but any touch or
     // scroll of the user's own (tapping the map, panning) cancels it at once.

@@ -1,4 +1,4 @@
-import { BottomPortal } from "@/components/bottom-portal";
+import { APP_SCROLL_ID } from "@/lib/app-scroll";
 import { useState } from "react";
 import { createFileRoute, Outlet, Link, useRouterState, Navigate } from "@tanstack/react-router";
 import { LayoutDashboard, CalendarDays, Newspaper, Tag, Handshake, ArrowLeft, LogOut, Users, Settings, UserPlus, MessagesSquare, BedDouble, Plug, BarChart3 , Package, Tent, Brain, Bot, BellRing, ShieldCheck, HardHat, CalendarClock, KeyRound, Trophy, Medal, ClipboardList, Instagram, Wallet, GraduationCap, LogIn, Mail, Radar, MapPinned } from "lucide-react";
@@ -130,9 +130,9 @@ function AdminLayout() {
   }
 
   return (
-    <div className="min-h-screen bg-secondary/40 text-ink">
+    <div className="app-frame flex h-[100dvh] flex-col overflow-hidden bg-secondary/40 text-ink md:block md:h-auto md:min-h-screen md:overflow-visible">
       {/* Top bar */}
-      <header className="sticky top-0 z-30 border-b border-border bg-card/95 backdrop-blur">
+      <header className="sticky top-0 z-30 shrink-0 border-b border-border bg-card/95 backdrop-blur">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 md:px-8">
           <div className="flex items-center gap-3">
             <span className="grid h-10 w-10 place-items-center rounded-lg bg-white p-1 ring-1 ring-border">
@@ -163,6 +163,11 @@ function AdminLayout() {
         </div>
       </header>
 
+      <div
+        id={APP_SCROLL_ID}
+        data-scroll-restoration-id={APP_SCROLL_ID}
+        className="min-h-0 flex-1 overflow-y-auto overscroll-contain md:overflow-visible"
+      >
       <div className="mx-auto flex max-w-7xl gap-6 px-4 py-6 md:px-8">
         {/* Sidebar (desktop) — grouped by section, only the current section open */}
         <aside className="hidden w-56 shrink-0 md:block">
@@ -198,9 +203,16 @@ function AdminLayout() {
           </nav>
         </aside>
 
-        {/* Mobile nav — pick a section, then a page */}
-        <BottomPortal>
-        <nav className="bottom-dock fixed inset-x-0 bottom-0 z-30 border-t border-border bg-card md:hidden" style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
+
+        {/* Content */}
+        <main className="min-w-0 flex-1 pb-6">
+          <Outlet />
+        </main>
+      </div>
+      </div>
+
+      {/* Mobile nav — last row of the one-screen frame, never position:fixed */}
+        <nav className="relative z-30 shrink-0 border-t border-border bg-card md:hidden" style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
           <div className="flex gap-1 overflow-x-auto px-2 pt-2">
             {navGroups.map((g) => {
               const on = g.section === mobileSection;
@@ -236,13 +248,6 @@ function AdminLayout() {
             })}
           </div>
         </nav>
-        </BottomPortal>
-
-        {/* Content */}
-        <main className="min-w-0 flex-1 pb-36 md:pb-6">
-          <Outlet />
-        </main>
-      </div>
     </div>
   );
 }

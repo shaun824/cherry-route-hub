@@ -1,3 +1,4 @@
+import { getScrollTop, scrollAppTo, scrollerViewportTop } from "@/lib/app-scroll";
 // Interactive first-visit tour of the tracking page: switches to each tab, spotlights the
 // real feature and shows a tapping finger on what to press. Shown once per person
 // (device + account); replayable from the link at the bottom of the page.
@@ -160,8 +161,8 @@ export function TrackingTutorial({ onTab }: { onTab?: (tab: string) => void }) {
         if (!scrolled || offscreen) {
           scrolled = true;
           const tall = r.height > h * 0.5;
-          const y = window.scrollY + r.top - (tall ? 90 : h / 2 - r.height / 2);
-          window.scrollTo({ top: Math.max(0, y), behavior: "auto" });
+          const y = getScrollTop() + r.top - scrollerViewportTop() - (tall ? 90 : h / 2 - r.height / 2);
+          scrollAppTo(Math.max(0, y), "auto");
         }
       }
       setVh(window.innerHeight);
@@ -196,7 +197,7 @@ export function TrackingTutorial({ onTab }: { onTab?: (tab: string) => void }) {
     if (user && !user.user_metadata?.tracking_tour_v2_seen) {
       void supabase.auth.updateUser({ data: { tracking_tour_v2_seen: true } });
     }
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    scrollAppTo(0, "smooth");
   }, [user, onTab]);
 
   if (!open || typeof document === "undefined") return null;
