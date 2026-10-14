@@ -239,7 +239,7 @@ function AdminLayout() {
         </BottomPortal>
 
         {/* Content */}
-        <main className="min-w-0 flex-1 pb-24 md:pb-6">
+        <main className="min-w-0 flex-1 pb-36 md:pb-6">
           <Outlet />
         </main>
       </div>
