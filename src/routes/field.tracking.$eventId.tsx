@@ -80,7 +80,7 @@ function FieldTrackingPage() {
               </div>
               {a.lat != null && a.lng != null ? (
                 <a
-                  href={`https://www.google.com/maps/dir/?api=1&destination=${a.lat},${a.lng}&travelmode=driving`}
+                  href={`https://www.google.com/maps/search/?api=1&query=${a.lat},${a.lng}`}
                   target="_blank"
                   rel="noreferrer"
                   className="inline-flex items-center gap-1 rounded-full bg-cherry px-3 py-2 text-xs font-bold text-white"
