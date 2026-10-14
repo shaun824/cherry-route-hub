@@ -394,20 +394,14 @@ function AlertCard({
           {alert.bib ? ` · #${alert.bib}` : ""}
         </p>
         <p className="text-xs text-ink-soft">
-          {ago(alert.createdAt)} ·{" "}
-          {alert.lat != null && alert.lng != null ? (
-            <a
-              href={`https://www.google.com/maps/dir/?api=1&destination=${alert.lat},${alert.lng}&travelmode=driving`}
-              target="_blank"
-              rel="noreferrer"
-              className="font-semibold text-cherry underline"
-            >
-              Navigate
-            </a>
-          ) : (
-            "no GPS fix"
-          )}
+          {ago(alert.createdAt)}
+          {alert.lat == null || alert.lng == null ? " · no GPS fix" : ""}
         </p>
+      </button>
+      {alert.lat != null && alert.lng != null ? (
+        <SosCoords lat={alert.lat} lng={alert.lng} />
+      ) : null}
+      <button type="button" onClick={onFocus} className="hidden" aria-hidden tabIndex={-1}>
         {alert.note ? (
           <p className="mt-1 rounded-md bg-cherry/10 px-2 py-1 text-xs font-semibold text-ink">“{alert.note}”</p>
         ) : null}
