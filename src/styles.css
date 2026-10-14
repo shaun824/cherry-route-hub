@@ -556,3 +556,6 @@
   -webkit-transform: translateZ(0);
   backface-visibility: hidden;
 }
+
+/* Stop wide content from widening the page; on iPhone that shifts fixed bars mid-screen. */
+html, body { overflow-x: clip; max-width: 100%; }

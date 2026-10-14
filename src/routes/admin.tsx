@@ -1,3 +1,4 @@
+import { BottomPortal } from "@/components/bottom-portal";
 import { useState } from "react";
 import { createFileRoute, Outlet, Link, useRouterState, Navigate } from "@tanstack/react-router";
 import { LayoutDashboard, CalendarDays, Newspaper, Tag, Handshake, ArrowLeft, LogOut, Users, Settings, UserPlus, MessagesSquare, BedDouble, Plug, BarChart3 , Package, Tent, Brain, Bot, BellRing, ShieldCheck, HardHat, CalendarClock, KeyRound, Trophy, Medal, ClipboardList, Instagram, Wallet, GraduationCap, LogIn, Mail, Radar, MapPinned } from "lucide-react";
@@ -198,7 +199,8 @@ function AdminLayout() {
         </aside>
 
         {/* Mobile nav — pick a section, then a page */}
-        <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-card/95 backdrop-blur md:hidden">
+        <BottomPortal>
+        <nav className="bottom-dock fixed inset-x-0 bottom-0 z-30 border-t border-border bg-card md:hidden" style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
           <div className="flex gap-1 overflow-x-auto px-2 pt-2">
             {navGroups.map((g) => {
               const on = g.section === mobileSection;
@@ -234,7 +236,7 @@ function AdminLayout() {
             })}
           </div>
         </nav>
-
+        </BottomPortal>
 
         {/* Content */}
         <main className="min-w-0 flex-1 pb-24 md:pb-6">

@@ -1,3 +1,4 @@
+import { BottomPortal } from "@/components/bottom-portal";
 import { Link, useRouterState } from "@tanstack/react-router";
 import { Home, Ticket, Binoculars, User, LogIn, X, HardHat, BedDouble, Smartphone, ClipboardList, GraduationCap, RefreshCw } from "lucide-react";
 import { lazy, Suspense, useEffect, useState, type ReactNode } from "react";
@@ -174,6 +175,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       {/* Mobile bottom stack: pills + tab bar share ONE fixed box pinned with bottom:0,
           so nothing can drift apart or float mid-screen (no JS repositioning). */}
+      <BottomPortal>
       <div className="bottom-dock pointer-events-none fixed inset-x-0 bottom-0 z-30 mx-auto w-full max-w-md md:hidden">
       {/* Mobile-only sign-in banner */}
       {showSignInCta ? (
@@ -268,6 +270,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </ul>
       </nav>
       </div>
+      </BottomPortal>
 
       <InstallAppPrompt />
       <Suspense fallback={null}><LazyAssistantWidget /></Suspense>
