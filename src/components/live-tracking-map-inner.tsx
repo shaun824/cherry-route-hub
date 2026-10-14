@@ -185,7 +185,7 @@ function bearingText(lat1: number, lng1: number, lat2: number, lng2: number): st
 }
 
 function navUrl(lat: number, lng: number): string {
-  return `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`;
+  return `https://www.google.com/maps/search/?api=1&query=${lat.toFixed(6)},${lng.toFixed(6)}`;
 }
 
 function popupContent(
@@ -1083,7 +1083,7 @@ export default function LiveTrackingMapInner({
           .addTo(map)
           .bindTooltip(label, { permanent: true, direction: "top", offset: [0, -10] })
           .bindPopup(
-            `<b>${t.name.replace(/[<>&]/g, "")}</b><br/><a href="https://www.google.com/maps/dir/?api=1&destination=${t.lat},${t.lng}" target="_blank" rel="noreferrer">Navigate</a>`,
+            `<b>${t.name.replace(/[<>&]/g, "")}</b><br/><a href="https://www.google.com/maps/search/?api=1&query=${t.lat},${t.lng}" target="_blank" rel="noreferrer">Navigate</a>`,
           );
         teamMarkersRef.current.set(t.deviceId, m);
       }
