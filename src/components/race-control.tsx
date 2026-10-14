@@ -1,6 +1,39 @@
 // Race control: live rider map + SOS alert list for a chosen event.
 // Shared by the admin console and the crew portal (crew + admin only).
 import { ResolveSosButton } from "@/components/resolve-sos-button";
+import { appleMapsUrl, fmtCoords, googleMapsUrl } from "@/lib/nav-links";
+import { toast } from "sonner";
+
+/** SOS position: visible coordinates (copyable) plus Google / Apple Maps links. */
+function SosCoords({ lat, lng }: { lat: number; lng: number }) {
+  const text = fmtCoords(lat, lng);
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(text);
+      toast.success("Coordinates copied");
+    } catch {
+      toast.error("Couldn't copy — select the numbers and copy them");
+    }
+  };
+  return (
+    <div className="mt-2 space-y-1.5">
+      <p className="select-all break-all rounded-md bg-muted px-2 py-1 font-mono text-xs font-semibold text-ink">
+        {text}
+      </p>
+      <div className="flex flex-wrap gap-1.5 text-xs font-bold">
+        <a href={googleMapsUrl(lat, lng)} target="_blank" rel="noreferrer" className="rounded-lg bg-cherry px-2.5 py-1.5 text-white">
+          Google Maps
+        </a>
+        <a href={appleMapsUrl(lat, lng)} target="_blank" rel="noreferrer" className="rounded-lg bg-muted px-2.5 py-1.5 text-ink">
+          Apple Maps
+        </a>
+        <button type="button" onClick={copy} className="rounded-lg bg-muted px-2.5 py-1.5 text-ink">
+          Copy
+        </button>
+      </div>
+    </div>
+  );
+}
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -387,6 +420,7 @@ function AlertCard({
 }) {
   return (
     <div className="flex flex-wrap items-start justify-between gap-3 rounded-xl bg-card p-3 ring-1 ring-cherry/30">
+      <div className="min-w-0 flex-1">
       <button type="button" onClick={onFocus} className="text-left text-sm">
         <p className="font-black text-cherry">{reasonLabel(alert.reason)}</p>
         <p className="font-bold text-ink">
@@ -397,11 +431,6 @@ function AlertCard({
           {ago(alert.createdAt)}
           {alert.lat == null || alert.lng == null ? " · no GPS fix" : ""}
         </p>
-      </button>
-      {alert.lat != null && alert.lng != null ? (
-        <SosCoords lat={alert.lat} lng={alert.lng} />
-      ) : null}
-      <button type="button" onClick={onFocus} className="hidden" aria-hidden tabIndex={-1}>
         {alert.note ? (
           <p className="mt-1 rounded-md bg-cherry/10 px-2 py-1 text-xs font-semibold text-ink">“{alert.note}”</p>
         ) : null}
@@ -412,6 +441,10 @@ function AlertCard({
           </p>
         ) : null}
       </button>
+      {alert.lat != null && alert.lng != null ? (
+        <SosCoords lat={alert.lat} lng={alert.lng} />
+      ) : null}
+      </div>
       <div className="flex shrink-0 flex-col gap-1.5">
         {onAcknowledge ? (
           <button
