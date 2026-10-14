@@ -2,7 +2,6 @@
 // Shared by the admin console and the crew portal (crew + admin only).
 import { ResolveSosButton } from "@/components/resolve-sos-button";
 import { appleMapsUrl, fmtCoords, googleMapsUrl } from "@/lib/nav-links";
-import { toast } from "sonner";
 
 /** SOS position: visible coordinates (copyable) plus Google / Apple Maps links. */
 function SosCoords({ lat, lng }: { lat: number; lng: number }) {
