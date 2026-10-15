@@ -558,6 +558,22 @@ function StepEditor({
               <Mail className="h-3.5 w-3.5" /> Test
             </button>
           ) : null}
+          {onTest && step?.id ? (
+            <button
+              onClick={() => {
+                const raw = prompt("Also send this email to (comma-separated addresses):");
+                if (!raw) return;
+                const to = raw.split(/[\s,;]+/).map((e) => e.trim()).filter((e) => /.+@.+\..+/.test(e));
+                if (!to.length) return toast.error("No valid email addresses");
+                void sendWorkflowStepTest({ data: { stepId: step.id, to } })
+                  .then((r: any) => toast.success(`Sent to ${r.to}`))
+                  .catch((e: Error) => toast.error(e.message));
+              }}
+              className="flex items-center gap-1 rounded-lg border border-border px-3 py-1.5 text-xs font-semibold"
+            >
+              <Mail className="h-3.5 w-3.5" /> Send to others
+            </button>
+          ) : null}
           {onDelete ? (
             <button
               onClick={() => {
