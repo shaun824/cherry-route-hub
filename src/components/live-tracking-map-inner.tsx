@@ -1930,7 +1930,7 @@ export default function LiveTrackingMapInner({
         <RouteProfile
           route={matchedRoutes[0].route}
           color={matchedRoutes[0].color}
-          markers={((matchedRoutes[0].route.customMarkers ?? []) as CustomMarker[]).filter((m) => crewTools || m.icon !== "warning")}
+          markers={((matchedRoutes[0].route.customMarkers ?? []) as CustomMarker[]).filter((m) => crewTools || (m.icon !== "warning" && m.icon !== "aid"))}
         />
       ) : null}
 
