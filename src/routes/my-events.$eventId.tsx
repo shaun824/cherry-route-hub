@@ -56,6 +56,7 @@ import { OfflinePackCard } from "@/components/offline-pack-card";
 import { buildPackingList, fetchEventInfo, tubelessSanitise, type EventInfoBlock, type PackingItem } from "@/lib/event-info";
 import { getEventSport } from "@/lib/event-sport";
 import { RouteMap } from "@/components/route-map";
+import { downloadBlob } from "@/lib/route-files";
 import { RouteFileStats } from "@/components/route-file-stats";
 import { RouteProfile } from "@/components/route-profile";
 
@@ -2745,7 +2746,7 @@ function DownloadAllRoutesCard({
         Every route for every day in one file (GPX), ready for your GPS, Garmin, Wahoo or phone app. Single routes can also be downloaded under each route below.
       </p>
       {signedOut ? (
-        <Link to="/login" className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-cherry px-4 py-2.5 text-sm font-bold text-primary-foreground">
+        <Link to="/auth" className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-cherry px-4 py-2.5 text-sm font-bold text-primary-foreground">
           <LockIcon className="h-4 w-4" /> Sign in to download
         </Link>
       ) : checking ? (
@@ -2759,9 +2760,8 @@ function DownloadAllRoutesCard({
           type="button"
           disabled={!zip}
           data-track-action="route_download_all"
-          onClick={async () => {
+          onClick={() => {
             if (!zip) return;
-            const { downloadBlob } = await import("@/lib/route-files");
             downloadBlob(zip.blob, fileName);
           }}
           className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-full bg-cherry px-4 py-3 text-sm font-bold text-primary-foreground disabled:opacity-60 sm:w-auto"
