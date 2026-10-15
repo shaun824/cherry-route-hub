@@ -21,11 +21,20 @@ const norm = (s: string | null | undefined) =>
 
 function parseStart(s: string | null | undefined): number | null {
   if (!s) return null;
-  let v = s.trim().replace(" ", "T");
+  const raw = s.trim();
+  // Myriad sends "MM/DD/YYYY HH:mm" in SA local time.
+  const us = /^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:[ T](\d{1,2}):(\d{2})(?::(\d{2}))?)?$/.exec(raw);
+  if (us) {
+    const [, mo, d, y, h = "0", mi = "0", se = "0"] = us;
+    return Date.UTC(+y!, +mo! - 1, +d!, +h - 2, +mi, +se);
+  }
+  let v = raw.replace(" ", "T");
   if (!/[zZ]|[+-]\d\d:?\d\d$/.test(v)) v += "+02:00"; // Myriad times are SA local
   const t = Date.parse(v);
   return Number.isFinite(t) ? t : null;
 }
+/** GC / combined sets are cumulative across days — not a finish on the day. */
+const isCumulative = (label: string) => /\bGC\b|general classification|combined/i.test(label);
 const dayKeyOf = (t: number) => new Date(t + 2 * 3600_000).toISOString().slice(0, 10);
 
 export async function buildRaceStatus(eventId: string, wantDay: string | null): Promise<RaceStatusPayload> {
