@@ -113,6 +113,12 @@ export async function buildRaceStatus(eventId: string, wantDay: string | null): 
     days0[days0.length - 1]?.key ??
     null;
 
+  // Prefer the entry's class over the timing feed's set name.
+  const rosterCat = new Map<string, string | null>();
+  for (const r of roster) {
+    if (r.bib) rosterCat.set(`b:${norm(r.bib)}`, r.category);
+    rosterCat.set(`n:${norm(r.name)}`, r.category);
+  }
   const byKey = new Map<string, RaceStatusRider>();
   for (const r of rows) {
     const d = setDay.get(r.result_set_id);
@@ -123,7 +129,10 @@ export async function buildRaceStatus(eventId: string, wantDay: string | null): 
     byKey.set(k, {
       name: r.full_name,
       bib: r.bib_number,
-      category: r.category,
+      category:
+        (r.bib_number ? rosterCat.get(`b:${norm(r.bib_number)}`) : undefined) ??
+        rosterCat.get(`n:${norm(r.full_name)}`) ??
+        r.category,
       timeText: r.time_text,
       finishedAt: d.start != null && r.time_ms != null ? new Date(d.start + r.time_ms).toISOString() : null,
     });
