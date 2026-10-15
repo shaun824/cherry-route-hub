@@ -23,7 +23,7 @@ export function RaceStatusPanel({ eventId, fieldToken }: { eventId: string; fiel
   const list = (tab === "finished" ? data?.finished : data?.stillOut) ?? [];
   const needle = q.trim().toLowerCase();
   const shown = needle
-    ? list.filter((r) => r.name.toLowerCase().includes(needle) || (r.bib ?? "").toLowerCase().includes(needle))
+    ? list.filter((r) => r.name.toLowerCase().includes(needle) || (r.category ?? "").toLowerCase().includes(needle) || (r.bib ?? "").toLowerCase().includes(needle))
     : list;
 
   return (
@@ -33,7 +33,7 @@ export function RaceStatusPanel({ eventId, fieldToken }: { eventId: string; fiel
           <Flag className="h-4 w-4 text-cherry" /> Finish line
         </h2>
         {data && data.days.length > 1 ? (
-          <div className="flex gap-1">
+          <div className="flex flex-wrap justify-end gap-1">
             {data.days.map((d) => (
               <button
                 key={d.key}
@@ -74,6 +74,31 @@ export function RaceStatusPanel({ eventId, fieldToken }: { eventId: string; fiel
               <p className="text-xs font-semibold text-ink-soft">Finished</p>
             </button>
           </div>
+          {data.dayKey === "all" && data.stillOut.length > 0 ? (
+            <div className="mt-2 flex flex-wrap gap-1">
+              {Object.entries(
+                data.stillOut.reduce<Record<string, number>>((m, r) => {
+                  const c = r.category?.trim() || "Uncategorised";
+                  m[c] = (m[c] ?? 0) + 1;
+                  return m;
+                }, {}),
+              )
+                .sort((a, b) => b[1] - a[1])
+                .map(([c, n]) => (
+                  <button
+                    key={c}
+                    type="button"
+                    onClick={() => {
+                      setTab("out");
+                      setQ(q === c ? "" : c);
+                    }}
+                    className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ring-1 ring-border ${q === c ? "bg-ink text-background" : "bg-muted text-ink"}`}
+                  >
+                    {c} · {n} out
+                  </button>
+                ))}
+            </div>
+          ) : null}
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}
