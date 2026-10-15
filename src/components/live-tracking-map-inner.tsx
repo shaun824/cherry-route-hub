@@ -1128,7 +1128,7 @@ export default function LiveTrackingMapInner({
     const byKey = new Map<string, FieldPoint & { logoUrl?: string; color?: string }>();
     for (const c of dayCandidates) {
       for (const m of (c.route.customMarkers ?? []) as CustomMarker[]) {
-        if (!crewTools && m.icon === "warning") continue; // marshals: crew/admin only
+        if (!crewTools && (m.icon === "warning" || m.icon === "aid")) continue; // marshals/medics: crew/admin only
         const key = `${m.name}|${m.lat.toFixed(4)}|${m.lng.toFixed(4)}`;
         const ex = byKey.get(key);
         if (ex) ex.routes.push(c.route.name);
