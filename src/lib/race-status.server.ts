@@ -101,7 +101,7 @@ export async function buildRaceStatus(eventId: string, wantDay: string | null): 
     } else setDay.set(s.id, { key: `set:${s.id}`, label: s.label, start: null });
   }
   const dayMap = new Map<string, string>();
-  for (const d of setDay.values()) dayMap.set(d.key, d.label);
+  for (const d of setDay.values()) if (!dayMap.has(d.key) || /^Day /.test(d.label)) dayMap.set(d.key, d.label);
   const days0 = [...dayMap.entries()].sort((a, b) => a[0].localeCompare(b[0])).map(([key, label]) => ({ key, label }));
   const days = days0.length > 1 ? [{ key: "all", label: "All routes" }, ...days0] : days0;
   const today = dayKeyOf(Date.now());
