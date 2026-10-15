@@ -56,6 +56,7 @@ import { OfflinePackCard } from "@/components/offline-pack-card";
 import { buildPackingList, fetchEventInfo, tubelessSanitise, type EventInfoBlock, type PackingItem } from "@/lib/event-info";
 import { getEventSport } from "@/lib/event-sport";
 import { RouteMap } from "@/components/route-map";
+import { downloadBlob } from "@/lib/route-files";
 import { RouteFileStats } from "@/components/route-file-stats";
 import { RouteProfile } from "@/components/route-profile";
 
@@ -667,9 +668,11 @@ function RoutesPanel({
   });
   const myEntry = entryQ.data ?? null;
   const myPayment = myEntry ? paymentStatus(myEntry) : null;
-  const isPaidEntrant = !!myEntry && myPayment?.state === "paid";
-  // Any signed-in rider can download route files.
-  const downloadsLocked = locked;
+  void myPayment;
+  // Route files are for entered riders. Sea to Sea North stays open to any
+  // signed-in rider (race organiser's choice).
+  const openToSignedIn = eventId === "cb6a0064-aa7e-4e26-928d-6a67d0a9722d";
+  const downloadsLocked = locked || (!openToSignedIn && !entryQ.isLoading && !myEntry);
   // Rider offers live inside the routes — the most-viewed part of the page.
   const promos = useShuffledPromos(useEventPromos(eventName ?? event.name ?? ""));
   const days: EventDay[] = withRegistrationDayLabels(
@@ -686,9 +689,8 @@ function RoutesPanel({
   const shownDays =
     effectiveDay === "all" ? routeDays : routeDays.filter((d) => d.id === effectiveDay);
   const mapDayIds = effectiveDay === "all" ? undefined : [effectiveDay];
-  // Route files aren't final for PE Plett / Weekend Warrior — no downloads.
-  const lowerName = (eventName ?? event.name ?? "").toLowerCase();
-  const downloadsDisabled = pePlettJourney || lowerName.includes("weekend warrior");
+  // Route files aren't final for PE Plett — no downloads.
+  const downloadsDisabled = pePlettJourney;
   // PE Plett routes are public: map + descriptions visible signed out.
   const mapLocked = pePlettJourney ? false : locked;
   // Running counter so offers are spaced evenly across every day's route cards.
@@ -728,6 +730,16 @@ function RoutesPanel({
             },
           )}
         </div>
+      ) : null}
+
+      {!downloadsDisabled && allRoutes.some((r) => (r.kmlUrls ?? []).length > 0) ? (
+        <DownloadAllRoutesCard
+          days={days}
+          eventName={eventName ?? event.name ?? "Event"}
+          signedOut={locked}
+          canDownload={!downloadsLocked && !entryQ.isLoading}
+          checking={!!user && entryQ.isLoading}
+        />
       ) : null}
 
       {ROUTE_GUIDE_PDFS[eventId] && !downloadsDisabled ? (
@@ -840,9 +852,7 @@ function RoutesPanel({
                       downloadsLocked && !locked ? (
                         <p className="mt-3 flex items-center gap-1.5 rounded-xl bg-muted/60 px-3 py-2 text-[11px] font-medium text-ink-soft">
                           <LockIcon className="h-3.5 w-3.5 text-cherry" />
-                          {myEntry
-                            ? "Route files unlock once your entry is paid in full."
-                            : "Route files are available to fully paid entered riders only."}
+                          Route files are available to entered riders only.
                         </p>
                       ) : (
                         <LockedSection locked={locked} message="Sign in to download route files">
@@ -2695,3 +2705,71 @@ function TeamCard({ eventId, teamName }: { eventId: string; teamName: string | n
   );
 }
 
+
+// One-tap "all routes" download for entered riders. The zip is built as soon
+// as the card shows, so the tap itself downloads straight away (iPhones drop
+// the download if it waits on a slow build after the tap).
+function DownloadAllRoutesCard({
+  days,
+  eventName,
+  signedOut,
+  canDownload,
+  checking,
+}: {
+  days: EventDay[];
+  eventName: string;
+  signedOut: boolean;
+  canDownload: boolean;
+  checking: boolean;
+}) {
+  const [zip, setZip] = useState<{ blob: Blob; count: number } | null>(null);
+  const [failed, setFailed] = useState(false);
+  useEffect(() => {
+    if (!canDownload) return;
+    let live = true;
+    import("@/lib/route-files")
+      .then(({ buildAllRoutesGpxZip }) => buildAllRoutesGpxZip(eventName, days))
+      .then((z) => live && setZip(z))
+      .catch(() => live && setFailed(true));
+    return () => {
+      live = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [canDownload, eventName]);
+  const fileName = `${eventName.replace(/[^a-z0-9]+/gi, "-")}-all-routes-gpx.zip`;
+  return (
+    <section className="rounded-2xl border-2 border-cherry bg-cherry/5 p-4">
+      <p className="flex items-center gap-2 font-display text-base font-black text-ink">
+        <Download className="h-5 w-5 text-cherry" /> Download all routes
+      </p>
+      <p className="mt-1 text-xs text-ink-soft">
+        Every route for every day in one file (GPX), ready for your GPS, Garmin, Wahoo or phone app. Single routes can also be downloaded under each route below.
+      </p>
+      {signedOut ? (
+        <Link to="/auth" className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-cherry px-4 py-2.5 text-sm font-bold text-primary-foreground">
+          <LockIcon className="h-4 w-4" /> Sign in to download
+        </Link>
+      ) : checking ? (
+        <p className="mt-3 text-xs text-ink-soft">Checking your entry…</p>
+      ) : !canDownload ? (
+        <p className="mt-3 flex items-center gap-1.5 rounded-xl bg-muted/60 px-3 py-2 text-xs font-medium text-ink-soft">
+          <LockIcon className="h-4 w-4 text-cherry" /> Route downloads are for entered riders only.
+        </p>
+      ) : (
+        <button
+          type="button"
+          disabled={!zip}
+          data-track-action="route_download_all"
+          onClick={() => {
+            if (!zip) return;
+            downloadBlob(zip.blob, fileName);
+          }}
+          className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-full bg-cherry px-4 py-3 text-sm font-bold text-primary-foreground disabled:opacity-60 sm:w-auto"
+        >
+          <Download className="h-4 w-4" />
+          {zip ? `Download all ${zip.count} routes` : failed ? "Couldn't prepare the routes — refresh to retry" : "Preparing routes…"}
+        </button>
+      )}
+    </section>
+  );
+}
