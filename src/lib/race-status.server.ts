@@ -92,19 +92,21 @@ export async function buildRaceStatus(eventId: string, wantDay: string | null): 
   }
   const dayMap = new Map<string, string>();
   for (const d of setDay.values()) dayMap.set(d.key, d.label);
-  const days = [...dayMap.entries()].sort((a, b) => a[0].localeCompare(b[0])).map(([key, label]) => ({ key, label }));
+  const days0 = [...dayMap.entries()].sort((a, b) => a[0].localeCompare(b[0])).map(([key, label]) => ({ key, label }));
+  const days = days0.length > 1 ? [{ key: "all", label: "All routes" }, ...days0] : days0;
   const today = dayKeyOf(Date.now());
   const dayKey =
+    ((wantDay === "all" || !wantDay) && days0.length > 1 ? "all" : null) ??
     (wantDay && dayMap.has(wantDay) ? wantDay : null) ??
     (dayMap.has(today) ? today : null) ??
-    [...days].reverse().find((d) => d.key <= today)?.key ??
-    days[days.length - 1]?.key ??
+    [...days0].reverse().find((d) => d.key <= today)?.key ??
+    days0[days0.length - 1]?.key ??
     null;
 
   const byKey = new Map<string, RaceStatusRider>();
   for (const r of rows) {
     const d = setDay.get(r.result_set_id);
-    if (!d || d.key !== dayKey) continue;
+    if (!d || (dayKey !== "all" && d.key !== dayKey)) continue;
     if (!r.time_text) continue;
     const k = r.bib_number ? `b:${norm(r.bib_number)}` : `n:${norm(r.full_name)}`;
     if (byKey.has(k)) continue;
