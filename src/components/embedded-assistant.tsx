@@ -23,7 +23,7 @@ import { getSessionId } from "@/lib/analytics";
 import { supabase } from "@/integrations/supabase/client";
 import { Link } from "@tanstack/react-router";
 
-const WA_NUMBER = "27415815335";
+const WA_NUMBER = "27818180179";
 export function eventWaLink(eventName?: string) {
   const text = eventName ? `Hi, I have a question about ${eventName}: ` : "Hi, I have a question: ";
   return `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(text)}`;
