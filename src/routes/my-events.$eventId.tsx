@@ -667,9 +667,11 @@ function RoutesPanel({
   });
   const myEntry = entryQ.data ?? null;
   const myPayment = myEntry ? paymentStatus(myEntry) : null;
-  const isPaidEntrant = !!myEntry && myPayment?.state === "paid";
-  // Any signed-in rider can download route files.
-  const downloadsLocked = locked;
+  void myPayment;
+  // Route files are for entered riders. Sea to Sea North stays open to any
+  // signed-in rider (race organiser's choice).
+  const openToSignedIn = eventId === "cb6a0064-aa7e-4e26-928d-6a67d0a9722d";
+  const downloadsLocked = locked || (!openToSignedIn && !entryQ.isLoading && !myEntry);
   // Rider offers live inside the routes — the most-viewed part of the page.
   const promos = useShuffledPromos(useEventPromos(eventName ?? event.name ?? ""));
   const days: EventDay[] = withRegistrationDayLabels(
@@ -686,9 +688,8 @@ function RoutesPanel({
   const shownDays =
     effectiveDay === "all" ? routeDays : routeDays.filter((d) => d.id === effectiveDay);
   const mapDayIds = effectiveDay === "all" ? undefined : [effectiveDay];
-  // Route files aren't final for PE Plett / Weekend Warrior — no downloads.
-  const lowerName = (eventName ?? event.name ?? "").toLowerCase();
-  const downloadsDisabled = pePlettJourney || lowerName.includes("weekend warrior");
+  // Route files aren't final for PE Plett — no downloads.
+  const downloadsDisabled = pePlettJourney;
   // PE Plett routes are public: map + descriptions visible signed out.
   const mapLocked = pePlettJourney ? false : locked;
   // Running counter so offers are spaced evenly across every day's route cards.
@@ -728,6 +729,16 @@ function RoutesPanel({
             },
           )}
         </div>
+      ) : null}
+
+      {!downloadsDisabled && allRoutes.some((r) => (r.kmlUrls ?? []).length > 0) ? (
+        <DownloadAllRoutesCard
+          days={days}
+          eventName={eventName ?? event.name ?? "Event"}
+          signedOut={locked}
+          canDownload={!downloadsLocked && !entryQ.isLoading}
+          checking={!!user && entryQ.isLoading}
+        />
       ) : null}
 
       {ROUTE_GUIDE_PDFS[eventId] && !downloadsDisabled ? (
@@ -840,9 +851,7 @@ function RoutesPanel({
                       downloadsLocked && !locked ? (
                         <p className="mt-3 flex items-center gap-1.5 rounded-xl bg-muted/60 px-3 py-2 text-[11px] font-medium text-ink-soft">
                           <LockIcon className="h-3.5 w-3.5 text-cherry" />
-                          {myEntry
-                            ? "Route files unlock once your entry is paid in full."
-                            : "Route files are available to fully paid entered riders only."}
+                          Route files are available to entered riders only.
                         </p>
                       ) : (
                         <LockedSection locked={locked} message="Sign in to download route files">
