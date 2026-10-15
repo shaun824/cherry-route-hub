@@ -1,5 +1,5 @@
 // Leaflet map for the admin route-points editor. Browser-only — lazy-loaded.
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import type { LatLngAlt } from "@/lib/geo";
@@ -37,6 +37,11 @@ export default function RoutePointsEditorMap({
   onSelect,
   onMove,
   onPlace,
+  editLines,
+  editColor = "#e11d48",
+  selectedVertex,
+  onVertexSelect,
+  onLinesChange,
 }: {
   lines: EditorLine[];
   points: EditorPoint[];
@@ -45,6 +50,12 @@ export default function RoutePointsEditorMap({
   onSelect: (key: string | null) => void;
   onMove: (key: string, lat: number, lng: number) => void;
   onPlace: (lat: number, lng: number) => void;
+  /** Route-line editing: the route's lines, with draggable vertices when zoomed in. */
+  editLines?: LatLngAlt[][] | null;
+  editColor?: string;
+  selectedVertex?: [number, number] | null;
+  onVertexSelect?: (v: [number, number] | null) => void;
+  onLinesChange?: (lines: LatLngAlt[][]) => void;
 }) {
   const el = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
@@ -53,6 +64,10 @@ export default function RoutePointsEditorMap({
   const fitted = useRef("");
   const cb = useRef({ onSelect, onMove, onPlace, placing });
   cb.current = { onSelect, onMove, onPlace, placing };
+  const editLayer = useRef<L.LayerGroup | null>(null);
+  const [view, setView] = useState(0);
+  const ecb = useRef({ editLines, onVertexSelect, onLinesChange });
+  ecb.current = { editLines, onVertexSelect, onLinesChange };
 
   useEffect(() => {
     if (!el.current || mapRef.current) return;
@@ -62,7 +77,9 @@ export default function RoutePointsEditorMap({
     street.addTo(map);
     L.control.layers({ Street: street, Satellite: sat }, {}, { position: "topright" }).addTo(map);
     lineLayer.current = L.layerGroup().addTo(map);
+    editLayer.current = L.layerGroup().addTo(map);
     pointLayer.current = L.layerGroup().addTo(map);
+    map.on("moveend zoomend", () => setView((v) => v + 1));
     map.on("click", (e) => {
       if (cb.current.placing) cb.current.onPlace(e.latlng.lat, e.latlng.lng);
       else cb.current.onSelect(null);
@@ -118,6 +135,63 @@ export default function RoutePointsEditorMap({
       m.addTo(layer);
     }
   }, [points, selectedKey]);
+
+  // Route line editing: line is clickable (adds a bend point), vertices draggable at zoom >= 15.
+  useEffect(() => {
+    const map = mapRef.current;
+    const layer = editLayer.current;
+    if (!map || !layer) return;
+    layer.clearLayers();
+    if (!editLines) return;
+    const zoomedIn = map.getZoom() >= 15;
+    const b = map.getBounds().pad(0.2);
+    editLines.forEach((line, li) => {
+      const ll = line.map((c) => [c[1], c[0]] as [number, number]);
+      const pl = L.polyline(ll, { color: editColor, weight: 7, opacity: 0.95 }).addTo(layer);
+      pl.on("click", (e) => {
+        L.DomEvent.stopPropagation(e);
+        if (!zoomedIn) return map.setView(e.latlng, 16);
+        // insert the new vertex into the nearest segment
+        const p = map.latLngToLayerPoint(e.latlng);
+        let best = 0, bestD = Infinity;
+        for (let i = 0; i < ll.length - 1; i++) {
+          const d = L.LineUtil.pointToSegmentDistance(p, map.latLngToLayerPoint(ll[i]!), map.latLngToLayerPoint(ll[i + 1]!));
+          if (d < bestD) { bestD = d; best = i; }
+        }
+        const a = line[best]!, c = line[best + 1] ?? a;
+        const alt = a[2] != null && c[2] != null ? (a[2] + c[2]) / 2 : a[2];
+        const next = ecb.current.editLines!.map((l) => l.slice());
+        next[li]!.splice(best + 1, 0, [+e.latlng.lng.toFixed(7), +e.latlng.lat.toFixed(7), alt]);
+        ecb.current.onLinesChange?.(next);
+        ecb.current.onVertexSelect?.([li, best + 1]);
+      });
+      if (!zoomedIn) return;
+      line.forEach((c, vi) => {
+        if (!b.contains([c[1], c[0]])) return;
+        const sel = selectedVertex?.[0] === li && selectedVertex?.[1] === vi;
+        const m = L.marker([c[1], c[0]], {
+          draggable: true,
+          icon: L.divIcon({
+            className: "",
+            iconSize: [16, 16],
+            iconAnchor: [8, 8],
+            html: `<div style="width:16px;height:16px;border-radius:50%;background:${sel ? "#e11d48" : "#fff"};border:3px solid ${editColor};cursor:grab"></div>`,
+          }),
+        }).addTo(layer);
+        m.on("click", (e) => {
+          L.DomEvent.stopPropagation(e);
+          ecb.current.onVertexSelect?.([li, vi]);
+        });
+        m.on("dragend", () => {
+          const p = m.getLatLng();
+          const next = ecb.current.editLines!.map((l) => l.slice());
+          next[li]![vi] = [+p.lng.toFixed(7), +p.lat.toFixed(7), c[2]];
+          ecb.current.onLinesChange?.(next);
+          ecb.current.onVertexSelect?.([li, vi]);
+        });
+      });
+    });
+  }, [editLines, editColor, selectedVertex, view]);
 
   return <div ref={el} className="h-full w-full" />;
 }
