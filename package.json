@@ -61,6 +61,7 @@
     "embla-carousel-react": "^8.6.0",
     "fflate": "^0.8.3",
     "input-otp": "^1.4.2",
+    "jszip": "^3.10.2",
     "leaflet": "^1.9.4",
     "leaflet-rotate": "^0.2.8",
     "leaflet.markercluster": "^1.5.3",

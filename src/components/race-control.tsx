@@ -84,6 +84,36 @@ function ago(iso: string) {
   return `${Math.floor(mins / 60)}h ${mins % 60}m ago`;
 }
 
+function RoutesGpxButton({ eventId, eventName }: { eventId: string; eventName: string }) {
+  const [busy, setBusy] = useState(false);
+  return (
+    <button
+      type="button"
+      disabled={busy}
+      onClick={async () => {
+        setBusy(true);
+        try {
+          const { supabase } = await import("@/integrations/supabase/client");
+          const { buildAllRoutesGpxZip, downloadBlob } = await import("@/lib/route-files");
+          const { data, error } = await supabase.from("events").select("days").eq("id", eventId).maybeSingle();
+          if (error || !data) throw new Error(error?.message ?? "Event not found");
+          const { blob, count } = await buildAllRoutesGpxZip(eventName, (data.days ?? []) as never);
+          if (!count) return void toast.error("This event has no route files yet.");
+          downloadBlob(blob, `${eventName.replace(/[^a-z0-9]+/gi, "-")}-routes-gpx.zip`);
+          toast.success(`Downloaded ${count} route${count === 1 ? "" : "s"} as GPX`);
+        } catch (e) {
+          toast.error(`Couldn't download routes: ${(e as Error).message}`);
+        } finally {
+          setBusy(false);
+        }
+      }}
+      className="flex w-full items-center justify-center gap-1.5 rounded-xl bg-card px-3 py-2.5 text-sm font-semibold text-ink ring-1 ring-border hover:bg-accent disabled:opacity-60"
+    >
+      {busy ? "Preparing routes…" : "Download all routes (GPX)"}
+    </button>
+  );
+}
+
 export function RaceControlPanel({
   title = "Live tracking",
   shareCrewEvent = false,
@@ -290,6 +320,10 @@ export function RaceControlPanel({
           </option>
         ))}
       </select>
+
+      {selected ? (
+        <RoutesGpxButton eventId={selected} eventName={events.find((e) => e.id === selected)?.name ?? "Event"} />
+      ) : null}
 
       {/* Acknowledged but still open — no alarm, still visible. */}
       {open.some((a) => a.status === "acknowledged") ? (

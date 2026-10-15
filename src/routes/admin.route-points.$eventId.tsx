@@ -1,10 +1,11 @@
 // Super-admin editor: tap to add marshal spots / route points, drag waterpoints to move them.
 import { createFileRoute, ClientOnly, Link, notFound, useRouter } from "@tanstack/react-router";
 import { Suspense, lazy, useEffect, useMemo, useState } from "react";
-import { ArrowLeft, Droplets, Loader2, MapPin, Save, ShieldAlert, Trash2, X } from "lucide-react";
+import { ArrowLeft, Droplets, Route as RouteIcon, Undo2, Loader2, MapPin, Save, ShieldAlert, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { parseKml, type LatLngAlt } from "@/lib/geo";
+import { parseKml, polylineKm, type LatLngAlt } from "@/lib/geo";
+import { buildKml } from "@/lib/route-files";
 import { distanceToRouteM } from "@/lib/tracking-route-overlay";
 import type { CustomMarker, EventDay } from "@/lib/mock-data";
 import type { EditorLine, EditorPoint } from "@/components/route-points-editor-map";
@@ -100,21 +101,31 @@ function RoutePointsEditor() {
   const [dirty, setDirty] = useState(false);
   const [saving, setSaving] = useState(false);
   const [lines, setLines] = useState<EditorLine[]>([]);
+  const [mode, setMode] = useState<"points" | "line">("points");
+  const [lineRoute, setLineRoute] = useState<string | null>(null);
+  const [draft, setDraft] = useState<LatLngAlt[][] | null>(null);
+  const [history, setHistory] = useState<LatLngAlt[][][]>([]);
+  const [vertex, setVertex] = useState<[number, number] | null>(null);
+  const [lineSaving, setLineSaving] = useState(false);
   const day = days[dayIdx];
   const dayGroups = day ? groups[day.id] ?? [] : [];
   const sel = dayGroups.find((g) => g.gid === selected) ?? null;
 
   useEffect(() => {
-    if (!dirty) return;
+    if (!dirty && !draft) return;
     const h = (e: BeforeUnloadEvent) => e.preventDefault();
     window.addEventListener("beforeunload", h);
     return () => window.removeEventListener("beforeunload", h);
-  }, [dirty]);
+  }, [dirty, draft]);
 
   // Load the day's route lines.
   useEffect(() => {
     let off = false;
     setLines([]);
+    setDraft(null);
+    setHistory([]);
+    setVertex(null);
+    setLineRoute(day?.routes?.[0]?.id ?? null);
     if (!day) return;
     (async () => {
       const out: EditorLine[] = [];
@@ -202,6 +213,47 @@ function RoutePointsEditor() {
     toast.success("Route points saved — riders and crew see them straight away.");
   }
 
+  const lineSrc = lines.find((l) => l.routeId === lineRoute) ?? null;
+  const editLines = mode === "line" && lineSrc ? draft ?? lineSrc.lines : null;
+  const lineDirty = !!draft;
+  const changeLines = (next: LatLngAlt[][]) => {
+    setHistory((h) => [...h.slice(-49), editLines ?? []]);
+    setDraft(next);
+  };
+
+  async function saveLine() {
+    if (!day || !lineRoute || !draft) return;
+    const route = (day.routes ?? []).find((r) => r.id === lineRoute);
+    if (!route) return;
+    setLineSaving(true);
+    try {
+      const kml = buildKml(`${day.label || "Day"} - ${route.name}`, draft);
+      const path = `${crypto.randomUUID()}-${route.id}-edited.kml`;
+      const up = await supabase.storage.from("event-kmls").upload(path, new Blob([kml], { type: "application/vnd.google-earth.kml+xml" }), { contentType: "application/vnd.google-earth.kml+xml" });
+      if (up.error) throw up.error;
+      const signed = await supabase.storage.from("event-kmls").createSignedUrl(path, 60 * 60 * 24 * 365 * 10);
+      if (signed.error || !signed.data?.signedUrl) throw signed.error ?? new Error("Couldn't link the file");
+      const { data: fresh, error: readErr } = await supabase.from("events").select("days").eq("id", event.id).maybeSingle();
+      if (readErr || !fresh) throw readErr ?? new Error("event not found");
+      const km = +draft.reduce((t, l) => t + polylineKm(l), 0).toFixed(1);
+      const nextDays = ((fresh.days ?? []) as EventDay[]).map((d) =>
+        d.id !== day.id ? d : { ...d, routes: (d.routes ?? []).map((r) => (r.id === lineRoute ? { ...r, kmlUrls: [signed.data.signedUrl], distanceKm: km } : r)) },
+      );
+      const { error } = await supabase.from("events").update({ days: nextDays as never }).eq("id", event.id);
+      if (error) throw error;
+      setLines((ls) => ls.map((l) => (l.routeId === lineRoute ? { ...l, lines: draft } : l)));
+      setDraft(null);
+      setHistory([]);
+      setVertex(null);
+      void router.invalidate();
+      toast.success(`${route.name} line saved (${km} km) — every map uses it now.`);
+    } catch (e) {
+      toast.error(`Couldn't save the line: ${(e as Error).message}`);
+    } finally {
+      setLineSaving(false);
+    }
+  }
+
   const points: EditorPoint[] = dayGroups.map((g) => ({ key: g.gid, name: g.name, icon: g.icon, lat: g.lat, lng: g.lng }));
   const counts = { marshal: dayGroups.filter((g) => g.icon === "warning").length, water: dayGroups.filter((g) => g.icon === "water").length };
 
@@ -245,6 +297,83 @@ function RoutePointsEditor() {
             ))}
           </div>
 
+          <div className="flex gap-1.5">
+            {(["points", "line"] as const).map((m) => (
+              <button
+                key={m}
+                onClick={() => {
+                  if (m === "points" && lineDirty) return toast.error("Save or undo your route line changes first.");
+                  setMode(m);
+                  setPlacing(null);
+                  setSelected(null);
+                }}
+                className={`inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-bold ring-1 ring-border ${mode === m ? "bg-ink text-primary-foreground" : "bg-card text-ink"}`}
+              >
+                {m === "points" ? <MapPin className="h-3.5 w-3.5" /> : <RouteIcon className="h-3.5 w-3.5" />}
+                {m === "points" ? "Edit points" : "Edit route line"}
+              </button>
+            ))}
+          </div>
+
+          {mode === "line" ? (
+            <div className="space-y-2 rounded-xl bg-card p-2 ring-1 ring-border">
+              <div className="flex flex-wrap items-center gap-1.5">
+                {(day?.routes ?? []).map((r) => (
+                  <button
+                    key={r.id}
+                    onClick={() => {
+                      if (lineDirty) return toast.error("Save or undo your changes to this line first.");
+                      setLineRoute(r.id);
+                      setVertex(null);
+                    }}
+                    className={`rounded-full px-3 py-1.5 text-xs font-bold ring-1 ring-border ${lineRoute === r.id ? "bg-cherry text-primary-foreground" : "bg-background text-ink"}`}
+                  >
+                    {r.name}
+                  </button>
+                ))}
+                <span className="ml-auto flex gap-1.5">
+                  <button
+                    disabled={!history.length}
+                    onClick={() => {
+                      const prev = history[history.length - 1];
+                      setHistory((h) => h.slice(0, -1));
+                      setDraft(history.length === 1 ? null : prev ?? null);
+                      setVertex(null);
+                    }}
+                    className="inline-flex items-center gap-1 rounded-lg bg-background px-3 py-1.5 text-xs font-bold ring-1 ring-border disabled:opacity-40"
+                  >
+                    <Undo2 className="h-3.5 w-3.5" /> Undo
+                  </button>
+                  <button
+                    disabled={!lineDirty || lineSaving}
+                    onClick={() => void saveLine()}
+                    className="inline-flex items-center gap-1 rounded-lg cherry-gradient px-3 py-1.5 text-xs font-bold text-primary-foreground disabled:opacity-50"
+                  >
+                    {lineSaving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />} Save line
+                  </button>
+                </span>
+              </div>
+              <p className="text-xs text-ink-soft">
+                Zoom in close to see the line's points. Drag a point to move it, tap the line to add a bend, or tap a point and delete it.
+                {editLines ? ` · ${editLines.reduce((t, l) => t + polylineKm(l), 0).toFixed(1)} km` : ""}
+              </p>
+              {vertex && editLines ? (
+                <button
+                  onClick={() => {
+                    const next = editLines.map((l) => l.slice());
+                    if ((next[vertex[0]]?.length ?? 0) <= 2) return toast.error("A line needs at least two points.");
+                    next[vertex[0]]!.splice(vertex[1], 1);
+                    changeLines(next);
+                    setVertex(null);
+                  }}
+                  className="inline-flex items-center gap-1 rounded-lg bg-destructive px-3 py-1.5 text-xs font-bold text-destructive-foreground"
+                >
+                  <Trash2 className="h-3.5 w-3.5" /> Delete selected point
+                </button>
+              ) : null}
+            </div>
+          ) : (
+          <>
           <div className="flex flex-wrap items-center gap-2 rounded-xl bg-card p-2 ring-1 ring-border">
             <span className="px-1 text-xs font-semibold text-ink-soft">Add:</span>
             {TYPES.map((t) => (
@@ -266,14 +395,21 @@ function RoutePointsEditor() {
               ? "Now tap the map where it should go."
               : "Drag any point to move it. Tap a point to rename it, change its routes or delete it."}
           </p>
+          </>
+          )}
 
           <div className="grid gap-3 lg:grid-cols-[1fr_300px]">
             <div className="h-[65vh] overflow-hidden rounded-xl ring-1 ring-border">
               <ClientOnly fallback={<div className="grid h-full place-items-center text-sm text-ink-soft">Loading map…</div>}>
                 <Suspense fallback={<div className="grid h-full place-items-center text-sm text-ink-soft">Loading map…</div>}>
                   <EditorMap
-                    lines={lines}
-                    points={points}
+                    lines={mode === "line" ? lines.filter((l) => l.routeId !== lineRoute) : lines}
+                    points={mode === "line" ? [] : points}
+                    editLines={editLines}
+                    editColor={lineSrc?.color}
+                    selectedVertex={vertex}
+                    onVertexSelect={setVertex}
+                    onLinesChange={changeLines}
                     selectedKey={selected}
                     placing={!!placing}
                     onSelect={setSelected}
