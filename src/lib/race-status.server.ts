@@ -87,16 +87,17 @@ export async function buildRaceStatus(eventId: string, wantDay: string | null): 
   }
 
   // Group result sets into days (by gun start), else one bucket per set.
+  // Cumulative GC sets are skipped when daily sets exist.
+  const hasDaily = sets.some((s) => !isCumulative(s.label));
   const setDay = new Map<string, { key: string; label: string; start: number | null }>();
   for (const s of sets) {
+    if (hasDaily && isCumulative(s.label)) continue;
     const st = parseStart(s.start_time);
     if (st != null) {
       const key = dayKeyOf(st);
-      setDay.set(s.id, {
-        key,
-        label: new Date(st).toLocaleDateString("en-ZA", { weekday: "short", day: "numeric", month: "short", timeZone: "Africa/Johannesburg" }),
-        start: st,
-      });
+      const dayNo = /day\s*(\d+)/i.exec(s.label)?.[1];
+      const date = new Date(st).toLocaleDateString("en-ZA", { weekday: "short", day: "numeric", month: "short", timeZone: "Africa/Johannesburg" });
+      setDay.set(s.id, { key, label: dayNo ? `Day ${dayNo} · ${date}` : date, start: st });
     } else setDay.set(s.id, { key: `set:${s.id}`, label: s.label, start: null });
   }
   const dayMap = new Map<string, string>();
