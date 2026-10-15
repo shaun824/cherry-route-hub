@@ -263,7 +263,12 @@ export const deleteWorkflowStep = createServerFn({ method: "POST" })
 /** Sends the step to the signed-in admin only — nothing is recorded as sent. */
 export const sendWorkflowStepTest = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { stepId: string }) => input)
+  .inputValidator((input: { stepId: string; to?: string[] }) => ({
+    stepId: String(input.stepId),
+    to: Array.isArray(input.to)
+      ? input.to.map((e) => String(e).trim().toLowerCase()).filter((e) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)).slice(0, 20)
+      : undefined,
+  }))
   .handler(async ({ data, context }) => {
     await assertAdmin(context as any);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -281,6 +286,22 @@ export const sendWorkflowStepTest = createServerFn({ method: "POST" })
 
     const event = (step as any).event_email_campaigns?.events;
     if (!event) throw new Error("This workflow has no event attached");
+
+    // Extra named recipients (e.g. crew or partners who aren't entered):
+    // real sends, recorded so they're never repeated.
+    if (data.to?.length) {
+      for (const to of data.to) {
+        await sendWorkflowEmail(supabaseAdmin, {
+          campaignId: (step as any).campaign_id,
+          stepId: (step as any).id,
+          event,
+          step,
+          to,
+          name: null,
+        });
+      }
+      return { to: data.to.join(", ") };
+    }
 
     const to = (context as any).claims?.email as string | undefined;
     if (!to) throw new Error("Your account has no email address");
