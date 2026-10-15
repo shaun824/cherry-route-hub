@@ -55,7 +55,8 @@ export async function buildAllRoutesGpxZip(eventName: string, days: EventDay[]):
       if (!r.kmlUrls?.length) continue;
       const lines = await fetchRouteLines(r.kmlUrls);
       if (!lines.length) continue;
-      const label = `${d.label || `Day ${i + 1}`} ${r.name}`;
+      const dayLabel = d.label || `Day ${i + 1}`;
+      const label = r.name.toLowerCase().includes(dayLabel.toLowerCase()) ? r.name : `${dayLabel} ${r.name}`;
       zip.file(`${String(++count).padStart(2, "0")}-${slug(label)}.gpx`, buildGpx(`${eventName} — ${label}`, lines));
     }
   }
