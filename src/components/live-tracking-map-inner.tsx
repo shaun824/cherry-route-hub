@@ -566,9 +566,10 @@ export default function LiveTrackingMapInner({
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
     const map = L.map(containerRef.current, { zoomControl: true }).setView([-29.5, 24.5], 6);
-    // On phones a one-finger swipe scrolls the page instead of getting trapped by
-    // the map; two fingers move/zoom the map.
-    if (window.matchMedia("(pointer: coarse)").matches) {
+    // On phones (rider/spectator) a one-finger swipe scrolls the page instead of
+    // getting trapped by the map; two fingers move/zoom the map. Race control
+    // (crew) moves the map with one finger.
+    if (!isCrew && window.matchMedia("(pointer: coarse)").matches) {
       const el = containerRef.current;
       map.dragging.disable();
       el.style.touchAction = "pan-y";
