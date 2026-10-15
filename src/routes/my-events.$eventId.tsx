@@ -2704,3 +2704,72 @@ function TeamCard({ eventId, teamName }: { eventId: string; teamName: string | n
   );
 }
 
+
+// One-tap "all routes" download for entered riders. The zip is built as soon
+// as the card shows, so the tap itself downloads straight away (iPhones drop
+// the download if it waits on a slow build after the tap).
+function DownloadAllRoutesCard({
+  days,
+  eventName,
+  signedOut,
+  canDownload,
+  checking,
+}: {
+  days: EventDay[];
+  eventName: string;
+  signedOut: boolean;
+  canDownload: boolean;
+  checking: boolean;
+}) {
+  const [zip, setZip] = useState<{ blob: Blob; count: number } | null>(null);
+  const [failed, setFailed] = useState(false);
+  useEffect(() => {
+    if (!canDownload) return;
+    let live = true;
+    import("@/lib/route-files")
+      .then(({ buildAllRoutesGpxZip }) => buildAllRoutesGpxZip(eventName, days))
+      .then((z) => live && setZip(z))
+      .catch(() => live && setFailed(true));
+    return () => {
+      live = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [canDownload, eventName]);
+  const fileName = `${eventName.replace(/[^a-z0-9]+/gi, "-")}-all-routes-gpx.zip`;
+  return (
+    <section className="rounded-2xl border-2 border-cherry bg-cherry/5 p-4">
+      <p className="flex items-center gap-2 font-display text-base font-black text-ink">
+        <Download className="h-5 w-5 text-cherry" /> Download all routes
+      </p>
+      <p className="mt-1 text-xs text-ink-soft">
+        Every route for every day in one file (GPX), ready for your GPS, Garmin, Wahoo or phone app. Single routes can also be downloaded under each route below.
+      </p>
+      {signedOut ? (
+        <Link to="/login" className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-cherry px-4 py-2.5 text-sm font-bold text-primary-foreground">
+          <LockIcon className="h-4 w-4" /> Sign in to download
+        </Link>
+      ) : checking ? (
+        <p className="mt-3 text-xs text-ink-soft">Checking your entry…</p>
+      ) : !canDownload ? (
+        <p className="mt-3 flex items-center gap-1.5 rounded-xl bg-muted/60 px-3 py-2 text-xs font-medium text-ink-soft">
+          <LockIcon className="h-4 w-4 text-cherry" /> Route downloads are for entered riders only.
+        </p>
+      ) : (
+        <button
+          type="button"
+          disabled={!zip}
+          data-track-action="route_download_all"
+          onClick={async () => {
+            if (!zip) return;
+            const { downloadBlob } = await import("@/lib/route-files");
+            downloadBlob(zip.blob, fileName);
+          }}
+          className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-full bg-cherry px-4 py-3 text-sm font-bold text-primary-foreground disabled:opacity-60 sm:w-auto"
+        >
+          <Download className="h-4 w-4" />
+          {zip ? `Download all ${zip.count} routes` : failed ? "Couldn't prepare the routes — refresh to retry" : "Preparing routes…"}
+        </button>
+      )}
+    </section>
+  );
+}
