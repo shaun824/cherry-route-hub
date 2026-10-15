@@ -188,5 +188,5 @@ export async function computePodium(eventId: string, depth: number): Promise<Pod
       .slice(0, depth)
       .map((r, i) => ({ ...r, pos: i + 1 })),
   }));
-  return { cats, stagesWithResults, totalStages: Math.max(setIds.length, days.filter((d) => /day\s*\d/i.test(String(d.label ?? ""))).length), standings, missingGender, lastDay };
+  return { cats, stagesWithResults, totalStages: Math.max(hasDaySets ? new Set(setIds.map(dayOf).filter(Boolean)).size : setIds.length, days.filter((d) => /day\s*\d/i.test(String(d.label ?? ""))).length), standings, missingGender, lastDay };
 }
