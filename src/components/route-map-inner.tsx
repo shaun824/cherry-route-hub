@@ -303,7 +303,7 @@ export default function RouteMapInner({
       const dayLabel = day.label || new Date(day.date).toLocaleDateString("en-ZA", { weekday: "short", day: "numeric", month: "short" });
       for (const r of day.routes ?? []) {
         const hasKml = (r.kmlUrls ?? []).length > 0;
-        const hasMarkers = (r.customMarkers ?? []).some((m) => m.icon !== "warning");
+        const hasMarkers = (r.customMarkers ?? []).some((m) => m.icon !== "warning" && m.icon !== "aid");
         if (hasKml || hasMarkers) out.push({ route: r, dayLabel });
       }
     }
@@ -344,8 +344,8 @@ export default function RouteMapInner({
           .map((l) => simplifyPolyline(l, 6))
           .map((l) => capPolyline(l, 2000));
 
-        // Marshal points are crew/admin-only — riders never see them.
-        const markers = (route.customMarkers ?? []).filter((m) => m.icon !== "warning");
+        // Marshal and medic points are crew/admin-only — riders never see them.
+        const markers = (route.customMarkers ?? []).filter((m) => m.icon !== "warning" && m.icon !== "aid");
 
         if (simplifiedLines.length || markers.length) {
           results.push({
