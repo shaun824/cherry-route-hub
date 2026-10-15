@@ -74,7 +74,7 @@ export function RaceStatusPanel({ eventId, fieldToken }: { eventId: string; fiel
               <p className="text-xs font-semibold text-ink-soft">Finished</p>
             </button>
           </div>
-          {data.dayKey === "all" && data.stillOut.length > 0 ? (
+          {data.stillOut.length > 0 ? (
             <div className="mt-2 flex flex-wrap gap-1">
               {Object.entries(
                 data.stillOut.reduce<Record<string, number>>((m, r) => {

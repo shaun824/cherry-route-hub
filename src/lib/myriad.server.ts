@@ -290,7 +290,7 @@ function toRow(raw: Record<string, any>, set: RawSet): ResultRow {
     result_set_id: `myriad-${set.individual_result_set_id}`,
     bib_number: raw["bib"] == null ? null : String(raw["bib"]),
     full_name: fullName || String(raw["bib"] ?? "Unnamed"),
-    category: (extras["Category"] as string | undefined) ?? null,
+    category: (extras["Category"] as string | undefined) ?? (extras["Registration Event"] as string | undefined) ?? null,
     batch: null,
     position: raw["place"] == null ? null : Number(raw["place"]),
     time_text: timeText || null,

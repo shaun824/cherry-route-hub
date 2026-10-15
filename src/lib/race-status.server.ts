@@ -21,11 +21,20 @@ const norm = (s: string | null | undefined) =>
 
 function parseStart(s: string | null | undefined): number | null {
   if (!s) return null;
-  let v = s.trim().replace(" ", "T");
+  const raw = s.trim();
+  // Myriad sends "MM/DD/YYYY HH:mm" in SA local time.
+  const us = /^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:[ T](\d{1,2}):(\d{2})(?::(\d{2}))?)?$/.exec(raw);
+  if (us) {
+    const [, mo, d, y, h = "0", mi = "0", se = "0"] = us;
+    return Date.UTC(+y!, +mo! - 1, +d!, +h - 2, +mi, +se);
+  }
+  let v = raw.replace(" ", "T");
   if (!/[zZ]|[+-]\d\d:?\d\d$/.test(v)) v += "+02:00"; // Myriad times are SA local
   const t = Date.parse(v);
   return Number.isFinite(t) ? t : null;
 }
+/** GC / combined sets are cumulative across days — not a finish on the day. */
+const isCumulative = (label: string) => /\bGC\b|general classification|combined/i.test(label);
 const dayKeyOf = (t: number) => new Date(t + 2 * 3600_000).toISOString().slice(0, 10);
 
 export async function buildRaceStatus(eventId: string, wantDay: string | null): Promise<RaceStatusPayload> {
@@ -78,20 +87,21 @@ export async function buildRaceStatus(eventId: string, wantDay: string | null): 
   }
 
   // Group result sets into days (by gun start), else one bucket per set.
+  // Cumulative GC sets are skipped when daily sets exist.
+  const hasDaily = sets.some((s) => !isCumulative(s.label));
   const setDay = new Map<string, { key: string; label: string; start: number | null }>();
   for (const s of sets) {
+    if (hasDaily && isCumulative(s.label)) continue;
     const st = parseStart(s.start_time);
     if (st != null) {
       const key = dayKeyOf(st);
-      setDay.set(s.id, {
-        key,
-        label: new Date(st).toLocaleDateString("en-ZA", { weekday: "short", day: "numeric", month: "short", timeZone: "Africa/Johannesburg" }),
-        start: st,
-      });
+      const dayNo = /day\s*(\d+)/i.exec(s.label)?.[1];
+      const date = new Date(st).toLocaleDateString("en-ZA", { weekday: "short", day: "numeric", month: "short", timeZone: "Africa/Johannesburg" });
+      setDay.set(s.id, { key, label: dayNo ? `Day ${dayNo} · ${date}` : date, start: st });
     } else setDay.set(s.id, { key: `set:${s.id}`, label: s.label, start: null });
   }
   const dayMap = new Map<string, string>();
-  for (const d of setDay.values()) dayMap.set(d.key, d.label);
+  for (const d of setDay.values()) if (!dayMap.has(d.key) || /^Day /.test(d.label)) dayMap.set(d.key, d.label);
   const days0 = [...dayMap.entries()].sort((a, b) => a[0].localeCompare(b[0])).map(([key, label]) => ({ key, label }));
   const days = days0.length > 1 ? [{ key: "all", label: "All routes" }, ...days0] : days0;
   const today = dayKeyOf(Date.now());
@@ -103,6 +113,12 @@ export async function buildRaceStatus(eventId: string, wantDay: string | null): 
     days0[days0.length - 1]?.key ??
     null;
 
+  // Prefer the entry's class over the timing feed's set name.
+  const rosterCat = new Map<string, string | null>();
+  for (const r of roster) {
+    if (r.bib) rosterCat.set(`b:${norm(r.bib)}`, r.category);
+    rosterCat.set(`n:${norm(r.name)}`, r.category);
+  }
   const byKey = new Map<string, RaceStatusRider>();
   for (const r of rows) {
     const d = setDay.get(r.result_set_id);
@@ -113,7 +129,10 @@ export async function buildRaceStatus(eventId: string, wantDay: string | null): 
     byKey.set(k, {
       name: r.full_name,
       bib: r.bib_number,
-      category: r.category,
+      category:
+        (r.bib_number ? rosterCat.get(`b:${norm(r.bib_number)}`) : undefined) ??
+        rosterCat.get(`n:${norm(r.full_name)}`) ??
+        r.category,
       timeText: r.time_text,
       finishedAt: d.start != null && r.time_ms != null ? new Date(d.start + r.time_ms).toISOString() : null,
     });
