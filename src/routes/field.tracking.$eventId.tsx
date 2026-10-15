@@ -4,8 +4,9 @@ import { useQuery } from "@tanstack/react-query";
 import { Navigation, Radar, Siren } from "lucide-react";
 import { z } from "zod";
 import { LiveTrackingMap } from "@/components/live-tracking-map";
-import { fetchFieldLinkSos } from "@/lib/crew-field-link.functions";
+import { fetchFieldLinkSos, fetchFieldLinkSosLog } from "@/lib/crew-field-link.functions";
 import { useIsAdmin } from "@/lib/auth";
+import { RoutesGpxButton } from "@/components/race-control";
 import { ResolveSosButton } from "@/components/resolve-sos-button";
 import { RaceStatusPanel } from "@/components/race-status-panel";
 import { StartCountdownPanel } from "@/components/start-countdown-panel";
@@ -38,6 +39,13 @@ function FieldTrackingPage() {
     queryFn: () => fetchFieldLinkSos({ data: { eventId, token: k ?? "" } }),
     enabled: Boolean(k),
     refetchInterval: 5_000,
+  });
+
+  const logQ = useQuery({
+    queryKey: ["field-link-sos-log", eventId, k],
+    queryFn: () => fetchFieldLinkSosLog({ data: { eventId, token: k ?? "" } }),
+    enabled: Boolean(k),
+    refetchInterval: 15_000,
   });
 
   if (!k || (q.data && !q.data.ok)) {
@@ -105,6 +113,60 @@ function FieldTrackingPage() {
       <LiveTrackingMap eventId={eventId} isCrew fieldToken={k} />
       <StartCountdownPanel eventId={eventId} fieldToken={k} />
       <RaceStatusPanel eventId={eventId} fieldToken={k} />
+      <section className="space-y-2 rounded-2xl bg-card p-3 ring-1 ring-border">
+        <p className="font-display text-sm font-bold text-ink">Route files</p>
+        <RoutesGpxButton eventId={eventId} eventName={q.data.eventName} />
+      </section>
+      <section className="space-y-2 rounded-2xl bg-card p-3 ring-1 ring-border">
+        <p className="flex items-center gap-2 font-display text-sm font-bold text-ink">
+          <Siren className="h-4 w-4 text-cherry" /> SOS log
+        </p>
+        <p className="text-xs text-ink-soft">Every SOS for this event, including cleared ones, with the GPS spot it was sent from.</p>
+        {(logQ.data?.log ?? []).length === 0 ? (
+          <p className="text-xs text-ink-soft">{logQ.isLoading ? "Loading…" : "No SOS alerts yet."}</p>
+        ) : (
+          <ul className="divide-y divide-border">
+            {logQ.data!.log.map((s) => (
+              <li key={s.id} className="space-y-1 py-2 text-sm">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="font-bold text-ink">{s.riderName ?? "Unknown rider"}</span>
+                  <span
+                    className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${s.status === "resolved" ? "bg-muted text-ink-soft" : "bg-cherry text-primary-foreground"}`}
+                  >
+                    {s.status === "resolved" ? "cleared" : s.status}
+                  </span>
+                  <span className="ml-auto text-xs text-ink-soft">
+                    {new Date(s.createdAt).toLocaleString("en-ZA", { weekday: "short", hour: "2-digit", minute: "2-digit" })}
+                    {s.resolvedAt
+                      ? ` · cleared ${new Date(s.resolvedAt).toLocaleTimeString("en-ZA", { hour: "2-digit", minute: "2-digit" })}`
+                      : ""}
+                  </span>
+                </div>
+                {s.reason || s.note ? (
+                  <p className="text-xs text-ink-soft">{[s.reason, s.note && `“${s.note}”`].filter(Boolean).join(" · ")}</p>
+                ) : null}
+                {s.lat != null && s.lng != null ? (
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="select-all break-all rounded-md bg-muted px-2 py-1 font-mono text-xs font-semibold text-ink">
+                      {s.lat.toFixed(6)}, {s.lng.toFixed(6)}
+                    </span>
+                    <a
+                      href={`https://www.google.com/maps/search/?api=1&query=${s.lat},${s.lng}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-xs font-bold text-cherry"
+                    >
+                      Open map
+                    </a>
+                  </div>
+                ) : (
+                  <p className="text-xs text-ink-soft">No GPS fix was sent with this SOS.</p>
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
       <p className="text-xs text-ink-soft">
         Tap Full screen to search riders, see waterpoints and navigate. Anyone with this link can see SOS alerts and navigate to riders. Clearing an SOS needs an admin sign-in and an incident report.
       </p>

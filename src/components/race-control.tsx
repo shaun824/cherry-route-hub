@@ -84,7 +84,7 @@ function ago(iso: string) {
   return `${Math.floor(mins / 60)}h ${mins % 60}m ago`;
 }
 
-function RoutesGpxButton({ eventId, eventName }: { eventId: string; eventName: string }) {
+export function RoutesGpxButton({ eventId, eventName }: { eventId: string; eventName: string }) {
   const [busy, setBusy] = useState(false);
   return (
     <button
