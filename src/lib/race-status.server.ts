@@ -96,7 +96,7 @@ export async function buildRaceStatus(eventId: string, wantDay: string | null): 
   const days = days0.length > 1 ? [{ key: "all", label: "All routes" }, ...days0] : days0;
   const today = dayKeyOf(Date.now());
   const dayKey =
-    (wantDay === "all" && days.length ? "all" : null) ??
+    ((wantDay === "all" || !wantDay) && days0.length > 1 ? "all" : null) ??
     (wantDay && dayMap.has(wantDay) ? wantDay : null) ??
     (dayMap.has(today) ? today : null) ??
     [...days0].reverse().find((d) => d.key <= today)?.key ??
