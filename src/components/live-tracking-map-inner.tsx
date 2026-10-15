@@ -307,6 +307,8 @@ function followKey(eventId: string) {
   return `rce-follow-${eventId}`;
 }
 
+const ALL_DAYS = "__all__";
+
 export default function LiveTrackingMapInner({
   eventId,
   isCrew = false,
@@ -717,10 +719,15 @@ export default function LiveTrackingMapInner({
     () => allDays.filter((d) => candidates.some((c) => c.dayId === d.id)),
     [allDays, candidates],
   );
+  // Picker buttons: "All days" first when there's more than one riding day.
+  const dayButtons = useMemo(
+    () => (dayOptions.length > 1 ? [{ id: ALL_DAYS, label: "All days", date: "" }, ...dayOptions] : dayOptions),
+    [dayOptions],
+  );
   const activeDayId =
     pickedDay ?? todayDayIds?.find((id) => dayOptions.some((d) => d.id === id)) ?? dayOptions[0]?.id ?? null;
   const dayCandidates = useMemo(
-    () => candidates.filter((c) => !activeDayId || c.dayId === activeDayId),
+    () => candidates.filter((c) => !activeDayId || activeDayId === ALL_DAYS || c.dayId === activeDayId),
     [candidates, activeDayId],
   );
 
@@ -779,6 +786,10 @@ export default function LiveTrackingMapInner({
   };
   const pickDay = (id: string) => {
     setPickedDay(id);
+    if (id === ALL_DAYS) {
+      saveManual(candidates.length ? candidates.map((c) => c.route.id) : null);
+      return;
+    }
     const first = candidates.find((c) => c.dayId === id);
     saveManual(first ? [first.route.id] : null);
   };
@@ -1443,7 +1454,7 @@ export default function LiveTrackingMapInner({
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-bold text-ink">{event?.name ?? "Live tracking"}</p>
             <p className="truncate text-[11px] text-muted-foreground">
-              {dayOptions.find((d) => d.id === activeDayId)?.label ?? "Live"} · {riders.length} on course
+              {dayButtons.find((d) => d.id === activeDayId)?.label ?? "Live"} · {riders.length} on course
             </p>
           </div>
           <Button variant={fsTools ? "default" : "outline"} size="sm" type="button" onClick={() => setFsTools((t) => !t)}>
@@ -1599,11 +1610,11 @@ export default function LiveTrackingMapInner({
               </div>
               {dayOptions.length > 1 ? (
                 <div className="mb-2 flex flex-wrap gap-1">
-                  {dayOptions.map((d) => (
+                  {dayButtons.map((d) => (
                     <Button variant="outline" size="sm"
                       key={d.id}
                       type="button"
-                      onClick={() => setPickedDay(d.id)}
+                      onClick={() => pickDay(d.id)}
                       className={`rounded-md px-2.5 py-1 font-semibold ring-1 ${
                         d.id === activeDayId ? "bg-primary text-primary-foreground ring-cherry" : "bg-card text-ink ring-border"
                       }`}
@@ -1711,7 +1722,7 @@ export default function LiveTrackingMapInner({
         <div className="space-y-1.5">
           {dayOptions.length > 1 ? (
             <div className="flex flex-wrap gap-1.5">
-              {dayOptions.map((d) => (
+              {dayButtons.map((d) => (
                 <button
                   key={d.id}
                   type="button"
