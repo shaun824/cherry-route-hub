@@ -41,6 +41,7 @@ function ResetPasswordPage() {
     verification.current ??= (async () => {
       const url = new URL(window.location.href);
       const hash = new URLSearchParams(url.hash.slice(1));
+      const incomingToken = hash.get("access_token");
       // A failed recovery must never fall back to a different account already
       // signed in on this device. The auth client consumes implicit link tokens.
       if ([url.searchParams, hash].some((p) => p.has("error") || p.has("error_code") || p.has("error_description"))) return null;
@@ -54,6 +55,8 @@ function ResetPasswordPage() {
       }
       const { data, error: sessionError } = await supabase.auth.getSession();
       if (sessionError || !data.session) return null;
+      if (incomingToken && data.session.access_token !== incomingToken) return null;
+      if (url.searchParams.has("code")) return null;
       const { data: identity, error: identityError } = await supabase.auth.getUser();
       return identityError ? null : identity.user?.email ?? null;
     })().catch(() => null);
