@@ -2608,6 +2608,7 @@ function YourEntryCard({
         </p>
       ) : null}
 
+      <MyRegistrationCard eventId={eventId} embedded />
     </section>
   );
 }

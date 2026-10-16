@@ -17,7 +17,7 @@ type Row = {
   is_me: boolean;
 };
 
-export function MyRegistrationCard() {
+export function MyRegistrationCard({ eventId, embedded }: { eventId?: string; embedded?: boolean } = {}) {
   const { data } = useQuery({
     queryKey: ["my-registration-members"],
     queryFn: async () => {
@@ -32,7 +32,7 @@ export function MyRegistrationCard() {
   today.setHours(0, 0, 0, 0);
   const groups = new Map<string, Row[]>();
   for (const r of rows) {
-    if (new Date(r.event_date).getTime() < today.getTime()) continue;
+    if (eventId ? r.event_id !== eventId : new Date(r.event_date).getTime() < today.getTime()) continue;
     const k = `${r.event_id}|${r.group_ref}`;
     groups.set(k, [...(groups.get(k) ?? []), r]);
   }
@@ -40,7 +40,7 @@ export function MyRegistrationCard() {
   if (list.length === 0) return null;
 
   return (
-    <section className="mx-5 mt-4 rounded-2xl bg-card p-4 ring-1 ring-border">
+    <section className={embedded ? "mt-4 border-t border-border pt-4" : "mx-5 mt-4 rounded-2xl bg-card p-4 ring-1 ring-border"}>
       <div className="flex items-center gap-2">
         <Users className="h-5 w-5 text-cherry" />
         <p className="font-display text-base font-bold text-ink">People on your entry</p>
