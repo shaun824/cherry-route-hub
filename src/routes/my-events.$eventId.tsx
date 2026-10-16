@@ -1,3 +1,4 @@
+import { MyRegistrationCard } from "@/components/my-registration-card";
 import { scrollAppTo } from "@/lib/app-scroll";
 import { eventApparel, missingSizes, type ApparelFlags } from "@/lib/apparel";
 import { MissingSizeCallout } from "@/components/missing-size-callout";
@@ -2608,6 +2609,7 @@ function YourEntryCard({
         </p>
       ) : null}
 
+      <MyRegistrationCard eventId={eventId} embedded />
     </section>
   );
 }
