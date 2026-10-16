@@ -1,6 +1,7 @@
 # Roadmap
 
-- [ ] Fix and verify password recovery with valid, missing and expired links; check Michelle’s entry/account association.
+- [x] Add and test recovery-session validation, missing/expired-link handling and account identity checks; confirm Michelle’s work account owns her entry.
+- [ ] Confirm Michelle completes a password reset after publishing; waits on publication and her retry (no live account password changed during testing).
 
 - [x] Move crew map controls and selected-rider actions above the map; add Google Maps and signed-in SOS resolution.
 - [x] Verify the clean map and rider actions in signed-in race control and the unsigned medic view; resolution confirmation tested without changing a live alert.
