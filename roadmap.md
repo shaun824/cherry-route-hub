@@ -1,5 +1,7 @@
 # Roadmap
 
+- [ ] Fix and verify password recovery with valid, missing and expired links; check Michelle’s entry/account association.
+
 - [x] Move crew map controls and selected-rider actions above the map; add Google Maps and signed-in SOS resolution.
 - [x] Verify the clean map and rider actions in signed-in race control and the unsigned medic view; resolution confirmation tested without changing a live alert.
 
