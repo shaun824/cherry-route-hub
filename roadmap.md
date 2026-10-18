@@ -1,5 +1,7 @@
 # Roadmap
 
+- [ ] Connect individual rider results and missing roster race numbers to the live timing feed; verify Natalie Stacey with real timing data.
+
 - [x] Add and test recovery-session validation, missing/expired-link handling and account identity checks; confirm Michelle’s work account owns her entry.
 - [ ] Confirm Michelle completes a password reset after publishing; waits on publication and her retry (no live account password changed during testing).
 
