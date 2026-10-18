@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { resultsForRider, timingBibForRider } from "./rider-result-matching";
 import type { ResultRow } from "./results.functions";
 
-const row = (name: string, bib: string, time = "1:42:15"): ResultRow => ({
+const row = (name: string, bib: string, time = "4:41:20.96"): ResultRow => ({
   id: bib, result_set_id: "day1", full_name: name, bib_number: bib,
   category: "Gold", batch: null, position: 12, time_text: time, time_ms: 6135000,
   gap_text: null, status: null, extras: {},
@@ -11,9 +11,9 @@ const row = (name: string, bib: string, time = "1:42:15"): ResultRow => ({
 describe("live rider identity", () => {
   test("missing entry bib still finds Natalie Stacey's timing result", () => {
     const rider = { full_name: "Natalie Stacey", bib_number: null };
-    const rows = [row("Natalie Stacey", "235")];
-    assert.equal(resultsForRider(rider, rows)[0]?.time_text, "1:42:15");
-    assert.equal(timingBibForRider(rider, rows), "235");
+    const rows = [row("Natalie Stacey", "753")];
+    assert.equal(resultsForRider(rider, rows)[0]?.time_text, "4:41:20.96");
+    assert.equal(timingBibForRider(rider, rows), "753");
   });
   test("same-name riders with different numbers are not merged", () => {
     assert.deepEqual(resultsForRider({ full_name: "Natalie Stacey", bib_number: null }, [row("Natalie Stacey", "235"), row("Natalie Stacey", "236")]), []);

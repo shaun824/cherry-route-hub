@@ -1,6 +1,6 @@
 # Roadmap
 
-- [ ] Connect individual rider results and missing roster race numbers to the live timing feed; verify Natalie Stacey with real timing data.
+- [x] Connect individual rider results and missing roster race numbers to the live timing feed; verified signed-in Natalie Stacey page: bib 753, Day 1 Gold position 232, time 4:41:20.96. Publishing is still needed for the live site.
 
 - [x] Add and test recovery-session validation, missing/expired-link handling and account identity checks; confirm Michelle’s work account owns her entry.
 - [ ] Confirm Michelle completes a password reset after publishing; waits on publication and her retry (no live account password changed during testing).
