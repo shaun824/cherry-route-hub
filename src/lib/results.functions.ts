@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { resultsForRider, timingBibForRider } from "./rider-result-matching";
 
 export type TrackedRider = {
   id: string;
@@ -131,6 +132,13 @@ export const getEventRiders = createServerFn({ method: "GET" })
       }))
       .filter((r) => r.full_name)
       .sort((a, b) => a.full_name.localeCompare(b.full_name));
+    // Entry Ninja may omit bibs even after timing has published them.
+    try {
+      const timing = await getEventResults({ data: { eventId: data.eventId } });
+      for (const rider of riders) rider.bib_number = timingBibForRider(rider, timing.rows);
+    } catch {
+      // Keep the signed-in roster available when the timing host is offline.
+    }
     return { status: "ok", opens_at: opensAt, event_date: eventDate, riders };
   });
 
@@ -435,6 +443,7 @@ export type RiderDetailPayload = {
   rider: TrackedRider | null;
   /** Result sets that have a row for this rider (multi-day / stage breakdown). */
   sets: (ResultSet & { row: ResultRow | null })[];
+  feed_error?: string | null;
 };
 
 /** Everything we know about one entrant, including their per-stage results. */
@@ -486,58 +495,20 @@ export const getRiderDetail = createServerFn({ method: "GET" })
       age_band: ((row as any).entrants?.age_band as string | null) ?? null,
     };
 
-    const { data: sets } = await supabaseAdmin
-      .from("event_result_sets")
-      .select("id, label, kind, sort_order, imported_at")
-      .eq("event_id", data.eventId)
-      .order("sort_order", { ascending: true });
-
-    const { data: rows } = await supabaseAdmin
-      .from("event_results")
-      .select(
-        "id, result_set_id, event_entrant_id, bib_number, full_name, category, batch, position, time_text, time_ms, gap_text, status, extras",
-      )
-      .eq("event_id", data.eventId)
-      .limit(5000);
-
-    const name = rider.full_name.trim().toLowerCase();
-    const mine = (rows ?? []).filter(
-      (r: any) =>
-        (r.event_entrant_id && String(r.event_entrant_id) === rider.id) ||
-        (rider.bib_number && r.bib_number && String(r.bib_number) === rider.bib_number) ||
-        (!!name && String(r.full_name ?? "").trim().toLowerCase() === name),
-    );
-
-    const toRow = (r: any): ResultRow => ({
-      id: String(r.id),
-      result_set_id: String(r.result_set_id),
-      bib_number: (r.bib_number as string | null) ?? null,
-      full_name: String(r.full_name ?? ""),
-      category: (r.category as string | null) ?? null,
-      batch: (r.batch as string | null) ?? null,
-      position: r.position == null ? null : Number(r.position),
-      time_text: (r.time_text as string | null) ?? null,
-      time_ms: r.time_ms == null ? null : Number(r.time_ms),
-      gap_text: (r.gap_text as string | null) ?? null,
-      status: (r.status as string | null) ?? null,
-      extras: (r.extras as Record<string, string>) ?? {},
-    });
+    // Use precisely the same live/import source as the event's Results tab.
+    const timing = await getEventResults({ data: { eventId: data.eventId } });
+    const mine = resultsForRider(rider, timing.rows);
+    rider.bib_number = timingBibForRider(rider, timing.rows);
 
     return {
       status: "ok",
       event_name: (ev?.name as string | null) ?? null,
       event_date: (ev?.event_date as string | null) ?? null,
       rider,
-      sets: (sets ?? []).map((s: any) => {
-        const match = mine.find((r: any) => String(r.result_set_id) === String(s.id));
-        return {
-          id: String(s.id),
-          label: String(s.label),
-          kind: String(s.kind ?? "stage"),
-          sort_order: Number(s.sort_order ?? 0),
-          imported_at: (s.imported_at as string | null) ?? null,
-          row: match ? toRow(match) : null,
-        };
-      }),
+      feed_error: timing.feed_error,
+      sets: timing.sets.map((set) => ({
+        ...set,
+        row: mine.find((result) => result.result_set_id === set.id) ?? null,
+      })),
     };
   });

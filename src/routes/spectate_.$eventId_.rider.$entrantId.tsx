@@ -49,7 +49,8 @@ function RiderDetailPage() {
   const q = useQuery<RiderDetailPayload>({
     queryKey: ["rider-detail", eventId, entrantId, user?.id ?? "guest"],
     queryFn: () => fetchDetail({ data: { eventId, entrantId } }),
-    staleTime: 60_000,
+    staleTime: 30_000,
+    refetchInterval: 60_000,
   });
 
   const rider = q.data?.rider ?? null;
@@ -160,6 +161,11 @@ function RiderDetailPage() {
               <h2 className="font-display text-[13px] font-bold uppercase tracking-wider text-ink-soft">
                 Day-by-day results
               </h2>
+              {q.isError || q.data?.feed_error ? (
+                <p role="status" className="mt-2 text-sm text-ink-soft">
+                  Timing is temporarily unavailable. Retrying every minute.
+                </p>
+              ) : null}
               {q.isLoading ? (
                 <p className="mt-3 text-sm text-ink-soft">Loading results…</p>
               ) : withResults.length === 0 ? (
