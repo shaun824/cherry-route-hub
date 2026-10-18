@@ -415,26 +415,63 @@ export function RaceControlPanel({
       {selected ? <StartCountdownPanel eventId={selected} /> : null}
       {selected ? <RaceStatusPanel eventId={selected} /> : null}
 
-      {alerts.filter((a) => a.status !== "active" && a.status !== "acknowledged").length > 0 ? (
-        <details className="rounded-2xl bg-card p-4 ring-1 ring-border">
-          <summary className="cursor-pointer text-xs font-bold uppercase tracking-wider text-ink-soft">
-            Sorted alerts ({alerts.length - open.length})
-          </summary>
-          <div className="mt-3 space-y-2">
-            {alerts
-              .filter((a) => a.status !== "active" && a.status !== "acknowledged")
-              .map((a) => (
-                <p key={a.id} className="text-xs text-ink-soft">
-                  {a.riderName ?? "Unknown rider"} · {reasonLabel(a.reason)} · {a.status} ·{" "}
-                  {new Date(a.createdAt).toLocaleString()}
-                  {a.acknowledgedByName ? ` · seen by ${a.acknowledgedByName}` : ""}
-                  {a.resolvedByName ? ` · sorted by ${a.resolvedByName}` : ""}
-                  {a.resolvedAt ? ` at ${new Date(a.resolvedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}` : ""}
-                  {a.incidentReport ? <span className="mt-0.5 block whitespace-pre-line text-ink">Report: {a.incidentReport}</span> : null}
-                </p>
-              ))}
-          </div>
-        </details>
+      {selected ? (
+        <section className="space-y-2 rounded-2xl bg-card p-4 ring-1 ring-border">
+          <p className="flex items-center gap-2 font-display text-sm font-bold text-ink">
+            <Siren className="h-4 w-4 text-cherry" /> Detailed SOS log ({alerts.length})
+          </p>
+          <p className="text-xs text-ink-soft">
+            Every SOS for this event — open, cancelled and cleared — with the full timeline and GPS spot.
+          </p>
+          {alerts.length === 0 ? (
+            <p className="text-xs text-ink-soft">No SOS alerts yet.</p>
+          ) : (
+            <ul className="divide-y divide-border">
+              {alerts.map((a) => {
+                const t = (s: string | null | undefined) =>
+                  s ? new Date(s).toLocaleString("en-ZA", { weekday: "short", hour: "2-digit", minute: "2-digit", second: "2-digit" }) : null;
+                const mins = (s: string | null | undefined) =>
+                  s ? ` (+${Math.max(0, Math.round((new Date(s).getTime() - new Date(a.createdAt).getTime()) / 60000))} min)` : "";
+                const steps: [string, string | null][] = [
+                  ["Sent", t(a.createdAt)],
+                  ["Seen", a.acknowledgedAt ? `${t(a.acknowledgedAt)}${mins(a.acknowledgedAt)}${a.acknowledgedByName ? ` · ${a.acknowledgedByName}` : ""}` : null],
+                  ["Escalated", a.escalatedAt ? `${t(a.escalatedAt)}${mins(a.escalatedAt)}` : null],
+                  ["Cleared", a.resolvedAt ? `${t(a.resolvedAt)}${mins(a.resolvedAt)}${a.resolvedByName ? ` · ${a.resolvedByName}` : ""}` : null],
+                ];
+                const label = a.status === "resolved" ? "cleared" : a.status === "cancelled" ? "cancelled by rider" : a.status;
+                return (
+                  <li key={a.id} className="space-y-1.5 py-3 text-sm">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="font-bold text-ink">{a.riderName ?? "Unknown rider"}</span>
+                      {a.bib ? <span className="text-xs text-ink-soft">#{a.bib}</span> : null}
+                      <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${a.status === "active" ? "bg-cherry text-primary-foreground" : "bg-muted text-ink-soft"}`}>
+                        {label}
+                      </span>
+                      <span className="text-xs text-ink-soft">{reasonLabel(a.reason)}</span>
+                    </div>
+                    {a.note ? <p className="rounded-md bg-muted px-2 py-1 text-xs text-ink">“{a.note}”</p> : null}
+                    <dl className="grid grid-cols-[5.5rem_1fr] gap-x-2 gap-y-0.5 text-xs">
+                      {steps.filter(([, v]) => v).map(([k, v]) => (
+                        <div key={k} className="contents">
+                          <dt className="font-semibold text-ink-soft">{k}</dt>
+                          <dd className="text-ink">{v}</dd>
+                        </div>
+                      ))}
+                    </dl>
+                    {a.incidentReport ? (
+                      <p className="whitespace-pre-line text-xs text-ink"><span className="font-semibold">Report:</span> {a.incidentReport}</p>
+                    ) : null}
+                    {a.lat != null && a.lng != null ? (
+                      <SosCoords lat={a.lat} lng={a.lng} />
+                    ) : (
+                      <p className="text-xs text-ink-soft">No GPS fix was sent with this SOS.</p>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </section>
       ) : null}
     </div>
   );
