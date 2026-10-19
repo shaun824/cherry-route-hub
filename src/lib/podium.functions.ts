@@ -54,6 +54,7 @@ export const getPodiumReview = createServerFn({ method: "POST" })
       standings: c.standings,
       missingGender: c.missingGender,
       courseMismatches: c.courseMismatches,
+      issues: c.issues,
       stagesWithResults: c.stagesWithResults,
       totalStages: c.totalStages,
       publishedAt: (row?.published_at as string | null) ?? null,
@@ -63,6 +64,21 @@ export const getPodiumReview = createServerFn({ method: "POST" })
   });
 
 const Rider = z.object({ pos: z.number(), name: z.string(), bib: z.string().nullable(), time: z.string().nullable(), ms: z.number().nullable() });
+export const sendResultsIssueReport = createServerFn({ method: 'POST' })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: unknown) => In.parse(i))
+  .handler(async ({ data, context }) => {
+    const { assertAdmin } = await import('./results.server');
+    await assertAdmin(context);
+    const { computePodium } = await import('./podium.server');
+    const review = await computePodium(data.eventId, 1000);
+    if (!review) throw new Error('No podium categories configured for this event');
+    const { data: event } = await context.supabase.from('events').select('name').eq('id', data.eventId).single();
+    if (!event) throw new Error('Event not found');
+    const { emailResultsIssues } = await import('./results-alerts.server');
+    return emailResultsIssues(data.eventId, event.name, review.issues);
+  });
+
 export const publishPodium = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((i: unknown) =>

@@ -1,6 +1,7 @@
 // Podium maths: works out each prize category's standings from timing results
 // plus the entry roster (class + gender from Entry Ninja). Server-only.
 import { courseMismatch, resultCourse } from "./result-course";
+import { reviewResults, timedCourse, ridingDay, flagFastPodium, type ResultsIssue } from './results-anomalies';
 export type PodiumCategory = {
   key: string;
   title: string;
@@ -76,6 +77,7 @@ export type PodiumComputed = {
   standings: PodiumStanding[];
   missingGender: { name: string; bib: string | null; category: string | null }[];
   courseMismatches: { name: string; bib: string | null; category: string | null; courses: string[] }[];
+  issues: ResultsIssue[];
   lastDay: string | null;
 };
 
@@ -104,6 +106,7 @@ export async function computePodium(eventId: string, depth: number): Promise<Pod
   let rows: { full_name: string; bib_number: string | null; category?: string | null; time_ms: number | null; result_set_id: string }[] = [];
   let setIds: string[] = [];
   let setLabels = new Map<string, string>();
+  let feedError: string | null = null;
   const raceId = String(ev.myriad_race_id ?? "").trim();
   if (raceId) {
     try {
@@ -112,8 +115,8 @@ export async function computePodium(eventId: string, depth: number): Promise<Pod
       rows = live.rows as any;
       setIds = live.sets.map((s: any) => String(s.id));
       setLabels = new Map(live.sets.map((s: any) => [String(s.id), String(s.label ?? "")]));
-    } catch {
-      /* fall back */
+    } catch (error) {
+      feedError = error instanceof Error ? error.message : 'Timing feed unavailable';
     }
   }
   if (!rows.length) {
@@ -127,7 +130,9 @@ export async function computePodium(eventId: string, depth: number): Promise<Pod
   // A "stage" is a riding day. Result sets are split per race/start group (Gold,
   // Silver, Bronze each get their own Day 1 set), so group sets by the day in
   // their label; sets with no day label count as their own stage.
-  const dayOf = (setId: string) => /day\s*(\d+)/i.exec(setLabels.get(setId) ?? "")?.[1] ?? null;
+  const dayOf = (setId: string) => ridingDay(setLabels.get(setId) ?? '');
+  const issues = reviewResults(rows, setLabels, roster);
+  if (raceId && (!rows.length || feedError)) issues.push({ kind: 'feed-unavailable', name: 'Timing feed', bib: null, detail: feedError ?? 'No timing rows returned. Podiums cannot be verified from an empty feed.' });
   // Overall/GC sets are cumulative, not an extra day: ignore them when daily sets exist.
   const hasDaySets = setIds.some((id) => dayOf(id) != null);
   const stageOf = (setId: string) => {
@@ -141,14 +146,14 @@ export async function computePodium(eventId: string, depth: number): Promise<Pod
   const perRider = new Map<string, Map<string, number>>();
   const riderCourses = new Map<string, Set<string>>();
   for (const r of rows) {
-    if (r.time_ms == null) continue;
+    if (r.time_ms == null || !Number.isFinite(r.time_ms) || r.time_ms <= 0) continue;
     const st = stageOf(r.result_set_id);
     // Index by race number AND name: entries often have no race number yet.
     const keys = [r.bib_number ? `b:${norm(r.bib_number)}` : null, r.full_name ? `n:${norm(r.full_name)}` : null];
     for (const k of keys) {
       if (!k) continue;
-      const course = resultCourse(r.category) ?? resultCourse(setLabels.get(r.result_set_id));
-      if (course) {
+      const course = timedCourse(r, setLabels.get(r.result_set_id) ?? '');
+      if (course && st) {
         const courses = riderCourses.get(k) ?? new Set<string>();
         courses.add(course);
         riderCourses.set(k, courses);
@@ -179,7 +184,10 @@ export async function computePodium(eventId: string, depth: number): Promise<Pod
       if (!p.gender && categoryFor(cats, p.category, "male")) missingGender.push({ name: p.name, bib: p.bib, category: p.category });
       continue;
     }
-    const identity = p.bib && totals.has(`b:${norm(p.bib)}`) ? `b:${norm(p.bib)}` : `n:${norm(p.name)}`;
+    const hasBib = p.bib && totals.has(`b:${norm(p.bib)}`);
+    const nameBibs = new Set(rows.filter(r => norm(r.full_name) === norm(p.name)).map(r => r.bib_number).filter(Boolean));
+    if (!hasBib && nameBibs.size > 1) continue;
+    const identity = hasBib ? `b:${norm(p.bib)}` : `n:${norm(p.name)}`;
     const t = totals.get(identity);
     if (!t) continue;
     const courses = [...(riderCourses.get(identity) ?? [])];
@@ -201,8 +209,8 @@ export async function computePodium(eventId: string, depth: number): Promise<Pod
     group: groupLabel(c),
     riders: (byCat.get(c.key) ?? [])
       .sort((a, b) => (a.ms ?? 0) - (b.ms ?? 0))
-      .slice(0, depth)
       .map((r, i) => ({ ...r, pos: i + 1 })),
   }));
-  return { cats, stagesWithResults, totalStages: Math.max(hasDaySets ? new Set(setIds.map(dayOf).filter(Boolean)).size : setIds.length, days.filter((d) => /day\s*\d/i.test(String(d.label ?? ""))).length), standings, missingGender, courseMismatches, lastDay };
+  issues.push(...flagFastPodium(standings));
+  return { cats, stagesWithResults, totalStages: Math.max(hasDaySets ? new Set(setIds.map(dayOf).filter(Boolean)).size : setIds.length, days.filter((d) => /day\s*\d/i.test(String(d.label ?? ""))).length), standings: standings.map(s => ({ ...s, riders: s.riders.slice(0, depth) })), missingGender, courseMismatches, issues, lastDay };
 }
