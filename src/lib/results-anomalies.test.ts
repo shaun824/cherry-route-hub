@@ -11,6 +11,13 @@ describe('podium issue review', () => {
   it('does not use an overall classification as proof of a course switch', () => {
     assert.deepEqual(reviewResults([{ ...row, result_set_id: 'gc' }], new Map([['gc', 'Bronze GC']]), [{ name: row.full_name, bib: '271', category: row.category }]), [])
   })
+  it('does not call a Silver e-bike rider analogue just because Silver has a mixed daily list', () => {
+    assert.equal(timedCourse({ ...row, category: 'E-Bike Silver - Adult Weekend Warrior' }, 'Day 1 Silver Overall Results'), 'silver-ebike')
+  })
+  it('flags a GC total that does not add up to the two daily times', () => {
+    const rows = [{ ...row, time_ms: 3600000 }, { ...row, result_set_id: 'd2', time_ms: 3600000 }, { ...row, result_set_id: 'gc', time_ms: 3600000 }]
+    assert.equal(reviewResults(rows, new Map([['d1', 'Day 1 Silver'], ['d2', 'Day 2 Silver'], ['gc', 'Silver GC']]), [])[0]?.kind, 'gc-total')
+  })
   it('flags conflicting times within the same daily set', () => {
     assert.equal(reviewResults([row, { ...row, time_ms: 100000 }], new Map([['d1', 'Day 1 Silver']]), [])[0]?.kind, 'duplicate-result')
   })

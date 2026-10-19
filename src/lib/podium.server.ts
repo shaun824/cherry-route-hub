@@ -1,6 +1,6 @@
 // Podium maths: works out each prize category's standings from timing results
 // plus the entry roster (class + gender from Entry Ninja). Server-only.
-import { courseMismatch, resultCourse } from "./result-course";
+import { courseMismatch } from "./result-course";
 import { reviewResults, timedCourse, ridingDay, flagFastPodium, type ResultsIssue } from './results-anomalies';
 export type PodiumCategory = {
   key: string;
@@ -135,6 +135,8 @@ export async function computePodium(eventId: string, depth: number): Promise<Pod
   if (raceId && (!rows.length || feedError)) issues.push({ kind: 'feed-unavailable', name: 'Timing feed', bib: null, detail: feedError ?? 'No timing rows returned. Podiums cannot be verified from an empty feed.' });
   // Overall/GC sets are cumulative, not an extra day: ignore them when daily sets exist.
   const hasDaySets = setIds.some((id) => dayOf(id) != null);
+  const completedDays = days.filter(d => !/registration/i.test(String(d.label ?? '')) && String(d.date ?? '') && String(d.date).slice(0, 10) < new Intl.DateTimeFormat('en-CA', { timeZone: 'Africa/Johannesburg' }).format(new Date())).length;
+  if (completedDays > new Set(setIds.map(dayOf).filter(Boolean)).size) issues.push({ kind: 'missing-day', name: 'Timing coverage', bib: null, detail: `Only ${new Set(setIds.map(dayOf).filter(Boolean)).size} riding days have results, but ${completedDays} riding days have ended. Do not finalise weekend podiums until the missing day is confirmed.` });
   const stageOf = (setId: string) => {
     const d = dayOf(setId);
     if (d) return `day${d}`;

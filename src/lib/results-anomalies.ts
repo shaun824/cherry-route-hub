@@ -7,7 +7,10 @@ export const ridingDay = (label: string) => /day\s*(\d+)/i.exec(label)?.[1] ?? n
 
 /** Daily set identifies the course ridden; Registration Event identifies the entry, not the ride. */
 export function timedCourse(row: ReviewRow, label: string): string | null {
-  return resultCourse(label) ?? resultCourse(row.category)
+  const course = resultCourse(label)
+  if (!course) return resultCourse(row.category)
+  // Silver/Bronze daily lists mix bike types; lack of “eBike” is not proof of analogue.
+  return course.endsWith('-ebike') || !/e[\s-]?bike/i.test(row.category ?? '') ? course : `${course}-ebike`
 }
 
 export function reviewResults(rows: ReviewRow[], labels: Map<string, string>, roster: { name: string; bib: string | null; category: string | null }[]): ResultsIssue[] {
@@ -46,6 +49,24 @@ export function reviewResults(rows: ReviewRow[], labels: Map<string, string>, ro
     const matched = byBib.length ? byBib : byName
     const courses = [...new Set(matched.filter(r => r.time_ms !== null).map(r => timedCourse(r, labels.get(r.result_set_id) ?? '')).filter((x): x is string => x !== null))]
     if (courseMismatch(p.category, courses)) add({ kind: 'course-mismatch', name: p.name, bib: p.bib ?? matched[0]?.bib_number ?? null, detail: `Entry: ${p.category}; timed riding-day courses: ${courses.join(', ')}. Excluded from automatic weekend podium; timing team must confirm any correction.` })
+  }
+  const dailyByBib = new Map<string, Map<string, number>>()
+  for (const r of daily) {
+    if (!r.bib_number || !r.time_ms || r.time_ms <= 0) continue
+    const day = ridingDay(labels.get(r.result_set_id) ?? '')
+    if (!day) continue
+    const times = dailyByBib.get(r.bib_number) ?? new Map<string, number>()
+    times.set(day, Math.min(times.get(day) ?? Infinity, r.time_ms))
+    dailyByBib.set(r.bib_number, times)
+  }
+  const observedDays = new Set(daily.map(r => ridingDay(labels.get(r.result_set_id) ?? ''))).size
+  for (const r of rows) {
+    if (!/\bGC\b|general classification/i.test(labels.get(r.result_set_id) ?? '') || !r.time_ms || !r.bib_number) continue
+    const times = dailyByBib.get(r.bib_number)
+    if (times && times.size === observedDays && observedDays > 1) {
+      const sum = [...times.values()].reduce((a, b) => a + b, 0)
+      if (Math.abs(sum - r.time_ms) > 1000) add({ kind: 'gc-total', name: r.full_name, bib: r.bib_number, detail: `Overall total differs from the daily sum by ${Math.round(Math.abs(sum - r.time_ms) / 1000)} seconds; confirm penalties, adjustments or missing timing with the timing team.` })
+    }
   }
   return issues
 }
