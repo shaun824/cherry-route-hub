@@ -1,0 +1,2 @@
+ALTER TABLE public.event_email_steps DROP CONSTRAINT event_email_steps_template_name_check;
+ALTER TABLE public.event_email_steps ADD CONSTRAINT event_email_steps_template_name_check CHECK (template_name = ANY (ARRAY['event-update','pe-plett-extras','sea-to-sea-pre-event','sea-to-sea-pre-event-reminder','event-thank-you']));
