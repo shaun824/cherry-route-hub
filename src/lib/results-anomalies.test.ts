@@ -18,6 +18,9 @@ describe('podium issue review', () => {
     const rows = [{ ...row, time_ms: 3600000 }, { ...row, result_set_id: 'd2', time_ms: 3600000 }, { ...row, result_set_id: 'gc', time_ms: 3600000 }]
     assert.equal(reviewResults(rows, new Map([['d1', 'Day 1 Silver'], ['d2', 'Day 2 Silver'], ['gc', 'Silver GC']]), [])[0]?.kind, 'gc-total')
   })
+  it('flags a top-three overall rider missing from the roster instead of silently omitting them', () => {
+    assert.equal(reviewResults([{ ...row, result_set_id: 'gc', position: 1 }], new Map([['gc', 'Gold GC']]), [])[0]?.kind, 'unmatched-contender')
+  })
   it('flags conflicting times within the same daily set', () => {
     assert.equal(reviewResults([row, { ...row, time_ms: 100000 }], new Map([['d1', 'Day 1 Silver']]), [])[0]?.kind, 'duplicate-result')
   })

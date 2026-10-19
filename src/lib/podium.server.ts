@@ -103,7 +103,7 @@ export async function computePodium(eventId: string, depth: number): Promise<Pod
   }
 
   // Results: Myriad live feed first, else imported results.
-  let rows: { full_name: string; bib_number: string | null; category?: string | null; time_ms: number | null; result_set_id: string }[] = [];
+  let rows: { full_name: string; bib_number: string | null; category?: string | null; time_ms: number | null; result_set_id: string; position?: number | null }[] = [];
   let setIds: string[] = [];
   let setLabels = new Map<string, string>();
   let feedError: string | null = null;
@@ -122,7 +122,7 @@ export async function computePodium(eventId: string, depth: number): Promise<Pod
   if (!rows.length) {
     const { data: s } = await (supabaseAdmin as any).from("event_result_sets").select("id, label").eq("event_id", eventId);
     const { data: r } = await (supabaseAdmin as any)
-      .from("event_results").select("full_name, bib_number, category, time_ms, result_set_id").eq("event_id", eventId).limit(5000);
+      .from("event_results").select("full_name, bib_number, category, time_ms, result_set_id, position").eq("event_id", eventId).limit(5000);
     rows = (r ?? []).map((x: any) => ({ ...x, result_set_id: String(x.result_set_id) }));
     setIds = (s ?? []).map((x: any) => String(x.id));
     setLabels = new Map((s ?? []).map((x: any) => [String(x.id), String(x.label ?? "")]));
@@ -137,6 +137,17 @@ export async function computePodium(eventId: string, depth: number): Promise<Pod
   const hasDaySets = setIds.some((id) => dayOf(id) != null);
   const completedDays = days.filter(d => !/registration/i.test(String(d.label ?? '')) && String(d.date ?? '') && String(d.date).slice(0, 10) < new Intl.DateTimeFormat('en-CA', { timeZone: 'Africa/Johannesburg' }).format(new Date())).length;
   if (completedDays > new Set(setIds.map(dayOf).filter(Boolean)).size) issues.push({ kind: 'missing-day', name: 'Timing coverage', bib: null, detail: `Only ${new Set(setIds.map(dayOf).filter(Boolean)).size} riding days have results, but ${completedDays} riding days have ended. Do not finalise weekend podiums until the missing day is confirmed.` });
+  const dayCourses = new Map<string, Set<string>>();
+  for (const id of setIds) {
+    const day = dayOf(id), label = setLabels.get(id) ?? '';
+    if (!day) continue;
+    const course = timedCourse({ full_name: '', bib_number: null, time_ms: null, result_set_id: id }, label);
+    if (course) dayCourses.set(day, new Set([...(dayCourses.get(day) ?? []), course]));
+  }
+  const expectedCourses = new Set([...dayCourses.values()].flatMap(c => [...c]));
+  for (const [day, courses] of dayCourses) for (const course of expectedCourses) {
+    if (!courses.has(course)) issues.push({ kind: 'missing-list', name: 'Timing coverage', bib: null, detail: `Day ${day}: ${course} results list is missing while the course appears on another day. Confirm feed completeness before prize-giving.` });
+  }
   const stageOf = (setId: string) => {
     const d = dayOf(setId);
     if (d) return `day${d}`;

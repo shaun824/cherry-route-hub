@@ -1,6 +1,6 @@
 import { courseMismatch, resultCourse } from './result-course'
 
-export type ReviewRow = { full_name: string; bib_number: string | null; time_ms: number | null; result_set_id: string; category?: string | null }
+export type ReviewRow = { full_name: string; bib_number: string | null; time_ms: number | null; result_set_id: string; category?: string | null; position?: number | null }
 export type ResultsIssue = { kind: string; name: string; bib: string | null; detail: string }
 export const identityText = (s: string | null | undefined) => (s ?? '').toLowerCase().replace(/[^a-z0-9]/g, '')
 export const ridingDay = (label: string) => /day\s*(\d+)/i.exec(label)?.[1] ?? null
@@ -67,6 +67,11 @@ export function reviewResults(rows: ReviewRow[], labels: Map<string, string>, ro
       const sum = [...times.values()].reduce((a, b) => a + b, 0)
       if (Math.abs(sum - r.time_ms) > 1000) add({ kind: 'gc-total', name: r.full_name, bib: r.bib_number, detail: `Overall total differs from the daily sum by ${Math.round(Math.abs(sum - r.time_ms) / 1000)} seconds; confirm penalties, adjustments or missing timing with the timing team.` })
     }
+  }
+  for (const r of rows) {
+    if (!/\bGC\b/i.test(labels.get(r.result_set_id) ?? '') || !r.position || r.position > 3 || !r.time_ms) continue
+    const known = roster.some(p => p.bib ? identityText(p.bib) === identityText(r.bib_number) : identityText(p.name) === identityText(r.full_name))
+    if (!known) add({ kind: 'unmatched-contender', name: r.full_name, bib: r.bib_number, detail: `${labels.get(r.result_set_id)}: top-three timing rider cannot be matched to an entry by bib or full name. They may be omitted from automatic podiums; confirm their identity and category.` })
   }
   return issues
 }
