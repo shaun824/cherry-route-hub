@@ -69,6 +69,11 @@ export const Route = createFileRoute("/spectate/$eventId")({
     ],
     ...({ _: params } as Record<string, unknown>),
   }),
+  validateSearch: (search: Record<string, unknown>): { tab?: "info" | "riders" | "results" | "live" } => ({
+    tab: ["info", "riders", "results", "live"].includes(search.tab as string)
+      ? (search.tab as "info" | "riders" | "results" | "live")
+      : undefined,
+  }),
   component: SpectatorEventPage,
 });
 
@@ -84,7 +89,8 @@ function SpectatorEventPage() {
   useHydratedStore();
   const { eventId } = Route.useParams();
   const event = useAdminStore((s) => s.events.find((e) => e.id === eventId));
-  const [tab, setTab] = useState<Tab>("live");
+  const initialTab = Route.useSearch().tab;
+  const [tab, setTab] = useState<Tab>(initialTab ?? "live");
   const villageQ = useQuery({ queryKey: ["village-map", eventId, null], queryFn: () => fetchVillageMap(eventId, null) });
   const tabNavRef = useRef<HTMLDivElement | null>(null);
   /** Switching tabs should always land you at the top of the new section. */
