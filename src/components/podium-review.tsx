@@ -52,6 +52,18 @@ export function PodiumReview({ eventId }: { eventId: string }) {
           <p className="mt-1 text-ink-soft">Fix their gender on Entry Ninja, then sync the event.</p>
         </details>
       ) : null}
+      {d.courseMismatches.length > 0 ? (
+        <details className="mt-2 rounded-lg bg-destructive/10 p-2 text-xs text-ink">
+          <summary className="cursor-pointer font-bold">Course mismatch ({d.courseMismatches.length}) — not ranked</summary>
+          <ul className="mt-1 space-y-1">
+            {d.courseMismatches.map((r) => (
+              <li key={`${r.bib ?? ""}-${r.name}`}>
+                <strong>{r.name}</strong>{r.bib ? ` · #${r.bib}` : ""} · Entry: {r.category} · Timed: {r.courses.join(", ")}
+              </li>
+            ))}
+          </ul>
+        </details>
+      ) : null}
       <div className="mt-3 space-y-4">
         {groupStandings(edit).map(([group, cats]) => (
           <div key={group}>
