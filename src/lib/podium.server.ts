@@ -101,7 +101,7 @@ export async function computePodium(eventId: string, depth: number): Promise<Pod
   }
 
   // Results: Myriad live feed first, else imported results.
-  let rows: { full_name: string; bib_number: string | null; time_ms: number | null; result_set_id: string }[] = [];
+  let rows: { full_name: string; bib_number: string | null; category?: string | null; time_ms: number | null; result_set_id: string }[] = [];
   let setIds: string[] = [];
   let setLabels = new Map<string, string>();
   const raceId = String(ev.myriad_race_id ?? "").trim();
@@ -119,7 +119,7 @@ export async function computePodium(eventId: string, depth: number): Promise<Pod
   if (!rows.length) {
     const { data: s } = await (supabaseAdmin as any).from("event_result_sets").select("id, label").eq("event_id", eventId);
     const { data: r } = await (supabaseAdmin as any)
-      .from("event_results").select("full_name, bib_number, time_ms, result_set_id").eq("event_id", eventId).limit(5000);
+      .from("event_results").select("full_name, bib_number, category, time_ms, result_set_id").eq("event_id", eventId).limit(5000);
     rows = (r ?? []).map((x: any) => ({ ...x, result_set_id: String(x.result_set_id) }));
     setIds = (s ?? []).map((x: any) => String(x.id));
     setLabels = new Map((s ?? []).map((x: any) => [String(x.id), String(x.label ?? "")]));
@@ -143,17 +143,17 @@ export async function computePodium(eventId: string, depth: number): Promise<Pod
   for (const r of rows) {
     if (r.time_ms == null) continue;
     const st = stageOf(r.result_set_id);
-    if (!st) continue;
     // Index by race number AND name: entries often have no race number yet.
     const keys = [r.bib_number ? `b:${norm(r.bib_number)}` : null, r.full_name ? `n:${norm(r.full_name)}` : null];
     for (const k of keys) {
       if (!k) continue;
-      const course = resultCourse(setLabels.get(r.result_set_id));
+      const course = resultCourse(r.category) ?? resultCourse(setLabels.get(r.result_set_id));
       if (course) {
         const courses = riderCourses.get(k) ?? new Set<string>();
         courses.add(course);
         riderCourses.set(k, courses);
       }
+      if (!st) continue;
       const stages = perRider.get(k) ?? new Map<string, number>();
       const prev = stages.get(st);
       if (prev == null || r.time_ms < prev) stages.set(st, r.time_ms);
