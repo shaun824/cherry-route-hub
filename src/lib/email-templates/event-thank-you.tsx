@@ -88,6 +88,9 @@ const Email = ({ firstName, eventName = 'Otto1890 Weekend Warrior Lourensford', 
               Next up, the Otto1890 Weekend Warrior heads to Oak Valley Wine Estate in April 2027 — we'd love to see you there.
             </Text>
             <Text style={text}>See you on the trails,<br />Shaun and the Red Cherry Events team</Text>
+            <Section style={{ textAlign: 'center', borderTop: `1px solid ${brand.border}`, padding: '24px 0 8px' }}>
+              <Img src={RCE_LOGO_URL} alt="Red Cherry Events" width="132" style={{ display: 'inline-block', height: 'auto' }} />
+            </Section>
           </Section>
         </Container>
       </Body>
