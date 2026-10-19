@@ -115,6 +115,28 @@ export async function sendWorkflowEmail(
   const isPePlettExtras = step.template_name === "pe-plett-extras";
   const isSeaToSeaReminder = step.template_name === "sea-to-sea-pre-event-reminder";
   const isSeaToSea = step.template_name === "sea-to-sea-pre-event" || isSeaToSeaReminder;
+  if (step.template_name === "event-thank-you") {
+    const { buildThankYouPeople } = await import("./event-thank-you.server");
+    const people = await buildThankYouPeople(admin, event.id, opts.to, { sampleIfEmpty: opts.record === false });
+    const result = await sendTemplateEmail("event-thank-you", opts.to, {
+      idempotencyKey: `workflow-${opts.stepId}-event-thank-you-${opts.to}`,
+      templateData: {
+        firstName: firstName(opts.name) === "Test" ? null : firstName(opts.name),
+        eventName: event.name,
+        coverUrl: absoluteLogo(event.cover_url),
+        youtubeUrl: step.cta_url || "https://www.youtube.com/watch?v=_sU-SqKrfos",
+        resultsUrl: `${APP_URL}/spectate/${event.id}`,
+        people,
+      },
+    });
+    if (opts.record !== false) {
+      await admin.from("event_email_sends").upsert(
+        { step_id: opts.stepId, campaign_id: opts.campaignId, event_id: event.id, email: opts.to, status: result.sent ? "sent" : "suppressed" },
+        { onConflict: "step_id,email" },
+      );
+    }
+    return result.sent ? "sent" : "suppressed";
+  }
   const templateName = isSeaToSeaReminder
     ? "sea-to-sea-pre-event-reminder"
     : isSeaToSea

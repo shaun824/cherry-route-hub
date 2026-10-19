@@ -7,6 +7,7 @@ import { template as scheduleApology } from './schedule-apology'
 import { template as eventUpdate } from './event-update'
 import { template as pePlettExtras } from './pe-plett-extras'
 import { template as seaToSeaPreEvent } from './sea-to-sea-pre-event'
+import { template as eventThankYou } from './event-thank-you'
 import { SignupEmail } from './signup'
 import { InviteEmail } from './invite'
 import { MagicLinkEmail } from './magic-link'
@@ -40,6 +41,7 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'pe-plett-extras': pePlettExtras,
   'sea-to-sea-pre-event': seaToSeaPreEvent,
   'sea-to-sea-pre-event-reminder': seaToSeaPreEvent,
+  'event-thank-you': eventThankYou,
   // Auth emails are sent live by the Supabase auth webhook (see
   // src/routes/lovable/email/auth/webhook.ts). They are registered here only so
   // admins can send themselves an exact copy of what riders receive.
