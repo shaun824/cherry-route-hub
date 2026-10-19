@@ -5,6 +5,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Mail, Play, Pause, Plus, Send, Trash2, Clock } from "lucide-react";
 import { toast } from "sonner";
+import { EverlyticPanel } from "@/components/everlytic-panel";
 
 import {
   listEmailWorkflows,
@@ -26,6 +27,10 @@ export const Route = createFileRoute("/admin/email-workflows")({
         content: "Build a sequence of event emails — route info, sponsors, updates — with a delay between each one.",
       },
       { name: "robots", content: "noindex,nofollow" },
+      { property: "og:title", content: "Email workflows · Red Cherry Events admin" },
+      { property: "og:description", content: "Manage Red Cherry event emails and Everlytic campaigns." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: EmailWorkflowsPage,
@@ -120,6 +125,8 @@ function EmailWorkflowsPage() {
           nothing sends outside 07:00–20:00.
         </p>
       </header>
+
+      <EverlyticPanel />
 
       <section className="rounded-2xl border border-border bg-card p-4">
         <h2 className="mb-3 flex items-center gap-2 font-semibold">
