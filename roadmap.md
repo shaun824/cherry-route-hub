@@ -1,6 +1,6 @@
 # Roadmap
 
-- [ ] Check the Silver Male two-day outlier, exclude the confirmed invalid classification and review other serious distance-switching outliers without deleting real daily times.
+- [x] Verified Hannes Kriel #271 rode Bronze both days (52:03.77 + 44:49.51) despite a Silver entry; excluded mismatched timed courses from automatic weekend podiums, added admin mismatch review, and verified corrected Silver and other category leaders in the rider Results tab. All 10 tests passed; publishing needed.
 
 - [x] Connect individual rider results and missing roster race numbers to the live timing feed; verified signed-in Natalie Stacey page: bib 753, Day 1 Gold position 232, time 4:41:20.96. Publishing is still needed for the live site.
 
