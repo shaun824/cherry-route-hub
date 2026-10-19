@@ -1,6 +1,6 @@
 # Roadmap
 
-- [ ] Schedule the personalized Weekend Warrior Lourensford thank-you through Everlytic for 20 October 2026 at 08:20 Johannesburg time. Prepared 516 unique email recipients (433 with matched results; 109 registration rows have no valid email). Blocked on choosing a dedicated custom field or explicitly permitting replacement of the existing RCE contact message field; no rider list imported or campaign scheduled.
+- [ ] Schedule the personalized Weekend Warrior Lourensford thank-you through Everlytic for 20 October 2026 at 08:20 Johannesburg time. Prepared 516 unique email recipients (433 with matched results; 109 registration rows have no valid email). User chose dedicated text field “weekend warrior 2026 lourensford results”; blocked on its creation in Everlytic (connected API documents no field-creation operation) and confirming the editor’s personalization tag. No rider list imported or campaign scheduled.
 
 - [x] Connected Everlytic at the builder-confirmed installation; signed-in admin page reads 20 campaigns and provides preview-to-Shaun and subscriber-campaign sending controls. Two safety tests pass and build is clean; no preview or campaign sent. Existing personalized Rider Hub thank-you content has not been imported into Everlytic.
 
