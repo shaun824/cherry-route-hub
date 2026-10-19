@@ -30,7 +30,9 @@ const Email = ({ firstName, eventName = 'Otto1890 Weekend Warrior Lourensford', 
           <Section style={bar} />
           {coverUrl ? <Img src={coverUrl} alt={eventName} width="520" style={{ width: '100%', display: 'block' }} /> : null}
           <Section style={inner}>
-            <Img src={RCE_LOGO_URL} alt="Red Cherry Events" height="40" style={{ marginBottom: 16 }} />
+            <Section style={{ ...logoBanner, marginBottom: 16 }}>
+              <Img src={RCE_LOGO_URL} alt="Red Cherry Events" height="40" style={{ display: 'block', margin: '0 auto' }} />
+            </Section>
             <Heading style={h1}>Thank you for an incredible weekend{firstName ? `, ${firstName}` : ''}!</Heading>
             <Text style={text}>
               What a weekend at Lourensford. Saturday's rain cleared just in time, Sunday turned on the sunshine, and
@@ -88,7 +90,7 @@ const Email = ({ firstName, eventName = 'Otto1890 Weekend Warrior Lourensford', 
               Next up, the Otto1890 Weekend Warrior heads to Oak Valley Wine Estate in April 2027 — we'd love to see you there.
             </Text>
             <Text style={text}>See you on the trails,<br />Shaun and the Red Cherry Events team</Text>
-            <Section style={{ textAlign: 'center', borderTop: `1px solid ${brand.border}`, padding: '24px 0 8px' }}>
+            <Section style={{ ...logoBanner, borderTop: `1px solid ${brand.border}`, marginTop: 24 }}>
               <Img src={RCE_LOGO_URL} alt="Red Cherry Events" width="132" style={{ display: 'inline-block', height: 'auto' }} />
             </Section>
           </Section>
@@ -113,6 +115,13 @@ export const template = {
 } satisfies TemplateEntry
 
 const h2 = { fontSize: '18px', fontWeight: 700 as const, color: brand.ink, margin: '8px 0 12px' }
+const logoBanner = {
+  backgroundColor: main.backgroundColor,
+  backgroundImage: `linear-gradient(${main.backgroundColor}, ${main.backgroundColor})`,
+  border: `1px solid ${brand.border}`,
+  padding: '20px 16px',
+  textAlign: 'center' as const,
+}
 const card = { border: `1px solid ${brand.border}`, borderRadius: '12px', padding: '14px 16px', margin: '0 0 14px' }
 const personName = { fontSize: '16px', fontWeight: 700 as const, color: brand.ink, margin: '0 0 8px' }
 const line = { borderTop: `1px solid ${brand.border}`, padding: '8px 0 2px' }
