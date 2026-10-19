@@ -1,5 +1,8 @@
 # Roadmap
 
+- [x] Retrieved all eight daily lists and overall results; reviewed all ten podium categories, found 29 entry/course mismatches and six identity warnings, and emailed Shaun the complete 35-issue report. Timing feed remains intermittent; raw results preserved and timing-team confirmation is required.
+- [x] Added admin-only anomaly flags and a fixed-recipient event-day report through the protected existing hourly callback; 21 tests passed, signed-in warning/report flow verified, unauthorized callback rejected, and full report send confirmed. Publication is required for automatic live event-day checks.
+
 - [x] Verified Hannes Kriel #271 rode Bronze both days (52:03.77 + 44:49.51) despite a Silver entry; excluded mismatched timed courses from automatic weekend podiums, added admin mismatch review, and verified corrected Silver and other category leaders in the rider Results tab. All 10 tests passed; publishing needed.
 
 - [x] Connect individual rider results and missing roster race numbers to the live timing feed; verified signed-in Natalie Stacey page: bib 753, Day 1 Gold position 232, time 4:41:20.96. Publishing is still needed for the live site.

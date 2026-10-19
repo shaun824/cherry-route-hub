@@ -31,8 +31,10 @@ export const Route = createFileRoute("/api/public/hooks/rooming-sheet-sync")({
             results.push({ ok: false, venue: v.id, error: (err as Error).message });
           }
         }
+        const { checkEventDayResults } = await import('@/lib/results-alerts.server');
+        const resultsChecks = await checkEventDayResults();
         console.log("[rooming-sheet-sync]", JSON.stringify(results));
-        return new Response(JSON.stringify({ success: true, results }), {
+        return new Response(JSON.stringify({ success: true, results, resultsChecks }), {
           headers: { "Content-Type": "application/json" },
         });
       },

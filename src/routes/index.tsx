@@ -70,6 +70,8 @@ export const Route = createFileRoute("/")({
       { name: "description", content: "Your race dashboard: next event countdown plus upcoming motorbike and bicycle events." },
       { property: "og:title", content: "Red Cherry Events — Rider Hub" },
       { property: "og:description", content: "Your race dashboard for Red Cherry Events." },
+      { property: 'og:type', content: 'website' },
+      { name: 'twitter:card', content: 'summary' },
     ],
   }),
   component: Home,

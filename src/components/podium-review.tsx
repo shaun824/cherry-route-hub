@@ -3,7 +3,8 @@ import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { ArrowUp, Trophy, X } from "lucide-react";
-import { getPodiumReview, publishPodium, unpublishPodium } from "@/lib/podium.functions";
+import { getPodiumReview, publishPodium, unpublishPodium, sendResultsIssueReport } from "@/lib/podium.functions";
+import { Button } from '@/components/ui/button';
 import type { PodiumStanding } from "@/lib/podium.server";
 import { groupStandings } from "@/components/podium-section";
 
@@ -11,6 +12,7 @@ export function PodiumReview({ eventId }: { eventId: string }) {
   const review = useServerFn(getPodiumReview);
   const publish = useServerFn(publishPodium);
   const unpublish = useServerFn(unpublishPodium);
+  const emailReport = useServerFn(sendResultsIssueReport);
   const q = useQuery({ queryKey: ["podium-review", eventId], queryFn: () => review({ data: { eventId } }) });
   const [edit, setEdit] = useState<PodiumStanding[]>([]);
   const [reveal, setReveal] = useState("");
@@ -64,6 +66,16 @@ export function PodiumReview({ eventId }: { eventId: string }) {
           </ul>
         </details>
       ) : null}
+      {d.issues?.length ? <details open className="mt-3 border-l-2 border-destructive pl-3 text-xs text-ink">
+        <summary className="cursor-pointer font-bold">Results issues ({d.issues.length}) — review before prize-giving</summary>
+        <ul className="mt-2 space-y-2">{d.issues.map((issue, i) => <li key={i}><strong>{issue.name}{issue.bib ? ` · #${issue.bib}` : ''}</strong><p className="text-ink-soft">{issue.detail}</p></li>)}</ul>
+        <Button variant="outline" size="sm" className="mt-3" disabled={busy} onClick={async () => {
+          setBusy(true); setMsg(null);
+          try { const result = await emailReport({ data: { eventId } }); setMsg(result.sent ? 'Issue report sent to Shaun.' : result.reason === 'recipient_suppressed' ? 'Shaun’s address is blocked from app emails; report not sent.' : 'No issues to email.'); }
+          catch (error) { setMsg(error instanceof Error ? error.message : 'Report could not be sent.'); }
+          finally { setBusy(false); }
+        }}>Email issue report to Shaun</Button>
+      </details> : null}
       <div className="mt-3 space-y-4">
         {groupStandings(edit).map(([group, cats]) => (
           <div key={group}>

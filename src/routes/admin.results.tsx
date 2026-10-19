@@ -18,6 +18,14 @@ import {
 } from "@/lib/results.functions";
 
 export const Route = createFileRoute("/admin/results")({
+  head: () => ({ meta: [
+    { title: 'Results review — Red Cherry Events' },
+    { name: 'description', content: 'Race-control timing, podium review and results issue checks.' },
+    { property: 'og:title', content: 'Results review — Red Cherry Events' },
+    { property: 'og:description', content: 'Race-control timing and podium review.' },
+    { property: 'og:type', content: 'website' },
+    { name: 'twitter:card', content: 'summary' },
+  ] }),
   component: ResultsAdminPage,
 });
 
