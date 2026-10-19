@@ -203,7 +203,7 @@ export async function computePodium(eventId: string, depth: number): Promise<Pod
     const identity = hasBib ? `b:${norm(p.bib)}` : `n:${norm(p.name)}`;
     const t = totals.get(identity);
     if (!t) continue;
-    const courses = [...(riderCourses.get(identity) ?? [])];
+    const courses = [...new Set(rows.filter(r => dayOf(r.result_set_id) && r.time_ms !== null && (hasBib ? norm(r.bib_number) === norm(p.bib) : norm(r.full_name) === norm(p.name))).map(r => timedCourse(r, setLabels.get(r.result_set_id) ?? '', p.category)).filter((c): c is string => c !== null))];
     if (courseMismatch(p.category, courses)) {
       courseMismatches.push({ name: p.name, bib: p.bib, category: p.category, courses });
       continue;

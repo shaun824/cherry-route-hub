@@ -13,6 +13,7 @@ describe('podium issue review', () => {
   })
   it('does not call a Silver e-bike rider analogue just because Silver has a mixed daily list', () => {
     assert.equal(timedCourse({ ...row, category: 'E-Bike Silver - Adult Weekend Warrior' }, 'Day 1 Silver Overall Results'), 'silver-ebike')
+    assert.deepEqual(reviewResults([row], new Map([['d1', 'Day 1 Silver Overall Results']]), [{ name: row.full_name, bib: '271', category: 'E-Bike Silver - Adult Weekend Warrior' }]), [])
   })
   it('flags a GC total that does not add up to the two daily times', () => {
     const rows = [{ ...row, time_ms: 3600000 }, { ...row, result_set_id: 'd2', time_ms: 3600000 }, { ...row, result_set_id: 'gc', time_ms: 3600000 }]

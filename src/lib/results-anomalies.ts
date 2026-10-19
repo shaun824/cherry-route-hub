@@ -6,11 +6,12 @@ export const identityText = (s: string | null | undefined) => (s ?? '').toLowerC
 export const ridingDay = (label: string) => /day\s*(\d+)/i.exec(label)?.[1] ?? null
 
 /** Daily set identifies the course ridden; Registration Event identifies the entry, not the ride. */
-export function timedCourse(row: ReviewRow, label: string): string | null {
+export function timedCourse(row: ReviewRow, label: string, entryClass?: string | null): string | null {
   const course = resultCourse(label)
   if (!course) return resultCourse(row.category)
   // Silver/Bronze daily lists mix bike types; lack of “eBike” is not proof of analogue.
-  return course.endsWith('-ebike') || !/e[\s-]?bike/i.test(row.category ?? '') ? course : `${course}-ebike`
+  const mixedList = course === 'silver' || course === 'bronze'
+  return mixedList && /e[\s-]?bike/i.test(entryClass ?? row.category ?? '') ? `${course}-ebike` : course
 }
 
 export function reviewResults(rows: ReviewRow[], labels: Map<string, string>, roster: { name: string; bib: string | null; category: string | null }[]): ResultsIssue[] {
@@ -47,7 +48,7 @@ export function reviewResults(rows: ReviewRow[], labels: Map<string, string>, ro
       continue
     }
     const matched = byBib.length ? byBib : byName
-    const courses = [...new Set(matched.filter(r => r.time_ms !== null).map(r => timedCourse(r, labels.get(r.result_set_id) ?? '')).filter((x): x is string => x !== null))]
+    const courses = [...new Set(matched.filter(r => r.time_ms !== null).map(r => timedCourse(r, labels.get(r.result_set_id) ?? '', p.category)).filter((x): x is string => x !== null))]
     if (courseMismatch(p.category, courses)) add({ kind: 'course-mismatch', name: p.name, bib: p.bib ?? matched[0]?.bib_number ?? null, detail: `Entry: ${p.category}; timed riding-day courses: ${courses.join(', ')}. Excluded from automatic weekend podium; timing team must confirm any correction.` })
   }
   const dailyByBib = new Map<string, Map<string, number>>()
