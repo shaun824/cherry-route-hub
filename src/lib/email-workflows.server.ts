@@ -125,7 +125,7 @@ export async function sendWorkflowEmail(
         eventName: event.name,
         coverUrl: absoluteLogo(event.cover_url),
         youtubeUrl: step.cta_url || "https://www.youtube.com/watch?v=_sU-SqKrfos",
-        resultsUrl: `${eventUrl}?tab=results`,
+        resultsUrl: `${APP_URL}/spectate/${event.id}`,
         people,
       },
     });
