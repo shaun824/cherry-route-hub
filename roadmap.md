@@ -1,5 +1,7 @@
 # Roadmap
 
+- [ ] Check the Silver Male two-day outlier, exclude the confirmed invalid classification and review other serious distance-switching outliers without deleting real daily times.
+
 - [x] Connect individual rider results and missing roster race numbers to the live timing feed; verified signed-in Natalie Stacey page: bib 753, Day 1 Gold position 232, time 4:41:20.96. Publishing is still needed for the live site.
 
 - [x] Add and test recovery-session validation, missing/expired-link handling and account identity checks; confirm Michelle’s work account owns her entry.
