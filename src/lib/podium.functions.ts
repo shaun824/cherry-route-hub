@@ -53,6 +53,7 @@ export const getPodiumReview = createServerFn({ method: "POST" })
     return {
       standings: c.standings,
       missingGender: c.missingGender,
+      courseMismatches: c.courseMismatches,
       stagesWithResults: c.stagesWithResults,
       totalStages: c.totalStages,
       publishedAt: (row?.published_at as string | null) ?? null,

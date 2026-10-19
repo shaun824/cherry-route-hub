@@ -1,5 +1,6 @@
 // Podium maths: works out each prize category's standings from timing results
 // plus the entry roster (class + gender from Entry Ninja). Server-only.
+import { courseMismatch, resultCourse } from "./result-course";
 export type PodiumCategory = {
   key: string;
   title: string;
@@ -74,6 +75,7 @@ export type PodiumComputed = {
   totalStages: number;
   standings: PodiumStanding[];
   missingGender: { name: string; bib: string | null; category: string | null }[];
+  courseMismatches: { name: string; bib: string | null; category: string | null; courses: string[] }[];
   lastDay: string | null;
 };
 
@@ -137,6 +139,7 @@ export async function computePodium(eventId: string, depth: number): Promise<Pod
   // Per rider, per stage: best time (a rider in both an overall and a category
   // set for the same day is counted once, not twice).
   const perRider = new Map<string, Map<string, number>>();
+  const riderCourses = new Map<string, Set<string>>();
   for (const r of rows) {
     if (r.time_ms == null) continue;
     const st = stageOf(r.result_set_id);
@@ -145,6 +148,12 @@ export async function computePodium(eventId: string, depth: number): Promise<Pod
     const keys = [r.bib_number ? `b:${norm(r.bib_number)}` : null, r.full_name ? `n:${norm(r.full_name)}` : null];
     for (const k of keys) {
       if (!k) continue;
+      const course = resultCourse(setLabels.get(r.result_set_id));
+      if (course) {
+        const courses = riderCourses.get(k) ?? new Set<string>();
+        courses.add(course);
+        riderCourses.set(k, courses);
+      }
       const stages = perRider.get(k) ?? new Map<string, number>();
       const prev = stages.get(st);
       if (prev == null || r.time_ms < prev) stages.set(st, r.time_ms);
@@ -162,6 +171,7 @@ export async function computePodium(eventId: string, depth: number): Promise<Pod
 
   const pending = new Map<string, (PodiumRider & { n: number })[]>();
   const missingGender: PodiumComputed["missingGender"] = [];
+  const courseMismatches: PodiumComputed["courseMismatches"] = [];
   for (const p of roster) {
     if (!p.name || /test|placeholder/i.test(p.name)) continue;
     const cat = categoryFor(cats, p.category, p.gender);
@@ -169,8 +179,14 @@ export async function computePodium(eventId: string, depth: number): Promise<Pod
       if (!p.gender && categoryFor(cats, p.category, "male")) missingGender.push({ name: p.name, bib: p.bib, category: p.category });
       continue;
     }
-    const t = (p.bib && totals.get(`b:${norm(p.bib)}`)) || totals.get(`n:${norm(p.name)}`);
+    const identity = p.bib && totals.has(`b:${norm(p.bib)}`) ? `b:${norm(p.bib)}` : `n:${norm(p.name)}`;
+    const t = totals.get(identity);
     if (!t) continue;
+    const courses = [...(riderCourses.get(identity) ?? [])];
+    if (courseMismatch(p.category, courses)) {
+      courseMismatches.push({ name: p.name, bib: p.bib, category: p.category, courses });
+      continue;
+    }
     pending.set(cat.key, [...(pending.get(cat.key) ?? []), { pos: 0, name: p.name, bib: p.bib, ms: t.ms, time: fmtMs(t.ms), n: t.n }]);
   }
   // Ranked only when they have a time on every stage that this category has results for so far.
@@ -188,5 +204,5 @@ export async function computePodium(eventId: string, depth: number): Promise<Pod
       .slice(0, depth)
       .map((r, i) => ({ ...r, pos: i + 1 })),
   }));
-  return { cats, stagesWithResults, totalStages: Math.max(hasDaySets ? new Set(setIds.map(dayOf).filter(Boolean)).size : setIds.length, days.filter((d) => /day\s*\d/i.test(String(d.label ?? ""))).length), standings, missingGender, lastDay };
+  return { cats, stagesWithResults, totalStages: Math.max(hasDaySets ? new Set(setIds.map(dayOf).filter(Boolean)).size : setIds.length, days.filter((d) => /day\s*\d/i.test(String(d.label ?? ""))).length), standings, missingGender, courseMismatches, lastDay };
 }
