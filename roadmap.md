@@ -1,6 +1,6 @@
 # Roadmap
 
-- [ ] Connect Everlytic for rider emails and verify a test send; pending secure credentials and required account details.
+- [ ] Connect Everlytic for rider emails and verify a test send; credentials securely saved, but a valid HTTPS Everlytic installation address must be confirmed before any credentialed request. Personalized campaign sending also needs verified account capabilities; no emails sent.
 
 - [x] Retrieved all eight daily lists and overall results; reviewed all ten podium categories, found 29 entry/course mismatches and six identity warnings, and emailed Shaun the complete 35-issue report. Timing feed remains intermittent; raw results preserved and timing-team confirmation is required.
 - [x] Added admin-only anomaly flags and a fixed-recipient event-day report through the protected existing hourly callback; 21 tests passed, signed-in warning/report flow verified, unauthorized callback rejected, and full report send confirmed. Publication is required for automatic live event-day checks.
