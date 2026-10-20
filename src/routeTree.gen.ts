@@ -16,6 +16,7 @@ import { Route as FeedRouteImport } from './routes/feed'
 import { Route as GalleryRouteImport } from './routes/gallery'
 import { Route as McpRouteImport } from './routes/mcp'
 import { Route as MyEventsRouteImport } from './routes/my-events'
+import { Route as Otto1890SignupRouteImport } from './routes/otto1890-signup'
 import { Route as PolicyRouteImport } from './routes/policy'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as PromosRouteImport } from './routes/promos'
@@ -160,6 +161,11 @@ const McpRoute = McpRouteImport.update({
 const MyEventsRoute = MyEventsRouteImport.update({
   id: '/my-events',
   path: '/my-events',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const Otto1890SignupRoute = Otto1890SignupRouteImport.update({
+  id: '/otto1890-signup',
+  path: '/otto1890-signup',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PolicyRoute = PolicyRouteImport.update({
@@ -744,6 +750,7 @@ export interface FileRoutesByFullPath {
   '/gallery': typeof GalleryRoute
   '/mcp': typeof McpRoute
   '/my-events': typeof MyEventsRouteWithChildren
+  '/otto1890-signup': typeof Otto1890SignupRoute
   '/policy': typeof PolicyRoute
   '/profile': typeof ProfileRoute
   '/promos': typeof PromosRoute
@@ -861,6 +868,7 @@ export interface FileRoutesByTo {
   '/feed': typeof FeedRoute
   '/gallery': typeof GalleryRoute
   '/mcp': typeof McpRoute
+  '/otto1890-signup': typeof Otto1890SignupRoute
   '/policy': typeof PolicyRoute
   '/profile': typeof ProfileRoute
   '/promos': typeof PromosRoute
@@ -979,6 +987,7 @@ export interface FileRoutesById {
   '/gallery': typeof GalleryRoute
   '/mcp': typeof McpRoute
   '/my-events': typeof MyEventsRouteWithChildren
+  '/otto1890-signup': typeof Otto1890SignupRoute
   '/policy': typeof PolicyRoute
   '/profile': typeof ProfileRoute
   '/promos': typeof PromosRoute
@@ -1100,6 +1109,7 @@ export interface FileRouteTypes {
     | '/gallery'
     | '/mcp'
     | '/my-events'
+    | '/otto1890-signup'
     | '/policy'
     | '/profile'
     | '/promos'
@@ -1217,6 +1227,7 @@ export interface FileRouteTypes {
     | '/feed'
     | '/gallery'
     | '/mcp'
+    | '/otto1890-signup'
     | '/policy'
     | '/profile'
     | '/promos'
@@ -1334,6 +1345,7 @@ export interface FileRouteTypes {
     | '/gallery'
     | '/mcp'
     | '/my-events'
+    | '/otto1890-signup'
     | '/policy'
     | '/profile'
     | '/promos'
@@ -1454,6 +1466,7 @@ export interface RootRouteChildren {
   GalleryRoute: typeof GalleryRoute
   McpRoute: typeof McpRoute
   MyEventsRoute: typeof MyEventsRouteWithChildren
+  Otto1890SignupRoute: typeof Otto1890SignupRoute
   PolicyRoute: typeof PolicyRoute
   ProfileRoute: typeof ProfileRoute
   PromosRoute: typeof PromosRoute
@@ -1568,6 +1581,13 @@ declare module '@tanstack/react-router' {
       path: '/my-events'
       fullPath: '/my-events'
       preLoaderRoute: typeof MyEventsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/otto1890-signup': {
+      id: '/otto1890-signup'
+      path: '/otto1890-signup'
+      fullPath: '/otto1890-signup'
+      preLoaderRoute: typeof Otto1890SignupRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/policy': {
@@ -2493,6 +2513,7 @@ const rootRouteChildren: RootRouteChildren = {
   GalleryRoute: GalleryRoute,
   McpRoute: McpRoute,
   MyEventsRoute: MyEventsRouteWithChildren,
+  Otto1890SignupRoute: Otto1890SignupRoute,
   PolicyRoute: PolicyRoute,
   ProfileRoute: ProfileRoute,
   PromosRoute: PromosRoute,
