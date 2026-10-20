@@ -1,6 +1,6 @@
 # Roadmap
 
-- [ ] Match the latest grouped partner network without pink artwork backgrounds in both 2027 mailers; add distinct Grabouw and Lourensford entry links; update the scheduled Everlytic mailer while preserving its audience and time.
+- [x] Both 2027 mailers now use the latest grouped title/premium/event partner layout with white logo artwork, plus separate Grabouw 84713 and Lourensford 84714 links (including the calendar reminder). All 22 images load at 375px and 1280px without overflow; three date/link tests pass and build OK. Everlytic replacement 923637 verified pre-queue for 1 Dec 09:00 SAST, same 20 lists and 1,668 recipients, zero sent; previous 923636 verified cancelled.
 
 - [x] Create /otto1890-signup as a public branded bio page; verified desktop/phone layouts, no horizontal overflow, and successful form submission with Shaun's address. Existing email safety tests pass; build OK.
 - [x] Add entry-alert sign-ups to Shaun's selected larger Bicycles list (102600), preserving existing list mappings and global opt-outs/bounces. Existing one sign-up reconciled and memberships read back; form submission succeeds; five audience/email safety tests pass and build OK. Publish required for the public bio page and updated form handler.
