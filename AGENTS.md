@@ -32,3 +32,4 @@
 - Everlytic campaigns use an admin-only API boundary and a builder-confirmed installation host with redirects disabled; app sign-in and operational email delivery remain unchanged to protect credentials and avoid sender-domain conflicts.
 - Otto1890 email artwork, partner logos and date/reminder blocks share one email-only module; the entries-open marketing creative is Everlytic-only and is never registered with the managed app-email sender, keeping promotional sends separate from confirmations.
 - The public entry-alert bio page uses the existing entry-interest API and a bare one-screen scrolling layout, so visitors can subscribe without an account or rider navigation.
+- Entry-alert audience sync verifies exact-email contacts and list mappings before adding missing memberships; never overwrite existing mappings or global contact status, so opt-outs and other lists remain unchanged.
