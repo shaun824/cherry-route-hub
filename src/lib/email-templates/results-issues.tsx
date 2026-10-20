@@ -22,5 +22,5 @@ export const template = {
   subject: (data: Record<string, unknown>) => `Results need review — ${data.eventName ?? 'Red Cherry event'}`,
   displayName: 'Event results issue alert',
   to: 'shaun@redcherryevents.co.za',
-  previewData: { eventName: 'Weekend Warrior Lourensford', checkedAt: '17 October, 16:00 SAST', issues: [{ kind: 'course-mismatch', name: 'Sample rider', bib: '271', detail: 'Silver entry; timed on Bronze. Check the classification with the timing team.' }] },
+  previewData: { eventName: 'Otto1890 Weekend Warrior Lourensford', checkedAt: '17 October, 16:00 SAST', issues: [{ kind: 'course-mismatch', name: 'Sample rider', bib: '271', detail: 'Silver entry; timed on Bronze. Check the classification with the timing team.' }] },
 } satisfies TemplateEntry
