@@ -10,21 +10,21 @@ const logoBanner = { background: 'linear-gradient(180deg,#ffffff,#f4f4f6)', bord
 const Email = () => (
   <Html lang="en" dir="ltr">
     <Head />
-    <Preview>You're on the list — Weekend Warrior 2027 entries open 1 December</Preview>
+    <Preview>You're on the list — Otto1890 Weekend Warrior 2027 entries open 1 December</Preview>
     <Body style={main}>
       <Container style={container}>
         <Section style={bar} />
         <Section style={inner}>
           <Heading style={h1}>You're on the list!</Heading>
           <Text style={text}>
-            Thanks for signing up. Entries for Weekend Warrior 2027 open on <strong>1 December 2026</strong>, and
+            Thanks for signing up. Entries for Otto1890 Weekend Warrior 2027 open on <strong>1 December 2026</strong>, and
             we'll email you the moment they do. Pop these dates in your diary:
           </Text>
           <Section style={card}>
-            <Text style={dateRow}><strong>Weekend Warrior Oak Valley</strong><br />2, 3 &amp; 4 April 2027</Text>
+            <Text style={dateRow}><strong>Otto1890 Weekend Warrior Oak Valley</strong><br />2, 3 &amp; 4 April 2027</Text>
           </Section>
           <Section style={card}>
-            <Text style={dateRow}><strong>Weekend Warrior Lourensford</strong><br />8, 9 &amp; 10 October 2027</Text>
+            <Text style={dateRow}><strong>Otto1890 Weekend Warrior Lourensford</strong><br />8, 9 &amp; 10 October 2027</Text>
           </Section>
           <Text style={text}>See you on the trails.<br />— The Red Cherry Events team</Text>
           <Section style={{ ...logoBanner, textAlign: 'center' as const }}>
@@ -38,7 +38,7 @@ const Email = () => (
 
 export const template = {
   component: Email,
-  subject: "You're on the list — Weekend Warrior 2027 dates",
-  displayName: 'Weekend Warrior 2027 sign-up confirmation',
+  subject: "You're on the list — Otto1890 Weekend Warrior 2027 dates",
+  displayName: 'Otto1890 Weekend Warrior 2027 sign-up confirmation',
   previewData: {},
 } satisfies TemplateEntry

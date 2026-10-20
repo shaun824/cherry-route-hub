@@ -71,7 +71,7 @@ const Email = ({ firstName, eventName = 'Otto1890 Weekend Warrior Lourensford', 
 
             <Heading as="h2" style={h2}>Relive the weekend</Heading>
             <Text style={text}>
-              Our highlights video is up on the Weekend Warrior YouTube channel. Grab a coffee and see if you can spot yourself!
+              Our highlights video is up on the Otto1890 Weekend Warrior YouTube channel. Grab a coffee and see if you can spot yourself!
             </Text>
             {youtubeUrl ? (
               <Section style={{ textAlign: 'center', margin: '0 0 28px' }}>
@@ -102,7 +102,7 @@ const Email = ({ firstName, eventName = 'Otto1890 Weekend Warrior Lourensford', 
 
 export const template = {
   component: Email,
-  subject: 'Thank you for an incredible Weekend Warrior — your results inside',
+  subject: 'Thank you for an incredible Otto1890 Weekend Warrior — your results inside',
   displayName: 'Post-event thank you with results',
   previewData: {
     firstName: 'Natalie',

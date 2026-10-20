@@ -1,4 +1,4 @@
-// Public sign-up for "entries open 1 December" alerts, posted from the Weekend Warrior website.
+// Public sign-up for "entries open 1 December" alerts, posted from the Otto1890 Weekend Warrior website.
 // Stores the email, subscribes it to the Everlytic sign-up list, and sends the dates confirmation.
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
