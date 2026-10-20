@@ -3,7 +3,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 
-const SIGNUP_LIST_ID = "145818";
 const cors = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
@@ -42,15 +41,14 @@ export const Route = createFileRoute("/api/public/entry-interest")({
           row = data;
         }
 
-        if (!row.everlytic_synced) {
+        {
           const username = process.env["EVERLYTIC_USERNAME"]; const apiKey = process.env["EVERLYTIC_API_KEY"];
           if (username && apiKey) {
             try {
-              const { everlyticRequest } = await import("@/lib/everlytic.server");
-              await everlyticRequest("/api/2.0/contacts", "POST", username, apiKey,
-                { contact_email: email, list_id: { [SIGNUP_LIST_ID]: "subscribed" }, on_duplicate: "update" });
+              const { syncEntryInterestAudience } = await import("@/lib/entry-interest-audience.server");
+              await syncEntryInterestAudience(email, username, apiKey);
               await supabaseAdmin.from("entry_interest_signups").update({ everlytic_synced: true }).eq("id", row.id);
-            } catch (e) { console.error("Everlytic sign-up sync failed", (e as Error).message); }
+            } catch { return json({ ok: false, error: "Your email is saved, but we couldn't finish adding you to the mailing lists. Please try again." }, 503); }
           }
         }
 

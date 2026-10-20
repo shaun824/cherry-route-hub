@@ -1,7 +1,7 @@
 # Roadmap
 
 - [x] Create /otto1890-signup as a public branded bio page; verified desktop/phone layouts, no horizontal overflow, and successful form submission with Shaun's address. Existing email safety tests pass; build OK.
-- [ ] Add new and existing entry-alert sign-ups to Bicycles, preserving opt-outs. Blocker: Everlytic has two lists named Bicycles (331 and 4,347 active subscribers); Shaun must choose the intended list. No Bicycles membership changed.
+- [x] Add entry-alert sign-ups to Shaun's selected larger Bicycles list (102600), preserving existing list mappings and global opt-outs/bounces. Existing one sign-up reconciled and memberships read back; form submission succeeds; five audience/email safety tests pass and build OK. Publish required for the public bio page and updated form handler.
 
 - [x] Restyled both 2027 emails using the original Lourensford forest/teal/vermilion design and photography, all 20 partner logos on light backgrounds, confirmed dates and an entries-opening calendar reminder. Both Shaun-only tests accepted by Everlytic (923634, 923635), no audience attached. Both layouts checked at 375px and 1280px; all 21 images load with no horizontal overflow; four tests pass. Refreshed December campaign 923636 is pre-queue for 1 Dec 09:00 SAST, same 20 lists and 1,668 recipients, zero sent; replaced campaign 923633 confirmed cancelled.
 

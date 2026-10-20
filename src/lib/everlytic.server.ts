@@ -10,7 +10,7 @@ export async function everlyticRequest(path: string, method: "GET" | "POST", use
   });
   if (!response.ok) {
     // Provider bodies can echo credentials; do not log or return them.
-    throw new Error(`Everlytic request failed (${response.status}). ${response.status === 401 ? "Check your Everlytic username and API key." : response.status === 403 ? "Check this account's email permissions." : "Check the campaign in Everlytic and try again."}`);
+    throw Object.assign(new Error(`Everlytic request failed (${response.status}). ${response.status === 401 ? "Check your Everlytic username and API key." : response.status === 403 ? "Check this account's email permissions." : "Check the campaign in Everlytic and try again."}`), { status: response.status });
   }
   const payload = await response.json();
   if (payload === false || payload?.success === false || payload?.error) throw new Error("Everlytic did not accept the request. Check the campaign in Everlytic.");

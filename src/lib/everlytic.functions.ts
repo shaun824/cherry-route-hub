@@ -5,7 +5,7 @@ import { campaignCanSend, readEverlyticCampaigns } from "./everlytic-data";
 
 export const manageEverlytic = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => z.object({ action: z.enum(["list", "lists", "preview", "send"]), campaignId: z.string().regex(/^\d+$/).optional() }).parse(input))
+  .inputValidator((input: unknown) => z.object({ action: z.enum(["list", "lists", "signup-status", "sync-signups", "preview", "send"]), campaignId: z.string().regex(/^\d+$/).optional() }).parse(input))
   .handler(async ({ context, data }) => {
     const { data: role, error } = await context.supabase.from("user_roles").select("role").eq("user_id", context.userId).eq("role", "admin").maybeSingle();
     if (error || !role) throw new Error("Admins only");
@@ -13,6 +13,28 @@ export const manageEverlytic = createServerFn({ method: "POST" })
     const apiKey = process.env['EVERLYTIC_API_KEY'];
     if (!username || !apiKey) throw new Error("Everlytic account details are not configured");
     const { everlyticRequest } = await import("./everlytic.server");
+    if (data.action === 'sync-signups') {
+      const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
+      const { data: rows, error } = await supabaseAdmin.from('entry_interest_signups').select('id,email').limit(500);
+      if (error) throw new Error('Could not read sign-ups');
+      const { syncEntryInterestAudience } = await import('./entry-interest-audience.server');
+      let verified = 0;
+      for (const row of rows ?? []) {
+        await syncEntryInterestAudience(row.email, username, apiKey);
+        await supabaseAdmin.from('entry_interest_signups').update({ everlytic_synced: true }).eq('id', row.id);
+        verified++;
+      }
+      return { campaigns: [], message: `${verified} sign-ups reconciled with both lists; opt-outs preserved` };
+    }
+    if (data.action === "signup-status") {
+      const raw = await everlyticRequest(`/api/2.0/contacts?filters[email]=${encodeURIComponent('shaun@redcherryevents.co.za')}&count=1`, "GET", username, apiKey);
+      const contact = raw.collection?.[0]?.data ?? raw.data ?? {};
+      let mapping;
+      if (contact.email === 'shaun@redcherryevents.co.za') {
+        try { mapping = await everlyticRequest(`/api/2.0/list_subscriptions/102600/${contact.id}`, 'GET', username, apiKey); } catch { mapping = 'not found'; }
+      }
+      return { campaigns: [], message: JSON.stringify({ matched: contact.email === 'shaun@redcherryevents.co.za', id: contact.id, emailStatus: contact.email_status, status: contact.status, mapping }) };
+    }
     if (data.action === "lists") {
       const lists = [];
       for (let page = 1; page <= 20; page++) {
