@@ -1,36 +1,27 @@
 import * as React from 'react'
-import { Body, Container, Head, Heading, Html, Img, Preview, Section, Text } from '@react-email/components'
+import { Body, Container, Head, Heading, Html, Preview, Section, Text } from '@react-email/components'
 import type { TemplateEntry } from './registry'
-import { RCE_LOGO_URL, bar, brand, h1, inner, main, container, text } from './theme'
-
-const dateRow = { fontSize: '16px', color: brand.ink, margin: '0 0 6px', lineHeight: '1.5' }
-const card = { border: `1px solid ${brand.border}`, borderRadius: '10px', padding: '16px 18px', margin: '0 0 20px' }
-const logoBanner = { background: 'linear-gradient(180deg,#ffffff,#f4f4f6)', border: `1px solid ${brand.border}`, borderRadius: '10px', padding: '20px' }
+import { WarriorDates, WarriorHeader, WarriorPartners, WarriorReminder, ww } from './weekend-warrior-brand'
 
 const Email = () => (
   <Html lang="en" dir="ltr">
     <Head />
-    <Preview>You're on the list — Otto1890 Weekend Warrior 2027 entries open 1 December</Preview>
-    <Body style={main}>
-      <Container style={container}>
-        <Section style={bar} />
-        <Section style={inner}>
-          <Heading style={h1}>You're on the list!</Heading>
-          <Text style={text}>
-            Thanks for signing up. Entries for Otto1890 Weekend Warrior 2027 open on <strong>1 December 2026</strong>, and
-            we'll email you the moment they do. Pop these dates in your diary:
+    <Preview>You're on the list — Otto1890 Weekend Warrior 2027 entries open 1 December at 09:00 SAST.</Preview>
+    <Body style={ww.body}>
+      <Container style={ww.container}>
+        <WarriorHeader label="YOU'RE ON THE LIST · OTTO1890 WEEKEND WARRIOR 2027" />
+        <Section style={ww.inner}>
+          <Text style={{ ...ww.text, color: ww.red, fontWeight: 700 }}>Thanks for joining us!</Text>
+          <Heading style={ww.heading}>Your next trail adventure<br />is in the diary.</Heading>
+          <Text style={ww.text}>
+            Your sign-up is confirmed. We’ll email you when entries for <strong>Otto1890 Weekend Warrior 2027</strong> open on <strong>1 December 2026 at 09:00 SAST</strong>.
           </Text>
-          <Section style={card}>
-            <Text style={dateRow}><strong>Otto1890 Weekend Warrior Oak Valley</strong><br />2, 3 &amp; 4 April 2027</Text>
-          </Section>
-          <Section style={card}>
-            <Text style={dateRow}><strong>Otto1890 Weekend Warrior Lourensford</strong><br />8, 9 &amp; 10 October 2027</Text>
-          </Section>
-          <Text style={text}>See you on the trails.<br />— The Red Cherry Events team</Text>
-          <Section style={{ ...logoBanner, textAlign: 'center' as const }}>
-            <Img src={RCE_LOGO_URL} alt="Red Cherry Events" width="132" style={{ display: 'inline-block', height: 'auto' }} />
-          </Section>
+          <Text style={ww.text}>Here are the two weekends you asked to hear about — keep these dates handy:</Text>
+          <WarriorDates />
+          <WarriorReminder />
+          <Text style={ww.text}>No entry has been booked yet; this confirms your entries-opening alert. Keep an eye on your inbox on 1 December — we’ll send you the entry link then.</Text>
         </Section>
+        <WarriorPartners />
       </Container>
     </Body>
   </Html>
