@@ -48,7 +48,10 @@ export const Route = createFileRoute("/api/public/entry-interest")({
               const { syncEntryInterestAudience } = await import("@/lib/entry-interest-audience.server");
               await syncEntryInterestAudience(email, username, apiKey);
               await supabaseAdmin.from("entry_interest_signups").update({ everlytic_synced: true }).eq("id", row.id);
-            } catch { return json({ ok: false, error: "Your email is saved, but we couldn't finish adding you to the mailing lists. Please try again." }, 503); }
+            } catch (e) {
+              // Never block the visitor: the row stays everlytic_synced=false for the admin reconcile.
+              console.error("Entry-alert list sync deferred", (e as Error).message);
+            }
           }
         }
 
