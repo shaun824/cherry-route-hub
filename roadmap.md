@@ -1,5 +1,8 @@
 # Roadmap
 
+- [x] Create /otto1890-signup as a public branded bio page; verified desktop/phone layouts, no horizontal overflow, and successful form submission with Shaun's address. Existing email safety tests pass; build OK.
+- [ ] Add new and existing entry-alert sign-ups to Bicycles, preserving opt-outs. Blocker: Everlytic has two lists named Bicycles (331 and 4,347 active subscribers); Shaun must choose the intended list. No Bicycles membership changed.
+
 - [x] Restyled both 2027 emails using the original Lourensford forest/teal/vermilion design and photography, all 20 partner logos on light backgrounds, confirmed dates and an entries-opening calendar reminder. Both Shaun-only tests accepted by Everlytic (923634, 923635), no audience attached. Both layouts checked at 375px and 1280px; all 21 images load with no horizontal overflow; four tests pass. Refreshed December campaign 923636 is pre-queue for 1 Dec 09:00 SAST, same 20 lists and 1,668 recipients, zero sent; replaced campaign 923633 confirmed cancelled.
 
 - [x] WW 2027 entry-alert sign-up: website HTML form, stores sign-ups, adds to Everlytic list 145818, emails the 2027 dates straight away (tested with Shaun). 1 Dec 09:00 SAST campaign 923636 armed to all past WW lists + sign-ups (20 lists, 1,668 to queue); earlier copies 923627 and 923633 were cancelled and verified cancelled, so only one send is live.

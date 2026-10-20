@@ -4,6 +4,22 @@
 
 @custom-variant dark (&:is(.dark *));
 
+.ww-signup {
+  --ww-forest: #052c29;
+  --ww-teal: #9fd4d8;
+  --ww-red: #eb3817;
+  --ww-white: #ffffff;
+  background: var(--ww-teal);
+  color: var(--ww-forest);
+}
+.ww-signup-photo { min-height: 300px; color: var(--ww-white); }
+.ww-signup-shade { background: linear-gradient(90deg, var(--ww-forest), transparent); }
+.ww-signup .ww-signup-heading { font-family: Georgia, 'Times New Roman', serif; letter-spacing: 0; }
+.ww-signup-label { color: var(--ww-forest); }
+.ww-signup-input, .ww-signup-logo { background: var(--ww-white); color: var(--ww-forest); }
+.ww-signup-submit { background: var(--ww-red); color: var(--ww-white); }
+.ww-signup-submit:hover { background: var(--ww-forest); }
+
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
