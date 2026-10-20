@@ -14,9 +14,13 @@ export const manageEverlytic = createServerFn({ method: "POST" })
     if (!username || !apiKey) throw new Error("Everlytic account details are not configured");
     const { everlyticRequest } = await import("./everlytic.server");
     if (data.action === "signup-status") {
-      const raw = await everlyticRequest(`/api/2.0/contacts?contact_email=${encodeURIComponent('shaun@redcherryevents.co.za')}&count=1`, "GET", username, apiKey);
+      const raw = await everlyticRequest(`/api/2.0/contacts?filters[email]=${encodeURIComponent('shaun@redcherryevents.co.za')}&count=1`, "GET", username, apiKey);
       const contact = raw.collection?.[0]?.data ?? raw.data ?? {};
-      return { campaigns: [], message: JSON.stringify({ keys: Object.keys(contact), id: contact.id, emailStatus: contact.contact_email_status, lists: contact.list_id, subscriptions: contact.subscriptions }) };
+      let mapping;
+      if (contact.email === 'shaun@redcherryevents.co.za') {
+        try { mapping = await everlyticRequest(`/api/2.0/list_subscriptions/102600/${contact.id}`, 'GET', username, apiKey); } catch { mapping = 'not found'; }
+      }
+      return { campaigns: [], message: JSON.stringify({ matched: contact.email === 'shaun@redcherryevents.co.za', id: contact.id, emailStatus: contact.email_status, status: contact.status, mapping }) };
     }
     if (data.action === "lists") {
       const lists = [];
