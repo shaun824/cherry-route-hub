@@ -713,7 +713,7 @@ function VillageEditor() {
       alert("Set the venue location first, then load the master layout.");
       return;
     }
-    if (map.hotspots.length > 0 && !window.confirm("Add the master Weekend Warrior layout on top of the existing points?")) {
+    if (map.hotspots.length > 0 && !window.confirm("Add the master Otto1890 Weekend Warrior layout on top of the existing points?")) {
       return;
     }
     patch({ hotspots: [...map.hotspots, ...templateSpots(centre)] });
