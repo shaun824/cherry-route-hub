@@ -1,5 +1,7 @@
 # Roadmap
 
+- [ ] Create a public Otto1890 Weekend Warrior 2027 bio sign-up page and add new and existing sign-ups to the Bicycles list, preserving opt-outs; verify the form and memberships.
+
 - [x] Restyled both 2027 emails using the original Lourensford forest/teal/vermilion design and photography, all 20 partner logos on light backgrounds, confirmed dates and an entries-opening calendar reminder. Both Shaun-only tests accepted by Everlytic (923634, 923635), no audience attached. Both layouts checked at 375px and 1280px; all 21 images load with no horizontal overflow; four tests pass. Refreshed December campaign 923636 is pre-queue for 1 Dec 09:00 SAST, same 20 lists and 1,668 recipients, zero sent; replaced campaign 923633 confirmed cancelled.
 
 - [x] WW 2027 entry-alert sign-up: website HTML form, stores sign-ups, adds to Everlytic list 145818, emails the 2027 dates straight away (tested with Shaun). 1 Dec 09:00 SAST campaign 923636 armed to all past WW lists + sign-ups (20 lists, 1,668 to queue); earlier copies 923627 and 923633 were cancelled and verified cancelled, so only one send is live.
