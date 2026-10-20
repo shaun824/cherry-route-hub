@@ -2,25 +2,26 @@ import * as React from 'react'
 import { Button, Column, Heading, Img, Link, Row, Section, Text } from '@react-email/components'
 import { RCE_LOGO_URL } from './theme'
 import trails from '@/assets/ww-email/ww-trails.jpg.asset.json'
-import otto from '@/assets/ww-email/ww_logo_otto1890.png.asset.json'
-import cycle from '@/assets/ww-email/ww_logo_cycle_lab.png.asset.json'
-import westvaal from '@/assets/ww-email/ww_logo_westvaal.png.asset.json'
-import hyperclear from '@/assets/ww-email/ww_logo_hyperclear.png.asset.json'
-import isuzu from '@/assets/ww-email/ww_logo_isuzu.png.asset.json'
-import scriptex from '@/assets/ww-email/ww_logo_scriptex.png.asset.json'
-import sab from '@/assets/ww-email/ww_logo_sab.png.asset.json'
-import squirt from '@/assets/ww-email/ww_logo_squirt.png.asset.json'
-import principa from '@/assets/ww-email/ww_logo_principa.png.asset.json'
-import triumph from '@/assets/ww-email/ww_logo_triumph.png.asset.json'
-import truCape from '@/assets/ww-email/ww_logo_tru_cape.png.asset.json'
-import green from '@/assets/ww-email/ww_logo_green_motion.png.asset.json'
-import peninsula from '@/assets/ww-email/ww_logo_peninsula_power.png.asset.json'
-import cogent from '@/assets/ww-email/ww_logo_cogent.png.asset.json'
-import kazin from '@/assets/ww-email/ww_logo_kazin.png.asset.json'
-import nutri from '@/assets/ww-email/ww_logo_nutri_go.png.asset.json'
-import rudy from '@/assets/ww-email/ww_logo_rudy_project.png.asset.json'
-import cyberlogic from '@/assets/ww-email/ww_logo_cyberlogic.png.asset.json'
-import enjoy from '@/assets/ww-email/ww_logo_enjoy.png.asset.json'
+import otto from '@/assets/ww-email/ww_logo_otto1890-white.png.asset.json'
+import cycle from '@/assets/ww-email/ww_logo_cycle_lab-white.png.asset.json'
+import westvaal from '@/assets/ww-email/ww_logo_westvaal-white.png.asset.json'
+import hyperclear from '@/assets/ww-email/ww_logo_hyperclear-white.png.asset.json'
+import isuzu from '@/assets/ww-email/ww_logo_isuzu-white.png.asset.json'
+import scriptex from '@/assets/ww-email/ww_logo_scriptex-white.png.asset.json'
+import sab from '@/assets/ww-email/ww_logo_sab-white.png.asset.json'
+import squirt from '@/assets/ww-email/ww_logo_squirt-white.png.asset.json'
+import principa from '@/assets/ww-email/ww_logo_principa-white.png.asset.json'
+import triumph from '@/assets/ww-email/ww_logo_triumph-white.png.asset.json'
+import truCape from '@/assets/ww-email/ww_logo_tru_cape-white.png.asset.json'
+import green from '@/assets/ww-email/ww_logo_green_motion-white.png.asset.json'
+import peninsula from '@/assets/ww-email/ww_logo_peninsula_power-white.png.asset.json'
+import cogent from '@/assets/ww-email/ww_logo_cogent-white.png.asset.json'
+import kazin from '@/assets/ww-email/ww_logo_kazin-white.png.asset.json'
+import nutri from '@/assets/ww-email/ww_logo_nutri_go-white.png.asset.json'
+import rudy from '@/assets/ww-email/ww_logo_rudy_project-white.png.asset.json'
+import cyberlogic from '@/assets/ww-email/ww_logo_cyberlogic-white.png.asset.json'
+import rcePartner from '@/assets/ww-email/ww_logo_red_cherry_events-white.png.asset.json'
+import enjoy from '@/assets/ww-email/ww_logo_enjoy-white.png.asset.json'
 
 const absolute = (url: string) => new URL(url, 'https://riderhub.redcherryevents.co.za').href
 export const ww = {
@@ -64,10 +65,11 @@ export function WarriorDates() {
 export const ENTRY_OPEN_DATE = '20261201T070000Z'
 export const ENTRY_OPEN_END = '20261201T071500Z'
 export const ENTRY_URL = 'https://entries.redcherryevents.co.za/events/84713'
+export const LOURENSFORD_ENTRY_URL = 'https://entries.redcherryevents.co.za/events/84714'
 export const REMINDER_URL = 'https://calendar.google.com/calendar/render?' + new URLSearchParams({
   action: 'TEMPLATE', text: 'Otto1890 Weekend Warrior 2027 — entries open',
   dates: `${ENTRY_OPEN_DATE}/${ENTRY_OPEN_END}`, ctz: 'Africa/Johannesburg',
-  details: `Entries open 1 December 2026 at 09:00 SAST. Oak Valley: 2–4 April 2027. Lourensford: 8–10 October 2027. ${ENTRY_URL}`,
+  details: `Entries open 1 December 2026 at 09:00 SAST. Oak Valley: 2–4 April 2027. Lourensford: 8–10 October 2027. Grabouw / Oak Valley: ${ENTRY_URL}. Lourensford: ${LOURENSFORD_ENTRY_URL}`,
 }).toString()
 
 export function WarriorReminder({ open = false }: { open?: boolean }) {
@@ -79,26 +81,41 @@ export function WarriorReminder({ open = false }: { open?: boolean }) {
   </Section>
 }
 
-const partners = [
-  ['Cycle Lab', cycle], ['Westvaal Motor Group', westvaal], ['Tru-Cape', truCape], ['Green Motion', green],
-  ['Hyperclear', hyperclear], ['Scriptex', scriptex], ['Principa', principa], ['Cogent', cogent], ['Cyberlogic', cyberlogic],
-  ['Isuzu', isuzu], ['SAB', sab], ['Squirt Cycling Products', squirt], ['Triumph Cape Town', triumph],
-  ['Peninsula Power Products', peninsula], ['Kazin', kazin], ['Nutri-Go', nutri], ['Rudy Project', rudy], ['Enjoy', enjoy],
+const premiumPartners = [
+  ['Cycle Lab', cycle], ['Westvaal Motor Group', westvaal], ['Hyperclear', hyperclear], ['Red Cherry Events', rcePartner],
+] as const
+const eventPartners = [
+  ['Isuzu', isuzu], ['Scriptex', scriptex], ['SAB', sab], ['Squirt Cycling Products', squirt], ['Principa', principa],
+  ['Triumph Cape Town', triumph], ['Tru-Cape', truCape], ['Green Motion', green], ['Peninsula Power Products', peninsula], ['Cogent', cogent],
+  ['Kazin', kazin], ['Nutri-Go', nutri], ['Rudy Project', rudy], ['Cyberlogic', cyberlogic], ['Enjoy', enjoy],
 ] as const
 
-export function WarriorPartners() {
-  const rows = Array.from({ length: Math.ceil(partners.length / 3) }, (_, i) => partners.slice(i * 3, i * 3 + 3))
-  return <Section style={{ backgroundColor: ww.white, borderTop: `3px solid ${ww.teal}`, padding: '24px 12px 8px', textAlign: 'center' }}>
-    <Text style={{ ...ww.label, color: ww.forest }}>THE PARTNER NETWORK BEHIND THE ADVENTURE</Text>
-    <Text style={{ ...ww.text, color: ww.muted, fontSize: '13px' }}>With thanks to our title partner, sponsors and event partners.</Text>
-    <Text style={{ ...ww.label, color: ww.muted }}>TITLE PARTNER</Text>
-    <Img src={absolute(otto.url)} alt="Otto1890 Investment Specialists" width="220" style={{ margin: '0 auto 24px', maxWidth: '100%', height: 'auto' }} />
+function PartnerGroup({ label, partners, columns }: { label: string; partners: ReadonlyArray<readonly [string, { url: string }]>; columns: number }) {
+  const rows = Array.from({ length: Math.ceil(partners.length / columns) }, (_, i) => partners.slice(i * columns, (i + 1) * columns))
+  return <Section style={{ marginTop: '22px' }}>
+    <Text style={{ ...ww.label, color: ww.forest, borderBottom: `1px solid ${ww.line}`, paddingBottom: '10px' }}><span style={{ color: ww.red }}>● </span>{label}</Text>
     {rows.map((row, i) => <Row key={i} style={{ tableLayout: 'fixed', width: '100%' }}>
-      {row.map(([name, asset]) => <Column key={name} style={{ width: '33.33%', padding: '12px 5px', verticalAlign: 'middle' }}>
-        <Img src={absolute(asset.url)} alt={name} width="115" style={{ width: '100%', maxWidth: '115px', height: 'auto', margin: '0 auto' }} />
-        <Text style={{ fontSize: '10px', lineHeight: '1.4', color: ww.muted, margin: '7px 0 0' }}>{name}</Text>
+      {row.map(([name, asset]) => <Column key={name} style={{ width: `${100 / columns}%`, padding: '6px 4px', verticalAlign: 'middle' }}>
+        <Img src={absolute(asset.url)} alt={name} width={columns === 4 ? 125 : 100} style={{ width: '100%', height: 'auto', margin: '0 auto', display: 'block' }} />
       </Column>)}
     </Row>)}
+  </Section>
+}
+
+export function WarriorEntryButtons() {
+  return <Section style={{ margin: '8px 0 24px' }}>
+    <Section style={{ marginBottom: '12px' }}><Button href={ENTRY_URL} style={{ ...ww.button, display: 'block', textAlign: 'center' }}>Enter Grabouw / Oak Valley</Button></Section>
+    <Section><Button href={LOURENSFORD_ENTRY_URL} style={{ ...ww.button, backgroundColor: ww.forest, display: 'block', textAlign: 'center' }}>Enter Lourensford</Button></Section>
+  </Section>
+}
+
+export function WarriorPartners() {
+  return <Section style={{ backgroundColor: ww.white, borderTop: `3px solid ${ww.teal}`, padding: '26px 24px 8px' }}>
+    <Heading as="h2" style={{ fontFamily: 'Helvetica, Arial, sans-serif', fontWeight: 800, fontSize: '30px', lineHeight: '1.1', color: ww.forest, margin: '0 0 24px' }}>THE PARTNER<br /><span style={{ color: ww.red }}>NETWORK</span></Heading>
+    <Text style={{ ...ww.label, color: ww.forest, borderBottom: `1px solid ${ww.line}`, paddingBottom: '10px' }}><span style={{ color: ww.red }}>● </span>OFFICIAL TITLE PARTNER</Text>
+    <Img src={absolute(otto.url)} alt="Otto1890 Investment Specialists" width="250" style={{ maxWidth: '100%', height: 'auto', display: 'block' }} />
+    <PartnerGroup label="PREMIUM PARTNERS" partners={premiumPartners} columns={4} />
+    <PartnerGroup label="EVENT PARTNERS" partners={eventPartners} columns={5} />
     <Section style={{ backgroundColor: ww.white, padding: '24px 16px 12px', borderTop: `1px solid ${ww.line}`, marginTop: '18px' }}>
       <Img src={RCE_LOGO_URL} alt="Red Cherry Events" width="150" style={{ display: 'block', margin: '0 auto', height: 'auto' }} />
       <Text style={{ ...ww.text, fontSize: '12px', color: ww.muted, margin: '14px 0 0' }}>See you on the trails.<br />Shaun and the Red Cherry Events team</Text>
