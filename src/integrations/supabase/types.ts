@@ -712,6 +712,33 @@ export type Database = {
           },
         ]
       }
+      entry_interest_signups: {
+        Row: {
+          confirmation_sent: boolean
+          created_at: string
+          email: string
+          everlytic_synced: boolean
+          id: string
+          source: string
+        }
+        Insert: {
+          confirmation_sent?: boolean
+          created_at?: string
+          email: string
+          everlytic_synced?: boolean
+          id?: string
+          source?: string
+        }
+        Update: {
+          confirmation_sent?: boolean
+          created_at?: string
+          email?: string
+          everlytic_synced?: boolean
+          id?: string
+          source?: string
+        }
+        Relationships: []
+      }
       event_bot_knowledge: {
         Row: {
           content: string

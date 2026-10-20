@@ -1,5 +1,8 @@
 # Roadmap
 
+- [x] WW 2027 entry-alert sign-up: website HTML form, stores sign-ups, adds to Everlytic list 145818, emails the 2027 dates straight away (tested with Shaun). 1 Dec 09:00 campaign 923627 scheduled to all past WW lists + sign-ups.
+- [ ] Publish so the website form works on the live domain.
+
 - [x] Scheduled the personalized Weekend Warrior Lourensford thank-you through Everlytic for 20 October 2026 at 08:10 Johannesburg time (06:10 UTC), campaign 923462, dedicated list 145761. All 450 deliverable addresses have individual results read back from cfv_weekend_warrior_2026_lourensford_results30; existing contact messages, names and email status preserved. Of 516 valid addresses, excluded 29 bounced/bouncing, 36 prior unsubscribes and 1 provider conflict; 109 registration rows lacked a valid email. Concrete Mark Tew preview visually checked; overall field-size count omitted, official results button and both logo banners present. Three provider reads confirm pre-queue, is_scheduled=yes, epoch 1792476600, 450 to queue, 0 sent and send_date=0. Shaun-only schedule test 923461 cancelled; no duplicate test scheduled. Recipient-specific provider merge rendering cannot be inspected through the public online view; dedicated field and existing custom-tag syntax verified.
 
 - [x] Connected Everlytic at the builder-confirmed installation; signed-in admin page reads campaigns and provides preview-to-Shaun and subscriber-campaign sending controls. Two safety tests pass; personalized thank-you content imported into the dedicated event audience and campaign 923462 scheduled.

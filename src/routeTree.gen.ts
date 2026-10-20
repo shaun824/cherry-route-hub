@@ -86,6 +86,7 @@ import { Route as AdminVillageIndexRouteImport } from './routes/admin.village.in
 import { Route as AdminVillageEventIdRouteImport } from './routes/admin.village.$eventId'
 import { Route as ApiPublicClassAvailabilityRouteImport } from './routes/api/public/class-availability'
 import { Route as ApiPublicEntryCountRouteImport } from './routes/api/public/entry-count'
+import { Route as ApiPublicEntryInterestRouteImport } from './routes/api/public/entry-interest'
 import { Route as ApiPublicMarketingSnapshotRouteImport } from './routes/api/public/marketing-snapshot'
 import { Route as CrewDepartmentDeptIdRouteImport } from './routes/crew.department.$deptId'
 import { Route as CrewLearnIndexRouteImport } from './routes/crew.learn.index'
@@ -515,6 +516,11 @@ const ApiPublicEntryCountRoute = ApiPublicEntryCountRouteImport.update({
   path: '/api/public/entry-count',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicEntryInterestRoute = ApiPublicEntryInterestRouteImport.update({
+  id: '/api/public/entry-interest',
+  path: '/api/public/entry-interest',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicMarketingSnapshotRoute =
   ApiPublicMarketingSnapshotRouteImport.update({
     id: '/api/public/marketing-snapshot',
@@ -805,6 +811,7 @@ export interface FileRoutesByFullPath {
   '/admin/village/$eventId': typeof AdminVillageEventIdRoute
   '/api/public/class-availability': typeof ApiPublicClassAvailabilityRoute
   '/api/public/entry-count': typeof ApiPublicEntryCountRoute
+  '/api/public/entry-interest': typeof ApiPublicEntryInterestRoute
   '/api/public/marketing-snapshot': typeof ApiPublicMarketingSnapshotRoute
   '/crew/department/$deptId': typeof CrewDepartmentDeptIdRoute
   '/crew/learn/$courseId': typeof CrewLearnCourseIdRoute
@@ -919,6 +926,7 @@ export interface FileRoutesByTo {
   '/admin/village/$eventId': typeof AdminVillageEventIdRoute
   '/api/public/class-availability': typeof ApiPublicClassAvailabilityRoute
   '/api/public/entry-count': typeof ApiPublicEntryCountRoute
+  '/api/public/entry-interest': typeof ApiPublicEntryInterestRoute
   '/api/public/marketing-snapshot': typeof ApiPublicMarketingSnapshotRoute
   '/crew/department/$deptId': typeof CrewDepartmentDeptIdRoute
   '/crew/learn/$courseId': typeof CrewLearnCourseIdRoute
@@ -1038,6 +1046,7 @@ export interface FileRoutesById {
   '/admin/village/$eventId': typeof AdminVillageEventIdRoute
   '/api/public/class-availability': typeof ApiPublicClassAvailabilityRoute
   '/api/public/entry-count': typeof ApiPublicEntryCountRoute
+  '/api/public/entry-interest': typeof ApiPublicEntryInterestRoute
   '/api/public/marketing-snapshot': typeof ApiPublicMarketingSnapshotRoute
   '/crew/department/$deptId': typeof CrewDepartmentDeptIdRoute
   '/crew/learn/$courseId': typeof CrewLearnCourseIdRoute
@@ -1158,6 +1167,7 @@ export interface FileRouteTypes {
     | '/admin/village/$eventId'
     | '/api/public/class-availability'
     | '/api/public/entry-count'
+    | '/api/public/entry-interest'
     | '/api/public/marketing-snapshot'
     | '/crew/department/$deptId'
     | '/crew/learn/$courseId'
@@ -1272,6 +1282,7 @@ export interface FileRouteTypes {
     | '/admin/village/$eventId'
     | '/api/public/class-availability'
     | '/api/public/entry-count'
+    | '/api/public/entry-interest'
     | '/api/public/marketing-snapshot'
     | '/crew/department/$deptId'
     | '/crew/learn/$courseId'
@@ -1390,6 +1401,7 @@ export interface FileRouteTypes {
     | '/admin/village/$eventId'
     | '/api/public/class-availability'
     | '/api/public/entry-count'
+    | '/api/public/entry-interest'
     | '/api/public/marketing-snapshot'
     | '/crew/department/$deptId'
     | '/crew/learn/$courseId'
@@ -1469,6 +1481,7 @@ export interface RootRouteChildren {
   Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
   ApiPublicClassAvailabilityRoute: typeof ApiPublicClassAvailabilityRoute
   ApiPublicEntryCountRoute: typeof ApiPublicEntryCountRoute
+  ApiPublicEntryInterestRoute: typeof ApiPublicEntryInterestRoute
   ApiPublicMarketingSnapshotRoute: typeof ApiPublicMarketingSnapshotRoute
   CrewDepartmentDeptIdRoute: typeof CrewDepartmentDeptIdRoute
   CrewLearnCourseIdRoute: typeof CrewLearnCourseIdRoute
@@ -2047,6 +2060,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicEntryCountRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/entry-interest': {
+      id: '/api/public/entry-interest'
+      path: '/api/public/entry-interest'
+      fullPath: '/api/public/entry-interest'
+      preLoaderRoute: typeof ApiPublicEntryInterestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/marketing-snapshot': {
       id: '/api/public/marketing-snapshot'
       path: '/api/public/marketing-snapshot'
@@ -2501,6 +2521,7 @@ const rootRouteChildren: RootRouteChildren = {
   Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
   ApiPublicClassAvailabilityRoute: ApiPublicClassAvailabilityRoute,
   ApiPublicEntryCountRoute: ApiPublicEntryCountRoute,
+  ApiPublicEntryInterestRoute: ApiPublicEntryInterestRoute,
   ApiPublicMarketingSnapshotRoute: ApiPublicMarketingSnapshotRoute,
   CrewDepartmentDeptIdRoute: CrewDepartmentDeptIdRoute,
   CrewLearnCourseIdRoute: CrewLearnCourseIdRoute,

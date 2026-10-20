@@ -1,8 +1,12 @@
 // Only the builder-confirmed installation may receive credentials. Never follow redirects.
-export async function everlyticRequest(path: string, method: "GET" | "POST", username: string, apiKey: string) {
+export async function everlyticRequest(path: string, method: "GET" | "POST", username: string, apiKey: string, body?: unknown) {
   const response = await fetch(`https://newsletters.computicket-mails.com${path}`, {
     method, redirect: "error", signal: AbortSignal.timeout(30_000),
-    headers: { Authorization: `Basic ${btoa(`${username}:${apiKey}`)}`, Accept: "application/json" },
+    headers: {
+      Authorization: `Basic ${btoa(`${username}:${apiKey}`)}`, Accept: "application/json",
+      ...(body === undefined ? {} : { "Content-Type": "application/json" }),
+    },
+    body: body === undefined ? undefined : JSON.stringify(body),
   });
   if (!response.ok) {
     // Provider bodies can echo credentials; do not log or return them.
