@@ -1,5 +1,7 @@
 # Roadmap
 
+- [ ] Match the latest grouped partner network without pink artwork backgrounds in both 2027 mailers; add distinct Grabouw and Lourensford entry links; update the scheduled Everlytic mailer while preserving its audience and time.
+
 - [x] Create /otto1890-signup as a public branded bio page; verified desktop/phone layouts, no horizontal overflow, and successful form submission with Shaun's address. Existing email safety tests pass; build OK.
 - [x] Add entry-alert sign-ups to Shaun's selected larger Bicycles list (102600), preserving existing list mappings and global opt-outs/bounces. Existing one sign-up reconciled and memberships read back; form submission succeeds; five audience/email safety tests pass and build OK. Publish required for the public bio page and updated form handler.
 
