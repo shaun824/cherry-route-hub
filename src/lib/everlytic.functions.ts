@@ -5,7 +5,7 @@ import { campaignCanSend, readEverlyticCampaigns } from "./everlytic-data";
 
 export const manageEverlytic = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => z.object({ action: z.enum(["list", "lists", "preview", "send"]), campaignId: z.string().regex(/^\d+$/).optional() }).parse(input))
+  .inputValidator((input: unknown) => z.object({ action: z.enum(["list", "lists", "signup-status", "preview", "send"]), campaignId: z.string().regex(/^\d+$/).optional() }).parse(input))
   .handler(async ({ context, data }) => {
     const { data: role, error } = await context.supabase.from("user_roles").select("role").eq("user_id", context.userId).eq("role", "admin").maybeSingle();
     if (error || !role) throw new Error("Admins only");
@@ -13,6 +13,11 @@ export const manageEverlytic = createServerFn({ method: "POST" })
     const apiKey = process.env['EVERLYTIC_API_KEY'];
     if (!username || !apiKey) throw new Error("Everlytic account details are not configured");
     const { everlyticRequest } = await import("./everlytic.server");
+    if (data.action === "signup-status") {
+      const raw = await everlyticRequest(`/api/2.0/contacts?contact_email=${encodeURIComponent('shaun@redcherryevents.co.za')}&count=1`, "GET", username, apiKey);
+      const contact = raw.collection?.[0]?.data ?? raw.data ?? {};
+      return { campaigns: [], message: JSON.stringify({ keys: Object.keys(contact), id: contact.id, emailStatus: contact.contact_email_status, lists: contact.list_id, subscriptions: contact.subscriptions }) };
+    }
     if (data.action === "lists") {
       const lists = [];
       for (let page = 1; page <= 20; page++) {
