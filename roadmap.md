@@ -1,7 +1,7 @@
 # Roadmap
 
 - [x] Prepared JBFE Sea to Sea North welcome/route mailer with nine measured distances, confirmed stops, safety notes and full sponsors; Everlytic draft 923685 is composing with no list and zero rider sends. Updated Shaun-only preview accepted; 13 images load at phone/desktop widths, no overflow. Event-only roster is 25 riders / 22 unique emails.
-- [ ] Send approved JBFE Sea to Sea North mailer to entered riders only; waiting on Shaun's test approval and confirmation of any additional waterpoints / separate Day 2 refuel location.
+- [x] Shaun approved the JBFE Sea to Sea North mailer; Everlytic 923685 send accepted and verified pre-queue for 21 eligible entered-rider email addresses on isolated list 145850. All list members match the refreshed roster; one bounced address excluded, existing subscriptions/opt-outs unchanged. Unconfirmed separate Day 2 refuel location remains explicitly noted in the approved email.
 - [x] Delivered verified nine-route GPX ZIP for all three days/classes with confirmed lunch waypoints, unchanged full-resolution tracks, CSV distances/stops and GPS import notes; ZIP integrity and each GPX track/waypoint validated.
 
 - [x] Both 2027 mailers now use the latest grouped title/premium/event partner layout with white logo artwork, plus separate Grabouw 84713 and Lourensford 84714 links (including the calendar reminder). All 22 images load at 375px and 1280px without overflow; three date/link tests pass and build OK. Everlytic replacement 923637 verified pre-queue for 1 Dec 09:00 SAST, same 20 lists and 1,668 recipients, zero sent; previous 923636 verified cancelled.
