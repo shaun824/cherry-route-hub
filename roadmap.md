@@ -1,5 +1,8 @@
 # Roadmap
 
+- [ ] Prepare current JBFE Sea to Sea North welcome/route mailer for entered riders only and send Shaun a test; hold rider send for test approval.
+- [ ] Deliver verified nine-route GPX ZIP covering all three days and classes, with confirmed lunch-stop waypoints.
+
 - [x] Both 2027 mailers now use the latest grouped title/premium/event partner layout with white logo artwork, plus separate Grabouw 84713 and Lourensford 84714 links (including the calendar reminder). All 22 images load at 375px and 1280px without overflow; three date/link tests pass and build OK. Everlytic replacement 923637 verified pre-queue for 1 Dec 09:00 SAST, same 20 lists and 1,668 recipients, zero sent; previous 923636 verified cancelled.
 
 - [x] Create /otto1890-signup as a public branded bio page; verified desktop/phone layouts, no horizontal overflow, and successful form submission with Shaun's address. Existing email safety tests pass; build OK.
