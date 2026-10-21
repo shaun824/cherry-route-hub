@@ -1,6 +1,6 @@
 # Roadmap
 
-- [ ] Replace JBFE Sea to Sea Day 1 Gold/Silver with the corrected forest-free tracks, preserve all stops, resend to entered riders and deliver a revised GPS ZIP.
+- [x] Replaced JBFE Sea to Sea Day 1 Gold/Silver with corrected full-resolution tracks (86.6/86.0 km); verified only their files/distances changed and all stops/other tracks are unchanged. Delivered validated nine-route GPS ZIP v2. Everlytic correction 923732 accepted, verified pre-queue for 21 eligible entered-rider emails; one bounced address excluded, opt-outs preserved.
 
 - [x] Prepared JBFE Sea to Sea North welcome/route mailer with nine measured distances, confirmed stops, safety notes and full sponsors; Everlytic draft 923685 is composing with no list and zero rider sends. Updated Shaun-only preview accepted; 13 images load at phone/desktop widths, no overflow. Event-only roster is 25 riders / 22 unique emails.
 - [x] Shaun approved the JBFE Sea to Sea North mailer; Everlytic 923685 send accepted and verified pre-queue for 21 eligible entered-rider email addresses on isolated list 145850. All list members match the refreshed roster; one bounced address excluded, existing subscriptions/opt-outs unchanged. Unconfirmed separate Day 2 refuel location remains explicitly noted in the approved email.
