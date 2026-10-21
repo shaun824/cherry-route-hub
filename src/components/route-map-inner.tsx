@@ -29,6 +29,7 @@ import {
 import { getRouteElevation } from "@/lib/elevation.functions";
 import { withRegistrationDayLabels } from "@/lib/event-days";
 import { useRouteHover } from "@/lib/route-hover";
+import RouteMapTrackpad from "@/components/route-map-trackpad";
 
 // Fix Leaflet's default icon paths (Vite bundles differently than webpack).
 delete (L.Icon.Default.prototype as unknown as { _getIconUrl?: unknown })._getIconUrl;
@@ -256,6 +257,7 @@ export default function RouteMapInner({
   dayIds,
 }: Props) {
   const [loaded, setLoaded] = useState<Loaded[]>([]);
+  const trackpadPan = /sea to sea/i.test(event.name);
   const [enabled, setEnabled] = useState<Record<string, boolean>>({});
   const [fs, setFs] = useState(false);
   const [zoom, setZoom] = useState(12);
@@ -552,7 +554,7 @@ export default function RouteMapInner({
       zoom={bounds ? undefined : 9}
       style={{ height: h, width: "100%" }}
       zoomControl={false}
-      scrollWheelZoom
+      scrollWheelZoom={!trackpadPan}
       zoomSnap={0}
       zoomDelta={0.5}
       wheelPxPerZoomLevel={180}
@@ -572,6 +574,7 @@ export default function RouteMapInner({
         maxNativeZoom={19}
       />
       <FitToBounds bounds={bounds} />
+      {trackpadPan ? <RouteMapTrackpad /> : null}
       <ZoomWatcher onZoom={setZoom} />
       <MapControls bounds={bounds} />
       <HoverMarker />
