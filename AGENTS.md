@@ -13,6 +13,7 @@
 - Crew live-map controls and selected-rider actions render outside the map; SOS resolution uses the signed-in race-control callback so field links remain read-only.
 - Supplier promo ROI is an engagement estimate from outbound clicks, never a confirmed redemption or sale.
 - PE Plett's Routes tab reuses generic route data but presents a PE Plett-only map-first journey and vector profile, keeping other events unchanged.
+- Sea to Sea route maps use Leaflet panBy for unmodified trackpad wheel gestures and pointer-anchored setZoomAround for pinch; frame batching prevents gesture lag while preserving native touch dragging and other events' controls.
 
 - In-event analytics go through `src/lib/event-analytics.ts` (batched `track()` queue, `data-section` / `data-track-action` markers) — one fire-and-forget path, no personal data in props.
 - Rental plan edits regenerate an editable text plan from live rental data (not stored separately, since site_settings is publicly readable) and re-run it through the AI draft step before applying — keeps one source of truth.
