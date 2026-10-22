@@ -61,7 +61,7 @@ export function useFullscreenMapNavigation(map: L.Map | null, active: boolean, f
     opened.current = true;
     moving.current = false;
   }, [map, active, fix?.lat, fix?.lng, fix?.heading, paused, resumeKey]);
-  return { paused, resume: () => { opened.current = false; setPaused(false); setResumeKey(k => k + 1); } };
+  return { paused, pause: () => setPaused(true), resume: () => { opened.current = false; setPaused(false); setResumeKey(k => k + 1); } };
 }
 
 export function FullscreenNavigationBar({ fix, progress, routeName, paused, onResume, error }: {

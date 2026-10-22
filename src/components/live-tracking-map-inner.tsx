@@ -1061,7 +1061,7 @@ export default function LiveTrackingMapInner({
   // ---- Open on the course: fit every route once they load ---------------
   useEffect(() => {
     const map = mapRef.current;
-    if (!map || fittedRef.current || candidates.length === 0) return;
+    if (!map || fullscreen || fittedRef.current || candidates.length === 0) return;
     const b: [number, number][] = [];
     for (const c of candidates) for (const line of c.lines) for (const [lng, lat] of line) b.push([lat, lng]);
     if (b.length === 0) return;
@@ -1069,7 +1069,7 @@ export default function LiveTrackingMapInner({
     map.fitBounds(L.latLngBounds(b).pad(0.08));
     fittedRef.current = true;
     window.setTimeout(() => (programmaticMoveRef.current = false), 700);
-  }, [candidates]);
+  }, [candidates, fullscreen]);
 
   // ---- Team locations: crew see each other; sharing only near the course ----
   const distToCourse = useMemo(() => {
@@ -1258,6 +1258,7 @@ export default function LiveTrackingMapInner({
   const focusPoint = (pt: FieldPoint) => {
     const map = mapRef.current;
     if (!map) return;
+    if (fullscreen) navigation.pause();
     setFollowPaused(true);
     programmaticMoveRef.current = true;
     map.setView([pt.lat, pt.lng], Math.max(map.getZoom(), 16));
@@ -1266,6 +1267,7 @@ export default function LiveTrackingMapInner({
   };
 
   const centreOnMe = () => {
+    if (fullscreen) { navigation.resume(); if (!viewerLoc) requestLocation(false); return; }
     const map = mapRef.current;
     if (viewerLoc && map) {
       setFollowMe(true);
@@ -1468,6 +1470,7 @@ export default function LiveTrackingMapInner({
   };
 
   const focusRider = (r: LiveRiderPosition) => {
+    if (fullscreen && crewTools) navigation.pause();
     setSelectedId(r.userId);
     startFollowing(r.userId);
     const map = mapRef.current;
@@ -1842,6 +1845,8 @@ export default function LiveTrackingMapInner({
         {sosPopups}
         {fullscreen && crewTools && selectedRider ? riderCard : null}
       </div>
+
+      {fullscreen ? <FullscreenNavigationBar fix={navigationFix} progress={navProgress} routeName={navigationRoute?.route.name} error={locError} paused={navigation.paused} onResume={navigation.resume} /> : null}
 
       {fullscreen && fsTools ? (
         <div

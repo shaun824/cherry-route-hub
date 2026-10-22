@@ -759,7 +759,7 @@ export default function RouteMapInner({
                     <li key={`${owner.route.id}-${m.id}`} className="flex items-center gap-3 py-2.5">
                       <button
                         type="button"
-                        onClick={() => setFlyTarget({ lat: m.lat, lng: m.lng, n: Date.now() })}
+                        onClick={() => { navigation.pause(); setFlyTarget({ lat: m.lat, lng: m.lng, n: Date.now() }); }}
                         className="flex min-w-0 flex-1 items-start gap-2.5 text-left"
                       >
                         <span
