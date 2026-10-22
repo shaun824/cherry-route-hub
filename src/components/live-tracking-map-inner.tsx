@@ -888,7 +888,7 @@ export default function LiveTrackingMapInner({
     }
     const stopArrows = addDirectionArrows(
       map,
-      matchedRoutes.flatMap((c) => c.lines.map((line) => ({ color: c.color, coords: line.map(([lng, lat]) => [lat, lng] as [number, number]) }))),
+      matchedRoutes.map((c) => ({ color: c.color, lines: navigationLinesRef.current.get(c.route.id) ?? c.lines })),
     );
 
     return () => {
