@@ -98,7 +98,7 @@ import { fetchMyEventById, fetchMyTeam, fetchMyEntryGroup, type MyEventRow } fro
 import { Printer, Siren, BedDouble, ExternalLink, Users } from "lucide-react";
 import type { EventDay, EventRoute, FeedPost, ScheduleItem, SocialLinks } from "@/lib/mock-data";
 import { relativeTime } from "@/lib/mock-data";
-import { withRegistrationDayLabels } from "@/lib/event-days";
+import { cleanEventDays, withRegistrationDayLabels } from "@/lib/event-days";
 
 import { TypeBadge } from "@/components/ui-bits";
 
@@ -266,7 +266,7 @@ function MyEventDetail() {
   );
 
   // Moving events sleep somewhere different each night — they get their own tab.
-  const eventDays = Array.isArray(event.days) ? (event.days as EventDay[]) : [];
+  const eventDays = cleanEventDays(event.days);
   const eventSchedule = Array.isArray(event.schedule) ? (event.schedule as ScheduleItem[]) : [];
   const stays = useMyNights(event.id, eventDays, eventSchedule, Boolean(user));
   const hasNightly = stays.multiVenue && stays.nights.length > 0;
@@ -352,7 +352,7 @@ function MyEventDetail() {
           eventId={event.id}
           eventName={event.name}
           eventDate={event.event_date}
-          days={event.days}
+          days={cleanEventDays(event.days)}
         />
       </div>
 
@@ -677,7 +677,7 @@ function RoutesPanel({
   // Rider offers live inside the routes — the most-viewed part of the page.
   const promos = useShuffledPromos(useEventPromos(eventName ?? event.name ?? ""));
   const days: EventDay[] = withRegistrationDayLabels(
-    Array.isArray(event.days) ? (event.days as EventDay[]) : [],
+    cleanEventDays(event.days),
     Array.isArray(event.schedule) ? (event.schedule as ScheduleItem[]) : [],
   );
   const routeDays = days.filter((d) => (d.routes ?? []).length > 0);
@@ -939,7 +939,7 @@ function InfoPanel({
   const riderOffers = useEventPromos(eventName);
   const schedule: ScheduleItem[] = Array.isArray(event.schedule) ? (event.schedule as ScheduleItem[]) : [];
   const days: EventDay[] = withRegistrationDayLabels(
-    Array.isArray(event.days) ? (event.days as EventDay[]) : [],
+    cleanEventDays(event.days),
     schedule,
   );
 
@@ -967,7 +967,7 @@ function InfoPanel({
           location={event.location ?? ""}
           mapQuery={event.map_query}
           eventDate={event.event_date ?? undefined}
-          eventDays={(event as { days?: unknown }).days}
+          eventDays={cleanEventDays((event as { days?: unknown }).days)}
         /></div>
       ) : null}
 
@@ -982,7 +982,7 @@ function InfoPanel({
       {hasNightly ? (
         <div data-section="accommodation"><AccommodationTimeline
           eventId={eventId}
-          days={Array.isArray(event.days) ? (event.days as EventDay[]) : []}
+          days={cleanEventDays(event.days)}
           schedule={schedule}
           variant="compact"
           enabled={signedIn}
@@ -1240,7 +1240,7 @@ function PackingPanel({
   // Size the list to the itinerary: ride days come from days that have routes,
   // nights from the number of days on the programme.
   const { rideDays, nights } = useMemo(() => {
-    const days: EventDay[] = Array.isArray(event.days) ? (event.days as EventDay[]) : [];
+    const days: EventDay[] = cleanEventDays(event.days);
     const withRoutes = days.filter((d) => (d.routes ?? []).length > 0).length;
     return {
       rideDays: withRoutes > 0 ? withRoutes : Math.max(1, days.length),
