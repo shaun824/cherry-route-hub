@@ -1459,6 +1459,7 @@ export default function LiveTrackingMapInner({
   const fitCourse = () => {
     const map = mapRef.current;
     if (!map) return;
+    if (fullscreen) navigation.pause();
     const src = matchedRoutes.length ? matchedRoutes : candidates;
     const b: [number, number][] = [];
     for (const c of src) for (const line of c.lines) for (const [lng, lat] of line) b.push([lat, lng]);
@@ -1628,7 +1629,7 @@ export default function LiveTrackingMapInner({
               {followMe && !followPaused ? "Following me" : viewerLoc ? "Follow me" : "Show my location"}
             </Button>
           ) : null}
-          <Button variant="outline" size="sm"
+          {!fullscreen ? <Button variant="outline" size="sm"
             type="button"
             aria-pressed={headingUp}
             onClick={() => {
@@ -1638,7 +1639,7 @@ export default function LiveTrackingMapInner({
             className={`inline-flex items-center gap-1 rounded-md px-3 py-2 text-xs font-bold ring-1 ring-border ${headingUp ? "bg-primary text-primary-foreground" : "bg-card text-ink"}`}
           >
             <Compass className="h-3.5 w-3.5" /> {headingUp ? "Heading up" : "North up"}
-          </Button>
+          </Button> : null}
           {crewTools && shareAllowed ? (
             <Button variant="outline" size="sm"
               type="button"

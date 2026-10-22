@@ -62,6 +62,8 @@ export const Route = createFileRoute("/spectate/$eventId")({
         content: `Track riders at this Red Cherry event: rider list with bib numbers, batches, results and venue info.`,
       },
       { property: "og:title", content: "Track riders — Red Cherry Events" },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       {
         property: "og:description",
         content: `Rider list with bib numbers, batches, results and spectator venue info.`,
