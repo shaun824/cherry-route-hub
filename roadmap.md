@@ -1,4 +1,5 @@
 # Roadmap
+- [x] Correct kilometre labels to use full-resolution cumulative distance per route without resetting at track sections; audited all nine current JBFE Sea to Sea files, verified Gold Day 2 on signed-in race-control and rider fullscreen maps, and passed six distance/navigation regression tests.
 
 - [x] Add fullscreen-only driving-style pin follow, 120 m camera-height-equivalent opening scale, two-finger rotation and full-resolution selected-route distance/remaining display; verified signed-in route and race-control maps with simulated GPS movement, touch twist, exit restoration and desktop layout. Real-device driving remains a field check.
 
