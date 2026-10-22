@@ -1,5 +1,7 @@
 # Roadmap
 
+- [ ] Add fullscreen-only driving-style pin follow, close opening zoom, two-finger rotation and selected-route distance/remaining display; verify rider routes and race control.
+
 - [x] Replaced JBFE Sea to Sea Day 1 Gold/Silver with corrected full-resolution tracks (86.6/86.0 km); verified only their files/distances changed and all stops/other tracks are unchanged. Delivered validated nine-route GPS ZIP v2. Everlytic correction 923732 accepted, verified pre-queue for 21 eligible entered-rider emails; one bounced address excluded, opt-outs preserved.
 
 - [x] Prepared JBFE Sea to Sea North welcome/route mailer with nine measured distances, confirmed stops, safety notes and full sponsors; Everlytic draft 923685 is composing with no list and zero rider sends. Updated Shaun-only preview accepted; 13 images load at phone/desktop widths, no overflow. Event-only roster is 25 riders / 22 unique emails.
