@@ -17,6 +17,8 @@ import { useQuery } from "@tanstack/react-query";
 import { fetchLiveTracking, type LiveRiderPosition } from "@/lib/tracking.functions";
 import { Compass, Crosshair, Layers, LocateFixed, MapPin, Maximize2, Navigation, Copy, Share2, Check, Route as RouteIcon, Search, Star, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { FullscreenNavigationBar, useFullscreenMapNavigation } from '@/components/fullscreen-map-navigation';
+import { navigationProgress } from '@/lib/fullscreen-navigation';
 import { toast } from "sonner";
 import type { CustomMarker } from "@/lib/mock-data";
 import { RouteProfile } from "@/components/route-profile";
@@ -462,6 +464,8 @@ export default function LiveTrackingMapInner({
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const guideLineRef = useRef<L.Polyline | null>(null);
   const ownMarkerRef = useRef<L.Marker | null>(null);
+  const fullscreenRef = useRef(fullscreen);
+  fullscreenRef.current = fullscreen;
 
   // Remember who a spectator is following so reopening the page keeps them on
   // their rider instead of making them search again.
@@ -594,7 +598,7 @@ export default function LiveTrackingMapInner({
       map.dragging.disable();
       el.style.touchAction = "pan-y";
       const onTouch = (e: TouchEvent) => {
-        if (e.touches.length >= 2) map.dragging.enable();
+        if (fullscreenRef.current || e.touches.length >= 2) map.dragging.enable();
         else map.dragging.disable();
       };
       el.addEventListener("touchstart", onTouch, { passive: true });
@@ -645,6 +649,7 @@ export default function LiveTrackingMapInner({
 
     // Standard follow behaviour: a manual pan or zoom pauses auto-recentring.
     const onUserMove = () => {
+      if (fullscreenRef.current) return;
       if (programmaticMoveRef.current) return;
       setFollowPaused(true);
     };
@@ -689,6 +694,7 @@ export default function LiveTrackingMapInner({
   }, [allDays]);
 
   const specKey = routeSpecs.map((s) => s.route.id).join(",");
+  const navigationLinesRef = useRef(new Map<string, LatLngAlt[][]>());
 
   // Fetch + parse the KMLs for the candidate routes.
   useEffect(() => {
@@ -702,12 +708,14 @@ export default function LiveTrackingMapInner({
       await Promise.all(
         routeSpecs.map(async (spec) => {
           const lines: LatLngAlt[][] = [];
+          const navigationLines: LatLngAlt[][] = [];
           for (const url of spec.route.kmlUrls ?? []) {
             try {
               const res = await fetch(url);
               if (!res.ok) continue;
               const layer = parseKml(await res.text());
               for (const line of layer.lines) {
+                navigationLines.push(line);
                 lines.push(capPolyline(simplifyPolyline(line, 8), 1500));
               }
             } catch (err) {
@@ -715,6 +723,7 @@ export default function LiveTrackingMapInner({
             }
           }
           if (lines.length === 0) return;
+          if (!cancelled) navigationLinesRef.current.set(spec.route.id, navigationLines);
           out.push({
             route: spec.route,
             dayId: spec.dayId,
@@ -873,7 +882,7 @@ export default function LiveTrackingMapInner({
       polys.forEach((p) => p.bringToBack());
     }
 
-    if (!fittedRef.current && bounds.length > 0) {
+    if (!fullscreen && !fittedRef.current && bounds.length > 0) {
       map.fitBounds(L.latLngBounds(bounds).pad(0.1));
     }
     const stopArrows = addDirectionArrows(
@@ -886,7 +895,7 @@ export default function LiveTrackingMapInner({
       for (const [, polys] of routeLayersRef.current) polys.forEach((p) => p.remove());
       routeLayersRef.current.clear();
     };
-  }, [matchedRoutes]);
+  }, [matchedRoutes, fullscreen]);
 
   // Course line used for progress + off-course checks: the followed rider's route.
   const course: CourseLine | null = useMemo(() => {
@@ -982,12 +991,12 @@ export default function LiveTrackingMapInner({
     } else {
       ownMarkerRef.current.setLatLng([posLat, posLng]);
     }
-    if (!followPaused) {
+    if (!fullscreen && !followPaused) {
       programmaticMoveRef.current = true;
       map.setView([posLat, posLng], Math.max(map.getZoom(), 15));
       window.setTimeout(() => (programmaticMoveRef.current = false), 700);
     }
-  }, [posLat, posLng, followPaused, riderMode]);
+  }, [posLat, posLng, followPaused, riderMode, fullscreen]);
 
   // ---- Crew tools: "me" dot + waterpoints/aid stations -----------------
   const meMarkerRef = useRef<L.Marker | null>(null);
@@ -1009,12 +1018,12 @@ export default function LiveTrackingMapInner({
     } else {
       meMarkerRef.current.setLatLng([viewerLoc.lat, viewerLoc.lng]);
     }
-    if (followMe && !followPaused) {
+    if (!fullscreen && followMe && !followPaused) {
       programmaticMoveRef.current = true;
       map.panTo([viewerLoc.lat, viewerLoc.lng], { animate: true, duration: 0.5 });
       window.setTimeout(() => (programmaticMoveRef.current = false), 700);
     }
-  }, [viewerLoc, crewTools, followMe, followPaused]);
+  }, [viewerLoc, crewTools, followMe, followPaused, fullscreen]);
 
   // ---- Heading-up: rotate the map to the followed target's travel direction ----
   const headingTarget = useMemo(() => {
@@ -1026,7 +1035,12 @@ export default function LiveTrackingMapInner({
   }, [riderMode, currentPosition, crewTools, followMe, viewerLoc, follow, selectedId, riders]);
   const headingAnchorRef = useRef<{ lat: number; lng: number } | null>(null);
   const headingRef = useRef<number | null>(null);
+  const navigationFix = riderMode ? currentPosition : crewTools ? viewerLoc : headingTarget;
+  const navigation = useFullscreenMapNavigation(mapRef.current, fullscreen, navigationFix);
+  const navigationRoute = matchedRoutes.find(c => followedRider && !crewTools && categoryMatchesRoute(followedRider.category, c.route)) ?? matchedRoutes[0];
+  const navProgress = useMemo(() => navigationFix && navigationRoute ? navigationProgress(navigationLinesRef.current.get(navigationRoute.route.id) ?? navigationRoute.lines, navigationFix.lat, navigationFix.lng) : null, [navigationRoute, navigationFix]);
   useEffect(() => {
+    if (fullscreen) return;
     const map = mapRef.current as (L.Map & { setBearing?: (d: number) => void }) | null;
     if (!map?.setBearing) return;
     if (!headingUp) {
@@ -1046,12 +1060,12 @@ export default function LiveTrackingMapInner({
       }
     }
     if (headingRef.current != null && !followPaused) map.setBearing(-headingRef.current);
-  }, [headingTarget, headingUp, followPaused]);
+  }, [headingTarget, headingUp, followPaused, fullscreen]);
 
   // ---- Open on the course: fit every route once they load ---------------
   useEffect(() => {
     const map = mapRef.current;
-    if (!map || fittedRef.current || candidates.length === 0) return;
+    if (!map || fullscreen || fittedRef.current || candidates.length === 0) return;
     const b: [number, number][] = [];
     for (const c of candidates) for (const line of c.lines) for (const [lng, lat] of line) b.push([lat, lng]);
     if (b.length === 0) return;
@@ -1059,7 +1073,7 @@ export default function LiveTrackingMapInner({
     map.fitBounds(L.latLngBounds(b).pad(0.08));
     fittedRef.current = true;
     window.setTimeout(() => (programmaticMoveRef.current = false), 700);
-  }, [candidates]);
+  }, [candidates, fullscreen]);
 
   // ---- Team locations: crew see each other; sharing only near the course ----
   const distToCourse = useMemo(() => {
@@ -1248,6 +1262,7 @@ export default function LiveTrackingMapInner({
   const focusPoint = (pt: FieldPoint) => {
     const map = mapRef.current;
     if (!map) return;
+    if (fullscreen) navigation.pause();
     setFollowPaused(true);
     programmaticMoveRef.current = true;
     map.setView([pt.lat, pt.lng], Math.max(map.getZoom(), 16));
@@ -1256,6 +1271,7 @@ export default function LiveTrackingMapInner({
   };
 
   const centreOnMe = () => {
+    if (fullscreen) { navigation.resume(); if (!viewerLoc) requestLocation(false); return; }
     const map = mapRef.current;
     if (viewerLoc && map) {
       setFollowMe(true);
@@ -1384,7 +1400,7 @@ export default function LiveTrackingMapInner({
       bounds.push([r.lat, r.lng]);
       // Follow mode recentres smoothly, but stays out of the way once the
       // viewer has panned or zoomed themselves.
-      if ((follow === r.userId || selectedId === r.userId) && !followPaused && !followMe) {
+      if (!fullscreen && (follow === r.userId || selectedId === r.userId) && !followPaused && !followMe) {
         programmaticMoveRef.current = true;
         map.panTo([r.lat, r.lng], { animate: true, duration: 0.5 });
         window.setTimeout(() => (programmaticMoveRef.current = false), 700);
@@ -1408,13 +1424,13 @@ export default function LiveTrackingMapInner({
       if (!seen.has(id)) { l.remove(); estLinesRef.current.delete(id); }
     }
 
-    if (!fittedRef.current && bounds.length > 0 && !follow) {
+    if (!fullscreen && !fittedRef.current && bounds.length > 0 && !follow) {
       programmaticMoveRef.current = true;
       map.fitBounds(L.latLngBounds(bounds).pad(0.15));
       fittedRef.current = true;
       window.setTimeout(() => (programmaticMoveRef.current = false), 700);
     }
-  }, [riders, follow, followPaused, followMe, isCrew, viewerLoc, selectedId, animateTo, progressFor, favs, estimates]);
+  }, [riders, follow, followPaused, followMe, isCrew, viewerLoc, selectedId, animateTo, progressFor, favs, estimates, fullscreen]);
 
 
   // Draw/refresh the dashed guide line from viewer to selected rider.
@@ -1447,6 +1463,7 @@ export default function LiveTrackingMapInner({
   const fitCourse = () => {
     const map = mapRef.current;
     if (!map) return;
+    if (fullscreen) navigation.pause();
     const src = matchedRoutes.length ? matchedRoutes : candidates;
     const b: [number, number][] = [];
     for (const c of src) for (const line of c.lines) for (const [lng, lat] of line) b.push([lat, lng]);
@@ -1458,6 +1475,7 @@ export default function LiveTrackingMapInner({
   };
 
   const focusRider = (r: LiveRiderPosition) => {
+    if (fullscreen && crewTools) navigation.pause();
     setSelectedId(r.userId);
     startFollowing(r.userId);
     const map = mapRef.current;
@@ -1615,7 +1633,7 @@ export default function LiveTrackingMapInner({
               {followMe && !followPaused ? "Following me" : viewerLoc ? "Follow me" : "Show my location"}
             </Button>
           ) : null}
-          <Button variant="outline" size="sm"
+          {!fullscreen ? <Button variant="outline" size="sm"
             type="button"
             aria-pressed={headingUp}
             onClick={() => {
@@ -1625,7 +1643,7 @@ export default function LiveTrackingMapInner({
             className={`inline-flex items-center gap-1 rounded-md px-3 py-2 text-xs font-bold ring-1 ring-border ${headingUp ? "bg-primary text-primary-foreground" : "bg-card text-ink"}`}
           >
             <Compass className="h-3.5 w-3.5" /> {headingUp ? "Heading up" : "North up"}
-          </Button>
+          </Button> : null}
           {crewTools && shareAllowed ? (
             <Button variant="outline" size="sm"
               type="button"
@@ -1832,6 +1850,8 @@ export default function LiveTrackingMapInner({
         {sosPopups}
         {fullscreen && crewTools && selectedRider ? riderCard : null}
       </div>
+
+      {fullscreen ? <FullscreenNavigationBar fix={navigationFix} progress={navProgress} routeName={navigationRoute?.route.name} error={locError} paused={navigation.paused} onResume={navigation.resume} /> : null}
 
       {fullscreen && fsTools ? (
         <div
