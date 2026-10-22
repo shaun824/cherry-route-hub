@@ -1,6 +1,6 @@
 # Roadmap
 
-- [ ] Add fullscreen-only driving-style pin follow, close opening zoom, two-finger rotation and selected-route distance/remaining display; verify rider routes and race control.
+- [x] Add fullscreen-only driving-style pin follow, 120 m camera-height-equivalent opening scale, two-finger rotation and full-resolution selected-route distance/remaining display; verified signed-in route and race-control maps with simulated GPS movement, touch twist, exit restoration and desktop layout. Real-device driving remains a field check.
 
 - [x] Replaced JBFE Sea to Sea Day 1 Gold/Silver with corrected full-resolution tracks (86.6/86.0 km); verified only their files/distances changed and all stops/other tracks are unchanged. Delivered validated nine-route GPS ZIP v2. Everlytic correction 923732 accepted, verified pre-queue for 21 eligible entered-rider emails; one bounced address excluded, opt-outs preserved.
 
@@ -44,4 +44,5 @@
 - [x] Build and test the Sea to Sea pre-event rider mailer.
 - [x] Keep shared village-map location, point details and the app link clear on mobile.
 - [x] Add undo for village editor point, tent, group and area moves.
-- [ ] Verify the shared village map and editor undo on a real phone.- [ ] 5 km distance markers on route maps (rider route map + live map)
+- [ ] Verify the shared village map and editor undo on a real phone.
+- [x] 5 km distance markers on route maps (rider route map + live map).
