@@ -48,6 +48,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { LiveTrackingMap } from "@/components/live-tracking-map";
+import { useScreenWakeLock } from "@/components/riding-mode-overlay";
 import { RaceStatusPanel } from "@/components/race-status-panel";
 import { StartCountdownPanel } from "@/components/start-countdown-panel";
 import { createCrewFieldLink } from "@/lib/crew-field-link.functions";
@@ -123,6 +124,8 @@ export function RaceControlPanel({
   shareCrewEvent?: boolean;
 }) {
   const queryClient = useQueryClient();
+  // Race control stays on screen (e.g. on a dashboard while driving): never dim.
+  useScreenWakeLock(true);
   const [eventId, setEventId] = useState<string | null>(() =>
     shareCrewEvent ? readCrewEventId() : null,
   );
