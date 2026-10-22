@@ -17,7 +17,6 @@ import { Button } from "@/components/ui/button";
 import type { CustomMarker, Event, EventRoute } from "@/lib/mock-data";
 import {
   boundsFromCoords,
-  haversineMeters,
   parseKml,
   polylineElevationGainM,
   polylineKm,
@@ -237,28 +236,6 @@ function NavigationMap({ onMap }: { onMap: (map: L.Map | null) => void }) {
   useEffect(() => { onMap(map); return () => onMap(null); }, [map, onMap]);
   return null;
 }
-
-/**
- * Nearest point on a route to a marker: how far into the route it sits (km)
- * and how far off the line it is (m), so we can hide irrelevant matches.
- */
-function distanceAlongRoute(
-  lines: LatLngAlt[][],
-  lat: number,
-  lng: number,
-): { km: number; offM: number } | null {
-  let best: { km: number; offM: number } | null = null;
-  let travelled = 0;
-  for (const line of lines) {
-    for (let i = 0; i < line.length; i++) {
-      if (i > 0) travelled += haversineMeters(line[i - 1], line[i]);
-      const off = haversineMeters([lng, lat], line[i]);
-      if (!best || off < best.offM) best = { km: travelled / 1000, offM: off };
-    }
-  }
-  return best;
-}
-
 
 export default function RouteMapInner({
   event,
