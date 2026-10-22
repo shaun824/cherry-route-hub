@@ -8,10 +8,14 @@ import { createPortal } from "react-dom";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import "leaflet.markercluster";
+// Bearing support (heading-up, like Google Maps). UMD plugin patches global L;
+// this module is only loaded lazily in the browser.
+(globalThis as unknown as { L: typeof L }).L = L;
+await import("leaflet-rotate");
 import "leaflet.markercluster/dist/MarkerCluster.css";
 import { useQuery } from "@tanstack/react-query";
 import { fetchLiveTracking, type LiveRiderPosition } from "@/lib/tracking.functions";
-import { Crosshair, Layers, LocateFixed, MapPin, Maximize2, Navigation, Copy, Share2, Check, Route as RouteIcon, Search, Star, X } from "lucide-react";
+import { Compass, Crosshair, Layers, LocateFixed, MapPin, Maximize2, Navigation, Copy, Share2, Check, Route as RouteIcon, Search, Star, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import type { CustomMarker } from "@/lib/mock-data";
@@ -303,6 +307,13 @@ function favKey(eventId: string) {
   return `rc-fav:${eventId}`;
 }
 
+function bearingDeg(a: { lat: number; lng: number }, b: { lat: number; lng: number }) {
+  const r = Math.PI / 180;
+  const y = Math.sin((b.lng - a.lng) * r) * Math.cos(b.lat * r);
+  const x = Math.cos(a.lat * r) * Math.sin(b.lat * r) - Math.sin(a.lat * r) * Math.cos(b.lat * r) * Math.cos((b.lng - a.lng) * r);
+  return ((Math.atan2(y, x) / r) + 360) % 360;
+}
+
 function followKey(eventId: string) {
   return `rce-follow-${eventId}`;
 }
@@ -443,7 +454,11 @@ export default function LiveTrackingMapInner({
   }, [fullscreen, sheetTall, fsTools]);
   const [search, setSearch] = useState("");
   const [showFinished, setShowFinished] = useState(false);
-  const [viewerLoc, setViewerLoc] = useState<{ lat: number; lng: number } | null>(null);
+  const [viewerLoc, setViewerLoc] = useState<{ lat: number; lng: number; heading?: number | null } | null>(null);
+  // Google-Maps-style navigation: keep "me" centred (crew) and turn the map so
+  // the direction of travel points up.
+  const [followMe, setFollowMe] = useState(false);
+  const [headingUp, setHeadingUp] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const guideLineRef = useRef<L.Polyline | null>(null);
   const ownMarkerRef = useRef<L.Marker | null>(null);
@@ -526,7 +541,11 @@ export default function LiveTrackingMapInner({
     }
     const onPos = (p: GeolocationPosition) => {
       setLocError(null);
-      setViewerLoc({ lat: p.coords.latitude, lng: p.coords.longitude });
+      setViewerLoc({
+        lat: p.coords.latitude,
+        lng: p.coords.longitude,
+        heading: p.coords.speed != null && p.coords.speed > 1 ? p.coords.heading : null,
+      });
     };
     const onErr = (e: GeolocationPositionError) =>
       setLocError(
@@ -565,7 +584,7 @@ export default function LiveTrackingMapInner({
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
-    const map = L.map(containerRef.current, { zoomControl: true }).setView([-29.5, 24.5], 6);
+    const map = L.map(containerRef.current, { zoomControl: true, rotate: true, touchRotate: false, rotateControl: false, bearing: 0 } as L.MapOptions).setView([-29.5, 24.5], 6);
     // On phones (rider/spectator) a one-finger swipe scrolls the page instead of
     // getting trapped by the map; two fingers move/zoom the map. Race control
     // (crew) moves the map with one finger.
@@ -989,7 +1008,44 @@ export default function LiveTrackingMapInner({
     } else {
       meMarkerRef.current.setLatLng([viewerLoc.lat, viewerLoc.lng]);
     }
-  }, [viewerLoc, crewTools]);
+    if (followMe && !followPaused) {
+      programmaticMoveRef.current = true;
+      map.panTo([viewerLoc.lat, viewerLoc.lng], { animate: true, duration: 0.5 });
+      window.setTimeout(() => (programmaticMoveRef.current = false), 700);
+    }
+  }, [viewerLoc, crewTools, followMe, followPaused]);
+
+  // ---- Heading-up: rotate the map to the followed target's travel direction ----
+  const headingTarget = useMemo(() => {
+    if (riderMode) return currentPosition ? { lat: currentPosition.lat, lng: currentPosition.lng, heading: null } : null;
+    if (crewTools && followMe) return viewerLoc;
+    const id = follow ?? selectedId;
+    const r = id ? riders.find((x) => x.userId === id) : null;
+    return r ? { lat: r.lat, lng: r.lng, heading: null } : null;
+  }, [riderMode, currentPosition, crewTools, followMe, viewerLoc, follow, selectedId, riders]);
+  const headingAnchorRef = useRef<{ lat: number; lng: number } | null>(null);
+  const headingRef = useRef<number | null>(null);
+  useEffect(() => {
+    const map = mapRef.current as (L.Map & { setBearing?: (d: number) => void }) | null;
+    if (!map?.setBearing) return;
+    if (!headingUp) {
+      map.setBearing(0);
+      headingAnchorRef.current = null;
+      return;
+    }
+    if (!headingTarget) return;
+    if (headingTarget.heading != null && !Number.isNaN(headingTarget.heading)) {
+      headingRef.current = headingTarget.heading;
+    } else {
+      const a = headingAnchorRef.current;
+      if (!a) headingAnchorRef.current = { lat: headingTarget.lat, lng: headingTarget.lng };
+      else if (L.latLng(a).distanceTo([headingTarget.lat, headingTarget.lng]) > 12) {
+        headingRef.current = bearingDeg(a, headingTarget);
+        headingAnchorRef.current = { lat: headingTarget.lat, lng: headingTarget.lng };
+      }
+    }
+    if (headingRef.current != null && !followPaused) map.setBearing(-headingRef.current);
+  }, [headingTarget, headingUp, followPaused]);
 
   // ---- Open on the course: fit every route once they load ---------------
   useEffect(() => {
@@ -1201,7 +1257,8 @@ export default function LiveTrackingMapInner({
   const centreOnMe = () => {
     const map = mapRef.current;
     if (viewerLoc && map) {
-      setFollowPaused(true);
+      setFollowMe(true);
+      setFollowPaused(false);
       programmaticMoveRef.current = true;
       map.setView([viewerLoc.lat, viewerLoc.lng], Math.max(map.getZoom(), 16));
       window.setTimeout(() => (programmaticMoveRef.current = false), 700);
@@ -1326,7 +1383,7 @@ export default function LiveTrackingMapInner({
       bounds.push([r.lat, r.lng]);
       // Follow mode recentres smoothly, but stays out of the way once the
       // viewer has panned or zoomed themselves.
-      if ((follow === r.userId || selectedId === r.userId) && !followPaused) {
+      if ((follow === r.userId || selectedId === r.userId) && !followPaused && !followMe) {
         programmaticMoveRef.current = true;
         map.panTo([r.lat, r.lng], { animate: true, duration: 0.5 });
         window.setTimeout(() => (programmaticMoveRef.current = false), 700);
@@ -1356,7 +1413,7 @@ export default function LiveTrackingMapInner({
       fittedRef.current = true;
       window.setTimeout(() => (programmaticMoveRef.current = false), 700);
     }
-  }, [riders, follow, followPaused, isCrew, viewerLoc, selectedId, animateTo, progressFor, favs, estimates]);
+  }, [riders, follow, followPaused, followMe, isCrew, viewerLoc, selectedId, animateTo, progressFor, favs, estimates]);
 
 
   // Draw/refresh the dashed guide line from viewer to selected rider.
@@ -1553,9 +1610,21 @@ export default function LiveTrackingMapInner({
               onClick={centreOnMe}
               className="inline-flex items-center gap-1 rounded-md bg-card px-3 py-2 text-xs font-bold text-ink ring-1 ring-border"
             >
-              <LocateFixed className="h-3.5 w-3.5 text-primary" /> {viewerLoc ? "Centre on me" : "Show my location"}
+              <LocateFixed className="h-3.5 w-3.5 text-primary" />{" "}
+              {followMe && !followPaused ? "Following me" : viewerLoc ? "Follow me" : "Show my location"}
             </Button>
           ) : null}
+          <Button variant="outline" size="sm"
+            type="button"
+            aria-pressed={headingUp}
+            onClick={() => {
+              setHeadingUp((h) => !h);
+              setFollowPaused(false);
+            }}
+            className={`inline-flex items-center gap-1 rounded-md px-3 py-2 text-xs font-bold ring-1 ring-border ${headingUp ? "bg-primary text-primary-foreground" : "bg-card text-ink"}`}
+          >
+            <Compass className="h-3.5 w-3.5" /> {headingUp ? "Heading up" : "North up"}
+          </Button>
           {crewTools && shareAllowed ? (
             <Button variant="outline" size="sm"
               type="button"
