@@ -42,4 +42,4 @@
 - [x] Build and test the Sea to Sea pre-event rider mailer.
 - [x] Keep shared village-map location, point details and the app link clear on mobile.
 - [x] Add undo for village editor point, tent, group and area moves.
-- [ ] Verify the shared village map and editor undo on a real phone.
+- [ ] Verify the shared village map and editor undo on a real phone.- [ ] 5 km distance markers on route maps (rider route map + live map)
