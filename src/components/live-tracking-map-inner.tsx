@@ -17,6 +17,8 @@ import { useQuery } from "@tanstack/react-query";
 import { fetchLiveTracking, type LiveRiderPosition } from "@/lib/tracking.functions";
 import { Compass, Crosshair, Layers, LocateFixed, MapPin, Maximize2, Navigation, Copy, Share2, Check, Route as RouteIcon, Search, Star, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { FullscreenNavigationBar, useFullscreenMapNavigation } from '@/components/fullscreen-map-navigation';
+import { navigationProgress } from '@/lib/fullscreen-navigation';
 import { toast } from "sonner";
 import type { CustomMarker } from "@/lib/mock-data";
 import { RouteProfile } from "@/components/route-profile";
@@ -462,6 +464,8 @@ export default function LiveTrackingMapInner({
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const guideLineRef = useRef<L.Polyline | null>(null);
   const ownMarkerRef = useRef<L.Marker | null>(null);
+  const fullscreenRef = useRef(fullscreen);
+  fullscreenRef.current = fullscreen;
 
   // Remember who a spectator is following so reopening the page keeps them on
   // their rider instead of making them search again.
@@ -594,7 +598,7 @@ export default function LiveTrackingMapInner({
       map.dragging.disable();
       el.style.touchAction = "pan-y";
       const onTouch = (e: TouchEvent) => {
-        if (e.touches.length >= 2) map.dragging.enable();
+        if (fullscreenRef.current || e.touches.length >= 2) map.dragging.enable();
         else map.dragging.disable();
       };
       el.addEventListener("touchstart", onTouch, { passive: true });
@@ -645,6 +649,7 @@ export default function LiveTrackingMapInner({
 
     // Standard follow behaviour: a manual pan or zoom pauses auto-recentring.
     const onUserMove = () => {
+      if (fullscreenRef.current) return;
       if (programmaticMoveRef.current) return;
       setFollowPaused(true);
     };
@@ -982,12 +987,12 @@ export default function LiveTrackingMapInner({
     } else {
       ownMarkerRef.current.setLatLng([posLat, posLng]);
     }
-    if (!followPaused) {
+    if (!fullscreen && !followPaused) {
       programmaticMoveRef.current = true;
       map.setView([posLat, posLng], Math.max(map.getZoom(), 15));
       window.setTimeout(() => (programmaticMoveRef.current = false), 700);
     }
-  }, [posLat, posLng, followPaused, riderMode]);
+  }, [posLat, posLng, followPaused, riderMode, fullscreen]);
 
   // ---- Crew tools: "me" dot + waterpoints/aid stations -----------------
   const meMarkerRef = useRef<L.Marker | null>(null);
@@ -1009,12 +1014,12 @@ export default function LiveTrackingMapInner({
     } else {
       meMarkerRef.current.setLatLng([viewerLoc.lat, viewerLoc.lng]);
     }
-    if (followMe && !followPaused) {
+    if (!fullscreen && followMe && !followPaused) {
       programmaticMoveRef.current = true;
       map.panTo([viewerLoc.lat, viewerLoc.lng], { animate: true, duration: 0.5 });
       window.setTimeout(() => (programmaticMoveRef.current = false), 700);
     }
-  }, [viewerLoc, crewTools, followMe, followPaused]);
+  }, [viewerLoc, crewTools, followMe, followPaused, fullscreen]);
 
   // ---- Heading-up: rotate the map to the followed target's travel direction ----
   const headingTarget = useMemo(() => {
@@ -1026,7 +1031,12 @@ export default function LiveTrackingMapInner({
   }, [riderMode, currentPosition, crewTools, followMe, viewerLoc, follow, selectedId, riders]);
   const headingAnchorRef = useRef<{ lat: number; lng: number } | null>(null);
   const headingRef = useRef<number | null>(null);
+  const navigationFix = riderMode ? currentPosition : crewTools ? viewerLoc : headingTarget;
+  const navigation = useFullscreenMapNavigation(mapRef.current, fullscreen, navigationFix);
+  const navigationRoute = matchedRoutes.find(c => followedRider && !crewTools && categoryMatchesRoute(followedRider.category, c.route)) ?? matchedRoutes[0];
+  const navProgress = useMemo(() => navigationFix && navigationRoute ? navigationProgress(navigationRoute.lines, navigationFix.lat, navigationFix.lng) : null, [navigationRoute, navigationFix]);
   useEffect(() => {
+    if (fullscreen) return;
     const map = mapRef.current as (L.Map & { setBearing?: (d: number) => void }) | null;
     if (!map?.setBearing) return;
     if (!headingUp) {
@@ -1046,7 +1056,7 @@ export default function LiveTrackingMapInner({
       }
     }
     if (headingRef.current != null && !followPaused) map.setBearing(-headingRef.current);
-  }, [headingTarget, headingUp, followPaused]);
+  }, [headingTarget, headingUp, followPaused, fullscreen]);
 
   // ---- Open on the course: fit every route once they load ---------------
   useEffect(() => {
@@ -1384,7 +1394,7 @@ export default function LiveTrackingMapInner({
       bounds.push([r.lat, r.lng]);
       // Follow mode recentres smoothly, but stays out of the way once the
       // viewer has panned or zoomed themselves.
-      if ((follow === r.userId || selectedId === r.userId) && !followPaused && !followMe) {
+      if (!fullscreen && (follow === r.userId || selectedId === r.userId) && !followPaused && !followMe) {
         programmaticMoveRef.current = true;
         map.panTo([r.lat, r.lng], { animate: true, duration: 0.5 });
         window.setTimeout(() => (programmaticMoveRef.current = false), 700);
@@ -1408,13 +1418,13 @@ export default function LiveTrackingMapInner({
       if (!seen.has(id)) { l.remove(); estLinesRef.current.delete(id); }
     }
 
-    if (!fittedRef.current && bounds.length > 0 && !follow) {
+    if (!fullscreen && !fittedRef.current && bounds.length > 0 && !follow) {
       programmaticMoveRef.current = true;
       map.fitBounds(L.latLngBounds(bounds).pad(0.15));
       fittedRef.current = true;
       window.setTimeout(() => (programmaticMoveRef.current = false), 700);
     }
-  }, [riders, follow, followPaused, followMe, isCrew, viewerLoc, selectedId, animateTo, progressFor, favs, estimates]);
+  }, [riders, follow, followPaused, followMe, isCrew, viewerLoc, selectedId, animateTo, progressFor, favs, estimates, fullscreen]);
 
 
   // Draw/refresh the dashed guide line from viewer to selected rider.

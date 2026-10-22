@@ -30,6 +30,11 @@ import { getRouteElevation } from "@/lib/elevation.functions";
 import { withRegistrationDayLabels } from "@/lib/event-days";
 import { useRouteHover } from "@/lib/route-hover";
 import RouteMapTrackpad from "@/components/route-map-trackpad";
+import { FullscreenNavigationBar, useFullscreenMapNavigation, type NavigationFix } from '@/components/fullscreen-map-navigation';
+import { navigationProgress } from '@/lib/fullscreen-navigation';
+// This module is lazy-loaded in the browser; rotation never enters SSR.
+(globalThis as unknown as { L: typeof L }).L = L;
+await import('leaflet-rotate');
 
 // Fix Leaflet's default icon paths (Vite bundles differently than webpack).
 delete (L.Icon.Default.prototype as unknown as { _getIconUrl?: unknown })._getIconUrl;
@@ -226,6 +231,12 @@ function FitToBounds({ bounds }: { bounds: [[number, number], [number, number]] 
   return null;
 }
 
+function NavigationMap({ onMap }: { onMap: (map: L.Map | null) => void }) {
+  const map = useMap();
+  useEffect(() => { onMap(map); return () => onMap(null); }, [map, onMap]);
+  return null;
+}
+
 /**
  * Nearest point on a route to a marker: how far into the route it sits (km)
  * and how far off the line it is (m), so we can hide irrelevant matches.
@@ -260,6 +271,19 @@ export default function RouteMapInner({
   const trackpadPan = /sea to sea/i.test(event.name);
   const [enabled, setEnabled] = useState<Record<string, boolean>>({});
   const [fs, setFs] = useState(false);
+  const [navigationMap, setNavigationMap] = useState<L.Map | null>(null);
+  const [navigationFix, setNavigationFix] = useState<NavigationFix | null>(null);
+  const [locationError, setLocationError] = useState<string | null>(null);
+  const navigation = useFullscreenMapNavigation(navigationMap, fs, navigationFix);
+  useEffect(() => {
+    if (!fs) return;
+    if (!navigator.geolocation) { setLocationError('Location is unavailable on this device.'); return; }
+    const watch = navigator.geolocation.watchPosition(p => {
+      setLocationError(null);
+      setNavigationFix({ lat: p.coords.latitude, lng: p.coords.longitude, heading: (p.coords.speed ?? 0) > 1 ? p.coords.heading : null });
+    }, e => setLocationError(e.code === 1 ? 'Allow location to follow your pin.' : 'Waiting for a GPS fix…'), { enableHighAccuracy: true, maximumAge: 0, timeout: 15000 });
+    return () => navigator.geolocation.clearWatch(watch);
+  }, [fs]);
   const [zoom, setZoom] = useState(12);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [chipDay, setChipDay] = useState<string | null>(null);
@@ -565,6 +589,7 @@ export default function RouteMapInner({
       doubleClickZoom
       maxZoom={24}
       preferCanvas
+      {...({ rotate: keySuffix === '-fs', touchRotate: keySuffix === '-fs', rotateControl: false, bearing: 0 } as object)}
     >
       <TileLayer
         crossOrigin="anonymous"
@@ -573,11 +598,13 @@ export default function RouteMapInner({
         maxZoom={24}
         maxNativeZoom={19}
       />
-      <FitToBounds bounds={bounds} />
+      {keySuffix !== '-fs' || !navigationFix ? <FitToBounds bounds={bounds} /> : null}
+      {keySuffix === '-fs' ? <NavigationMap onMap={setNavigationMap} /> : null}
       {trackpadPan ? <RouteMapTrackpad /> : null}
       <ZoomWatcher onZoom={setZoom} />
       <MapControls bounds={bounds} />
-      <HoverMarker />
+      {keySuffix !== '-fs' ? <HoverMarker /> : null}
+      {keySuffix === '-fs' && navigationFix ? <Marker position={[navigationFix.lat, navigationFix.lng]} zIndexOffset={1500} icon={L.divIcon({ className: '', html: '<div class="grid h-9 w-9 place-items-center rounded-full border-4 border-card bg-primary text-primary-foreground shadow-lg">▲</div>', iconSize: [36, 36], iconAnchor: [18, 18] })}><Tooltip>You</Tooltip></Marker> : null}
       <DirectionArrows lines={arrowLines} />
       {keySuffix === "-fs" ? <FlyTo target={flyTarget} /> : null}
       {visible.map((l) =>
@@ -700,7 +727,7 @@ export default function RouteMapInner({
           <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
           <div className="flex min-h-0 min-w-0 flex-1 flex-col">
           <div className="relative min-h-0 flex-1">{renderMap("100%", "-fs")}</div>
-          {visible[0] ? (
+          {visible[0] && !navigationFix ? (
             <div className="border-t border-border bg-card px-3 pb-1">
               <RouteProfile route={visible[0].route} color={visible[0].color} markers={visible[0].markers} />
             </div>
@@ -769,6 +796,7 @@ export default function RouteMapInner({
             ) : null}
           </div>
           </div>
+          <FullscreenNavigationBar fix={navigationFix} error={locationError} routeName={visible[0]?.route.name} progress={navigationFix && visible[0] ? navigationProgress(visible[0].lines, navigationFix.lat, navigationFix.lng) : null} paused={navigation.paused} onResume={navigation.resume} />
         </div>,
         document.body,
       )
