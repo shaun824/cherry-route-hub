@@ -60,7 +60,7 @@ function detailEvent(e: any, info: any | null, merch: any[]): string {
   if (e.entry_ninja_url) lines.push(`Entries: ${e.entry_ninja_url}`);
   if (e.website_url) lines.push(`Website: ${e.website_url}`);
 
-  const days = Array.isArray(e.days) ? e.days : [];
+  const days = cleanEventDays(e.days);
   if (days.length)
     lines.push(`Days: ${days.map((d: any) => `${d.label ?? d.name ?? "Day"}${d.date ? ` (${d.date})` : ""}`).join(", ")}`);
 

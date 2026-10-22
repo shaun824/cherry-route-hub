@@ -28,7 +28,7 @@ function formatEventStructured(event: any, info: any | null): string {
   if (event.location) lines.push(`Location: ${event.location}`);
   if (event.description) lines.push(`Description: ${event.description}`);
 
-  const days = Array.isArray(event.days) ? event.days : [];
+  const days = cleanEventDays(event.days);
   if (days.length) {
     lines.push("\nDays:");
     for (const d of days) {
