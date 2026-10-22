@@ -563,7 +563,8 @@ export default function LiveTrackingMapInner({
         onPos(p);
         const map = mapRef.current;
         if (centre && map) {
-          setFollowPaused(true);
+          setFollowMe(true);
+          setFollowPaused(false);
           programmaticMoveRef.current = true;
           map.setView([p.coords.latitude, p.coords.longitude], Math.max(map.getZoom(), 16));
           window.setTimeout(() => (programmaticMoveRef.current = false), 700);
