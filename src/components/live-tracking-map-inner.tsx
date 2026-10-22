@@ -477,6 +477,7 @@ export default function LiveTrackingMapInner({
   const startFollowing = useCallback(
     (userId: string | null) => {
       setFollow(userId);
+      if (userId) setFollowMe(false);
       setFollowPaused(false);
       try {
         if (userId) localStorage.setItem(followKey(eventId), userId);
