@@ -29,6 +29,17 @@ function firstDayIsRegistration(firstDayId: string | undefined, schedule: Schedu
 }
 
 /**
+ * Drop blank/garbled entries from an event's day list. Imports and quick
+ * edits have slipped null entries into the array before, and every reader
+ * downstream assumes real day objects — one null used to crash the whole
+ * event page with "Cannot read properties of null (reading 'date')".
+ */
+export function cleanEventDays(days: unknown): EventDay[] {
+  if (!Array.isArray(days)) return [];
+  return days.filter((d): d is EventDay => Boolean(d) && typeof d === "object");
+}
+
+/**
  * Return the event days with corrected labels: the first day becomes
  * "Registration Day" and the riding days are renumbered from 1.
  * Days with bespoke labels are always left exactly as the admin wrote them.
@@ -37,7 +48,7 @@ export function withRegistrationDayLabels(
   days: EventDay[] | null | undefined,
   schedule: ScheduleItem[] | null | undefined,
 ): EventDay[] {
-  const list = Array.isArray(days) ? days : [];
+  const list = cleanEventDays(days);
   if (list.length < 2) return list;
   const items = Array.isArray(schedule) ? schedule : [];
 

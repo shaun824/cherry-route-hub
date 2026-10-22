@@ -7,7 +7,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { parseKml, polylineKm, type LatLngAlt } from "@/lib/geo";
 import { buildKml } from "@/lib/route-files";
 import { distanceToRouteM } from "@/lib/tracking-route-overlay";
-import type { CustomMarker, EventDay } from "@/lib/mock-data";
+import type { CustomMarker, EventDay, EventRoute } from "@/lib/mock-data";
+import { cleanEventDays } from "@/lib/event-days";
 import type { EditorLine, EditorPoint } from "@/components/route-points-editor-map";
 
 const EditorMap = lazy(() => import("@/components/route-points-editor-map"));
@@ -91,7 +92,7 @@ function groupsFromDay(day: EventDay): Group[] {
 function RoutePointsEditor() {
   const { event } = Route.useLoaderData();
   const router = useRouter();
-  const days = useMemo(() => (Array.isArray(event.days) ? event.days : []), [event.days]);
+  const days = useMemo(() => cleanEventDays(event.days), [event.days]);
   const [dayIdx, setDayIdx] = useState(() => Math.max(0, days.findIndex((d) => (d.routes ?? []).length > 0)));
   const [groups, setGroups] = useState<Record<string, Group[]>>(() =>
     Object.fromEntries(days.map((d) => [d.id, groupsFromDay(d)])),
@@ -463,7 +464,7 @@ function RoutePointsEditor() {
                   <div>
                     <p className="text-xs font-semibold text-ink">Show on routes</p>
                     <div className="mt-1 space-y-1">
-                      {(day?.routes ?? []).map((r) => (
+                      {(day?.routes ?? []).map((r: EventRoute) => (
                         <label key={r.id} className="flex items-center gap-2 text-sm">
                           <input
                             type="checkbox"

@@ -3,6 +3,7 @@ import { BOT_MISS_REPLY } from "@/lib/bot-handoff";
 import { CONFIDENTIALITY_RULES } from "@/lib/knowledge-redact";
 import { FOLLOWUP_PROMPT_RULE, splitFollowUps } from "@/lib/bot-followups";
 import { venueMapLinks } from "@/lib/map-embed";
+import { cleanEventDays } from "@/lib/event-days";
 
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
@@ -28,11 +29,11 @@ function formatEventStructured(event: any, info: any | null): string {
   if (event.location) lines.push(`Location: ${event.location}`);
   if (event.description) lines.push(`Description: ${event.description}`);
 
-  const days = Array.isArray(event.days) ? event.days : [];
+  const days = cleanEventDays(event.days);
   if (days.length) {
     lines.push("\nDays:");
     for (const d of days) {
-      lines.push(`- ${d.label ?? d.name ?? "Day"}${d.date ? ` (${d.date})` : ""}`);
+      lines.push(`- ${d.label ?? "Day"}${d.date ? ` (${d.date})` : ""}`);
     }
   }
 
