@@ -1,7 +1,10 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { BICYCLES_LIST, ENTRY_ALERT_LIST, mayAddMembership } from './entry-interest-audience';
+import { BICYCLES_LIST, ENTRY_ALERT_LIST, mayAddMembership, newEntryInterestContact } from './entry-interest-audience';
 describe('entry-alert audiences', () => {
+  it('creates new contacts with an entry-alert list mapping without overwriting existing contacts', () => {
+    assert.deepEqual(newEntryInterestContact('rider@example.com'), { contact_email: 'rider@example.com', list_id: '145818' });
+  });
   it('uses the larger Bicycles list alongside entry alerts', () => {
     assert.equal(BICYCLES_LIST, '102600'); assert.equal(ENTRY_ALERT_LIST, '145818');
   });
