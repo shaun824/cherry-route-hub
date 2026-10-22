@@ -1,13 +1,16 @@
 // Animated chevrons that flow along route lines in their riding direction.
 // Plain Leaflet so both the rider route map and the live race-control map share it.
 import L from "leaflet";
+import type { LatLngAlt } from './geo';
+import { routeDistanceMarkers } from './route-distance-markers';
 
-export function addDirectionArrows(map: L.Map, lines: { color: string; coords: [number, number][] }[]): () => void {
+export function addDirectionArrows(map: L.Map, routes: { color: string; lines: LatLngAlt[][] }[]): () => void {
   const layer = L.layerGroup().addTo(map);
   type Track = { cum: number[]; pts: L.LatLng[]; total: number; markers: { m: L.Marker; el?: HTMLElement }[] };
   const tracks: Track[] = [];
   const kmMarkers: { m: L.Marker; km: number }[] = [];
   const kmLayer = L.layerGroup().addTo(map);
+  const lines = routes.flatMap(route => route.lines.map(line => ({ color: route.color, coords: line.map(([lng, lat]) => [lat, lng] as [number, number]) })));
   for (const l of lines) {
     if (l.coords.length < 2) continue;
     const pts = l.coords.map(([lat, lng]) => L.latLng(lat, lng));
@@ -29,22 +32,18 @@ export function addDirectionArrows(map: L.Map, lines: { color: string; coords: [
       }).addTo(layer),
     })) as Track["markers"];
     tracks.push({ cum, pts, total, markers });
-    // Distance markers every 5 km so riders can see how far along they are.
-    for (let km = 5; km * 1000 < total - 300; km += 5) {
-      const d = km * 1000;
-      let i = 1;
-      while (i < cum.length - 1 && cum[i] < d) i++;
-      const f = (d - cum[i - 1]) / (cum[i] - cum[i - 1] || 1);
-      const a = pts[i - 1];
-      const b = pts[i];
-      const m = L.marker(L.latLng(a.lat + (b.lat - a.lat) * f, a.lng + (b.lng - a.lng) * f), {
+  }
+  // One cumulative sequence per complete, full-resolution route — never per section.
+  for (const route of routes) {
+    for (const { km, coord } of routeDistanceMarkers(route.lines)) {
+      const m = L.marker([coord[1], coord[0]], {
         interactive: false,
         keyboard: false,
         icon: L.divIcon({
           className: "",
           iconSize: [34, 18],
           iconAnchor: [17, 9],
-          html: `<div style="height:18px;min-width:34px;padding:0 5px;display:flex;align-items:center;justify-content:center;border-radius:9999px;background:#fff;color:#111;border:2px solid ${l.color};font:800 10px/1 system-ui,sans-serif;box-shadow:0 1px 3px rgba(0,0,0,.35);white-space:nowrap">${km} km</div>`,
+          html: `<div data-route-distance-km="${km}" style="height:18px;min-width:34px;padding:0 5px;display:flex;align-items:center;justify-content:center;border-radius:9999px;background:#fff;color:#111;border:2px solid ${route.color};font:800 10px/1 system-ui,sans-serif;box-shadow:0 1px 3px rgba(0,0,0,.35);white-space:nowrap">${km} km</div>`,
         }),
       });
       kmMarkers.push({ m, km });

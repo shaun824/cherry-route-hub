@@ -17,7 +17,6 @@ import { Button } from "@/components/ui/button";
 import type { CustomMarker, Event, EventRoute } from "@/lib/mock-data";
 import {
   boundsFromCoords,
-  haversineMeters,
   parseKml,
   polylineElevationGainM,
   polylineKm,
@@ -211,7 +210,7 @@ function HoverMarker() {
 }
 
 /** Animated chevrons that flow along each route in its riding direction. */
-function DirectionArrows({ lines }: { lines: { color: string; coords: [number, number][] }[] }) {
+function DirectionArrows({ lines }: { lines: { color: string; lines: LatLngAlt[][] }[] }) {
   const map = useMap();
   useEffect(() => addDirectionArrows(map, lines), [lines, map]);
   return null;
@@ -237,28 +236,6 @@ function NavigationMap({ onMap }: { onMap: (map: L.Map | null) => void }) {
   useEffect(() => { onMap(map); return () => onMap(null); }, [map, onMap]);
   return null;
 }
-
-/**
- * Nearest point on a route to a marker: how far into the route it sits (km)
- * and how far off the line it is (m), so we can hide irrelevant matches.
- */
-function distanceAlongRoute(
-  lines: LatLngAlt[][],
-  lat: number,
-  lng: number,
-): { km: number; offM: number } | null {
-  let best: { km: number; offM: number } | null = null;
-  let travelled = 0;
-  for (const line of lines) {
-    for (let i = 0; i < line.length; i++) {
-      if (i > 0) travelled += haversineMeters(line[i - 1], line[i]);
-      const off = haversineMeters([lng, lat], line[i]);
-      if (!best || off < best.offM) best = { km: travelled / 1000, offM: off };
-    }
-  }
-  return best;
-}
-
 
 export default function RouteMapInner({
   event,
@@ -444,16 +421,16 @@ export default function RouteMapInner({
           remainingKm: number;
         }[] = [];
         for (const l of loaded) {
-          if (l.dayLabel !== owner.dayLabel || l.lines.length === 0) continue;
-          const hit = distanceAlongRoute(l.lines, m.lat, m.lng);
-          if (!hit || hit.offM > 300) continue;
+          if (l.dayLabel !== owner.dayLabel || l.navigationLines.length === 0) continue;
+          const hit = navigationProgress(l.navigationLines, m.lat, m.lng);
+          if (!hit || hit.offCourseM > 300) continue;
           legs.push({
             routeId: l.route.id,
             name: l.route.name || l.route.tier,
             color: l.color,
-            km: hit.km,
+            km: hit.alongM / 1000,
             totalKm: l.distanceKm,
-            remainingKm: Math.max(0, l.distanceKm - hit.km),
+            remainingKm: Math.max(0, l.distanceKm - hit.alongM / 1000),
           });
         }
         legs.sort((a, b) => a.km - b.km);
@@ -467,9 +444,7 @@ export default function RouteMapInner({
   const visible = loaded.filter((l) => enabled[l.route.id]);
   const arrowLines = useMemo(
     () =>
-      visible.flatMap((l) =>
-        l.lines.map((line) => ({ color: l.color, coords: line.map(([lng, lat]) => [lat, lng] as [number, number]) })),
-      ),
+      visible.map((l) => ({ color: l.color, lines: l.navigationLines })),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [visible.map((l) => l.route.id).join(","), loaded],
   );
