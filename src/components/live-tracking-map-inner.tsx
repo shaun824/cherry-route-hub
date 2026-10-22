@@ -1672,13 +1672,23 @@ export default function LiveTrackingMapInner({
           <Button variant="outline" size="sm" type="button" onClick={fitCourse} className="inline-flex items-center gap-1 rounded-md px-3 py-2 text-xs font-bold shadow-lg">
             <RouteIcon className="h-3.5 w-3.5" /> Show whole route
           </Button>
-          {follow && followPaused ? (
+          {followPaused && (riderMode ? posLat != null && posLng != null : follow != null || (crewTools && followMe)) ? (
             <Button variant="outline" size="sm"
               type="button"
               onClick={() => {
                 setFollowPaused(false);
-                const r = riders.find((x) => x.userId === follow);
                 const map = mapRef.current;
+                if (riderMode && posLat != null && posLng != null && map) {
+                  programmaticMoveRef.current = true;
+                  map.setView([posLat, posLng], Math.max(map.getZoom(), 15), { animate: true });
+                  window.setTimeout(() => (programmaticMoveRef.current = false), 900);
+                  return;
+                }
+                if (crewTools && followMe && viewerLoc && map) {
+                  centreOnMe();
+                  return;
+                }
+                const r = riders.find((x) => x.userId === follow);
                 if (r && map) {
                   programmaticMoveRef.current = true;
                   map.setView([r.lat, r.lng], Math.max(map.getZoom(), 15), { animate: true });
