@@ -1,5 +1,5 @@
 import { everlyticRequest } from './everlytic.server';
-import { BICYCLES_LIST, ENTRY_ALERT_LIST, mayAddMembership } from './entry-interest-audience';
+import { BICYCLES_LIST, ENTRY_ALERT_LIST, mayAddMembership, newEntryInterestContact } from './entry-interest-audience';
 
 export async function syncEntryInterestAudience(email: string, username: string, apiKey: string) {
   async function lookup() {
@@ -8,7 +8,7 @@ export async function syncEntryInterestAudience(email: string, username: string,
   }
   let contact = await lookup();
   if (!contact) {
-    await everlyticRequest('/api/2.0/contacts', 'POST', username, apiKey, { contact_email: email, on_duplicate: 'update' });
+    await everlyticRequest('/api/2.0/contacts', 'POST', username, apiKey, newEntryInterestContact(email));
     contact = await lookup();
   }
   if (!contact?.id) throw new Error('Could not verify mailing-list contact');
