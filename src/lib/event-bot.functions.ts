@@ -3,6 +3,7 @@ import { BOT_MISS_REPLY } from "@/lib/bot-handoff";
 import { CONFIDENTIALITY_RULES } from "@/lib/knowledge-redact";
 import { FOLLOWUP_PROMPT_RULE, splitFollowUps } from "@/lib/bot-followups";
 import { venueMapLinks } from "@/lib/map-embed";
+import { cleanEventDays } from "@/lib/event-days";
 
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";

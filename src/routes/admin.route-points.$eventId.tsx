@@ -8,6 +8,7 @@ import { parseKml, polylineKm, type LatLngAlt } from "@/lib/geo";
 import { buildKml } from "@/lib/route-files";
 import { distanceToRouteM } from "@/lib/tracking-route-overlay";
 import type { CustomMarker, EventDay } from "@/lib/mock-data";
+import { cleanEventDays } from "@/lib/event-days";
 import type { EditorLine, EditorPoint } from "@/components/route-points-editor-map";
 
 const EditorMap = lazy(() => import("@/components/route-points-editor-map"));

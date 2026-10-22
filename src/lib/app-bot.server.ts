@@ -5,6 +5,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { APP_HELP_TEXT } from "@/lib/app-help";
 import { venueMapLinks } from "@/lib/map-embed";
+import { cleanEventDays } from "@/lib/event-days";
 
 type AnyClient = SupabaseClient<any, any, any>;
 
