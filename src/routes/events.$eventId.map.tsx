@@ -4,10 +4,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { RouteMap } from "@/components/route-map";
 
 export const Route = createFileRoute("/events/$eventId/map")({
-  head: ({ loaderData }) => ({ meta: [
-    { title: `${loaderData?.event.name ?? 'Event'} route map · Red Cherry Rider Hub` },
+  head: () => ({ meta: [
+    { title: 'Event route map · Red Cherry Rider Hub' },
     { name: 'description', content: 'Explore event routes, waterpoints and fullscreen GPS route navigation.' },
-    { property: 'og:title', content: `${loaderData?.event.name ?? 'Event'} route map · Red Cherry Rider Hub` },
+    { property: 'og:title', content: 'Event route map · Red Cherry Rider Hub' },
     { property: 'og:description', content: 'Explore event routes, waterpoints and fullscreen GPS route navigation.' },
     { property: 'og:type', content: 'website' },
     { name: 'twitter:card', content: 'summary' },

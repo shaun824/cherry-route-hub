@@ -694,6 +694,7 @@ export default function LiveTrackingMapInner({
   }, [allDays]);
 
   const specKey = routeSpecs.map((s) => s.route.id).join(",");
+  const navigationLinesRef = useRef(new Map<string, LatLngAlt[][]>());
 
   // Fetch + parse the KMLs for the candidate routes.
   useEffect(() => {
@@ -707,12 +708,14 @@ export default function LiveTrackingMapInner({
       await Promise.all(
         routeSpecs.map(async (spec) => {
           const lines: LatLngAlt[][] = [];
+          const navigationLines: LatLngAlt[][] = [];
           for (const url of spec.route.kmlUrls ?? []) {
             try {
               const res = await fetch(url);
               if (!res.ok) continue;
               const layer = parseKml(await res.text());
               for (const line of layer.lines) {
+                navigationLines.push(line);
                 lines.push(capPolyline(simplifyPolyline(line, 8), 1500));
               }
             } catch (err) {
@@ -720,6 +723,7 @@ export default function LiveTrackingMapInner({
             }
           }
           if (lines.length === 0) return;
+          if (!cancelled) navigationLinesRef.current.set(spec.route.id, navigationLines);
           out.push({
             route: spec.route,
             dayId: spec.dayId,
@@ -878,7 +882,7 @@ export default function LiveTrackingMapInner({
       polys.forEach((p) => p.bringToBack());
     }
 
-    if (!fittedRef.current && bounds.length > 0) {
+    if (!fullscreen && !fittedRef.current && bounds.length > 0) {
       map.fitBounds(L.latLngBounds(bounds).pad(0.1));
     }
     const stopArrows = addDirectionArrows(
@@ -891,7 +895,7 @@ export default function LiveTrackingMapInner({
       for (const [, polys] of routeLayersRef.current) polys.forEach((p) => p.remove());
       routeLayersRef.current.clear();
     };
-  }, [matchedRoutes]);
+  }, [matchedRoutes, fullscreen]);
 
   // Course line used for progress + off-course checks: the followed rider's route.
   const course: CourseLine | null = useMemo(() => {
@@ -1034,7 +1038,7 @@ export default function LiveTrackingMapInner({
   const navigationFix = riderMode ? currentPosition : crewTools ? viewerLoc : headingTarget;
   const navigation = useFullscreenMapNavigation(mapRef.current, fullscreen, navigationFix);
   const navigationRoute = matchedRoutes.find(c => followedRider && !crewTools && categoryMatchesRoute(followedRider.category, c.route)) ?? matchedRoutes[0];
-  const navProgress = useMemo(() => navigationFix && navigationRoute ? navigationProgress(navigationRoute.lines, navigationFix.lat, navigationFix.lng) : null, [navigationRoute, navigationFix]);
+  const navProgress = useMemo(() => navigationFix && navigationRoute ? navigationProgress(navigationLinesRef.current.get(navigationRoute.route.id) ?? navigationRoute.lines, navigationFix.lat, navigationFix.lng) : null, [navigationRoute, navigationFix]);
   useEffect(() => {
     if (fullscreen) return;
     const map = mapRef.current as (L.Map & { setBearing?: (d: number) => void }) | null;

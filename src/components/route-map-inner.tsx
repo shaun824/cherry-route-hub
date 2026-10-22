@@ -115,6 +115,7 @@ type Loaded = {
   dayLabel: string;
   color: string;
   lines: LatLngAlt[][];
+  navigationLines: LatLngAlt[][];
   markers: CustomMarker[];
   distanceKm: number;
   gainFromKmlM: number | null;
@@ -379,6 +380,7 @@ export default function RouteMapInner({
             dayLabel,
             color: route.color || TIER_COLORS[route.tier] || TIER_COLORS.Custom,
             lines: simplifiedLines,
+            navigationLines: lines,
             markers,
             distanceKm,
             gainFromKmlM,
@@ -796,7 +798,7 @@ export default function RouteMapInner({
             ) : null}
           </div>
           </div>
-          <FullscreenNavigationBar fix={navigationFix} error={locationError} routeName={visible[0]?.route.name} progress={navigationFix && visible[0] ? navigationProgress(visible[0].lines, navigationFix.lat, navigationFix.lng) : null} paused={navigation.paused} onResume={navigation.resume} />
+          <FullscreenNavigationBar fix={navigationFix} error={locationError} routeName={visible[0]?.route.name} progress={navigationFix && visible[0] ? navigationProgress(visible[0].navigationLines, navigationFix.lat, navigationFix.lng) : null} paused={navigation.paused} onResume={navigation.resume} />
         </div>,
         document.body,
       )
