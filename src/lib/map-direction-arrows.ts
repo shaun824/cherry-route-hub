@@ -6,6 +6,8 @@ export function addDirectionArrows(map: L.Map, lines: { color: string; coords: [
   const layer = L.layerGroup().addTo(map);
   type Track = { cum: number[]; pts: L.LatLng[]; total: number; markers: { m: L.Marker; el?: HTMLElement }[] };
   const tracks: Track[] = [];
+  const kmMarkers: { m: L.Marker; km: number }[] = [];
+  const kmLayer = L.layerGroup().addTo(map);
   for (const l of lines) {
     if (l.coords.length < 2) continue;
     const pts = l.coords.map(([lat, lng]) => L.latLng(lat, lng));
@@ -27,7 +29,38 @@ export function addDirectionArrows(map: L.Map, lines: { color: string; coords: [
       }).addTo(layer),
     })) as Track["markers"];
     tracks.push({ cum, pts, total, markers });
+    // Distance markers every 5 km so riders can see how far along they are.
+    for (let km = 5; km * 1000 < total - 300; km += 5) {
+      const d = km * 1000;
+      let i = 1;
+      while (i < cum.length - 1 && cum[i] < d) i++;
+      const f = (d - cum[i - 1]) / (cum[i] - cum[i - 1] || 1);
+      const a = pts[i - 1];
+      const b = pts[i];
+      const m = L.marker(L.latLng(a.lat + (b.lat - a.lat) * f, a.lng + (b.lng - a.lng) * f), {
+        interactive: false,
+        keyboard: false,
+        icon: L.divIcon({
+          className: "",
+          iconSize: [34, 18],
+          iconAnchor: [17, 9],
+          html: `<div style="height:18px;min-width:34px;padding:0 5px;display:flex;align-items:center;justify-content:center;border-radius:9999px;background:#fff;color:#111;border:2px solid ${l.color};font:800 10px/1 system-ui,sans-serif;box-shadow:0 1px 3px rgba(0,0,0,.35);white-space:nowrap">${km} km</div>`,
+        }),
+      });
+      kmMarkers.push({ m, km });
+    }
   }
+  // Keep it calm: hidden when zoomed far out, every 10 km at mid zoom, every 5 km close in.
+  const syncKm = () => {
+    const z = map.getZoom();
+    for (const { m, km } of kmMarkers) {
+      const show = z >= 13 || (z >= 11 && km % 10 === 0);
+      if (show && !kmLayer.hasLayer(m)) kmLayer.addLayer(m);
+      else if (!show && kmLayer.hasLayer(m)) kmLayer.removeLayer(m);
+    }
+  };
+  syncKm();
+  map.on("zoomend", syncKm);
   const at = (t: Track, d: number) => {
     let lo = 0;
     let hi = t.cum.length - 1;
@@ -67,5 +100,7 @@ export function addDirectionArrows(map: L.Map, lines: { color: string; coords: [
   return () => {
     cancelAnimationFrame(raf);
     layer.remove();
+    map.off("zoomend", syncKm);
+    kmLayer.remove();
   };
 }
