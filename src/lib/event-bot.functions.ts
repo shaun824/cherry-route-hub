@@ -33,7 +33,7 @@ function formatEventStructured(event: any, info: any | null): string {
   if (days.length) {
     lines.push("\nDays:");
     for (const d of days) {
-      lines.push(`- ${d.label ?? d.name ?? "Day"}${d.date ? ` (${d.date})` : ""}`);
+      lines.push(`- ${d.label ?? "Day"}${d.date ? ` (${d.date})` : ""}`);
     }
   }
 
