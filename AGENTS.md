@@ -10,7 +10,7 @@
 <!-- LOVABLE:END -->
 
 - Village section names use `VillageZone.showLabel` and default to visible when unset, preserving existing maps.
-- Fullscreen rider/route/live navigation shares a Leaflet camera controller with gesture-paused follow and segment-based multi-section progress; normal map cameras are restored on exit, and the 120 m opening view is an approximate camera-height-equivalent scale, not terrain altitude.
+- Fullscreen rider/route/live navigation shares a Leaflet camera controller with gesture-paused follow and segment-based multi-section progress; opening scale applies only on entry, resume preserves current zoom, and normal map cameras are restored on exit — avoids resetting user scale during navigation.
 - Map kilometre markers use full-resolution lines grouped by route and carry cumulative distance across sections without bridging gaps; run route-distance-markers tests whenever route or map distance logic changes to prevent reset labels and simplification drift.
 - Crew live-map controls and selected-rider actions render outside the map; SOS resolution uses the signed-in race-control callback so field links remain read-only.
 - Supplier promo ROI is an engagement estimate from outbound clicks, never a confirmed redemption or sale.

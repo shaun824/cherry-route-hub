@@ -3,7 +3,7 @@ import L from 'leaflet';
 import { Crosshair, Navigation } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import type { ProgressResult } from '@/lib/course-progress';
-import { navigationZoom, travelBearing } from '@/lib/fullscreen-navigation';
+import { navigationFollowZoom, travelBearing } from '@/lib/fullscreen-navigation';
 
 type RotatingMap = L.Map & { setBearing?: (n: number) => void; getBearing?: () => number; touchRotate?: L.Handler };
 export type NavigationFix = { lat: number; lng: number; heading?: number | null };
@@ -54,14 +54,14 @@ export function useFullscreenMapNavigation(map: L.Map | null, active: boolean, f
     }
     anchor.current ??= fix;
     if (heading.current != null) rotating.setBearing?.(-heading.current);
-    const zoom = opened.current ? map.getZoom() : navigationZoom(fix.lat, map.getSize().y);
+    const zoom = navigationFollowZoom(opened.current, map.getZoom(), fix.lat, map.getSize().y);
     map.setView([fix.lat, fix.lng], zoom, { animate: false });
     // Leave more route ahead visible, with the pin in the lower third.
     map.panBy([0, -map.getSize().y * 0.18], { animate: false });
     opened.current = true;
     moving.current = false;
   }, [map, active, fix?.lat, fix?.lng, fix?.heading, paused, resumeKey]);
-  return { paused, pause: () => setPaused(true), resume: () => { opened.current = false; setPaused(false); setResumeKey(k => k + 1); } };
+  return { paused, pause: () => setPaused(true), resume: () => { opened.current = true; setPaused(false); setResumeKey(k => k + 1); } };
 }
 
 export function FullscreenNavigationBar({ fix, progress, routeName, paused, onResume, error }: {

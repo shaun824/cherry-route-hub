@@ -9,6 +9,11 @@ export function navigationZoom(lat: number, viewportHeight: number) {
   return Math.max(15, Math.min(20, Math.log2(156543.03392 * Math.cos(lat * Math.PI / 180) / metresPerPixel)));
 }
 
+/** Only initial navigation entry sets the opening scale; follow keeps the chosen zoom. */
+export function navigationFollowZoom(opened: boolean, currentZoom: number, lat: number, viewportHeight: number) {
+  return opened ? currentZoom : navigationZoom(lat, viewportHeight);
+}
+
 /** Project onto segments, counting every track section without bridging gaps. */
 export function navigationProgress(lines: LatLngAlt[][], lat: number, lng: number): ProgressResult | null {
   let totalM = 0, alongM = 0, offCourseM = Infinity;
