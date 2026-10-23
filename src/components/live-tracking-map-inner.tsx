@@ -565,8 +565,9 @@ export default function LiveTrackingMapInner({
         if (centre && map) {
           setFollowMe(true);
           setFollowPaused(false);
+          setHeadingUp(true);
           programmaticMoveRef.current = true;
-          map.setView([p.coords.latitude, p.coords.longitude], Math.max(map.getZoom(), 16));
+          map.setView([p.coords.latitude, p.coords.longitude], map.getZoom());
           window.setTimeout(() => (programmaticMoveRef.current = false), 700);
         }
       },
@@ -1272,13 +1273,16 @@ export default function LiveTrackingMapInner({
   };
 
   const centreOnMe = () => {
+    setFollowMe(true);
+    setFollowPaused(false);
+    setHeadingUp(true);
     if (fullscreen) { navigation.resume(); if (!viewerLoc) requestLocation(false); return; }
     const map = mapRef.current;
     if (viewerLoc && map) {
       setFollowMe(true);
       setFollowPaused(false);
       programmaticMoveRef.current = true;
-      map.setView([viewerLoc.lat, viewerLoc.lng], Math.max(map.getZoom(), 16));
+      map.setView([viewerLoc.lat, viewerLoc.lng], map.getZoom());
       window.setTimeout(() => (programmaticMoveRef.current = false), 700);
       return;
     }
@@ -1862,7 +1866,7 @@ export default function LiveTrackingMapInner({
         {fullscreen && crewTools && selectedRider ? riderCard : null}
       </div>
 
-      {fullscreen ? <FullscreenNavigationBar fix={navigationFix} progress={navProgress} routeName={navigationRoute?.route.name} error={locError} paused={navigation.paused} onResume={navigation.resume} /> : null}
+      {fullscreen ? <FullscreenNavigationBar fix={navigationFix} progress={navProgress} routeName={navigationRoute?.route.name} error={locError} paused={navigation.paused} onResume={crewTools ? centreOnMe : navigation.resume} /> : null}
 
       {fullscreen && fsTools ? (
         <div

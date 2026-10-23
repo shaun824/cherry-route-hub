@@ -1,7 +1,13 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { NAVIGATION_CAMERA_HEIGHT_M, navigationZoom, navigationProgress, travelBearing } from './fullscreen-navigation';
+import { NAVIGATION_CAMERA_HEIGHT_M, navigationZoom, navigationFollowZoom, navigationProgress, travelBearing } from './fullscreen-navigation';
 describe('fullscreen navigation rules', () => {
+  it('preserves the user-selected zoom when following or re-centering', () => {
+    for (const zoom of [10, 12.5, 16, 19]) {
+      assert.equal(navigationFollowZoom(true, zoom, -32, 600), zoom);
+    }
+    assert.equal(navigationFollowZoom(false, 10, -32, 600), navigationZoom(-32, 600));
+  });
   it('opens at a 120 metre camera-height equivalent', () => {
     assert.equal(NAVIGATION_CAMERA_HEIGHT_M, 120);
     const zoom = navigationZoom(-32, 600);

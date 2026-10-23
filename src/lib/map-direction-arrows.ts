@@ -43,7 +43,7 @@ export function addDirectionArrows(map: L.Map, routes: { color: string; lines: L
           className: "",
           iconSize: [34, 18],
           iconAnchor: [17, 9],
-          html: `<div data-route-distance-km="${km}" style="height:18px;min-width:34px;padding:0 5px;display:flex;align-items:center;justify-content:center;border-radius:9999px;background:#fff;color:#111;border:2px solid ${route.color};font:800 10px/1 system-ui,sans-serif;box-shadow:0 1px 3px rgba(0,0,0,.35);white-space:nowrap">${km} km</div>`,
+          html: `<div data-route-distance-km="${km}" style="height:18px;min-width:34px;padding:0 5px;display:flex;align-items:center;justify-content:center;border-radius:9999px;background:#fff;color:#111;border:2px solid ${route.color};font:800 10px/1 system-ui,sans-serif;box-shadow:0 1px 3px rgba(0,0,0,.35);white-space:nowrap">${km}</div>`,
         }),
       });
       kmMarkers.push({ m, km });
