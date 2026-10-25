@@ -33,7 +33,8 @@ const crewTabs = [
 
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const { user, loading } = useSession();
+  // Crew screens are a distinct area of the app; riders never see /crew paths.
+  const inCrewArea = pathname.startsWith("/crew") && !pathname.startsWith("/crew/login");
 
   const [dismissed, setDismissed] = useState(false);
   const { pull, refreshing } = usePullToRefresh();
