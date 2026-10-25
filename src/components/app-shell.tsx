@@ -2,10 +2,9 @@ import { APP_SCROLL_ID } from "@/lib/app-scroll";
 import { Link, useRouterState } from "@tanstack/react-router";
 import { Home, Ticket, Binoculars, User, LogIn, X, HardHat, BedDouble, Smartphone, ClipboardList, GraduationCap, RefreshCw } from "lucide-react";
 import { lazy, Suspense, useEffect, useState, type ReactNode } from "react";
-import { useSession, useIsCrew } from "@/lib/auth";
+import { useSession } from "@/lib/auth";
 import { usePullToRefresh } from "@/lib/use-pull-to-refresh";
 import { useEntryAutoSync } from "@/lib/use-entry-autosync";
-import { useCrewMode } from "@/lib/crew-mode";
 import { Footer } from "@/components/footer";
 import { BrandMark } from "@/components/ui-bits";
 import { InstallAppPrompt } from "@/components/install-app-prompt";
@@ -35,8 +34,9 @@ const crewTabs = [
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { user, loading } = useSession();
-  const { isCrew } = useIsCrew();
-  const { crewMode, inCrewArea, exitCrewMode } = useCrewMode(pathname);
+  // Crew screens are a distinct area of the app; riders never see /crew paths.
+  const inCrewArea = pathname.startsWith("/crew") && !pathname.startsWith("/crew/login");
+
   const [dismissed, setDismissed] = useState(false);
   const { pull, refreshing } = usePullToRefresh();
   useEntryAutoSync(Boolean(user));
@@ -58,7 +58,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     match: (p: string) => boolean;
   }[] = inCrewArea ? crewTabs : riderTabs;
   const showSignInCta = !loading && !user && !dismissed && !inCrewArea;
-  const showCrewReturn = !inCrewArea && crewMode && isCrew;
+
   const nextPath = pathname === "/auth" ? "/" : pathname;
 
   function dismiss() {
@@ -130,26 +130,8 @@ export function AppShell({ children }: { children: ReactNode }) {
           </ul>
         </nav>
 
-        {showCrewReturn ? (
-          <div className="rounded-2xl bg-ink px-3 py-3 text-white">
-            <p className="text-[13px] font-bold">You're on crew</p>
-            <p className="mt-0.5 text-[11px] opacity-75">Jump back to the on-site tools</p>
-            <div className="mt-2 flex items-center gap-2">
-              <Link to="/crew" className="inline-flex rounded-full bg-cherry px-3 py-1.5 text-xs font-bold text-white">
-                Crew tools
-              </Link>
-              <button
-                type="button"
-                onClick={exitCrewMode}
-                className="text-[11px] font-semibold text-white/70 hover:text-white"
-              >
-                Stay in rider app
-              </button>
-            </div>
-          </div>
-        ) : null}
-
         {showSignInCta ? (
+
           <div className="rounded-2xl bg-ink px-3 py-3 text-white">
             <p className="text-[13px] font-bold">Sign in for your events</p>
             <p className="mt-0.5 text-[11px] opacity-75">Race packs, routes, chat &amp; more</p>
@@ -212,32 +194,8 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
       ) : null}
 
-      {/* Mobile-only "back to crew tools" pill for signed-in crew browsing the rider app */}
-      {showCrewReturn ? (
-        <div
-          className="pb-2 pl-3 pr-[4.5rem]"
-        >
-          <div className="flex items-center gap-2 rounded-2xl bg-ink px-3 py-2 text-white shadow-lg ring-1 ring-black/20">
-            <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white/15">
-              <HardHat className="h-4 w-4" />
-            </span>
-            <p className="min-w-0 flex-1 text-[13px] font-bold leading-tight">Back to crew tools</p>
-            <Link to="/crew" className="shrink-0 rounded-full bg-cherry px-3 py-1.5 text-xs font-bold text-white">
-              Open
-            </Link>
-            <button
-              type="button"
-              aria-label="Stay in the rider app"
-              onClick={exitCrewMode}
-              className="grid h-7 w-7 shrink-0 place-items-center rounded-full text-white/70 hover:text-white"
-            >
-              <X className="h-3.5 w-3.5" />
-            </button>
-          </div>
-        </div>
-      ) : null}
-
       {/* Mobile-only bottom tab bar */}
+
       <nav
         aria-label="Primary"
         className="w-full border-t border-border/70 bg-card"
