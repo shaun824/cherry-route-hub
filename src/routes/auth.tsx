@@ -144,8 +144,21 @@ function AuthPage() {
   }, []);
 
 
-  const target = next && next.startsWith("/") ? next : "/";
+  /**
+   * Crew accounts open on the crew centre by default; a specific ?next=
+   * destination (or the rider app) is still respected.
+   */
+  async function crewDefaultTarget(fallback: string): Promise<string> {
+    if (fallback !== "/") return fallback;
+    try {
+      const { checkIsCrew } = await import("@/lib/crew");
+      return (await checkIsCrew(supabase as never)) ? "/crew" : "/";
+    } catch {
+      return "/";
+    }
+  }
 
+  const target = next && next.startsWith("/") ? next : "/";
 
   // Once a session exists, claim any entries matching the ID number they gave
   // at sign-up, then continue into the app.
@@ -162,17 +175,17 @@ function AuthPage() {
 
     const pending = readPending(PENDING_ID_KEY);
     const pendingName = readPending(PENDING_NAME_KEY) ?? "";
-    const go = () => navigate({ to: target, replace: true });
+    const go = async () => navigate({ to: await crewDefaultTarget(target), replace: true });
     if (!pending) {
       clearPending();
-      go();
+      void go();
       return;
     }
     void linkEntry({ data: { id_number: pending, surname: pendingName } })
       .catch(() => null)
       .finally(() => {
         clearPending();
-        go();
+        void go();
       });
   }, [loading, user, target, navigate, linkEntry]);
 
