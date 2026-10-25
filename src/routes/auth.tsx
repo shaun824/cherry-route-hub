@@ -286,7 +286,7 @@ function AuthPage() {
           (data.user?.user_metadata?.["full_name"] as string | undefined) ?? null,
         );
         await saveCredential(signedInEmail, password);
-        navigate({ to: target, replace: true });
+        navigate({ to: await crewDefaultTarget(target), replace: true });
       }
 
     } catch (err) {
