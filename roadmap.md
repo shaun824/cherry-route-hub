@@ -4,11 +4,11 @@
 - [x] Parse KCA match-campaign PDF (design system: pink #E6007E, yellow accent, hearts, script accents)
 - [x] Scrape sabrinalove.co.za/summer-challenge-2026 (4 days, venues, times, fees, contacts)
 - [x] Get KCA (Keep a Child Alive) logo online + Discovery logo + SLSC artwork as assets
-- [ ] Create 4 events in DB (Beach Walk & Surf Ski 27 Dec, Vitality Run 28 Dec, MTB & E-Bike 29 Dec, Trail Run & Kids of Steel 30 Dec) — listed under Bicycle/cycling
-- [ ] Teach the bot: event_bot_knowledge rows + full event data per day
-- [ ] Build SLSC email brand module + 4 pre-event mailers (parking → schedule etc; parking not published on site — flag to Shaun)
-- [ ] Create 4 Everlytic draft campaigns, send tests to Shaun
-- [ ] Load event entrants into Bicycles list (102600), preserving opt-outs
+- [x] Create 4 events in DB — verified all 4 show under Bicycle on the hub
+- [x] Teach the bot: event_bot_knowledge rows + full event data per day
+- [x] Build SLSC email brand module + 4 pre-event mailers (parking not published on site — flagged to Shaun)
+- [x] Create 4 Everlytic draft campaigns 924371–924374, previews sent to Shaun
+- [x] Sync Entry Ninja rosters (48 entries) and load 37 unique riders into Bicycles list (102600), opt-outs preserved
 - [ ] Verify race-control re-centering preserves chosen zoom; number-only distance markers (from previous task — tests passed, Playwright check pending)
 - [ ] Publish and confirm all good to go
 
