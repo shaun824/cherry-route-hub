@@ -136,7 +136,7 @@ export function SabrinaLovePreEvent({ firstName, day = 1 }: SlscPreEventProps) {
             <strong>Getting there:</strong>{' '}
             <Link href={d.mapUrl} style={{ color: sl.pink }}>Open in Google Maps</Link>
           </Text>
-          <Text style={{ ...sl.text, margin: '0' }}><strong>Parking:</strong> at the venue — final parking details will be confirmed on <Link href={SLSC_SITE} style={{ color: sl.pink }}>sabrinalove.co.za</Link> closer to the day.</Text>
+          <Text style={{ ...sl.text, margin: '0' }}><strong>Parking:</strong> at the venue — use the <Link href={d.mapUrl} style={{ color: sl.pink }}>Google Maps link</Link> above for directions and parking at {d.venue}.</Text>
         </Section>
 
         <Section style={card}>
