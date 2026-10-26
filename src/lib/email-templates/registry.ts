@@ -10,6 +10,7 @@ import { template as seaToSeaPreEvent } from './sea-to-sea-pre-event'
 import { template as eventThankYou } from './event-thank-you'
 import { template as resultsIssues } from './results-issues'
 import { template as entryInterestConfirmation } from './entry-interest-confirmation'
+import { template as sabrinaLovePreEvent } from './sabrina-love-pre-event'
 import { SignupEmail } from './signup'
 import { InviteEmail } from './invite'
 import { MagicLinkEmail } from './magic-link'
@@ -46,6 +47,7 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'event-thank-you': eventThankYou,
   'results-issues': resultsIssues,
   'entry-interest-confirmation': entryInterestConfirmation,
+  'sabrina-love-pre-event': sabrinaLovePreEvent,
   // Auth emails are sent live by the Supabase auth webhook (see
   // src/routes/lovable/email/auth/webhook.ts). They are registered here only so
   // admins can send themselves an exact copy of what riders receive.
