@@ -40,6 +40,7 @@ export type EventRoute = {
   description?: string;
   gpxUrl?: string;
   mapEmbedUrl?: string;
+  profileImageUrl?: string; // static elevation profile picture, used until route files exist
   kmlUrls?: string[];      // one or more KML files layered on the interactive map
   color?: string;          // optional override for the polyline colour on the map
   customMarkers?: CustomMarker[]; // admin-added markers shown on the interactive map
