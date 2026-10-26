@@ -832,7 +832,7 @@ function RoutesPanel({
                         style={{ backgroundColor: r.color || "#b91c1c" }}
                       >
                         <RouteIcon className="h-3 w-3" />
-                        {r.tier}
+                        {r.tier === "Custom" && r.profileImageUrl ? "Route" : r.tier}
                       </span>
                        <p className={"text-sm font-semibold text-ink"}>{r.name}</p>
                     </div>
