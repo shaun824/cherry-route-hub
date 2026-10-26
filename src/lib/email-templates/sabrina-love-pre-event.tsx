@@ -136,7 +136,7 @@ export function SabrinaLovePreEvent({ firstName, day = 1 }: SlscPreEventProps) {
   const d = DAYS[day] ?? DAYS[1]
   return (
     <>
-      <SlscHeader dayLabel={d.dayLabel} />
+      <SlscHeader dayLabel={d.dayLabel} photoUrl={d.photoUrl} photoAlt={d.photoAlt} />
       <Section style={sl.inner}>
         <Text style={sl.label}>YOUR PRE-EVENT GUIDE</Text>
         <Heading style={sl.heading}>{d.title}</Heading>
