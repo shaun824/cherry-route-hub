@@ -70,11 +70,17 @@ export async function backfillLoyalty(
     .slice(0, opts.maxEvents ?? 60);
 
   // Local event ids so participation rows can deep-link.
-  const { data: localEvents } = await supabase.from("events").select("id, entry_ninja_id");
+  const { data: localEvents } = await supabase.from("events").select("id, entry_ninja_id, earns_cherry_miles");
   const localByEn = new Map<string, string>();
-  for (const e of (localEvents ?? []) as { id: string; entry_ninja_id: string | number | null }[]) {
-    if (e.entry_ninja_id != null) localByEn.set(String(e.entry_ninja_id), e.id);
+  const excludedEn = new Set<string>();
+  for (const e of (localEvents ?? []) as { id: string; entry_ninja_id: string | number | null; earns_cherry_miles: boolean | null }[]) {
+    if (e.entry_ninja_id != null) {
+      localByEn.set(String(e.entry_ninja_id), e.id);
+      if (e.earns_cherry_miles === false) excludedEn.add(String(e.entry_ninja_id));
+    }
   }
+  // Events that don't qualify for Cherry Miles (e.g. charity partner events) earn nothing.
+  enEvents = enEvents.filter((e) => !excludedEn.has(String(e.id)));
 
   // Make sure every event has a value row (defaults applied).
   const valueRows = enEvents.map((e) => ({
@@ -246,7 +252,8 @@ export async function syncParticipationFromRoster(
   const { data: eventRows } = await supabase
     .from("events")
     .select("id, name, event_date, entry_ninja_id")
-    .not("entry_ninja_id", "is", null);
+    .not("entry_ninja_id", "is", null)
+    .neq("earns_cherry_miles", false);
   const events = ((eventRows ?? []) as { id: string; name: string; event_date: string; entry_ninja_id: string }[])
     .filter((e) => new Date(e.event_date).getTime() <= Date.now());
 
