@@ -4,7 +4,8 @@ import { createFileRoute, Link, Navigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { BedDouble, Bot, Boxes, CalendarDays, ClipboardList, GraduationCap, HardHat, Map as MapIcon, MapPin, Search, Siren, Users } from "lucide-react";
-import { useIsCrew } from "@/lib/auth";
+import { useIsAdmin, useIsCrew } from "@/lib/auth";
+import { ShieldCheck, ChevronRight } from "lucide-react";
 import { fetchAllCrewEvents, fetchCrewEvents, fetchCrewRooming, normaliseTent } from "@/lib/crew";
 import { buildCrewTimeline, groupScheduleByDay, pickCurrentDay } from "@/lib/crew-plan";
 import { useCrewEvent, useCrewShowPast } from "@/lib/crew-event";
@@ -102,6 +103,7 @@ function CrewDashboard() {
   const crewTasks = useMemo(() => buildCrewTimeline(activeDay), [activeDay]);
   const [view, setView] = useState<"crew" | "riders">("crew");
   const [tab, setTab] = useState<"tools" | "plan">("tools");
+  const { isAdmin } = useIsAdmin();
 
 
 
@@ -123,6 +125,15 @@ function CrewDashboard() {
 
   return (
     <div className="mx-auto w-full max-w-3xl space-y-5 px-4 pb-10 pt-5">
+      {isAdmin && (
+        <Link
+          to="/admin"
+          className="flex items-center justify-between gap-2 rounded-2xl bg-ink px-4 py-3 text-sm font-bold text-background"
+        >
+          <span className="inline-flex items-center gap-2"><ShieldCheck className="h-4 w-4" /> Go to admin portal</span>
+          <ChevronRight className="h-4 w-4" />
+        </Link>
+      )}
       <header>
         <p className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest text-cherry">
           <HardHat className="h-3.5 w-3.5" /> Crew
