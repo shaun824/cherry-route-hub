@@ -28,3 +28,16 @@ export function isHiddenFromBackend(ev: EventLike, now: number = Date.now()): bo
 export function visibleInBackend<T extends EventLike>(events: T[], now?: number): T[] {
   return events.filter((e) => !isHiddenFromBackend(e, now));
 }
+
+/** Race control keeps events that ended in the last ~6 months; older ones are archived. */
+export const RACE_CONTROL_HISTORY_DAYS = 183;
+
+export function inRaceControlWindow(ev: EventLike, now: number = Date.now()): boolean {
+  return eventEndMs(ev) >= now - RACE_CONTROL_HISTORY_DAYS * DAY_MS;
+}
+
+/** Index of the next (or currently running) event in a date-ascending list; last event if all are past. */
+export function nextEventIndex<T extends EventLike>(events: T[], now: number = Date.now()): number {
+  const i = events.findIndex((e) => eventEndMs(e) + DAY_MS > now);
+  return i === -1 ? events.length - 1 : i;
+}

@@ -478,14 +478,17 @@ export const fetchTrackingEvents = createServerFn({ method: "GET" })
       .from("events")
       .select("id, name, event_date, lifecycle, days")
       .neq("lifecycle", "archived")
+      .gte("event_date", new Date(Date.now() - 200 * 24 * 60 * 60 * 1000).toISOString())
       .order("event_date", { ascending: true })
-      .limit(50);
+      .limit(100);
     if (error) throw new Error(error.message);
-    return visibleInBackend(data ?? []).map((e) => ({
+    const { inRaceControlWindow } = await import("@/lib/event-window");
+    return (data ?? []).filter((e) => inRaceControlWindow(e)).map((e) => ({
       id: e.id,
       name: e.name,
       eventDate: e.event_date,
       lifecycle: e.lifecycle,
+      days: e.days,
     }));
   });
 
