@@ -138,14 +138,17 @@ export function SabrinaLovePreEvent({ firstName, day = 1 }: SlscPreEventProps) {
     <>
       <SlscHeader dayLabel={d.dayLabel} photoUrl={d.photoUrl} photoAlt={d.photoAlt} />
       <Section style={sl.inner}>
-        <Text style={sl.label}>YOUR PRE-EVENT GUIDE</Text>
+        <Text style={sl.label}>ENTRIES ARE OPEN</Text>
         <Heading style={sl.heading}>{d.title}</Heading>
         <Text style={sl.text}>
-          {firstName ? `Hi ${firstName}, ` : ''}here is everything you need for {d.title} on {d.dateLabel}. {d.intro}
+          {firstName ? `Hi ${firstName}, ` : ''}come and join us for {d.title} on {d.dateLabel}. {d.intro}
         </Text>
+        <Section style={{ margin: '0 0 20px' }}>
+          <Button href={d.entryUrl} style={{ ...sl.button, display: 'block', textAlign: 'center' }}>Enter now ♥</Button>
+        </Section>
 
         <Section style={card}>
-          <Text style={{ ...sl.label, margin: '0 0 8px' }}>YOUR DAY AT A GLANCE</Text>
+          <Text style={{ ...sl.label, margin: '0 0 8px' }}>THE DAY AT A GLANCE</Text>
           <Text style={{ ...sl.text, margin: '0 0 4px' }}><strong>Date:</strong> {d.dateLabel}</Text>
           <Text style={{ ...sl.text, margin: '0 0 4px' }}><strong>Venue:</strong> {d.venue}</Text>
           <Text style={{ ...sl.text, margin: '0 0 4px' }}>
@@ -181,7 +184,7 @@ export function SabrinaLovePreEvent({ firstName, day = 1 }: SlscPreEventProps) {
         </Section>
 
         <Section style={{ margin: '8px 0 20px' }}>
-          <Button href={d.entryUrl} style={{ ...sl.button, display: 'block', textAlign: 'center' }}>Enter {d.title} ♥</Button>
+          <Button href={d.entryUrl} style={{ ...sl.button, display: 'block', textAlign: 'center' }}>Book your spot for {d.title} ♥</Button>
         </Section>
 
         <Section style={card}>

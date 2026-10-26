@@ -37,45 +37,39 @@ export function SlscHeader({ dayLabel, photoUrl, photoAlt }: { dayLabel: string;
     <Section style={{ backgroundColor: sl.white, padding: '18px 24px 14px', textAlign: 'center' }}>
       <Img src={absolute(slLogo.url)} alt="Sabrina Love Foundation" width="150" style={{ width: '150px', height: 'auto', margin: '0 auto', display: 'block' }} />
     </Section>
-    <Section style={{ backgroundColor: sl.pink, padding: '26px 24px 24px', textAlign: 'center' }}>
-      <Text style={{ ...sl.script, color: sl.white, fontSize: '26px', lineHeight: '1.3', margin: '0 0 6px' }}>Sabrina Love Summer Challenge 2026</Text>
-      <Text style={{ ...sl.label, color: sl.yellow, margin: '0' }}>27–30 DECEMBER · PLETTENBERG BAY</Text>
+    <Section style={{ backgroundColor: sl.white, padding: '4px 24px 18px', textAlign: 'center' }}>
+      <Text style={{ ...sl.script, color: sl.pink, fontSize: '28px', lineHeight: '1.3', margin: '0 0 6px' }}>Sabrina Love Summer Challenge 2026</Text>
+      <Text style={{ ...sl.label, color: sl.ink, margin: '0' }}>27 TO 30 DECEMBER · PLETTENBERG BAY</Text>
     </Section>
     <Img src={photoUrl} alt={photoAlt} width="600" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block' }} />
-    <Section style={{ backgroundColor: sl.deepPink, padding: '12px 24px' }}>
-      <Text style={{ ...sl.label, color: sl.white, margin: '0', textAlign: 'center' }}>{dayLabel}</Text>
+    <Section style={{ backgroundColor: sl.white, padding: '12px 24px', borderBottom: `3px solid ${sl.pink}` }}>
+      <Text style={{ ...sl.label, color: sl.pink, margin: '0', textAlign: 'center' }}>{dayLabel}</Text>
     </Section>
   </>
 }
 
 export function KcaMatchBand({ entryUrl }: { entryUrl: string }) {
-  return <Section style={{ backgroundColor: sl.pink, padding: '26px 24px', margin: '12px 0 24px', borderRadius: '12px' }}>
-    <Text style={{ ...sl.label, color: sl.yellow }}>♥ MATCH-FUNDED BY KCA</Text>
-    <Heading as="h2" style={{ color: sl.white, fontSize: '26px', lineHeight: '1.25', fontWeight: 800, margin: '0 0 12px' }}>
-      Give once. Make <span style={{ color: sl.yellow }}>twice</span> the difference.
+  return <Section style={{ backgroundColor: sl.white, border: `2px solid ${sl.pink}`, padding: '24px 22px', margin: '12px 0 24px', borderRadius: '12px' }}>
+    <Img src={absolute(kcaLogo.url)} alt="Keep a Child Alive" width="110" style={{ width: '110px', height: 'auto', display: 'block', margin: '0 0 14px' }} />
+    <Text style={{ ...sl.label }}>♥ DONATION MATCHING WITH KCA</Text>
+    <Heading as="h2" style={{ color: sl.ink, fontSize: '24px', lineHeight: '1.25', fontWeight: 800, margin: '0 0 12px' }}>
+      Give once. Make <span style={{ color: sl.pink }}>twice</span> the difference.
     </Heading>
-    <Text style={{ ...sl.text, color: sl.white }}>
-      Keep a Child Alive has proposed a match-funding commitment for the Summer Challenge. Once confirmed, your entry and any extra donation could make twice the difference for children with disabilities in the greater Plettenberg Bay community.
+    <Text style={{ ...sl.text }}>
+      Keep a Child Alive has proposed matching donations made through the Summer Challenge. Once confirmed, your entry and any extra donation could count double for children with disabilities in the greater Plettenberg Bay community.
     </Text>
-    <Text style={{ ...sl.text, color: sl.white, fontWeight: 700 }}>♥ Let's raise a million!</Text>
-    <Row style={{ margin: '6px 0 18px' }}>
+    <Text style={{ ...sl.text, fontWeight: 700, color: sl.pink }}>♥ Let's raise a million!</Text>
+    <Row style={{ margin: '6px 0 4px' }}>
       <Column style={{ paddingRight: '6px' }}>
-        <Button href={entryUrl} style={{ ...sl.buttonGhost, display: 'block', textAlign: 'center' }}>Enter &amp; add a donation</Button>
+        <Button href={entryUrl} style={{ ...sl.button, display: 'block', textAlign: 'center' }}>Enter now</Button>
       </Column>
       <Column style={{ paddingLeft: '6px' }}>
-        <Button href={SLSC_GIVENGAIN} style={{ ...sl.button, backgroundColor: sl.deepPink, display: 'block', textAlign: 'center' }}>Donate on GivenGain ♥</Button>
+        <Button href={SLSC_GIVENGAIN} style={{ ...sl.buttonGhost, display: 'block', textAlign: 'center' }}>Donate ♥</Button>
       </Column>
     </Row>
-    <Row>
-      <Column style={{ width: '120px', verticalAlign: 'middle' }}>
-        <Section style={{ backgroundColor: sl.white, borderRadius: '10px', padding: '8px' }}>
-          <Img src={absolute(kcaLogo.url)} alt="Keep a Child Alive" width="100" style={{ width: '100%', height: 'auto', display: 'block' }} />
-        </Section>
-      </Column>
-      <Column style={{ verticalAlign: 'middle', paddingLeft: '12px' }}>
-        <Text style={{ ...sl.text, color: sl.white, fontSize: '13px', margin: '0' }}>Keep a Child Alive, our matching partner</Text>
-      </Column>
-    </Row>
+    <Text style={{ ...sl.text, fontSize: '13px', color: sl.muted, margin: '12px 0 0' }}>
+      Find out more about <Link href="https://keep.org" style={{ color: sl.pink }}>Keep a Child Alive</Link>.
+    </Text>
   </Section>
 }
 
