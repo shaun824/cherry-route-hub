@@ -105,6 +105,8 @@ const DAYS: Record<number, DayContent> = {
     dateLabel: 'Wednesday 30 December 2026',
     venue: 'Kurland Estate, The Crags',
     mapUrl: 'https://www.google.com/maps/search/?api=1&query=Kurland+Estate+The+Crags',
+    photoUrl: absolute(day4Photo.url),
+    photoAlt: 'Trail Run and Kids of Steel at Kurland Estate, The Crags',
     intro: 'The last day of the Challenge. Trail runs of 6km, 12km and 21km through Kurland Estate, followed by the much-loved Kids of Steel run/swim/run for young athletes.',
     schedule: [
       { time: '06:30', label: '21km Trail Run starts', detail: 'For experienced trail runners' },
