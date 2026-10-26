@@ -43,7 +43,7 @@ const DAYS: Record<number, DayContent> = {
     intro: 'Kick off the Year of Joy on the beach. Paddlers take on a 12km surf ski from Central Beach to Robberg and back, while families walk 4km along the sand. Bring your wishing shells for the Sabrina Love wishing well on the route.',
     schedule: [
       { time: '08:00', label: '12km Surf Ski Single & Double start', detail: 'Central Beach to Robberg and back' },
-      { time: '08:30', label: '4km Beach Walk starts', detail: 'Family friendly — bring your wishing shells' },
+      { time: '08:30', label: '4km Beach Walk starts', detail: 'Family friendly, bring your wishing shells' },
     ],
     entries: [
       { name: '12km Surf Ski Single', price: 'R450' },
@@ -52,7 +52,7 @@ const DAYS: Record<number, DayContent> = {
       { name: '4km Beach Walk Child (18 and under)', price: 'R200' },
     ],
     entryUrl: 'https://www.entryninja.com/events/83457-walk-surf-ski',
-    extras: ['No cut-off times — go at your own pace', 'Support vehicles out on the route', 'Wear pink — the whole town goes pink for the Year of Joy'],
+    extras: ['No cut-off times, go at your own pace', 'Support vehicles out on the route', 'Wear pink: the whole town goes pink for the Year of Joy'],
   },
   2: {
     dayLabel: 'DAY 2 · MONDAY 28 DECEMBER 2026',
@@ -72,7 +72,7 @@ const DAYS: Record<number, DayContent> = {
       { name: '5km Road Run', price: 'R450' },
     ],
     entryUrl: 'https://www.entryninja.com/events/83458-vitality-run-series',
-    extras: ['No cut-off times — go at your own pace', 'Support vehicles out on the route', 'Wear pink — the whole town goes pink for the Year of Joy'],
+    extras: ['No cut-off times, go at your own pace', 'Support vehicles out on the route', 'Wear pink: the whole town goes pink for the Year of Joy'],
   },
   3: {
     dayLabel: 'DAY 3 · TUESDAY 29 DECEMBER 2026',
@@ -97,7 +97,7 @@ const DAYS: Record<number, DayContent> = {
       { name: '10km MTB', price: 'R450' },
     ],
     entryUrl: 'https://www.entryninja.com/events/83460-mtb-challenge',
-    extras: ['No cut-off times — go at your own pace', 'Support vehicles out on every route', 'Water points on the route', 'Wear pink — the whole town goes pink for the Year of Joy'],
+    extras: ['No cut-off times, go at your own pace', 'Support vehicles out on every route', 'Water points on the route', 'Wear pink: the whole town goes pink for the Year of Joy'],
   },
   4: {
     dayLabel: 'DAY 4 · WEDNESDAY 30 DECEMBER 2026',
@@ -121,7 +121,7 @@ const DAYS: Record<number, DayContent> = {
       { name: 'Kids of Steel (ages 8–14)', price: 'R250' },
     ],
     entryUrl: 'https://www.entryninja.com/events/83461-trail-run',
-    extras: ['No cut-off times — go at your own pace', 'Support vehicles out on every route', 'Water points on the route', 'Wear pink — the whole town goes pink for the Year of Joy'],
+    extras: ['No cut-off times, go at your own pace', 'Support vehicles out on every route', 'Water points on the route', 'Wear pink: the whole town goes pink for the Year of Joy'],
   },
 }
 
@@ -152,7 +152,7 @@ export function SabrinaLovePreEvent({ firstName, day = 1 }: SlscPreEventProps) {
             <strong>Getting there:</strong>{' '}
             <Link href={d.mapUrl} style={{ color: sl.pink }}>Open in Google Maps</Link>
           </Text>
-          <Text style={{ ...sl.text, margin: '0' }}><strong>Parking:</strong> at the venue — use the <Link href={d.mapUrl} style={{ color: sl.pink }}>Google Maps link</Link> above for directions and parking at {d.venue}.</Text>
+          <Text style={{ ...sl.text, margin: '0' }}><strong>Parking:</strong> at the venue. Use the <Link href={d.mapUrl} style={{ color: sl.pink }}>Google Maps link</Link> above for directions and parking at {d.venue}.</Text>
         </Section>
 
         <Section style={card}>
@@ -163,7 +163,7 @@ export function SabrinaLovePreEvent({ firstName, day = 1 }: SlscPreEventProps) {
                 <Text style={{ ...sl.text, margin: '0', fontWeight: 700, color: sl.pink }}>{s.time}</Text>
               </Column>
               <Column style={{ verticalAlign: 'top' }}>
-                <Text style={{ ...sl.text, margin: '0' }}><strong>{s.label}</strong>{s.detail ? ` — ${s.detail}` : ''}</Text>
+                <Text style={{ ...sl.text, margin: '0' }}><strong>{s.label}</strong>{s.detail ? ` · ${s.detail}` : ''}</Text>
               </Column>
             </Row>
           ))}
@@ -187,7 +187,7 @@ export function SabrinaLovePreEvent({ firstName, day = 1 }: SlscPreEventProps) {
         <Section style={card}>
           <Text style={{ ...sl.label, margin: '0 0 8px' }}>GOOD TO KNOW</Text>
           {d.extras.map((x) => <Text key={x} style={{ ...sl.text, margin: '0 0 4px' }}>♥ {x}</Text>)}
-          <Text style={{ ...sl.text, margin: '8px 0 0' }}>Doing more than one day? Lots of people do all four — paddle or walk on the 27th, run on the 28th, ride on the 29th and trail-run on the 30th.</Text>
+          <Text style={{ ...sl.text, margin: '8px 0 0' }}>Doing more than one day? Lots of people do all four: paddle or walk on the 27th, run on the 28th, ride on the 29th and trail-run on the 30th.</Text>
         </Section>
 
         <KcaMatchBand entryUrl={d.entryUrl} />

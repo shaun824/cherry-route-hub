@@ -5,7 +5,7 @@ import discoveryLogo from '@/assets/discovery-logo.jpg.asset.json'
 
 const absolute = (url: string) => new URL(url, 'https://riderhub.redcherryevents.co.za').href
 
-/** Sabrina Love Summer Challenge email design tokens — from the 2026 campaign design system. */
+/** Sabrina Love Summer Challenge email design tokens from the 2026 campaign design system. */
 export const sl = {
   pink: '#E6007E',
   deepPink: '#B80065',
