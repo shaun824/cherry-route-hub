@@ -3,6 +3,12 @@ import { Button, Column, Heading, Link, Row, Section, Text } from '@react-email/
 
 import type { TemplateEntry } from './registry'
 import { KcaMatchBand, SlscFooter, SlscHeader, sl } from './sabrina-love-brand'
+import day1Photo from '@/assets/slsc-day1-beach-walk.jpg.asset.json'
+import day2Photo from '@/assets/slsc-day2-vitality-run.jpg.asset.json'
+import day3Photo from '@/assets/slsc-day3-mtb.jpg.asset.json'
+import day4Photo from '@/assets/slsc-day4-trail-run.jpg.asset.json'
+
+const absolute = (url: string) => new URL(url, 'https://riderhub.redcherryevents.co.za').href
 
 export interface SlscPreEventProps {
   firstName?: string | null
@@ -16,6 +22,8 @@ interface DayContent {
   dateLabel: string
   venue: string
   mapUrl: string
+  photoUrl: string
+  photoAlt: string
   intro: string
   schedule: { time: string; label: string; detail?: string }[]
   entries: { name: string; price: string }[]
@@ -30,6 +38,8 @@ const DAYS: Record<number, DayContent> = {
     dateLabel: 'Sunday 27 December 2026',
     venue: 'Central Beach, Plettenberg Bay',
     mapUrl: 'https://www.google.com/maps/search/?api=1&query=Central+Beach+Plettenberg+Bay',
+    photoUrl: absolute(day1Photo.url),
+    photoAlt: 'Beach Walk and Surf Ski at Central Beach, Plettenberg Bay',
     intro: 'Kick off the Year of Joy on the beach. Paddlers take on a 12km surf ski from Central Beach to Robberg and back, while families walk 4km along the sand. Bring your wishing shells for the Sabrina Love wishing well on the route.',
     schedule: [
       { time: '08:00', label: '12km Surf Ski Single & Double start', detail: 'Central Beach to Robberg and back' },
@@ -50,7 +60,9 @@ const DAYS: Record<number, DayContent> = {
     dateLabel: 'Monday 28 December 2026',
     venue: 'Longstone Park, Plettenberg Bay',
     mapUrl: 'https://www.google.com/maps/search/?api=1&query=Longstone+Park+Plettenberg+Bay',
-    intro: 'A 5km or 10km road run through Plettenberg Bay, professionally timed with a water point on the route. More than 1,200 runners took part in 2025 — come add to the joy.',
+    photoUrl: absolute(day2Photo.url),
+    photoAlt: 'Discovery Vitality Run Series at Longstone Park, Plettenberg Bay',
+    intro: 'A 5km or 10km road run through Plettenberg Bay, professionally timed with a water point on the route. More than 1,200 runners took part in 2025. Come add to the joy.',
     schedule: [
       { time: '07:00', label: '10km Road Run starts', detail: 'Professionally timed · 1 water point' },
       { time: '07:30', label: '5km Road Run starts', detail: 'Professionally timed · 1 water point' },
@@ -68,6 +80,8 @@ const DAYS: Record<number, DayContent> = {
     dateLabel: 'Tuesday 29 December 2026',
     venue: 'Kurland Estate, The Crags',
     mapUrl: 'https://www.google.com/maps/search/?api=1&query=Kurland+Estate+The+Crags',
+    photoUrl: absolute(day3Photo.url),
+    photoAlt: 'MTB and E-Bike Challenge at Kurland Estate, The Crags',
     intro: 'Ride the trails of Kurland Estate and the MTO forestry. The 40km has about 702m of climbing with technical sections, the 25km suits intermediate riders, and the 10km is perfect for beginners and families. Dedicated e-bike starts at 07:00.',
     schedule: [
       { time: '07:00', label: '40km & 25km E-Bike start' },
