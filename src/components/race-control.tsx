@@ -1,3 +1,4 @@
+import { nextEventIndex } from "@/lib/event-window";
 // Race control: live rider map + SOS alert list for a chosen event.
 // Shared by the admin console and the crew portal (crew + admin only).
 import { ResolveSosButton } from "@/components/resolve-sos-button";
@@ -145,7 +146,9 @@ export function RaceControlPanel({
   });
   const events = eventsQ.data ?? [];
   const selected =
-    (eventId && events.some((e) => e.id === eventId) ? eventId : null) ?? events[0]?.id ?? null;
+    (eventId && events.some((e) => e.id === eventId) ? eventId : null) ??
+    events[nextEventIndex(events.map((e) => ({ event_date: e.eventDate, days: e.days })))]?.id ??
+    null;
 
   const sosQ = useQuery({
     queryKey: ["tracking-sos", selected],
