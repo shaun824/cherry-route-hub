@@ -2,6 +2,7 @@ import * as React from 'react'
 import { Button, Column, Heading, Img, Link, Row, Section, Text } from '@react-email/components'
 import kcaLogo from '@/assets/kca-logo.png.asset.json'
 import discoveryLogo from '@/assets/discovery-logo.jpg.asset.json'
+import slLogo from '@/assets/sabrina-love-logo.png.asset.json'
 import rceLogo from '@/assets/rce-logo.png.asset.json'
 
 const absolute = (url: string) => new URL(url, 'https://riderhub.redcherryevents.co.za').href
