@@ -112,13 +112,13 @@ const DAYS: Record<number, DayContent> = {
       { time: '06:30', label: '21km Trail Run starts', detail: 'For experienced trail runners' },
       { time: '07:00', label: '12km Trail Run starts' },
       { time: '07:30', label: '6km Trail Run starts', detail: 'Good for newer trail runners' },
-      { time: '09:30', label: 'Kids of Steel Run/Swim/Run', detail: 'Ages 8–10: ±1.5km · Ages 11–14: ±3km (2 laps)' },
+      { time: '09:30', label: 'Kids of Steel Run/Swim/Run', detail: 'Ages 8 to 10: ±1.5km · Ages 11 to 14: ±3km (2 laps)' },
     ],
     entries: [
       { name: '21km Trail Run', price: 'R560' },
       { name: '12km Trail Run', price: 'R450' },
       { name: '6km Trail Run', price: 'R450' },
-      { name: 'Kids of Steel (ages 8–14)', price: 'R250' },
+      { name: 'Kids of Steel (ages 8 to 14)', price: 'R250' },
     ],
     entryUrl: 'https://www.entryninja.com/events/83461-trail-run',
     extras: ['No cut-off times, go at your own pace', 'Support vehicles out on every route', 'Water points on the route', 'Wear pink: the whole town goes pink for the Year of Joy'],
@@ -138,14 +138,17 @@ export function SabrinaLovePreEvent({ firstName, day = 1 }: SlscPreEventProps) {
     <>
       <SlscHeader dayLabel={d.dayLabel} photoUrl={d.photoUrl} photoAlt={d.photoAlt} />
       <Section style={sl.inner}>
-        <Text style={sl.label}>YOUR PRE-EVENT GUIDE</Text>
+        <Text style={sl.label}>ENTRIES ARE OPEN</Text>
         <Heading style={sl.heading}>{d.title}</Heading>
         <Text style={sl.text}>
-          {firstName ? `Hi ${firstName}, ` : ''}here is everything you need for {d.title} on {d.dateLabel}. {d.intro}
+          {firstName ? `Hi ${firstName}, ` : ''}come and join us for {d.title} on {d.dateLabel}. {d.intro}
         </Text>
+        <Section style={{ margin: '0 0 20px' }}>
+          <Button href={d.entryUrl} style={{ ...sl.button, display: 'block', textAlign: 'center' }}>Enter now ♥</Button>
+        </Section>
 
         <Section style={card}>
-          <Text style={{ ...sl.label, margin: '0 0 8px' }}>YOUR DAY AT A GLANCE</Text>
+          <Text style={{ ...sl.label, margin: '0 0 8px' }}>THE DAY AT A GLANCE</Text>
           <Text style={{ ...sl.text, margin: '0 0 4px' }}><strong>Date:</strong> {d.dateLabel}</Text>
           <Text style={{ ...sl.text, margin: '0 0 4px' }}><strong>Venue:</strong> {d.venue}</Text>
           <Text style={{ ...sl.text, margin: '0 0 4px' }}>
@@ -181,7 +184,7 @@ export function SabrinaLovePreEvent({ firstName, day = 1 }: SlscPreEventProps) {
         </Section>
 
         <Section style={{ margin: '8px 0 20px' }}>
-          <Button href={d.entryUrl} style={{ ...sl.button, display: 'block', textAlign: 'center' }}>Enter {d.title} ♥</Button>
+          <Button href={d.entryUrl} style={{ ...sl.button, display: 'block', textAlign: 'center' }}>Book your spot for {d.title} ♥</Button>
         </Section>
 
         <Section style={card}>
@@ -203,7 +206,7 @@ export function SabrinaLovePreEvent({ firstName, day = 1 }: SlscPreEventProps) {
 
 export const template: TemplateEntry = {
   component: SabrinaLovePreEvent,
-  subject: (data) => `Your guide to Day ${data?.day ?? 1} of the Sabrina Love Summer Challenge 2026 ♥`,
-  displayName: 'Sabrina Love Summer Challenge: pre-event guide',
+  subject: (data) => `Entries open: Day ${data?.day ?? 1} of the Sabrina Love Summer Challenge 2026 ♥`,
+  displayName: 'Sabrina Love Summer Challenge: invitation to enter',
   previewData: { firstName: 'Shaun', day: 1 },
 }
