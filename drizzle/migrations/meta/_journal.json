@@ -218,6 +218,13 @@
       "when": 1792503656285,
       "tag": "0030_entry_interest_signups",
       "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1793041416311,
+      "tag": "0031_events_earns_cherry_miles_flag",
+      "breakpoints": true
     }
   ]
 }

@@ -2284,6 +2284,7 @@ export type Database = {
           description: string | null
           discipline: string
           distance_km: number
+          earns_cherry_miles: boolean
           entry_ninja_id: string | null
           entry_ninja_url: string | null
           event_date: string
@@ -2338,6 +2339,7 @@ export type Database = {
           description?: string | null
           discipline: string
           distance_km?: number
+          earns_cherry_miles?: boolean
           entry_ninja_id?: string | null
           entry_ninja_url?: string | null
           event_date: string
@@ -2392,6 +2394,7 @@ export type Database = {
           description?: string | null
           discipline?: string
           distance_km?: number
+          earns_cherry_miles?: boolean
           entry_ninja_id?: string | null
           entry_ninja_url?: string | null
           event_date?: string
