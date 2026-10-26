@@ -1,3 +1,4 @@
+import { SlscKcaCard, isSabrinaLoveEvent } from "@/components/slsc-kca-card";
 import { MyRegistrationCard } from "@/components/my-registration-card";
 import { scrollAppTo } from "@/lib/app-scroll";
 import { eventApparel, missingSizes, type ApparelFlags } from "@/lib/apparel";
