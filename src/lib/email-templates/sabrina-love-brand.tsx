@@ -56,7 +56,7 @@ export function KcaMatchBand({ entryUrl }: { entryUrl: string }) {
       Give once. Make <span style={{ color: sl.pink }}>twice</span> the difference.
     </Heading>
     <Text style={{ ...sl.text }}>
-      Keep a Child Alive has proposed matching donations made through the Summer Challenge. Once confirmed, your entry and any extra donation could count double for children with disabilities in the greater Plettenberg Bay community.
+      Keep a Child Alive is matching every donation made through the Summer Challenge. Your entry and any extra donation count double for children with disabilities in the greater Plettenberg Bay community.
     </Text>
     <Text style={{ ...sl.text, fontWeight: 700, color: sl.pink }}>♥ Let's raise a million!</Text>
     <Row style={{ margin: '6px 0 4px' }}>
