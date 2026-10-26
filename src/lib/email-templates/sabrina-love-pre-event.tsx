@@ -206,7 +206,7 @@ export function SabrinaLovePreEvent({ firstName, day = 1 }: SlscPreEventProps) {
 
 export const template: TemplateEntry = {
   component: SabrinaLovePreEvent,
-  subject: (data) => `Your guide to Day ${data?.day ?? 1} of the Sabrina Love Summer Challenge 2026 ♥`,
-  displayName: 'Sabrina Love Summer Challenge: pre-event guide',
+  subject: (data) => `Entries open: Day ${data?.day ?? 1} of the Sabrina Love Summer Challenge 2026 ♥`,
+  displayName: 'Sabrina Love Summer Challenge: invitation to enter',
   previewData: { firstName: 'Shaun', day: 1 },
 }
