@@ -1,7 +1,5 @@
 import * as React from 'react'
 import { Button, Column, Heading, Img, Link, Row, Section, Text } from '@react-email/components'
-import { RCE_LOGO_URL } from './theme'
-import joyStar from '@/assets/slsc-joy-star.webp.asset.json'
 import kcaLogo from '@/assets/kca-logo.png.asset.json'
 import discoveryLogo from '@/assets/discovery-logo.jpg.asset.json'
 
@@ -32,13 +30,13 @@ export const SLSC_SITE = 'https://sabrinalove.co.za/summer-challenge-2026/'
 export const SLSC_GIVENGAIN = 'https://www.givengain.com/cc/sabrinalove'
 export const SLSC_WHATSAPP = 'https://wa.me/27788038978'
 
-export function SlscHeader({ dayLabel }: { dayLabel: string }) {
+export function SlscHeader({ dayLabel, photoUrl, photoAlt }: { dayLabel: string; photoUrl: string; photoAlt: string }) {
   return <>
-    <Section style={{ backgroundColor: sl.pink, padding: '26px 24px 30px', textAlign: 'center' }}>
-      <Img src={absolute(joyStar.url)} alt="Sabrina Love Summer Challenge — Year of Joy" width="120" style={{ width: '120px', height: 'auto', margin: '0 auto 14px', display: 'block', borderRadius: '16px' }} />
+    <Section style={{ backgroundColor: sl.pink, padding: '26px 24px 24px', textAlign: 'center' }}>
       <Text style={{ ...sl.script, color: sl.white, fontSize: '26px', lineHeight: '1.3', margin: '0 0 6px' }}>Sabrina Love Summer Challenge 2026</Text>
       <Text style={{ ...sl.label, color: sl.yellow, margin: '0' }}>27–30 DECEMBER · PLETTENBERG BAY</Text>
     </Section>
+    <Img src={photoUrl} alt={photoAlt} width="600" style={{ width: '100%', maxWidth: '600px', height: 'auto', display: 'block' }} />
     <Section style={{ backgroundColor: sl.deepPink, padding: '12px 24px' }}>
       <Text style={{ ...sl.label, color: sl.white, margin: '0', textAlign: 'center' }}>{dayLabel}</Text>
     </Section>
@@ -70,7 +68,7 @@ export function KcaMatchBand({ entryUrl }: { entryUrl: string }) {
         </Section>
       </Column>
       <Column style={{ verticalAlign: 'middle', paddingLeft: '12px' }}>
-        <Text style={{ ...sl.text, color: sl.white, fontSize: '13px', margin: '0' }}>Keep a Child Alive — matching partner</Text>
+        <Text style={{ ...sl.text, color: sl.white, fontSize: '13px', margin: '0' }}>Keep a Child Alive, our matching partner</Text>
       </Column>
     </Row>
   </Section>
@@ -94,8 +92,7 @@ export function SlscFooter() {
       {' · '}<Link href={SLSC_SITE} style={{ color: sl.pink }}>sabrinalove.co.za</Link>
     </Text>
     <Section style={{ padding: '18px 16px 12px', borderTop: `1px solid ${sl.line}`, textAlign: 'center' }}>
-      <Img src={RCE_LOGO_URL} alt="Red Cherry Events" width="150" style={{ display: 'block', margin: '0 auto', height: 'auto' }} />
-      <Text style={{ ...sl.text, fontSize: '12px', color: sl.muted, margin: '14px 0 0' }}>See you in Plett for the Year of Joy!<br />Shaun and the Red Cherry Events team</Text>
+      <Text style={{ ...sl.text, fontSize: '12px', color: sl.muted, margin: '0' }}>See you in Plett for the Year of Joy!<br />Shaun and the Red Cherry Events team</Text>
       <Link href="https://www.redcherryevents.co.za" style={{ color: sl.pink, fontSize: '12px' }}>redcherryevents.co.za</Link>
     </Section>
   </Section>
