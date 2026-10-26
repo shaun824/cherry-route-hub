@@ -18,9 +18,9 @@ export function SlscKcaCard() {
       </p>
       <h3 className="mt-1 font-display text-lg font-bold leading-snug">Give once. Make twice the difference.</h3>
       <p className="mt-2 text-xs leading-relaxed opacity-95">
-        Keep a Child Alive has proposed matching donations made through the Summer Challenge. Once
-        confirmed, your entry and any extra donation could count double for children with disabilities
-        in Plettenberg Bay and the Bitou region. Every cent goes to the Sabrina Love Foundation.
+        Keep a Child Alive is matching every donation made through the Summer Challenge. Your
+        entry and any extra donation count double for children with disabilities in Plettenberg
+        Bay and the Bitou region. Every cent goes to the Sabrina Love Foundation.
       </p>
       <div className="mt-3 flex items-center gap-3">
         <span className="rounded-xl bg-card p-2">
