@@ -2,6 +2,7 @@ import * as React from 'react'
 import { Button, Column, Heading, Img, Link, Row, Section, Text } from '@react-email/components'
 import kcaLogo from '@/assets/kca-logo.png.asset.json'
 import discoveryLogo from '@/assets/discovery-logo.jpg.asset.json'
+import rceLogo from '@/assets/rce-logo.png.asset.json'
 
 const absolute = (url: string) => new URL(url, 'https://riderhub.redcherryevents.co.za').href
 
@@ -94,6 +95,11 @@ export function SlscFooter() {
     <Section style={{ padding: '18px 16px 12px', borderTop: `1px solid ${sl.line}`, textAlign: 'center' }}>
       <Text style={{ ...sl.text, fontSize: '12px', color: sl.muted, margin: '0' }}>See you in Plett for the Year of Joy!<br />Shaun and the Red Cherry Events team</Text>
       <Link href="https://www.redcherryevents.co.za" style={{ color: sl.pink, fontSize: '12px' }}>redcherryevents.co.za</Link>
+    </Section>
+    <Section style={{ padding: '10px 16px 4px', textAlign: 'center', backgroundColor: sl.white }}>
+      <Link href="https://www.redcherryevents.co.za">
+        <Img src={absolute(rceLogo.url)} alt="Red Cherry Events" width="140" style={{ width: '140px', height: 'auto', margin: '0 auto', display: 'block' }} />
+      </Link>
     </Section>
   </Section>
 }
