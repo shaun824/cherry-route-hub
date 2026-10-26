@@ -1,0 +1,2 @@
+ALTER TABLE public.events ADD COLUMN earns_cherry_miles boolean NOT NULL DEFAULT true;
+COMMENT ON COLUMN public.events.earns_cherry_miles IS 'When false, entries for this event earn no Cherry Miles loyalty points (e.g. charity partner events).';
