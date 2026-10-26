@@ -47,6 +47,7 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'event-thank-you': eventThankYou,
   'results-issues': resultsIssues,
   'entry-interest-confirmation': entryInterestConfirmation,
+  'sabrina-love-pre-event': sabrinaLovePreEvent,
   // Auth emails are sent live by the Supabase auth webhook (see
   // src/routes/lovable/email/auth/webhook.ts). They are registered here only so
   // admins can send themselves an exact copy of what riders receive.
