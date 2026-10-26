@@ -2,6 +2,7 @@ import kcaLogo from "@/assets/kca-logo.png.asset.json";
 import { ExternalLink, Heart } from "lucide-react";
 
 export const KCA_URL = "https://keep.org";
+const SLSC_PINK = "#E6007E"; // Sabrina Love brand pink
 const GIVENGAIN_URL = "https://www.givengain.com/cc/sabrinalove";
 
 /** Sabrina Love Summer Challenge events get the KCA donation-matching block. */
@@ -11,7 +12,7 @@ export function isSabrinaLoveEvent(name?: string | null) {
 
 export function SlscKcaCard() {
   return (
-    <section data-section="kca_matching" className="rounded-2xl bg-cherry p-4 text-primary-foreground">
+    <section data-section="kca_matching" className="rounded-2xl p-4 text-primary-foreground" style={{ backgroundColor: SLSC_PINK }}>
       <p className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest opacity-90">
         <Heart className="h-3.5 w-3.5" /> Donation matching with KCA
       </p>
@@ -31,7 +32,8 @@ export function SlscKcaCard() {
             target="_blank"
             rel="noreferrer"
             data-track-action="kca_link_opened"
-            className="inline-flex items-center gap-1 rounded-full bg-card px-3 py-1.5 text-xs font-bold text-cherry"
+            className="inline-flex items-center gap-1 rounded-full bg-card px-3 py-1.5 text-xs font-bold"
+            style={{ color: SLSC_PINK }}
           >
             About KCA <ExternalLink className="h-3 w-3" />
           </a>
