@@ -837,6 +837,14 @@ function RoutesPanel({
                     </div>
                     <RouteFileStats route={r}  />
                      <RouteProfile route={r} color={r.color} markers={dayMarkers} />
+                    {r.profileImageUrl ? (
+                      <img
+                        src={r.profileImageUrl}
+                        alt={`${r.name} elevation profile`}
+                        loading="lazy"
+                        className="mt-3 w-full rounded-xl ring-1 ring-border"
+                      />
+                    ) : null}
 
                     {r.description ? (
                        <ReadMoreText
@@ -949,6 +957,7 @@ function InfoPanel({
 
   return (
     <div className="space-y-4">
+      {isSabrinaLoveEvent(eventName) ? <SlscKcaCard /> : null}
       {isLive ? (
         <section data-section="live_tracking">
           <SectionTitle>Live tracking & SOS</SectionTitle>
