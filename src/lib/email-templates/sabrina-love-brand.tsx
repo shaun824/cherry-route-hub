@@ -2,6 +2,7 @@ import * as React from 'react'
 import { Button, Column, Heading, Img, Link, Row, Section, Text } from '@react-email/components'
 import kcaLogo from '@/assets/kca-logo.png.asset.json'
 import discoveryLogo from '@/assets/discovery-logo.jpg.asset.json'
+import slLogo from '@/assets/sabrina-love-logo.png.asset.json'
 import rceLogo from '@/assets/rce-logo.png.asset.json'
 
 const absolute = (url: string) => new URL(url, 'https://riderhub.redcherryevents.co.za').href
@@ -33,6 +34,9 @@ export const SLSC_WHATSAPP = 'https://wa.me/27788038978'
 
 export function SlscHeader({ dayLabel, photoUrl, photoAlt }: { dayLabel: string; photoUrl: string; photoAlt: string }) {
   return <>
+    <Section style={{ backgroundColor: sl.white, padding: '18px 24px 14px', textAlign: 'center' }}>
+      <Img src={absolute(slLogo.url)} alt="Sabrina Love Foundation" width="150" style={{ width: '150px', height: 'auto', margin: '0 auto', display: 'block' }} />
+    </Section>
     <Section style={{ backgroundColor: sl.pink, padding: '26px 24px 24px', textAlign: 'center' }}>
       <Text style={{ ...sl.script, color: sl.white, fontSize: '26px', lineHeight: '1.3', margin: '0 0 6px' }}>Sabrina Love Summer Challenge 2026</Text>
       <Text style={{ ...sl.label, color: sl.yellow, margin: '0' }}>27–30 DECEMBER · PLETTENBERG BAY</Text>
