@@ -1,6 +1,7 @@
 # Roadmap
 
 ## Event results, 27 Oct
+- [x] Correct gender placings after approved exclusions and verify Kirsten Flanagan is second female overall on her rider page.
 - [x] Exclude Noemi Pestana, bib 714, from Hub results and standings while keeping source timing records.
 - [x] Add the shared results view to the event page and verify it with real results.
 
