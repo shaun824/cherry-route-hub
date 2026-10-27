@@ -1,6 +1,7 @@
 # Roadmap
 
 ## Event results, 27 Oct
+- [ ] Correct gender placings after approved exclusions and verify the rider detail against real timing.
 - [x] Exclude Noemi Pestana, bib 714, from Hub results and standings while keeping source timing records.
 - [x] Add the shared results view to the event page and verify it with real results.
 

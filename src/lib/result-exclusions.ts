@@ -12,10 +12,22 @@ export function isResultExcluded(rider: { full_name?: string; name?: string; bib
   return exclusions.some(exclusion => bib && norm(exclusion.bib) ? bib === norm(exclusion.bib) : !!name && name === norm(exclusion.name));
 }
 
-export function excludeResultRows<T extends { full_name: string; bib_number: string | null; result_set_id: string; position: number | null }>(rows: T[], exclusions: ResultExclusion[]): T[] {
+export function excludeResultRows<T extends { full_name: string; bib_number: string | null; result_set_id: string; position: number | null; extras?: Record<string, string> }>(rows: T[], exclusions: ResultExclusion[]): T[] {
   const removed = rows.filter(row => isResultExcluded(row, exclusions));
-  return rows.filter(row => !isResultExcluded(row, exclusions)).map(row => ({
-    ...row,
-    position: row.position === null ? null : row.position - removed.filter(other => other.result_set_id === row.result_set_id && other.position !== null && other.position < (row.position ?? 0)).length,
-  }));
+  return rows.filter(row => !isResultExcluded(row, exclusions)).map(row => {
+    const extras = row.extras ? { ...row.extras } : undefined;
+    const gender = norm(extras?.Gender);
+    const genderPlace = Number(extras?.['Gender Place']);
+    if (extras && gender && Number.isInteger(genderPlace) && genderPlace > 0) {
+      extras['Gender Place'] = String(genderPlace - removed.filter(other => {
+        const place = Number(other.extras?.['Gender Place']);
+        return other.result_set_id === row.result_set_id && norm(other.extras?.Gender) === gender && Number.isInteger(place) && place > 0 && place < genderPlace;
+      }).length);
+    }
+    return {
+      ...row,
+      ...(extras ? { extras } : {}),
+      position: row.position === null ? null : row.position - removed.filter(other => other.result_set_id === row.result_set_id && other.position !== null && other.position < (row.position ?? 0)).length,
+    };
+  });
 }
