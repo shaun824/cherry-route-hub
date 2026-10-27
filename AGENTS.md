@@ -30,6 +30,8 @@
 - Password recovery validates the link/session before enabling updates, displays the verified account email, rechecks identity on submit, and offers a fresh link on expired/missing sessions; never let a failed link update another signed-in account.
 - Individual rider results reuse the event results source switch; missing roster bibs are inferred only from unambiguous full-name timing matches, without writing inferred identity back to entries.
 - Automatic weekend podiums exclude riders whose explicit timed course differs from their entry class on any riding day, and expose mismatches in admin review; raw daily/GC timing remains unchanged because course corrections require timing-team confirmation.
+- Approved event result exclusions live in events.result_exclusions and filter Hub result lists plus computed/published standings without changing source timing records.
+- Event detail and spectator Results tabs share EventResultsPanel and the event-results query, so results controls and refresh behaviour stay consistent.
 - Results diagnostics use daily set labels before registration fields, preserve entry bike type on mixed Silver/Bronze daily lists, stay admin-only, and flag speed anomalies without disqualifying; this separates course evidence from suspicious timing.
 - Event-day results alerts reuse the private-key hourly rooming callback and the fixed-recipient results-issues template with event/date/content idempotency; this avoids a separate scheduler or rider mailing list.
 - Everlytic campaigns use an admin-only API boundary and a builder-confirmed installation host with redirects disabled; app sign-in and operational email delivery remain unchanged to protect credentials and avoid sender-domain conflicts.

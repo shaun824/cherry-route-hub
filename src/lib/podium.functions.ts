@@ -27,9 +27,13 @@ export const getPodium = createServerFn({ method: "GET" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: row } = await (supabaseAdmin as any)
       .from("event_podiums").select("final, published_at, reveal_at").eq("event_id", data.eventId).maybeSingle();
+    const { data: event } = await supabaseAdmin.from('events').select('result_exclusions').eq('id', data.eventId).maybeSingle();
+    const { isResultExcluded, parseResultExclusions } = await import('./result-exclusions');
+    const exclusions = parseResultExclusions(event?.result_exclusions);
     const revealAt = (row?.reveal_at as string | null) ?? defaultReveal(c.lastDay);
     if (row?.published_at && (!revealAt || new Date(revealAt).getTime() <= Date.now())) {
-      return { enabled: true, stage: "final", revealAt, stagesWithResults: c.stagesWithResults, standings: row.final as PodiumStanding[] };
+      const standings = (row.final as PodiumStanding[]).map(s => ({ ...s, riders: s.riders.filter(r => !isResultExcluded(r, exclusions)).map((r, i) => ({ ...r, pos: i + 1 })) }));
+      return { enabled: true, stage: "final", revealAt, stagesWithResults: c.stagesWithResults, standings };
     }
     if (c.stagesWithResults === 0) {
       return { enabled: true, stage: "preview", revealAt, stagesWithResults: 0, standings: c.standings.map((s) => ({ ...s, riders: [] })) };

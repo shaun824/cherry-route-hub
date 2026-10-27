@@ -1,0 +1,2 @@
+ALTER TABLE public.events ADD COLUMN IF NOT EXISTS result_exclusions jsonb NOT NULL DEFAULT '[]'::jsonb;
+COMMENT ON COLUMN public.events.result_exclusions IS 'Race-control approved exclusions from Hub result lists and standings; source timing records remain unchanged.';

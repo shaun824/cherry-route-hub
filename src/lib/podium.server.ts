@@ -1,6 +1,7 @@
 // Podium maths: works out each prize category's standings from timing results
 // plus the entry roster (class + gender from Entry Ninja). Server-only.
 import { courseMismatch } from "./result-course";
+import { isResultExcluded, parseResultExclusions } from './result-exclusions';
 import { reviewResults, timedCourse, ridingDay, flagFastPodium, type ResultsIssue } from './results-anomalies';
 export type PodiumCategory = {
   key: string;
@@ -84,8 +85,9 @@ export type PodiumComputed = {
 export async function computePodium(eventId: string, depth: number): Promise<PodiumComputed | null> {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { data: ev } = await (supabaseAdmin as any)
-    .from("events").select("name, podium_config, myriad_race_id, days").eq("id", eventId).maybeSingle();
+    .from("events").select("name, podium_config, myriad_race_id, days, result_exclusions").eq("id", eventId).maybeSingle();
   if (!ev) return null;
+  const exclusions = parseResultExclusions(ev.result_exclusions);
   const cats = podiumConfigFor(ev);
   if (!cats) return null;
   const days: any[] = Array.isArray(ev.days) ? ev.days : [];
@@ -192,6 +194,7 @@ export async function computePodium(eventId: string, depth: number): Promise<Pod
   const courseMismatches: PodiumComputed["courseMismatches"] = [];
   for (const p of roster) {
     if (!p.name || /test|placeholder/i.test(p.name)) continue;
+    if (isResultExcluded(p, exclusions)) continue;
     const cat = categoryFor(cats, p.category, p.gender);
     if (!cat) {
       if (!p.gender && categoryFor(cats, p.category, "male")) missingGender.push({ name: p.name, bib: p.bib, category: p.category });

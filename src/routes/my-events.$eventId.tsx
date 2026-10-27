@@ -117,13 +117,16 @@ import { VillageFocusContext } from "@/lib/village-focus";
 import { brandHeader } from "@/lib/event-brand";
 import { EventLogo } from "@/components/event-logo";
 import { EventPhotosPanel } from "@/components/event-photos-panel";
+import { EventResultsPanel } from '@/components/event-results-panel';
+import { Button } from '@/components/ui/button';
+import { Trophy } from 'lucide-react';
 import { FeedPostBody } from "@/components/feed-post-body";
 import { SyncMyEntryButton } from "@/components/sync-my-entry";
 
 import { Image as ImageIcon } from "lucide-react";
 
 
-const EVENT_TABS = ["info", "village", "routes", "news", "photos", "chat", "ask", "packing", "sponsors", "accommodation"] as const;
+const EVENT_TABS = ["info", "village", "routes", "results", "news", "photos", "chat", "ask", "packing", "sponsors", "accommodation"] as const;
 type Tab = (typeof EVENT_TABS)[number];
 
 export const Route = createFileRoute("/my-events/$eventId")({
@@ -146,8 +149,8 @@ export const Route = createFileRoute("/my-events/$eventId")({
     if (!ev) {
       return { meta: [{ title: "Event — Red Cherry Events" }, { name: "robots", content: "noindex" }] };
     }
-    const title = `${ev.name} — Red Cherry Events`;
-    const description = `${ev.name} in ${ev.location}: schedule, routes, venue, packing list and event info.`;
+    const title = `${ev.name} · Red Cherry Events`;
+    const description = `${ev.name} in ${ev.location}: results, schedule, routes, venue, packing list and event info.`;
     return {
       meta: [
         { title },
@@ -316,6 +319,7 @@ function MyEventDetail() {
           [
             { id: "info", label: "Info", icon: Info },
             { id: "routes", label: "Routes", icon: MapIcon },
+            { id: "results", label: "Results", icon: Trophy },
             { id: "village", label: "Village", icon: Tent },
             ...(hasNightly ? [{ id: "accommodation" as Tab, label: "Accommodation", icon: BedDouble }] : []),
             { id: "news", label: "News", icon: Newspaper },
@@ -331,11 +335,13 @@ function MyEventDetail() {
           const Icon = t.icon;
           const active = tab === t.id;
           return (
-            <button
+            <Button
               key={t.id}
+              variant={active ? 'default' : 'ghost'}
+              size="sm"
               onClick={() => selectTab(t.id)}
               className={`relative flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold ${
-                active ? "bg-cherry text-white" : "text-ink-soft"
+                active ? "bg-cherry text-primary-foreground" : "text-ink-soft"
               }`}
             >
               <Icon className="h-3.5 w-3.5" />
@@ -343,7 +349,7 @@ function MyEventDetail() {
               {t.id === "news" && hasFreshNews && !active ? (
                 <span className="absolute right-1.5 top-1 h-1.5 w-1.5 rounded-full bg-cherry" />
               ) : null}
-            </button>
+            </Button>
           );
         })}
       </nav>
@@ -411,6 +417,7 @@ function MyEventDetail() {
         )}
 
         {tab === "routes" && <RoutesPanel eventId={event.id} event={event} eventName={event.name} />}
+        {tab === "results" && <EventResultsPanel eventId={event.id} />}
         {tab === "news" && <EventNewsPanel posts={eventNews} />}
         {tab === "photos" && (
           <section className="space-y-3">
