@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { resultsForRider, timingBibForRider } from "./rider-result-matching";
+import { excludeResultRows, parseResultExclusions } from './result-exclusions';
 
 export type TrackedRider = {
   id: string;
@@ -151,7 +152,7 @@ export const getEventResults = createServerFn({ method: "GET" })
 
     const { data: ev } = await supabaseAdmin
       .from("events")
-      .select("results_url, results_rider_url_template, results_published, myriad_race_id")
+      .select("results_url, results_rider_url_template, results_published, myriad_race_id, result_exclusions")
       .eq("id", data.eventId)
       .maybeSingle();
 
@@ -171,6 +172,7 @@ export const getEventResults = createServerFn({ method: "GET" })
       .limit(5000);
 
     const raceId = ((ev?.myriad_race_id as string | null) ?? "").trim() || null;
+    const exclusions = parseResultExclusions(ev?.result_exclusions);
     const base = {
       results_url: (ev?.results_url as string | null) ?? null,
       results_rider_url_template: (ev?.results_rider_url_template as string | null) ?? null,
@@ -186,7 +188,7 @@ export const getEventResults = createServerFn({ method: "GET" })
         const { fetchRaceResults } = await import("@/lib/myriad.server");
         const live = await fetchRaceResults(raceId);
         if (live.rows.length > 0) {
-          return { ...base, source: "myriad" as const, feed_error: null, ...live };
+          return { ...base, source: "myriad" as const, feed_error: null, ...live, rows: excludeResultRows(live.rows, exclusions) };
         }
       } catch (e) {
         // Fall back to whatever was imported, but say why the feed is missing.
@@ -205,7 +207,7 @@ export const getEventResults = createServerFn({ method: "GET" })
         sort_order: Number(s.sort_order ?? 0),
         imported_at: (s.imported_at as string | null) ?? null,
       })),
-      rows: (rows ?? []).map((r: any) => ({
+      rows: excludeResultRows((rows ?? []).map((r: any) => ({
         id: String(r.id),
         result_set_id: String(r.result_set_id),
         bib_number: (r.bib_number as string | null) ?? null,
@@ -218,7 +220,7 @@ export const getEventResults = createServerFn({ method: "GET" })
         gap_text: (r.gap_text as string | null) ?? null,
         status: (r.status as string | null) ?? null,
         extras: (r.extras as Record<string, string>) ?? {},
-      })),
+      })), exclusions),
     };
   });
 
