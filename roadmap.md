@@ -1,8 +1,8 @@
 # Roadmap
 
 ## Event results, 27 Oct
-- [ ] Exclude Noemi Pestana, bib 714, from Hub results and standings while keeping source timing records.
-- [ ] Add the shared results view to the event page and verify it with real results.
+- [x] Exclude Noemi Pestana, bib 714, from Hub results and standings while keeping source timing records.
+- [x] Add the shared results view to the event page and verify it with real results.
 
 ## Sabrina Love Summer Challenge 2026 (Shaun, 26 Oct)
 - [x] Parse KCA match-campaign PDF (design system: pink #E6007E, yellow accent, hearts, script accents)

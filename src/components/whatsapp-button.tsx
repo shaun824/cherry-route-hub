@@ -1,6 +1,7 @@
 // "Chat on WhatsApp" deep-link button. Renders nothing until an admin has
 // enabled WhatsApp support and saved a number in Admin → Site settings.
 import { useQuery } from "@tanstack/react-query";
+import { useEffect, useState } from 'react';
 import { MessageCircle } from "lucide-react";
 import { fetchSupportSettings, waLink } from "@/lib/whatsapp";
 
@@ -14,6 +15,8 @@ export function WhatsappButton({
   className?: string;
   size?: "sm" | "md";
 }) {
+  const [hydrated, setHydrated] = useState(false);
+  useEffect(() => setHydrated(true), []);
   const q = useQuery({
     queryKey: ["support-settings"],
     queryFn: fetchSupportSettings,
@@ -21,11 +24,11 @@ export function WhatsappButton({
   });
 
   const s = q.data;
-  if (!s?.whatsappEnabled || !s.whatsappNumber) return null;
+  if (!hydrated || !s?.whatsappEnabled || !s.whatsappNumber) return null;
 
   const message = context
-    ? `Hi Red Cherry Events — I have a question about ${context}.`
-    : "Hi Red Cherry Events — I have a question.";
+    ? `Hi Red Cherry Events, I have a question about ${context}.`
+    : "Hi Red Cherry Events, I have a question.";
 
   return (
     <a
