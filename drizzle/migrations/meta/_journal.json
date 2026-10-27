@@ -225,6 +225,13 @@
       "when": 1793041416311,
       "tag": "0031_events_earns_cherry_miles_flag",
       "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1793126761480,
+      "tag": "0032_event_result_exclusions",
+      "breakpoints": true
     }
   ]
 }

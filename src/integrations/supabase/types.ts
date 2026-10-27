@@ -2302,6 +2302,7 @@ export type Database = {
           name: string
           photos_album_url: string | null
           podium_config: Json | null
+          result_exclusions: Json
           results_published: boolean
           results_rider_url_template: string | null
           results_url: string | null
@@ -2357,6 +2358,7 @@ export type Database = {
           name: string
           photos_album_url?: string | null
           podium_config?: Json | null
+          result_exclusions?: Json
           results_published?: boolean
           results_rider_url_template?: string | null
           results_url?: string | null
@@ -2412,6 +2414,7 @@ export type Database = {
           name?: string
           photos_album_url?: string | null
           podium_config?: Json | null
+          result_exclusions?: Json
           results_published?: boolean
           results_rider_url_template?: string | null
           results_url?: string | null
