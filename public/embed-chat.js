@@ -121,7 +121,8 @@
   window.addEventListener("resize", layout);
 
   window.addEventListener("message", (event) => {
-    if (event.origin !== origin) return;
+    // Trust the chat frame itself; the site may load it from either Rider Hub domain.
+    if (event.source !== iframe.contentWindow) return;
     const data = event.data;
     if (data && typeof data === "object" && data.type === "red-cherry-assistant-close") {
       open = false;
