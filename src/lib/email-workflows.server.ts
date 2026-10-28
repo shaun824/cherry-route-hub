@@ -386,6 +386,9 @@ export async function processDueWorkflowEmails(
             entrantId: rider.entrantId,
             extras: rider.extras,
             registrationRef: rider.registrationRef,
+            unsubscribeUrl: rider.interestId
+              ? `${APP_URL}/api/public/event-interest-unsubscribe?id=${rider.interestId}`
+              : null,
           });
           if (r === "sent") out.sent++;
           else out.suppressed++;
