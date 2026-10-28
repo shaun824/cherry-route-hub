@@ -31,7 +31,7 @@ export const listEmailWorkflows = createServerFn({ method: "POST" })
 
     const { data: campaigns, error } = await supabaseAdmin
       .from("event_email_campaigns")
-      .select("id, event_id, name, status, anchor, activated_at, created_at")
+      .select("id, event_id, name, status, anchor, audience, activated_at, created_at")
       .order("created_at", { ascending: false });
     if (error) throw new Error(error.message);
 
@@ -117,16 +117,17 @@ export const listEmailWorkflows = createServerFn({ method: "POST" })
 
 export const saveEmailWorkflow = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { id?: string; eventId: string; name: string; anchor: "activation" | "entry" }) => input)
+  .inputValidator((input: { id?: string; eventId: string; name: string; anchor: "activation" | "entry"; audience?: "entrants" | "interest" | "both" }) => input)
   .handler(async ({ data, context }) => {
     await assertAdmin(context as any);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     if (!data.name.trim()) throw new Error("Give the workflow a name");
+    const audience = ["entrants", "interest", "both"].includes(data.audience ?? "") ? data.audience! : "entrants";
 
     if (data.id) {
       const { error } = await supabaseAdmin
         .from("event_email_campaigns")
-        .update({ name: data.name.trim(), anchor: data.anchor })
+        .update({ name: data.name.trim(), anchor: data.anchor, audience })
         .eq("id", data.id);
       if (error) throw new Error(error.message);
       return { id: data.id };
@@ -138,6 +139,7 @@ export const saveEmailWorkflow = createServerFn({ method: "POST" })
         event_id: data.eventId,
         name: data.name.trim(),
         anchor: data.anchor,
+        audience,
         created_by: (context as any).userId,
       })
       .select("id")
