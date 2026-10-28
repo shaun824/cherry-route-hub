@@ -1,5 +1,11 @@
 # Roadmap
 
+## Native sign-in and self-account deletion
+- [ ] Hide Google and divider only on native /auth, retain email sign-in/sign-up
+- [ ] Authenticated deletion and race-record retention with sensitive-data cleanup
+- [ ] Profile danger action, DELETE confirmation and privacy policy
+- [ ] Tests and signed-in verification
+
 ## ICE 2026 event-interest sign-ups + race-week campaign (Shaun, 28 Oct)
 - [x] Migration: event_interest_signups table, campaign audience column, step send_at/theme, events.everlytic_interest_list_id
 - [x] POST /api/public/event-interest (X-Event-Interest-Key secret, honeypot, rate limit, upsert, optional Everlytic sync, no emails)
