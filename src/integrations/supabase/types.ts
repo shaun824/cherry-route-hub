@@ -2360,6 +2360,7 @@ export type Database = {
           hero_color: string | null
           id: string
           is_public: boolean
+          is_review_event: boolean
           lifecycle: string
           location: string
           logo_url: string | null
@@ -2417,6 +2418,7 @@ export type Database = {
           hero_color?: string | null
           id?: string
           is_public?: boolean
+          is_review_event?: boolean
           lifecycle?: string
           location: string
           logo_url?: string | null
@@ -2474,6 +2476,7 @@ export type Database = {
           hero_color?: string | null
           id?: string
           is_public?: boolean
+          is_review_event?: boolean
           lifecycle?: string
           location?: string
           logo_url?: string | null
