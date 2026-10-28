@@ -75,6 +75,7 @@ function EmailWorkflowsPage() {
   const [newEventId, setNewEventId] = useState("");
   const [newName, setNewName] = useState("");
   const [newAnchor, setNewAnchor] = useState<"activation" | "entry">("entry");
+  const [newAudience, setNewAudience] = useState<"entrants" | "interest" | "both">("entrants");
 
   const events = (q.data?.events ?? []) as any[];
   const campaigns = (q.data?.campaigns ?? []) as any[];
@@ -82,7 +83,7 @@ function EmailWorkflowsPage() {
 
   const create = useMutation({
     mutationFn: () =>
-      saveCampaign({ data: { eventId: newEventId, name: newName, anchor: newAnchor } }),
+      saveCampaign({ data: { eventId: newEventId, name: newName, anchor: newAnchor, audience: newAudience } }),
     onSuccess: () => {
       setNewName("");
       toast.success("Workflow created — now add your emails");
@@ -132,7 +133,7 @@ function EmailWorkflowsPage() {
         <h2 className="mb-3 flex items-center gap-2 font-semibold">
           <Plus className="h-4 w-4" /> New workflow
         </h2>
-        <div className="grid gap-3 md:grid-cols-4">
+        <div className="grid gap-3 md:grid-cols-5">
           <select className={input} value={newEventId} onChange={(e) => setNewEventId(e.target.value)}>
             <option value="">Choose event…</option>
             {events.map((e) => (
@@ -147,6 +148,15 @@ function EmailWorkflowsPage() {
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
           />
+          <select
+            className={input}
+            value={newAudience}
+            onChange={(e) => setNewAudience(e.target.value as "entrants" | "interest" | "both")}
+          >
+            <option value="entrants">Send to entered riders</option>
+            <option value="interest">Send to interest sign-ups</option>
+            <option value="both">Send to both (deduped)</option>
+          </select>
           <select
             className={input}
             value={newAnchor}
