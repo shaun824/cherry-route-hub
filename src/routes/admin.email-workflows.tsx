@@ -188,6 +188,8 @@ function EmailWorkflowsPage() {
         }}
       />
 
+      <InterestSignups events={events} />
+
       {campaigns.map((c) => (
         <CampaignCard
           key={c.id}
@@ -409,7 +411,13 @@ function CampaignCard({
         <div>
           <h2 className="font-display text-lg font-bold">{campaign.name}</h2>
           <p className="text-xs text-ink-soft">
-            {eventName} · delays counted from{" "}
+            {eventName} · sends to{" "}
+            {campaign.audience === "interest"
+              ? "interest sign-ups"
+              : campaign.audience === "both"
+                ? "entered riders and interest sign-ups"
+                : "entered riders"}{" "}
+            · delays counted from{" "}
             {campaign.anchor === "entry" ? "each rider's entry date" : "when the workflow was switched on"}
           </p>
         </div>
