@@ -1,3 +1,4 @@
+import { excludeEventFromAnalytics } from "@/lib/analytics";
 import { liveReviewEvent, REVIEW_EVENT_NOTE } from "@/lib/review-event";
 import { SlscKcaCard, isSabrinaLoveEvent } from "@/components/slsc-kca-card";
 import { MyRegistrationCard } from "@/components/my-registration-card";
@@ -191,6 +192,7 @@ function MyEventDetail() {
 }
 
 function MyEventDetailInner({ event }: { event: NonNullable<ReturnType<typeof Route.useLoaderData>["event"]> }) {
+  if (event.is_review_event) excludeEventFromAnalytics(event.id);
   const { user } = useSession();
   const { tab: initialTab } = Route.useSearch();
   const navigate = useNavigate({ from: "/my-events/$eventId" });
