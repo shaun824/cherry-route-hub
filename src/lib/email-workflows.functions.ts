@@ -368,7 +368,7 @@ export const getWorkflowStep = createServerFn({ method: "POST" })
     const { data: step, error } = await supabaseAdmin
       .from("event_email_steps")
       .select(
-        "id, campaign_id, position, subject, heading, body, blocks, cta_label, cta_url, banner_url, image_urls, delay_hours, enabled, template_name, event_email_campaigns(id, name, status, anchor, event_id, events(id, name, event_date, location, logo_url, cover_url))",
+        "id, campaign_id, position, subject, heading, body, blocks, cta_label, cta_url, banner_url, image_urls, delay_hours, send_at, theme, enabled, template_name, event_email_campaigns(id, name, status, anchor, audience, event_id, events(id, name, event_date, location, logo_url, cover_url))",
       )
       .eq("id", data.stepId)
       .maybeSingle();
@@ -389,11 +389,13 @@ export const getWorkflowStep = createServerFn({ method: "POST" })
         bannerUrl: ((step as any).banner_url ?? "") as string,
         imageUrls: (Array.isArray((step as any).image_urls) ? (step as any).image_urls : []) as string[],
         delayHours: Number((step as any).delay_hours ?? 24),
+        sendAt: ((step as any).send_at ?? null) as string | null,
+        theme: ((step as any).theme ?? null) as string | null,
         enabled: !!(step as any).enabled,
         templateName: ((step as any).template_name ?? "event-update") as "event-update" | "pe-plett-extras",
       },
       campaign: campaign
-        ? { id: campaign.id as string, name: campaign.name as string, status: campaign.status as string, anchor: campaign.anchor as string }
+        ? { id: campaign.id as string, name: campaign.name as string, status: campaign.status as string, anchor: campaign.anchor as string, audience: (campaign.audience ?? "entrants") as string }
         : null,
       event: campaign?.events ?? null,
     };
