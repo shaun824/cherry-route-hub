@@ -127,7 +127,7 @@ export const EventUpdateEmail = ({
 
       {firstName ? <Text style={text}>Hi {firstName},</Text> : null}
 
-      {built.length ? built.map((b) => <EmailBlockView key={b.id} block={b} />) : null}
+      {built.length ? built.map((b) => <EmailBlockView key={b.id} block={b} theme={blockTheme} />) : null}
 
       {built.length ? null : paragraphs.map((p, i) => (
         <Text key={i} style={text}>
@@ -154,7 +154,7 @@ export const EventUpdateEmail = ({
       ) : null}
 
       {built.length && !ctaUrl ? null : cta ? (
-        <Button style={button} href={cta}>
+        <Button style={buttonStyle} href={cta}>
           {ctaText}
         </Button>
       ) : null}
@@ -166,6 +166,16 @@ export const EventUpdateEmail = ({
         </Link>
         .
       </Text>
+
+      {unsubscribeUrl ? (
+        <Text style={{ ...meta, margin: '16px 0 0', textAlign: 'center' as const }}>
+          You are getting this because you asked for updates about {eventName}.{' '}
+          <Link href={unsubscribeUrl} style={link}>
+            Unsubscribe
+          </Link>
+          .
+        </Text>
+      ) : null}
     </EmailShell>
   )
 }
