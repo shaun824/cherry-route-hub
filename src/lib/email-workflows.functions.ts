@@ -414,6 +414,7 @@ export const renderWorkflowStepPreview = createServerFn({ method: "POST" })
       body?: string | null;
       ctaLabel?: string | null;
       ctaUrl?: string | null;
+      theme?: string | null;
     }) => input,
   )
   .handler(async ({ data, context }) => {
@@ -448,6 +449,7 @@ export const renderWorkflowStepPreview = createServerFn({ method: "POST" })
         body: data.body ?? "",
         ctaLabel: data.ctaLabel ?? null,
         ctaUrl: data.ctaUrl ?? null,
+        theme: data.theme ?? null,
         eventUrl: `https://riderapp.redcherryevents.co.za/my-events/${ev.id ?? ""}`,
       } as any),
     );
