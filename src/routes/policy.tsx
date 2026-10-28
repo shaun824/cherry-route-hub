@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { LegalPage, LegalSection } from "@/components/legal-page";
 
-const TITLE = "Privacy Policy — Red Cherry Events Rider Hub";
+const TITLE = "Privacy Policy · Red Cherry Events Rider Hub";
 const DESC = "How the Red Cherry Events Rider Hub collects, uses and protects rider information.";
 
 export const Route = createFileRoute("/policy")({
@@ -49,6 +49,7 @@ function PolicyPage() {
       </LegalSection>
       <LegalSection title="Your choices">
         <p>You can turn off location sharing and notifications at any time, and you can ask us to see, correct or delete your information by emailing us.</p>
+        <p>Riders can delete their account in Profile → Delete my account.</p>
       </LegalSection>
     </LegalPage>
   );
