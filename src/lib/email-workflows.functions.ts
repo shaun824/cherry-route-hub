@@ -453,3 +453,20 @@ export const renderWorkflowStepPreview = createServerFn({ method: "POST" })
     );
     return { html };
   });
+
+/** Interest sign-ups for one event, newest first, for the admin list and CSV export. */
+export const listEventInterestSignups = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { eventId: string }) => input)
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context as any);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: rows, error } = await supabaseAdmin
+      .from("event_interest_signups")
+      .select("id, email, name, phone, topic, source, consent_at, unsubscribed_at, everlytic_synced, created_at")
+      .eq("event_id", data.eventId)
+      .order("created_at", { ascending: false })
+      .limit(10000);
+    if (error) throw new Error(error.message);
+    return { signups: rows ?? [] };
+  });
