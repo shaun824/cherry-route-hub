@@ -1,3 +1,4 @@
+import { useHydratedStore } from "@/lib/use-hydrated-store";
 import { excludeEventFromAnalytics } from "@/lib/analytics";
 import { liveReviewEvent, REVIEW_EVENT_NOTE } from "@/lib/review-event";
 import { SlscKcaCard, isSabrinaLoveEvent } from "@/components/slsc-kca-card";
@@ -182,6 +183,8 @@ export const Route = createFileRoute("/my-events/$eventId")({
 
 
 function MyEventDetail() {
+  // The tracking panel reads event details from the shared store, so load it on direct links too.
+  useHydratedStore();
   const { event } = Route.useLoaderData();
   const router = useRouter();
   useEffect(() => {
