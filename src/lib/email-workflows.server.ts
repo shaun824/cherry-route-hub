@@ -65,33 +65,67 @@ interface Recipient {
   entrantId: string;
   extras: any[];
   registrationRef: string | null;
+  /** Set when the person came from the interest list — they get an unsubscribe link. */
+  interestId?: string | null;
 }
 
-async function loadRecipients(admin: AnyClient, eventId: string): Promise<Recipient[]> {
-  const { data, error } = await admin
-    .from("event_entrants")
-    .select("id, created_at, extras, registration_ref, entrants(full_name, email)")
-    .eq("event_id", eventId)
-    .limit(5000);
-  if (error) throw new Error(error.message);
+export type CampaignAudience = "entrants" | "interest" | "both";
 
+async function loadRecipients(admin: AnyClient, eventId: string, audience: CampaignAudience = "entrants"): Promise<Recipient[]> {
   const byEmail = new Map<string, Recipient>();
-  for (const row of (data ?? []) as any[]) {
-    const email = String(row.entrants?.email ?? "").trim().toLowerCase();
-    if (!email) continue;
-    const existing = byEmail.get(email);
-    // Keep the earliest entry date — the rider's sequence starts when they entered.
-    if (!existing || row.created_at < existing.enteredAt) {
+
+  if (audience !== "interest") {
+    const { data, error } = await admin
+      .from("event_entrants")
+      .select("id, created_at, extras, registration_ref, entrants(full_name, email)")
+      .eq("event_id", eventId)
+      .limit(5000);
+    if (error) throw new Error(error.message);
+
+    for (const row of (data ?? []) as any[]) {
+      const email = String(row.entrants?.email ?? "").trim().toLowerCase();
+      if (!email) continue;
+      const existing = byEmail.get(email);
+      // Keep the earliest entry date — the rider's sequence starts when they entered.
+      if (!existing || row.created_at < existing.enteredAt) {
+        byEmail.set(email, {
+          email,
+          name: row.entrants?.full_name ?? existing?.name ?? null,
+          enteredAt: row.created_at,
+          entrantId: row.id,
+          extras: Array.isArray(row.extras) ? row.extras : [],
+          registrationRef: row.registration_ref ?? null,
+          interestId: null,
+        });
+      }
+    }
+  }
+
+  if (audience !== "entrants") {
+    const { data, error } = await admin
+      .from("event_interest_signups")
+      .select("id, email, name, created_at")
+      .eq("event_id", eventId)
+      .is("unsubscribed_at", null)
+      .limit(10000);
+    if (error) throw new Error(error.message);
+
+    for (const row of (data ?? []) as any[]) {
+      const email = String(row.email ?? "").trim().toLowerCase();
+      // Entrants win on a duplicate address — their personalisation is richer.
+      if (!email || byEmail.has(email)) continue;
       byEmail.set(email, {
         email,
-        name: row.entrants?.full_name ?? existing?.name ?? null,
+        name: row.name ?? null,
         enteredAt: row.created_at,
         entrantId: row.id,
-        extras: Array.isArray(row.extras) ? row.extras : [],
-        registrationRef: row.registration_ref ?? null,
+        extras: [],
+        registrationRef: null,
+        interestId: row.id,
       });
     }
   }
+
   return Array.from(byEmail.values());
 }
 
