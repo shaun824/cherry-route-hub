@@ -320,7 +320,7 @@ export function TrackerPanel({
   }, [flush]);
 
   const checkStartArea = useCallback(() => {
-    if (!startPoint) {
+    if (!startPoint && !event?.isReviewEvent) {
       setStartCheckError("The event start location is not available yet. Please ask race control.");
       return;
     }
@@ -332,7 +332,7 @@ export function TrackerPanel({
     setStartCheckError(null);
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        const metres = haversineMeters(
+        const metres = !startPoint ? 0 : haversineMeters(
           [startPoint.lng, startPoint.lat],
           [pos.coords.longitude, pos.coords.latitude],
         );
@@ -355,7 +355,7 @@ export function TrackerPanel({
       },
       { enableHighAccuracy: true, maximumAge: 15_000, timeout: 15_000 },
     );
-  }, [startPoint]);
+  }, [startPoint, event?.isReviewEvent]);
 
   // Resume an in-progress session after navigating back to this page.
   useEffect(() => {
@@ -668,7 +668,7 @@ export function TrackerPanel({
         {!tracking ? (
           <div className="mt-3 space-y-2 text-sm">
             <p className="flex items-center justify-between gap-3"><span className="text-ink-soft">Tracking time</span><strong className="text-right text-ink">{windowState.message}</strong></p>
-            <p className="flex items-center justify-between gap-3"><span className="text-ink-soft">Race village</span><strong className={insideStartArea ? "text-emerald-700" : "text-ink"}>{startDistanceM === null ? "Not checked" : insideStartArea ? `Ready · ${Math.round(startDistanceM)}m from start` : `${(startDistanceM / 1000).toFixed(1)} km away`}</strong></p>
+            <p className="flex items-center justify-between gap-3"><span className="text-ink-soft">Race village</span><strong className={insideStartArea ? "text-emerald-700" : "text-ink"}>{reviewEvent ? "Ready · test event, works anywhere" : startDistanceM === null ? "Not checked" : insideStartArea ? `Ready · ${Math.round(startDistanceM)}m from start` : `${(startDistanceM / 1000).toFixed(1)} km away`}</strong></p>
             <p className="flex items-center justify-between gap-3"><span className="text-ink-soft">Battery</span><strong className="text-ink">{battery === null ? "Check on start" : `${battery}%`}</strong></p>
             <Button type="button" variant="outline" className="w-full" onClick={checkStartArea} disabled={checkingStart || eventInfoQ.isLoading}>
               <LocateFixed className="h-4 w-4" />{checkingStart ? "Checking location…" : startDistanceM === null ? "Check my location" : "Retry location"}
