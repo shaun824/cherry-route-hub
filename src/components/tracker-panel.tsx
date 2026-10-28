@@ -146,9 +146,12 @@ async function batteryPct(): Promise<number | null> {
 export function TrackerPanel({
   eventId,
   eventName,
+  isReviewEvent = false,
 }: {
   eventId: string;
   eventName?: string;
+  /** Set by pages that already know the event is a private app-review event. */
+  isReviewEvent?: boolean;
 }) {
   const [coords, setCoords] = useState<Coords>(null);
   // Tracking survives navigation: the active flag lives in localStorage and the
@@ -169,7 +172,11 @@ export function TrackerPanel({
   const [sosHadLocation, setSosHadLocation] = useState<boolean | null>(null);
   const previousPointRef = useRef<{ lat: number; lng: number } | null>(null);
 
-  const event = useAdminStore((s) => s.events.find((e) => e.id === eventId));
+  const storeEvent = useAdminStore((s) => s.events.find((e) => e.id === eventId));
+  const event = useMemo<Event | undefined>(() => {
+    if (!isReviewEvent) return storeEvent;
+    return storeEvent ? { ...storeEvent, isReviewEvent: true } : ({ id: eventId, name: eventName ?? "", isReviewEvent: true } as unknown as Event);
+  }, [storeEvent, isReviewEvent, eventId, eventName]);
   const { user } = useSession();
   const eventInfoQ = useQuery({
     queryKey: ["event-info", eventId],
