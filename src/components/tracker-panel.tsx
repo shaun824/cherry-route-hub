@@ -792,7 +792,7 @@ export function TrackerPanel({
             </Button>
             {sosSent ? (
               <p className="mt-2 rounded-lg bg-cherry/10 px-3 py-2 text-center text-xs font-semibold text-cherry-deep">
-                SOS sent {sosHadLocation ? "with your location" : "without a GPS fix"} · Race control notified
+                SOS sent {sosHadLocation ? "with your location" : "without a GPS fix"} · {event?.isReviewEvent ? "Test alert logged, no real crew contacted" : "Race control notified"}
               </p>
             ) : null}
           </>
