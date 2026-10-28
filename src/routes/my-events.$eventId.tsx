@@ -993,7 +993,7 @@ function InfoPanel({
         <section data-section="live_tracking">
           <SectionTitle>Live tracking & SOS</SectionTitle>
           <div className="mt-2">
-            <TrackerPanel eventId={eventId} eventName={eventName} />
+            <TrackerPanel eventId={eventId} eventName={eventName} isReviewEvent={Boolean((event as { is_review_event?: boolean } | undefined)?.is_review_event)} />
           </div>
         </section>
       ) : (
