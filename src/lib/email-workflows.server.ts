@@ -72,7 +72,8 @@ interface Recipient {
 export type CampaignAudience = "entrants" | "interest" | "both";
 
 async function loadRecipients(admin: AnyClient, eventId: string, audience: CampaignAudience = "entrants"): Promise<Recipient[]> {
-  const byEmail = new Map<string, Recipient>();
+  const entrants: Recipient[] = [];
+  const interest: Recipient[] = [];
 
   if (audience !== "interest") {
     const { data, error } = await admin
@@ -82,13 +83,14 @@ async function loadRecipients(admin: AnyClient, eventId: string, audience: Campa
       .limit(5000);
     if (error) throw new Error(error.message);
 
+    const earliest = new Map<string, Recipient>();
     for (const row of (data ?? []) as any[]) {
       const email = String(row.entrants?.email ?? "").trim().toLowerCase();
       if (!email) continue;
-      const existing = byEmail.get(email);
+      const existing = earliest.get(email);
       // Keep the earliest entry date — the rider's sequence starts when they entered.
       if (!existing || row.created_at < existing.enteredAt) {
-        byEmail.set(email, {
+        earliest.set(email, {
           email,
           name: row.entrants?.full_name ?? existing?.name ?? null,
           enteredAt: row.created_at,
@@ -99,6 +101,7 @@ async function loadRecipients(admin: AnyClient, eventId: string, audience: Campa
         });
       }
     }
+    entrants.push(...earliest.values());
   }
 
   if (audience !== "entrants") {
@@ -112,9 +115,8 @@ async function loadRecipients(admin: AnyClient, eventId: string, audience: Campa
 
     for (const row of (data ?? []) as any[]) {
       const email = String(row.email ?? "").trim().toLowerCase();
-      // Entrants win on a duplicate address — their personalisation is richer.
-      if (!email || byEmail.has(email)) continue;
-      byEmail.set(email, {
+      if (!email) continue;
+      interest.push({
         email,
         name: row.name ?? null,
         enteredAt: row.created_at,
@@ -126,7 +128,9 @@ async function loadRecipients(admin: AnyClient, eventId: string, audience: Campa
     }
   }
 
-  return Array.from(byEmail.values());
+  // Dedupe by email; entrants win so their personalisation is kept.
+  const { mergeAudiences } = await import("./event-interest");
+  return mergeAudiences(entrants, interest, audience) as Recipient[];
 }
 
 export async function sendWorkflowEmail(
