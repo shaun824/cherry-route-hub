@@ -117,7 +117,19 @@ const Email = ({ firstName, unsubscribeUrl }: Props) => (
 
     <IceSectionHeading title="Getting there" />
     <Section style={{ padding: '12px 28px 0' }}>
-      <Text style={iceBody}>[TO CONFIRM: parking, gate times and entrance]</Text>
+      <Text style={iceBody}>
+        Parking is on Lower Valley Road, right by the venue. Car guards will be
+        on duty, but parking is at your own risk.
+      </Text>
+      <Section style={{ padding: '14px 0 4px' }}>
+        <Link
+          href="https://maps.app.goo.gl/naXNy1Kk21RyNHtL8"
+          target="_blank"
+          style={iceRedButton}
+        >
+          Open the parking pin
+        </Link>
+      </Section>
     </Section>
 
     <IceSectionHeading title="Get trackside" />
