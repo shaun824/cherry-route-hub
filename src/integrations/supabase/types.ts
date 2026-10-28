@@ -994,6 +994,7 @@ export type Database = {
         Row: {
           activated_at: string | null
           anchor: string
+          audience: string
           created_at: string
           created_by: string | null
           event_id: string
@@ -1005,6 +1006,7 @@ export type Database = {
         Insert: {
           activated_at?: string | null
           anchor?: string
+          audience?: string
           created_at?: string
           created_by?: string | null
           event_id: string
@@ -1016,6 +1018,7 @@ export type Database = {
         Update: {
           activated_at?: string | null
           anchor?: string
+          audience?: string
           created_at?: string
           created_by?: string | null
           event_id?: string
@@ -1104,8 +1107,10 @@ export type Database = {
           id: string
           image_urls: string[]
           position: number
+          send_at: string | null
           subject: string
           template_name: string
+          theme: string | null
           updated_at: string
         }
         Insert: {
@@ -1122,8 +1127,10 @@ export type Database = {
           id?: string
           image_urls?: string[]
           position?: number
+          send_at?: string | null
           subject: string
           template_name?: string
+          theme?: string | null
           updated_at?: string
         }
         Update: {
@@ -1140,8 +1147,10 @@ export type Database = {
           id?: string
           image_urls?: string[]
           position?: number
+          send_at?: string | null
           subject?: string
           template_name?: string
+          theme?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -1409,6 +1418,62 @@ export type Database = {
             foreignKeyName: "event_info_blocks_event_id_fkey"
             columns: ["event_id"]
             isOneToOne: true
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_interest_signups: {
+        Row: {
+          consent: boolean
+          consent_at: string | null
+          created_at: string
+          email: string
+          event_id: string
+          everlytic_synced: boolean
+          id: string
+          name: string | null
+          phone: string | null
+          source: string | null
+          topic: string | null
+          unsubscribed_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          consent?: boolean
+          consent_at?: string | null
+          created_at?: string
+          email: string
+          event_id: string
+          everlytic_synced?: boolean
+          id?: string
+          name?: string | null
+          phone?: string | null
+          source?: string | null
+          topic?: string | null
+          unsubscribed_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          consent?: boolean
+          consent_at?: string | null
+          created_at?: string
+          email?: string
+          event_id?: string
+          everlytic_synced?: boolean
+          id?: string
+          name?: string | null
+          phone?: string | null
+          source?: string | null
+          topic?: string | null
+          unsubscribed_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_interest_signups_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
             referencedRelation: "events"
             referencedColumns: ["id"]
           },
@@ -2289,6 +2354,7 @@ export type Database = {
           entry_ninja_url: string | null
           event_date: string
           event_type: string
+          everlytic_interest_list_id: string | null
           faq_url: string | null
           has_toilets: boolean
           hero_color: string | null
@@ -2345,6 +2411,7 @@ export type Database = {
           entry_ninja_url?: string | null
           event_date: string
           event_type?: string
+          everlytic_interest_list_id?: string | null
           faq_url?: string | null
           has_toilets?: boolean
           hero_color?: string | null
@@ -2401,6 +2468,7 @@ export type Database = {
           entry_ninja_url?: string | null
           event_date?: string
           event_type?: string
+          everlytic_interest_list_id?: string | null
           faq_url?: string | null
           has_toilets?: boolean
           hero_color?: string | null

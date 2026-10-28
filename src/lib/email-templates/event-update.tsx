@@ -29,6 +29,18 @@ export interface EventUpdateProps {
   venue?: string | null
   siteName?: string
   siteUrl?: string
+  /** Per-event brand, e.g. "ice" for Inner City Enduro (black/red/navy). */
+  theme?: string | null
+  /** One-click unsubscribe for interest-list recipients. */
+  unsubscribeUrl?: string | null
+}
+
+/** Inner City Enduro: black, red #ed3237, white, navy #1e1954, condensed uppercase headings. */
+const ICE = {
+  red: '#ed3237',
+  navy: '#1e1954',
+  black: '#000000',
+  headingFont: "'Arial Narrow', 'Helvetica Neue', Helvetica, Arial, sans-serif",
 }
 
 const bannerWrap = { margin: '0 0 20px', textAlign: 'center' as const, lineHeight: 0 }
@@ -74,6 +86,8 @@ export const EventUpdateEmail = ({
   venue,
   siteName = 'Red Cherry Events',
   siteUrl = 'https://riderapp.redcherryevents.co.za',
+  theme,
+  unsubscribeUrl,
 }: EventUpdateProps) => {
   const paragraphs = bodyParagraphs(body)
   const banner = bannerUrl || eventCoverUrl || eventLogoUrl
@@ -83,16 +97,28 @@ export const EventUpdateEmail = ({
   const cta = ctaUrl || eventUrl
   const built = (blocks ?? []).filter(Boolean)
   const ctaText = ctaLabel || 'Open your event page'
+  const ice = theme === 'ice'
+  const headingStyle = ice
+    ? { ...h1, color: ICE.black, fontFamily: ICE.headingFont, textTransform: 'uppercase' as const, letterSpacing: '0.5px', fontWeight: 800 as const }
+    : h1
+  const blockTheme = ice
+    ? {
+        heading: { color: ICE.black, fontFamily: ICE.headingFont, textTransform: 'uppercase' as const, letterSpacing: '0.5px', fontWeight: 800 as const },
+        button: { backgroundColor: ICE.red, borderRadius: '4px', textTransform: 'uppercase' as const, letterSpacing: '0.5px' },
+      }
+    : undefined
+  const shellTheme = ice ? { barBackground: `linear-gradient(90deg, ${ICE.black} 0%, ${ICE.red} 55%, ${ICE.navy} 100%)`, brandColor: ICE.red } : undefined
+  const buttonStyle = ice ? { ...button, backgroundColor: ICE.red, borderRadius: '4px', textTransform: 'uppercase' as const, letterSpacing: '0.5px' } : button
 
   return (
-    <EmailShell preview={heading || `An update about ${eventName}`} siteName={siteName}>
+    <EmailShell preview={heading || `An update about ${eventName}`} siteName={siteName} theme={shellTheme}>
       {banner ? (
         <Section style={bannerWrap}>
           <Img src={banner} alt={eventName} width="600" style={bannerImg} />
         </Section>
       ) : null}
 
-      <Heading style={h1}>{heading || eventName}</Heading>
+      <Heading style={headingStyle}>{heading || eventName}</Heading>
 
       <Text style={meta}>
         <strong>{eventName}</strong>
@@ -101,7 +127,7 @@ export const EventUpdateEmail = ({
 
       {firstName ? <Text style={text}>Hi {firstName},</Text> : null}
 
-      {built.length ? built.map((b) => <EmailBlockView key={b.id} block={b} />) : null}
+      {built.length ? built.map((b) => <EmailBlockView key={b.id} block={b} theme={blockTheme} />) : null}
 
       {built.length ? null : paragraphs.map((p, i) => (
         <Text key={i} style={text}>
@@ -128,7 +154,7 @@ export const EventUpdateEmail = ({
       ) : null}
 
       {built.length && !ctaUrl ? null : cta ? (
-        <Button style={button} href={cta}>
+        <Button style={buttonStyle} href={cta}>
           {ctaText}
         </Button>
       ) : null}
@@ -140,6 +166,16 @@ export const EventUpdateEmail = ({
         </Link>
         .
       </Text>
+
+      {unsubscribeUrl ? (
+        <Text style={{ ...meta, margin: '16px 0 0', textAlign: 'center' as const }}>
+          You are getting this because you asked for updates about {eventName}.{' '}
+          <Link href={unsubscribeUrl} style={link}>
+            Unsubscribe
+          </Link>
+          .
+        </Text>
+      ) : null}
     </EmailShell>
   )
 }

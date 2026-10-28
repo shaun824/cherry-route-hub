@@ -88,6 +88,8 @@ import { Route as AdminVillageEventIdRouteImport } from './routes/admin.village.
 import { Route as ApiPublicClassAvailabilityRouteImport } from './routes/api/public/class-availability'
 import { Route as ApiPublicEntryCountRouteImport } from './routes/api/public/entry-count'
 import { Route as ApiPublicEntryInterestRouteImport } from './routes/api/public/entry-interest'
+import { Route as ApiPublicEventInterestRouteImport } from './routes/api/public/event-interest'
+import { Route as ApiPublicEventInterestUnsubscribeRouteImport } from './routes/api/public/event-interest-unsubscribe'
 import { Route as ApiPublicMarketingSnapshotRouteImport } from './routes/api/public/marketing-snapshot'
 import { Route as CrewDepartmentDeptIdRouteImport } from './routes/crew.department.$deptId'
 import { Route as CrewLearnIndexRouteImport } from './routes/crew.learn.index'
@@ -527,6 +529,17 @@ const ApiPublicEntryInterestRoute = ApiPublicEntryInterestRouteImport.update({
   path: '/api/public/entry-interest',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicEventInterestRoute = ApiPublicEventInterestRouteImport.update({
+  id: '/api/public/event-interest',
+  path: '/api/public/event-interest',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicEventInterestUnsubscribeRoute =
+  ApiPublicEventInterestUnsubscribeRouteImport.update({
+    id: '/api/public/event-interest-unsubscribe',
+    path: '/api/public/event-interest-unsubscribe',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicMarketingSnapshotRoute =
   ApiPublicMarketingSnapshotRouteImport.update({
     id: '/api/public/marketing-snapshot',
@@ -819,6 +832,8 @@ export interface FileRoutesByFullPath {
   '/api/public/class-availability': typeof ApiPublicClassAvailabilityRoute
   '/api/public/entry-count': typeof ApiPublicEntryCountRoute
   '/api/public/entry-interest': typeof ApiPublicEntryInterestRoute
+  '/api/public/event-interest': typeof ApiPublicEventInterestRoute
+  '/api/public/event-interest-unsubscribe': typeof ApiPublicEventInterestUnsubscribeRoute
   '/api/public/marketing-snapshot': typeof ApiPublicMarketingSnapshotRoute
   '/crew/department/$deptId': typeof CrewDepartmentDeptIdRoute
   '/crew/learn/$courseId': typeof CrewLearnCourseIdRoute
@@ -935,6 +950,8 @@ export interface FileRoutesByTo {
   '/api/public/class-availability': typeof ApiPublicClassAvailabilityRoute
   '/api/public/entry-count': typeof ApiPublicEntryCountRoute
   '/api/public/entry-interest': typeof ApiPublicEntryInterestRoute
+  '/api/public/event-interest': typeof ApiPublicEventInterestRoute
+  '/api/public/event-interest-unsubscribe': typeof ApiPublicEventInterestUnsubscribeRoute
   '/api/public/marketing-snapshot': typeof ApiPublicMarketingSnapshotRoute
   '/crew/department/$deptId': typeof CrewDepartmentDeptIdRoute
   '/crew/learn/$courseId': typeof CrewLearnCourseIdRoute
@@ -1056,6 +1073,8 @@ export interface FileRoutesById {
   '/api/public/class-availability': typeof ApiPublicClassAvailabilityRoute
   '/api/public/entry-count': typeof ApiPublicEntryCountRoute
   '/api/public/entry-interest': typeof ApiPublicEntryInterestRoute
+  '/api/public/event-interest': typeof ApiPublicEventInterestRoute
+  '/api/public/event-interest-unsubscribe': typeof ApiPublicEventInterestUnsubscribeRoute
   '/api/public/marketing-snapshot': typeof ApiPublicMarketingSnapshotRoute
   '/crew/department/$deptId': typeof CrewDepartmentDeptIdRoute
   '/crew/learn/$courseId': typeof CrewLearnCourseIdRoute
@@ -1178,6 +1197,8 @@ export interface FileRouteTypes {
     | '/api/public/class-availability'
     | '/api/public/entry-count'
     | '/api/public/entry-interest'
+    | '/api/public/event-interest'
+    | '/api/public/event-interest-unsubscribe'
     | '/api/public/marketing-snapshot'
     | '/crew/department/$deptId'
     | '/crew/learn/$courseId'
@@ -1294,6 +1315,8 @@ export interface FileRouteTypes {
     | '/api/public/class-availability'
     | '/api/public/entry-count'
     | '/api/public/entry-interest'
+    | '/api/public/event-interest'
+    | '/api/public/event-interest-unsubscribe'
     | '/api/public/marketing-snapshot'
     | '/crew/department/$deptId'
     | '/crew/learn/$courseId'
@@ -1414,6 +1437,8 @@ export interface FileRouteTypes {
     | '/api/public/class-availability'
     | '/api/public/entry-count'
     | '/api/public/entry-interest'
+    | '/api/public/event-interest'
+    | '/api/public/event-interest-unsubscribe'
     | '/api/public/marketing-snapshot'
     | '/crew/department/$deptId'
     | '/crew/learn/$courseId'
@@ -1495,6 +1520,8 @@ export interface RootRouteChildren {
   ApiPublicClassAvailabilityRoute: typeof ApiPublicClassAvailabilityRoute
   ApiPublicEntryCountRoute: typeof ApiPublicEntryCountRoute
   ApiPublicEntryInterestRoute: typeof ApiPublicEntryInterestRoute
+  ApiPublicEventInterestRoute: typeof ApiPublicEventInterestRoute
+  ApiPublicEventInterestUnsubscribeRoute: typeof ApiPublicEventInterestUnsubscribeRoute
   ApiPublicMarketingSnapshotRoute: typeof ApiPublicMarketingSnapshotRoute
   CrewDepartmentDeptIdRoute: typeof CrewDepartmentDeptIdRoute
   CrewLearnCourseIdRoute: typeof CrewLearnCourseIdRoute
@@ -2087,6 +2114,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicEntryInterestRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/event-interest': {
+      id: '/api/public/event-interest'
+      path: '/api/public/event-interest'
+      fullPath: '/api/public/event-interest'
+      preLoaderRoute: typeof ApiPublicEventInterestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/event-interest-unsubscribe': {
+      id: '/api/public/event-interest-unsubscribe'
+      path: '/api/public/event-interest-unsubscribe'
+      fullPath: '/api/public/event-interest-unsubscribe'
+      preLoaderRoute: typeof ApiPublicEventInterestUnsubscribeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/marketing-snapshot': {
       id: '/api/public/marketing-snapshot'
       path: '/api/public/marketing-snapshot'
@@ -2543,6 +2584,9 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicClassAvailabilityRoute: ApiPublicClassAvailabilityRoute,
   ApiPublicEntryCountRoute: ApiPublicEntryCountRoute,
   ApiPublicEntryInterestRoute: ApiPublicEntryInterestRoute,
+  ApiPublicEventInterestRoute: ApiPublicEventInterestRoute,
+  ApiPublicEventInterestUnsubscribeRoute:
+    ApiPublicEventInterestUnsubscribeRoute,
   ApiPublicMarketingSnapshotRoute: ApiPublicMarketingSnapshotRoute,
   CrewDepartmentDeptIdRoute: CrewDepartmentDeptIdRoute,
   CrewLearnCourseIdRoute: CrewLearnCourseIdRoute,

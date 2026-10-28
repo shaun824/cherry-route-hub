@@ -31,7 +31,7 @@ export const listEmailWorkflows = createServerFn({ method: "POST" })
 
     const { data: campaigns, error } = await supabaseAdmin
       .from("event_email_campaigns")
-      .select("id, event_id, name, status, anchor, activated_at, created_at")
+      .select("id, event_id, name, status, anchor, audience, activated_at, created_at")
       .order("created_at", { ascending: false });
     if (error) throw new Error(error.message);
 
@@ -79,6 +79,20 @@ export const listEmailWorkflows = createServerFn({ method: "POST" })
       entrantStats.set(row.event_id, s);
     }
 
+    // Interest sign-ups per event (people who opted in on the event website).
+    const { data: interestRows } = await (supabaseAdmin as any)
+      .from("event_interest_signups")
+      .select("event_id, unsubscribed_at")
+      .in("event_id", safeEventIds)
+      .limit(50000);
+    const interestStats = new Map<string, { total: number; active: number }>();
+    for (const row of (interestRows ?? []) as any[]) {
+      const s = interestStats.get(row.event_id) ?? { total: 0, active: 0 };
+      s.total++;
+      if (!row.unsubscribed_at) s.active++;
+      interestStats.set(row.event_id, s);
+    }
+
     const { data: sentRows } = await (supabaseAdmin as any)
       .from("email_sends")
       .select("template, sent_at")
@@ -101,6 +115,8 @@ export const listEmailWorkflows = createServerFn({ method: "POST" })
         eventDate: e.event_date,
         entrants: entrantStats.get(e.id)?.entrants ?? 0,
         welcomeSent: entrantStats.get(e.id)?.welcomeSent ?? 0,
+        interestSignups: interestStats.get(e.id)?.total ?? 0,
+        interestActive: interestStats.get(e.id)?.active ?? 0,
       })),
       systemEmails: Array.from(byTemplate.entries())
         .map(([template, s]) => ({ template, ...s }))
@@ -117,16 +133,17 @@ export const listEmailWorkflows = createServerFn({ method: "POST" })
 
 export const saveEmailWorkflow = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { id?: string; eventId: string; name: string; anchor: "activation" | "entry" }) => input)
+  .inputValidator((input: { id?: string; eventId: string; name: string; anchor: "activation" | "entry"; audience?: "entrants" | "interest" | "both" }) => input)
   .handler(async ({ data, context }) => {
     await assertAdmin(context as any);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     if (!data.name.trim()) throw new Error("Give the workflow a name");
+    const audience = ["entrants", "interest", "both"].includes(data.audience ?? "") ? data.audience! : "entrants";
 
     if (data.id) {
       const { error } = await supabaseAdmin
         .from("event_email_campaigns")
-        .update({ name: data.name.trim(), anchor: data.anchor })
+        .update({ name: data.name.trim(), anchor: data.anchor, audience })
         .eq("id", data.id);
       if (error) throw new Error(error.message);
       return { id: data.id };
@@ -138,6 +155,7 @@ export const saveEmailWorkflow = createServerFn({ method: "POST" })
         event_id: data.eventId,
         name: data.name.trim(),
         anchor: data.anchor,
+        audience,
         created_by: (context as any).userId,
       })
       .select("id")
@@ -201,6 +219,10 @@ export const saveWorkflowStep = createServerFn({ method: "POST" })
       position?: number;
       enabled?: boolean;
       templateName?: "event-update" | "pe-plett-extras";
+      /** Fixed send time (ISO). When set, the step goes out once this passes. */
+      sendAt?: string | null;
+      /** Per-event brand, e.g. "ice". */
+      theme?: string | null;
     }) => input,
   )
   .handler(async ({ data, context }) => {
@@ -208,6 +230,7 @@ export const saveWorkflowStep = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     if (!data.subject.trim()) throw new Error("The email needs a subject line");
 
+    const sendAt = data.sendAt && !Number.isNaN(new Date(data.sendAt).getTime()) ? new Date(data.sendAt).toISOString() : null;
     const patch = {
       subject: data.subject.trim(),
       heading: data.heading?.trim() || null,
@@ -220,6 +243,8 @@ export const saveWorkflowStep = createServerFn({ method: "POST" })
       delay_hours: Math.max(0, Math.round(Number(data.delayHours) || 0)),
       enabled: data.enabled ?? true,
       ...(data.templateName === undefined ? {} : { template_name: data.templateName }),
+      ...(data.sendAt === undefined ? {} : { send_at: sendAt }),
+      ...(data.theme === undefined ? {} : { theme: data.theme?.trim() || null }),
     };
 
     if (data.id) {
@@ -343,7 +368,7 @@ export const getWorkflowStep = createServerFn({ method: "POST" })
     const { data: step, error } = await supabaseAdmin
       .from("event_email_steps")
       .select(
-        "id, campaign_id, position, subject, heading, body, blocks, cta_label, cta_url, banner_url, image_urls, delay_hours, enabled, template_name, event_email_campaigns(id, name, status, anchor, event_id, events(id, name, event_date, location, logo_url, cover_url))",
+        "id, campaign_id, position, subject, heading, body, blocks, cta_label, cta_url, banner_url, image_urls, delay_hours, send_at, theme, enabled, template_name, event_email_campaigns(id, name, status, anchor, audience, event_id, events(id, name, event_date, location, logo_url, cover_url))",
       )
       .eq("id", data.stepId)
       .maybeSingle();
@@ -364,11 +389,13 @@ export const getWorkflowStep = createServerFn({ method: "POST" })
         bannerUrl: ((step as any).banner_url ?? "") as string,
         imageUrls: (Array.isArray((step as any).image_urls) ? (step as any).image_urls : []) as string[],
         delayHours: Number((step as any).delay_hours ?? 24),
+        sendAt: ((step as any).send_at ?? null) as string | null,
+        theme: ((step as any).theme ?? null) as string | null,
         enabled: !!(step as any).enabled,
         templateName: ((step as any).template_name ?? "event-update") as "event-update" | "pe-plett-extras",
       },
       campaign: campaign
-        ? { id: campaign.id as string, name: campaign.name as string, status: campaign.status as string, anchor: campaign.anchor as string }
+        ? { id: campaign.id as string, name: campaign.name as string, status: campaign.status as string, anchor: campaign.anchor as string, audience: (campaign.audience ?? "entrants") as string }
         : null,
       event: campaign?.events ?? null,
     };
@@ -387,6 +414,7 @@ export const renderWorkflowStepPreview = createServerFn({ method: "POST" })
       body?: string | null;
       ctaLabel?: string | null;
       ctaUrl?: string | null;
+      theme?: string | null;
     }) => input,
   )
   .handler(async ({ data, context }) => {
@@ -421,8 +449,26 @@ export const renderWorkflowStepPreview = createServerFn({ method: "POST" })
         body: data.body ?? "",
         ctaLabel: data.ctaLabel ?? null,
         ctaUrl: data.ctaUrl ?? null,
+        theme: data.theme ?? null,
         eventUrl: `https://riderapp.redcherryevents.co.za/my-events/${ev.id ?? ""}`,
       } as any),
     );
     return { html };
+  });
+
+/** Interest sign-ups for one event, newest first, for the admin list and CSV export. */
+export const listEventInterestSignups = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { eventId: string }) => input)
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context as any);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: rows, error } = await supabaseAdmin
+      .from("event_interest_signups")
+      .select("id, email, name, phone, topic, source, consent_at, unsubscribed_at, everlytic_synced, created_at")
+      .eq("event_id", data.eventId)
+      .order("created_at", { ascending: false })
+      .limit(10000);
+    if (error) throw new Error(error.message);
+    return { signups: rows ?? [] };
   });

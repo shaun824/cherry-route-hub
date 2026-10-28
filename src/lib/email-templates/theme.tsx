@@ -106,23 +106,31 @@ const brandName = {
   margin: '20px 0 0',
 }
 
+/** Per-email shell overrides (e.g. the Inner City Enduro brand). */
+export interface ShellTheme {
+  barBackground?: string
+  brandColor?: string
+}
+
 export const EmailShell = ({
   preview,
   siteName,
   children,
+  theme,
 }: {
   preview: string
   siteName: string
   children: React.ReactNode
+  theme?: ShellTheme
 }) => (
   <Html lang="en" dir="ltr">
     <Head />
     <Preview>{preview}</Preview>
     <Body style={main}>
       <Container style={container}>
-        <Section style={bar} />
+        <Section style={theme?.barBackground ? { ...bar, background: theme.barBackground } : bar} />
         <Section style={inner}>
-          <Text style={brandName}>{siteName}</Text>
+          <Text style={theme?.brandColor ? { ...brandName, color: theme.brandColor } : brandName}>{siteName}</Text>
           {children}
           <Hr style={{ borderColor: brand.border, margin: '28px 0 0' }} />
           <Section style={{ textAlign: 'center' as const, padding: '20px 0 0' }}>

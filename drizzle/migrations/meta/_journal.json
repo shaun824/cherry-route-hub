@@ -232,6 +232,13 @@
       "when": 1793126761480,
       "tag": "0032_event_result_exclusions",
       "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1793163530684,
+      "tag": "0033_event_interest_signups_and_campaign_audience",
+      "breakpoints": true
     }
   ]
 }

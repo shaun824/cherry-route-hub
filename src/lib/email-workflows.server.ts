@@ -65,34 +65,72 @@ interface Recipient {
   entrantId: string;
   extras: any[];
   registrationRef: string | null;
+  /** Set when the person came from the interest list — they get an unsubscribe link. */
+  interestId?: string | null;
 }
 
-async function loadRecipients(admin: AnyClient, eventId: string): Promise<Recipient[]> {
-  const { data, error } = await admin
-    .from("event_entrants")
-    .select("id, created_at, extras, registration_ref, entrants(full_name, email)")
-    .eq("event_id", eventId)
-    .limit(5000);
-  if (error) throw new Error(error.message);
+export type CampaignAudience = "entrants" | "interest" | "both";
 
-  const byEmail = new Map<string, Recipient>();
-  for (const row of (data ?? []) as any[]) {
-    const email = String(row.entrants?.email ?? "").trim().toLowerCase();
-    if (!email) continue;
-    const existing = byEmail.get(email);
-    // Keep the earliest entry date — the rider's sequence starts when they entered.
-    if (!existing || row.created_at < existing.enteredAt) {
-      byEmail.set(email, {
+async function loadRecipients(admin: AnyClient, eventId: string, audience: CampaignAudience = "entrants"): Promise<Recipient[]> {
+  const entrants: Recipient[] = [];
+  const interest: Recipient[] = [];
+
+  if (audience !== "interest") {
+    const { data, error } = await admin
+      .from("event_entrants")
+      .select("id, created_at, extras, registration_ref, entrants(full_name, email)")
+      .eq("event_id", eventId)
+      .limit(5000);
+    if (error) throw new Error(error.message);
+
+    const earliest = new Map<string, Recipient>();
+    for (const row of (data ?? []) as any[]) {
+      const email = String(row.entrants?.email ?? "").trim().toLowerCase();
+      if (!email) continue;
+      const existing = earliest.get(email);
+      // Keep the earliest entry date — the rider's sequence starts when they entered.
+      if (!existing || row.created_at < existing.enteredAt) {
+        earliest.set(email, {
+          email,
+          name: row.entrants?.full_name ?? existing?.name ?? null,
+          enteredAt: row.created_at,
+          entrantId: row.id,
+          extras: Array.isArray(row.extras) ? row.extras : [],
+          registrationRef: row.registration_ref ?? null,
+          interestId: null,
+        });
+      }
+    }
+    entrants.push(...earliest.values());
+  }
+
+  if (audience !== "entrants") {
+    const { data, error } = await admin
+      .from("event_interest_signups")
+      .select("id, email, name, created_at")
+      .eq("event_id", eventId)
+      .is("unsubscribed_at", null)
+      .limit(10000);
+    if (error) throw new Error(error.message);
+
+    for (const row of (data ?? []) as any[]) {
+      const email = String(row.email ?? "").trim().toLowerCase();
+      if (!email) continue;
+      interest.push({
         email,
-        name: row.entrants?.full_name ?? existing?.name ?? null,
+        name: row.name ?? null,
         enteredAt: row.created_at,
         entrantId: row.id,
-        extras: Array.isArray(row.extras) ? row.extras : [],
-        registrationRef: row.registration_ref ?? null,
+        extras: [],
+        registrationRef: null,
+        interestId: row.id,
       });
     }
   }
-  return Array.from(byEmail.values());
+
+  // Dedupe by email; entrants win so their personalisation is kept.
+  const { mergeAudiences } = await import("./event-interest");
+  return mergeAudiences(entrants, interest, audience) as Recipient[];
 }
 
 export async function sendWorkflowEmail(
@@ -107,6 +145,8 @@ export async function sendWorkflowEmail(
     entrantId?: string;
     extras?: any[];
     registrationRef?: string | null;
+    /** Interest-list recipients get a one-click unsubscribe link in the footer. */
+    unsubscribeUrl?: string | null;
     record?: boolean;
   },
 ): Promise<"sent" | "suppressed"> {
@@ -169,6 +209,8 @@ export async function sendWorkflowEmail(
       eventCoverUrl: absoluteLogo(event.cover_url),
       eventLogoUrl: absoluteLogo(event.logo_url),
       bannerUrl: absoluteLogo(step.banner_url),
+      theme: step.theme ?? null,
+      unsubscribeUrl: opts.unsubscribeUrl ?? null,
       images: (Array.isArray(step.image_urls) ? step.image_urls : []).filter((u: string) =>
         /^https:\/\//i.test(String(u ?? "")),
       ),
@@ -225,7 +267,7 @@ export async function processDueWorkflowEmails(
 
   let campQuery = admin
     .from("event_email_campaigns")
-    .select("id, event_id, name, status, anchor, activated_at, events(id, name, event_date, location, logo_url, cover_url, lifecycle)")
+    .select("id, event_id, name, status, anchor, audience, activated_at, events(id, name, event_date, location, logo_url, cover_url, lifecycle)")
     .eq("status", "active");
   if (opts.campaignId) campQuery = campQuery.eq("id", opts.campaignId);
 
@@ -240,7 +282,7 @@ export async function processDueWorkflowEmails(
 
     const { data: stepRows } = await admin
       .from("event_email_steps")
-      .select("id, position, subject, heading, body, cta_label, cta_url, banner_url, image_urls, blocks, delay_hours, enabled, template_name")
+      .select("id, position, subject, heading, body, cta_label, cta_url, banner_url, image_urls, blocks, delay_hours, send_at, theme, enabled, template_name")
       .eq("campaign_id", campaign.id)
       .order("position", { ascending: true });
     const steps = ((stepRows ?? []) as any[]).filter((s) => s.enabled);
@@ -250,7 +292,7 @@ export async function processDueWorkflowEmails(
     const anchorActivation = campaign.activated_at ? new Date(campaign.activated_at) : null;
     if (campaign.anchor === "activation" && !anchorActivation) continue;
 
-    const recipients = await loadRecipients(admin, campaign.event_id);
+    const recipients = await loadRecipients(admin, campaign.event_id, (campaign.audience ?? "entrants") as CampaignAudience);
     if (!recipients.length) continue;
 
     // Release stale claims: a run that was cut off mid-flight (rate limit,
@@ -295,11 +337,17 @@ export async function processDueWorkflowEmails(
         if (out.sent + out.suppressed >= limit) break;
         if (done.has(`${step.id}|${rider.email}`)) continue;
 
-        const anchor =
-          campaign.anchor === "entry"
-            ? new Date(rider.enteredAt)
-            : new Date(Math.max(anchorActivation!.getTime(), new Date(rider.enteredAt).getTime()));
-        if (now.getTime() < anchor.getTime() + offsetMs) continue;
+        // A step with a fixed send_at goes out once that time passes,
+        // regardless of the campaign anchor.
+        if (step.send_at) {
+          if (now.getTime() < new Date(step.send_at).getTime()) continue;
+        } else {
+          const anchor =
+            campaign.anchor === "entry"
+              ? new Date(rider.enteredAt)
+              : new Date(Math.max(anchorActivation!.getTime(), new Date(rider.enteredAt).getTime()));
+          if (now.getTime() < anchor.getTime() + offsetMs) continue;
+        }
 
         if (step.template_name === "sea-to-sea-pre-event-reminder") {
           const prev = steps[i - 1];
@@ -342,6 +390,9 @@ export async function processDueWorkflowEmails(
             entrantId: rider.entrantId,
             extras: rider.extras,
             registrationRef: rider.registrationRef,
+            unsubscribeUrl: rider.interestId
+              ? `${APP_URL}/api/public/event-interest-unsubscribe?id=${rider.interestId}`
+              : null,
           });
           if (r === "sent") out.sent++;
           else out.suppressed++;

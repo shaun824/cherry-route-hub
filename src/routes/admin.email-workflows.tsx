@@ -3,7 +3,7 @@ import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Mail, Play, Pause, Plus, Send, Trash2, Clock } from "lucide-react";
+import { Mail, Play, Pause, Plus, Send, Trash2, Clock, Download } from "lucide-react";
 import { toast } from "sonner";
 import { EverlyticPanel } from "@/components/everlytic-panel";
 
@@ -16,6 +16,7 @@ import {
   deleteWorkflowStep,
   sendWorkflowStepTest,
   runEmailWorkflowsNow,
+  listEventInterestSignups,
 } from "@/lib/email-workflows.functions";
 
 export const Route = createFileRoute("/admin/email-workflows")({
@@ -75,6 +76,7 @@ function EmailWorkflowsPage() {
   const [newEventId, setNewEventId] = useState("");
   const [newName, setNewName] = useState("");
   const [newAnchor, setNewAnchor] = useState<"activation" | "entry">("entry");
+  const [newAudience, setNewAudience] = useState<"entrants" | "interest" | "both">("entrants");
 
   const events = (q.data?.events ?? []) as any[];
   const campaigns = (q.data?.campaigns ?? []) as any[];
@@ -82,7 +84,7 @@ function EmailWorkflowsPage() {
 
   const create = useMutation({
     mutationFn: () =>
-      saveCampaign({ data: { eventId: newEventId, name: newName, anchor: newAnchor } }),
+      saveCampaign({ data: { eventId: newEventId, name: newName, anchor: newAnchor, audience: newAudience } }),
     onSuccess: () => {
       setNewName("");
       toast.success("Workflow created — now add your emails");
@@ -132,7 +134,7 @@ function EmailWorkflowsPage() {
         <h2 className="mb-3 flex items-center gap-2 font-semibold">
           <Plus className="h-4 w-4" /> New workflow
         </h2>
-        <div className="grid gap-3 md:grid-cols-4">
+        <div className="grid gap-3 md:grid-cols-5">
           <select className={input} value={newEventId} onChange={(e) => setNewEventId(e.target.value)}>
             <option value="">Choose event…</option>
             {events.map((e) => (
@@ -147,6 +149,15 @@ function EmailWorkflowsPage() {
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
           />
+          <select
+            className={input}
+            value={newAudience}
+            onChange={(e) => setNewAudience(e.target.value as "entrants" | "interest" | "both")}
+          >
+            <option value="entrants">Send to entered riders</option>
+            <option value="interest">Send to interest sign-ups</option>
+            <option value="both">Send to both (deduped)</option>
+          </select>
           <select
             className={input}
             value={newAnchor}
@@ -177,6 +188,8 @@ function EmailWorkflowsPage() {
           scrollAppTo(0, "smooth");
         }}
       />
+
+      <InterestSignups events={events} />
 
       {campaigns.map((c) => (
         <CampaignCard
@@ -271,6 +284,7 @@ function EmailsGoingOut({
                   <p className="truncate text-sm font-semibold">{e.name}</p>
                   <p className="text-xs text-ink-soft">
                     {shortDate(e.eventDate)} · {e.entrants ?? 0} entries
+                    {e.interestSignups ? ` · ${e.interestActive ?? 0} interest sign-ups` : ""}
                   </p>
                 </div>
                 <span
@@ -399,7 +413,13 @@ function CampaignCard({
         <div>
           <h2 className="font-display text-lg font-bold">{campaign.name}</h2>
           <p className="text-xs text-ink-soft">
-            {eventName} · delays counted from{" "}
+            {eventName} · sends to{" "}
+            {campaign.audience === "interest"
+              ? "interest sign-ups"
+              : campaign.audience === "both"
+                ? "entered riders and interest sign-ups"
+                : "entered riders"}{" "}
+            · delays counted from{" "}
             {campaign.anchor === "entry" ? "each rider's entry date" : "when the workflow was switched on"}
           </p>
         </div>
@@ -651,5 +671,118 @@ function StepEditor({
         )}
       </div>
     </div>
+  );
+}
+
+function csvCell(v: unknown) {
+  const s = String(v ?? "");
+  return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+}
+
+/** Interest sign-ups for one event, with a count and a CSV export. */
+function InterestSignups({ events }: { events: any[] }) {
+  const listSignups = useServerFn(listEventInterestSignups);
+  const [eventId, setEventId] = useState("");
+  const q = useQuery({
+    queryKey: ["event-interest-signups", eventId],
+    queryFn: () => listSignups({ data: { eventId } }),
+    enabled: !!eventId,
+  });
+  const signups = (q.data?.signups ?? []) as any[];
+  const active = signups.filter((s) => !s.unsubscribed_at);
+  const event = events.find((e) => e.id === eventId);
+
+  const downloadCsv = () => {
+    const header = ["email", "name", "phone", "topic", "source", "signed_up", "consent_at", "unsubscribed"];
+    const rows = signups.map((s) =>
+      [s.email, s.name, s.phone, s.topic, s.source, s.created_at, s.consent_at, s.unsubscribed_at ? "yes" : "no"]
+        .map(csvCell)
+        .join(","),
+    );
+    const blob = new Blob([[header.join(","), ...rows].join("\n")], { type: "text/csv" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `${(event?.name ?? "event").toLowerCase().replace(/[^a-z0-9]+/g, "-")}-interest-signups.csv`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  };
+
+  return (
+    <section className="space-y-3 rounded-2xl border border-border bg-card p-4">
+      <div>
+        <h2 className="font-display text-lg font-bold">Interest sign-ups</h2>
+        <p className="text-xs text-ink-soft">
+          People who opted in on an event website (for example the Inner City Enduro contact form).
+          They can be mailed through a workflow set to the interest audience.
+        </p>
+      </div>
+      <select className={input} value={eventId} onChange={(e) => setEventId(e.target.value)}>
+        <option value="">Choose event…</option>
+        {events.map((e) => (
+          <option key={e.id} value={e.id}>
+            {e.name}
+            {e.interestSignups ? ` (${e.interestSignups})` : ""}
+          </option>
+        ))}
+      </select>
+
+      {eventId ? (
+        q.isLoading ? (
+          <p className="text-sm text-ink-soft">Loading…</p>
+        ) : (
+          <>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className="text-sm text-ink-soft">
+                <b className="text-ink">{active.length}</b> subscribed
+                {signups.length !== active.length ? ` · ${signups.length - active.length} unsubscribed` : ""}
+              </p>
+              <button
+                onClick={downloadCsv}
+                disabled={!signups.length}
+                className="flex items-center gap-1 rounded-lg border border-border px-3 py-1.5 text-xs font-semibold disabled:opacity-50"
+              >
+                <Download className="h-3.5 w-3.5" /> Download CSV
+              </button>
+            </div>
+            {signups.length ? (
+              <div className="overflow-x-auto rounded-xl border border-border/70">
+                <table className="w-full text-left text-xs">
+                  <thead>
+                    <tr className="border-b border-border/70 text-ink-soft">
+                      <th className="px-3 py-2 font-semibold">Email</th>
+                      <th className="px-3 py-2 font-semibold">Name</th>
+                      <th className="px-3 py-2 font-semibold">Phone</th>
+                      <th className="px-3 py-2 font-semibold">Source</th>
+                      <th className="px-3 py-2 font-semibold">Signed up</th>
+                      <th className="px-3 py-2 font-semibold">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {signups.map((s) => (
+                      <tr key={s.id} className="border-b border-border/40 last:border-0">
+                        <td className="px-3 py-2">{s.email}</td>
+                        <td className="px-3 py-2">{s.name ?? "—"}</td>
+                        <td className="px-3 py-2">{s.phone ?? "—"}</td>
+                        <td className="px-3 py-2">{s.source ?? "—"}</td>
+                        <td className="px-3 py-2 whitespace-nowrap">{shortDate(s.created_at)}</td>
+                        <td className="px-3 py-2">
+                          {s.unsubscribed_at ? (
+                            <span className="text-destructive">unsubscribed</span>
+                          ) : (
+                            <span className="text-primary">subscribed</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <p className="text-sm text-ink-soft">No sign-ups for this event yet.</p>
+            )}
+          </>
+        )
+      ) : null}
+    </section>
   );
 }

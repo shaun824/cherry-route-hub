@@ -88,6 +88,7 @@ function EmailBuilderPage() {
 
   const data = q.data as any;
   const eventId = data?.event?.id as string | undefined;
+  const stepTheme = (data?.step?.theme ?? null) as string | null;
   const published = !!data?.step?.enabled;
 
   useEffect(() => {
@@ -110,8 +111,8 @@ function EmailBuilderPage() {
 
   // Live preview: rendered by the same code that sends the real email.
   const previewKey = useMemo(
-    () => JSON.stringify({ subject, heading, bannerUrl, ctaLabel, ctaUrl, blocks }),
-    [subject, heading, bannerUrl, ctaLabel, ctaUrl, blocks],
+    () => JSON.stringify({ subject, heading, bannerUrl, ctaLabel, ctaUrl, blocks, stepTheme }),
+    [subject, heading, bannerUrl, ctaLabel, ctaUrl, blocks, stepTheme],
   );
 
   useEffect(() => {
@@ -120,7 +121,7 @@ function EmailBuilderPage() {
     const t = setTimeout(async () => {
       try {
         const r: any = await renderPreview({
-          data: { eventId, subject, heading, bannerUrl, blocks, body: blocksToPlainText(blocks), ctaLabel, ctaUrl },
+          data: { eventId, subject, heading, bannerUrl, blocks, body: blocksToPlainText(blocks), ctaLabel, ctaUrl, theme: stepTheme },
         });
         if (!cancelled) setHtml(r.html ?? "");
       } catch {
