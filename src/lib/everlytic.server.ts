@@ -10,6 +10,9 @@ export async function everlyticRequest(path: string, method: "GET" | "POST", use
     },
     body: body === undefined ? undefined : JSON.stringify(body),
   });
+  if (response.status >= 300 && response.status < 400) {
+    throw Object.assign(new Error("Everlytic redirected the request. Check the configured installation host."), { status: response.status });
+  }
   if (!response.ok) {
     // Provider bodies can echo credentials; do not log or return them.
     throw Object.assign(new Error(`Everlytic request failed (${response.status}). ${response.status === 401 ? "Check your Everlytic username and API key." : response.status === 403 ? "Check this account's email permissions." : "Check the campaign in Everlytic and try again."}`), { status: response.status });
