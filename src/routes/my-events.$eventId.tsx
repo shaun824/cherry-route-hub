@@ -13,7 +13,7 @@ import { isBotMiss } from "@/lib/bot-handoff";
 import { splitFollowUps } from "@/lib/bot-followups";
 import ReactMarkdown from "react-markdown";
 
-import { createFileRoute, Link, notFound, useNavigate, useRouterState } from "@tanstack/react-router";
+import { createFileRoute, Link, notFound, useNavigate, useRouter, useRouterState } from "@tanstack/react-router";
 import { trackAction, trackActionThrottled, useClickTracking, useSectionTracking, useTabTracking, type TabSource } from "@/lib/event-analytics";
 import { useServerFn } from "@tanstack/react-start";
 import { askEventBot } from "@/lib/event-bot.functions";
