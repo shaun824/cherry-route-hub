@@ -1,24 +1,16 @@
 # Roadmap
 
-## Event results, 27 Oct
-- [x] Correct gender placings after approved exclusions and verify Kirsten Flanagan is second female overall on her rider page.
-- [x] Exclude Noemi Pestana, bib 714, from Hub results and standings while keeping source timing records.
-- [x] Add the shared results view to the event page and verify it with real results.
-
-## Sabrina Love Summer Challenge 2026 (Shaun, 26 Oct)
-- [x] Parse KCA match-campaign PDF (design system: pink #E6007E, yellow accent, hearts, script accents)
-- [x] Scrape sabrinalove.co.za/summer-challenge-2026 (4 days, venues, times, fees, contacts)
-- [x] Get KCA (Keep a Child Alive) logo online + Discovery logo + SLSC artwork as assets
-- [x] Create 4 events in DB — verified all 4 show under Bicycle on the hub
-- [x] Teach the bot: event_bot_knowledge rows + full event data per day
-- [x] Build SLSC email brand module + 4 pre-event mailers (parking not published on site — flagged to Shaun)
-- [x] Create 4 Everlytic draft campaigns 924371–924374, previews sent to Shaun
-- [x] Sync Entry Ninja rosters (48 entries) and load 37 unique riders into Bicycles list (102600), opt-outs preserved
-- [ ] Verify race-control re-centering preserves chosen zoom; number-only distance markers (from previous task — tests passed, Playwright check pending)
-- [ ] Publish and confirm all good to go
+## ICE 2026 event-interest sign-ups + race-week campaign (Shaun, 28 Oct)
+- [ ] Migration: event_interest_signups table, campaign audience column, step send_at, events.everlytic_interest_list_id
+- [ ] POST /api/public/event-interest (X-Event-Interest-Key secret, honeypot, rate limit, upsert, optional Everlytic sync, no emails)
+- [ ] Unsubscribe endpoint + unsubscribe link in interest emails
+- [ ] Workflow audiences: entrants / interest / both, deduped; send_at scheduling; hourly hook unchanged
+- [ ] Admin: audience selector, interest sign-ups list with count + CSV export
+- [ ] ICE-styled event-update brand (black/red/navy, condensed uppercase)
+- [ ] Draft ICE 2026 race week campaign (24 Nov 2026 09:00 SAST, status draft, never sends until Shaun switches on)
+- [ ] Tests + build check + publish
 
 ## Open / waiting
 - BaseCamp import of GPS pack unverified; single-route app downloads still have old internal names (awaiting Shaun)
-- /otto1890-signup needs publishing (goes out with this publish)
 - Everlytic campaign 923637 armed for 1 Dec 2026 09:00 SAST — never resend; replace only
 - Michelle Bester password reset pending her retry
