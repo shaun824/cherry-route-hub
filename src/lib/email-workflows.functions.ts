@@ -219,6 +219,10 @@ export const saveWorkflowStep = createServerFn({ method: "POST" })
       position?: number;
       enabled?: boolean;
       templateName?: "event-update" | "pe-plett-extras";
+      /** Fixed send time (ISO). When set, the step goes out once this passes. */
+      sendAt?: string | null;
+      /** Per-event brand, e.g. "ice". */
+      theme?: string | null;
     }) => input,
   )
   .handler(async ({ data, context }) => {
@@ -226,6 +230,7 @@ export const saveWorkflowStep = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     if (!data.subject.trim()) throw new Error("The email needs a subject line");
 
+    const sendAt = data.sendAt && !Number.isNaN(new Date(data.sendAt).getTime()) ? new Date(data.sendAt).toISOString() : null;
     const patch = {
       subject: data.subject.trim(),
       heading: data.heading?.trim() || null,
@@ -238,6 +243,8 @@ export const saveWorkflowStep = createServerFn({ method: "POST" })
       delay_hours: Math.max(0, Math.round(Number(data.delayHours) || 0)),
       enabled: data.enabled ?? true,
       ...(data.templateName === undefined ? {} : { template_name: data.templateName }),
+      ...(data.sendAt === undefined ? {} : { send_at: sendAt }),
+      ...(data.theme === undefined ? {} : { theme: data.theme?.trim() || null }),
     };
 
     if (data.id) {
