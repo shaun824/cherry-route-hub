@@ -30,7 +30,7 @@ function Events() {
   const navigate = useNavigate({ from: "/events/" });
   const filter: SportFilter = sportParam ?? "all";
   const events = useAdminStore((s) => s.events)
-    .filter((e) => (e.lifecycle ?? "published") === "published")
+    .filter((e) => (e.lifecycle ?? "published") === "published" && !e.isReviewEvent)
     .filter((e) => filter === "all" || getEventSport(e.discipline, e.name) === filter);
 
   return (

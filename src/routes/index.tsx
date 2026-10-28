@@ -1,3 +1,4 @@
+import { useIsAdmin } from "@/lib/auth";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useState, useMemo, useEffect } from "react";
@@ -81,7 +82,9 @@ function Home() {
   useHydratedStore();
   const { user, loading } = useSession();
   const feed = useAdminStore((s) => s.feed);
-  const allEvents = useAdminStore((s) => s.events);
+  const { isAdmin: viewerIsAdmin } = useIsAdmin();
+  // Review events reach the store only for their entrants (and admins, who see them in the admin portal instead).
+  const allEvents = useAdminStore((s) => s.events).filter((e) => !e.isReviewEvent || !viewerIsAdmin);
   const promos = useAdminStore((s) => s.promos);
   const branding = useAdminStore((s) => s.settings.branding);
   const quickLinks = useAdminStore((s) => s.settings.quickLinks).filter((q) => q.enabled);
