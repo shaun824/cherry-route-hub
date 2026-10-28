@@ -288,7 +288,7 @@ export async function processDueWorkflowEmails(
     const anchorActivation = campaign.activated_at ? new Date(campaign.activated_at) : null;
     if (campaign.anchor === "activation" && !anchorActivation) continue;
 
-    const recipients = await loadRecipients(admin, campaign.event_id);
+    const recipients = await loadRecipients(admin, campaign.event_id, (campaign.audience ?? "entrants") as CampaignAudience);
     if (!recipients.length) continue;
 
     // Release stale claims: a run that was cut off mid-flight (rate limit,
@@ -333,11 +333,17 @@ export async function processDueWorkflowEmails(
         if (out.sent + out.suppressed >= limit) break;
         if (done.has(`${step.id}|${rider.email}`)) continue;
 
-        const anchor =
-          campaign.anchor === "entry"
-            ? new Date(rider.enteredAt)
-            : new Date(Math.max(anchorActivation!.getTime(), new Date(rider.enteredAt).getTime()));
-        if (now.getTime() < anchor.getTime() + offsetMs) continue;
+        // A step with a fixed send_at goes out once that time passes,
+        // regardless of the campaign anchor.
+        if (step.send_at) {
+          if (now.getTime() < new Date(step.send_at).getTime()) continue;
+        } else {
+          const anchor =
+            campaign.anchor === "entry"
+              ? new Date(rider.enteredAt)
+              : new Date(Math.max(anchorActivation!.getTime(), new Date(rider.enteredAt).getTime()));
+          if (now.getTime() < anchor.getTime() + offsetMs) continue;
+        }
 
         if (step.template_name === "sea-to-sea-pre-event-reminder") {
           const prev = steps[i - 1];
