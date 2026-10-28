@@ -3,7 +3,7 @@ import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Mail, Play, Pause, Plus, Send, Trash2, Clock } from "lucide-react";
+import { Mail, Play, Pause, Plus, Send, Trash2, Clock, Download } from "lucide-react";
 import { toast } from "sonner";
 import { EverlyticPanel } from "@/components/everlytic-panel";
 
@@ -16,6 +16,7 @@ import {
   deleteWorkflowStep,
   sendWorkflowStepTest,
   runEmailWorkflowsNow,
+  listEventInterestSignups,
 } from "@/lib/email-workflows.functions";
 
 export const Route = createFileRoute("/admin/email-workflows")({
@@ -283,6 +284,7 @@ function EmailsGoingOut({
                   <p className="truncate text-sm font-semibold">{e.name}</p>
                   <p className="text-xs text-ink-soft">
                     {shortDate(e.eventDate)} · {e.entrants ?? 0} entries
+                    {e.interestSignups ? ` · ${e.interestActive ?? 0} interest sign-ups` : ""}
                   </p>
                 </div>
                 <span
