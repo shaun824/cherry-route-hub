@@ -141,6 +141,8 @@ export async function sendWorkflowEmail(
     entrantId?: string;
     extras?: any[];
     registrationRef?: string | null;
+    /** Interest-list recipients get a one-click unsubscribe link in the footer. */
+    unsubscribeUrl?: string | null;
     record?: boolean;
   },
 ): Promise<"sent" | "suppressed"> {
@@ -203,6 +205,8 @@ export async function sendWorkflowEmail(
       eventCoverUrl: absoluteLogo(event.cover_url),
       eventLogoUrl: absoluteLogo(event.logo_url),
       bannerUrl: absoluteLogo(step.banner_url),
+      theme: step.theme ?? null,
+      unsubscribeUrl: opts.unsubscribeUrl ?? null,
       images: (Array.isArray(step.image_urls) ? step.image_urls : []).filter((u: string) =>
         /^https:\/\//i.test(String(u ?? "")),
       ),
