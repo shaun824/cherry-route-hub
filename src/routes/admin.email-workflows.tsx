@@ -673,3 +673,116 @@ function StepEditor({
     </div>
   );
 }
+
+function csvCell(v: unknown) {
+  const s = String(v ?? "");
+  return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+}
+
+/** Interest sign-ups for one event, with a count and a CSV export. */
+function InterestSignups({ events }: { events: any[] }) {
+  const listSignups = useServerFn(listEventInterestSignups);
+  const [eventId, setEventId] = useState("");
+  const q = useQuery({
+    queryKey: ["event-interest-signups", eventId],
+    queryFn: () => listSignups({ data: { eventId } }),
+    enabled: !!eventId,
+  });
+  const signups = (q.data?.signups ?? []) as any[];
+  const active = signups.filter((s) => !s.unsubscribed_at);
+  const event = events.find((e) => e.id === eventId);
+
+  const downloadCsv = () => {
+    const header = ["email", "name", "phone", "topic", "source", "signed_up", "consent_at", "unsubscribed"];
+    const rows = signups.map((s) =>
+      [s.email, s.name, s.phone, s.topic, s.source, s.created_at, s.consent_at, s.unsubscribed_at ? "yes" : "no"]
+        .map(csvCell)
+        .join(","),
+    );
+    const blob = new Blob([[header.join(","), ...rows].join("\n")], { type: "text/csv" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `${(event?.name ?? "event").toLowerCase().replace(/[^a-z0-9]+/g, "-")}-interest-signups.csv`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  };
+
+  return (
+    <section className="space-y-3 rounded-2xl border border-border bg-card p-4">
+      <div>
+        <h2 className="font-display text-lg font-bold">Interest sign-ups</h2>
+        <p className="text-xs text-ink-soft">
+          People who opted in on an event website (for example the Inner City Enduro contact form).
+          They can be mailed through a workflow set to the interest audience.
+        </p>
+      </div>
+      <select className={input} value={eventId} onChange={(e) => setEventId(e.target.value)}>
+        <option value="">Choose event…</option>
+        {events.map((e) => (
+          <option key={e.id} value={e.id}>
+            {e.name}
+            {e.interestSignups ? ` (${e.interestSignups})` : ""}
+          </option>
+        ))}
+      </select>
+
+      {eventId ? (
+        q.isLoading ? (
+          <p className="text-sm text-ink-soft">Loading…</p>
+        ) : (
+          <>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className="text-sm text-ink-soft">
+                <b className="text-ink">{active.length}</b> subscribed
+                {signups.length !== active.length ? ` · ${signups.length - active.length} unsubscribed` : ""}
+              </p>
+              <button
+                onClick={downloadCsv}
+                disabled={!signups.length}
+                className="flex items-center gap-1 rounded-lg border border-border px-3 py-1.5 text-xs font-semibold disabled:opacity-50"
+              >
+                <Download className="h-3.5 w-3.5" /> Download CSV
+              </button>
+            </div>
+            {signups.length ? (
+              <div className="overflow-x-auto rounded-xl border border-border/70">
+                <table className="w-full text-left text-xs">
+                  <thead>
+                    <tr className="border-b border-border/70 text-ink-soft">
+                      <th className="px-3 py-2 font-semibold">Email</th>
+                      <th className="px-3 py-2 font-semibold">Name</th>
+                      <th className="px-3 py-2 font-semibold">Phone</th>
+                      <th className="px-3 py-2 font-semibold">Source</th>
+                      <th className="px-3 py-2 font-semibold">Signed up</th>
+                      <th className="px-3 py-2 font-semibold">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {signups.map((s) => (
+                      <tr key={s.id} className="border-b border-border/40 last:border-0">
+                        <td className="px-3 py-2">{s.email}</td>
+                        <td className="px-3 py-2">{s.name ?? "—"}</td>
+                        <td className="px-3 py-2">{s.phone ?? "—"}</td>
+                        <td className="px-3 py-2">{s.source ?? "—"}</td>
+                        <td className="px-3 py-2 whitespace-nowrap">{shortDate(s.created_at)}</td>
+                        <td className="px-3 py-2">
+                          {s.unsubscribed_at ? (
+                            <span className="text-destructive">unsubscribed</span>
+                          ) : (
+                            <span className="text-primary">subscribed</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <p className="text-sm text-ink-soft">No sign-ups for this event yet.</p>
+            )}
+          </>
+        )
+      ) : null}
+    </section>
+  );
+}
