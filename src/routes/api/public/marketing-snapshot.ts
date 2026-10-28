@@ -65,6 +65,7 @@ export const Route = createFileRoute("/api/public/marketing-snapshot")({
               "id, name, slug, discipline, event_date, location, distance_km, status, entry_ninja_url, website_url, photos_album_url, results_url, title_sponsor_name",
             )
             .eq("is_public", true)
+            .eq("is_review_event", false)
             .neq("lifecycle", "draft")
             .gte("event_date", new Date(now - 365 * DAY).toISOString())
             .lte("event_date", new Date(now + 365 * DAY).toISOString())

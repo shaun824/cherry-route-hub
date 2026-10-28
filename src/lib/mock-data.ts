@@ -108,6 +108,7 @@ export type Event = {
   titleSponsorName?: string;    // headline / title sponsor for this event
   titleSponsorLogoUrl?: string; // logo shown on the event banner
   titleSponsorUrl?: string;     // sponsor website
+  isReviewEvent?: boolean;      // private app-store review event: always live, no location checks
 };
 
 // Returns the currently active price tier for a batch, or null if none defined.

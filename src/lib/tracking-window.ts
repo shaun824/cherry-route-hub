@@ -68,6 +68,10 @@ export function trackingWindow(
   opts: { resultsPublished?: boolean; now?: Date } = {},
 ): TrackingWindow {
   const now = opts.now ?? new Date();
+  // App review events are always open, wherever and whenever the reviewer is.
+  if (event?.isReviewEvent) {
+    return { open: true, reason: "open", opensAt: null, closesAt: null, message: "Tracking is open (test event)." };
+  }
   const todayKey = localDateKey(now);
 
   if (!isRaceDay(event, todayKey)) {

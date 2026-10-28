@@ -25,6 +25,7 @@ export const listEmailWorkflows = createServerFn({ method: "POST" })
     const { data: rawEvents } = await supabaseAdmin
       .from("events")
       .select("id, name, event_date, days")
+      .eq("is_review_event", false)
       .neq("lifecycle", "archived")
       .order("event_date", { ascending: true });
     const events = visibleInBackend(rawEvents ?? []);

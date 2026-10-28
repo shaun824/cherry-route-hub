@@ -81,6 +81,7 @@ export const getEventRiders = createServerFn({ method: "GET" })
     const { getRequestHeader } = await import("@tanstack/react-start/server");
     const { resolveOptionalUserId } = await import("@/lib/app-bot.server");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    await (await import("@/lib/review-event.server")).assertEventVisibleToCaller(supabaseAdmin, data.eventId);
 
     const { data: ev } = await supabaseAdmin
       .from("events")
@@ -149,6 +150,7 @@ export const getEventResults = createServerFn({ method: "GET" })
   .inputValidator((input: unknown) => EventInput.parse(input))
   .handler(async ({ data }): Promise<EventResultsPayload> => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    await (await import("@/lib/review-event.server")).assertEventVisibleToCaller(supabaseAdmin, data.eventId);
 
     const { data: ev } = await supabaseAdmin
       .from("events")
@@ -315,6 +317,7 @@ export const findResultsParticipant = createServerFn({ method: "GET" })
   .handler(async ({ data }): Promise<{ matches: ParticipantMatch[]; error: string | null }> => {
     if (!data.lastName && !data.bib) return { matches: [], error: null };
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    await (await import("@/lib/review-event.server")).assertEventVisibleToCaller(supabaseAdmin, data.eventId);
     const { data: ev } = await supabaseAdmin
       .from("events")
       .select("myriad_race_id")
@@ -461,6 +464,7 @@ export const getRiderDetail = createServerFn({ method: "GET" })
     const userId = await resolveOptionalUserId(getRequestHeader("authorization") ?? null);
     if (!userId)
       return { status: "signin", event_name: null, event_date: null, rider: null, sets: [] };
+    await (await import("@/lib/review-event.server")).assertEventVisible(supabaseAdmin, data.eventId, userId);
 
     const { data: ev } = await supabaseAdmin
       .from("events")

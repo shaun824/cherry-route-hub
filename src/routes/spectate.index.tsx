@@ -34,7 +34,7 @@ function SpectatePage() {
   const [filter, setFilter] = useState<Filter>("upcoming");
 
   const visible = useMemo(() => {
-    const list = events.filter((e) => (e.lifecycle ?? "published") !== "archived");
+    const list = events.filter((e) => (e.lifecycle ?? "published") !== "archived" && !e.isReviewEvent);
     const now = Date.now();
     const bucket = (e: Event) => (e.status === "live" ? "live" : "upcoming");
     return list

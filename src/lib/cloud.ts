@@ -4,6 +4,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Batch, EntryCategory, Event, EventDay, FeedPost, Promo, ScheduleItem } from "./mock-data";
 import type { Sponsor } from "./store";
+import { liveReviewEvent } from "./review-event";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const isUuid = (v: string) => UUID_RE.test(v);
@@ -169,6 +170,11 @@ export async function deleteSponsorCloud(id: string) {
 
 // ---------- EVENTS ----------
 function eventFromRow(r: Row): Event {
+  const ev = baseEventFromRow(r);
+  return ev.isReviewEvent ? liveReviewEvent(ev as unknown as Record<string, unknown>) as unknown as Event : ev;
+}
+
+function baseEventFromRow(r: Row): Event {
   return {
     id: String(r.id),
     externalId: (r.entry_ninja_id as string | null) ?? null,
@@ -205,6 +211,7 @@ function eventFromRow(r: Row): Event {
     titleSponsorName: ((r as Row).title_sponsor_name as string | null) ?? undefined,
     titleSponsorLogoUrl: ((r as Row).title_sponsor_logo_url as string | null) ?? undefined,
     titleSponsorUrl: ((r as Row).title_sponsor_url as string | null) ?? undefined,
+    isReviewEvent: (r as Row).is_review_event === true,
   };
 }
 

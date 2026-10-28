@@ -53,6 +53,7 @@ export type DispatchResult = {
 
 
 const CHUNK = 20;
+const REVIEW_ACCOUNT_EMAIL = "appreview@redcherryevents.co.za";
 
 function prefColumn(kind: NotificationKind): "news" | "event_reminders" | null {
   if (kind === "news") return "news";
@@ -65,6 +66,16 @@ async function resolveUserIds(
   admin: any,
   input: DispatchInput,
 ): Promise<{ userIds: string[] | null; phones: string[] }> {
+  // Private app-review events only ever notify the review account: no other
+  // riders, crew or WhatsApp numbers.
+  if (input.eventId) {
+    const { data: ev } = await admin.from("events").select("is_review_event").eq("id", input.eventId).maybeSingle();
+    if (ev?.is_review_event) {
+      const { data: users } = await admin.auth.admin.listUsers({ perPage: 1000 });
+      const reviewer = (users?.users ?? []).find((u: { email?: string }) => u.email?.toLowerCase() === REVIEW_ACCOUNT_EMAIL);
+      return { userIds: reviewer ? [reviewer.id] : [], phones: [] };
+    }
+  }
   if (input.onlyUserIds?.length) return { userIds: input.onlyUserIds, phones: [] };
 
   if (input.audience === "all") return { userIds: null, phones: [] };

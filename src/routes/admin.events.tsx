@@ -499,7 +499,7 @@ function AdminEvents() {
               return (
                 <tr key={e.id}>
                   <td className="px-4 py-3">
-                    <p className="font-semibold text-ink">{e.name || "(untitled)"}</p>
+                    <p className="font-semibold text-ink">{e.name || "(untitled)"}{e.isReviewEvent ? <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 align-middle text-[10px] font-bold uppercase tracking-wider text-amber-900">Review event</span> : null}</p>
                     <p className="text-[11px] text-ink-soft">
                       {e.discipline} · {e.distanceKm}km · {e.status} · EN:{" "}
                       {e.externalId ?? "—"}

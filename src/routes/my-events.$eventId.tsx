@@ -1,3 +1,6 @@
+import { useHydratedStore } from "@/lib/use-hydrated-store";
+import { excludeEventFromAnalytics } from "@/lib/analytics";
+import { liveReviewEvent, REVIEW_EVENT_NOTE } from "@/lib/review-event";
 import { SlscKcaCard, isSabrinaLoveEvent } from "@/components/slsc-kca-card";
 import { MyRegistrationCard } from "@/components/my-registration-card";
 import { scrollAppTo } from "@/lib/app-scroll";
@@ -12,7 +15,7 @@ import { isBotMiss } from "@/lib/bot-handoff";
 import { splitFollowUps } from "@/lib/bot-followups";
 import ReactMarkdown from "react-markdown";
 
-import { createFileRoute, Link, notFound, useNavigate, useRouterState } from "@tanstack/react-router";
+import { createFileRoute, Link, notFound, useNavigate, useRouter, useRouterState } from "@tanstack/react-router";
 import { trackAction, trackActionThrottled, useClickTracking, useSectionTracking, useTabTracking, type TabSource } from "@/lib/event-analytics";
 import { useServerFn } from "@tanstack/react-start";
 import { askEventBot } from "@/lib/event-bot.functions";
@@ -138,11 +141,14 @@ export const Route = createFileRoute("/my-events/$eventId")({
   loader: async ({ params }) => {
     const { data, error } = await supabase
       .from("events")
-      .select("id, name, discipline, event_date, location, map_query, distance_km, description, hero_color, logo_url, days, schedule, social_links, status, entry_ninja_url, website_url, collects_tshirt_size, collects_jacket_size")
+      .select("id, name, discipline, event_date, location, map_query, distance_km, description, hero_color, logo_url, days, schedule, social_links, status, entry_ninja_url, website_url, collects_tshirt_size, collects_jacket_size, is_review_event")
       .eq("id", params.eventId)
       .maybeSingle();
+    // Private review events are only readable with the rider's session, which the
+    // server render does not have; the browser re-runs this loader after hydration.
+    if (!data && !error && typeof window === "undefined") return { event: null };
     if (error || !data) throw notFound();
-    return { event: data };
+    return { event: data.is_review_event ? liveReviewEvent(data) : data };
   },
   head: ({ loaderData }) => {
     const ev = loaderData?.event;
@@ -177,7 +183,19 @@ export const Route = createFileRoute("/my-events/$eventId")({
 
 
 function MyEventDetail() {
+  // The tracking panel reads event details from the shared store, so load it on direct links too.
+  useHydratedStore();
   const { event } = Route.useLoaderData();
+  const router = useRouter();
+  useEffect(() => {
+    if (!event) void router.invalidate();
+  }, [event, router]);
+  if (!event) return <div className="p-8 text-center text-sm text-ink-soft">Loading event…</div>;
+  return <MyEventDetailInner event={event} />;
+}
+
+function MyEventDetailInner({ event }: { event: NonNullable<ReturnType<typeof Route.useLoaderData>["event"]> }) {
+  if (event.is_review_event) excludeEventFromAnalytics(event.id);
   const { user } = useSession();
   const { tab: initialTab } = Route.useSearch();
   const navigate = useNavigate({ from: "/my-events/$eventId" });
@@ -354,6 +372,11 @@ function MyEventDetail() {
         })}
       </nav>
 
+      {event.is_review_event ? (
+        <div className="px-5 pt-4">
+          <p role="note" className="rounded-xl bg-amber-100 px-3 py-2 text-xs font-semibold text-amber-900">{REVIEW_EVENT_NOTE}</p>
+        </div>
+      ) : null}
       <div className="px-5 pt-4">
         <RaceWeekBanner
           eventId={event.id}
@@ -970,7 +993,7 @@ function InfoPanel({
         <section data-section="live_tracking">
           <SectionTitle>Live tracking & SOS</SectionTitle>
           <div className="mt-2">
-            <TrackerPanel eventId={eventId} eventName={eventName} />
+            <TrackerPanel eventId={eventId} eventName={eventName} isReviewEvent={Boolean((event as { is_review_event?: boolean } | undefined)?.is_review_event)} />
           </div>
         </section>
       ) : (

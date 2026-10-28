@@ -1,7 +1,8 @@
 // Rider tracker + SOS panel. Rendered inside a My Event page when the event is live.
 // Captures GPS every ~30s while tracking, buffers points locally (offline-safe),
 // and uploads batches once a minute when there's signal.
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { Event } from "@/lib/mock-data";
 import { BatteryMedium, Clock3, Crosshair, LocateFixed, Play, Radio, Siren, Smartphone, Square, WifiOff } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
@@ -22,6 +23,7 @@ import {
   fetchMySos,
   getMyResultStatus,
   sendTrackingSos,
+  recordReviewDemoResult,
   uploadTrackingPoints,
   SOS_REASONS,
   SOS_REASON_LABELS,
@@ -145,9 +147,12 @@ async function batteryPct(): Promise<number | null> {
 export function TrackerPanel({
   eventId,
   eventName,
+  isReviewEvent = false,
 }: {
   eventId: string;
   eventName?: string;
+  /** Set by pages that already know the event is a private app-review event. */
+  isReviewEvent?: boolean;
 }) {
   const [coords, setCoords] = useState<Coords>(null);
   // Tracking survives navigation: the active flag lives in localStorage and the
@@ -168,7 +173,11 @@ export function TrackerPanel({
   const [sosHadLocation, setSosHadLocation] = useState<boolean | null>(null);
   const previousPointRef = useRef<{ lat: number; lng: number } | null>(null);
 
-  const event = useAdminStore((s) => s.events.find((e) => e.id === eventId));
+  const storeEvent = useAdminStore((s) => s.events.find((e) => e.id === eventId));
+  const event = useMemo<Event | undefined>(() => {
+    if (!isReviewEvent) return storeEvent;
+    return storeEvent ? { ...storeEvent, isReviewEvent: true } : ({ id: eventId, name: eventName ?? "", isReviewEvent: true } as unknown as Event);
+  }, [storeEvent, isReviewEvent, eventId, eventName]);
   const { user } = useSession();
   const eventInfoQ = useQuery({
     queryKey: ["event-info", eventId],
@@ -211,6 +220,7 @@ export function TrackerPanel({
 
   const upload = useServerFn(uploadTrackingPoints);
   const sendSos = useServerFn(sendTrackingSos);
+  const recordDemo = useServerFn(recordReviewDemoResult);
 
   const bufferRef = useRef<TrackingPointInput[]>([]);
   const lastPointAtRef = useRef(0);
@@ -320,7 +330,7 @@ export function TrackerPanel({
   }, [flush]);
 
   const checkStartArea = useCallback(() => {
-    if (!startPoint) {
+    if (!startPoint && !event?.isReviewEvent) {
       setStartCheckError("The event start location is not available yet. Please ask race control.");
       return;
     }
@@ -332,7 +342,7 @@ export function TrackerPanel({
     setStartCheckError(null);
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        const metres = haversineMeters(
+        const metres = !startPoint ? 0 : haversineMeters(
           [startPoint.lng, startPoint.lat],
           [pos.coords.longitude, pos.coords.latitude],
         );
@@ -355,7 +365,7 @@ export function TrackerPanel({
       },
       { enableHighAccuracy: true, maximumAge: 15_000, timeout: 15_000 },
     );
-  }, [startPoint]);
+  }, [startPoint, event?.isReviewEvent]);
 
   // Resume an in-progress session after navigating back to this page.
   useEffect(() => {
@@ -417,9 +427,14 @@ export function TrackerPanel({
   }, [tracking, windowState.open, stopTracking, eventId]);
 
   function toggleTracking() {
-    if ((!windowState.open || startDistanceM === null || startDistanceM > START_RADIUS_M) && !tracking) return;
-    if (tracking) stopTracking();
-    else {
+    const nearStart = Boolean(event?.isReviewEvent) || (startDistanceM !== null && startDistanceM <= START_RADIUS_M);
+    if ((!windowState.open || !nearStart) && !tracking) return;
+    if (tracking) {
+      stopTracking();
+      if (event?.isReviewEvent) {
+        void recordDemo({ data: { eventId, startedAt: loadSessionStart(eventId) } }).catch(() => undefined);
+      }
+    } else {
       const now = Date.now();
       setStartedAt(now);
       saveSessionStart(eventId, now);
@@ -561,7 +576,9 @@ export function TrackerPanel({
   const [needsInstall, setNeedsInstall] = useState(false);
   useEffect(() => setNeedsInstall(!isInstalledApp()), []);
 
-  const insideStartArea = startDistanceM !== null && startDistanceM <= START_RADIUS_M;
+  // Review events skip the race-village distance check so reviewers can test from anywhere.
+  const reviewEvent = Boolean(event?.isReviewEvent);
+  const insideStartArea = reviewEvent || (startDistanceM !== null && startDistanceM <= START_RADIUS_M);
   const canStart = windowState.open && insideStartArea;
   const gpsQuality = !coords
     ? "Finding GPS"
@@ -665,7 +682,7 @@ export function TrackerPanel({
         {!tracking ? (
           <div className="mt-3 space-y-2 text-sm">
             <p className="flex items-center justify-between gap-3"><span className="text-ink-soft">Tracking time</span><strong className="text-right text-ink">{windowState.message}</strong></p>
-            <p className="flex items-center justify-between gap-3"><span className="text-ink-soft">Race village</span><strong className={insideStartArea ? "text-emerald-700" : "text-ink"}>{startDistanceM === null ? "Not checked" : insideStartArea ? `Ready · ${Math.round(startDistanceM)}m from start` : `${(startDistanceM / 1000).toFixed(1)} km away`}</strong></p>
+            <p className="flex items-center justify-between gap-3"><span className="text-ink-soft">Race village</span><strong className={insideStartArea ? "text-emerald-700" : "text-ink"}>{reviewEvent ? "Ready · test event, works anywhere" : startDistanceM === null ? "Not checked" : insideStartArea ? `Ready · ${Math.round(startDistanceM)}m from start` : `${(startDistanceM / 1000).toFixed(1)} km away`}</strong></p>
             <p className="flex items-center justify-between gap-3"><span className="text-ink-soft">Battery</span><strong className="text-ink">{battery === null ? "Check on start" : `${battery}%`}</strong></p>
             <Button type="button" variant="outline" className="w-full" onClick={checkStartArea} disabled={checkingStart || eventInfoQ.isLoading}>
               <LocateFixed className="h-4 w-4" />{checkingStart ? "Checking location…" : startDistanceM === null ? "Check my location" : "Retry location"}
@@ -783,7 +800,7 @@ export function TrackerPanel({
             </Button>
             {sosSent ? (
               <p className="mt-2 rounded-lg bg-cherry/10 px-3 py-2 text-center text-xs font-semibold text-cherry-deep">
-                SOS sent {sosHadLocation ? "with your location" : "without a GPS fix"} · Race control notified
+                SOS sent {sosHadLocation ? "with your location" : "without a GPS fix"} · {event?.isReviewEvent ? "Test alert logged, no real crew contacted" : "Race control notified"}
               </p>
             ) : null}
           </>

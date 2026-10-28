@@ -94,10 +94,20 @@ export function flushAnalytics() {
   void flush();
 }
 
+// Private app-review events are never recorded in analytics.
+const excludedEventIds = new Set<string>();
+export function excludeEventFromAnalytics(eventId: string) {
+  excludedEventIds.add(eventId);
+}
+
 export function track({ eventName, path, durationMs, props }: TrackInput) {
   if (typeof window === "undefined") return;
   try {
     const pathname = path ?? window.location.pathname;
+    if (excludedEventIds.size) {
+      const evId = String((props as Record<string, unknown> | undefined)?.event_id ?? "");
+      for (const id of excludedEventIds) if (evId === id || pathname.includes(id)) return;
+    }
     queue.push({
       session_id: getSessionId(),
       event_name: eventName,
