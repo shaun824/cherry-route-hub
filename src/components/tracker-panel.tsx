@@ -417,7 +417,8 @@ export function TrackerPanel({
   }, [tracking, windowState.open, stopTracking, eventId]);
 
   function toggleTracking() {
-    if ((!windowState.open || startDistanceM === null || startDistanceM > START_RADIUS_M) && !tracking) return;
+    const nearStart = Boolean(event?.isReviewEvent) || (startDistanceM !== null && startDistanceM <= START_RADIUS_M);
+    if ((!windowState.open || !nearStart) && !tracking) return;
     if (tracking) stopTracking();
     else {
       const now = Date.now();
@@ -561,7 +562,9 @@ export function TrackerPanel({
   const [needsInstall, setNeedsInstall] = useState(false);
   useEffect(() => setNeedsInstall(!isInstalledApp()), []);
 
-  const insideStartArea = startDistanceM !== null && startDistanceM <= START_RADIUS_M;
+  // Review events skip the race-village distance check so reviewers can test from anywhere.
+  const reviewEvent = Boolean(event?.isReviewEvent);
+  const insideStartArea = reviewEvent || (startDistanceM !== null && startDistanceM <= START_RADIUS_M);
   const canStart = windowState.open && insideStartArea;
   const gpsQuality = !coords
     ? "Finding GPS"
