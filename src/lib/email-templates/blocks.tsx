@@ -37,8 +37,14 @@ function RoutePicture({ day }: { day: { label: string; detail?: string | null; u
   )
 }
 
+/** Per-email style overrides (e.g. the Inner City Enduro brand). */
+export interface BlockTheme {
+  heading?: React.CSSProperties
+  button?: React.CSSProperties
+}
+
 /** Renders one builder block as email-safe markup. Text is never raw HTML. */
-export function EmailBlockView({ block }: { block: EmailBlock }) {
+export function EmailBlockView({ block, theme }: { block: EmailBlock; theme?: BlockTheme }) {
   switch (block.type) {
     case 'heading':
       return (
@@ -49,6 +55,7 @@ export function EmailBlockView({ block }: { block: EmailBlock }) {
             color: brand.ink,
             margin: '18px 0 10px',
             textAlign: block.align ?? 'left',
+            ...theme?.heading,
           }}
         >
           {block.text}
@@ -114,7 +121,7 @@ export function EmailBlockView({ block }: { block: EmailBlock }) {
       if (!block.url.trim()) return null
       return (
         <Section style={{ margin: '4px 0 18px', textAlign: block.align ?? 'center' }}>
-          <Button style={button} href={block.url}>
+          <Button style={{ ...button, ...theme?.button }} href={block.url}>
             {block.label || 'Open'}
           </Button>
         </Section>
