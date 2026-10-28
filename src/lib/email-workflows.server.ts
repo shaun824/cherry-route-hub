@@ -283,7 +283,7 @@ export async function processDueWorkflowEmails(
 
   let campQuery = admin
     .from("event_email_campaigns")
-    .select("id, event_id, name, status, anchor, audience, activated_at, events(id, name, event_date, location, logo_url, cover_url, lifecycle)")
+    .select("id, event_id, name, status, anchor, audience, activated_at, events(id, name, event_date, location, logo_url, cover_url, lifecycle, is_review_event)")
     .eq("status", "active");
   if (opts.campaignId) campQuery = campQuery.eq("id", opts.campaignId);
 
@@ -293,7 +293,7 @@ export async function processDueWorkflowEmails(
   for (const campaign of (campaigns ?? []) as any[]) {
     if (out.sent + out.suppressed >= limit) break;
     const event = campaign.events;
-    if (!event || event.lifecycle === "draft" || event.lifecycle === "archived") continue;
+    if (!event || event.lifecycle === "draft" || event.lifecycle === "archived" || event.is_review_event) continue;
     out.campaigns++;
 
     const { data: stepRows } = await admin

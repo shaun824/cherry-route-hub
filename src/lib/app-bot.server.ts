@@ -161,6 +161,7 @@ export async function buildGlobalBotContext(
   const { data: events } = await admin
     .from("events")
     .select("*")
+    .eq("is_review_event", false)
     .neq("lifecycle", "archived")
     .order("event_date", { ascending: true })
     .limit(60);

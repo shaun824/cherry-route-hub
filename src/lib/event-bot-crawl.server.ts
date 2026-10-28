@@ -333,6 +333,7 @@ export async function refreshAllEventKnowledge(admin: SupabaseClient<any>) {
   const { data: events, error } = await admin
     .from("events")
     .select("id, name, website_url, faq_url")
+    .eq("is_review_event", false)
     .neq("lifecycle", "archived");
   if (error) throw new Error(error.message);
 
