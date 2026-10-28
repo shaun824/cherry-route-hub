@@ -38,6 +38,13 @@ export function useHydratedStore() {
     };
     load();
 
+    // Some events (private review events) are only readable once signed in, so
+    // reload the event list whenever the signed-in account changes.
+    supabase.auth.onAuthStateChange((event) => {
+      if (event !== "SIGNED_IN" && event !== "SIGNED_OUT") return;
+      fetchEvents().then((events) => events && events.length > 0 && setState({ events }));
+    });
+
     const ch = supabase
       .channel("admin-content")
       .on("postgres_changes", { event: "*", schema: "public", table: "events" }, () => {
