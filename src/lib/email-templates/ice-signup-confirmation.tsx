@@ -3,6 +3,7 @@ import * as React from 'react'
 import { Link, Section, Text } from '@react-email/components'
 
 import {
+  ICE,
   ICE_ASSISTANT_URL,
   ICE_HERO_URL,
   ICE_TICKETS_URL,
@@ -56,12 +57,12 @@ const Email = ({ firstName }: Props) => (
     </Section>
 
     <Section style={{ padding: '22px 28px 30px' }}>
-      <Section style={{ borderLeft: `4px solid ${ICE.red ?? '#ed3237'}`, backgroundColor: '#f4f4f6', padding: '16px 18px' }}>
+      <Section style={{ borderLeft: `4px solid ${ICE.red}`, backgroundColor: ICE.offWhite, padding: '16px 18px' }}>
         <Text style={{ ...iceHeading, fontSize: '16px', margin: '0 0 8px' }}>Got a question?</Text>
         <Text style={{ ...iceBody, fontSize: '13px' }}>
           Ask the Rider Hub assistant about the event, the course or the venue, any time of day.
         </Text>
-        <Link href={ICE_ASSISTANT_URL} target="_blank" style={{ color: '#ed3237', fontWeight: 700, fontSize: '13px', textDecoration: 'underline' }}>
+        <Link href={ICE_ASSISTANT_URL} target="_blank" style={{ color: ICE.red, fontWeight: 700, fontSize: '13px', textDecoration: 'underline' }}>
           Ask the Rider Hub
         </Link>
       </Section>
