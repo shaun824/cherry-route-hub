@@ -1,7 +1,8 @@
 // Public event interest sign-up, posted server to server from an event
 // website (e.g. the Inner City Enduro WordPress contact form). Protected by a
-// shared secret header, stores the sign-up, and optionally syncs it to the
-// event's Everlytic interest list. Never sends email.
+// shared secret header, stores the sign-up, optionally syncs it to the
+// event's Everlytic interest list, and sends the sign-up confirmation email.
+// Email and Everlytic failures never block the response.
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 
@@ -137,6 +138,19 @@ export const Route = createFileRoute("/api/public/event-interest")({
           } catch (e) {
             console.error("Event interest list sync deferred", (e as Error).message);
           }
+        }
+
+        // Sign-up confirmation email — fire and forget, idempotent per sign-up
+        // row so repeat sign-ups do not resend it.
+        try {
+          const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
+          const firstName = (parsed.data.name ?? "").trim().split(/\s+/)[0] || null;
+          await sendTemplateEmail("ice-signup-confirmation", email, {
+            idempotencyKey: `event-interest-confirm-${signupId}`,
+            templateData: { firstName },
+          });
+        } catch (e) {
+          console.error("Event interest confirmation deferred", (e as Error).message);
         }
 
         return json({ ok: true, id: signupId });
