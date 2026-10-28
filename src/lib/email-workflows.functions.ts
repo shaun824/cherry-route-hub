@@ -79,6 +79,20 @@ export const listEmailWorkflows = createServerFn({ method: "POST" })
       entrantStats.set(row.event_id, s);
     }
 
+    // Interest sign-ups per event (people who opted in on the event website).
+    const { data: interestRows } = await (supabaseAdmin as any)
+      .from("event_interest_signups")
+      .select("event_id, unsubscribed_at")
+      .in("event_id", safeEventIds)
+      .limit(50000);
+    const interestStats = new Map<string, { total: number; active: number }>();
+    for (const row of (interestRows ?? []) as any[]) {
+      const s = interestStats.get(row.event_id) ?? { total: 0, active: 0 };
+      s.total++;
+      if (!row.unsubscribed_at) s.active++;
+      interestStats.set(row.event_id, s);
+    }
+
     const { data: sentRows } = await (supabaseAdmin as any)
       .from("email_sends")
       .select("template, sent_at")
@@ -101,6 +115,8 @@ export const listEmailWorkflows = createServerFn({ method: "POST" })
         eventDate: e.event_date,
         entrants: entrantStats.get(e.id)?.entrants ?? 0,
         welcomeSent: entrantStats.get(e.id)?.welcomeSent ?? 0,
+        interestSignups: interestStats.get(e.id)?.total ?? 0,
+        interestActive: interestStats.get(e.id)?.active ?? 0,
       })),
       systemEmails: Array.from(byTemplate.entries())
         .map(([template, s]) => ({ template, ...s }))
