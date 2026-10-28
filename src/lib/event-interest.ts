@@ -9,7 +9,7 @@ export interface AudiencePerson {
   email: string;
   name: string | null;
   /** When set, this person came from the interest list and gets an unsubscribe link. */
-  interestId?: string;
+  interestId?: string | null;
 }
 
 /**
