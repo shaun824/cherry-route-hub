@@ -239,6 +239,13 @@
       "when": 1793163530684,
       "tag": "0033_event_interest_signups_and_campaign_audience",
       "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1793195766870,
+      "tag": "0034_self_account_deletion",
+      "breakpoints": true
     }
   ]
 }

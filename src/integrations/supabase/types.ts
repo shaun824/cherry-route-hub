@@ -670,7 +670,7 @@ export type Database = {
           total_cents: number
           tshirt_size: string | null
           updated_at: string
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           category: string
@@ -685,7 +685,7 @@ export type Database = {
           total_cents?: number
           tshirt_size?: string | null
           updated_at?: string
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           category?: string
@@ -700,7 +700,7 @@ export type Database = {
           total_cents?: number
           tshirt_size?: string | null
           updated_at?: string
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -4242,6 +4242,10 @@ export type Database = {
           group_ref: string
           is_me: boolean
         }[]
+      }
+      prepare_account_deletion: {
+        Args: { _user_id: string }
+        Returns: undefined
       }
       promo_engagement_summary: { Args: { _since: string }; Returns: Json }
       verify_cron_key: { Args: { _key: string }; Returns: boolean }

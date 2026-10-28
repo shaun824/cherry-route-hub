@@ -9,6 +9,9 @@
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
 
+- Self-account deletion uses the verified middleware userId, a service-role-only transactional cleanup RPC, then Auth Admin deletion; retain and unlink race records to avoid cascade loss.
+- Native platform detection runs after hydration on /auth so the website keeps Google sign-in and native email authentication remains available.
+
 - Village section names use `VillageZone.showLabel` and default to visible when unset, preserving existing maps.
 - Fullscreen rider/route/live navigation shares a Leaflet camera controller with gesture-paused follow and segment-based multi-section progress; opening scale applies only on entry, resume preserves current zoom, and normal map cameras are restored on exit — avoids resetting user scale during navigation.
 - Map kilometre markers use full-resolution lines grouped by route and carry cumulative distance across sections without bridging gaps; run route-distance-markers tests whenever route or map distance logic changes to prevent reset labels and simplification drift.

@@ -9,6 +9,7 @@ import { NotificationSettings } from "@/components/notification-settings";
 import { RiderEventHistory } from "@/components/rider-event-history";
 import { RewardsSummary } from "@/components/rewards-summary";
 import { StarredRidersCard } from "@/components/starred-riders-card";
+import { DeleteAccount } from "@/components/delete-account";
 
 
 import {
@@ -22,9 +23,13 @@ import {
 export const Route = createFileRoute("/profile")({
   head: () => ({
     meta: [
-      { title: "Profile — Red Cherry Events" },
+      { title: "Profile · Red Cherry Events Rider Hub" },
       { name: "description", content: "Manage your Red Cherry rider profile." },
       { name: "robots", content: "noindex,nofollow" },
+      { property: "og:title", content: "Profile · Red Cherry Events Rider Hub" },
+      { property: "og:description", content: "Manage your rider details, notifications and account." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: Profile,
@@ -376,6 +381,7 @@ function Profile() {
       <div data-section="notifications" className="mt-4">
         <NotificationSettings />
       </div>
+      <DeleteAccount email={user.email} />
 
 
 

@@ -12,6 +12,7 @@ import { linkMyEntry } from "@/lib/roster.functions";
 import { useSession } from "@/lib/auth";
 import { BrandMark } from "@/components/ui-bits";
 import { listKnownAccounts, rememberAccount, type KnownAccount } from "@/lib/known-accounts";
+import { isNativePlatform } from "@/lib/native-platform";
 
 
 
@@ -19,6 +20,7 @@ const searchSchema = z.object({
   next: z.string().optional(),
   email: z.string().optional(),
   add: z.boolean().optional(),
+  deleted: z.boolean().optional(),
 });
 
 
@@ -104,6 +106,10 @@ export const Route = createFileRoute("/auth")({
           "Create a Red Cherry Events Rider Hub account with your ID number to link your Entry Ninja entries, or sign in if you already have one.",
       },
       { name: "robots", content: "noindex,nofollow" },
+      { property: "og:title", content: "Sign in · Red Cherry Events Rider Hub" },
+      { property: "og:description", content: "Sign in or create your Red Cherry Events Rider Hub account." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: AuthPage,
@@ -113,7 +119,7 @@ type Mode = "signin" | "signup" | "reset";
 
 function AuthPage() {
   const { user, loading } = useSession();
-  const { next, email: emailParam, add } = Route.useSearch();
+  const { next, email: emailParam, add, deleted } = Route.useSearch();
   const navigate = useNavigate();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -126,11 +132,13 @@ function AuthPage() {
   const [noAccount, setNoAccount] = useState(false);
   const [hasEntries, setHasEntries] = useState(false);
   const [knownAccounts, setKnownAccounts] = useState<KnownAccount[]>([]);
+  const [native, setNative] = useState(false);
   const checkAccount = useServerFn(checkAccountExists);
   const linkEntry = useServerFn(linkMyEntry);
   const linkedRef = useRef(false);
 
   useEffect(() => {
+    setNative(isNativePlatform());
     const known = listKnownAccounts();
     setKnownAccounts(known);
     // Pre-fill from the device keychain when we don't already have an email.
@@ -324,6 +332,7 @@ function AuthPage() {
           </h1>
         </div>
 
+        {deleted ? <p role="status" className="mt-4 rounded-lg bg-accent p-3 text-sm text-foreground">Your account has been deleted.</p> : null}
         {isSignup ? (
           <div className="mt-4 flex gap-2 rounded-2xl bg-accent/60 p-3 text-left ring-1 ring-border">
             <Info className="mt-0.5 h-4 w-4 shrink-0 text-cherry" />
@@ -369,13 +378,13 @@ function AuthPage() {
               ))}
             </div>
             <p className="mt-2 text-[11px] leading-snug text-ink-soft">
-              Tap an account to fill it in, then enter its password — or use Google below.
+              {native ? "Tap an account to fill it in, then enter its password." : "Tap an account to fill it in, then enter its password, or use Google below."}
             </p>
           </div>
         ) : null}
 
 
-        <button
+        {!native ? <><button
           onClick={handleGoogle}
           disabled={busy}
           className="mt-4 flex w-full items-center justify-center gap-3 rounded-xl border border-border bg-white px-4 py-3 text-sm font-semibold text-ink shadow-sm transition hover:bg-secondary disabled:opacity-60"
@@ -389,6 +398,7 @@ function AuthPage() {
           <span className="text-[10px] font-bold uppercase tracking-widest text-ink-soft">or use email</span>
           <span className="h-px flex-1 bg-border" />
         </div>
+        </> : <div className="h-4" />}
 
         <form onSubmit={handleEmail} className="space-y-3" method="post" action="#">
           {isSignup ? (
