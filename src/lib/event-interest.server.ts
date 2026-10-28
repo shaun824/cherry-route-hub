@@ -26,6 +26,8 @@ export async function syncEventInterestToList(
   }
   let contact = await lookup();
   if (!contact) {
+    // Everlytic requires list_id on create; it pre-adds an "unconfirmed"
+    // membership, which the upgrade logic below flips to "subscribed".
     await everlyticRequest("/api/2.0/contacts", "POST", username, apiKey, {
       contact_email: email,
       list_id: listId,
@@ -40,7 +42,11 @@ export async function syncEventInterestToList(
   } catch (error) {
     if (!(error && typeof error === "object" && "status" in error && error.status === 404)) throw error;
   }
-  if (mayAddMembership(contact, mapping)) {
+  // Upgrade an existing unconfirmed/none membership; never touch opt-outs.
+  const mappingStatus = String((mapping as { data?: { email_status?: string } } | null)?.data?.email_status ?? (mapping as { email_status?: string } | null)?.email_status ?? "").toLowerCase();
+  const mappingActive = ["subscribed", "confirmed"].includes(mappingStatus);
+  const mappingBlocks = ["unsubscribed", "bounced", "complained"].includes(mappingStatus);
+  if (!mappingActive && !mappingBlocks && (mayAddMembership(contact, mapping) || (mapping && ["unconfirmed", "none", ""].includes(mappingStatus)))) {
     await everlyticRequest(`/api/2.0/list_subscriptions/${listId}`, "POST", username, apiKey, {
       contact_id: contact.id,
       email_status: "subscribed",

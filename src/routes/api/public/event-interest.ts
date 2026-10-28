@@ -118,14 +118,21 @@ export const Route = createFileRoute("/api/public/event-interest")({
           signupId = data.id;
         }
 
-        // Optional Everlytic sync — never blocks the response.
-        const listId = (event as { everlytic_interest_list_id?: string | null }).everlytic_interest_list_id;
+        // Optional Everlytic sync — never blocks the response. The event
+        // setting holds one list ID or a comma-separated set (e.g. a dedicated
+        // event list plus the master Motorbikes list).
+        const listIds = String((event as { everlytic_interest_list_id?: string | null }).everlytic_interest_list_id ?? "")
+          .split(/[\s,;]+/)
+          .map((id) => id.trim())
+          .filter((id) => /^\d+$/.test(id));
         const username = process.env["EVERLYTIC_USERNAME"];
         const apiKey = process.env["EVERLYTIC_API_KEY"];
-        if (listId && username && apiKey) {
+        if (listIds.length && username && apiKey) {
           try {
             const { syncEventInterestToList } = await import("@/lib/event-interest.server");
-            await syncEventInterestToList(email, listId, username, apiKey, parsed.data.name ?? null);
+            for (const listId of listIds) {
+              await syncEventInterestToList(email, listId, username, apiKey, parsed.data.name ?? null);
+            }
             await supabaseAdmin.from("event_interest_signups").update({ everlytic_synced: true }).eq("id", signupId);
           } catch (e) {
             console.error("Event interest list sync deferred", (e as Error).message);
