@@ -26,10 +26,11 @@ export async function syncEventInterestToList(
   }
   let contact = await lookup();
   if (!contact) {
-    // Create without list_id: passing it makes Everlytic pre-add an
-    // "unconfirmed" membership that then blocks the explicit subscribe below.
+    // Everlytic requires list_id on create; it pre-adds an "unconfirmed"
+    // membership, which the upgrade logic below flips to "subscribed".
     await everlyticRequest("/api/2.0/contacts", "POST", username, apiKey, {
       contact_email: email,
+      list_id: listId,
       ...(name ? { contact_name: name } : {}),
     });
     contact = await lookup();
