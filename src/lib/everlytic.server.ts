@@ -1,7 +1,9 @@
 // Only the builder-confirmed installation may receive credentials. Never follow redirects.
 export async function everlyticRequest(path: string, method: "GET" | "POST", username: string, apiKey: string, body?: unknown) {
   const response = await fetch(`https://newsletters.computicket-mails.com${path}`, {
-    method, redirect: "error", signal: AbortSignal.timeout(30_000),
+    // Edge runtimes only allow "follow" or "manual"; "manual" keeps the
+    // builder-confirmed host rule by never following redirects.
+    method, redirect: "manual", signal: AbortSignal.timeout(30_000),
     headers: {
       Authorization: `Basic ${btoa(`${username}:${apiKey}`)}`, Accept: "application/json",
       ...(body === undefined ? {} : { "Content-Type": "application/json" }),
