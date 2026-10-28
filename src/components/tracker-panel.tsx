@@ -22,6 +22,7 @@ import {
   fetchMySos,
   getMyResultStatus,
   sendTrackingSos,
+  recordReviewDemoResult,
   uploadTrackingPoints,
   SOS_REASONS,
   SOS_REASON_LABELS,
@@ -211,6 +212,7 @@ export function TrackerPanel({
 
   const upload = useServerFn(uploadTrackingPoints);
   const sendSos = useServerFn(sendTrackingSos);
+  const recordDemo = useServerFn(recordReviewDemoResult);
 
   const bufferRef = useRef<TrackingPointInput[]>([]);
   const lastPointAtRef = useRef(0);
@@ -419,8 +421,12 @@ export function TrackerPanel({
   function toggleTracking() {
     const nearStart = Boolean(event?.isReviewEvent) || (startDistanceM !== null && startDistanceM <= START_RADIUS_M);
     if ((!windowState.open || !nearStart) && !tracking) return;
-    if (tracking) stopTracking();
-    else {
+    if (tracking) {
+      stopTracking();
+      if (event?.isReviewEvent) {
+        void recordDemo({ data: { eventId, startedAt: loadSessionStart(eventId) } }).catch(() => undefined);
+      }
+    } else {
       const now = Date.now();
       setStartedAt(now);
       saveSessionStart(eventId, now);

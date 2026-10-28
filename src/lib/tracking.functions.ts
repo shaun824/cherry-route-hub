@@ -134,6 +134,23 @@ export const SOS_REASON_LABELS: Record<SosReason, string> = {
   "checking-in": "Just checking in",
 };
 
+/** True when the event is a private app-review event (service-role read). */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function isReviewEventId(admin: any, eventId: string): Promise<boolean> {
+  const { data } = await admin.from("events").select("is_review_event").eq("id", eventId).maybeSingle();
+  return data?.is_review_event === true;
+}
+
+/** Review-event test SOS alerts auto-resolve after 10 minutes. */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function autoResolveReviewSos(admin: any) {
+  const cutoff = new Date(Date.now() - 10 * 60_000).toISOString();
+  await table(admin, "tracking_sos")
+    .update({ status: "resolved", resolved_at: new Date().toISOString(), incident_report: "Test alert from the app review event, auto-resolved after 10 minutes." })
+    .eq("status", "test")
+    .lt("created_at", cutoff);
+}
+
 /** Crew + admin user ids — the people who must hear about an SOS. */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function crewUserIds(admin: any, exclude?: string[]): Promise<string[]> {
@@ -158,6 +175,8 @@ export const sendTrackingSos = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data, context }) => {
+    const { supabaseAdmin: adminForCheck } = await import("@/integrations/supabase/client.server");
+    const review = await isReviewEventId(adminForCheck, data.eventId);
     const { data: inserted, error } = await table(context.supabase, "tracking_sos")
       .insert({
         event_id: data.eventId,
@@ -169,11 +188,14 @@ export const sendTrackingSos = createServerFn({ method: "POST" })
         note: data.message ?? null,
         message: data.message ?? null,
         // Column default is "open", which race control never treats as live.
-        status: "active",
+        // Review events log a test alert only (a database trigger enforces this too).
+        status: review ? "test" : "active",
       })
       .select("id")
       .single();
     if (error) throw new Error(error.message);
+    // Never page real crew, medics, marshals or WhatsApp contacts for a review event.
+    if (review) return { ok: true as const, id: inserted?.id ?? null, test: true as const };
 
     // Push to every crew/admin device so an alert never depends on someone
     // having the race-control tab open.
@@ -218,7 +240,7 @@ export const cancelMySos = createServerFn({ method: "POST" })
       .update({ status: "cancelled" })
       .eq("event_id", data.eventId)
       .eq("user_id", context.userId)
-      .in("status", ["active", "acknowledged"]);
+      .in("status", ["active", "acknowledged", "test"]);
     if (error) throw new Error(error.message);
     return { ok: true as const };
   });
@@ -228,11 +250,13 @@ export const fetchMySos = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input) => z.object({ eventId: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    await autoResolveReviewSos(supabaseAdmin);
     const { data: rows } = await table(context.supabase, "tracking_sos")
       .select("id, status, reason, note, created_at, acknowledged_at")
       .eq("event_id", data.eventId)
       .eq("user_id", context.userId)
-      .in("status", ["active", "acknowledged"])
+      .in("status", ["active", "acknowledged", "test"])
       .order("created_at", { ascending: false })
       .limit(1);
     const row = (rows ?? [])[0] ?? null;
@@ -323,6 +347,8 @@ export const fetchLiveTracking = createServerFn({ method: "GET" })
     const since = currentDayStartIso();
     // GPS history isn't publicly readable; read server-side and return only today's latest positions.
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    // Private app-review events never appear on public live maps.
+    if (await isReviewEventId(supabaseAdmin, data.eventId)) return { riders: [], activeSos: 0, since };
     const { data: points, error } = await table(supabaseAdmin, "tracking_points")
       .select("user_id, entrant_id, lat, lng, accuracy_m, battery_pct, recorded_at")
       .eq("event_id", data.eventId)
@@ -477,6 +503,7 @@ export const fetchTrackingEvents = createServerFn({ method: "GET" })
     const { data, error } = await context.supabase
       .from("events")
       .select("id, name, event_date, lifecycle, days")
+      .eq("is_review_event", false)
       .neq("lifecycle", "archived")
       .gte("event_date", new Date(Date.now() - 200 * 24 * 60 * 60 * 1000).toISOString())
       .order("event_date", { ascending: true })
@@ -499,6 +526,11 @@ export const fetchSosAlerts = createServerFn({ method: "GET" })
   .handler(async ({ data, context }) => {
     await assertAdmin(context.supabase, context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    await autoResolveReviewSos(supabaseAdmin);
+    // Test alerts from review events only show when race control opens that review event.
+    const { data: reviewRows } = await supabaseAdmin.from("events").select("id").eq("is_review_event", true);
+    const reviewIds = ((reviewRows ?? []) as { id: string }[]).map((r) => r.id);
+    const viewingReview = Boolean(data.eventId && reviewIds.includes(data.eventId));
     let q = table(supabaseAdmin, "tracking_sos")
       .select(
         "id, event_id, user_id, lat, lng, reason, note, message, status, created_at, acknowledged_at, acknowledged_by, escalated_at, resolved_at, resolved_by, incident_report",
@@ -506,6 +538,10 @@ export const fetchSosAlerts = createServerFn({ method: "GET" })
       .order("created_at", { ascending: false })
       .limit(100);
     if (data.eventId) q = q.eq("event_id", data.eventId);
+    if (!viewingReview) {
+      q = q.neq("status", "test");
+      if (reviewIds.length) q = q.not("event_id", "in", `(${reviewIds.join(",")})`);
+    }
     const { data: rows, error } = await q;
     if (error) throw new Error(error.message);
 
@@ -671,3 +707,56 @@ export const resolveSosAlert = createServerFn({ method: "POST" })
     return { ok: true as const };
   });
 
+
+
+/**
+ * App review event only: after the reviewer stops tracking, record a demo
+ * finish time from their session so the Results tab shows a result.
+ */
+export const recordReviewDemoResult = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z.object({ eventId: z.string().uuid(), startedAt: z.number().nullish() }).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    if (!(await isReviewEventId(supabaseAdmin, data.eventId))) return { ok: false as const };
+    const { data: ee } = await supabaseAdmin
+      .from("event_entrants")
+      .select("id, bib_number, category, batch, entrants!inner(user_id, full_name)")
+      .eq("event_id", data.eventId)
+      .eq("entrants.user_id", context.userId)
+      .maybeSingle();
+    const row = ee as unknown as { id: string; bib_number: string | null; category: string | null; batch: string | null; entrants: { full_name: string } } | null;
+    if (!row) return { ok: false as const };
+    const { data: sets } = await supabaseAdmin
+      .from("event_result_sets")
+      .select("id")
+      .eq("event_id", data.eventId)
+      .order("sort_order", { ascending: true })
+      .limit(1);
+    const setId = (sets ?? [])[0]?.id;
+    if (!setId) return { ok: false as const };
+    const raw = data.startedAt ? Date.now() - data.startedAt : 0;
+    // Demo time: real session length, kept within a believable 20 km range.
+    const ms = Math.min(Math.max(raw, 45 * 60_000), 4 * 60 * 60_000);
+    const s = Math.round(ms / 1000);
+    const timeText = `${Math.floor(s / 3600)}:${String(Math.floor((s % 3600) / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
+    await supabaseAdmin.from("event_results").delete().eq("event_id", data.eventId).eq("event_entrant_id", row.id);
+    const { error } = await supabaseAdmin.from("event_results").insert({
+      result_set_id: setId,
+      event_id: data.eventId,
+      event_entrant_id: row.id,
+      bib_number: row.bib_number,
+      full_name: row.entrants.full_name,
+      category: row.category,
+      batch: row.batch,
+      position: 1,
+      time_text: timeText,
+      time_ms: s * 1000,
+      status: "Finished",
+      extras: { demo: true },
+    });
+    if (error) throw new Error(error.message);
+    return { ok: true as const, timeText };
+  });
