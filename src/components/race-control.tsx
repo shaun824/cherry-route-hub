@@ -431,6 +431,7 @@ export function RaceControlPanel({
               refreshAll();
             }}
           />
+          </div>
         ) : (
           <TriageList riders={riders} alerts={open} onFocus={(u) => { setFocusRider(u); setView("map"); }} />
         )
@@ -538,7 +539,7 @@ function AlertCard({
         ) : null}
       </button>
       {alert.lat != null && alert.lng != null ? (
-        <SosCoords lat={alert.lat} lng={alert.lng} />
+        <SosCoords lat={alert.lat} lng={alert.lng} label={`SOS · ${alert.riderName ?? "Rider"}`} />
       ) : null}
       </div>
       <div className="flex shrink-0 flex-col gap-1.5">

@@ -9,6 +9,7 @@ export function LiveTrackingMap({
   eventId,
   isCrew,
   focusUserId,
+  focusPoint,
   trackRider,
   onOffCourse,
   riderMode,
@@ -22,6 +23,7 @@ export function LiveTrackingMap({
   eventId: string;
   isCrew?: boolean;
   focusUserId?: string | null;
+  focusPoint?: { lat: number; lng: number; label: string; key: number } | null;
   trackRider?: { name: string; bib: string | null } | null;
   onOffCourse?: (map: Record<string, number>) => void;
   riderMode?: boolean;
@@ -40,6 +42,7 @@ export function LiveTrackingMap({
           eventId={eventId}
           isCrew={isCrew}
           focusUserId={focusUserId}
+          focusPoint={focusPoint}
           trackRider={trackRider}
           onOffCourse={onOffCourse}
           riderMode={riderMode}

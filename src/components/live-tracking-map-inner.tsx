@@ -327,6 +327,7 @@ export default function LiveTrackingMapInner({
   eventId,
   isCrew = false,
   focusUserId = null,
+  focusPoint = null,
   trackRider = null,
   onOffCourse,
   riderMode = false,
@@ -342,6 +343,8 @@ export default function LiveTrackingMapInner({
   isCrew?: boolean;
   /** Race control can jump the map to a specific rider. */
   focusUserId?: string | null;
+  /** Race control "Show on map": drop a pin at an SOS position and fly there. */
+  focusPoint?: { lat: number; lng: number; label: string; key: number } | null;
   /** Follow a rider picked by name/race number (e.g. a starred rider from results). */
   trackRider?: { name: string; bib: string | null } | null;
   /** Reports riders sitting far off the course line (metres), for the watch list. */
@@ -497,6 +500,46 @@ export default function LiveTrackingMapInner({
   useEffect(() => {
     if (focusUserId) startFollowing(focusUserId);
   }, [focusUserId, startFollowing]);
+
+  const focusPinRef = useRef<L.Marker | null>(null);
+  useEffect(() => {
+    if (!focusPoint) return;
+    let tries = 0;
+    let timer = 0;
+    const place = () => {
+      const map = mapRef.current;
+      if (!map) {
+        if (tries++ < 40) timer = window.setTimeout(place, 150);
+        return;
+      }
+      startFollowing(null);
+      focusPinRef.current?.remove();
+      const { lat, lng, label } = focusPoint;
+      const wrap = document.createElement("div");
+      const b = document.createElement("b");
+      b.textContent = label;
+      wrap.appendChild(b);
+      const c = document.createElement("p");
+      c.style.margin = "4px 0";
+      c.textContent = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+      wrap.appendChild(c);
+      const a = document.createElement("a");
+      a.href = `https://www.google.com/maps/dir/?api=1&destination=${lat.toFixed(6)},${lng.toFixed(6)}&travelmode=driving&dir_action=navigate`;
+      a.target = "_blank";
+      a.rel = "noreferrer";
+      a.style.fontWeight = "700";
+      a.textContent = "Directions in Google Maps";
+      wrap.appendChild(a);
+      focusPinRef.current = L.marker([lat, lng], { icon: markerIcon("live" as Signal, true), zIndexOffset: 2000 })
+        .addTo(map)
+        .bindPopup(wrap)
+        .openPopup();
+      map.setView([lat, lng], Math.max(map.getZoom(), 16));
+    };
+    place();
+    return () => window.clearTimeout(timer);
+  }, [focusPoint, startFollowing]);
+  useEffect(() => () => { focusPinRef.current?.remove(); }, []);
 
   const { data } = useQuery({
     queryKey: ["live-tracking", eventId],
