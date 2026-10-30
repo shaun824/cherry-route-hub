@@ -178,20 +178,9 @@ export async function sendWorkflowEmail(
     return result.sent ? "sent" : "suppressed";
   }
   if (step.template_name === "ice-race-week") {
-    const result = await sendTemplateEmail("ice-race-week", opts.to, {
-      idempotencyKey: `workflow-${opts.stepId}-ice-race-week-${opts.to}`,
-      templateData: {
-        firstName: firstName(opts.name) === "Test" ? null : firstName(opts.name),
-        unsubscribeUrl: opts.unsubscribeUrl ?? null,
-      },
-    });
-    if (opts.record !== false) {
-      await admin.from("event_email_sends").upsert(
-        { step_id: opts.stepId, campaign_id: opts.campaignId, event_id: event.id, email: opts.to, status: result.sent ? "sent" : "suppressed" },
-        { onConflict: "step_id,email" },
-      );
-    }
-    return result.sent ? "sent" : "suppressed";
+    // This opt-in campaign is promotional and scheduled directly in Everlytic.
+    // Never dispatch a duplicate through the managed app-email service.
+    throw new Error('ICE race-week email is scheduled in Everlytic. Manage it there.');
   }
   const templateName = isSeaToSeaReminder
     ? "sea-to-sea-pre-event-reminder"

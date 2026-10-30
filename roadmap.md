@@ -1,5 +1,12 @@
 # Roadmap
 
+## ICE website near-top sign-up (30 Oct)
+- [x] Add first-name/email opt-in to supplied WordPress page, preserving the design
+- [x] Secure public opt-in flow, store consent and sync Motorbikes list without exposing the shared key
+- [x] Verify immediate confirmation and race-week audience/schedule in Everlytic (924873, list 146523), old Hub campaign paused
+- [x] Test form and deliver updated website code
+- [ ] Install supplied HTML on WordPress, requires Shaun's website editor
+
 ## Native sign-in and self-account deletion
 - [x] Hide Google and divider only on native /auth, retain email sign-in/sign-up
 - [x] Authenticated deletion and race-record retention with sensitive-data cleanup
@@ -18,9 +25,9 @@
 - [ ] Publish
 
 ## Open / waiting
-- Shaun to add EVENT_INTEREST_KEY secret, then wire the WordPress contact form to POST /api/public/event-interest
-- Shaun to confirm ICE parking/gate details and switch the campaign on himself
-- Optional: set an Everlytic interest list ID on the ICE event for auto list sync
+- [x] EVENT_INTEREST_KEY configured and live sign-up verified
+- [x] ICE parking confirmed and race-week campaign scheduled in Everlytic for 24 Nov at 09:00 SAST
+- [x] ICE sign-ups sync to Motorbikes and dedicated ICE race-week list
 - BaseCamp import of GPS pack unverified; single-route app downloads still have old internal names (awaiting Shaun)
 - Everlytic campaign 923637 armed for 1 Dec 2026 09:00 SAST — never resend; replace only
 - Michelle Bester password reset pending her retry
