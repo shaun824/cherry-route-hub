@@ -2,10 +2,26 @@
 // every lap, and each lap adds another jump. Shown briefly on app start and on
 // slow page changes, with a minimum on-screen time so it never flickers.
 import { useEffect, useRef, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+
+const FACTS = [
+  "Training tip: ride easy two days before an event. Fresh legs beat one last hard session.",
+  "Training tip: drink before you're thirsty. Small sips every 15 minutes add up.",
+  "Training tip: drop your tyre pressure a little for loose trails. More grip, fewer slides.",
+  "Fun fact: JBFE Sea to Sea crosses from the Indian Ocean side to the Atlantic over three days.",
+  "Fun fact: the Otto1890 Weekend Warrior village at Lourensford had 300 free Castle Lites handed out in one happy hour.",
+  "Fun fact: Inner City Enduro's Last Man Standing keeps going until only one rider is left.",
+  "Fun fact: the Sabrina Love Summer Challenge mixes beach walks, kayaking, running and riding.",
+  "Race tip: if the arrows and markers disagree with your GPS, follow the arrows. They always win.",
+  "Race tip: pack Duct Tape. It fixes almost anything out on the trail.",
+  "Did you know? You can hold the SOS button in the app to reach race control fast.",
+  "Did you know? Your results, routes and start times all live right here in Rider Hub.",
+];
+
 
 const SHOW_DELAY_MS = 250; // fast page changes never show the loader
 const MIN_VISIBLE_MS = 900; // once shown, stay long enough to look intentional
-const FIRST_LOAD_MS = 1_500; // one full lap on app start
+const FIRST_LOAD_MS = 3_200; // long enough to read the welcome and one fact
 const SAFETY_TIMEOUT_MS = 6_000;
 const FADE_MS = 320;
 const LAP_MS = 1_900;
@@ -75,7 +91,51 @@ export function AppPreloader({ routeLoading }: { routeLoading: boolean }) {
   // Starts visible (server-rendered too) so the first screen never flashes before the loader.
   const [visible, setVisible] = useState(true);
   const [leaving, setLeaving] = useState(false);
+  const [firstName, setFirstName] = useState<string | null>(null);
+  const [facts, setFacts] = useState<string[]>([]);
+  const [factIdx, setFactIdx] = useState(0);
   const shownAt = useRef(0);
+
+  // Welcome name, next event and a shuffled set of facts for this load.
+  useEffect(() => {
+    const shuffled = [...FACTS].sort(() => Math.random() - 0.5);
+    setFacts(shuffled);
+    let alive = true;
+    (async () => {
+      try {
+        const { data } = await supabase.auth.getSession();
+        const user = data.session?.user;
+        if (user) {
+          const meta = user.user_metadata as Record<string, unknown> | undefined;
+          let full = (meta?.full_name || meta?.name || meta?.first_name) as string | undefined;
+          if (!full) {
+            const { data: prof } = await supabase.from("profiles").select("full_name").eq("id", user.id).maybeSingle();
+            full = prof?.full_name ?? undefined;
+          }
+          const first = full?.trim().split(/\s+/)[0];
+          if (alive && first) setFirstName(first);
+        }
+        const today = new Date().toISOString().slice(0, 10);
+        const { data: ev } = await supabase
+          .from("events").select("name,event_date").gte("event_date", today)
+          .order("event_date", { ascending: true }).limit(1).maybeSingle();
+        if (alive && ev?.name) {
+          const days = Math.round((new Date(ev.event_date).getTime() - Date.now()) / 86_400_000);
+          const when = days <= 0 ? "is on now" : days === 1 ? "is tomorrow" : `is ${days} days away`;
+          setFacts((f) => [f[0], `Coming up: ${ev.name} ${when}.`, ...f.slice(1)]);
+        }
+      } catch {
+        /* the loader never depends on the network */
+      }
+    })();
+    return () => { alive = false; };
+  }, []);
+
+  useEffect(() => {
+    if (!visible || facts.length < 2) return;
+    const t = window.setInterval(() => setFactIdx((i) => (i + 1) % facts.length), 2_400);
+    return () => window.clearInterval(t);
+  }, [visible, facts.length]);
   const minUntil = useRef(0);
 
   const show = (minMs: number) => {
@@ -171,6 +231,10 @@ export function AppPreloader({ routeLoading }: { routeLoading: boolean }) {
       aria-label="Preparing your Rider Hub"
     >
       <div className="ww-preloader-track-wrap">
+        <h1 className="ww-welcome">
+          <span className="ww-welcome-small">Welcome to Rider Hub</span>
+          {firstName ? <span className="ww-welcome-name">{firstName}</span> : null}
+        </h1>
         <div className="ww-preloader-meta" aria-hidden="true">
           <span className="ww-preloader-brand">Rider Hub</span>
           <span className="ww-preloader-dot" />
@@ -197,6 +261,9 @@ export function AppPreloader({ routeLoading }: { routeLoading: boolean }) {
             </g>
           </svg>
         </div>
+        {facts.length ? (
+          <p key={factIdx} className="ww-fact">{facts[factIdx]}</p>
+        ) : null}
       </div>
     </div>
   );

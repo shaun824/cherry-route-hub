@@ -471,6 +471,44 @@
   opacity: 0.75;
 }
 
+.ww-welcome {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 18px;
+  font-family: var(--font-display);
+  text-align: center;
+  animation: ww-welcome-in 700ms cubic-bezier(.2,.8,.2,1) both;
+}
+.ww-welcome-small {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-ink);
+  opacity: 0.75;
+}
+.ww-welcome-name {
+  font-size: clamp(34px, 10vw, 54px);
+  font-weight: 800;
+  line-height: 1.05;
+  color: var(--brand-orange);
+  animation: ww-name-pop 800ms 250ms cubic-bezier(.2,1.4,.4,1) both;
+}
+.ww-fact {
+  min-height: 3.2em;
+  max-width: 420px;
+  margin-top: 18px;
+  padding: 0 12px;
+  font-size: 14px;
+  line-height: 1.45;
+  text-align: center;
+  color: var(--color-ink);
+  animation: ww-fact-in 2400ms ease both;
+}
+@keyframes ww-welcome-in { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+@keyframes ww-name-pop { 0% { opacity: 0; transform: scale(.6); } 60% { opacity: 1; transform: scale(1.08); } 100% { transform: scale(1); } }
+@keyframes ww-fact-in { 0% { opacity: 0; transform: translateY(8px); } 12%, 85% { opacity: 1; transform: none; } 100% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .ww-welcome, .ww-welcome-name, .ww-fact { animation: none; } }
+
 .ww-preloader-canvas-box {
   position: relative;
   width: 100%;
