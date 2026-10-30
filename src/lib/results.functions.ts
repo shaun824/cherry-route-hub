@@ -1,3 +1,4 @@
+import { canReadResults } from "@/lib/security-rules";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
@@ -157,6 +158,16 @@ export const getEventResults = createServerFn({ method: "GET" })
       .select("results_url, results_rider_url_template, results_published, myriad_race_id, result_exclusions")
       .eq("id", data.eventId)
       .maybeSingle();
+
+    if (!ev) throw new Error("Event not found");
+    const { getRequestHeader } = await import("@tanstack/react-start/server");
+    const { resolveOptionalUserId } = await import("@/lib/app-bot.server");
+    const caller = await resolveOptionalUserId(getRequestHeader("authorization") ?? null);
+    const { data: role } = caller ? await supabaseAdmin.from("user_roles").select("role").eq("user_id", caller).in("role", ["admin", "crew"]).limit(1) : { data: [] };
+    if (!canReadResults(Boolean(ev.results_published), Boolean(role?.length))) return {
+      results_url: null, results_rider_url_template: null, results_published: false,
+      source: "import", myriad_race_id: null, feed_error: null, sets: [], rows: [],
+    };
 
     const { data: sets } = await supabaseAdmin
       .from("event_result_sets")
