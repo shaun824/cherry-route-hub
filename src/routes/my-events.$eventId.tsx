@@ -3,6 +3,7 @@ import { isFixedIceVenue, ICE_VENUE_URL } from "@/lib/ice-venue";
 import { excludeEventFromAnalytics } from "@/lib/analytics";
 import { liveReviewEvent, REVIEW_EVENT_NOTE } from "@/lib/review-event";
 import { SlscKcaCard, isSabrinaLoveEvent } from "@/components/slsc-kca-card";
+import { activityPackingList } from "@/lib/packing-activity";
 import sabrinaLoveLogo from "@/assets/sabrina-love-logo.png.asset.json";
 import discoveryLogo from "@/assets/discovery-logo.jpg.asset.json";
 import { MyRegistrationCard } from "@/components/my-registration-card";
@@ -1300,13 +1301,13 @@ function PackingPanel({
 
   const items: PackingItem[] = useMemo(() => {
     const base =
-      configured.length > 0
+      activityPackingList(event.name) ?? (configured.length > 0
         ? tubelessSanitise(configured)
         : buildPackingList({
             rideDays,
             nights,
             sport: getEventSport(event.discipline, event.name),
-          });
+          }));
     if (!isFuelCarryEvent(event.name)) return base;
     const fuelItems: PackingItem[] = [
       { key: "fuel-full-tank", label: "Arrive with a full tank", category: "Fuel", essential: true },
@@ -1389,11 +1390,11 @@ function PackingPanel({
             style={{ width: total > 0 ? `${(done / total) * 100}%` : "0%" }}
           />
         </div>
-        {usingDefault ? (
+        {usingDefault && !activityPackingList(event.name) ? (
           <p className="mt-2 text-[11px] text-ink-soft">
             Sized for this event: {rideDays} riding day{rideDays > 1 ? "s" : ""}
             {nights > 0 ? ` and ${nights} night${nights > 1 ? "s" : ""} away` : " (no overnight stay)"}. Everyone
-            runs tubeless — bring a spare tyre, sealant and plugs instead of tubes.
+            runs tubeless, bring a spare tyre, sealant and plugs instead of tubes.
           </p>
         ) : null}
 

@@ -1,6 +1,7 @@
 // Client-safe types + helpers for event info blocks and chat/QA.
 import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
+import { normalisePackingTerms } from "./packing-activity";
 
 export type PackingItem = { key: string; label: string; essential?: boolean; category?: string };
 
@@ -79,7 +80,7 @@ export function buildPackingList(ctx: PackingContext): PackingItem[] {
     { key: "bk-plugs", label: "Tyre plugs and plug tool", category: bikeCat, essential: true },
     { key: "bk-levers", label: "Tyre levers", category: bikeCat },
     { key: "bk-bombs", label: `CO₂ bombs (${times(Math.max(2, rideDays))}) and bomb valve${moto ? "" : " / mini pump"}`, category: bikeCat },
-    { key: "bk-gaffer", label: "Gaffer tape", category: bikeCat },
+    { key: "bk-gaffer", label: "Duct Tape", category: bikeCat },
     { key: "bk-bottles", label: moto ? "Hydration pack (2L)" : "2x 900ml bottles", category: bikeCat, essential: true },
     { key: "bk-lube", label: `Chain lube (${times(Math.max(1, Math.ceil(rideDays / 2)))})`, category: bikeCat },
     { key: "bk-cloth", label: "Cloth", category: bikeCat },
@@ -145,6 +146,7 @@ export function buildPackingList(ctx: PackingContext): PackingItem[] {
  * present instead — all riders run tubeless.
  */
 export function tubelessSanitise(items: PackingItem[]): PackingItem[] {
+  items = normalisePackingTerms(items);
   const cleaned = items.filter((i) => !/\btubes?\b/i.test(i.label));
   if (cleaned.length === items.length) return items;
   const hasTyre = cleaned.some((i) => /spare (foldable )?tyre/i.test(i.label));
@@ -224,7 +226,7 @@ export async function fetchEventInfo(eventId: string): Promise<EventInfoBlock | 
     venue_lng: data.venue_lng as number | null,
     map_embed_url: data.map_embed_url,
     parking_notes: data.parking_notes,
-    packing_list: parseJsonArray<PackingItem>(data.packing_list),
+    packing_list: normalisePackingTerms(parseJsonArray<PackingItem>(data.packing_list)),
     route_description: data.route_description,
     finish_location: (data as any).finish_location ?? null,
     distance_km: data.distance_km as number | null,
@@ -250,7 +252,7 @@ export async function saveEventInfo(info: EventInfoBlock): Promise<boolean> {
     venue_lng: info.venue_lng,
     map_embed_url: info.map_embed_url,
     parking_notes: info.parking_notes,
-    packing_list: toJson(info.packing_list),
+    packing_list: toJson(normalisePackingTerms(info.packing_list)),
     route_description: info.route_description,
     finish_location: info.finish_location,
     distance_km: info.distance_km,

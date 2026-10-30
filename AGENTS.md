@@ -52,3 +52,4 @@
 - Crew roster summaries use authenticated server projections rather than direct sensitive roster reads; general crew never receives medical notes or ID hashes.
 - Crew training prompts omit answer keys; assessment and completion writes are server-verified, while direct client grade writes are denied.
 - Public request quotas are atomic durable counters, independent of caller-provided session identifiers.
+- Activity-specific packing lives in the shared packing-activity helper and overrides cycling defaults for non-cycling Sabrina Love days; checklist keys remain stable when labels change to preserve ticked items.
