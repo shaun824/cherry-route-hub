@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="rider_hub_accent">#F64214</color>
+    <string name="capacitor_background_geolocation_notification_channel_name">Live tracking</string>
+    <string name="capacitor_background_geolocation_notification_color">#F64214</string>
+</resources>
