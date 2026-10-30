@@ -1,5 +1,12 @@
 # Roadmap
 
+## Apple and Google rider sign-up (30 Oct)
+- [x] Enable both managed providers and show both on web and native auth
+- [x] Preserve rider profiles, entry linking and email sign-in
+- [x] Add Apple disconnect after account deletion
+- [ ] Verify sign-in screen and regression tests
+- [ ] Verify provider consent on a real native device, requires TestFlight device
+
 ## ICE website near-top sign-up (30 Oct)
 - [x] Add first-name/email opt-in to supplied WordPress page, preserving the design
 - [x] Secure public opt-in flow, store consent and sync Motorbikes list without exposing the shared key
@@ -8,7 +15,7 @@
 - [ ] Install supplied HTML on WordPress, requires Shaun's website editor
 
 ## Native sign-in and self-account deletion
-- [x] Hide Google and divider only on native /auth, retain email sign-in/sign-up
+- [x] Native email sign-in/sign-up retained; Apple and Google now offered too
 - [x] Authenticated deletion and race-record retention with sensitive-data cleanup
 - [x] Profile danger action, DELETE confirmation and privacy policy
 - [x] Tests and signed-in verification with disposable accounts; entries/results retained, personal GPS/SOS/favourites removed

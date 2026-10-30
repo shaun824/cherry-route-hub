@@ -22,7 +22,11 @@ export function DeleteAccount({ email }: { email?: string }) {
     if (confirmation !== "DELETE" || busy) return;
     setBusy(true);
     setError(null);
+    let disconnectApple = false;
     try {
+      const { data, error: identityError } = await supabase.auth.getUser();
+      if (identityError || !data.user) throw new Error("Please sign in again before deleting your account.");
+      disconnectApple = data.user.identities?.some((identity) => identity.provider === "apple") ?? false;
       await queryClient.cancelQueries();
       await removeAccount({ data: { confirmation: "DELETE" } });
     } catch (err) {
@@ -33,7 +37,7 @@ export function DeleteAccount({ email }: { email?: string }) {
     queryClient.clear();
     if (email) forgetAccount(email);
     await supabase.auth.signOut({ scope: "local" });
-    await navigate({ to: "/auth", search: { deleted: true }, replace: true });
+    await navigate({ to: "/auth", search: { deleted: true, disconnectApple }, replace: true });
   }
 
   return (

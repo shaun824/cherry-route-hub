@@ -11,8 +11,9 @@ import { linkMyEntry } from "@/lib/roster.functions";
 
 import { useSession } from "@/lib/auth";
 import { BrandMark } from "@/components/ui-bits";
+import { Button } from "@/components/ui/button";
 import { listKnownAccounts, rememberAccount, type KnownAccount } from "@/lib/known-accounts";
-import { isNativePlatform } from "@/lib/native-platform";
+import { safeAuthTarget } from "@/lib/auth-navigation";
 
 
 
@@ -21,6 +22,7 @@ const searchSchema = z.object({
   email: z.string().optional(),
   add: z.boolean().optional(),
   deleted: z.boolean().optional(),
+  disconnectApple: z.boolean().optional(),
 });
 
 
@@ -119,7 +121,7 @@ type Mode = "signin" | "signup" | "reset";
 
 function AuthPage() {
   const { user, loading } = useSession();
-  const { next, email: emailParam, add, deleted } = Route.useSearch();
+  const { next, email: emailParam, add, deleted, disconnectApple } = Route.useSearch();
   const navigate = useNavigate();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -132,13 +134,11 @@ function AuthPage() {
   const [noAccount, setNoAccount] = useState(false);
   const [hasEntries, setHasEntries] = useState(false);
   const [knownAccounts, setKnownAccounts] = useState<KnownAccount[]>([]);
-  const [native, setNative] = useState(false);
   const checkAccount = useServerFn(checkAccountExists);
   const linkEntry = useServerFn(linkMyEntry);
   const linkedRef = useRef(false);
 
   useEffect(() => {
-    setNative(isNativePlatform());
     const known = listKnownAccounts();
     setKnownAccounts(known);
     // Pre-fill from the device keychain when we don't already have an email.
@@ -166,7 +166,7 @@ function AuthPage() {
     }
   }
 
-  const target = next && next.startsWith("/") ? next : "/";
+  const target = safeAuthTarget(next);
 
   // Once a session exists, claim any entries matching the ID number they gave
   // at sign-up, then continue into the app.
@@ -197,7 +197,8 @@ function AuthPage() {
       });
   }, [loading, user, target, navigate, linkEntry]);
 
-  async function handleGoogle() {
+  async function handleSocial(provider: "apple" | "google") {
+    if (busy) return;
     setBusy(true);
     setError(null);
     setNotice(null);
@@ -206,19 +207,20 @@ function AuthPage() {
       writePending(PENDING_NAME_KEY, fullName.trim().split(/\s+/).pop() ?? "");
     }
     const hint = (emailParam || email).trim();
-    const result = await lovable.auth.signInWithOAuth("google", {
+    try {
+    const result = await lovable.auth.signInWithOAuth(provider, {
       // Preserve where they were headed (e.g. an OAuth consent screen) across
       // the Google round-trip, otherwise they land back on the home page.
       redirect_uri:
         window.location.origin +
         "/auth" +
         (target !== "/" ? `?next=${encodeURIComponent(target)}` : ""),
-      extraParams: {
+      ...(provider === "google" ? { extraParams: {
         // Always let people pick which Google account to use, so switching
         // or adding a second account never silently reuses the last one.
         prompt: "select_account",
         ...(add || !hint ? {} : { login_hint: hint }),
-      },
+      } } : {}),
     });
 
     if (result.error) {
@@ -227,7 +229,12 @@ function AuthPage() {
       return;
     }
     if (result.redirected) return;
-    navigate({ to: target, replace: true });
+    // The session listener above links entries and chooses the rider or crew home.
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Sign in failed. Please try again.");
+    } finally {
+      setBusy(false);
+    }
   }
 
   async function handleEmail(e: React.FormEvent) {
@@ -333,6 +340,7 @@ function AuthPage() {
         </div>
 
         {deleted ? <p role="status" className="mt-4 rounded-lg bg-accent p-3 text-sm text-foreground">Your account has been deleted.</p> : null}
+        {deleted && disconnectApple ? <AppleDisconnect /> : null}
         {isSignup ? (
           <div className="mt-4 flex gap-2 rounded-2xl bg-accent/60 p-3 text-left ring-1 ring-border">
             <Info className="mt-0.5 h-4 w-4 shrink-0 text-cherry" />
@@ -378,20 +386,32 @@ function AuthPage() {
               ))}
             </div>
             <p className="mt-2 text-[11px] leading-snug text-ink-soft">
-              {native ? "Tap an account to fill it in, then enter its password." : "Tap an account to fill it in, then enter its password, or use Google below."}
+              Tap an account to fill it in, then enter its password, or continue with Apple or Google below.
             </p>
           </div>
         ) : null}
 
 
-        {!native ? <><button
-          onClick={handleGoogle}
+        {mode !== "reset" ? <><Button
+          type="button"
+          variant="outline"
+          onClick={() => void handleSocial("apple")}
           disabled={busy}
-          className="mt-4 flex w-full items-center justify-center gap-3 rounded-xl border border-border bg-white px-4 py-3 text-sm font-semibold text-ink shadow-sm transition hover:bg-secondary disabled:opacity-60"
+          className="mt-4 h-12 w-full gap-3 font-semibold"
+        >
+          <AppleIcon />
+          Continue with Apple
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => void handleSocial("google")}
+          disabled={busy}
+          className="mt-2 h-12 w-full gap-3 font-semibold"
         >
           <GoogleIcon />
           {isSignup ? "Sign up with Google" : "Continue with Google"}
-        </button>
+        </Button>
 
         <div className="my-4 flex items-center gap-3">
           <span className="h-px flex-1 bg-border" />
@@ -681,4 +701,19 @@ function GoogleIcon() {
       <path fill="#EA4335" d="M12 10.2v3.9h5.5c-.25 1.4-1.66 4-5.5 4-3.3 0-6-2.75-6-6.1s2.7-6.1 6-6.1c1.9 0 3.15.8 3.87 1.5l2.65-2.55C16.9 3.15 14.7 2.1 12 2.1 6.9 2.1 2.8 6.2 2.8 11.3s4.1 9.2 9.2 9.2c5.3 0 8.8-3.7 8.8-8.95 0-.6-.05-1.05-.15-1.35H12z"/>
     </svg>
   );
+}
+
+function AppleIcon() {
+  return <svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d="M17.05 12.54c.03 3.11 2.73 4.15 2.76 4.16-.02.07-.43 1.48-1.42 2.94-.86 1.26-1.75 2.52-3.16 2.54-1.38.03-1.83-.82-3.41-.82-1.58 0-2.08.79-3.39.85-1.37.05-2.41-1.37-3.27-2.63-1.77-2.57-3.12-7.26-1.3-10.43.9-1.57 2.5-2.56 4.24-2.59 1.33-.03 2.58.9 3.39.9.81 0 2.33-1.11 3.92-.95.67.03 2.55.27 3.76 2.04-.1.06-2.24 1.3-2.22 3.99ZM14.45 4.8c.72-.87 1.2-2.08 1.07-3.3-1.04.04-2.3.69-3.04 1.56-.67.77-1.26 2-1.1 3.18 1.16.09 2.35-.59 3.07-1.44Z" /></svg>;
+}
+
+function AppleDisconnect() {
+  const [url, setUrl] = useState<string>();
+  useEffect(() => {
+    setUrl(`${window.location.origin}/~oauth/apple/revoke?redirect_uri=${encodeURIComponent(window.location.origin)}`);
+  }, []);
+  return <div className="mt-3 space-y-2 text-sm">
+    <p>Your account is deleted. You can also disconnect Rider Hub from your Apple account.</p>
+    {url ? <Button asChild variant="outline" className="w-full"><a href={url} target="_blank" rel="noopener noreferrer">Disconnect Apple</a></Button> : null}
+  </div>;
 }
