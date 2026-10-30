@@ -8,7 +8,8 @@ import { iceInterestSchema } from '@/lib/ice-interest';
 import hero from '@/assets/ice/signup-hero.asset.json';
 
 export const Route = createFileRoute('/ice-signup')({
-  validateSearch: (search: Record<string, unknown>) => ({ compact: search.compact === '1' }),
+  // The router parses search params, so ?compact=1 can arrive as a number, a string or a boolean.
+  validateSearch: (search: Record<string, unknown>) => ({ compact: String(search.compact ?? '') === '1' }),
   head: () => ({ meta: [
     { title: 'Inner City Enduro 2026 | Email sign-up' },
     { name: 'description', content: 'Get Inner City Enduro 2026 event details and the race-week guide. 28–29 November, Baakens Valley, Gqeberha.' },
