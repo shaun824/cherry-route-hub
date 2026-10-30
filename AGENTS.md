@@ -10,6 +10,7 @@
 <!-- LOVABLE:END -->
 
 - Self-account deletion uses the verified middleware userId, a service-role-only transactional cleanup RPC, then Auth Admin deletion; retain and unlink race records to avoid cascade loss.
+- ICE venue links share the fixed-event venue helper; accommodation rows never imply that this single-venue event moves between hotels.
 - Apple and Google sign-in share the managed OAuth helper on /auth on web and native; return to the public auth page and let the session listener link entries and select the destination. Apple-linked account deletion offers managed authorization revocation after local sign-out.
 
 - Village section names use `VillageZone.showLabel` and default to visible when unset, preserving existing maps.

@@ -18,6 +18,7 @@ import { buildMapLink } from "@/lib/map-embed";
 import { fetchVillageMaps, hasVenueCentre } from "@/lib/village-map";
 import { VillageFocusContext } from "@/lib/village-focus";
 import type { EventDay, ScheduleItem } from "@/lib/mock-data";
+import { isFixedIceVenue, ICE_VENUE_URL } from "@/lib/ice-venue";
 
 /** Where the rider actually sleeps on a night, once their hotel answer is applied. */
 export type NightHotel = { hotel: string; note: string | null; villageVenue: string | null };
@@ -120,6 +121,11 @@ export function AccommodationTimeline({ eventId, days, schedule, variant = "comp
   const hotels = useMemo(() => hotelNightMap(nights, choiceQ.data ?? null), [nights, choiceQ.data]);
 
   if (!enabled) return null;
+  if (isFixedIceVenue(eventId)) return <section className="space-y-2 border-t border-border pt-3">
+    <p className="font-semibold text-ink">The venue stays the same all weekend</p>
+    <p className="text-xs text-ink-soft">Inner City Enduro takes place in Baakens Valley on Lower Valley Road. Sun International is accommodation for the pros only, not the event venue.</p>
+    <a href={ICE_VENUE_URL} target="_blank" rel="noopener noreferrer" className="text-xs font-semibold text-cherry">Open venue and parking pin ↗</a>
+  </section>;
   if (loading) return <div className="h-24 animate-pulse rounded-2xl bg-secondary" />;
   if (nights.length === 0 || !multiVenue) return null;
 
