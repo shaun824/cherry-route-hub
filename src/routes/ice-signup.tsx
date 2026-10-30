@@ -8,6 +8,7 @@ import { iceInterestSchema } from '@/lib/ice-interest';
 import hero from '@/assets/ice/signup-hero.asset.json';
 
 export const Route = createFileRoute('/ice-signup')({
+  validateSearch: (search: Record<string, unknown>) => ({ compact: search.compact === '1' }),
   head: () => ({ meta: [
     { title: 'Inner City Enduro 2026 | Email sign-up' },
     { name: 'description', content: 'Get Inner City Enduro 2026 event details and the race-week guide. 28–29 November, Baakens Valley, Gqeberha.' },
@@ -21,7 +22,7 @@ export const Route = createFileRoute('/ice-signup')({
   component: IceSignup,
 });
 
-function IceSignup() {
+function useSignup() {
   const subscribe = useServerFn(subscribeIceInterest);
   const [state, setState] = useState<'idle' | 'sending' | 'success'>('idle');
   const [error, setError] = useState('');
@@ -36,6 +37,40 @@ function IceSignup() {
     try { await subscribe({ data: parsed.data }); setState('success'); }
     catch { setError('We could not save your sign-up. Please try again.'); setState('idle'); }
   }
+  return { state, error, ready, submit };
+}
+
+function ConsentLine() {
+  return <label className="ice-muted flex items-start gap-3 text-sm leading-relaxed"><input name="consent" type="checkbox" required className="mt-1 size-4 shrink-0" /><span>Send me the ICE event guide, race-week email and Red Cherry Events motorbike news. I can unsubscribe at any time.</span></label>;
+}
+
+function Honeypot() {
+  return <div hidden aria-hidden="true"><input name="website" tabIndex={-1} autoComplete="off" /></div>;
+}
+
+function IceSignup() {
+  const { compact } = Route.useSearch();
+  const { state, error, ready, submit } = useSignup();
+
+  if (compact) {
+    return <main className="ice-signup ice-signup--compact">
+      <div className="mx-auto w-full max-w-3xl px-5 py-6">
+        {state === 'success' ? <p className="ice-inline-ok" role="status"><CheckCircle2 className="size-6 shrink-0" /> You're on the list. Your ICE guide is on its way, and we'll send the race-week email before the event.</p> : <form onSubmit={submit} className="ice-inline-form">
+          <p className="ice-muted text-sm font-bold">28–29 NOVEMBER 2026 · BAAKENS VALLEY · GQEBERHA</p>
+          <h2 className="ice-inline-title">Get the weekend guide</h2>
+          <div className="ice-inline-row">
+            <label className="ice-inline-field"><span className="sr-only">First name</span><input name="firstName" required maxLength={80} autoComplete="given-name" placeholder="First name" aria-label="First name" /></label>
+            <label className="ice-inline-field ice-inline-field--wide"><span className="sr-only">Email address</span><input name="email" type="email" required maxLength={254} autoComplete="email" placeholder="Email address" aria-label="Email address" /></label>
+            <Button className="ice-submit ice-inline-submit h-12 px-6 text-base font-bold" type="submit" disabled={!ready || state === 'sending'}>{state === 'sending' ? 'Signing you up…' : 'Sign me up'}<ArrowRight /></Button>
+          </div>
+          <Honeypot />
+          {error ? <p role="alert" className="ice-error pl-3 text-sm">{error}</p> : null}
+          <ConsentLine />
+        </form>}
+      </div>
+    </main>;
+  }
+
   return <main className="ice-signup h-dvh overflow-y-auto">
     <img src={hero.url} alt="Inner City Enduro riders on the start line" className="ice-signup-photo" />
     <div className="mx-auto max-w-xl px-6 py-7">
@@ -45,8 +80,8 @@ function IceSignup() {
         <h2 className="text-3xl">Get the weekend guide</h2>
         <div><label htmlFor="ice-firstName" className="mb-2 block text-sm font-bold">First name</label><input id="ice-firstName" name="firstName" required maxLength={80} autoComplete="given-name" className="h-12 w-full rounded border px-3" /></div>
         <div><label htmlFor="ice-email" className="mb-2 block text-sm font-bold">Email address</label><input id="ice-email" name="email" type="email" required maxLength={254} autoComplete="email" className="h-12 w-full rounded border px-3" /></div>
-        <div hidden aria-hidden="true"><input name="website" tabIndex={-1} autoComplete="off" /></div>
-        <label className="ice-muted flex items-start gap-3 text-sm leading-relaxed"><input name="consent" type="checkbox" required className="mt-1 size-4 shrink-0" /><span>Send me the ICE event guide, race-week email and Red Cherry Events motorbike news. I can unsubscribe at any time.</span></label>
+        <Honeypot />
+        <ConsentLine />
         {error ? <p role="alert" className="ice-error pl-3 text-sm">{error}</p> : null}
         <Button className="ice-submit h-12 w-full text-base font-bold" type="submit" disabled={!ready || state === 'sending'}>{state === 'sending' ? 'Signing you up…' : 'Sign me up'}<ArrowRight /></Button>
       </form>}
