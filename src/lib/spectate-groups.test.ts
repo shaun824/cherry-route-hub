@@ -47,13 +47,13 @@ describe("spectate groups", () => {
     assert.deepEqual(upcoming, []);
   });
 
-  it("keeps a multi-day event in Just past until its last day is over", () => {
+  it("keeps a multi-day event in the list until its last day is over", () => {
     const running = event({
       name: "Three day ride",
-      date: "2026-10-28T05:00:00Z",
+      date: "2026-10-29T05:00:00Z",
       days: [
-        { id: "d1", date: "2026-10-28", routes: [] },
-        { id: "d2", date: "2026-10-29", routes: [] },
+        { id: "d1", date: "2026-10-29", routes: [] },
+        { id: "d2", date: "2026-10-30", routes: [] },
         { id: "d3", date: "2026-10-31", routes: [] },
       ] as Event["days"],
     });
@@ -61,6 +61,7 @@ describe("spectate groups", () => {
     assert.deepEqual(past, []);
     assert.deepEqual(upcoming.map((e) => e.name), ["Three day ride"]);
   });
+
 
   it("hides drafts and private review events from both lists", () => {
     const { past, upcoming } = groupSpectateEvents(
