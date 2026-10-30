@@ -27,7 +27,7 @@ export function sustainedMovement(samples: SpeedSample[], now = Date.now()): boo
   const from = now - AUTO_START_SUSTAIN_MS;
   const recent = samples.filter((s) => s.at >= from - 30_000).sort((a, b) => a.at - b.at);
   if (recent.length < 3) return false;
-  if (recent[0].at > from + 30_000 - 30_000 && recent[0].at > from) return false;
+  if (recent[0].at > from + 15_000) return false;
   for (let i = 0; i < recent.length; i++) {
     const s = recent[i];
     if (s.kph == null || s.kph <= AUTO_START_KPH) return false;
