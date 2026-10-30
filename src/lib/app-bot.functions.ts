@@ -38,6 +38,8 @@ export const askAppBot = createServerFn({ method: "POST" })
 
     const authHeader = getRequestHeader("authorization") ?? null;
     const userId = await resolveOptionalUserId(authHeader);
+    const { enforceRequestQuota } = await import("@/lib/request-quota.server");
+    await enforceRequestQuota("assistant", 30, userId);
 
     // Internal-tier knowledge is only ever exposed to verified staff
     // (admins and crew) — never to riders or signed-out visitors.

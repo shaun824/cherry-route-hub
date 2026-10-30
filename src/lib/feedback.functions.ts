@@ -15,6 +15,8 @@ const feedbackSchema = z.object({
 export const submitFeedback = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => feedbackSchema.parse(data))
   .handler(async ({ data }) => {
+    const { enforceRequestQuota } = await import("@/lib/request-quota.server");
+    await enforceRequestQuota("feedback", 5);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     const email = data.email ? data.email.toLowerCase() : null;
