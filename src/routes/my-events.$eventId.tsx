@@ -3,6 +3,8 @@ import { isFixedIceVenue, ICE_VENUE_URL } from "@/lib/ice-venue";
 import { excludeEventFromAnalytics } from "@/lib/analytics";
 import { liveReviewEvent, REVIEW_EVENT_NOTE } from "@/lib/review-event";
 import { SlscKcaCard, isSabrinaLoveEvent } from "@/components/slsc-kca-card";
+import sabrinaLoveLogo from "@/assets/sabrina-love-logo.png.asset.json";
+import discoveryLogo from "@/assets/discovery-logo.jpg.asset.json";
 import { MyRegistrationCard } from "@/components/my-registration-card";
 import { scrollAppTo } from "@/lib/app-scroll";
 import { eventApparel, missingSizes, type ApparelFlags } from "@/lib/apparel";
@@ -455,6 +457,14 @@ function MyEventDetailInner({ event }: { event: NonNullable<ReturnType<typeof Ro
         {tab === "sponsors" && <EventSponsorsPanel eventId={event.id} eventName={event.name} />}
 
       </div>
+      {isSabrinaLoveEvent(event.name) && (
+        <section aria-label="Sabrina Love event partners" className="mx-5 mt-6 border-t border-border py-6">
+          <div className="flex flex-wrap items-center justify-center gap-8">
+            <img src={sabrinaLoveLogo.url} alt="Sabrina Love Foundation" className="h-24 w-36 object-contain" loading="lazy" />
+            <img src={discoveryLogo.url} alt="Discovery" className="h-20 w-44 object-contain" loading="lazy" />
+          </div>
+        </section>
+      )}
     </div>
     </VillageFocusContext.Provider>
   );
