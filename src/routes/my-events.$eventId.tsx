@@ -1390,11 +1390,11 @@ function PackingPanel({
             style={{ width: total > 0 ? `${(done / total) * 100}%` : "0%" }}
           />
         </div>
-        {usingDefault ? (
+        {usingDefault && !activityPackingList(event.name) ? (
           <p className="mt-2 text-[11px] text-ink-soft">
             Sized for this event: {rideDays} riding day{rideDays > 1 ? "s" : ""}
             {nights > 0 ? ` and ${nights} night${nights > 1 ? "s" : ""} away` : " (no overnight stay)"}. Everyone
-            runs tubeless — bring a spare tyre, sealant and plugs instead of tubes.
+            runs tubeless, bring a spare tyre, sealant and plugs instead of tubes.
           </p>
         ) : null}
 
