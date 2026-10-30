@@ -251,7 +251,7 @@ function SpectatorCard({ event }: { event: Event }) {
   );
 
   return (
-    <li>
+    <li className="min-w-0">
       {unlocked ? (
         <Link to="/spectate/$eventId" params={{ eventId: event.id }} className="block">
           {inner}
@@ -263,6 +263,7 @@ function SpectatorCard({ event }: { event: Event }) {
       )}
     </li>
   );
+
 }
 
 function useCountdown(iso: string): string | null {
