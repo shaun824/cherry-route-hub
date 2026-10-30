@@ -20,6 +20,17 @@
 .ww-signup-submit { background: var(--ww-red); color: var(--ww-white); }
 .ww-signup-submit:hover { background: var(--ww-forest); }
 
+.ice-signup { --ice-red: #ed3237; --ice-black: #000000; --ice-white: #ffffff; --ice-navy: #1e1954; --ice-muted: #d9d7de; background: var(--ice-black); color: var(--ice-white); }
+.ice-signup h1, .ice-signup h2 { font-family: 'Arial Narrow', Impact, sans-serif; text-transform: uppercase; letter-spacing: 0; }
+.ice-signup-photo { height: 180px; object-fit: cover; width: 100%; }
+.ice-signup form { border-top: 4px solid var(--ice-red); }
+.ice-signup input:not([type=checkbox]) { background: var(--ice-white); color: var(--ice-black); border-color: var(--ice-muted); }
+.ice-signup input[type=checkbox] { accent-color: var(--ice-red); }
+.ice-signup .ice-submit { background: var(--ice-red); color: var(--ice-white); border-radius: 4px; }
+.ice-signup .ice-submit:hover { background: var(--ice-navy); }
+.ice-signup .ice-muted { color: var(--ice-muted); }
+.ice-signup .ice-error { color: var(--ice-white); border-left: 3px solid var(--ice-red); }
+
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);

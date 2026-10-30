@@ -178,13 +178,9 @@ export async function sendWorkflowEmail(
     return result.sent ? "sent" : "suppressed";
   }
   if (step.template_name === "ice-race-week") {
-    const result = await sendTemplateEmail("ice-race-week", opts.to, {
-      idempotencyKey: `workflow-${opts.stepId}-ice-race-week-${opts.to}`,
-      templateData: {
-        firstName: firstName(opts.name) === "Test" ? null : firstName(opts.name),
-        unsubscribeUrl: opts.unsubscribeUrl ?? null,
-      },
-    });
+    const { sendIceRaceWeek } = await import('./ice-email.server');
+    if (!opts.unsubscribeUrl && opts.record !== false) throw new Error('ICE interest emails require an unsubscribe link');
+    const result = await sendIceRaceWeek(opts.to, firstName(opts.name) === 'Test' ? null : firstName(opts.name), opts.unsubscribeUrl || `${APP_URL}/policy`);
     if (opts.record !== false) {
       await admin.from("event_email_sends").upsert(
         { step_id: opts.stepId, campaign_id: opts.campaignId, event_id: event.id, email: opts.to, status: result.sent ? "sent" : "suppressed" },
