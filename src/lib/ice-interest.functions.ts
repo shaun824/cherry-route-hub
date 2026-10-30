@@ -5,6 +5,10 @@ export const subscribeIceInterest = createServerFn({ method: 'POST' })
   .inputValidator((input: unknown) => iceInterestSchema.parse(input))
   .handler(async ({ data }) => {
     if (data.website) return { ok: true };
+    const { getRequest } = await import('@tanstack/react-start/server');
+    const request = getRequest();
+    const origin = request.headers.get('origin');
+    if (origin && origin !== new URL(request.url).origin) throw new Error('Please use the ICE sign-up page.');
     const key = process.env['EVENT_INTEREST_KEY'];
     if (!key) throw new Error('Sign-ups are temporarily unavailable. Please try again later.');
     const { handleEventInterest } = await import('./event-interest-handler.server');

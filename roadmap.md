@@ -25,9 +25,9 @@
 - [ ] Publish
 
 ## Open / waiting
-- Shaun to add EVENT_INTEREST_KEY secret, then wire the WordPress contact form to POST /api/public/event-interest
-- Shaun to confirm ICE parking/gate details and switch the campaign on himself
-- Optional: set an Everlytic interest list ID on the ICE event for auto list sync
+- [x] EVENT_INTEREST_KEY configured and live sign-up verified
+- [x] ICE parking confirmed and race-week campaign scheduled in Everlytic for 24 Nov at 09:00 SAST
+- [x] ICE sign-ups sync to Motorbikes and dedicated ICE race-week list
 - BaseCamp import of GPS pack unverified; single-route app downloads still have old internal names (awaiting Shaun)
 - Everlytic campaign 923637 armed for 1 Dec 2026 09:00 SAST — never resend; replace only
 - Michelle Bester password reset pending her retry
