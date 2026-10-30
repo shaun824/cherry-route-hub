@@ -3,6 +3,7 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import { Home, Ticket, Binoculars, User, LogIn, X, HardHat, BedDouble, Smartphone, ClipboardList, GraduationCap, RefreshCw } from "lucide-react";
 import { lazy, Suspense, useEffect, useState, type ReactNode } from "react";
 import { useSession } from "@/lib/auth";
+import { markRiderAppVisit } from "@/lib/crew-landing";
 import { usePullToRefresh } from "@/lib/use-pull-to-refresh";
 import { useEntryAutoSync } from "@/lib/use-entry-autosync";
 import { Footer } from "@/components/footer";
@@ -27,7 +28,7 @@ const crewTabs = [
   { to: "/crew/run-sheet", label: "Run sheet", fullLabel: "Run sheet", icon: ClipboardList, match: (p: string) => p.startsWith("/crew/run-sheet") || p.startsWith("/crew/department") },
   { to: "/crew/learn", label: "Learn", fullLabel: "Crew training", icon: GraduationCap, match: (p: string) => p.startsWith("/crew/learn") },
   { to: "/crew/rooming", label: "Rooming", fullLabel: "Rooming finder", icon: BedDouble, match: (p: string) => p.startsWith("/crew/rooming") },
-  { to: "/", label: "Rider app", fullLabel: "Rider app", icon: Smartphone, match: () => false },
+  { to: "/", label: "Rider app", fullLabel: "Rider app", icon: Smartphone, match: () => false, onSelect: markRiderAppVisit },
 ] as const;
 
 
@@ -56,6 +57,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     fullLabel?: string;
     icon: typeof Home;
     match: (p: string) => boolean;
+    onSelect?: () => void;
   }[] = inCrewArea ? crewTabs : riderTabs;
   const showSignInCta = !loading && !user && !dismissed && !inCrewArea;
 
@@ -115,6 +117,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 <li key={t.to}>
                   <Link
                     to={t.to as never}
+                    onClick={t.onSelect}
                     className={
                       active
                         ? "flex items-center gap-3 rounded-xl bg-cherry px-3 py-2.5 text-sm font-bold text-white"
@@ -209,6 +212,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               <li key={t.to}>
                 <Link
                   to={t.to as never}
+                  onClick={t.onSelect}
                   preload="intent"
                   aria-label={t.fullLabel ?? t.label}
                   className="flex select-none flex-col items-center gap-1 py-3 text-[11px] font-medium"

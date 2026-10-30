@@ -1,5 +1,5 @@
 import { useIsAdmin } from "@/lib/auth";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useState, useMemo, useEffect } from "react";
 import { todaysTips, bellLastSeen, markBellSeen, bellSeenToday, type DiscoverTip } from "@/lib/feature-discovery";
@@ -14,6 +14,7 @@ import {
   Facebook,
   Globe,
   Handshake,
+  HardHat,
   Image as ImageIcon,
   Instagram,
   LogIn,
@@ -48,6 +49,7 @@ import { fetchMyEvents, type MyEventRow } from "@/lib/my-events";
 import type { QuickLinkIcon } from "@/lib/settings";
 import { brandHeader } from "@/lib/event-brand";
 import { curatedSponsorsFor } from "@/lib/event-sponsor-overrides";
+import { clearRiderAppVisit, crewLandingTarget, wantsRiderApp } from "@/lib/crew-landing";
 
 
 
@@ -81,6 +83,31 @@ export const Route = createFileRoute("/")({
 function Home() {
   useHydratedStore();
   const { user, loading } = useSession();
+  const navigate = useNavigate();
+  const [viewerIsCrew, setViewerIsCrew] = useState(false);
+
+  // Crew and admin accounts open on the crew centre. Tapping "Rider app" in the
+  // crew bar sets a session flag so the rider home stays reachable for the rest
+  // of that browser session; the next app open lands on the crew centre again.
+  useEffect(() => {
+    if (loading || !user) {
+      setViewerIsCrew(false);
+      return;
+    }
+    let cancelled = false;
+    void (async () => {
+      const { checkIsCrew } = await import("@/lib/crew");
+      const isCrew = await checkIsCrew(supabase as never);
+      if (cancelled) return;
+      setViewerIsCrew(isCrew);
+      if (crewLandingTarget({ signedIn: true, isCrew, wantsRiderApp: wantsRiderApp() }) === "/crew") {
+        void navigate({ to: "/crew", replace: true });
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [loading, user, navigate]);
   const feed = useAdminStore((s) => s.feed);
   const { isAdmin: viewerIsAdmin } = useIsAdmin();
   // Review events reach the store only for their entrants (and admins, who see them in the admin portal instead).
@@ -247,6 +274,18 @@ function Home() {
               <h1 className="font-display text-2xl font-bold leading-tight">{branding.tagline}</h1>
             </div>
           </div>
+          <div className="flex items-center gap-2">
+            {viewerIsCrew ? (
+              <Link
+                to="/crew"
+                onClick={clearRiderAppVisit}
+                aria-label="Crew tools"
+                title="Crew tools"
+                className="grid h-10 w-10 place-items-center rounded-full bg-white/15 backdrop-blur"
+              >
+                <HardHat className="h-5 w-5" />
+              </Link>
+            ) : null}
           <button
             aria-label="Notifications"
             onClick={() => {
@@ -260,6 +299,7 @@ function Home() {
               <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-white ring-2 ring-cherry" />
             ) : null}
           </button>
+          </div>
         </div>
 
         <div className="relative mt-7 flex items-end justify-between gap-3">

@@ -53,3 +53,9 @@
 - BaseCamp import of GPS pack unverified; single-route app downloads still have old internal names (awaiting Shaun)
 - Everlytic campaign 923637 armed for 1 Dec 2026 09:00 SAST — never resend; replace only
 - Michelle Bester password reset pending her retry
+
+## Crew always land on the crew centre (Shaun, 30 Oct)
+- [x] crewLandingTarget: crew/admin open the app on /crew even when already signed in
+- [x] Crew bar "Rider app" opts out for that browser session; rider home helmet button returns to crew
+- [x] Tests (82 pass) + live flow check + build OK
+- [x] Published
