@@ -59,3 +59,11 @@
 - [x] Crew bar "Rider app" opts out for that browser session; rider home helmet button returns to crew
 - [x] Tests (82 pass) + live flow check + build OK
 - [x] Published
+
+## Track riders: Just past + Coming up with type icons (Shaun, 30 Oct)
+- [x] "Just past" bar listing every finished event this year, most recent first
+- [x] "Coming up" bar listing live and future events, soonest first
+- [x] Round event-type icon on the right of every row and card
+- [x] 7 new tests (89 pass), phone overflow fixed, phone + desktop checks, build OK
+- [ ] Publish
+
