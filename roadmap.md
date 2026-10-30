@@ -1,9 +1,10 @@
 # Roadmap
 
 ## ICE venue correction (30 Oct)
-- [ ] Replace rider venue and parking directions with Shaun's fixed pin
-- [ ] Keep Sun International as pro accommodation only; verify venue stays fixed
-- [ ] Check relevant app links and publish
+- [x] Replace rider venue and parking directions with Shaun's fixed pin
+- [x] Keep Sun International as pro accommodation only; verify venue stays fixed
+- [x] Check app links signed in as Shaun and venue tests
+- [ ] Publish venue corrections
 
 ## Apple and Google rider sign-up (30 Oct)
 - [x] Enable both managed providers and show both on web and native auth
