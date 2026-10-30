@@ -15,6 +15,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as FeedRouteImport } from './routes/feed'
 import { Route as GalleryRouteImport } from './routes/gallery'
 import { Route as IceSignupRouteImport } from './routes/ice-signup'
+import { Route as IceSignupInlineRouteImport } from './routes/ice-signup-inline'
 import { Route as McpRouteImport } from './routes/mcp'
 import { Route as MyEventsRouteImport } from './routes/my-events'
 import { Route as Otto1890SignupRouteImport } from './routes/otto1890-signup'
@@ -159,6 +160,11 @@ const GalleryRoute = GalleryRouteImport.update({
 const IceSignupRoute = IceSignupRouteImport.update({
   id: '/ice-signup',
   path: '/ice-signup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const IceSignupInlineRoute = IceSignupInlineRouteImport.update({
+  id: '/ice-signup-inline',
+  path: '/ice-signup-inline',
   getParentRoute: () => rootRouteImport,
 } as any)
 const McpRoute = McpRouteImport.update({
@@ -768,6 +774,7 @@ export interface FileRoutesByFullPath {
   '/feed': typeof FeedRoute
   '/gallery': typeof GalleryRoute
   '/ice-signup': typeof IceSignupRoute
+  '/ice-signup-inline': typeof IceSignupInlineRoute
   '/mcp': typeof McpRoute
   '/my-events': typeof MyEventsRouteWithChildren
   '/otto1890-signup': typeof Otto1890SignupRoute
@@ -890,6 +897,7 @@ export interface FileRoutesByTo {
   '/feed': typeof FeedRoute
   '/gallery': typeof GalleryRoute
   '/ice-signup': typeof IceSignupRoute
+  '/ice-signup-inline': typeof IceSignupInlineRoute
   '/mcp': typeof McpRoute
   '/otto1890-signup': typeof Otto1890SignupRoute
   '/policy': typeof PolicyRoute
@@ -1011,6 +1019,7 @@ export interface FileRoutesById {
   '/feed': typeof FeedRoute
   '/gallery': typeof GalleryRoute
   '/ice-signup': typeof IceSignupRoute
+  '/ice-signup-inline': typeof IceSignupInlineRoute
   '/mcp': typeof McpRoute
   '/my-events': typeof MyEventsRouteWithChildren
   '/otto1890-signup': typeof Otto1890SignupRoute
@@ -1136,6 +1145,7 @@ export interface FileRouteTypes {
     | '/feed'
     | '/gallery'
     | '/ice-signup'
+    | '/ice-signup-inline'
     | '/mcp'
     | '/my-events'
     | '/otto1890-signup'
@@ -1258,6 +1268,7 @@ export interface FileRouteTypes {
     | '/feed'
     | '/gallery'
     | '/ice-signup'
+    | '/ice-signup-inline'
     | '/mcp'
     | '/otto1890-signup'
     | '/policy'
@@ -1378,6 +1389,7 @@ export interface FileRouteTypes {
     | '/feed'
     | '/gallery'
     | '/ice-signup'
+    | '/ice-signup-inline'
     | '/mcp'
     | '/my-events'
     | '/otto1890-signup'
@@ -1502,6 +1514,7 @@ export interface RootRouteChildren {
   FeedRoute: typeof FeedRoute
   GalleryRoute: typeof GalleryRoute
   IceSignupRoute: typeof IceSignupRoute
+  IceSignupInlineRoute: typeof IceSignupInlineRoute
   McpRoute: typeof McpRoute
   MyEventsRoute: typeof MyEventsRouteWithChildren
   Otto1890SignupRoute: typeof Otto1890SignupRoute
@@ -1614,6 +1627,13 @@ declare module '@tanstack/react-router' {
       path: '/ice-signup'
       fullPath: '/ice-signup'
       preLoaderRoute: typeof IceSignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ice-signup-inline': {
+      id: '/ice-signup-inline'
+      path: '/ice-signup-inline'
+      fullPath: '/ice-signup-inline'
+      preLoaderRoute: typeof IceSignupInlineRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/mcp': {
@@ -2573,6 +2593,7 @@ const rootRouteChildren: RootRouteChildren = {
   FeedRoute: FeedRoute,
   GalleryRoute: GalleryRoute,
   IceSignupRoute: IceSignupRoute,
+  IceSignupInlineRoute: IceSignupInlineRoute,
   McpRoute: McpRoute,
   MyEventsRoute: MyEventsRouteWithChildren,
   Otto1890SignupRoute: Otto1890SignupRoute,

@@ -31,6 +31,26 @@
 .ice-signup .ice-muted { color: var(--ice-muted); }
 .ice-signup .ice-error { color: var(--ice-white); border-left: 3px solid var(--ice-red); }
 
+/* Inline ICE sign-up: sits inside an iframe on innercityenduro.co.za, so it has
+   to fit one short band with no scrolling and no click to reveal it. */
+.ice-signup--compact { min-height: 100vh; display: flex; align-items: center; }
+.ice-signup .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+.ice-signup .ice-inline-title { font-size: clamp(24px, 3.4vw, 34px); margin: 2px 0 14px; }
+.ice-signup .ice-inline-row { display: flex; flex-wrap: wrap; gap: 10px; }
+.ice-signup .ice-inline-field { flex: 1 1 150px; min-width: 0; }
+.ice-signup .ice-inline-field--wide { flex: 2 1 220px; }
+.ice-signup .ice-inline-row input { width: 100%; height: 48px; border: 1px solid var(--ice-muted); border-radius: 4px; background: var(--ice-white); color: var(--ice-black); padding: 0 12px; font-size: 16px; }
+.ice-signup .ice-inline-row input::placeholder { color: #6b6875; }
+.ice-signup .ice-inline-submit { flex: 0 0 auto; }
+.ice-signup .ice-inline-form .ice-muted { margin-bottom: 6px; }
+.ice-signup .ice-inline-form > label { margin-top: 12px; }
+.ice-signup .ice-inline-ok { display: flex; align-items: center; gap: 10px; font-size: 18px; font-weight: 600; }
+@media (max-width: 640px) {
+  .ice-signup .ice-inline-row { flex-direction: column; }
+  .ice-signup .ice-inline-field { flex: 0 0 auto; width: 100%; }
+  .ice-signup .ice-inline-submit { width: 100%; }
+}
+
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
