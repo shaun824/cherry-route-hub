@@ -121,7 +121,7 @@ To test against the Lovable preview instead of the live site: `RIDER_HUB_URL=htt
 
 ## Known limits / next steps
 
-- **App icon:** "Rider Hub" mark (logo panels + wordmark), sources in `assets/`. To change it, replace `assets/icon-only.png` (1024×1024, no transparency) and `icon-foreground.png` (artwork inside the centre ~62%), then run `npm run cap:assets`.
+- **App icon:** Red Cherry Events logo (high-res `Red-Cherry-Events-blk.png` from redcherryevents.co.za) centred on white, sources in `assets/`. To change it, replace `assets/icon-only.png` (1024×1024, no transparency) and `icon-foreground.png` (artwork inside the centre ~62%), then run `npm run cap:assets`.
 - **Android 5-minute throttle:** after about 5 minutes in the background, Android may slow WebView network calls. Points still queue on the phone (the tracker's offline queue) and upload in batches. If live positions lag on long rides, the next step is uploading points via `CapacitorHttp`.
 - `@capacitor-community/background-geolocation` officially lists Capacitor 7. It builds fine with Capacitor 8 on Android (verified). Test iOS on a real device before release.
 - **Offline:** the app needs signal the first time it opens. On Android the site's service worker and offline packs work as they do on the web. On iOS, service workers in an app's web view only work with *App-Bound Domains*, which is off for now because it would block the sign-in redirects. Enable it (`WKAppBoundDomains` in Info.plist + `limitsNavigationsToAppBoundDomains: true`) once the sign-in domains are confirmed, then test offline packs on an iPhone.
