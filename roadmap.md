@@ -4,7 +4,7 @@
 - [x] Enable both managed providers and show both on web and native auth
 - [x] Preserve rider profiles, entry linking and email sign-in
 - [x] Add Apple disconnect after account deletion
-- [ ] Verify sign-in screen and regression tests
+- [x] Verify sign-in, recovery and Apple disconnect screens; eight regression tests passed
 - [ ] Verify provider consent on a real native device, requires TestFlight device
 
 ## ICE website near-top sign-up (30 Oct)
