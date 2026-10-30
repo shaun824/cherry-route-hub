@@ -1,3 +1,4 @@
+import { privatePeerStats } from "@/lib/security-rules";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
@@ -61,6 +62,8 @@ export const getStravaPanel = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }): Promise<StravaPanelPayload> => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { requireEventParticipant } = await import("@/lib/security-access.server");
+    await requireEventParticipant(context.supabase, context.userId, data.eventId);
     const configured = !!process.env["STRAVA_CLIENT_ID"] && !!process.env["STRAVA_CLIENT_SECRET"];
 
     const { data: ee } = await supabaseAdmin
@@ -69,6 +72,7 @@ export const getStravaPanel = createServerFn({ method: "POST" })
       .eq("id", data.entrantId)
       .eq("event_id", data.eventId)
       .maybeSingle();
+    if (!ee) throw new Error("Entry not found");
     const riderUser = ((ee as any)?.entrants?.user_id as string | null) ?? null;
     const isOwn = !!riderUser && riderUser === context.userId;
 
@@ -77,7 +81,7 @@ export const getStravaPanel = createServerFn({ method: "POST" })
       .select("user_id")
       .eq("user_id", context.userId)
       .maybeSingle();
-    const { data: riderConn } = riderUser
+    const { data: riderConn } = isOwn && riderUser
       ? await supabaseAdmin.from("strava_connections").select("user_id").eq("user_id", riderUser).maybeSingle()
       : { data: null };
 
@@ -105,7 +109,8 @@ export const getStravaPanel = createServerFn({ method: "POST" })
       // Ignore tiny or one-off segments only if the rider isn't on them.
       const mineS = isOwn && riderUser ? s.users.get(riderUser)?.s ?? null : null;
       const peers = [...s.users.values()].filter((u) => !cat || u.cat === cat).map((u) => u.s);
-      if (mineS == null && s.users.size < 2) continue;
+      if (mineS == null && peers.length < 3) continue;
+      const stats = privatePeerStats(cat ? peers : []);
       segments.push({
         segment_id: id,
         name: s.name,
@@ -113,8 +118,8 @@ export const getStravaPanel = createServerFn({ method: "POST" })
         average_grade: s.g != null ? Number(s.g) : null,
         riders: s.users.size,
         my_s: mineS,
-        best_s: peers.length ? Math.min(...peers) : null,
-        avg_s: peers.length ? Math.round(peers.reduce((a, b) => a + b, 0) / peers.length) : null,
+        best_s: stats.best,
+        avg_s: stats.average,
       });
     }
     segments.sort((a, b) => (b.distance_m ?? 0) - (a.distance_m ?? 0));

@@ -1,3 +1,4 @@
+import { csvCell as secureCsvCell } from "@/lib/security-rules";
 import {
   entryNinjaRegistrationId,
   entryNinjaRegistrationUrl,
@@ -57,7 +58,7 @@ function ReportPage() {
     "https://entries.redcherryevents.co.za/";
 
   function downloadCsv() {
-    const esc = (v: unknown) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+    const esc = secureCsvCell;
     const lines: string[][] = [
       ["Field", "Value"],
       ["Event", event.name],

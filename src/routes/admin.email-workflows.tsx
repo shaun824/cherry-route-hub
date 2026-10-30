@@ -1,3 +1,4 @@
+import { csvCell as secureCsvCell } from "@/lib/security-rules";
 import { scrollAppTo } from "@/lib/app-scroll";
 import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
