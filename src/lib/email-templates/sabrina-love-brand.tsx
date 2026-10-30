@@ -68,7 +68,7 @@ export function KcaMatchBand({ entryUrl }: { entryUrl: string }) {
       </Column>
     </Row>
     <Text style={{ ...sl.text, fontSize: '13px', color: sl.muted, margin: '12px 0 0' }}>
-      Find out more about <Link href="https://keep.org" style={{ color: sl.pink }}>Keep a Child Alive</Link>.
+      Find out more about <Link href="https://www.keepachildalive.org" style={{ color: sl.pink }}>Keep a Child Alive</Link>.
     </Text>
   </Section>
 }
