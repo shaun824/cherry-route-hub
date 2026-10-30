@@ -16,8 +16,7 @@ const inviteSchema = z.object({
 const SITE_URL = "https://riderapp.redcherryevents.co.za";
 
 function tempPassword() {
-  const n = Math.floor(1000 + Math.random() * 9000);
-  return `Cherry-${n}${Math.random().toString(36).slice(2, 6)}`;
+  return Array.from(crypto.getRandomValues(new Uint8Array(24)), (b) => b.toString(16).padStart(2, "0")).join("");
 }
 
 export const inviteCrewMember = createServerFn({ method: "POST" })
@@ -50,12 +49,14 @@ export const inviteCrewMember = createServerFn({ method: "POST" })
         user_metadata: { full_name: data.full_name || email.split("@")[0], must_set_password: true },
       });
       if (error) throw new Error(error.message);
-      user = created.user!;
+      user = created.user;
     }
 
+    if (!user) throw new Error("Account creation failed");
+    const userId = user.id;
     const roles = data.admin ? ["crew", "admin"] : ["crew"];
     await supabaseAdmin.from("user_roles").upsert(
-      roles.map((role) => ({ user_id: user!.id, role: role as "crew" | "admin" })),
+      roles.map((role) => ({ user_id: userId, role: role as "crew" | "admin" })),
       { onConflict: "user_id,role", ignoreDuplicates: true },
     );
 

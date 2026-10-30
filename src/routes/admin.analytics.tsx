@@ -1,3 +1,4 @@
+import { csvCell as secureCsvCell } from "@/lib/security-rules";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -6,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { InsideEventsAnalytics } from "@/components/inside-events-analytics";
 
 export const Route = createFileRoute("/admin/analytics")({
+  head: () => ({ meta: [ { title: 'Event analytics · Red Cherry Events' }, { name: "description", content: 'Private rider hub engagement and supplier analytics for Red Cherry Events.' }, { property: "og:title", content: 'Event analytics · Red Cherry Events' }, { property: "og:description", content: 'Private rider hub engagement and supplier analytics for Red Cherry Events.' }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }, { name: "robots", content: "noindex,nofollow" } ] }),
   component: AdminAnalytics,
 });
 
@@ -134,7 +136,7 @@ function AdminAnalytics() {
   }));
 
   function downloadPromoCsv() {
-    const escape = (value: unknown) => `"${String(value ?? "").replaceAll('"', '""')}"`;
+    const escape = secureCsvCell;
     const rows = [
       ["Supplier", "Offer", "Code", "Impressions", "Unique viewers", "Offer opens", "Code copies", "Supplier-site clicks", "Click-through rate", "Estimated value per click (ZAR)", "Estimated return (ZAR)"],
       ...promoRows.map((p) => [p.brand, p.title, p.code ?? "", p.impressions, p.unique_viewers, p.opens, p.copies, p.outbound_clicks, `${p.click_through_pct}%`, (p.estimated_click_value_cents / 100).toFixed(2), (p.estimated_return_cents / 100).toFixed(2)]),

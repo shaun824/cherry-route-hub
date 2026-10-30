@@ -1,3 +1,12 @@
+# Rider data security (30 Oct)
+- [x] Fix exposed scheduled tasks and preserve authorized schedules
+- [x] Protect GPS, SOS, private rider records and shared crew access
+- [x] Fix account, export, training, click tracking and actionable findings
+- [x] Verify denied public hooks, signed-in crew/race control, 72 tests and quick rescan
+- [ ] Confirm sharing on a real device, browser clipboard readback was unavailable
+- [x] Request publication of verified security fixes
+- [x] Review deep scan of the pre-change snapshot and address new findings
+
 # Roadmap
 
 ## ICE venue correction (30 Oct)

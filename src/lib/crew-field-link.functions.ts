@@ -5,10 +5,11 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { checkIsAdmin } from "@/lib/is-admin";
+import { validFieldExpiry } from "@/lib/security-rules";
 import { inRaceLocationWindow } from "@/lib/location-window";
 
-// Field links never expire (signature still checked) so shared race-control links keep working.
-const LINK_DAYS = 3650;
+// Field links expire daily and are invalidated when the issuer loses crew access.
+const LINK_DAYS = 1;
 
 function b64url(buf: ArrayBuffer) {
   let s = "";
@@ -41,11 +42,22 @@ function safeEqual(a: string, b: string) {
   return d === 0;
 }
 
+async function tokenHash(token: string) {
+  const hash = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(token));
+  return Array.from(new Uint8Array(hash), (b) => b.toString(16).padStart(2, "0")).join("");
+}
+
 async function verify(eventId: string, token: string) {
   const [expStr, sig] = token.split(".");
   const exp = Number(expStr);
-  if (!exp || !sig) return false;
-  return safeEqual(sig, await sign(eventId, exp));
+  if (!sig || !validFieldExpiry(exp) || !safeEqual(sig, await sign(eventId, exp))) return false;
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data: link } = await supabaseAdmin.from("crew_field_access").select("issued_by, expires_at, revoked_at").eq("token_hash", await tokenHash(token)).eq("event_id", eventId).maybeSingle();
+  if (!link || link.revoked_at || new Date(link.expires_at).getTime() <= Date.now()) return false;
+  const { data: roles } = await supabaseAdmin.from("user_roles").select("role").eq("user_id", link.issued_by).in("role", ["crew", "admin"]);
+  if (!roles?.length) return false;
+  const { data: event } = await supabaseAdmin.from("events").select("is_review_event").eq("id", eventId).maybeSingle();
+  return !!event && !event.is_review_event;
 }
 
 /** Crew/admin: mint a shareable no-sign-in race-control link for an event. */
@@ -60,8 +72,14 @@ export const createCrewFieldLink = createServerFn({ method: "POST" })
       .in("role", ["admin", "crew"])
       .limit(1);
     if (!roles || roles.length === 0) throw new Error("Forbidden");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: event } = await context.supabase.from("events").select("is_review_event").eq("id", data.eventId).maybeSingle();
+    if (!event || event.is_review_event) throw new Error("Event not found");
     const exp = Date.now() + LINK_DAYS * 24 * 60 * 60 * 1000;
-    return { token: `${exp}.${await sign(data.eventId, exp)}`, expiresAt: new Date(exp).toISOString() };
+    const token = `${exp}.${await sign(data.eventId, exp)}`;
+    const { error } = await supabaseAdmin.from("crew_field_access").insert({ token_hash: await tokenHash(token), event_id: data.eventId, issued_by: context.userId, expires_at: new Date(exp).toISOString() });
+    if (error) throw new Error("Could not create field link");
+    return { token, expiresAt: new Date(exp).toISOString() };
   });
 
 /** Public: check a field link and return the event name + open SOS alerts. */
@@ -80,7 +98,7 @@ export const fetchFieldLinkSos = createServerFn({ method: "GET" })
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: rows } = await (supabaseAdmin as any)
       .from("tracking_sos")
-      .select("id, user_id, lat, lng, reason, note, status, created_at")
+      .select("id, user_id, lat, lng, status, created_at")
       .eq("event_id", data.eventId)
       .in("status", ["active", "acknowledged"])
       .order("created_at", { ascending: false })
@@ -112,8 +130,8 @@ export const fetchFieldLinkSos = createServerFn({ method: "GET" })
         riderName: names.get(s.user_id) ?? null,
         lat: s.lat,
         lng: s.lng,
-        reason: s.reason,
-        note: s.note,
+        reason: null,
+        note: null,
         status: s.status,
         createdAt: s.created_at,
       })),
@@ -263,43 +281,11 @@ export const fetchStartsCrew = createServerFn({ method: "POST" })
 
 /** Public (field-link checked): every SOS for the event, including cleared ones, newest first. */
 export const fetchFieldLinkSosLog = createServerFn({ method: "GET" })
-  .inputValidator((input) =>
-    z.object({ eventId: z.string().uuid(), token: z.string().min(10).max(80) }).parse(input),
-  )
-  .handler(async ({ data }) => {
-    if (!(await verify(data.eventId, data.token))) return { ok: false as const, log: [] };
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: rows } = await (supabaseAdmin as any)
-      .from("tracking_sos")
-      .select("id, user_id, lat, lng, reason, note, status, created_at, resolved_at")
-      .eq("event_id", data.eventId)
-      .order("created_at", { ascending: false })
-      .limit(200);
-    const sos = (rows ?? []) as {
-      id: string; user_id: string; lat: number | null; lng: number | null; reason: string | null;
-      note: string | null; status: string; created_at: string; resolved_at: string | null;
-    }[];
-    const names = new Map<string, string>();
-    if (sos.length) {
-      const { data: ents } = await supabaseAdmin
-        .from("entrants")
-        .select("user_id, full_name")
-        .in("user_id", [...new Set(sos.map((s) => s.user_id))]);
-      for (const e of ents ?? []) if (e.user_id) names.set(e.user_id, e.full_name);
-    }
-    return {
-      ok: true as const,
-      log: sos.map((s) => ({
-        id: s.id,
-        riderName: names.get(s.user_id) ?? null,
-        lat: s.lat,
-        lng: s.lng,
-        reason: s.reason,
-        note: s.note,
-        status: s.status,
-        createdAt: s.created_at,
-        resolvedAt: s.resolved_at,
-      })),
-    };
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({ eventId: z.string().uuid(), token: z.string().min(10).max(80) }).parse(input))
+  .handler(async ({ data, context }) => {
+    if (!(await isCrewUser(context.supabase, context.userId))) throw new Error("Forbidden");
+    const { fetchSosAlerts } = await import("@/lib/tracking.functions");
+    const { alerts } = await fetchSosAlerts({ data: { eventId: data.eventId } });
+    return { ok: true as const, log: alerts.map((s) => ({ id: s.id, riderName: s.riderName, lat: s.lat, lng: s.lng, reason: s.reason, note: s.note, status: s.status, createdAt: s.createdAt, resolvedAt: s.resolvedAt })) };
   });

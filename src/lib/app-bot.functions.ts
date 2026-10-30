@@ -38,6 +38,8 @@ export const askAppBot = createServerFn({ method: "POST" })
 
     const authHeader = getRequestHeader("authorization") ?? null;
     const userId = await resolveOptionalUserId(authHeader);
+    const { enforceRequestQuota } = await import("@/lib/request-quota.server");
+    await enforceRequestQuota("assistant", 30, userId);
 
     // Internal-tier knowledge is only ever exposed to verified staff
     // (admins and crew) — never to riders or signed-out visitors.
@@ -143,7 +145,7 @@ ${isStaff ? CONFIDENTIALITY_RULES_STAFF : CONFIDENTIALITY_RULES}`;
     {
       try {
         const eventId = focusEventIds[0] ?? null;
-        const guestKey = userId ? null : (data.sessionId?.trim() || "anon");
+        const guestKey = userId ? null : crypto.randomUUID();
 
         let query = supabaseAdmin.from("admin_qa_threads").select("id").limit(1);
         query = eventId ? query.eq("event_id", eventId) : query.is("event_id", null);

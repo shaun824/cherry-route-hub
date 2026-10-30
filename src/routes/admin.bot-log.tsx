@@ -1,3 +1,4 @@
+import { csvCell as secureCsvCell } from "@/lib/security-rules";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -9,6 +10,7 @@ import { isBotMiss } from "@/lib/bot-handoff";
 import { upsertLearnedFaq } from "@/lib/faq-learned.functions";
 
 export const Route = createFileRoute("/admin/bot-log")({
+  head: () => ({ meta: [ { title: 'Assistant questions · Red Cherry Events' }, { name: "description", content: 'Review rider questions and approved Red Cherry Events answers.' }, { property: "og:title", content: 'Assistant questions · Red Cherry Events' }, { property: "og:description", content: 'Review rider questions and approved Red Cherry Events answers.' }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }, { name: "robots", content: "noindex,nofollow" } ] }),
   component: BotLogPage,
 });
 
@@ -112,7 +114,7 @@ function BotLogPage() {
   const missedCount = (logQ.data ?? []).filter((p) => p.missed).length;
 
   const exportCsv = () => {
-    const esc = (v: string) => `"${v.replace(/"/g, '""')}"`;
+    const esc = secureCsvCell;
     const csv = [
       ["Asked at", "Event", "Rider", "Channel", "Question", "Bot answer", "Needed admin"].join(","),
       ...rows.map((p) =>
@@ -120,7 +122,7 @@ function BotLogPage() {
           new Date(p.askedAt).toISOString(),
           esc(p.event),
           esc(p.rider),
-          p.channel,
+          esc(p.channel),
           esc(p.question),
           esc(p.answer),
           p.missed ? "yes" : "no",

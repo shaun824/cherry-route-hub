@@ -10,25 +10,7 @@ const schema = z.object({ email: z.string().email().max(200) });
  */
 export const checkAccountExists = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => schema.parse(input))
-  .handler(async ({ data }) => {
-    const email = data.email.trim().toLowerCase();
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-
-    const { data: profile } = await supabaseAdmin
-      .from("profiles")
-      .select("id")
-      .ilike("email", email)
-      .limit(1)
-      .maybeSingle();
-
-    if (profile) return { hasAccount: true, hasEntries: false };
-
-    const { data: entrant } = await supabaseAdmin
-      .from("entrants")
-      .select("id")
-      .ilike("email", email)
-      .limit(1)
-      .maybeSingle();
-
-    return { hasAccount: false, hasEntries: Boolean(entrant) };
+  .handler(async () => {
+    // Uniform response prevents disclosure of accounts and registration emails.
+    return { hasAccount: true, hasEntries: false };
   });

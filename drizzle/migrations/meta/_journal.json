@@ -260,6 +260,48 @@
       "when": 1793341253517,
       "tag": "0036_create_native_push_tokens",
       "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1793343763731,
+      "tag": "0037_rider_privacy_access_hardening",
+      "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1793343864801,
+      "tag": "0038_secure_cron_transport_and_event_reads",
+      "breakpoints": true
+    },
+    {
+      "idx": 39,
+      "version": "7",
+      "when": 1793343876229,
+      "tag": "0039_revocable_crew_field_access",
+      "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "7",
+      "when": 1793343958795,
+      "tag": "0040_atomic_public_request_limits",
+      "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "7",
+      "when": 1793344117699,
+      "tag": "0041_server_verified_crew_training",
+      "breakpoints": true
+    },
+    {
+      "idx": 42,
+      "version": "7",
+      "when": 1793344377997,
+      "tag": "0042_clear_medical_notes_on_account_unlink",
+      "breakpoints": true
     }
   ]
 }

@@ -415,7 +415,7 @@ export async function processDueWorkflowEmails(
           }
 
           out.failed++;
-          if (out.errors.length < 10) out.errors.push(`${rider.email}: ${(err as Error).message}`);
+          if (out.errors.length < 10) out.errors.push("A delivery failed. See the private campaign send log.");
           await admin.from("event_email_sends").upsert(
             {
               step_id: step.id,

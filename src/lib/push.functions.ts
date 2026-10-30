@@ -20,7 +20,7 @@ export const savePushSubscription = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => subscriptionSchema.parse(data))
   .handler(async ({ data, context }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { error } = await supabaseAdmin.from("push_subscriptions").upsert(
+    const { error } = await context.supabase.from("push_subscriptions").upsert(
       {
         user_id: context.userId,
         endpoint: data.endpoint,

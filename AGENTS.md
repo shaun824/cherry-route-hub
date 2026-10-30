@@ -45,3 +45,10 @@
 - Event interest sign-ups (website opt-ins like innercityenduro.co.za) live in event_interest_signups behind the secret-gated POST /api/public/event-interest (X-Event-Interest-Key); campaigns pick audience entrants/interest/both on event_email_campaigns.audience, interest recipients always get an unsubscribe link, and steps can carry a fixed send_at plus a per-event email theme (e.g. "ice") instead of delay-based scheduling.
 - The public ICE sign-up form uses a fixed-event server function and the shared event-interest handler, never browser-visible secrets; ICE race-week marketing is scheduled directly in Everlytic with a dedicated interest list and the old Hub workflow paused to prevent duplicate sends, while opt-in confirmations remain action-triggered app emails.
 - Private app-review events (`events.is_review_event`) are hidden by RLS plus explicit service-role filters (`src/lib/review-event.server.ts`), rewritten client-side to always be live (`src/lib/review-event.ts`), skip location checks, and log SOS as auto-resolving `test` alerts that never notify crew; keeps store reviewers' tests away from real riders and race control.
+
+- GPS/SOS privileged reads enforce event and staff access; public spectator feeds omit safety details and account IDs, and identity RPCs are server-only.
+- Crew field links are persisted, expire within 24 hours and recheck the issuer role; historical SOS requires staff sign-in.
+- Untrusted spreadsheet exports use the shared security-rules CSV encoder, and scheduled hooks accept only the private cron key.
+- Crew roster summaries use authenticated server projections rather than direct sensitive roster reads; general crew never receives medical notes or ID hashes.
+- Crew training prompts omit answer keys; assessment and completion writes are server-verified, while direct client grade writes are denied.
+- Public request quotas are atomic durable counters, independent of caller-provided session identifiers.

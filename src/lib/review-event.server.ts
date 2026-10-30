@@ -11,7 +11,8 @@ export async function reviewEventIds(admin: AnyClient): Promise<string[]> {
 /** Throws "Event not found" unless the event is normal or the caller is an admin/entrant of the review event. */
 export async function assertEventVisible(admin: AnyClient, eventId: string, userId?: string | null) {
   const { data: ev } = await admin.from("events").select("is_review_event").eq("id", eventId).maybeSingle();
-  if (!ev?.is_review_event) return;
+  if (!ev) throw new Error("Event not found");
+  if (!ev.is_review_event) return;
   if (userId) {
     const { data: role } = await admin.from("user_roles").select("role").eq("user_id", userId).eq("role", "admin").limit(1);
     if (role?.length) return;

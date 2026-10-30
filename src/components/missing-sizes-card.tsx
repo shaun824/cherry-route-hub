@@ -1,3 +1,4 @@
+import { csvCell as secureCsvCell } from "@/lib/security-rules";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ChevronDown, Download, Shirt } from "lucide-react";
@@ -59,7 +60,7 @@ export function MissingSizesCard({ eventId, eventName }: { eventId: string; even
   if (flags.jacket) parts.push(`${j} with no jacket size`);
 
   function exportCsv() {
-    const esc = (v: unknown) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+    const esc = secureCsvCell;
     const head = ["Name", "Bib", "Registration ref", "Email", "Phone", "Missing"];
     const lines = rows.map((r) =>
       [r.name, r.bib, r.ref, r.email, r.phone, [r.noTshirt && "T-shirt", r.noJacket && "Jacket"].filter(Boolean).join(" + ")]

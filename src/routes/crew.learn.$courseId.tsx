@@ -207,17 +207,27 @@ function ModuleQuiz({ module: m, userId }: { module: LearnModule; userId?: strin
   const qc = useQueryClient();
   const [answers, setAnswers] = useState<Record<string, number>>({});
   const [submitted, setSubmitted] = useState(false);
+  const [grade, setGrade] = useState<Awaited<ReturnType<typeof recordQuizAttempt>> | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const total = m.questions.length;
-  const score = m.questions.filter((q) => answers[q.id] === q.correct_index).length;
-  const passed = quizPassed(score, total);
+  const score = grade?.score ?? 0;
+  const passed = grade?.passed ?? false;
 
   async function submit() {
-    setSubmitted(true);
-    if (userId) {
-      await recordQuizAttempt(userId, m.id, score, total, passed);
+    if (!userId || busy) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const result = await recordQuizAttempt(userId, m.id, answers);
+      setGrade(result);
+      setSubmitted(true);
+      await markCourseComplete(userId, m.course_id);
       qc.invalidateQueries({ queryKey: ["learn-attempts", userId] });
-    }
+      qc.invalidateQueries({ queryKey: ["learn-completions", userId] });
+    } catch { setError("Could not save your answers. Please try again."); }
+    finally { setBusy(false); }
   }
 
   function chooseAnswer(questionId: string, optionIndex: number) {
@@ -240,8 +250,8 @@ function ModuleQuiz({ module: m, userId }: { module: LearnModule; userId?: strin
             <div className="mt-2 space-y-1.5">
               {q.options.map((opt, oi) => {
                 const chosen = answers[q.id] === oi;
-                const right = submitted && oi === q.correct_index;
-                const wrong = submitted && chosen && oi !== q.correct_index;
+                const right = submitted && oi === (grade?.questions.find((answer) => answer.id === q.id)?.correct_index ?? -1);
+                const wrong = submitted && chosen && oi !== (grade?.questions.find((answer) => answer.id === q.id)?.correct_index ?? -1);
                 return (
                   <label
                     key={oi}
@@ -270,11 +280,12 @@ function ModuleQuiz({ module: m, userId }: { module: LearnModule; userId?: strin
                 );
               })}
             </div>
-            {submitted && q.explanation ? <p className="mt-1.5 text-xs text-ink-soft">{q.explanation}</p> : null}
+            {submitted && grade?.questions.find((answer) => answer.id === q.id)?.explanation ? <p className="mt-1.5 text-xs text-ink-soft">{grade.questions.find((answer) => answer.id === q.id)?.explanation}</p> : null}
           </li>
         ))}
       </ol>
 
+      {error ? <p role="alert" className="mt-3 text-sm text-destructive">{error}</p> : null}
       {submitted ? (
         <div className="mt-4 flex items-center justify-between">
           <p className={`text-sm font-semibold ${passed ? "text-green-700" : "text-red-700"}`}>
@@ -295,7 +306,7 @@ function ModuleQuiz({ module: m, userId }: { module: LearnModule; userId?: strin
       ) : (
         <Button
           type="button"
-          disabled={Object.keys(answers).length < total}
+          disabled={busy || Object.keys(answers).length < total}
           onClick={submit}
           className="mt-4 w-full rounded-full"
         >

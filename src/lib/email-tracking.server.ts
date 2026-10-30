@@ -31,7 +31,7 @@ export async function recordEmailSend(input: {
     if (error) throw error;
     return (data?.id as string) ?? null;
   } catch (err) {
-    console.error("[email-tracking] could not record send", err);
+    console.error("[email-tracking] could not record send");
     return null;
   }
 }
@@ -71,6 +71,6 @@ export async function markEmailSuppressed(sendId: string) {
   try {
     await (supabaseAdmin as any).from("email_sends").update({ suppressed: true }).eq("id", sendId);
   } catch (err) {
-    console.error("[email-tracking] suppression flag failed", err);
+    console.error("[email-tracking] suppression flag failed");
   }
 }

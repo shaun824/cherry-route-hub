@@ -379,6 +379,38 @@ export type Database = {
           },
         ]
       }
+      crew_field_access: {
+        Row: {
+          event_id: string
+          expires_at: string
+          issued_by: string
+          revoked_at: string | null
+          token_hash: string
+        }
+        Insert: {
+          event_id: string
+          expires_at: string
+          issued_by: string
+          revoked_at?: string | null
+          token_hash: string
+        }
+        Update: {
+          event_id?: string
+          expires_at?: string
+          issued_by?: string
+          revoked_at?: string | null
+          token_hash?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crew_field_access_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       crew_locations: {
         Row: {
           device_id: string
@@ -3857,6 +3889,27 @@ export type Database = {
           },
         ]
       }
+      security_request_limits: {
+        Row: {
+          actor_hash: string
+          hits: number
+          scope: string
+          window_start: string
+        }
+        Insert: {
+          actor_hash: string
+          hits?: number
+          scope: string
+          window_start: string
+        }
+        Update: {
+          actor_hash?: string
+          hits?: number
+          scope?: string
+          window_start?: string
+        }
+        Relationships: []
+      }
       site_settings: {
         Row: {
           key: string
@@ -4203,11 +4256,37 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      learn_quiz_prompts: {
+        Row: {
+          id: string | null
+          module_id: string | null
+          options: Json | null
+          question: string | null
+          sort_order: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "learn_quiz_questions_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "learn_modules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       analytics_summary: { Args: { _since: string }; Returns: Json }
       chat_author_whatsapp: { Args: { _message_id: string }; Returns: string }
+      consume_request_quota: {
+        Args: {
+          _actor_hash: string
+          _limit: number
+          _scope: string
+          _window_seconds: number
+        }
+        Returns: boolean
+      }
       inside_events_summary: {
         Args: { _event_id?: string; _since: string }
         Returns: Json

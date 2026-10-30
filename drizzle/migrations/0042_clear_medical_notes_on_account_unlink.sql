@@ -1,0 +1,3 @@
+CREATE OR REPLACE FUNCTION public.clear_unlinked_rider_sensitive_notes() RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path=public AS $$ BEGIN IF OLD.user_id IS NOT NULL AND NEW.user_id IS NULL THEN UPDATE public.event_entrants SET notes=NULL WHERE entrant_id=OLD.id; NEW.phone := NULL; NEW.id_number_hash := NULL; NEW.id_number_last4 := NULL; END IF; RETURN NEW; END $$;
+REVOKE ALL ON FUNCTION public.clear_unlinked_rider_sensitive_notes() FROM PUBLIC,anon,authenticated;
+CREATE TRIGGER clear_sensitive_notes_before_unlink BEFORE UPDATE OF user_id ON public.entrants FOR EACH ROW EXECUTE FUNCTION public.clear_unlinked_rider_sensitive_notes();

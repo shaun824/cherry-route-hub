@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { useIsCrew } from "@/lib/auth";
 import { BrandMark } from "@/components/ui-bits";
+import { safeAuthTarget } from "@/lib/auth-navigation";
 import { loginIdentifierToEmail, isEmailAddress } from "@/lib/crew-username";
 
 export const Route = createFileRoute("/crew/login")({
@@ -38,7 +39,7 @@ function CrewLoginPage() {
   const { user, isCrew, loading } = useIsCrew();
   const navigate = useNavigate();
   const { next } = Route.useSearch();
-  const safeNext = next && next.startsWith("/") && !next.startsWith("//") ? next : null;
+  const safeNext = safeAuthTarget(next) === "/" ? null : safeAuthTarget(next);
   const goOn = () => {
     if (safeNext) window.location.assign(safeNext);
     else void navigate({ to: "/crew" });
@@ -74,7 +75,7 @@ function CrewLoginPage() {
   async function google() {
     setError(null);
     try {
-      await lovable.auth.signInWithOAuth("google", { redirect_uri: `${window.location.origin}${safeNext ?? "/crew"}` });
+      await lovable.auth.signInWithOAuth("google", { redirect_uri: `${window.location.origin}/crew/login${safeNext ? `?next=${encodeURIComponent(safeNext)}` : ""}` });
     } catch {
       setError("Google sign-in didn't complete. Try your email and password.");
     }

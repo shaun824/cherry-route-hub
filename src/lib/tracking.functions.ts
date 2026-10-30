@@ -3,9 +3,8 @@
 import { visibleInBackend } from "@/lib/event-window";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { createClient } from "@supabase/supabase-js";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import type { Database } from "@/integrations/supabase/types";
+import { canPublishTracking } from "@/lib/security-rules";
 
 export type TrackingPointInput = {
   lat: number;
@@ -52,6 +51,12 @@ export const uploadTrackingPoints = createServerFn({ method: "POST" })
       if (Date.now() - data.sessionStartedAt > limit) {
         return { ok: false as const, expired: true as const, uploaded: 0 };
       }
+    }
+    const { requireEventParticipant } = await import("@/lib/security-access.server");
+    await requireEventParticipant(context.supabase, context.userId, data.eventId);
+    if (data.entrantId) {
+      const { data: owned } = await context.supabase.from("entrants").select("id").eq("id", data.entrantId).eq("user_id", context.userId).maybeSingle();
+      if (!owned) throw new Error("Forbidden");
     }
     // Resolve the rider's entrant row so the live map can label the pin with
     // their name/bib instead of showing an anonymous dot.
@@ -176,6 +181,8 @@ export const sendTrackingSos = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { supabaseAdmin: adminForCheck } = await import("@/integrations/supabase/client.server");
+    const { requireEventParticipant } = await import("@/lib/security-access.server");
+    await requireEventParticipant(context.supabase, context.userId, data.eventId);
     const review = await isReviewEventId(adminForCheck, data.eventId);
     const { data: inserted, error } = await table(context.supabase, "tracking_sos")
       .insert({
@@ -306,12 +313,6 @@ export type LiveTrackingPayload = {
   since: string;
 };
 
-function publishableClient() {
-  return createClient<Database>(process.env["SUPABASE_URL"]!, process.env["SUPABASE_PUBLISHABLE_KEY"]!, {
-    auth: { storage: undefined, persistSession: false, autoRefreshToken: false },
-  });
-}
-
 /** Start of the current racing day in SAST (UTC+2), never more than 12h back. */
 function currentDayStartIso(now = Date.now()): string {
   const offsetMs = 2 * 60 * 60 * 1000;
@@ -343,12 +344,17 @@ function metresBetween(aLat: number, aLng: number, bLat: number, bLng: number) {
 export const fetchLiveTracking = createServerFn({ method: "GET" })
   .inputValidator((input) => z.object({ eventId: z.string().uuid() }).parse(input))
   .handler(async ({ data }): Promise<LiveTrackingPayload> => {
-    const supabase = publishableClient();
     const since = currentDayStartIso();
     // GPS history isn't publicly readable; read server-side and return only today's latest positions.
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    // Private app-review events never appear on public live maps.
-    if (await isReviewEventId(supabaseAdmin, data.eventId)) return { riders: [], activeSos: 0, since };
+    const { getRequestHeader } = await import("@tanstack/react-start/server");
+    const { resolveOptionalUserId } = await import("@/lib/app-bot.server");
+    const caller = await resolveOptionalUserId(getRequestHeader("authorization") ?? null);
+    const { data: roles } = caller ? await supabaseAdmin.from("user_roles").select("role").eq("user_id", caller).in("role", ["admin", "crew"]) : { data: [] };
+    const staff = Boolean(roles?.length);
+    const { data: event } = await supabaseAdmin.from("events").select("spectator_mode, is_review_event, is_public").eq("id", data.eventId).maybeSingle();
+    if (staff) await (await import("@/lib/review-event.server")).assertEventVisible(supabaseAdmin, data.eventId, caller);
+    if (!staff && !canPublishTracking(event)) return { riders: [], activeSos: 0, since };
     const { data: points, error } = await table(supabaseAdmin, "tracking_points")
       .select("user_id, entrant_id, lat, lng, accuracy_m, battery_pct, recorded_at")
       .eq("event_id", data.eventId)
@@ -381,7 +387,8 @@ export const fetchLiveTracking = createServerFn({ method: "GET" })
         });
         if (p.entrant_id) entrantIds.add(p.entrant_id);
       }
-      const cur = latest.get(p.user_id)!;
+      const cur = latest.get(p.user_id);
+      if (!cur) continue;
       // Rows arrive newest-first, so the last one seen per rider is the earliest.
       cur.firstLat = p.lat;
       cur.firstLng = p.lng;
@@ -411,7 +418,7 @@ export const fetchLiveTracking = createServerFn({ method: "GET" })
     // RLS blocks direct roster reads for spectators, so resolve via the
     // security-definer helper that only exposes riders who are tracking.
     if (entrantIds.size > 0) {
-      const { data: identity, error: identityError } = await supabase.rpc(
+      const { data: identity, error: identityError } = await supabaseAdmin.rpc(
         "live_tracking_identity_v2",
         { _event_id: data.eventId },
       );
@@ -440,8 +447,16 @@ export const fetchLiveTracking = createServerFn({ method: "GET" })
       }
     }
 
-    // Open SOS alerts — flagged on the rider so their pin can shout.
-    const { data: sosRows } = await supabase.rpc("live_tracking_sos_flags", {
+    if (!staff) {
+      const riders = await Promise.all([...latest.values()].map(async (rider) => {
+        const hash = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(`${data.eventId}:${since}:${rider.userId}`));
+        const publicId = Array.from(new Uint8Array(hash)).map((b) => b.toString(16).padStart(2, "0")).join("");
+        return { ...rider, userId: publicId, batteryPct: null, firstLat: undefined, firstLng: undefined, firstRecordedAt: undefined, stoppedForMs: null, sos: false, sosReason: null };
+      }));
+      return { riders, activeSos: 0, since };
+    }
+    // Open SOS alerts are available only to verified race-control staff.
+    const { data: sosRows } = await supabaseAdmin.rpc("live_tracking_sos_flags", {
       _event_id: data.eventId,
     });
     let activeSos = 0;
