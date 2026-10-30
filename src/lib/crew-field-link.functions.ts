@@ -186,7 +186,7 @@ export const shareTeamLocationCrew = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((i) => locInput.parse(i))
   .handler(async ({ data, context }) => {
-    if (!(await checkIsAdmin(context.supabase as never))) throw new Error("Location sharing is limited to admins right now");
+    if (!(await isCrewUser(context.supabase, context.userId))) throw new Error("Location sharing is limited to crew");
     const { data: ev } = await (context.supabase as any).from("events").select("event_date, days").eq("id", data.eventId).maybeSingle();
     if (!ev || !inRaceLocationWindow(ev.event_date, ev.days)) throw new Error("Location sharing opens 3 days before race day");
     return writeLoc(data);

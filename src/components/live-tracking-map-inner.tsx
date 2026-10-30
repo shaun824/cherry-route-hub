@@ -1092,8 +1092,8 @@ export default function LiveTrackingMapInner({
   const nearCourse = distToCourse != null && distToCourse <= SHARE_RADIUS_M;
   const [sharing, setSharing] = useState(false);
   const { isAdmin } = useIsAdmin();
-  // Only admins, and only from 3 days before race day, can share their location.
-  const shareAllowed = !fieldToken && isAdmin && inRaceLocationWindow((event as { date?: string } | undefined)?.date, event?.days);
+  // Signed-in crew and admins, only from 3 days before race day, can share their location.
+  const shareAllowed = !fieldToken && Boolean(crewTools) && inRaceLocationWindow((event as { date?: string } | undefined)?.date, event?.days);
   const [teamName, setTeamName] = useState("");
   const [deviceId, setDeviceId] = useState("");
   useEffect(() => {
