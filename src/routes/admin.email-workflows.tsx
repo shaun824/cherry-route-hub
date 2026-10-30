@@ -675,10 +675,7 @@ function StepEditor({
   );
 }
 
-function csvCell(v: unknown) {
-  const s = String(v ?? "");
-  return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
-}
+const csvCell = secureCsvCell;
 
 /** Interest sign-ups for one event, with a count and a CSV export. */
 function InterestSignups({ events }: { events: any[] }) {

@@ -1,4 +1,6 @@
-import { describe, expect, it } from "bun:test";
+import { describe, it } from "node:test";
+import assert from "node:assert/strict";
+const expect = (actual: unknown) => ({ toBe: (expected: unknown) => assert.equal(actual, expected), toEqual: (expected: unknown) => assert.deepEqual(actual, expected) });
 import { csvCell, canPublishTracking, canReadResults, validFieldExpiry, privatePeerStats } from "./security-rules";
 
 describe("rider privacy boundaries", () => {
