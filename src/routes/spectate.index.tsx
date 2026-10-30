@@ -169,7 +169,7 @@ function PastRow({ event }: { event: Event }) {
   );
 
   return (
-    <li>
+    <li className="min-w-0">
       {unlocked ? (
         <Link to="/spectate/$eventId" params={{ eventId: event.id }} className="block">
           {inner}
@@ -182,6 +182,7 @@ function PastRow({ event }: { event: Event }) {
     </li>
   );
 }
+
 
 function SpectatorCard({ event }: { event: Event }) {
   // Admins can open any event's track page, even before it unlocks publicly.
