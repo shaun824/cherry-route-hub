@@ -327,7 +327,7 @@ export default function LiveTrackingMapInner({
   eventId,
   isCrew = false,
   focusUserId = null,
-  focusPoint = null,
+  focusPoint: pinPoint = null,
   trackRider = null,
   onOffCourse,
   riderMode = false,
@@ -503,7 +503,7 @@ export default function LiveTrackingMapInner({
 
   const focusPinRef = useRef<L.Marker | null>(null);
   useEffect(() => {
-    if (!focusPoint) return;
+    if (!pinPoint) return;
     let tries = 0;
     let timer = 0;
     const place = () => {
@@ -514,7 +514,7 @@ export default function LiveTrackingMapInner({
       }
       startFollowing(null);
       focusPinRef.current?.remove();
-      const { lat, lng, label } = focusPoint;
+      const { lat, lng, label } = pinPoint;
       const wrap = document.createElement("div");
       const b = document.createElement("b");
       b.textContent = label;
@@ -538,7 +538,7 @@ export default function LiveTrackingMapInner({
     };
     place();
     return () => window.clearTimeout(timer);
-  }, [focusPoint, startFollowing]);
+  }, [pinPoint, startFollowing]);
   useEffect(() => () => { focusPinRef.current?.remove(); }, []);
 
   const { data } = useQuery({
