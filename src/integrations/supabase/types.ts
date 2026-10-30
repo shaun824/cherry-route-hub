@@ -379,6 +379,51 @@ export type Database = {
           },
         ]
       }
+      crew_emergency_profiles: {
+        Row: {
+          cell_number: string
+          created_at: string
+          date_of_birth: string
+          emergency_contact_name: string | null
+          emergency_contact_phone: string | null
+          first_name: string
+          medical_aid_name: string
+          medical_aid_number: string | null
+          medical_aid_plan: string | null
+          medical_notes: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cell_number: string
+          created_at?: string
+          date_of_birth: string
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          first_name: string
+          medical_aid_name: string
+          medical_aid_number?: string | null
+          medical_aid_plan?: string | null
+          medical_notes?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cell_number?: string
+          created_at?: string
+          date_of_birth?: string
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          first_name?: string
+          medical_aid_name?: string
+          medical_aid_number?: string | null
+          medical_aid_plan?: string | null
+          medical_notes?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       crew_field_access: {
         Row: {
           event_id: string

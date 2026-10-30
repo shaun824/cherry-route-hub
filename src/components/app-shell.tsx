@@ -8,6 +8,7 @@ import { usePullToRefresh } from "@/lib/use-pull-to-refresh";
 import { useEntryAutoSync } from "@/lib/use-entry-autosync";
 import { Footer } from "@/components/footer";
 import { BrandMark } from "@/components/ui-bits";
+import { CrewEmergencyGate } from "@/components/crew-emergency-gate";
 import { InstallAppPrompt } from "@/components/install-app-prompt";
 import { recordVisit } from "@/lib/feature-discovery";
 
@@ -158,6 +159,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       >
         <main className="mx-auto w-full flex-1 pb-6 md:max-w-3xl md:pb-10 lg:max-w-5xl xl:max-w-6xl">
           <div key={pathname} className="page-enter">{children}</div>
+          {inCrewArea && user && <CrewEmergencyGate userId={user.id} />}
           <Footer />
         </main>
       </div>
