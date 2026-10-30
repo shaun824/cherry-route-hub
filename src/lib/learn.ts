@@ -1,5 +1,6 @@
 // Crew Learn: staff training courses built from the app's own event data.
 // Shared types plus the client-side reads used by the crew and admin screens.
+import { submitLearnAssessment, completeLearnCourse } from "@/lib/learn-assessment.functions";
 import { supabase } from "@/integrations/supabase/client";
 
 export type LearnCourseKind = "business" | "event" | "department";
@@ -108,8 +109,8 @@ export async function fetchLearnModules(courseId: string): Promise<LearnModule[]
       .in("module_id", ids)
       .order("sort_order", { ascending: true }),
     supabase
-      .from("learn_quiz_questions")
-      .select("id, module_id, question, options, correct_index, explanation, sort_order")
+      .from("learn_quiz_prompts")
+      .select("id, module_id, question, options, sort_order")
       .in("module_id", ids)
       .order("sort_order", { ascending: true }),
   ]);
@@ -121,7 +122,7 @@ export async function fetchLearnModules(courseId: string): Promise<LearnModule[]
       .map((l) => ({ ...l, sources: asStringArray(l.sources) })) as LearnLesson[],
     questions: (questions ?? [])
       .filter((q) => q.module_id === m.id)
-      .map((q) => ({ ...q, options: asStringArray(q.options) })) as LearnQuizQuestion[],
+      .map((q) => ({ ...q, correct_index: -1, explanation: null, options: asStringArray(q.options) })) as LearnQuizQuestion[],
   }));
 }
 
@@ -138,14 +139,8 @@ export async function setLessonDone(userId: string, lessonId: string, done: bool
   if (error) throw new Error(error.message);
 }
 
-export async function recordQuizAttempt(
-  userId: string,
-  moduleId: string,
-  score: number,
-  total: number,
-  passed: boolean,
-) {
-  await supabase.from("learn_quiz_attempts").insert({ user_id: userId, module_id: moduleId, score, total, passed });
+export async function recordQuizAttempt(_userId: string, moduleId: string, answers: Record<string, number>) {
+  return submitLearnAssessment({ data: { moduleId, answers } });
 }
 
 export async function fetchQuizAttempts(userId: string): Promise<
@@ -159,10 +154,8 @@ export async function fetchQuizAttempts(userId: string): Promise<
   return (data ?? []) as never;
 }
 
-export async function markCourseComplete(userId: string, courseId: string) {
-  await supabase
-    .from("learn_completions")
-    .upsert({ user_id: userId, course_id: courseId }, { onConflict: "user_id,course_id" });
+export async function markCourseComplete(_userId: string, courseId: string) {
+  return completeLearnCourse({ data: { courseId } });
 }
 
 export async function fetchCompletions(userId: string): Promise<Record<string, string>> {
