@@ -14,7 +14,7 @@ const schema = z.object({
   topic: z.string().trim().max(200).optional(),
   source: z.string().trim().max(200).optional(),
   consent: z.literal(true, { error: "Consent is required" }),
-  website: z.string().max(0).optional(), // honeypot
+  website: z.string().max(200).optional(), // honeypot
 });
 
 export async function handleEventInterest(request: Request): Promise<Response> {
@@ -59,10 +59,10 @@ export async function handleEventInterest(request: Request): Promise<Response> {
         // The event must exist and be published.
         const { data: event } = await supabaseAdmin
           .from("events")
-          .select("id, lifecycle, everlytic_interest_list_id")
+          .select("id, lifecycle, everlytic_interest_list_id, is_review_event")
           .eq("id", parsed.data.event_id)
           .maybeSingle();
-        if (!event || event.lifecycle === "draft" || event.lifecycle === "archived") {
+        if (!event || event.lifecycle !== 'published' || event.is_review_event) {
           return json({ ok: false, error: "Unknown event" }, 404);
         }
 
@@ -72,7 +72,7 @@ export async function handleEventInterest(request: Request): Promise<Response> {
           .from("event_interest_signups")
           .select("id")
           .eq("event_id", event.id)
-          .ilike("email", email)
+          .eq("email", email)
           .maybeSingle();
 
         let signupId: string;
@@ -82,7 +82,7 @@ export async function handleEventInterest(request: Request): Promise<Response> {
             .from("event_interest_signups")
             .update({
               name: parsed.data.name ?? null,
-              phone: parsed.data.phone ?? null,
+              ...(parsed.data.phone !== undefined ? { phone: parsed.data.phone } : {}),
               topic: parsed.data.topic ?? null,
               source: parsed.data.source ?? null,
               consent: true,
