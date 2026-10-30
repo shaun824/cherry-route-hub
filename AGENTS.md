@@ -49,3 +49,6 @@
 - GPS/SOS privileged reads enforce event and staff access; public spectator feeds omit safety details and account IDs, and identity RPCs are server-only.
 - Crew field links are persisted, expire within 24 hours and recheck the issuer role; historical SOS requires staff sign-in.
 - Untrusted spreadsheet exports use the shared security-rules CSV encoder, and scheduled hooks accept only the private cron key.
+- Crew roster summaries use authenticated server projections rather than direct sensitive roster reads; general crew never receives medical notes or ID hashes.
+- Crew training prompts omit answer keys; assessment and completion writes are server-verified, while direct client grade writes are denied.
+- Public request quotas are atomic durable counters, independent of caller-provided session identifiers.

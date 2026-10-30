@@ -9,6 +9,7 @@ import { ShieldCheck, ChevronRight } from "lucide-react";
 import { fetchAllCrewEvents, fetchCrewEvents, fetchCrewRooming, normaliseTent } from "@/lib/crew";
 import { buildCrewTimeline, groupScheduleByDay, pickCurrentDay } from "@/lib/crew-plan";
 import { useCrewEvent, useCrewShowPast } from "@/lib/crew-event";
+import { getCrewRosterSummary } from "@/lib/crew-roster.functions";
 import { supabase } from "@/integrations/supabase/client";
 import type { EventDay, ScheduleItem } from "@/lib/mock-data";
 
@@ -70,13 +71,7 @@ function CrewDashboard() {
   const entrantsQ = useQuery({
     queryKey: ["crew-entrant-count", eventId],
     enabled: isCrew && !!eventId,
-    queryFn: async () => {
-      const { count } = await supabase
-        .from("event_entrants")
-        .select("id", { count: "exact", head: true })
-        .eq("event_id", eventId);
-      return count ?? 0;
-    },
+    queryFn: async () => (await getCrewRosterSummary({ data: { eventId } })).count,
   });
 
   const rooming = roomingQ.data ?? [];

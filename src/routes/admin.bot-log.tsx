@@ -10,6 +10,7 @@ import { isBotMiss } from "@/lib/bot-handoff";
 import { upsertLearnedFaq } from "@/lib/faq-learned.functions";
 
 export const Route = createFileRoute("/admin/bot-log")({
+  head: () => ({ meta: [ { title: 'Assistant questions · Red Cherry Events' }, { name: "description", content: 'Review rider questions and approved Red Cherry Events answers.' }, { property: "og:title", content: 'Assistant questions · Red Cherry Events' }, { property: "og:description", content: 'Review rider questions and approved Red Cherry Events answers.' }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }, { name: "robots", content: "noindex,nofollow" } ] }),
   component: BotLogPage,
 });
 

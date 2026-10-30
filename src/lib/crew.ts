@@ -1,5 +1,6 @@
 // Crew helpers: event staff can see the full rooming list for an event,
 // who shares each tent/room, and where that room sits on the village map.
+import { getCrewRosterSummary } from "@/lib/crew-roster.functions";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { visibleInBackend } from "./event-window";
@@ -60,7 +61,7 @@ export async function fetchCrewRooming(eventId: string): Promise<CrewRoomingRow[
   const { data, error } = await supabase
     .from("event_rooming")
     .select(
-      "id, event_id, venue_id, full_name, email, tent_number, room_type, notes, location_hint, village_zone_id, village_spot_id, village_tent_id, event_entrant_id, match_source, entry:event_entrants(id, bib_number, registration_ref, category, batch), venue:event_venues(id, name, address, village_spot_id)",
+      "id, event_id, venue_id, full_name, email, tent_number, room_type, notes, location_hint, village_zone_id, village_spot_id, village_tent_id, event_entrant_id, match_source, venue:event_venues(id, name, address, village_spot_id)",
     )
     .eq("event_id", eventId)
     .order("full_name", { ascending: true });
@@ -68,7 +69,9 @@ export async function fetchCrewRooming(eventId: string): Promise<CrewRoomingRow[
     console.warn("[crew] rooming", error);
     return [];
   }
-  return (data ?? []) as unknown as CrewRoomingRow[];
+  const summary = await getCrewRosterSummary({ data: { eventId } });
+  const entries = new Map(summary.rows.map((row) => [row.id, row]));
+  return (data ?? []).map((row) => ({ ...row, entry: row.event_entrant_id ? entries.get(row.event_entrant_id) ?? null : null })) as unknown as CrewRoomingRow[];
 }
 
 

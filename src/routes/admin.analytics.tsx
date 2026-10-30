@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { InsideEventsAnalytics } from "@/components/inside-events-analytics";
 
 export const Route = createFileRoute("/admin/analytics")({
+  head: () => ({ meta: [ { title: 'Event analytics · Red Cherry Events' }, { name: "description", content: 'Private rider hub engagement and supplier analytics for Red Cherry Events.' }, { property: "og:title", content: 'Event analytics · Red Cherry Events' }, { property: "og:description", content: 'Private rider hub engagement and supplier analytics for Red Cherry Events.' }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }, { name: "robots", content: "noindex,nofollow" } ] }),
   component: AdminAnalytics,
 });
 
