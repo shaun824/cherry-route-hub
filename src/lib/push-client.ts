@@ -4,6 +4,19 @@ import { getVapidPublicKey, removePushSubscription, savePushSubscription } from 
 
 const SW_URL = "/push-sw.js";
 
+// Inside the iOS / Android store app (Capacitor) alerts go through Firebase
+// Cloud Messaging instead of Web Push — see src/lib/native.ts.
+function inNativeApp(): boolean {
+  if (typeof window === "undefined") return false;
+  return Boolean((window as any).Capacitor?.isNativePlatform?.());
+}
+let nativeState: PushState = "default";
+async function refreshNativeState(): Promise<PushState> {
+  const { nativePushState } = await import("./native");
+  nativeState = await nativePushState().catch(() => "default" as const);
+  return nativeState;
+}
+
 export type PushState = "unsupported" | "needs-install" | "default" | "granted" | "denied";
 
 function isIos(): boolean {
@@ -35,6 +48,7 @@ export function pushBlockedHere(): boolean {
 
 export function pushState(): PushState {
   if (typeof window === "undefined") return "unsupported";
+  if (inNativeApp()) return nativeState;
   if (!("serviceWorker" in navigator) || !("PushManager" in window) || !("Notification" in window)) {
     return isIos() && !isStandalone() ? "needs-install" : "unsupported";
   }
@@ -66,6 +80,12 @@ function keyToB64url(buf: ArrayBuffer | null): string {
 
 /** Asks for permission, subscribes the device and stores it against the rider. */
 export async function enablePush(): Promise<{ ok: boolean; reason?: string }> {
+  if (inNativeApp()) {
+    const { enableNativePush } = await import("./native");
+    const res = await enableNativePush();
+    await refreshNativeState();
+    return res;
+  }
   if (pushBlockedHere()) return { ok: false, reason: "Open the published app (not the preview) to enable alerts." };
   const state = pushState();
   if (state === "unsupported") return { ok: false, reason: "This browser doesn't support notifications." };
@@ -101,6 +121,11 @@ export async function enablePush(): Promise<{ ok: boolean; reason?: string }> {
 }
 
 export async function disablePush(): Promise<void> {
+  if (inNativeApp()) {
+    const { disableNativePush } = await import("./native");
+    await disableNativePush();
+    return;
+  }
   if (typeof window === "undefined" || !("serviceWorker" in navigator)) return;
   const reg = await navigator.serviceWorker.getRegistration(SW_URL);
   const sub = await reg?.pushManager.getSubscription();
@@ -111,6 +136,11 @@ export async function disablePush(): Promise<void> {
 }
 
 export async function hasActiveSubscription(): Promise<boolean> {
+  if (inNativeApp()) {
+    await refreshNativeState();
+    const { hasNativePushToken } = await import("./native");
+    return hasNativePushToken();
+  }
   if (typeof window === "undefined" || !("serviceWorker" in navigator)) return false;
   const reg = await navigator.serviceWorker.getRegistration(SW_URL);
   const sub = await reg?.pushManager.getSubscription();

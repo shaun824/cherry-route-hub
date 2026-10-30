@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Rider Hub – no signal</title>
+    <style>
+      :root { color-scheme: light; }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center;
+        padding: max(24px, env(safe-area-inset-top)) 24px max(24px, env(safe-area-inset-bottom));
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        background: #fff; color: #171112; text-align: center;
+      }
+      .card { max-width: 360px; }
+      .dot { width: 64px; height: 64px; margin: 0 auto 20px; border-radius: 50%;
+        background: linear-gradient(135deg, #6cc04a, #0a8fd8 55%, #f68b1f); }
+      h1 { font-size: 22px; margin: 0 0 8px; }
+      p { font-size: 15px; line-height: 1.5; color: #5a5052; margin: 0 0 12px; }
+      .sos { background: #fdecea; color: #8a1c12; border-radius: 12px; padding: 12px; font-weight: 600; }
+      button { margin-top: 12px; width: 100%; border: 0; border-radius: 999px; padding: 14px;
+        font-size: 16px; font-weight: 700; color: #fff; background: #f64214; }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <div class="dot" aria-hidden="true"></div>
+      <h1>No signal right now</h1>
+      <p>The Rider Hub needs a connection the first time it opens. Move into the open or connect to Wi-Fi, then try again.</p>
+      <p class="sos">In an emergency, call race control on the number in your race pack.</p>
+      <button type="button" onclick="location.href='https://riderhub.redcherryevents.co.za'">Try again</button>
+    </div>
+    <script>
+      window.addEventListener("online", function () {
+        location.href = "https://riderhub.redcherryevents.co.za";
+      });
+    </script>
+  </body>
+</html>

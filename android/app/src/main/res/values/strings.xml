@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Rider Hub</string>
+    <string name="title_activity_main">Rider Hub</string>
+    <string name="package_name">za.co.redcherryevents.riderhub</string>
+    <string name="custom_url_scheme">za.co.redcherryevents.riderhub</string>
+</resources>
