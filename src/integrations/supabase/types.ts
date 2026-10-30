@@ -2420,6 +2420,7 @@ export type Database = {
           title_sponsor_logo_url: string | null
           title_sponsor_name: string | null
           title_sponsor_url: string | null
+          tracking_anywhere: boolean
           updated_at: string
           website_url: string | null
         }
@@ -2478,6 +2479,7 @@ export type Database = {
           title_sponsor_logo_url?: string | null
           title_sponsor_name?: string | null
           title_sponsor_url?: string | null
+          tracking_anywhere?: boolean
           updated_at?: string
           website_url?: string | null
         }
@@ -2536,6 +2538,7 @@ export type Database = {
           title_sponsor_logo_url?: string | null
           title_sponsor_name?: string | null
           title_sponsor_url?: string | null
+          tracking_anywhere?: boolean
           updated_at?: string
           website_url?: string | null
         }

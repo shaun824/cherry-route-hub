@@ -1,0 +1,1 @@
+ALTER TABLE public.events ADD COLUMN IF NOT EXISTS tracking_anywhere boolean NOT NULL DEFAULT false;

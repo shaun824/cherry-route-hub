@@ -816,6 +816,17 @@ function EventEditor({
               </p>
             </div>
           </Field>
+          <Field label="Live tracking">
+            <label className="flex items-center gap-2 rounded-md border border-border bg-background px-3 py-2 text-sm">
+              <input
+                type="checkbox"
+                role="switch"
+                checked={form.trackingAnywhere ?? false}
+                onChange={(e) => update("trackingAnywhere", e.target.checked)}
+              />
+              <span>Track from anywhere (multi-day / open-route events)</span>
+            </label>
+          </Field>
           <Field label="Spectator mode">
             <label className="flex items-center gap-2 rounded-md border border-border bg-background px-3 py-2 text-sm">
               <input

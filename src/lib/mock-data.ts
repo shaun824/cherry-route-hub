@@ -108,6 +108,7 @@ export type Event = {
   titleSponsorName?: string;    // headline / title sponsor for this event
   titleSponsorLogoUrl?: string; // logo shown on the event banner
   titleSponsorUrl?: string;     // sponsor website
+  trackingAnywhere?: boolean;   // open-route events: no start-area distance check
   isReviewEvent?: boolean;      // private app-store review event: always live, no location checks
 };
 
