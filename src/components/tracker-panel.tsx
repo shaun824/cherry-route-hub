@@ -427,7 +427,7 @@ export function TrackerPanel({
   }, [tracking, windowState.open, stopTracking, eventId]);
 
   function toggleTracking() {
-    const nearStart = Boolean(event?.isReviewEvent) || (startDistanceM !== null && startDistanceM <= START_RADIUS_M);
+    const nearStart = Boolean(event?.isReviewEvent) || Boolean(event?.trackingAnywhere) || (startDistanceM !== null && startDistanceM <= START_RADIUS_M);
     if ((!windowState.open || !nearStart) && !tracking) return;
     if (tracking) {
       stopTracking();
@@ -578,7 +578,7 @@ export function TrackerPanel({
 
   // Review events skip the race-village distance check so reviewers can test from anywhere.
   const reviewEvent = Boolean(event?.isReviewEvent);
-  const insideStartArea = reviewEvent || (startDistanceM !== null && startDistanceM <= START_RADIUS_M);
+  const insideStartArea = reviewEvent || Boolean(event?.trackingAnywhere) || (startDistanceM !== null && startDistanceM <= START_RADIUS_M);
   const canStart = windowState.open && insideStartArea;
   const gpsQuality = !coords
     ? "Finding GPS"
@@ -682,13 +682,13 @@ export function TrackerPanel({
         {!tracking ? (
           <div className="mt-3 space-y-2 text-sm">
             <p className="flex items-center justify-between gap-3"><span className="text-ink-soft">Tracking time</span><strong className="text-right text-ink">{windowState.message}</strong></p>
-            <p className="flex items-center justify-between gap-3"><span className="text-ink-soft">Race village</span><strong className={insideStartArea ? "text-emerald-700" : "text-ink"}>{reviewEvent ? "Ready · test event, works anywhere" : startDistanceM === null ? "Not checked" : insideStartArea ? `Ready · ${Math.round(startDistanceM)}m from start` : `${(startDistanceM / 1000).toFixed(1)} km away`}</strong></p>
+            <p className="flex items-center justify-between gap-3"><span className="text-ink-soft">Race village</span><strong className={insideStartArea ? "text-emerald-700" : "text-ink"}>{reviewEvent ? "Ready · test event, works anywhere" : event?.trackingAnywhere ? "Ready · open route, track from anywhere" : startDistanceM === null ? "Not checked" : insideStartArea ? `Ready · ${Math.round(startDistanceM)}m from start` : `${(startDistanceM / 1000).toFixed(1)} km away`}</strong></p>
             <p className="flex items-center justify-between gap-3"><span className="text-ink-soft">Battery</span><strong className="text-ink">{battery === null ? "Check on start" : `${battery}%`}</strong></p>
             <Button type="button" variant="outline" className="w-full" onClick={checkStartArea} disabled={checkingStart || eventInfoQ.isLoading}>
               <LocateFixed className="h-4 w-4" />{checkingStart ? "Checking location…" : startDistanceM === null ? "Check my location" : "Retry location"}
             </Button>
             {startCheckError ? <p className="rounded-lg bg-destructive/10 px-3 py-2 text-xs font-semibold text-destructive">{startCheckError}</p> : null}
-            {startDistanceM !== null && !insideStartArea ? <p className="rounded-lg bg-amber-100 px-3 py-2 text-xs font-semibold text-amber-900">Tracking unlocks inside 1 km of the event start. Move closer, then retry.</p> : null}
+            {startDistanceM !== null && !insideStartArea && !event?.trackingAnywhere ? <p className="rounded-lg bg-amber-100 px-3 py-2 text-xs font-semibold text-amber-900">Tracking unlocks inside 1 km of the event start. Move closer, then retry.</p> : null}
           </div>
         ) : (
           <p className="mt-2 text-xs text-ink-soft">Positions record every 5 seconds. {queued > 0 ? `${queued} waiting safely on this phone.` : lastUploadAt ? `Last shared at ${lastUploadAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}.` : "Waiting for the first GPS fix."}</p>
