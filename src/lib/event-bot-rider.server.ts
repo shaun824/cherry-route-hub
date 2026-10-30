@@ -5,6 +5,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { priceEntry } from "./entry-pricing";
 import { entryNinjaRegistrationUrl } from "@/lib/entry-ninja-link";
+import { isFixedIceVenue } from "@/lib/ice-venue";
 
 type AnyClient = SupabaseClient<any, any, any>;
 
@@ -158,7 +159,7 @@ export async function buildRiderContext(
   // Moving events: the rider sleeps at a different venue each night.
   if (mineAll.length > 1) {
     lines.push(
-      "\nThis event moves between venues, so the rider has a different bed each night. Their full stay:",
+      isFixedIceVenue(eventId) ? "\nAccommodation allocations only. Inner City Enduro stays at the same Baakens Valley venue all weekend; Sun International is PRO accommodation, not the event venue:" : "\nThis event moves between venues, so the rider has a different bed each night. Their full stay:",
     );
     for (const r of mineAll) {
       const v: any = Array.isArray(r.venue) ? r.venue[0] : r.venue;

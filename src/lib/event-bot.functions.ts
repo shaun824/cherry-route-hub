@@ -4,6 +4,7 @@ import { CONFIDENTIALITY_RULES } from "@/lib/knowledge-redact";
 import { FOLLOWUP_PROMPT_RULE, splitFollowUps } from "@/lib/bot-followups";
 import { venueMapLinks } from "@/lib/map-embed";
 import { cleanEventDays } from "@/lib/event-days";
+import { isFixedIceVenue, ICE_VENUE_URL } from "@/lib/ice-venue";
 
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
@@ -27,6 +28,7 @@ function formatEventStructured(event: any, info: any | null): string {
   lines.push(`Event name: ${event.name}`);
   if (event.event_date) lines.push(`Start date: ${new Date(event.event_date).toDateString()}`);
   if (event.location) lines.push(`Location: ${event.location}`);
+  if (isFixedIceVenue(event.id)) lines.push(`AUTHORITATIVE: The event venue and parking stay on Lower Valley Road, Baakens Valley all weekend. Sun International is PRO accommodation only, never the venue. All venue and parking links must use ${ICE_VENUE_URL}.`);
   if (event.description) lines.push(`Description: ${event.description}`);
 
   const days = cleanEventDays(event.days);
@@ -63,8 +65,8 @@ function formatEventStructured(event: any, info: any | null): string {
 
   if (info) {
     if (info.venue_address) lines.push(`\nVenue: ${info.venue_address}`);
-    const maps = venueMapLinks({
-      mapUrl: info.venue_map_url ?? info.map_url ?? null,
+    const maps = isFixedIceVenue(event.id) ? { pin: ICE_VENUE_URL, directions: ICE_VENUE_URL } : venueMapLinks({
+      mapUrl: info.map_embed_url ?? info.venue_map_url ?? info.map_url ?? null,
       lat: info.venue_lat != null ? Number(info.venue_lat) : null,
       lng: info.venue_lng != null ? Number(info.venue_lng) : null,
       address: info.venue_address ?? event.location ?? null,

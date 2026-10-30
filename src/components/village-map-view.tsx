@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ClientOnly } from "@tanstack/react-router";
 import { MapPin, Maximize2, Minimize2, Minus, Plus, X } from "lucide-react";
 import { buildMapLink } from "@/lib/map-embed";
+import { isFixedIceVenue, ICE_VENUE_URL } from "@/lib/ice-venue";
 import {
   VILLAGE_LAYERS,
   categoryMeta,
@@ -137,13 +138,15 @@ export function villageParkingPin(map: VillageMap | null | undefined): { lat: nu
 function OpenMapsButton({
   venue,
   point,
+  eventId,
   label = "Open in Google Maps",
 }: {
   venue: { name: string; address: string | null } | null;
   point?: { lat: number; lng: number } | null;
+  eventId?: string;
   label?: string;
 }) {
-  const url = point ? buildMapLink({ lat: point.lat, lng: point.lng }) : venue ? venueMapsUrl(venue) : null;
+  const url = eventId && isFixedIceVenue(eventId) ? ICE_VENUE_URL : point ? buildMapLink({ lat: point.lat, lng: point.lng }) : venue ? venueMapsUrl(venue) : null;
   if (!url) return null;
   return (
     <a
@@ -646,7 +649,7 @@ export function VillageMapView({
         {selectedVenue?.notes ? (
           <p className="text-xs leading-relaxed text-ink-soft">{selectedVenue.notes}</p>
         ) : null}
-        <OpenMapsButton venue={selectedVenue} point={villageAnchor(map)} />
+        <OpenMapsButton eventId={eventId} venue={selectedVenue} point={villageAnchor(map)} />
         <div className="rounded-2xl border border-dashed border-border p-6 text-center text-sm text-ink-soft">
           The village map for this venue hasn't been published yet — check back closer to race week.
         </div>
@@ -662,7 +665,7 @@ export function VillageMapView({
       {selectedVenue?.notes ? (
         <p className="text-xs leading-relaxed text-ink-soft">{selectedVenue.notes}</p>
       ) : null}
-      <OpenMapsButton venue={selectedVenue} point={villageAnchor(map)} />
+      <OpenMapsButton eventId={eventId} venue={selectedVenue} point={villageAnchor(map)} />
       <VillageShare eventId={eventId} venueId={venueId} isCrew={isCrew} />
       {focusZone ? (
         <p className="rounded-xl bg-accent px-3 py-2 text-xs font-semibold text-cherry-deep">
