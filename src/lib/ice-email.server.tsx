@@ -13,7 +13,7 @@ export async function sendIceRaceWeek(to: string, firstName: string | null, unsu
   const contact = (contacts.collection ?? []).map((item: any) => item.data ?? item).find((item: any) => String(item.email).toLowerCase() === to.toLowerCase());
   if (!contact?.id) throw new Error('Could not verify the ICE mailing-list contact');
   const mapping = await everlyticRequest(`/api/2.0/list_subscriptions/${ICE_MOTORBIKES_LIST_ID}/${contact.id}`, 'GET', username, apiKey);
-  const membership = mapping.data ?? mapping;
+  const membership = mapping.item ?? mapping.data ?? mapping;
   const blocked = ['unsubscribed', 'bounced', 'complained'];
   if (contact.status === 'off' || blocked.includes(String(contact.email_status).toLowerCase()) || blocked.includes(String(membership.email_status).toLowerCase())) return { sent: false as const };
   if (!['subscribed', 'confirmed'].includes(String(membership.email_status).toLowerCase())) throw new Error('ICE mailing-list membership is not active');

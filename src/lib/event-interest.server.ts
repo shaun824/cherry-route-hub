@@ -43,7 +43,8 @@ export async function syncEventInterestToList(
     if (!(error && typeof error === "object" && "status" in error && error.status === 404)) throw error;
   }
   // Upgrade an existing unconfirmed/none membership; never touch opt-outs.
-  const mappingStatus = String((mapping as { data?: { email_status?: string } } | null)?.data?.email_status ?? (mapping as { email_status?: string } | null)?.email_status ?? "").toLowerCase();
+  const mappingRow = (mapping as { item?: { email_status?: string }; data?: { email_status?: string }; email_status?: string } | null);
+  const mappingStatus = String(mappingRow?.item?.email_status ?? mappingRow?.data?.email_status ?? mappingRow?.email_status ?? "").toLowerCase();
   const mappingActive = ["subscribed", "confirmed"].includes(mappingStatus);
   const mappingBlocks = ["unsubscribed", "bounced", "complained"].includes(mappingStatus);
   if (!mappingActive && !mappingBlocks && (mayAddMembership(contact, mapping) || (mapping && ["unconfirmed", "none", ""].includes(mappingStatus)))) {
