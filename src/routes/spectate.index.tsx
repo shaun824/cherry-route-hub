@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { Binoculars, CalendarDays, ChevronRight, Lock, MapPin } from "lucide-react";
+import type { ReactNode } from "react";
+import { Binoculars, CalendarDays, ChevronRight, History, Lock, MapPin } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { PageHeader } from "@/components/ui-bits";
@@ -9,16 +10,25 @@ import { useHydratedStore } from "@/lib/use-hydrated-store";
 import { formatDate, formatTime } from "@/lib/mock-data";
 import { getEventRiders, ROSTER_WINDOW_DAYS } from "@/lib/results.functions";
 import { useIsAdmin, useSession } from "@/lib/auth";
+import { getEventTypeIcon } from "@/lib/event-type-icon";
+import { groupSpectateEvents } from "@/lib/spectate-groups";
 import type { Event } from "@/lib/mock-data";
-
 
 export const Route = createFileRoute("/spectate/")({
   head: () => ({
     meta: [
       { title: "Track riders — Red Cherry Events" },
-      { name: "description", content: "Follow Red Cherry rides as a spectator. Events unlock closer to race day." },
+      {
+        name: "description",
+        content:
+          "Follow Red Cherry rides as a spectator: events that have just finished this year, and everything still to come.",
+      },
       { property: "og:title", content: "Track riders — Red Cherry Events" },
-      { property: "og:description", content: "Follow Red Cherry rides as a spectator. Events unlock closer to race day." },
+      {
+        property: "og:description",
+        content:
+          "Follow Red Cherry rides as a spectator: events that have just finished this year, and everything still to come.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -26,27 +36,10 @@ export const Route = createFileRoute("/spectate/")({
   component: SpectatePage,
 });
 
-type Filter = "upcoming" | "live";
-
 function SpectatePage() {
   useHydratedStore();
   const events = useAdminStore((s) => s.events);
-  const [filter, setFilter] = useState<Filter>("upcoming");
-
-  const visible = useMemo(() => {
-    const list = events.filter((e) => (e.lifecycle ?? "published") !== "archived" && !e.isReviewEvent);
-    const now = Date.now();
-    const bucket = (e: Event) => (e.status === "live" ? "live" : "upcoming");
-    return list
-      .filter((e) => bucket(e) === filter)
-      .sort((a, b) => {
-        const at = new Date(a.date).getTime();
-        const bt = new Date(b.date).getTime();
-        // Nearest upcoming first; live-first for live tab.
-        if (filter === "live") return at - bt;
-        return Math.abs(at - now) - Math.abs(bt - now);
-      });
-  }, [events, filter]);
+  const { past, upcoming } = useMemo(() => groupSpectateEvents(events), [events]);
 
   // Preload rider rosters for signed-in riders so race-week lists open instantly.
   const { user } = useSession();
@@ -70,41 +63,38 @@ function SpectatePage() {
     }
   }, [events, user, queryClient, fetchRiders]);
 
-
-
   return (
     <div>
       <PageHeader title="Track riders" subtitle="Rider lists, bib numbers and results" />
 
-      <div className="mx-5 mt-4 flex gap-2">
-        {(["upcoming", "live"] as Filter[]).map((f) => {
-          const active = filter === f;
-          return (
-            <button
-              key={f}
-              type="button"
-              onClick={() => setFilter(f)}
-              className={`rounded-full px-3 py-1.5 text-xs font-semibold capitalize ring-1 ${
-                active
-                  ? "bg-cherry text-white ring-cherry"
-                  : "bg-card text-ink-soft ring-border"
-              }`}
-            >
-              {f === "live" ? "Live now" : "Upcoming"}
-            </button>
-          );
-        })}
-      </div>
+      {past.length > 0 ? (
+        <>
+          <SectionBar
+            title="Just past"
+            note={`${past.length} ${past.length === 1 ? "event" : "events"} this year`}
+            icon={<History className="h-3.5 w-3.5" />}
+          />
+          <ul className="mx-5 grid gap-2 lg:grid-cols-2">
+            {past.map((e) => (
+              <PastRow key={e.id} event={e} />
+            ))}
+          </ul>
+        </>
+      ) : null}
 
-      <ul className="mx-5 mt-4 grid gap-3 lg:grid-cols-2">
-        {visible.length === 0 ? (
+      <SectionBar
+        title="Coming up"
+        note={upcoming.length > 0 ? `${upcoming.length} ${upcoming.length === 1 ? "event" : "events"}` : undefined}
+        icon={<CalendarDays className="h-3.5 w-3.5" />}
+      />
+
+      <ul className="mx-5 grid gap-3 lg:grid-cols-2">
+        {upcoming.length === 0 ? (
           <li className="rounded-2xl bg-card p-6 text-center text-sm text-ink-soft ring-1 ring-border">
-            {filter === "live"
-              ? "No events are live right now. Check back on race day."
-              : "No upcoming events to spectate yet."}
+            Nothing is scheduled yet. Check back soon.
           </li>
         ) : (
-          visible.map((e) => <SpectatorCard key={e.id} event={e} />)
+          upcoming.map((e) => <SpectatorCard key={e.id} event={e} />)
         )}
       </ul>
 
@@ -120,13 +110,86 @@ function SpectatePage() {
   );
 }
 
+/** Heading bar above each list: title on the left, how many on the right. */
+function SectionBar({
+  title,
+  note,
+  icon,
+}: {
+  title: string;
+  note?: string;
+  icon: ReactNode;
+}) {
+  return (
+    <div className="mx-5 mt-6 flex items-center gap-2 rounded-xl bg-accent px-3 py-2 ring-1 ring-border">
+      <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-card text-cherry-deep">
+        {icon}
+      </span>
+      <h2 className="min-w-0 truncate font-display text-sm font-bold uppercase tracking-widest text-ink">
+        {title}
+      </h2>
+      {note ? (
+        <span className="ml-auto shrink-0 text-[11px] font-semibold text-ink-soft">{note}</span>
+      ) : null}
+    </div>
+  );
+}
+
+/** Compact finished-event row: date, name, type icon on the right. */
+function PastRow({ event }: { event: Event }) {
+  const { isAdmin } = useIsAdmin();
+  const unlocked = Boolean(event.spectatorMode) || isAdmin;
+  const { Icon, label } = getEventTypeIcon(event.discipline, event.name);
+  const day = new Date(event.date).toLocaleDateString("en-ZA", {
+    day: "2-digit",
+    month: "short",
+    timeZone: "UTC",
+  });
+
+  const inner = (
+    <div className="flex items-center gap-3 rounded-2xl bg-card px-3 py-2.5 ring-1 ring-border">
+      <div className="w-12 shrink-0 text-center">
+        <p className="text-sm font-bold leading-none text-ink">{day}</p>
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-sm font-semibold text-ink">{event.name}</p>
+        <p className="mt-0.5 truncate text-[11px] text-ink-soft">
+          {label}
+          {event.location ? ` · ${event.location}` : ""}
+        </p>
+      </div>
+      <span
+        className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-accent text-cherry-deep"
+        title={label}
+        aria-label={label}
+      >
+        <Icon className="h-4 w-4" aria-hidden="true" />
+      </span>
+    </div>
+  );
+
+  return (
+    <li>
+      {unlocked ? (
+        <Link to="/spectate/$eventId" params={{ eventId: event.id }} className="block">
+          {inner}
+        </Link>
+      ) : (
+        <div aria-disabled className="block cursor-default">
+          {inner}
+        </div>
+      )}
+    </li>
+  );
+}
+
 function SpectatorCard({ event }: { event: Event }) {
   // Admins can open any event's track page, even before it unlocks publicly.
   const { isAdmin } = useIsAdmin();
   const unlocked = Boolean(event.spectatorMode) || isAdmin;
   const adminPreview = !event.spectatorMode && isAdmin;
   const countdown = useCountdown(event.date);
-
+  const { Icon, label } = getEventTypeIcon(event.discipline, event.name);
 
   const inner = (
     <div
@@ -139,7 +202,14 @@ function SpectatorCard({ event }: { event: Event }) {
           <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-white" /> Live
         </span>
       ) : null}
-      <p className="text-[10px] font-bold uppercase tracking-widest text-cherry">
+      <p className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-cherry">
+        <span
+          className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-accent text-cherry-deep"
+          title={label}
+          aria-label={label}
+        >
+          <Icon className="h-3 w-3" aria-hidden="true" />
+        </span>
         {event.discipline}
       </p>
       <h2 className="mt-1 font-display text-base font-bold text-ink">{event.name}</h2>
@@ -167,7 +237,6 @@ function SpectatorCard({ event }: { event: Event }) {
             </span>
           </>
         ) : (
-
           <>
             <span className="inline-flex items-center gap-1 text-xs font-semibold text-ink-soft">
               <Lock className="h-3.5 w-3.5" />
