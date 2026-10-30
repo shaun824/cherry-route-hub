@@ -18,6 +18,20 @@ import { Button } from "@/components/ui/button";
 import { Lock } from "lucide-react";
 import { RidingModeOverlay, useScreenWakeLock } from "@/components/riding-mode-overlay";
 import type { ProgressResult } from "@/lib/course-progress";
+import { isNativeApp } from "@/lib/native";
+import { fetchMyEvents } from "@/lib/my-events";
+import {
+  MOVING_INTERVAL_MS,
+  STATIONARY_RADIUS_M,
+  BATCH_REMINDER_LEAD_MS,
+  batchStartTime,
+  leftVillage,
+  sastTimeMs,
+  sastToday,
+  sustainedMovement,
+  uploadIntervalMs,
+  type SpeedSample,
+} from "@/lib/tracking-auto";
 import {
   cancelMySos,
   fetchMySos,
@@ -33,10 +47,10 @@ import {
 
 type Coords = { lat: number; lng: number; accuracy: number; speedKph: number | null } | null;
 
-// Live mode: record and send a position every 5 seconds. Chosen over 3s to cut
-// database load ~40% at 300+ riders while staying well inside safety-tracking norms.
-const FLUSH_INTERVAL_MS = 5_000;
-const MIN_POINT_GAP_MS = 5_000;
+// Live mode: a point every 10 seconds while riding, once a minute after 5 minutes
+// standing still (water point, lunch). Saves battery and data; the live map glides
+// dots between fixes so they still move smoothly.
+const FLUSH_INTERVAL_MS = MOVING_INTERVAL_MS;
 
 // Press-and-hold duration before an SOS actually fires.
 const SOS_HOLD_MS = 2_000;
@@ -227,12 +241,17 @@ export function TrackerPanel({
   const watchIdRef = useRef<number | null>(null);
   const flushingRef = useRef(false);
   const firstFlushRef = useRef(false);
+  const lastMovedAtRef = useRef(Date.now());
+  const anchorRef = useRef<{ lat: number; lng: number } | null>(null);
+  const lastFlushAtRef = useRef(0);
+  const [stationary, setStationary] = useState(false);
 
   const flush = useCallback(async () => {
     if (flushingRef.current) return;
     const pending = [...loadQueue(eventId), ...bufferRef.current];
     if (pending.length === 0) return;
     flushingRef.current = true;
+    lastFlushAtRef.current = Date.now();
     try {
       // Upload in chunks of 100; remove from the offline queue only on success.
       const remaining = [...pending];
@@ -264,7 +283,15 @@ export function TrackerPanel({
   const addPoint = useCallback(
     (pos: GeolocationPosition) => {
       const now = Date.now();
-      if (now - lastPointAtRef.current < MIN_POINT_GAP_MS) return;
+      // Stationary sleep: a rider who hasn't moved 30 m in 5 minutes drops to one point a minute.
+      const anchor = anchorRef.current;
+      if (!anchor || haversineMeters([anchor.lng, anchor.lat], [pos.coords.longitude, pos.coords.latitude]) > STATIONARY_RADIUS_M) {
+        anchorRef.current = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        lastMovedAtRef.current = now;
+      }
+      const gap = uploadIntervalMs(lastMovedAtRef.current, now);
+      setStationary(gap > MOVING_INTERVAL_MS);
+      if (now - lastPointAtRef.current < gap - 500) return;
       lastPointAtRef.current = now;
       setCoords({
         lat: pos.coords.latitude,
@@ -310,6 +337,8 @@ export function TrackerPanel({
       return;
     }
     setError(null);
+    lastMovedAtRef.current = Date.now();
+    anchorRef.current = null;
     watchIdRef.current = navigator.geolocation.watchPosition(addPoint, (e) => setError(e.message), {
       enableHighAccuracy: true,
       maximumAge: 0,
@@ -426,6 +455,73 @@ export function TrackerPanel({
     saveActive(eventId, false);
   }, [tracking, windowState.open, stopTracking, eventId]);
 
+  const [autoStartNote, setAutoStartNote] = useState<string | null>(null);
+  const native = typeof window !== "undefined" && isNativeApp();
+
+  // Is this signed-in person entered in this event? Hands-free starts are only for entered riders.
+  const myEntriesQ = useQuery({
+    queryKey: ["tracker-my-entry", user?.id ?? null],
+    queryFn: fetchMyEvents,
+    enabled: Boolean(user?.id),
+    staleTime: 5 * 60_000,
+  });
+  const myEntry = myEntriesQ.data?.find((r) => r.event_id === eventId) ?? null;
+  const entered = Boolean(myEntry) || Boolean(event?.isReviewEvent);
+
+  // Option A + C: while the app is open in the tracking window, watch GPS lightly.
+  // Start on its own after 2 minutes above 10 km/h near the start (or anywhere on
+  // open-route events), or as soon as the rider leaves the race village.
+  const armed = Boolean(user?.id) && entered && windowState.open && !tracking && !autoStopNote;
+  useEffect(() => {
+    if (!armed || !("geolocation" in navigator)) return;
+    const samples: SpeedSample[] = [];
+    let wasInside = false;
+    let seenStart = Boolean(event?.trackingAnywhere) || Boolean(event?.isReviewEvent);
+    let prev: { lat: number; lng: number; at: number } | null = null;
+    const id = navigator.geolocation.watchPosition(
+      (pos) => {
+        const at = Date.now();
+        const here = { lat: pos.coords.latitude, lng: pos.coords.longitude, at };
+        let kph = pos.coords.speed == null ? null : Math.max(0, pos.coords.speed * 3.6);
+        if (kph == null && prev && at - prev.at > 0) {
+          kph = (haversineMeters([prev.lng, prev.lat], [here.lng, here.lat]) / ((at - prev.at) / 1000)) * 3.6;
+        }
+        prev = here;
+        samples.push({ at, kph });
+        while (samples.length && samples[0].at < at - 5 * 60_000) samples.shift();
+        const dist = startPoint ? haversineMeters([startPoint.lng, startPoint.lat], [here.lng, here.lat]) : null;
+        if (dist !== null) setStartDistanceM(dist);
+        if (dist !== null && dist <= START_RADIUS_M) {
+          wasInside = true;
+          seenStart = true;
+        }
+        if (!event?.trackingAnywhere && leftVillage(wasInside, dist, START_RADIUS_M)) {
+          beginRef.current("Tracking started automatically when you left the race village.");
+        } else if (seenStart && sustainedMovement(samples, at)) {
+          beginRef.current("Tracking started automatically once you were riding.");
+        }
+      },
+      () => undefined,
+      { enableHighAccuracy: true, maximumAge: 10_000, timeout: 30_000 },
+    );
+    return () => navigator.geolocation.clearWatch(id);
+  }, [armed, startPoint, event?.trackingAnywhere, event?.isReviewEvent]);
+
+  // Option B: 15 minutes before this rider's start batch, offer one-tap tracking.
+  // A push notification goes out too (see batch-start-reminder hook) and opens ?track=1.
+  const batchTime = batchStartTime(event?.batches, myEntry?.batch);
+  const batchStartMs = batchTime ? sastTimeMs(sastToday(clock), batchTime) : null;
+  const batchSoon = batchStartMs !== null && !tracking && clock >= batchStartMs - BATCH_REMINDER_LEAD_MS && clock <= batchStartMs + 30 * 60_000;
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("track") !== "1" || !windowState.open || tracking) return;
+    params.delete("track");
+    const qs = params.toString();
+    window.history.replaceState(null, "", window.location.pathname + (qs ? `?${qs}` : "") + window.location.hash);
+    beginRef.current("Tracking started from your start-batch reminder.");
+  }, [windowState.open, tracking]);
+
   function toggleTracking() {
     const nearStart = Boolean(event?.isReviewEvent) || Boolean(event?.trackingAnywhere) || (startDistanceM !== null && startDistanceM <= START_RADIUS_M);
     if ((!windowState.open || !nearStart) && !tracking) return;
@@ -434,19 +530,31 @@ export function TrackerPanel({
       if (event?.isReviewEvent) {
         void recordDemo({ data: { eventId, startedAt: loadSessionStart(eventId) } }).catch(() => undefined);
       }
+      setTracking(false);
+      saveActive(eventId, false);
     } else {
-      const now = Date.now();
-      setStartedAt(now);
-      saveSessionStart(eventId, now);
-      setAutoStopNote(null);
-      setElapsedNow(now);
-      setDistanceM(0);
-      startTracking();
-      setLocked(true);
+      beginTracking(null);
     }
-    setTracking((t) => !t);
-    saveActive(eventId, !tracking);
   }
+
+  // Shared start used by the button, auto-start on movement, leaving the village
+  // and the start-batch reminder. The tracking window still has to be open.
+  function beginTracking(note: string | null) {
+    if (tracking || !windowState.open) return;
+    const now = Date.now();
+    setStartedAt(now);
+    saveSessionStart(eventId, now);
+    setAutoStopNote(null);
+    setAutoStartNote(note);
+    setElapsedNow(now);
+    setDistanceM(0);
+    saveActive(eventId, true);
+    startTracking();
+    setTracking(true);
+    setLocked(true);
+  }
+  const beginRef = useRef(beginTracking);
+  beginRef.current = beginTracking;
 
   // Periodic flush + flush when the app comes back to the foreground / online.
   useEffect(() => {
@@ -454,14 +562,15 @@ export function TrackerPanel({
     const interval = window.setInterval(() => {
       // Phones only report GPS when the rider moves. A stopped rider (crash,
       // mechanical) must still check in, so ask for a fix after 30s of silence.
-      if (Date.now() - lastPointAtRef.current > 30_000 && "geolocation" in navigator) {
+      const gap = uploadIntervalMs(lastMovedAtRef.current);
+      if (Date.now() - lastPointAtRef.current > Math.max(30_000, gap) && "geolocation" in navigator) {
         navigator.geolocation.getCurrentPosition(addPoint, () => {}, {
           enableHighAccuracy: true,
           maximumAge: 10_000,
           timeout: 15_000,
         });
       }
-      void flush();
+      if (Date.now() - lastFlushAtRef.current >= gap - 500) void flush();
     }, FLUSH_INTERVAL_MS);
     const onOnline = () => void flush();
     const onVisible = () => {
@@ -474,7 +583,7 @@ export function TrackerPanel({
       window.removeEventListener("online", onOnline);
       document.removeEventListener("visibilitychange", onVisible);
     };
-  }, [tracking, flush]);
+  }, [tracking, flush, addPoint]);
 
   // Stop the GPS watch when the component unmounts, and never lose buffered
   // points — park them in the offline queue so the next flush sends them.
@@ -570,7 +679,8 @@ export function TrackerPanel({
   // or while riding-mode lock is up) — browsers pause GPS once the phone locks.
   const [keepAwakeAll, setKeepAwakeAll] = useState(false);
   const awakeLeftMs = tracking && startedAt ? Math.max(0, startedAt + AWAKE_FIRST_MS - elapsedNow) : 0;
-  const wakeSupported = useScreenWakeLock(tracking && (keepAwakeAll || locked || awakeLeftMs > 0));
+  // Inside the store app GPS keeps running with the screen off, so never hold it awake there.
+  const wakeSupported = useScreenWakeLock(!native && tracking && (keepAwakeAll || locked || awakeLeftMs > 0));
 
   // Background GPS only survives a locked screen in the installed app.
   const [needsInstall, setNeedsInstall] = useState(false);
@@ -610,7 +720,9 @@ export function TrackerPanel({
       ) : null}
       {tracking ? (
         <div className="space-y-2 rounded-xl bg-accent px-3 py-2 text-xs text-ink ring-1 ring-border">
-          {wakeSupported ? (
+          {native ? (
+            <p className="font-bold">You can lock your phone now and put it in your pocket. Tracking keeps running. Only take it out to check your route or press SOS.</p>
+          ) : wakeSupported ? (
             <div className="flex flex-wrap items-center gap-2">
               <span className="rounded-full bg-card px-2 py-0.5 font-bold ring-1 ring-border">
                 {keepAwakeAll
@@ -626,7 +738,8 @@ export function TrackerPanel({
               {keepAwakeAll ? <span className="w-full text-ink-soft">Uses more battery — roughly 10–20% per hour.</span> : null}
             </div>
           ) : null}
-          <p>Tip: keep this screen open or use the Rider Hub app. Locking your phone can pause live tracking, so your position may show as an estimate to race control and supporters.</p>
+          {!native ? <p>Tip: keep this screen open or use the Rider Hub app. Locking your phone can pause live tracking, so your position may show as an estimate to race control and supporters.</p> : null}
+          {autoStartNote ? <p className="font-semibold">{autoStartNote}</p> : null}
         </div>
       ) : null}
       {tracking && !locked ? (
@@ -672,6 +785,12 @@ export function TrackerPanel({
         </div>
       ) : null}
 
+      {batchSoon && windowState.open ? (
+        <button type="button" onClick={() => beginTracking("Tracking started from your start-batch reminder.")} className="w-full rounded-2xl bg-cherry px-4 py-3 text-left text-primary-foreground shadow-lg">
+          <p className="font-display text-base font-black">Your batch starts soon</p>
+          <p className="text-xs font-semibold">Tap here to start live tracking.</p>
+        </button>
+      ) : null}
       <div className="rounded-2xl bg-card p-4 ring-1 ring-border">
         <div className="flex items-center gap-2">
           <LocateFixed className="h-4 w-4 text-cherry" />
@@ -687,11 +806,12 @@ export function TrackerPanel({
             <Button type="button" variant="outline" className="w-full" onClick={checkStartArea} disabled={checkingStart || eventInfoQ.isLoading}>
               <LocateFixed className="h-4 w-4" />{checkingStart ? "Checking location…" : startDistanceM === null ? "Check my location" : "Retry location"}
             </Button>
+            {armed ? <p className="rounded-lg bg-accent px-3 py-2 text-xs font-semibold text-ink ring-1 ring-border">Hands-free start is on: tracking starts by itself when you leave the race village or ride for 2 minutes. Keep Rider Hub open.</p> : null}
             {startCheckError ? <p className="rounded-lg bg-destructive/10 px-3 py-2 text-xs font-semibold text-destructive">{startCheckError}</p> : null}
             {startDistanceM !== null && !insideStartArea && !event?.trackingAnywhere ? <p className="rounded-lg bg-amber-100 px-3 py-2 text-xs font-semibold text-amber-900">Tracking unlocks inside 1 km of the event start. Move closer, then retry.</p> : null}
           </div>
         ) : (
-          <p className="mt-2 text-xs text-ink-soft">Positions record every 5 seconds. {queued > 0 ? `${queued} waiting safely on this phone.` : lastUploadAt ? `Last shared at ${lastUploadAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}.` : "Waiting for the first GPS fix."}</p>
+          <p className="mt-2 text-xs text-ink-soft">{stationary ? "Stopped, so saving battery: one position a minute until you move again. " : "Positions share every 10 seconds. "}{queued > 0 ? `${queued} waiting safely on this phone.` : lastUploadAt ? `Last shared at ${lastUploadAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}.` : "Waiting for the first GPS fix."}</p>
         )}
         {error ? <p className="mt-2 flex items-start gap-1.5 rounded-lg bg-destructive/10 px-3 py-2 text-xs font-semibold text-destructive"><WifiOff className="mt-0.5 h-3.5 w-3.5 shrink-0" />{error}</p> : null}
         {needsInstall ? (
