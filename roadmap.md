@@ -67,3 +67,9 @@
 - [x] 7 new tests (89 pass), phone overflow fixed, phone + desktop checks, build OK
 - [ ] Publish
 
+## KCA link on Sabrina Love events (Shaun, 30 Oct)
+- [x] KCA_URL = https://www.keepachildalive.org in src/lib/sabrina-love.ts, used by the in-app KCA card and the Sabrina Love email band
+- [x] Checked stored event copy for old keep.org links: none
+- [x] 3 new tests (99 pass), build OK
+- [ ] Publish
+
