@@ -252,16 +252,32 @@ export default function RouteMapInner({
   const [navigationMap, setNavigationMap] = useState<L.Map | null>(null);
   const [navigationFix, setNavigationFix] = useState<NavigationFix | null>(null);
   const [locationError, setLocationError] = useState<string | null>(null);
-  const navigation = useFullscreenMapNavigation(navigationMap, fs, navigationFix);
+  const [locOn, setLocOn] = useState(true);
+  const [satellite, setSatellite] = useState(false);
   useEffect(() => {
-    if (!fs) return;
+    try { setLocOn(localStorage.getItem('rc-route-loc') !== '0'); setSatellite(localStorage.getItem('rc-route-sat') === '1'); } catch { /* ignore */ }
+  }, []);
+  const toggleLoc = () => {
+    const next = !locOn;
+    setLocOn(next);
+    if (!next) { setNavigationFix(null); setLocationError('Location is off. Tap Location to turn it back on.'); }
+    try { localStorage.setItem('rc-route-loc', next ? '1' : '0'); } catch { /* ignore */ }
+  };
+  const toggleSat = () => {
+    const next = !satellite;
+    setSatellite(next);
+    try { localStorage.setItem('rc-route-sat', next ? '1' : '0'); } catch { /* ignore */ }
+  };
+  const navigation = useFullscreenMapNavigation(navigationMap, fs && locOn, navigationFix);
+  useEffect(() => {
+    if (!fs || !locOn) return;
     if (!navigator.geolocation) { setLocationError('Location is unavailable on this device.'); return; }
     const watch = navigator.geolocation.watchPosition(p => {
       setLocationError(null);
       setNavigationFix({ lat: p.coords.latitude, lng: p.coords.longitude, heading: (p.coords.speed ?? 0) > 1 ? p.coords.heading : null });
     }, e => setLocationError(e.code === 1 ? 'Allow location to follow your pin.' : 'Waiting for a GPS fix…'), { enableHighAccuracy: true, maximumAge: 0, timeout: 15000 });
     return () => navigator.geolocation.clearWatch(watch);
-  }, [fs]);
+  }, [fs, locOn]);
   const [zoom, setZoom] = useState(12);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [chipDay, setChipDay] = useState<string | null>(null);
@@ -568,13 +584,25 @@ export default function RouteMapInner({
       preferCanvas
       {...({ rotate: keySuffix === '-fs', touchRotate: keySuffix === '-fs', rotateControl: false, bearing: 0 } as object)}
     >
-      <TileLayer
-        crossOrigin="anonymous"
-        attribution='&copy; <a href="https://openstreetmap.org">OpenStreetMap</a>'
-        url="https://a.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        maxZoom={24}
-        maxNativeZoom={19}
-      />
+      {keySuffix === '-fs' && satellite ? (
+        <TileLayer
+          key="sat"
+          crossOrigin="anonymous"
+          attribution="Imagery &copy; Esri"
+          url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+          maxZoom={24}
+          maxNativeZoom={18}
+        />
+      ) : (
+        <TileLayer
+          key="osm"
+          crossOrigin="anonymous"
+          attribution='&copy; <a href="https://openstreetmap.org">OpenStreetMap</a>'
+          url="https://a.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          maxZoom={24}
+          maxNativeZoom={19}
+        />
+      )}
       {keySuffix !== '-fs' || !navigationFix ? <FitToBounds bounds={bounds} /> : null}
       {keySuffix === '-fs' ? <NavigationMap onMap={setNavigationMap} /> : null}
       {trackpadPan ? <RouteMapTrackpad /> : null}
@@ -772,6 +800,20 @@ export default function RouteMapInner({
               </ul>
             ) : null}
           </div>
+          </div>
+          <div className="flex gap-1.5 overflow-x-auto border-t border-border bg-card px-3 py-2" aria-label="Rider map controls">
+            <button type="button" onClick={toggleLoc} aria-pressed={locOn} className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-bold ring-1 ${locOn ? 'bg-primary text-primary-foreground ring-primary' : 'bg-background text-ink ring-border'}`}>
+              {locOn ? 'Location on' : 'Location off'}
+            </button>
+            <button type="button" onClick={() => { navigation.pause(); const b = bounds; if (navigationMap && b) { (navigationMap as L.Map & { setBearing?: (n: number) => void }).setBearing?.(0); navigationMap.fitBounds(b, { padding: [28, 28], animate: true }); } }} className="shrink-0 rounded-full bg-background px-3 py-1.5 text-xs font-bold text-ink ring-1 ring-border">
+              Go to route
+            </button>
+            <button type="button" onClick={toggleSat} aria-pressed={satellite} className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-bold ring-1 ${satellite ? 'bg-primary text-primary-foreground ring-primary' : 'bg-background text-ink ring-border'}`}>
+              {satellite ? 'Satellite' : 'Street map'}
+            </button>
+            <button type="button" onClick={() => { const c = navigationFix ?? navigationMap?.getCenter(); if (c) window.open(`https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${c.lat},${c.lng}`, '_blank', 'noopener'); }} className="shrink-0 rounded-full bg-background px-3 py-1.5 text-xs font-bold text-ink ring-1 ring-border">
+              Street View
+            </button>
           </div>
           <FullscreenNavigationBar fix={navigationFix} error={locationError} routeName={visible[0]?.route.name} progress={navigationFix && visible[0] ? navigationProgress(visible[0].navigationLines, navigationFix.lat, navigationFix.lng) : null} paused={navigation.paused} onResume={navigation.resume} />
         </div>,
