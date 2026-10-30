@@ -295,7 +295,7 @@ export function RaceControlPanel({
                   if (navigator.share) await navigator.share({ title: `${name} · race control`, url });
                   else {
                     await navigator.clipboard.writeText(url);
-                    toast.success("Link copied — works without sign-in for 5 days");
+                    toast.success("Link copied, valid for 24 hours");
                   }
                 } catch {
                   /* share cancelled */

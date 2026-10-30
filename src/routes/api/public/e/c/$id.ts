@@ -7,12 +7,16 @@ export const Route = createFileRoute("/api/public/e/c/$id")({
       GET: async ({ params, request }) => {
         const url = new URL(request.url);
         const target = url.searchParams.get("u") ?? "";
-        const safe = /^https?:\/\//i.test(target) ? target : "https://riderapp.redcherryevents.co.za";
+        let safe = /^https?:\/\//i.test(target) ? target : "https://riderapp.redcherryevents.co.za";
 
+        if (!/^[0-9a-f-]{36}$/i.test(params.id)) safe = "https://riderapp.redcherryevents.co.za";
         if (/^[0-9a-f-]{36}$/i.test(params.id)) {
           try {
             const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
             const admin = supabaseAdmin as any;
+            const { data: original } = await admin.from("email_sends").select("html").eq("id", params.id).maybeSingle();
+            const links = Array.from(String(original?.html ?? "").matchAll(/href="([^"]+)"/gi), (match) => match[1].replace(/&amp;/gi, "&").replace(/&#38;/g, "&").replace(/&quot;/gi, '"'));
+            if (!links.includes(target)) safe = "https://riderapp.redcherryevents.co.za";
             await admin.from("email_send_clicks").insert({ send_id: params.id, url: safe });
             const { data } = await admin
               .from("email_sends")
@@ -26,7 +30,8 @@ export const Route = createFileRoute("/api/public/e/c/$id")({
                 .eq("id", params.id);
             }
           } catch (err) {
-            console.error("[email-click] failed", err);
+            safe = "https://riderapp.redcherryevents.co.za";
+            console.error("[email-click] failed");
           }
         }
 

@@ -145,7 +145,7 @@ ${isStaff ? CONFIDENTIALITY_RULES_STAFF : CONFIDENTIALITY_RULES}`;
     {
       try {
         const eventId = focusEventIds[0] ?? null;
-        const guestKey = userId ? null : (data.sessionId?.trim() || "anon");
+        const guestKey = userId ? null : crypto.randomUUID();
 
         let query = supabaseAdmin.from("admin_qa_threads").select("id").limit(1);
         query = eventId ? query.eq("event_id", eventId) : query.is("event_id", null);
