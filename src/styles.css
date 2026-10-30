@@ -47,6 +47,7 @@
 .ice-signup .ice-inline-ok { display: flex; align-items: center; gap: 10px; font-size: 18px; font-weight: 600; }
 @media (max-width: 640px) {
   .ice-signup .ice-inline-row { flex-direction: column; }
+  .ice-signup .ice-inline-field { flex: 0 0 auto; width: 100%; }
   .ice-signup .ice-inline-submit { width: 100%; }
 }
 
