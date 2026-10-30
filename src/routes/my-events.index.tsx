@@ -14,6 +14,16 @@ import { EventLogo } from "@/components/event-logo";
 import { SyncMyEntryButton } from "@/components/sync-my-entry";
 
 export const Route = createFileRoute("/my-events/")({
+  head: () => ({
+    meta: [
+      { title: "Your next event | Red Cherry Rider Hub" },
+      { name: "description", content: "Your entered Red Cherry events, upcoming rides and past events." },
+      { property: "og:title", content: "Your next event | Red Cherry Rider Hub" },
+      { property: "og:description", content: "Your entered Red Cherry events, upcoming rides and past events." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: MyEventsIndex,
 });
 
@@ -100,8 +110,8 @@ function SignedInState() {
   return (
     <div>
       <PageHeader
-        title="Events Hub"
-        subtitle={`${upcoming.length} upcoming event${upcoming.length === 1 ? "" : "s"}`}
+        title="YOUR NEXT EVENT"
+        subtitle={`${upcoming.length} upcoming event${upcoming.length === 1 ? "" : "s"} on your entries`}
       />
       {upcoming.length === 0 ? (
         <div className="mx-5 mt-4 rounded-2xl border border-dashed border-border p-8 text-center">
