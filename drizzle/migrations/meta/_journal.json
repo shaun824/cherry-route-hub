@@ -281,6 +281,13 @@
       "when": 1793343876229,
       "tag": "0039_revocable_crew_field_access",
       "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "7",
+      "when": 1793343958795,
+      "tag": "0040_atomic_public_request_limits",
+      "breakpoints": true
     }
   ]
 }

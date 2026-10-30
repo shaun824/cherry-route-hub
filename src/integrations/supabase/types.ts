@@ -3889,6 +3889,27 @@ export type Database = {
           },
         ]
       }
+      security_request_limits: {
+        Row: {
+          actor_hash: string
+          hits: number
+          scope: string
+          window_start: string
+        }
+        Insert: {
+          actor_hash: string
+          hits?: number
+          scope: string
+          window_start: string
+        }
+        Update: {
+          actor_hash?: string
+          hits?: number
+          scope?: string
+          window_start?: string
+        }
+        Relationships: []
+      }
       site_settings: {
         Row: {
           key: string
@@ -4240,6 +4261,15 @@ export type Database = {
     Functions: {
       analytics_summary: { Args: { _since: string }; Returns: Json }
       chat_author_whatsapp: { Args: { _message_id: string }; Returns: string }
+      consume_request_quota: {
+        Args: {
+          _actor_hash: string
+          _limit: number
+          _scope: string
+          _window_seconds: number
+        }
+        Returns: boolean
+      }
       inside_events_summary: {
         Args: { _event_id?: string; _since: string }
         Returns: Json

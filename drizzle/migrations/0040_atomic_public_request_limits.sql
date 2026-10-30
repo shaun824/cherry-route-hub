@@ -1,0 +1,7 @@
+CREATE TABLE public.security_request_limits (scope text NOT NULL, actor_hash text NOT NULL, window_start timestamptz NOT NULL, hits integer NOT NULL DEFAULT 1, PRIMARY KEY(scope,actor_hash,window_start));
+GRANT ALL ON public.security_request_limits TO service_role;
+REVOKE ALL ON public.security_request_limits FROM anon, authenticated;
+ALTER TABLE public.security_request_limits ENABLE ROW LEVEL SECURITY;
+CREATE OR REPLACE FUNCTION public.consume_request_quota(_scope text,_actor_hash text,_limit integer,_window_seconds integer) RETURNS boolean LANGUAGE plpgsql SECURITY DEFINER SET search_path=public AS $$ DECLARE count_hits integer; win timestamptz; BEGIN IF _limit < 1 OR _window_seconds < 1 THEN RETURN false; END IF; win := to_timestamp(floor(extract(epoch FROM now())/_window_seconds)*_window_seconds); INSERT INTO public.security_request_limits(scope,actor_hash,window_start,hits) VALUES(_scope,_actor_hash,win,1) ON CONFLICT(scope,actor_hash,window_start) DO UPDATE SET hits=security_request_limits.hits+1 RETURNING hits INTO count_hits; RETURN count_hits <= _limit; END $$;
+REVOKE ALL ON FUNCTION public.consume_request_quota(text,text,integer,integer) FROM PUBLIC,anon,authenticated;
+GRANT EXECUTE ON FUNCTION public.consume_request_quota(text,text,integer,integer) TO service_role;
