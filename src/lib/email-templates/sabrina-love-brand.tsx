@@ -4,6 +4,7 @@ import kcaLogo from '@/assets/kca-logo.png.asset.json'
 import discoveryLogo from '@/assets/discovery-logo.jpg.asset.json'
 import slLogo from '@/assets/sabrina-love-logo.png.asset.json'
 import rceLogo from '@/assets/rce-logo.png.asset.json'
+import { KCA_URL } from '@/lib/sabrina-love'
 
 const absolute = (url: string) => new URL(url, 'https://riderhub.redcherryevents.co.za').href
 
@@ -68,7 +69,7 @@ export function KcaMatchBand({ entryUrl }: { entryUrl: string }) {
       </Column>
     </Row>
     <Text style={{ ...sl.text, fontSize: '13px', color: sl.muted, margin: '12px 0 0' }}>
-      Find out more about <Link href="https://keep.org" style={{ color: sl.pink }}>Keep a Child Alive</Link>.
+      Find out more about <Link href={KCA_URL} style={{ color: sl.pink }}>Keep a Child Alive</Link>.
     </Text>
   </Section>
 }

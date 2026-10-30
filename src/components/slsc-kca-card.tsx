@@ -1,7 +1,8 @@
 import kcaLogo from "@/assets/kca-logo.png.asset.json";
 import { ExternalLink, Heart } from "lucide-react";
+import { KCA_URL } from "@/lib/sabrina-love";
 
-export const KCA_URL = "https://keep.org";
+
 const SLSC_PINK = "#E6007E"; // Sabrina Love brand pink
 const GIVENGAIN_URL = "https://www.givengain.com/cc/sabrinalove";
 
