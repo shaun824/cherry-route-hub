@@ -1,6 +1,6 @@
 // Rider tracker + SOS panel. Rendered inside a My Event page when the event is live.
-// Captures GPS every ~30s while tracking, buffers points locally (offline-safe),
-// and uploads batches once a minute when there's signal.
+// Shares GPS every 10s while riding (60s after 5 min stopped), buffers points
+// locally (offline-safe), and can start hands-free for entered riders.
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Event } from "@/lib/mock-data";
 import { BatteryMedium, Clock3, Crosshair, LocateFixed, Play, Radio, Siren, Smartphone, Square, WifiOff } from "lucide-react";

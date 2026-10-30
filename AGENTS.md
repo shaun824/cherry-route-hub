@@ -53,3 +53,4 @@
 - Crew training prompts omit answer keys; assessment and completion writes are server-verified, while direct client grade writes are denied.
 - Public request quotas are atomic durable counters, independent of caller-provided session identifiers.
 - Activity-specific packing lives in the shared packing-activity helper and overrides cycling defaults for non-cycling Sabrina Love days; checklist keys remain stable when labels change to preserve ticked items.
+- Tracking cadence, stationary sleep and hands-free start rules live in `src/lib/tracking-auto.ts` (tested); start-batch push reminders run from the race-hours `batch-start-reminder` hook and open `?track=1`, so web, native and push share one start path.
