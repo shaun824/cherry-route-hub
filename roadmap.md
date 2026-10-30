@@ -1,5 +1,11 @@
 # Roadmap
 
+## ICE website near-top sign-up (30 Oct)
+- [ ] Add first-name/email opt-in to supplied WordPress page, preserving the design
+- [ ] Secure public opt-in flow, store consent and sync Motorbikes list without exposing the shared key
+- [ ] Verify immediate confirmation and race-week audience/schedule
+- [ ] Test form and deliver updated website code
+
 ## Native sign-in and self-account deletion
 - [x] Hide Google and divider only on native /auth, retain email sign-in/sign-up
 - [x] Authenticated deletion and race-record retention with sensitive-data cleanup
