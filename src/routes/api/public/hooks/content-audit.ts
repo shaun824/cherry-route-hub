@@ -5,21 +5,9 @@ export const Route = createFileRoute("/api/public/hooks/content-audit")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const apikey =
-          request.headers.get("apikey") ??
-          request.headers.get("authorization")?.replace("Bearer ", "") ??
-          "";
-        const expected =
-          import.meta.env["VITE_SUPABASE_PUBLISHABLE_KEY"] ??
-          process.env["SUPABASE_PUBLISHABLE_KEY"] ??
-          "";
-
-        if (!apikey || (expected && apikey !== expected)) {
-          return new Response(JSON.stringify({ error: "Unauthorized" }), {
-            status: 401,
-            headers: { "Content-Type": "application/json" },
-          });
-        }
+        const { verifyCronRequest } = await import("@/lib/cron-auth.server");
+        const denied = await verifyCronRequest(request);
+        if (denied) return denied;
 
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
         const { runAndStoreContentAudit } = await import("@/lib/content-audit.server");

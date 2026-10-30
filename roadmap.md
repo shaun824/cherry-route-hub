@@ -1,3 +1,10 @@
+# Rider data security (30 Oct)
+- [ ] Fix exposed scheduled tasks and preserve authorized schedules
+- [ ] Protect GPS, SOS, private rider records and shared crew access
+- [ ] Fix account, export and remaining actionable findings
+- [ ] Verify denied access and legitimate rider/crew workflows, rescan and publish
+- [ ] Review deep security scan results when available
+
 # Roadmap
 
 ## ICE venue correction (30 Oct)
