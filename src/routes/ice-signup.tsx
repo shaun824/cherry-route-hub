@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { useServerFn } from '@tanstack/react-start';
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { ArrowRight, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { subscribeIceInterest } from '@/lib/ice-interest.functions';
@@ -25,6 +25,8 @@ function IceSignup() {
   const subscribe = useServerFn(subscribeIceInterest);
   const [state, setState] = useState<'idle' | 'sending' | 'success'>('idle');
   const [error, setError] = useState('');
+  const [ready, setReady] = useState(false);
+  useEffect(() => setReady(true), []);
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
@@ -46,7 +48,7 @@ function IceSignup() {
         <div hidden aria-hidden="true"><input name="website" tabIndex={-1} autoComplete="off" /></div>
         <label className="ice-muted flex items-start gap-3 text-sm leading-relaxed"><input name="consent" type="checkbox" required className="mt-1 size-4 shrink-0" /><span>Send me the ICE event guide, race-week email and Red Cherry Events motorbike news. I can unsubscribe at any time.</span></label>
         {error ? <p role="alert" className="ice-error pl-3 text-sm">{error}</p> : null}
-        <Button className="ice-submit h-12 w-full text-base font-bold" type="submit" disabled={state === 'sending'}>{state === 'sending' ? 'Signing you up…' : 'Sign me up'}<ArrowRight /></Button>
+        <Button className="ice-submit h-12 w-full text-base font-bold" type="submit" disabled={!ready || state === 'sending'}>{state === 'sending' ? 'Signing you up…' : 'Sign me up'}<ArrowRight /></Button>
       </form>}
       <footer className="ice-muted mt-6 text-xs"><a href="/policy" target="_blank" rel="noopener" className="underline">Privacy policy</a> · Red Cherry Events</footer>
     </div>

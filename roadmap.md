@@ -1,10 +1,11 @@
 # Roadmap
 
 ## ICE website near-top sign-up (30 Oct)
-- [ ] Add first-name/email opt-in to supplied WordPress page, preserving the design
-- [ ] Secure public opt-in flow, store consent and sync Motorbikes list without exposing the shared key
-- [ ] Verify immediate confirmation and race-week audience/schedule
-- [ ] Test form and deliver updated website code
+- [x] Add first-name/email opt-in to supplied WordPress page, preserving the design
+- [x] Secure public opt-in flow, store consent and sync Motorbikes list without exposing the shared key
+- [x] Verify immediate confirmation and race-week audience/schedule in Everlytic (924873, list 146523), old Hub campaign paused
+- [x] Test form and deliver updated website code
+- [ ] Install supplied HTML on WordPress, requires Shaun's website editor
 
 ## Native sign-in and self-account deletion
 - [x] Hide Google and divider only on native /auth, retain email sign-in/sign-up
