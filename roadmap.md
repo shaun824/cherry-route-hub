@@ -1,9 +1,11 @@
 # Rider data security (30 Oct)
-- [ ] Fix exposed scheduled tasks and preserve authorized schedules
-- [ ] Protect GPS, SOS, private rider records and shared crew access
-- [ ] Fix account, export and remaining actionable findings
-- [ ] Verify denied access and legitimate rider/crew workflows, rescan and publish
-- [ ] Review deep security scan results when available
+- [x] Fix exposed scheduled tasks and preserve authorized schedules
+- [x] Protect GPS, SOS, private rider records and shared crew access
+- [x] Fix account, export, training, click tracking and actionable findings
+- [x] Verify denied public hooks, signed-in crew/race control, 72 tests and quick rescan
+- [ ] Confirm sharing on a real device, browser clipboard readback was unavailable
+- [ ] Publish security fixes
+- [x] Review deep scan of the pre-change snapshot and address new findings
 
 # Roadmap
 
