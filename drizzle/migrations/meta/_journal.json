@@ -274,6 +274,13 @@
       "when": 1793343864801,
       "tag": "0038_secure_cron_transport_and_event_reads",
       "breakpoints": true
+    },
+    {
+      "idx": 39,
+      "version": "7",
+      "when": 1793343876229,
+      "tag": "0039_revocable_crew_field_access",
+      "breakpoints": true
     }
   ]
 }

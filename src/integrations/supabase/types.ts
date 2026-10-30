@@ -379,6 +379,38 @@ export type Database = {
           },
         ]
       }
+      crew_field_access: {
+        Row: {
+          event_id: string
+          expires_at: string
+          issued_by: string
+          revoked_at: string | null
+          token_hash: string
+        }
+        Insert: {
+          event_id: string
+          expires_at: string
+          issued_by: string
+          revoked_at?: string | null
+          token_hash: string
+        }
+        Update: {
+          event_id?: string
+          expires_at?: string
+          issued_by?: string
+          revoked_at?: string | null
+          token_hash?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crew_field_access_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       crew_locations: {
         Row: {
           device_id: string
