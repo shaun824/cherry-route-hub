@@ -242,6 +242,40 @@ function AdminCrewPage() {
           </ul>
         )}
       </section>
+      <CrewEmergencyList />
     </div>
+  );
+}
+
+function CrewEmergencyList() {
+  const q = useQuery({
+    queryKey: ["admin-crew-emergency"],
+    queryFn: async () => {
+      const { supabase } = await import("@/integrations/supabase/client");
+      const { data, error } = await supabase.from("crew_emergency_profiles").select("*").order("first_name");
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+  const age = (dob: string) => Math.floor((Date.now() - new Date(dob).getTime()) / 31_557_600_000);
+  return (
+    <section className="mt-6 rounded-2xl border border-border bg-card p-4">
+      <h2 className="text-sm font-bold">Crew emergency details ({q.data?.length ?? 0})</h2>
+      <p className="mb-3 text-xs text-ink-soft">Filled in by each crew member the first time they open the crew centre. Admins only.</p>
+      {q.isLoading ? (
+        <p className="text-xs text-ink-soft">Loading…</p>
+      ) : (
+        <ul className="divide-y divide-border text-xs">
+          {(q.data ?? []).map((r) => (
+            <li key={r.user_id} className="py-2">
+              <p className="font-bold">{r.first_name} · <a href={`tel:${r.cell_number}`} className="text-cherry">{r.cell_number}</a></p>
+              <p>DOB {r.date_of_birth} ({age(r.date_of_birth)}) · Medical aid: {r.medical_aid_name}{r.medical_aid_plan ? ` ${r.medical_aid_plan}` : ""}{r.medical_aid_number ? ` · #${r.medical_aid_number}` : ""}</p>
+              {(r.emergency_contact_name || r.emergency_contact_phone) && <p>Emergency: {r.emergency_contact_name} {r.emergency_contact_phone}</p>}
+              {r.medical_notes && <p className="text-cherry">Medical: {r.medical_notes}</p>}
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
   );
 }
