@@ -5,7 +5,7 @@ import { Navigation, Radar, Siren } from "lucide-react";
 import { z } from "zod";
 import { LiveTrackingMap } from "@/components/live-tracking-map";
 import { fetchFieldLinkSos, fetchFieldLinkSosLog } from "@/lib/crew-field-link.functions";
-import { useIsAdmin } from "@/lib/auth";
+import { useIsAdmin, useIsCrew } from "@/lib/auth";
 import { RoutesGpxButton } from "@/components/race-control";
 import { ResolveSosButton } from "@/components/resolve-sos-button";
 import { RaceStatusPanel } from "@/components/race-status-panel";
@@ -34,6 +34,7 @@ function FieldTrackingPage() {
   const { eventId } = Route.useParams();
   const { k } = Route.useSearch();
   const { isAdmin } = useIsAdmin();
+  const { isCrew } = useIsCrew();
   const q = useQuery({
     queryKey: ["field-link-sos", eventId, k],
     queryFn: () => fetchFieldLinkSos({ data: { eventId, token: k ?? "" } }),
@@ -44,7 +45,7 @@ function FieldTrackingPage() {
   const logQ = useQuery({
     queryKey: ["field-link-sos-log", eventId, k],
     queryFn: () => fetchFieldLinkSosLog({ data: { eventId, token: k ?? "" } }),
-    enabled: Boolean(k),
+    enabled: Boolean(k) && isCrew,
     refetchInterval: 15_000,
   });
 
@@ -117,7 +118,7 @@ function FieldTrackingPage() {
         <p className="font-display text-sm font-bold text-ink">Route files</p>
         <RoutesGpxButton eventId={eventId} eventName={q.data.eventName} />
       </section>
-      <section className="space-y-2 rounded-2xl bg-card p-3 ring-1 ring-border">
+      {isCrew ? <section className="space-y-2 rounded-2xl bg-card p-3 ring-1 ring-border">
         <p className="flex items-center gap-2 font-display text-sm font-bold text-ink">
           <Siren className="h-4 w-4 text-cherry" /> SOS log
         </p>
@@ -126,7 +127,7 @@ function FieldTrackingPage() {
           <p className="text-xs text-ink-soft">{logQ.isLoading ? "Loading…" : "No SOS alerts yet."}</p>
         ) : (
           <ul className="divide-y divide-border">
-            {logQ.data!.log.map((s) => (
+            {(logQ.data?.log ?? []).map((s) => (
               <li key={s.id} className="space-y-1 py-2 text-sm">
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="font-bold text-ink">{s.riderName ?? "Unknown rider"}</span>
@@ -166,7 +167,7 @@ function FieldTrackingPage() {
             ))}
           </ul>
         )}
-      </section>
+      </section> : null}
       <p className="text-xs text-ink-soft">
         Tap Full screen to search riders, see waterpoints and navigate. Anyone with this link can see SOS alerts and navigate to riders. Clearing an SOS needs an admin sign-in and an incident report.
       </p>

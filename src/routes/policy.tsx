@@ -26,23 +26,32 @@ function PolicyPage() {
     >
       <LegalSection title="Information we collect">
         <ul className="list-disc space-y-1 pl-5">
-          <li><strong>Account details</strong> — your name and email address when you sign in, including when you sign in with Google.</li>
-          <li><strong>Entry details</strong> — your event entries, category, start information and apparel sizes, synced from Entry Ninja where you entered.</li>
-          <li><strong>ID number</strong> — used only to find and link your entries. We do not keep your full ID number or date of birth; we store a scrambled version and a broad age group.</li>
-          <li><strong>Location</strong> — only when you choose to turn on live tracking or send an SOS during an event.</li>
-          <li><strong>Usage information</strong> — which pages and features are used, so we can improve the app. This does not include personal details.</li>
+          <li><strong>Account details</strong>: your name and email address when you sign in, including when you sign in with Apple or Google.</li>
+          <li><strong>Entry details</strong>: your event entries, category, start information and apparel sizes, synced from Entry Ninja where you entered.</li>
+          <li><strong>ID number</strong>: used only to find and link your entries. We do not keep your full ID number or date of birth; we store a scrambled version and a broad age group.</li>
+          <li><strong>Medical and emergency details</strong>: information supplied with your entry or profile, used for event safety and emergency assistance.</li>
+          <li><strong>Location</strong>: only when you choose to turn on live tracking or send an SOS during an event.</li>
+          <li><strong>Usage information</strong>: which pages and features are used, so we can improve the app. This does not include personal details.</li>
         </ul>
       </LegalSection>
       <LegalSection title="How we use it">
         <ul className="list-disc space-y-1 pl-5">
           <li>To show your events, schedules, routes, results and rewards.</li>
           <li>To send event emails and notifications you need for race day.</li>
-          <li>For rider safety — so race control and medics can find you if you send an SOS or are being tracked.</li>
+          <li>For rider safety: so race control and medics can find you if you send an SOS or are being tracked.</li>
           <li>To produce anonymous event statistics, such as entry counts and age groups. These never include names, emails, phone numbers or ID numbers.</li>
         </ul>
       </LegalSection>
       <LegalSection title="Sharing">
         <p>We do not sell your information. We share it only with services we use to run our events (such as Entry Ninja for entries and timing partners for results), or when the law requires it. Sponsor offers in the app link to sponsors, but we do not pass your details to them.</p>
+      </LegalSection>
+      <LegalSection title="Live tracking and safety information">
+        <p>When you start live tracking at an event with spectator tracking enabled, your latest position, name, race number and category may appear on its public spectator map. Stop tracking to stop sending new positions. Safety alert reasons, medical notes and emergency-contact details are not included in that public feed.</p>
+        <p>Race-control staff can view locations and safety alerts for emergency assistance. Shared field links are short-lived and do not include medical notes or historical incident details. Medical entry notes and profile emergency contacts are restricted to the rider and authorised administrators.</p>
+      </LegalSection>
+      <LegalSection title="Your information rights">
+        <p>Under South Africa's Protection of Personal Information Act (POPIA), you can request access to your information, correction of inaccurate details, or deletion where applicable. Contact <a href="mailto:team@redcherryevents.co.za">team@redcherryevents.co.za</a>. You can also raise a complaint with South Africa's Information Regulator.</p>
+        <p>Account deletion removes your profile, personal tracking and safety records, and clears medical notes and emergency details linked to your account. Entries and results are retained as race records but are unlinked from your account.</p>
       </LegalSection>
       <LegalSection title="Google sign-in">
         <p>If you sign in with Google, we receive only your name, email address and profile picture, and use them only to create and identify your Rider Hub account.</p>
