@@ -530,7 +530,7 @@ export default function LiveTrackingMapInner({
       a.style.fontWeight = "700";
       a.textContent = "Directions in Google Maps";
       wrap.appendChild(a);
-      focusPinRef.current = L.marker([lat, lng], { icon: markerIcon("live" as Signal, true), zIndexOffset: 2000 })
+      focusPinRef.current = L.marker([lat, lng], { icon: markerIcon("live", true), zIndexOffset: 2000 })
         .addTo(map)
         .bindPopup(wrap)
         .openPopup();
