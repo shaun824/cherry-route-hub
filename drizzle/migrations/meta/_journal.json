@@ -260,6 +260,13 @@
       "when": 1793341253517,
       "tag": "0036_create_native_push_tokens",
       "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1793343763731,
+      "tag": "0037_rider_privacy_access_hardening",
+      "breakpoints": true
     }
   ]
 }
