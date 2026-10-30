@@ -257,6 +257,7 @@ export async function upsertEventCloud(e: Event): Promise<string | null> {
     days: e.days ?? [],
     social_links: e.socialLinks ?? {},
     spectator_mode: e.spectatorMode ?? false,
+    tracking_anywhere: e.trackingAnywhere ?? false,
     collects_tshirt_size: e.collectsTshirtSize ?? false,
     collects_jacket_size: e.collectsJacketSize ?? false,
     website_url: e.websiteUrl ?? null,
