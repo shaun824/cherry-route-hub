@@ -185,7 +185,6 @@ function CrewDashboard() {
         ))}
       </div>
 
-      <AskBotCard eventName={event?.name ?? null} />
 
       {tab === "plan" ? (
       <section className="rounded-2xl bg-card p-4 shadow-sm ring-1 ring-border">
@@ -272,16 +271,16 @@ function CrewDashboard() {
       ) : (
       <section className="grid gap-2 sm:grid-cols-2">
         <Tile
-          to="/crew/learn"
-          icon={<GraduationCap className="h-5 w-5" />}
-          title="Learn"
-          body="New here? Train on the business, this event and your department — built from our live data."
+          to="/crew/tracking"
+          icon={<Siren className="h-5 w-5" />}
+          title="Race control"
+          body="Live rider positions and SOS alerts — crew only, riders never see these."
         />
         <Tile
-          to="/crew/run-sheet"
-          icon={<ClipboardList className="h-5 w-5" />}
-          title="Run sheet"
-          body="Your department's instructions for each day, packing lists and onboarding."
+          to="/crew/build"
+          icon={<MapPin className="h-5 w-5" />}
+          title="Field build map"
+          body="Generators, water, fencing, gazebos, flags and signage — where each goes, with quantities."
         />
         <Tile
 
@@ -291,36 +290,23 @@ function CrewDashboard() {
           body="Search by name to see their tent, room mates and exactly where to send them."
         />
         <Tile
-          to="/crew/rooming"
-          icon={<BedDouble className="h-5 w-5" />}
-          title="Rooming lists"
-          body="Every tent and room for the event, grouped and searchable."
-        />
-        <Tile
-          to="/crew/inventory"
-          icon={<Boxes className="h-5 w-5" />}
-          title="Inventory management"
-          body="The full event load-out: what to pack, who is driving it, and packed / on site / setup / returned ticks."
-        />
-        <Tile
-          to="/crew/build"
-          icon={<MapPin className="h-5 w-5" />}
-          title="Field build map"
-          body="Generators, water, fencing, gazebos, flags and signage — where each goes, with quantities."
-        />
-        <Tile
           to="/crew/rentals"
           icon={<Boxes className="h-5 w-5" />}
           title="Rental jobs"
           body="Infrastructure hire for client events — build map, run sheet and load-out."
         />
         <Tile
-          to="/crew/tracking"
-          icon={<Siren className="h-5 w-5" />}
-          title="Race control"
-          body="Live rider positions and SOS alerts — crew only, riders never see these."
+          to="/crew/learn"
+          icon={<GraduationCap className="h-5 w-5" />}
+          title="Learn"
+          body="New here? Train on the business, this event and your department — built from our live data."
         />
-
+        <Tile
+          to="/crew/rooming"
+          icon={<BedDouble className="h-5 w-5" />}
+          title="Rooming lists"
+          body="Every tent and room for the event, grouped and searchable."
+        />
         {event ? (
           <Tile
             to="/spectate/$eventId"
@@ -330,6 +316,18 @@ function CrewDashboard() {
             body="Batches, categories and who is riding what."
           />
         ) : null}
+        <Tile
+          to="/crew/run-sheet"
+          icon={<ClipboardList className="h-5 w-5" />}
+          title="Run sheet"
+          body="Your department's instructions for each day, packing lists and onboarding."
+        />
+        <Tile
+          to="/crew/inventory"
+          icon={<Boxes className="h-5 w-5" />}
+          title="Inventory management"
+          body="The full event load-out: what to pack, who is driving it, and packed / on site / setup / returned ticks."
+        />
         {event ? (
           <Tile
             to="/my-events/$eventId"
@@ -341,6 +339,7 @@ function CrewDashboard() {
         ) : null}
       </section>
       )}
+      <AskBotCard eventName={event?.name ?? null} />
 
     </div>
   );
