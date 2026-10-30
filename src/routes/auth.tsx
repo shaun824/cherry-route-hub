@@ -258,6 +258,11 @@ function AuthPage() {
       } else if (mode === "signup") {
         writePending(PENDING_ID_KEY, idNumber.trim());
         writePending(PENDING_NAME_KEY, fullName.trim().split(/\s+/).pop() ?? "");
+        // Ask for "while using the app" location now, so race-morning hands-free
+        // tracking can start without a permission prompt in the start chute.
+        if ("geolocation" in navigator) {
+          navigator.geolocation.getCurrentPosition(() => undefined, () => undefined, { enableHighAccuracy: false, maximumAge: 600_000, timeout: 20_000 });
+        }
         const { data, error: err } = await supabase.auth.signUp({
           email: email.trim(),
           password,

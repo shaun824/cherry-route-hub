@@ -104,6 +104,7 @@ import { Route as EventsEventIdMapRouteImport } from './routes/events.$eventId.m
 import { Route as FieldTrackingEventIdRouteImport } from './routes/field.tracking.$eventId'
 import { Route as MyEventsEventIdReportRouteImport } from './routes/my-events_.$eventId_.report'
 import { Route as AdminLoyaltyRiderEntrantIdRouteImport } from './routes/admin.loyalty.rider.$entrantId'
+import { Route as ApiPublicHooksBatchStartReminderRouteImport } from './routes/api/public/hooks/batch-start-reminder'
 import { Route as ApiPublicHooksContentAuditRouteImport } from './routes/api/public/hooks/content-audit'
 import { Route as ApiPublicHooksEmailWorkflowRouteImport } from './routes/api/public/hooks/email-workflow'
 import { Route as ApiPublicHooksEntryNinjaArchiveRouteImport } from './routes/api/public/hooks/entry-ninja-archive'
@@ -614,6 +615,12 @@ const AdminLoyaltyRiderEntrantIdRoute =
     path: '/rider/$entrantId',
     getParentRoute: () => AdminLoyaltyRoute,
   } as any)
+const ApiPublicHooksBatchStartReminderRoute =
+  ApiPublicHooksBatchStartReminderRouteImport.update({
+    id: '/api/public/hooks/batch-start-reminder',
+    path: '/api/public/hooks/batch-start-reminder',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksContentAuditRoute =
   ApiPublicHooksContentAuditRouteImport.update({
     id: '/api/public/hooks/content-audit',
@@ -863,6 +870,7 @@ export interface FileRoutesByFullPath {
   '/crew/learn/': typeof CrewLearnIndexRoute
   '/events/$eventId/': typeof EventsEventIdIndexRoute
   '/admin/loyalty/rider/$entrantId': typeof AdminLoyaltyRiderEntrantIdRoute
+  '/api/public/hooks/batch-start-reminder': typeof ApiPublicHooksBatchStartReminderRoute
   '/api/public/hooks/content-audit': typeof ApiPublicHooksContentAuditRoute
   '/api/public/hooks/email-workflow': typeof ApiPublicHooksEmailWorkflowRoute
   '/api/public/hooks/entry-ninja-archive': typeof ApiPublicHooksEntryNinjaArchiveRoute
@@ -983,6 +991,7 @@ export interface FileRoutesByTo {
   '/crew/learn': typeof CrewLearnIndexRoute
   '/events/$eventId': typeof EventsEventIdIndexRoute
   '/admin/loyalty/rider/$entrantId': typeof AdminLoyaltyRiderEntrantIdRoute
+  '/api/public/hooks/batch-start-reminder': typeof ApiPublicHooksBatchStartReminderRoute
   '/api/public/hooks/content-audit': typeof ApiPublicHooksContentAuditRoute
   '/api/public/hooks/email-workflow': typeof ApiPublicHooksEmailWorkflowRoute
   '/api/public/hooks/entry-ninja-archive': typeof ApiPublicHooksEntryNinjaArchiveRoute
@@ -1108,6 +1117,7 @@ export interface FileRoutesById {
   '/crew/learn/': typeof CrewLearnIndexRoute
   '/events/$eventId/': typeof EventsEventIdIndexRoute
   '/admin/loyalty/rider/$entrantId': typeof AdminLoyaltyRiderEntrantIdRoute
+  '/api/public/hooks/batch-start-reminder': typeof ApiPublicHooksBatchStartReminderRoute
   '/api/public/hooks/content-audit': typeof ApiPublicHooksContentAuditRoute
   '/api/public/hooks/email-workflow': typeof ApiPublicHooksEmailWorkflowRoute
   '/api/public/hooks/entry-ninja-archive': typeof ApiPublicHooksEntryNinjaArchiveRoute
@@ -1234,6 +1244,7 @@ export interface FileRouteTypes {
     | '/crew/learn/'
     | '/events/$eventId/'
     | '/admin/loyalty/rider/$entrantId'
+    | '/api/public/hooks/batch-start-reminder'
     | '/api/public/hooks/content-audit'
     | '/api/public/hooks/email-workflow'
     | '/api/public/hooks/entry-ninja-archive'
@@ -1354,6 +1365,7 @@ export interface FileRouteTypes {
     | '/crew/learn'
     | '/events/$eventId'
     | '/admin/loyalty/rider/$entrantId'
+    | '/api/public/hooks/batch-start-reminder'
     | '/api/public/hooks/content-audit'
     | '/api/public/hooks/email-workflow'
     | '/api/public/hooks/entry-ninja-archive'
@@ -1478,6 +1490,7 @@ export interface FileRouteTypes {
     | '/crew/learn/'
     | '/events/$eventId/'
     | '/admin/loyalty/rider/$entrantId'
+    | '/api/public/hooks/batch-start-reminder'
     | '/api/public/hooks/content-audit'
     | '/api/public/hooks/email-workflow'
     | '/api/public/hooks/entry-ninja-archive'
@@ -1556,6 +1569,7 @@ export interface RootRouteChildren {
   FieldTrackingEventIdRoute: typeof FieldTrackingEventIdRoute
   MyEventsEventIdReportRoute: typeof MyEventsEventIdReportRoute
   CrewLearnIndexRoute: typeof CrewLearnIndexRoute
+  ApiPublicHooksBatchStartReminderRoute: typeof ApiPublicHooksBatchStartReminderRoute
   ApiPublicHooksContentAuditRoute: typeof ApiPublicHooksContentAuditRoute
   ApiPublicHooksEmailWorkflowRoute: typeof ApiPublicHooksEmailWorkflowRoute
   ApiPublicHooksEntryNinjaArchiveRoute: typeof ApiPublicHooksEntryNinjaArchiveRoute
@@ -2252,6 +2266,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminLoyaltyRiderEntrantIdRouteImport
       parentRoute: typeof AdminLoyaltyRoute
     }
+    '/api/public/hooks/batch-start-reminder': {
+      id: '/api/public/hooks/batch-start-reminder'
+      path: '/api/public/hooks/batch-start-reminder'
+      fullPath: '/api/public/hooks/batch-start-reminder'
+      preLoaderRoute: typeof ApiPublicHooksBatchStartReminderRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/content-audit': {
       id: '/api/public/hooks/content-audit'
       path: '/api/public/hooks/content-audit'
@@ -2637,6 +2658,7 @@ const rootRouteChildren: RootRouteChildren = {
   FieldTrackingEventIdRoute: FieldTrackingEventIdRoute,
   MyEventsEventIdReportRoute: MyEventsEventIdReportRoute,
   CrewLearnIndexRoute: CrewLearnIndexRoute,
+  ApiPublicHooksBatchStartReminderRoute: ApiPublicHooksBatchStartReminderRoute,
   ApiPublicHooksContentAuditRoute: ApiPublicHooksContentAuditRoute,
   ApiPublicHooksEmailWorkflowRoute: ApiPublicHooksEmailWorkflowRoute,
   ApiPublicHooksEntryNinjaArchiveRoute: ApiPublicHooksEntryNinjaArchiveRoute,

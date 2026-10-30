@@ -128,3 +128,32 @@ export function estimateRider(
   const pt = pointAtAlong(course, along);
   return { ...pt, kph, aheadM: along - lp.alongM, capped, moved: true };
 }
+
+/** Longest a dot glides ahead of its last fix before the next 10-second fix lands. */
+export const GLIDE_MAX_MS = 20_000;
+
+/**
+ * Display-only glide between fresh fixes (under a minute old): moves the dot along
+ * the route at the rider's recent speed so it doesn't jump every 10 seconds. The
+ * next real fix corrects it. Never stored, never used for SOS.
+ */
+export function glideRider(
+  course: CourseLine | null,
+  last: { lat: number; lng: number; recordedAt: string },
+  first: { lat: number; lng: number; recordedAt: string } | null,
+  now = Date.now(),
+): { lat: number; lng: number } | null {
+  if (!course || !first) return null;
+  const lastT = new Date(last.recordedAt).getTime();
+  const age = now - lastT;
+  if (age <= 0 || age >= ESTIMATE_AFTER_MS) return null;
+  const lp = progressOnCourse(course, last.lat, last.lng);
+  const fp = progressOnCourse(course, first.lat, first.lng);
+  if (!lp || !fp || lp.offCourseM > 150) return null;
+  const dt = lastT - new Date(first.recordedAt).getTime();
+  if (dt < MIN_HISTORY_MS) return null;
+  const kph = ((lp.alongM - fp.alongM) / (dt / 1000)) * 3.6;
+  if (!(kph > 3 && kph < 80)) return null;
+  const along = Math.min(lp.alongM + (kph / 3.6) * (Math.min(age, GLIDE_MAX_MS) / 1000), course.totalM);
+  return pointAtAlong(course, along);
+}

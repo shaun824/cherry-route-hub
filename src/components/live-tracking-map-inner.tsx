@@ -70,6 +70,7 @@ import {
   formatProgress,
   progressOnCourse,
   estimateRider,
+  glideRider,
   type CourseLine,
   type RiderEstimate,
 } from "@/lib/course-progress";
@@ -915,7 +916,7 @@ export default function LiveTrackingMapInner({
   // Display-only position estimates for riders whose phone has gone quiet.
   const [estTick, setEstTick] = useState(0);
   useEffect(() => {
-    const id = window.setInterval(() => setEstTick((t) => t + 1), 5_000);
+    const id = window.setInterval(() => setEstTick((t) => t + 1), 2_500);
     return () => window.clearInterval(id);
   }, []);
   const riderCourses = useMemo(() => {
@@ -938,6 +939,22 @@ export default function LiveTrackingMapInner({
     }
     return out;
   }, [riders, dayCandidates, riderCourses, course, estTick]);
+  // Smooth glide between fresh fixes so dots keep moving; corrected by each real fix.
+  const glides = useMemo(() => {
+    void estTick;
+    const out = new Map<string, { lat: number; lng: number }>();
+    for (const r of riders) {
+      if (r.finished || r.sos || estimates.has(r.userId)) continue;
+      const cand = dayCandidates.find((c) => categoryMatchesRoute(r.category, c.route));
+      const cl = cand ? riderCourses.get(cand.route.id) ?? null : course;
+      const first = r.firstRecordedAt && r.firstLat != null && r.firstLng != null
+        ? { lat: r.firstLat, lng: r.firstLng, recordedAt: r.firstRecordedAt }
+        : null;
+      const g = glideRider(cl, r, first);
+      if (g) out.set(r.userId, g);
+    }
+    return out;
+  }, [riders, dayCandidates, riderCourses, course, estTick, estimates]);
   const estLinesRef = useRef(new Map<string, L.Polyline>());
   const [estNoticeHidden, setEstNoticeHidden] = useState(false);
   useEffect(() => {
@@ -1352,7 +1369,10 @@ export default function LiveTrackingMapInner({
       const existing = markersRef.current.get(r.userId);
       if (existing) {
         if (est) existing.setLatLng([showLat, showLng]);
-        else animateTo(r.userId, existing, r.lat, r.lng);
+        else {
+          const g = glides.get(r.userId);
+          animateTo(r.userId, existing, g?.lat ?? r.lat, g?.lng ?? r.lng);
+        }
         existing.setIcon(icon);
         // An SOS pin must live outside the cluster group so it always shows.
         const inCluster = cluster.hasLayer(existing);
@@ -1435,7 +1455,7 @@ export default function LiveTrackingMapInner({
       fittedRef.current = true;
       window.setTimeout(() => (programmaticMoveRef.current = false), 700);
     }
-  }, [riders, follow, followPaused, followMe, isCrew, viewerLoc, selectedId, animateTo, progressFor, favs, estimates, fullscreen]);
+  }, [riders, follow, followPaused, followMe, isCrew, viewerLoc, selectedId, animateTo, progressFor, favs, estimates, glides, fullscreen]);
 
 
   // Draw/refresh the dashed guide line from viewer to selected rider.
