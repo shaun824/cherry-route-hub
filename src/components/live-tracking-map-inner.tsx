@@ -1455,7 +1455,7 @@ export default function LiveTrackingMapInner({
       fittedRef.current = true;
       window.setTimeout(() => (programmaticMoveRef.current = false), 700);
     }
-  }, [riders, follow, followPaused, followMe, isCrew, viewerLoc, selectedId, animateTo, progressFor, favs, estimates, fullscreen]);
+  }, [riders, follow, followPaused, followMe, isCrew, viewerLoc, selectedId, animateTo, progressFor, favs, estimates, glides, fullscreen]);
 
 
   // Draw/refresh the dashed guide line from viewer to selected rider.
