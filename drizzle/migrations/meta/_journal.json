@@ -288,6 +288,13 @@
       "when": 1793343958795,
       "tag": "0040_atomic_public_request_limits",
       "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "7",
+      "when": 1793344117699,
+      "tag": "0041_server_verified_crew_training",
+      "breakpoints": true
     }
   ]
 }

@@ -4256,7 +4256,24 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      learn_quiz_prompts: {
+        Row: {
+          id: string | null
+          module_id: string | null
+          options: Json | null
+          question: string | null
+          sort_order: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "learn_quiz_questions_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "learn_modules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       analytics_summary: { Args: { _since: string }; Returns: Json }
