@@ -295,6 +295,13 @@
       "when": 1793344117699,
       "tag": "0041_server_verified_crew_training",
       "breakpoints": true
+    },
+    {
+      "idx": 42,
+      "version": "7",
+      "when": 1793344377997,
+      "tag": "0042_clear_medical_notes_on_account_unlink",
+      "breakpoints": true
     }
   ]
 }
