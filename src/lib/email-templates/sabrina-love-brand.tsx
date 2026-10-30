@@ -4,6 +4,7 @@ import kcaLogo from '@/assets/kca-logo.png.asset.json'
 import discoveryLogo from '@/assets/discovery-logo.jpg.asset.json'
 import slLogo from '@/assets/sabrina-love-logo.png.asset.json'
 import rceLogo from '@/assets/rce-logo.png.asset.json'
+import { KCA_URL } from '@/lib/sabrina-love'
 
 const absolute = (url: string) => new URL(url, 'https://riderhub.redcherryevents.co.za').href
 
