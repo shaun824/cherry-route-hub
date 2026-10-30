@@ -2,10 +2,10 @@ import { nextEventIndex } from "@/lib/event-window";
 // Race control: live rider map + SOS alert list for a chosen event.
 // Shared by the admin console and the crew portal (crew + admin only).
 import { ResolveSosButton } from "@/components/resolve-sos-button";
-import { appleMapsUrl, fmtCoords, googleMapsUrl } from "@/lib/nav-links";
+import { appleMapsUrl, fmtCoords, googleDirectionsUrl, googleMapsUrl, showPointOnRaceMap, SHOW_POINT_EVENT, type ShowPoint } from "@/lib/nav-links";
 
 /** SOS position: visible coordinates (copyable) plus Google / Apple Maps links. */
-function SosCoords({ lat, lng }: { lat: number; lng: number }) {
+function SosCoords({ lat, lng, label = "SOS" }: { lat: number; lng: number; label?: string }) {
   const text = fmtCoords(lat, lng);
   const copy = async () => {
     try {
@@ -21,8 +21,14 @@ function SosCoords({ lat, lng }: { lat: number; lng: number }) {
         {text}
       </p>
       <div className="flex flex-wrap gap-1.5 text-xs font-bold">
-        <a href={googleMapsUrl(lat, lng)} target="_blank" rel="noreferrer" className="rounded-lg bg-cherry px-2.5 py-1.5 text-white">
-          Google Maps
+        <button type="button" onClick={() => showPointOnRaceMap({ lat, lng, label })} className="rounded-lg bg-ink px-2.5 py-1.5 text-background">
+          Show on map
+        </button>
+        <a href={googleDirectionsUrl(lat, lng)} target="_blank" rel="noreferrer" className="rounded-lg bg-cherry px-2.5 py-1.5 text-white">
+          Directions
+        </a>
+        <a href={googleMapsUrl(lat, lng)} target="_blank" rel="noreferrer" className="rounded-lg bg-muted px-2.5 py-1.5 text-ink">
+          Google pin
         </a>
         <a href={appleMapsUrl(lat, lng)} target="_blank" rel="noreferrer" className="rounded-lg bg-muted px-2.5 py-1.5 text-ink">
           Apple Maps
@@ -133,6 +139,18 @@ export function RaceControlPanel({
   const [view, setView] = useState<"map" | "list">("map");
   const [muted, setMuted] = useState(false);
   const [focusRider, setFocusRider] = useState<string | null>(null);
+  const [focusPoint, setFocusPoint] = useState<(ShowPoint & { key: number }) | null>(null);
+  useEffect(() => {
+    const onShow = (e: Event) => {
+      const d = (e as CustomEvent<ShowPoint>).detail;
+      if (!d) return;
+      setView("map");
+      setFocusPoint({ ...d, key: Date.now() });
+      window.setTimeout(() => document.getElementById("race-control-map")?.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
+    };
+    window.addEventListener(SHOW_POINT_EVENT, onShow);
+    return () => window.removeEventListener(SHOW_POINT_EVENT, onShow);
+  }, []);
   const [offCourse, setOffCourse] = useState<Record<string, number>>({});
 
   const resolve = useServerFn(resolveSosAlert);
@@ -397,10 +415,12 @@ export function RaceControlPanel({
 
       {selected ? (
         view === "map" ? (
+          <div id="race-control-map" className="scroll-mt-4">
           <LiveTrackingMap
             eventId={selected}
             isCrew
             focusUserId={focusRider}
+            focusPoint={focusPoint}
             onOffCourse={setOffCourse}
             onResolveRiderSos={async (userId) => {
               const matching = open.filter((a) => a.userId === userId);
