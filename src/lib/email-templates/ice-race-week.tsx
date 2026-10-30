@@ -1,4 +1,5 @@
 import * as React from 'react'
+import { ICE_VENUE_URL } from '../ice-venue'
 
 import { Column, Link, Row, Section, Text } from '@react-email/components'
 
@@ -123,7 +124,7 @@ const Email = ({ firstName, unsubscribeUrl }: Props) => (
       </Text>
       <Section style={{ padding: '14px 0 4px' }}>
         <Link
-          href="https://maps.app.goo.gl/naXNy1Kk21RyNHtL8"
+          href={ICE_VENUE_URL}
           target="_blank"
           style={iceRedButton}
         >

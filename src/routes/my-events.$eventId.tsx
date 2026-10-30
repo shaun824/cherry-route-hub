@@ -1,4 +1,5 @@
 import { useHydratedStore } from "@/lib/use-hydrated-store";
+import { isFixedIceVenue, ICE_VENUE_URL } from "@/lib/ice-venue";
 import { excludeEventFromAnalytics } from "@/lib/analytics";
 import { liveReviewEvent, REVIEW_EVENT_NOTE } from "@/lib/review-event";
 import { SlscKcaCard, isSabrinaLoveEvent } from "@/components/slsc-kca-card";
@@ -402,8 +403,7 @@ function MyEventDetailInner({ event }: { event: NonNullable<ReturnType<typeof Ro
           <section className="space-y-3">
             <SectionTitle>Accommodation</SectionTitle>
             <p className="text-xs text-ink-soft">
-              This event moves between venues — here is where you sleep each night, with your own
-              tent or room allocation.
+              {isFixedIceVenue(event.id) ? "Sun International is accommodation for the pros only. The event stays in Baakens Valley all weekend." : "This event moves between venues. Here is where you sleep each night, with your own tent or room allocation."}
             </p>
             <AccommodationTimeline
               eventId={event.id}
@@ -1088,7 +1088,7 @@ function InfoPanel({
             const regAddress = info.reg_venue_address ?? info.reg_venue_name ?? "";
             const regLink =
               buildMapLink({
-                mapUrl: null,
+                mapUrl: isFixedIceVenue(eventId) ? ICE_VENUE_URL : null,
                 lat: info.reg_venue_lat,
                 lng: info.reg_venue_lng,
                 address: regAddress,
@@ -1153,7 +1153,7 @@ function InfoPanel({
           if (!venue && !embedSrc) return <EmptyBlock>Venue details will appear here.</EmptyBlock>;
           const mapLink =
             buildMapLink({
-              mapUrl: info?.map_embed_url,
+              mapUrl: isFixedIceVenue(eventId) ? ICE_VENUE_URL : info?.map_embed_url,
               lat: info?.venue_lat,
               lng: info?.venue_lng,
               address: venue,

@@ -1,4 +1,5 @@
 import { scrollAppTo } from "@/lib/app-scroll";
+import { isFixedIceVenue, ICE_VENUE_URL, ICE_VENUE_POINT } from "@/lib/ice-venue";
 import { PodiumSection } from "@/components/podium-section";
 import { EventResultsPanel } from "@/components/event-results-panel";
 import { createFileRoute, Link } from "@tanstack/react-router";
@@ -488,8 +489,8 @@ function SpectatorEventPage() {
             {(() => {
               const address = info?.venue_address || event.location || null;
               const mapUrl = event.mapQuery || info?.map_embed_url || null;
-              const pin = villageAnchor(villageQ.data);
-              const mapLink = pin ? buildMapLink({ lat: pin.lat, lng: pin.lng }) : buildMapLink({ mapUrl, address });
+              const pin = isFixedIceVenue(eventId) ? ICE_VENUE_POINT : villageAnchor(villageQ.data);
+              const mapLink = isFixedIceVenue(eventId) ? ICE_VENUE_URL : pin ? buildMapLink({ lat: pin.lat, lng: pin.lng }) : buildMapLink({ mapUrl, address });
               const embedSrc = buildMapEmbedSrc({ mapUrl, address });
               const point = pin ??
                 (info?.venue_lat != null && info?.venue_lng != null
@@ -546,14 +547,14 @@ function SpectatorEventPage() {
               "Parking details will be shared closer to race day."}
             {(() => {
               const pk = villageParkingPin(villageQ.data);
-              return pk ? (
+              return pk || isFixedIceVenue(eventId) ? (
                 <a
-                  href={buildMapLink({ lat: pk.lat, lng: pk.lng }) ?? "#"}
+                  href={isFixedIceVenue(eventId) ? ICE_VENUE_URL : buildMapLink({ lat: pk?.lat, lng: pk?.lng }) ?? "#"}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="mt-2 block font-semibold text-cherry"
                 >
-                  Navigate to {pk.title} ↗
+                  Navigate to {isFixedIceVenue(eventId) ? "venue and parking" : pk?.title} ↗
                 </a>
               ) : null;
             })()}
