@@ -130,8 +130,8 @@ export async function handleEventInterest(request: Request): Promise<Response> {
           }
         }
 
-        // Sign-up confirmation email — fire and forget, idempotent per sign-up
-        // row so repeat sign-ups do not resend it.
+        // Ordinary repeat signups dedupe; explicit re-consent after unsubscribe
+        // gets a new confirmation without changing provider-wide opt-outs.
         try {
           const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
           const firstName = (parsed.data.name ?? "").trim().split(/\s+/)[0] || null;

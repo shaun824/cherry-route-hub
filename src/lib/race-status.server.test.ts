@@ -1,3 +1,4 @@
+/// <reference types="bun" />
 import { afterAll, beforeEach, expect, mock, setSystemTime, test } from "bun:test";
 
 const event = { myriad_race_id: "race-1" };
