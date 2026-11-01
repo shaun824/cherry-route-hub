@@ -1,6 +1,7 @@
 // Browser-only Web Push helpers. Every function must be called from an event
 // handler or useEffect — never during render or module evaluation.
 import { getVapidPublicKey, removePushSubscription, savePushSubscription } from "./push.functions";
+import { isInstalledExperience } from "./native-platform";
 
 const SW_URL = "/push-sw.js";
 
@@ -24,11 +25,7 @@ function isIos(): boolean {
 }
 
 export function isStandalone(): boolean {
-  if (typeof window === "undefined") return false;
-  return (
-    window.matchMedia?.("(display-mode: standalone)").matches ||
-    (window.navigator as any).standalone === true
-  );
+  return isInstalledExperience();
 }
 
 /** Lovable preview / iframe contexts can't hold a real push subscription. */
