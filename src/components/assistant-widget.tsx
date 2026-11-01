@@ -42,7 +42,6 @@ type ChatMsg = { role: "user" | "assistant"; content: string; followUps?: string
 
 const NUDGE_KEY = ASSISTANT_NUDGE_KEY;
 
-
 export function AssistantWidget() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { user } = useSession();
