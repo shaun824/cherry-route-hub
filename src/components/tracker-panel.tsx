@@ -19,6 +19,7 @@ import { Lock } from "lucide-react";
 import { RidingModeOverlay, useScreenWakeLock } from "@/components/riding-mode-overlay";
 import type { ProgressResult } from "@/lib/course-progress";
 import { isNativeApp } from "@/lib/native";
+import { isInstalledExperience } from "@/lib/native-platform";
 import { fetchMyEvents } from "@/lib/my-events";
 import {
   MOVING_INTERVAL_MS,
@@ -67,8 +68,7 @@ function formatElapsed(ms: number) {
 /** True when the Rider Hub is running as an installed app (home-screen icon). */
 function isInstalledApp() {
   if (typeof window === "undefined") return true;
-  const nav = navigator as Navigator & { standalone?: boolean };
-  return window.matchMedia("(display-mode: standalone)").matches || nav.standalone === true;
+  return isNativeApp() || isInstalledExperience();
 }
 
 function isIos() {
@@ -717,7 +717,7 @@ export function TrackerPanel({
 
   // Background GPS only survives a locked screen in the installed app.
   const [needsInstall, setNeedsInstall] = useState(false);
-  useEffect(() => setNeedsInstall(!isInstalledApp()), []);
+  useEffect(() => setNeedsInstall(!isInstalledApp()), [native]);
 
   // Review events skip the race-village distance check so reviewers can test from anywhere.
   const reviewEvent = Boolean(event?.isReviewEvent);
@@ -849,7 +849,7 @@ export function TrackerPanel({
           <p className="mt-2 text-xs text-ink-soft">{stationary ? "Stopped, so saving battery: one position a minute until you move again. " : "Positions share every 10 seconds. "}{queued > 0 ? `${queued} waiting safely on this phone.` : lastUploadAt ? `Last shared at ${lastUploadAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}.` : "Waiting for the first GPS fix."}</p>
         )}
         {error ? <p className="mt-2 flex items-start gap-1.5 rounded-lg bg-destructive/10 px-3 py-2 text-xs font-semibold text-destructive"><WifiOff className="mt-0.5 h-3.5 w-3.5 shrink-0" />{error}</p> : null}
-        {needsInstall ? (
+        {!native && needsInstall ? (
           <div className="mt-3 rounded-xl bg-amber-50 p-3 ring-1 ring-amber-300">
             <div className="flex items-center gap-2">
               <Smartphone className="h-4 w-4 text-amber-700" />
@@ -877,7 +877,7 @@ export function TrackerPanel({
               ? insideStartArea ? "Start live tracking" : "Check location to start"
               : "Tracking unavailable"}
         </Button>
-        {tracking && needsInstall ? (
+        {tracking && !native && needsInstall ? (
           <p className="mt-2 text-xs font-semibold text-amber-800">
             Keep this screen on — tracking pauses when your phone locks unless the Rider Hub is
             added to your home screen.

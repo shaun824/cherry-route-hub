@@ -57,3 +57,4 @@
 - Manual tracking stops persist per account/event and block automatic starts until an explicit start; SOS errors have independent state inside a body-portalled riding lock above maps so uploads and stacking contexts cannot hide a failed alert.
 - Explicit event-interest re-consent clears the local unsubscribe and keys a new confirmation by the prior unsubscribe timestamp; external mailing-service opt-outs remain untouched.
 - Race-control finish boards default to the current/latest riding day; All routes includes that day's courses only, never earlier-day finishers, to preserve still-out counts.
+- Install prompts recognise the native bridge directly through the shared installed-experience helper, without waiting for startup to patch browser standalone flags.
