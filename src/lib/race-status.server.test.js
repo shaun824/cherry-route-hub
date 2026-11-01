@@ -1,4 +1,3 @@
-/// <reference types="bun" />
 import { afterAll, beforeEach, expect, mock, setSystemTime, test } from "bun:test";
 
 const event = { myriad_race_id: "race-1" };
@@ -11,7 +10,7 @@ const sets = [
 ];
 let rows = [{ full_name: "Rider One", bib_number: "753", category: "Silver", time_text: "02:00:00", time_ms: 7200000, result_set_id: "day1" }];
 mock.module("@/integrations/supabase/client.server", () => ({
-  supabaseAdmin: { from: (table: string) => ({ select: () => ({ eq: () => ({
+  supabaseAdmin: { from: (table) => ({ select: () => ({ eq: () => ({
     maybeSingle: async () => ({ data: event }),
     limit: async () => ({ data: table === "event_entrants" ? roster : [] }),
   }) }) }) },
