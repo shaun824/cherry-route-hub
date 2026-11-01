@@ -56,3 +56,4 @@
 - Tracking cadence, stationary sleep and hands-free start rules live in `src/lib/tracking-auto.ts` (tested); start-batch push reminders run from the race-hours `batch-start-reminder` hook and open `?track=1`, so web, native and push share one start path.
 - Manual tracking stops persist per account/event and block automatic starts until an explicit start; SOS errors have independent state rendered inside the riding lock so uploads cannot hide a failed alert.
 - Explicit event-interest re-consent clears the local unsubscribe and keys a new confirmation by the prior unsubscribe timestamp; external mailing-service opt-outs remain untouched.
+- Race-control finish boards default to the current/latest riding day; All routes includes that day's courses only, never earlier-day finishers, to preserve still-out counts.
