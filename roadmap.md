@@ -9,6 +9,12 @@
 
 # Roadmap
 
+## Project monitoring fixes (1 Nov)
+- [ ] Verify all five findings against current code and live schedule configuration
+- [ ] Correct day-specific finish counts, manual tracking stop, renewed signup consent and locked-screen SOS failures
+- [ ] Run regression tests and verify the rider safety controls
+- [ ] Resolve findings and publish verified changes
+
 ## ICE venue correction (30 Oct)
 - [x] Replace rider venue and parking directions with Shaun's fixed pin
 - [x] Keep Sun International as pro accommodation only; verify venue stays fixed

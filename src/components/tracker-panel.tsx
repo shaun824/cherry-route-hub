@@ -22,6 +22,7 @@ import { isNativeApp } from "@/lib/native";
 import { fetchMyEvents } from "@/lib/my-events";
 import {
   MOVING_INTERVAL_MS,
+  canAutoStartTracking,
   STATIONARY_RADIUS_M,
   BATCH_REMINDER_LEAD_MS,
   batchStartTime,
@@ -173,6 +174,11 @@ export function TrackerPanel({
   // GPS watch is re-attached whenever the panel mounts again.
   const [tracking, setTracking] = useState(false);
   const [sosSent, setSosSent] = useState(false);
+  const [sosError, setSosError] = useState<string | null>(null);
+  const [sosSending, setSosSending] = useState(false);
+  const sosSendingRef = useRef(false);
+  const manuallyStoppedRef = useRef(false);
+  const [manuallyStopped, setManuallyStopped] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [queued, setQueued] = useState(0);
   const [lastUploadAt, setLastUploadAt] = useState<Date | null>(null);
@@ -193,6 +199,13 @@ export function TrackerPanel({
     return storeEvent ? { ...storeEvent, isReviewEvent: true } : ({ id: eventId, name: eventName ?? "", isReviewEvent: true } as unknown as Event);
   }, [storeEvent, isReviewEvent, eventId, eventName]);
   const { user } = useSession();
+  const manualStopKey = `rce-track-stopped-${user?.id ?? "signed-out"}-${eventId}`;
+  useEffect(() => {
+    let stopped = false;
+    try { stopped = localStorage.getItem(manualStopKey) === "1"; } catch { /* unavailable */ }
+    manuallyStoppedRef.current = stopped;
+    setManuallyStopped(stopped);
+  }, [manualStopKey]);
   const eventInfoQ = useQuery({
     queryKey: ["event-info", eventId],
     queryFn: () => fetchEventInfo(eventId),
@@ -471,7 +484,7 @@ export function TrackerPanel({
   // Option A + C: while the app is open in the tracking window, watch GPS lightly.
   // Start on its own after 2 minutes above 10 km/h near the start (or anywhere on
   // open-route events), or as soon as the rider leaves the race village.
-  const armed = Boolean(user?.id) && entered && windowState.open && !tracking && !autoStopNote;
+  const armed = Boolean(user?.id) && entered && canAutoStartTracking(manuallyStopped, tracking, windowState.open) && !autoStopNote;
   useEffect(() => {
     if (!armed || !("geolocation" in navigator)) return;
     const samples: SpeedSample[] = [];
@@ -526,6 +539,9 @@ export function TrackerPanel({
     const nearStart = Boolean(event?.isReviewEvent) || Boolean(event?.trackingAnywhere) || (startDistanceM !== null && startDistanceM <= START_RADIUS_M);
     if ((!windowState.open || !nearStart) && !tracking) return;
     if (tracking) {
+      manuallyStoppedRef.current = true;
+      setManuallyStopped(true);
+      try { localStorage.setItem(manualStopKey, "1"); } catch { /* unavailable */ }
       stopTracking();
       if (event?.isReviewEvent) {
         void recordDemo({ data: { eventId, startedAt: loadSessionStart(eventId) } }).catch(() => undefined);
@@ -541,6 +557,11 @@ export function TrackerPanel({
   // and the start-batch reminder. The tracking window still has to be open.
   function beginTracking(note: string | null) {
     if (tracking || !windowState.open) return;
+    // Ignore stale GPS callbacks after Stop, but allow an explicit button/reminder start.
+    if (note?.startsWith("Tracking started automatically") && manuallyStoppedRef.current) return;
+    manuallyStoppedRef.current = false;
+    setManuallyStopped(false);
+    try { localStorage.removeItem(manualStopKey); } catch { /* unavailable */ }
     const now = Date.now();
     setStartedAt(now);
     saveSessionStart(eventId, now);
@@ -615,6 +636,11 @@ export function TrackerPanel({
   const openSos = mySosQ.data?.open ?? null;
 
   function triggerSos() {
+    if (sosSendingRef.current) return;
+    sosSendingRef.current = true;
+    setSosSending(true);
+    setSosError(null);
+    setSosSent(false);
     setError(null);
     const send = (pos: GeolocationPosition | null) => {
       // No fresh fix (bad signal)? Fall back to the last tracked position.
@@ -636,7 +662,14 @@ export function TrackerPanel({
           void mySosQ.refetch();
           setTimeout(() => setSosSent(false), 8000);
         })
-        .catch(() => setError("Could not send SOS — please call race control directly."));
+        .catch(() => {
+          const message = "SOS was not sent. Please call race control directly, or hold SOS to try again.";
+          setSosError(message);
+        })
+        .finally(() => {
+          sosSendingRef.current = false;
+          setSosSending(false);
+        });
     };
     if ("geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition(send, () => send(null), {
@@ -715,6 +748,8 @@ export function TrackerPanel({
           onUnlock={() => setLocked(false)}
           onSos={triggerSos}
           sosSent={sosSent}
+          sosError={sosError}
+          sosSending={sosSending}
           wakeSupported={wakeSupported}
         />
       ) : null}
@@ -876,6 +911,7 @@ export function TrackerPanel({
           </>
         ) : (
           <>
+            {sosError ? <p role="alert" className="mt-2 rounded-lg bg-destructive/10 px-3 py-2 text-sm font-bold text-destructive">{sosError}</p> : null}
             <p className="mt-1 text-xs text-ink-soft">
               Sends your GPS position, your name and this reason to race control.
             </p>

@@ -3,6 +3,7 @@
 // Unlock and SOS both need a 2-second hold.
 import { useEffect, useRef, useState } from "react";
 import { Lock, Siren, Unlock } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const HOLD_MS = 2_000;
 
@@ -20,11 +21,12 @@ export function useScreenWakeLock(active: boolean) {
       setSupported(false);
       return;
     }
+    const wakeLock = nav.wakeLock;
     let sentinel: WakeLockSentinelLike | null = null;
     let cancelled = false;
     const acquire = async () => {
       try {
-        const s = await nav.wakeLock!.request("screen");
+        const s = await wakeLock.request("screen");
         if (cancelled) void s.release();
         else sentinel = s;
       } catch {
@@ -80,6 +82,8 @@ export function RidingModeOverlay({
   onUnlock,
   onSos,
   sosSent,
+  sosError,
+  sosSending,
   wakeSupported,
 }: {
   elapsed: string;
@@ -89,6 +93,8 @@ export function RidingModeOverlay({
   onUnlock: () => void;
   onSos: () => void;
   sosSent: boolean;
+  sosError?: string | null;
+  sosSending?: boolean;
   wakeSupported: boolean;
 }) {
   const unlock = useHold(onUnlock);
@@ -105,7 +111,7 @@ export function RidingModeOverlay({
   return (
     <div
       role="dialog"
-      aria-label="Riding mode — screen locked"
+      aria-label="Riding mode, screen locked"
       className="fixed inset-0 z-[200] flex touch-none select-none flex-col items-center justify-between bg-ink/95 px-6 py-10 text-card"
       onContextMenu={(e) => e.preventDefault()}
     >
@@ -136,28 +142,31 @@ export function RidingModeOverlay({
       </div>
 
       <div className="w-full max-w-xs space-y-3">
-        <button
+        {sosError ? <p role="alert" className="rounded-lg border-2 border-cherry bg-card px-3 py-3 text-center text-sm font-bold text-ink">{sosError}</p> : null}
+        <Button
           type="button"
           {...sos.handlers}
-          className="relative w-full overflow-hidden rounded-2xl bg-cherry py-4 text-base font-black uppercase text-card shadow-lg"
+          disabled={sosSending}
+          className="relative h-auto w-full whitespace-normal overflow-hidden rounded-2xl bg-cherry py-4 text-base font-black uppercase text-card shadow-lg"
         >
           <span className="absolute inset-y-0 left-0 bg-card/30" style={{ width: `${sos.pct}%` }} aria-hidden />
           <span className="relative flex items-center justify-center gap-2">
             <Siren className="h-5 w-5" />
-            {sosSent ? "SOS sent · race control notified" : sos.pct > 0 ? "Keep holding…" : "Hold 2s for SOS"}
+            {sosSending ? "Sending SOS…" : sosSent ? "SOS sent · race control notified" : sos.pct > 0 ? "Keep holding…" : sosError ? "Hold 2s to retry SOS" : "Hold 2s for SOS"}
           </span>
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
           {...unlock.handlers}
-          className="relative w-full overflow-hidden rounded-2xl bg-card/10 py-4 text-sm font-bold text-card/80 ring-1 ring-card/20"
+          variant="ghost"
+          className="relative h-auto w-full overflow-hidden rounded-2xl bg-card/10 py-4 text-sm font-bold text-card/80 ring-1 ring-card/20"
         >
           <span className="absolute inset-y-0 left-0 bg-card/20" style={{ width: `${unlock.pct}%` }} aria-hidden />
           <span className="relative flex items-center justify-center gap-2">
             {unlock.pct > 0 ? <Unlock className="h-4 w-4" /> : <Lock className="h-4 w-4" />}
             {unlock.pct > 0 ? "Keep holding…" : "Hold 2s to unlock"}
           </span>
-        </button>
+        </Button>
       </div>
     </div>
   );

@@ -1,7 +1,7 @@
 // Shared event-interest action. The public website form and secret-gated WordPress endpoint use the same stored consent and audience.
 import { z } from "zod";
 
-import { normaliseEmail } from "@/lib/event-interest";
+import { interestConfirmationKey, normaliseEmail, renewedInterestConsent } from "@/lib/event-interest";
 
 const json = (body: unknown, status = 200) =>
   Response.json(body, { status, headers: { "Content-Type": "application/json" } });
@@ -70,7 +70,7 @@ export async function handleEventInterest(request: Request): Promise<Response> {
         const now = new Date().toISOString();
         const { data: existing } = await supabaseAdmin
           .from("event_interest_signups")
-          .select("id")
+          .select("id, unsubscribed_at")
           .eq("event_id", event.id)
           .eq("email", email)
           .maybeSingle();
@@ -85,9 +85,7 @@ export async function handleEventInterest(request: Request): Promise<Response> {
               ...(parsed.data.phone !== undefined ? { phone: parsed.data.phone } : {}),
               topic: parsed.data.topic ?? null,
               source: parsed.data.source ?? null,
-              consent: true,
-              consent_at: now,
-              updated_at: now,
+              ...renewedInterestConsent(now),
             })
             .eq("id", existing.id);
           if (error) return json({ ok: false, error: "Could not save the sign-up, please try again" }, 500);
@@ -138,7 +136,7 @@ export async function handleEventInterest(request: Request): Promise<Response> {
           const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
           const firstName = (parsed.data.name ?? "").trim().split(/\s+/)[0] || null;
           await sendTemplateEmail("ice-signup-confirmation", email, {
-            idempotencyKey: `event-interest-confirm-${signupId}`,
+            idempotencyKey: interestConfirmationKey(signupId, existing?.unsubscribed_at ?? null),
             templateData: { firstName },
           });
         } catch (e) {

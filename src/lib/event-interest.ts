@@ -5,6 +5,15 @@ export function normaliseEmail(email: string): string {
   return String(email ?? "").trim().toLowerCase();
 }
 
+/** New explicit consent renews this event opt-in, not global provider opt-outs. */
+export function renewedInterestConsent(now: string) {
+  return { consent: true as const, consent_at: now, updated_at: now, unsubscribed_at: null };
+}
+
+export function interestConfirmationKey(signupId: string, priorUnsubscribe: string | null) {
+  return `event-interest-confirm-${signupId}${priorUnsubscribe ? `-rejoin-${priorUnsubscribe}` : ""}`;
+}
+
 export interface AudiencePerson {
   email: string;
   name: string | null;
