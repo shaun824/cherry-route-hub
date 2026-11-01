@@ -40,7 +40,7 @@ const GREETING =
 
 type ChatMsg = { role: "user" | "assistant"; content: string; followUps?: string[] };
 
-const NUDGE_KEY = "rce-assistant-nudge-seen";
+const NUDGE_KEY = ASSISTANT_NUDGE_KEY;
 
 
 export function AssistantWidget() {
@@ -66,17 +66,25 @@ export function AssistantWidget() {
     enabled: isAdmin && open && mode === "teach",
     staleTime: 5 * 60 * 1000,
   });
-  // First-session nudge so riders notice the assistant exists.
+  // One-off nudge so riders notice the assistant exists. It is marked as seen
+  // the moment it appears, so it never comes back on a later visit.
   const [nudge, setNudge] = useState(false);
   useEffect(() => {
-    let seen = true;
+    let stored: string | null = null;
     try {
-      seen = localStorage.getItem(NUDGE_KEY) === "1";
+      stored = localStorage.getItem(NUDGE_KEY);
     } catch {
-      seen = true;
+      stored = assistantNudgeSeenValue();
     }
-    if (seen) return;
-    const show = window.setTimeout(() => setNudge(true), 1200);
+    if (!shouldShowAssistantNudge(stored)) return;
+    const show = window.setTimeout(() => {
+      setNudge(true);
+      try {
+        localStorage.setItem(NUDGE_KEY, assistantNudgeSeenValue());
+      } catch {
+        /* ignore */
+      }
+    }, 1200);
     const hide = window.setTimeout(() => setNudge(false), 13000);
     return () => {
       window.clearTimeout(show);
@@ -192,7 +200,7 @@ export function AssistantWidget() {
   function dismissNudge() {
     setNudge(false);
     try {
-      localStorage.setItem(NUDGE_KEY, "1");
+      localStorage.setItem(NUDGE_KEY, assistantNudgeSeenValue());
     } catch {
       /* ignore */
     }
