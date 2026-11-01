@@ -1,3 +1,4 @@
+import { SwipeNavigation } from "@/components/swipe-navigation";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   Outlet,
@@ -257,6 +258,7 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       {isEmbed ? null : <AppPreloader routeLoading={routeLoading} />}
+      {isEmbed ? null : <SwipeNavigation />}
       {isEmbed ? (
         <Outlet />
       ) : isAdmin ? (

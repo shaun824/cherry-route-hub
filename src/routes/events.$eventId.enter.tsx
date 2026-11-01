@@ -1,3 +1,4 @@
+import { BackLink } from "@/components/back-link";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import {
@@ -272,7 +273,7 @@ function EnterEventForm() {
         className={`relative ${brandHeader(event.heroColor).className} px-5 pb-5 text-white`}
         style={{ ...brandHeader(event.heroColor).style, paddingTop: "calc(env(safe-area-inset-top) + 3.5rem)" }}
       >
-        <Link
+        <BackLink
           to="/events/$eventId"
           params={{ eventId: event.id }}
           aria-label="Back"
@@ -280,7 +281,7 @@ function EnterEventForm() {
           style={{ top: "calc(env(safe-area-inset-top) + 1rem)" }}
         >
           <ArrowLeft className="h-5 w-5" />
-        </Link>
+        </BackLink>
         <p className="text-[11px] font-semibold uppercase tracking-widest opacity-85">
           Event entry
         </p>

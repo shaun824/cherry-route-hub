@@ -1,3 +1,4 @@
+import { BackLink } from "@/components/back-link";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -37,14 +38,14 @@ function FullscreenMap() {
   return (
     <div className="flex h-[100dvh] flex-col bg-background">
       <header className="flex items-center gap-3 border-b border-border bg-card px-4 py-3">
-        <Link
+        <BackLink
           to="/events/$eventId"
           params={{ eventId: event.id }}
           className="grid h-9 w-9 place-items-center rounded-full bg-secondary text-ink"
           aria-label="Back"
         >
           <ArrowLeft className="h-5 w-5" />
-        </Link>
+        </BackLink>
         <div className="min-w-0 flex-1">
           <p className="text-[10px] font-bold uppercase tracking-widest text-ink-soft">Route map</p>
           <h1 className="truncate font-display text-base font-bold text-ink">{event.name}</h1>
