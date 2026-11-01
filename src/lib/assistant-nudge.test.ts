@@ -1,4 +1,5 @@
-import { describe, expect, it } from "vitest";
+import { describe, it } from "node:test";
+import assert from "node:assert/strict";
 import {
   ASSISTANT_NUDGE_KEY,
   assistantNudgeSeenValue,
@@ -7,14 +8,14 @@ import {
 
 describe("assistant hint is shown once ever", () => {
   it("shows on a browser that has never seen it", () => {
-    expect(shouldShowAssistantNudge(null)).toBe(true);
+    assert.equal(shouldShowAssistantNudge(null), true);
   });
 
   it("never shows again once it has been put on screen", () => {
-    expect(shouldShowAssistantNudge(assistantNudgeSeenValue())).toBe(false);
+    assert.equal(shouldShowAssistantNudge(assistantNudgeSeenValue()), false);
   });
 
   it("keeps using the same stored key so old visitors stay muted", () => {
-    expect(ASSISTANT_NUDGE_KEY).toBe("rce-assistant-nudge-seen");
+    assert.equal(ASSISTANT_NUDGE_KEY, "rce-assistant-nudge-seen");
   });
 });
