@@ -1,3 +1,4 @@
+import { BackLink } from "@/components/back-link";
 import { scrollAppTo } from "@/lib/app-scroll";
 import { isFixedIceVenue, ICE_VENUE_URL, ICE_VENUE_POINT } from "@/lib/ice-venue";
 import { PodiumSection } from "@/components/podium-section";
@@ -369,14 +370,14 @@ function SpectatorEventPage() {
             <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
           </>
         ) : null}
-        <Link
+        <BackLink
           to="/spectate"
           aria-label="Back"
           className="absolute left-4 z-10 grid h-9 w-9 place-items-center rounded-full bg-white/15 backdrop-blur"
           style={{ top: "calc(env(safe-area-inset-top) + 1rem)" }}
         >
           <ArrowLeft className="h-5 w-5" />
-        </Link>
+        </BackLink>
 
         <div className="relative flex items-center gap-3">
           {event.logoUrl ? (

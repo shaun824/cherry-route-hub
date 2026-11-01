@@ -1,3 +1,4 @@
+import { BackLink } from "@/components/back-link";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -78,7 +79,7 @@ function RiderDetailPage() {
           paddingTop: "calc(env(safe-area-inset-top) + 3.5rem)",
         }}
       >
-        <Link
+        <BackLink
           to="/spectate/$eventId"
           params={{ eventId }}
           aria-label="Back"
@@ -86,7 +87,7 @@ function RiderDetailPage() {
           style={{ top: "calc(env(safe-area-inset-top) + 1rem)" }}
         >
           <ArrowLeft className="h-5 w-5" />
-        </Link>
+        </BackLink>
         <span className="text-[11px] font-semibold uppercase tracking-widest opacity-85">
           {q.data?.event_name ?? event?.name ?? "Rider"}
         </span>
