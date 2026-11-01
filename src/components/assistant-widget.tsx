@@ -15,6 +15,11 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { KnowledgeTeachChat } from "@/components/knowledge-teach-chat";
 import { visibleInBackend } from "@/lib/event-window";
+import {
+  ASSISTANT_NUDGE_KEY,
+  assistantNudgeSeenValue,
+  shouldShowAssistantNudge,
+} from "@/lib/assistant-nudge";
 
 const categories = [
   { value: "issue", label: "Something's broken" },
