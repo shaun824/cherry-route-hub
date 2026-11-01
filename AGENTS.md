@@ -54,3 +54,6 @@
 - Public request quotas are atomic durable counters, independent of caller-provided session identifiers.
 - Activity-specific packing lives in the shared packing-activity helper and overrides cycling defaults for non-cycling Sabrina Love days; checklist keys remain stable when labels change to preserve ticked items.
 - Tracking cadence, stationary sleep and hands-free start rules live in `src/lib/tracking-auto.ts` (tested); start-batch push reminders run from the race-hours `batch-start-reminder` hook and open `?track=1`, so web, native and push share one start path.
+- Manual tracking stops persist per account/event and block automatic starts until an explicit start; SOS errors have independent state inside a body-portalled riding lock above maps so uploads and stacking contexts cannot hide a failed alert.
+- Explicit event-interest re-consent clears the local unsubscribe and keys a new confirmation by the prior unsubscribe timestamp; external mailing-service opt-outs remain untouched.
+- Race-control finish boards default to the current/latest riding day; All routes includes that day's courses only, never earlier-day finishers, to preserve still-out counts.

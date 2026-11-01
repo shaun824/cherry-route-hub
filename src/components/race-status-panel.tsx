@@ -41,7 +41,7 @@ export function RaceStatusPanel({ eventId, fieldToken }: { eventId: string; fiel
                 onClick={() => setDay(d.key)}
                 className={`rounded-full px-2.5 py-1 text-[11px] font-bold ring-1 ring-border ${data.dayKey === d.key ? "bg-ink text-background" : "bg-card text-ink"}`}
               >
-                {d.label}
+                {d.key === "all" ? "All routes · current day" : d.label}
               </button>
             ))}
           </div>

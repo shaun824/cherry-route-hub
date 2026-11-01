@@ -1,8 +1,15 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { uploadIntervalMs, sustainedMovement, leftVillage, sastTimeMs, batchStartTime, BATCH_REMINDER_LEAD_MS } from "./tracking-auto";
+import { canAutoStartTracking, uploadIntervalMs, sustainedMovement, leftVillage, sastTimeMs, batchStartTime, BATCH_REMINDER_LEAD_MS } from "./tracking-auto";
 
 const NOW = 1_800_000_000_000;
+
+test("manual stop prevents movement and village auto-start until explicitly restarted", () => {
+  assert.equal(canAutoStartTracking(true, false, true), false);
+  assert.equal(canAutoStartTracking(false, false, true), true);
+  assert.equal(canAutoStartTracking(false, true, true), false);
+  assert.equal(canAutoStartTracking(false, false, false), false);
+});
 
 test("riding uploads every 10 seconds", () => {
   assert.equal(uploadIntervalMs(NOW - 60_000, NOW), 10_000);

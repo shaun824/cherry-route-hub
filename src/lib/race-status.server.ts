@@ -26,7 +26,8 @@ function parseStart(s: string | null | undefined): number | null {
   const us = /^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:[ T](\d{1,2}):(\d{2})(?::(\d{2}))?)?$/.exec(raw);
   if (us) {
     const [, mo, d, y, h = "0", mi = "0", se = "0"] = us;
-    return Date.UTC(+y!, +mo! - 1, +d!, +h - 2, +mi, +se);
+    if (!y || !mo || !d) return null;
+    return Date.UTC(+y, +mo - 1, +d, +h - 2, +mi, +se);
   }
   let v = raw.replace(" ", "T");
   if (!/[zZ]|[+-]\d\d:?\d\d$/.test(v)) v += "+02:00"; // Myriad times are SA local
@@ -106,7 +107,6 @@ export async function buildRaceStatus(eventId: string, wantDay: string | null): 
   const days = days0.length > 1 ? [{ key: "all", label: "All routes" }, ...days0] : days0;
   const today = dayKeyOf(Date.now());
   const dayKey =
-    ((wantDay === "all" || !wantDay) && days0.length > 1 ? "all" : null) ??
     (wantDay && dayMap.has(wantDay) ? wantDay : null) ??
     (dayMap.has(today) ? today : null) ??
     [...days0].reverse().find((d) => d.key <= today)?.key ??
@@ -122,7 +122,9 @@ export async function buildRaceStatus(eventId: string, wantDay: string | null): 
   const byKey = new Map<string, RaceStatusRider>();
   for (const r of rows) {
     const d = setDay.get(r.result_set_id);
-    if (!d || (dayKey !== "all" && d.key !== dayKey)) continue;
+    // All routes means all courses on the current/latest riding day, never
+    // a union of earlier finishes that could hide riders still on course.
+    if (!d || d.key !== dayKey) continue;
     if (!r.time_text) continue;
     const k = r.bib_number ? `b:${norm(r.bib_number)}` : `n:${norm(r.full_name)}`;
     if (byKey.has(k)) continue;
@@ -148,5 +150,5 @@ export async function buildRaceStatus(eventId: string, wantDay: string | null): 
           .map((r) => ({ ...r, timeText: null, finishedAt: null }))
           .sort((a, b) => a.name.localeCompare(b.name));
 
-  return { source, days, dayKey, finished, stillOut, error };
+  return { source, days, dayKey: wantDay === "all" && days0.length > 1 ? "all" : dayKey, finished, stillOut, error };
 }

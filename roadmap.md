@@ -9,6 +9,13 @@
 
 # Roadmap
 
+## Project monitoring fixes (1 Nov)
+- [x] Verify all five findings against current code and live schedule configuration; cron finding stale, all 13 active HTTP jobs use the private key
+- [x] Correct day-specific finish counts, manual tracking stop, renewed signup consent and locked-screen SOS failures
+- [x] Run 39 regression tests and verify failed SOS/retry and persisted Stop signed in on desktop and phone-sized screens
+- [x] Resolve all five findings
+- [ ] Publish verified changes
+
 ## ICE venue correction (30 Oct)
 - [x] Replace rider venue and parking directions with Shaun's fixed pin
 - [x] Keep Sun International as pro accommodation only; verify venue stays fixed

@@ -9,6 +9,11 @@ export const STATIONARY_AFTER_MS = 5 * 60_000;
 /** Movement smaller than this is GPS jitter, not riding. */
 export const STATIONARY_RADIUS_M = 30;
 
+/** Manual stop wins over movement/geofence starts until the rider starts again. */
+export function canAutoStartTracking(manuallyStopped: boolean, tracking: boolean, windowOpen: boolean): boolean {
+  return !manuallyStopped && !tracking && windowOpen;
+}
+
 export function uploadIntervalMs(lastMovedAt: number, now = Date.now()): number {
   return now - lastMovedAt >= STATIONARY_AFTER_MS ? STATIONARY_INTERVAL_MS : MOVING_INTERVAL_MS;
 }
