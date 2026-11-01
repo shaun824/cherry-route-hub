@@ -2,6 +2,7 @@
 // phone locks) and covers the page with a dim lock so pocket taps don't press anything.
 // Unlock and SOS both need a 2-second hold.
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Lock, Siren, Unlock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -108,11 +109,12 @@ export function RidingModeOverlay({
     return () => window.clearInterval(i);
   }, []);
 
-  return (
+  if (typeof document === "undefined") return null;
+  return createPortal(
     <div
       role="dialog"
       aria-label="Riding mode, screen locked"
-      className="fixed inset-0 z-[200] flex touch-none select-none flex-col items-center justify-between bg-ink/95 px-6 py-10 text-card"
+      className="fixed inset-0 z-[2000] flex touch-none select-none flex-col items-center justify-between overflow-y-auto bg-ink/95 px-6 py-6 text-card sm:py-10"
       onContextMenu={(e) => e.preventDefault()}
     >
       <div className="text-center">
@@ -168,6 +170,7 @@ export function RidingModeOverlay({
           </span>
         </Button>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
