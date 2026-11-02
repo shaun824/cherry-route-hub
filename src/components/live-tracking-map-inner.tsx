@@ -1149,7 +1149,9 @@ export default function LiveTrackingMapInner({
         }
     return best;
   }, [viewerLoc, candidates]);
-  const nearCourse = distToCourse != null && distToCourse <= SHARE_RADIUS_M;
+  // Events set to "track from anywhere" (e.g. Ride For Change) let crew share without routes or proximity.
+  const shareAnywhere = (event as { trackingAnywhere?: boolean } | undefined)?.trackingAnywhere === true;
+  const nearCourse = shareAnywhere || (distToCourse != null && distToCourse <= SHARE_RADIUS_M);
   const [sharing, setSharing] = useState(false);
   const { isAdmin } = useIsAdmin();
   // Signed-in crew and admins, only from 3 days before race day, can share their location.
