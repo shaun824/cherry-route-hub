@@ -1,6 +1,7 @@
 // Routine consistency audit of app content: events, days, routes, schedules,
 // info blocks, rooming, entrants and sponsors. Server-only.
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { eventEndMs } from "./event-window";
 
 /** A change the admin can approve with one tap from the home-page warning card. */
 export type AuditAction =
