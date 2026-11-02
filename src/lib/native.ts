@@ -241,11 +241,12 @@ export type NativePushState = "default" | "granted" | "denied";
 
 async function messaging() {
   const { FirebaseMessaging } = await import("@capacitor-firebase/messaging");
-  return FirebaseMessaging;
+  // Wrap the plugin proxy: resolving a promise with it reads `.then`, which Capacitor treats as a native call.
+  return { fm: FirebaseMessaging };
 }
 
 export async function nativePushState(): Promise<NativePushState> {
-  const fm = await messaging();
+  const { fm } = await messaging();
   const { receive } = await fm.checkPermissions();
   return receive === "granted" ? "granted" : receive === "denied" ? "denied" : "default";
 }
@@ -258,7 +259,7 @@ async function saveToken(token: string) {
 }
 
 export async function enableNativePush(): Promise<{ ok: boolean; reason?: string }> {
-  const fm = await messaging();
+  const { fm } = await messaging();
   const { receive } = await fm.requestPermissions();
   if (receive !== "granted") {
     return { ok: false, reason: "Notifications are off for Rider Hub. Turn them on in your phone's Settings." };
@@ -275,7 +276,7 @@ export async function enableNativePush(): Promise<{ ok: boolean; reason?: string
 }
 
 export async function disableNativePush(): Promise<void> {
-  const fm = await messaging();
+  const { fm } = await messaging();
   let token: string | null = null;
   try {
     token = localStorage.getItem("rce-native-push-token");
@@ -299,7 +300,7 @@ export async function hasNativePushToken(): Promise<boolean> {
 }
 
 async function setupPushListeners() {
-  const fm = await messaging();
+  const { fm } = await messaging();
   // FCM rotates tokens now and then — keep the server copy current.
   await fm.addListener("tokenReceived", ({ token }) => {
     let previous: string | null = null;

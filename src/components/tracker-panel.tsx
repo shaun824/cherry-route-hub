@@ -199,7 +199,9 @@ export function TrackerPanel({
     return storeEvent ? { ...storeEvent, isReviewEvent: true } : ({ id: eventId, name: eventName ?? "", isReviewEvent: true } as unknown as Event);
   }, [storeEvent, isReviewEvent, eventId, eventName]);
   const { user } = useSession();
-  const manualStopKey = `rce-track-stopped-${user?.id ?? "signed-out"}-${eventId}`;
+  const stopDay = new Date().toLocaleDateString("en-CA", { timeZone: "Africa/Johannesburg" });
+  // Scoped to the riding day so a Stop on one day never blocks hands-free start on later days.
+  const manualStopKey = `rce-track-stopped-${user?.id ?? "signed-out"}-${eventId}-${stopDay}`;
   useEffect(() => {
     let stopped = false;
     try { stopped = localStorage.getItem(manualStopKey) === "1"; } catch { /* unavailable */ }
