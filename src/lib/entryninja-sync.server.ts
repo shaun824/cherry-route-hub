@@ -251,7 +251,8 @@ export async function syncAllLinkedEvents(supabase: AnyClient) {
   const { fetchOpenEnEvents } = await import("./entryninja.server");
   const enEvents = await fetchOpenEnEvents();
   const openIds = new Set(enEvents.map((e) => String(e.id)));
-  const { data: local } = await supabase.from("events").select("id, name, entry_ninja_id, lifecycle, event_date");
+  const { data: local } = await supabase.from("events").select("id, name, entry_ninja_id, lifecycle, event_date, days");
+  const { eventEndMs } = await import("./event-window");
   const byExternal = new Map<string, string>();
   const byName = new Map<string, string>();
   const staleIds: string[] = [];
@@ -260,7 +261,9 @@ export async function syncAllLinkedEvents(supabase: AnyClient) {
     if (e.lifecycle === "archived") continue;
     if (e.entry_ninja_id) {
       byExternal.set(String(e.entry_ninja_id), e.id);
-      const past = e.event_date ? new Date(e.event_date).getTime() < cutoff : false;
+      // Multi-day events stay live until a day after their LAST day, not the
+      // first — archiving on the start date hid Ride For Change mid-event.
+      const past = e.event_date ? eventEndMs(e) < cutoff : false;
       if (!openIds.has(String(e.entry_ninja_id)) && past) staleIds.push(e.id);
     }
     if (e.name) byName.set(String(e.name).trim().toLowerCase(), e.id);

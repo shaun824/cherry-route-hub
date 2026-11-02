@@ -104,7 +104,8 @@ export async function runContentAudit(admin: SupabaseClient): Promise<AuditSumma
     const eventDate = ev.event_date ? new Date(ev.event_date as string) : null;
     const days = asArray<Day>(ev.days);
     const schedule = asArray<ScheduleItem>(ev.schedule);
-    const isPast = eventDate ? eventDate.getTime() < now.getTime() - 24 * 3600 * 1000 : false;
+    // A multi-day event is only "past" a day after its final day ends.
+    const isPast = eventDate ? eventEndMs(ev) < now.getTime() - 24 * 3600 * 1000 : false;
     const upcomingSoon =
       eventDate && !isPast && eventDate.getTime() - now.getTime() < 45 * 24 * 3600 * 1000;
 
