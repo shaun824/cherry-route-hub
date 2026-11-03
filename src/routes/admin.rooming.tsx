@@ -158,10 +158,13 @@ function RoomingAdminPage() {
 
 
   async function deleteVenue(id: string) {
-    if (!confirm("Delete this venue? Its rooming rows will become unassigned.")) return;
+    if (!confirm("Delete this venue? Its rooming rows will become unassigned and its village map for this venue will be removed.")) return;
     setBusy(true);
-    await supabase.from("event_venues").delete().eq("id", id);
+    setMsg(null);
+    const { error } = await supabase.from("event_venues").delete().eq("id", id);
     setBusy(false);
+    setMsg(error ? `Could not delete venue: ${error.message}` : "Venue deleted.");
+    void qc.invalidateQueries({ queryKey: ["admin-venues", eventId] });
     refreshRooming();
   }
 
@@ -565,9 +568,9 @@ function VenueManager({
                   type="button"
                   disabled={busy}
                   onClick={() => void onDelete(v.id)}
-                  className="inline-flex items-center gap-1 rounded-lg border border-border bg-background px-2.5 py-1.5 text-xs font-bold text-ink-soft"
+                  className="inline-flex items-center gap-1 rounded-lg border border-destructive/40 bg-background px-2.5 py-1.5 text-xs font-bold text-destructive"
                 >
-                  <Trash2 className="h-3.5 w-3.5" />
+                  <Trash2 className="h-3.5 w-3.5" /> Delete venue
                 </button>
               </div>
             </div>
