@@ -30,7 +30,7 @@ import {
   shareTeamLocationField,
 } from "@/lib/crew-field-link.functions";
 
-const SHARE_RADIUS_M = 2000;
+const SHARE_RADIUS_M = 100_000;
 
 const POINT_TYPE: Record<string, { label: string; glyph: string; color: string }> = {
   water: { label: "Waterpoints", glyph: "💧", color: "#0284c7" },
@@ -1167,11 +1167,29 @@ export default function LiveTrackingMapInner({
       }
       setDeviceId(id);
       setTeamName(localStorage.getItem("rc-team-name") ?? "");
-      setSharing(localStorage.getItem(`rc-team-share:${eventId}`) === "1");
+      // Signed-in crew share by default; only an explicit "off" keeps it off.
+      setSharing(localStorage.getItem(`rc-team-share:${eventId}`) !== "0");
     } catch {
       /* ignore */
     }
   }, [eventId]);
+  // Fill the team name from the signed-in account so sharing starts without a prompt.
+  useEffect(() => {
+    if (teamName || fieldToken) return;
+    let cancelled = false;
+    void import("@/integrations/supabase/client").then(async ({ supabase }) => {
+      const { data } = await supabase.auth.getUser();
+      const u = data.user;
+      const meta = (u?.user_metadata ?? {}) as Record<string, unknown>;
+      const n = String(meta.first_name ?? meta.full_name ?? meta.name ?? u?.email?.split("@")[0] ?? "").trim().slice(0, 60);
+      if (!cancelled && n) setTeamName(n);
+    }).catch(() => {});
+    return () => { cancelled = true; };
+  }, [teamName, fieldToken]);
+  useEffect(() => {
+    if (shareAllowed && sharing && !viewerLoc) requestLocation(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shareAllowed, sharing]);
   const toggleSharing = () => {
     if (!sharing) {
       let name = teamName;
@@ -1730,7 +1748,7 @@ export default function LiveTrackingMapInner({
           {crewTools && viewerLoc && !nearCourse ? (
             <p className="max-w-[14rem] rounded-xl bg-card px-3 py-2 text-[11px] text-ink ring-1 ring-border">
               {distToCourse != null ? `You're ${fmtDist(distToCourse)} from the routes. ` : "Routes not loaded yet. "}
-              Team sharing unlocks within 2 km of a route — nothing is sent until then.
+              Your location shows to the team automatically within 100 km of a route — nothing is sent until then.
             </p>
           ) : null}
           {crewTools && locError ? (
