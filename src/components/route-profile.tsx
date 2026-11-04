@@ -29,6 +29,7 @@ const PIN_GLYPH: Record<NonNullable<CustomMarker["icon"]>, string> = {
   photo: "📷",
   food: "🍎",
   water: "💧",
+  spectator: "📣",
 };
 
 /** Cumulative distance (km) at every coordinate, at full resolution. */

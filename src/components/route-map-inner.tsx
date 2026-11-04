@@ -53,6 +53,7 @@ const MARKER_GLYPH: Record<NonNullable<CustomMarker["icon"]>, string> = {
   photo: "📷",
   food: "🍎",
   water: "💧",
+  spectator: "📣",
 };
 
 /** Sponsor logos grow to full size once riders zoom in close. */
@@ -674,14 +675,14 @@ export default function RouteMapInner({
                     )}
                   </div>
                 ) : null}
-                <a
+                {m.icon === "spectator" ? <a
                   href={`https://www.google.com/maps/dir/?api=1&destination=${m.lat},${m.lng}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="mt-1 inline-block rounded-md bg-ink px-2 py-1 text-[11px] font-semibold text-white"
                 >
                   Navigate
-                </a>
+                </a> : null}
               </div>
             </Popup>
           </Marker>
@@ -732,8 +733,8 @@ export default function RouteMapInner({
           <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
           <div className="flex min-h-0 min-w-0 flex-1 flex-col">
           <div className="relative min-h-0 flex-1">{renderMap("100%", "-fs")}</div>
-          {visible[0] && !navigationFix ? (
-            <div className="border-t border-border bg-card px-3 pb-1">
+          {visible[0] ? (
+            <div className="max-h-[22dvh] overflow-y-auto border-t border-border bg-card px-3 pb-1">
               <RouteProfile route={visible[0].route} color={visible[0].color} markers={visible[0].markers} />
             </div>
           ) : null}
@@ -786,14 +787,14 @@ export default function RouteMapInner({
                           </span>
                         </span>
                       </button>
-                      <a
+                      {m.icon === "spectator" ? <a
                         href={`https://www.google.com/maps/dir/?api=1&destination=${m.lat},${m.lng}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="shrink-0 rounded-full bg-ink px-3 py-1.5 text-[11px] font-bold text-white"
                       >
                         Navigate
-                      </a>
+                      </a> : null}
                     </li>
                   );
                 })}
