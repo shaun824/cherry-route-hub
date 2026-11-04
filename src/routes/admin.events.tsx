@@ -217,6 +217,7 @@ const MARKER_ICON_GLYPH: Record<NonNullable<CustomMarker["icon"]>, string> = {
   photo: "📷",
   food: "🍎",
   water: "💧",
+  spectator: "📣",
 };
 
 function CustomMarkerEditor({
