@@ -258,14 +258,17 @@ export async function syncAllLinkedEvents(supabase: AnyClient) {
   const staleIds: string[] = [];
   const cutoff = Date.now() - 24 * 60 * 60 * 1000;
   for (const e of (local ?? []) as any[]) {
-    if (e.lifecycle === "archived") continue;
     if (e.entry_ninja_id) {
+      // Keep syncing edits made on Entry Ninja, even for matured events.
       byExternal.set(String(e.entry_ninja_id), e.id);
-      // Multi-day events stay live until a day after their LAST day, not the
-      // first — archiving on the start date hid Ride For Change mid-event.
+      if (e.lifecycle === "archived") continue;
+      // Entry Ninja marks an event matured once its date has passed, even if it
+      // is still listed. Mirror that here (using the LAST day for multi-day
+      // events) so welcome mails and campaigns stop for finished events.
       const past = e.event_date ? eventEndMs(e) < cutoff : false;
-      if (!openIds.has(String(e.entry_ninja_id)) && past) staleIds.push(e.id);
+      if (past) staleIds.push(e.id);
     }
+    if (e.lifecycle === "archived") continue;
     if (e.name) byName.set(String(e.name).trim().toLowerCase(), e.id);
   }
 
