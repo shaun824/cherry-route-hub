@@ -100,7 +100,8 @@ import { PromoInline } from "@/components/promo-inline";
 import { FuelNotice, isFuelCarryEvent } from "@/components/fuel-notice";
 import { useShuffledPromos } from "@/lib/use-shuffled-promos";
 
-import { curatedSponsorsFor } from "@/lib/event-sponsor-overrides";
+import { curatedSponsorsFor, iceSponsorsFor, isIceEvent } from "@/lib/event-sponsor-overrides";
+import { Radio } from "lucide-react";
 import { useAdminStore } from "@/lib/store";
 import { fetchMyEventById, fetchMyTeam, fetchMyEntryGroup, type MyEventRow } from "@/lib/my-events";
 import { Printer, Siren, BedDouble, ExternalLink, Users } from "lucide-react";
@@ -132,6 +133,30 @@ import { SyncMyEntryButton } from "@/components/sync-my-entry";
 
 import { Image as ImageIcon } from "lucide-react";
 
+
+const ICE_HIDDEN_TABS: readonly string[] = ["routes", "accommodation", "packing", "chat"];
+const ICE_TAB_ORDER = ["info", "village", "results"];
+function iceTabRank(id: string): number {
+  const i = ICE_TAB_ORDER.indexOf(id);
+  return i === -1 ? 10 : i;
+}
+
+function IceLiveStreamCard() {
+  return (
+    <section data-section="live_stream">
+      <SectionTitle>Watch the live stream</SectionTitle>
+      <div className="mt-2 rounded-2xl bg-ink p-4 text-primary-foreground ring-1 ring-border">
+        <p className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-cherry">
+          <Radio className="h-3.5 w-3.5" /> Live on Sunday
+        </p>
+        <p className="mt-1 font-display text-lg font-bold">The main race, streamed live</p>
+        <p className="mt-1 text-sm opacity-80">
+          We are streaming the Inner City Enduro main race on Sunday 29 November from 09:00. Watch it right here, wherever you are.
+        </p>
+      </div>
+    </section>
+  );
+}
 
 const EVENT_TABS = ["info", "village", "routes", "results", "news", "photos", "chat", "ask", "packing", "sponsors", "accommodation"] as const;
 type Tab = (typeof EVENT_TABS)[number];
@@ -352,7 +377,9 @@ function MyEventDetailInner({ event }: { event: NonNullable<ReturnType<typeof Ro
             { id: "ask", label: "Ask admin", icon: MessagesSquare },
             { id: "sponsors", label: "Sponsors", icon: Handshake },
           ] as { id: Tab; label: string; icon: typeof Info }[]
-        ).map((t) => {
+        ).filter((t) => !isIceEvent(event.name) || !ICE_HIDDEN_TABS.includes(t.id))
+        .sort((a, b) => (isIceEvent(event.name) ? iceTabRank(a.id) - iceTabRank(b.id) : 0))
+        .map((t) => {
 
           const Icon = t.icon;
           const active = tab === t.id;
@@ -399,6 +426,7 @@ function MyEventDetailInner({ event }: { event: NonNullable<ReturnType<typeof Ro
                 <AskAdminPanel eventId={event.id} userId={user?.id ?? null} eventName={event.name} compact />
               </div>
             </section>
+            {isIceEvent(event.name) ? <IceLiveStreamCard /> : null}
             <InfoPanel eventId={event.id} description={event.description} distanceKm={event.distance_km} event={event} isLive={event.status === "live"} eventName={event.name} onTabChange={(t) => selectTab(t, "quick_link")} hasFreshNews={hasFreshNews} hasNightly={hasNightly} signedIn={Boolean(user)} />
           </div>
         )}
@@ -473,12 +501,33 @@ function MyEventDetailInner({ event }: { event: NonNullable<ReturnType<typeof Ro
 
 function EventSponsorsPanel({ eventId, eventName }: { eventId: string; eventName?: string }) {
   const curated = curatedSponsorsFor(eventName);
+  const iceWall = iceSponsorsFor(eventName);
   const load = useServerFn(fetchEventSponsors);
   const q = useQuery({
     queryKey: ["event-sponsors", eventId],
     queryFn: () => load({ data: { eventId } }),
     staleTime: 60 * 60 * 1000,
   });
+
+  if (iceWall) {
+    return (
+      <div>
+        <p className="mb-3 text-xs text-ink-soft">
+          The partners who make Inner City Enduro happen. Tap a logo to visit their site.
+        </p>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+          {iceWall.map((s) => (
+            <a key={s.name} href={s.url} target="_blank" rel="noopener noreferrer sponsored" className="block">
+              <div className="flex aspect-[16/9] w-full items-center justify-center overflow-hidden rounded-2xl bg-white px-2 py-2 ring-1 ring-black/10 shadow-sm">
+                <img src={s.logoUrl} alt={s.name} loading="lazy" className="h-full w-full object-contain" />
+              </div>
+              <p className="mt-1.5 text-center text-[10px] uppercase tracking-[0.14em] text-ink-soft">{s.name}</p>
+            </a>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   if (curated) {
     return (
@@ -996,9 +1045,28 @@ function InfoPanel({
   const aboutText = description ?? "";
   const isLongAbout = aboutText.length > DESCRIPTION_PREVIEW_LENGTH;
   const [aboutExpanded, setAboutExpanded] = useState(false);
+  const ice = isIceEvent(eventName);
+  const entryCard = (
+      <div data-section={signedIn ? "entry_status" : "locked_entry"}>
+      <YourEntryCard
+        eventId={eventId}
+        entryUrl={event.entry_ninja_url ?? event.website_url ?? null}
+        apparel={eventApparel(event as never)}
+      />
+      </div>
+  );
+  const offersBlock = riderOffers.length > 0 ? (
+        <section data-section="rider_offers">
+          <SectionTitle>{ice ? "Promo codes & offers" : "Rider offers"}</SectionTitle>
+          <div className="mt-2">
+            <PromoCarousel promos={riderOffers} />
+          </div>
+        </section>
+  ) : null;
 
   return (
     <div className="space-y-4">
+      {ice ? offersBlock : null}
       {isSabrinaLoveEvent(eventName) ? <SlscKcaCard /> : null}
       {isLive ? (
         <section data-section="live_tracking">
@@ -1022,13 +1090,7 @@ function InfoPanel({
         /></div>
       ) : null}
 
-      <div data-section={signedIn ? "entry_status" : "locked_entry"}>
-      <YourEntryCard
-        eventId={eventId}
-        entryUrl={event.entry_ninja_url ?? event.website_url ?? null}
-        apparel={eventApparel(event as never)}
-      />
-      </div>
+      {ice ? null : entryCard}
 
       {hasNightly ? (
         <div data-section="accommodation"><AccommodationTimeline
@@ -1042,14 +1104,7 @@ function InfoPanel({
       ) : null}
 
 
-      {riderOffers.length > 0 ? (
-        <section data-section="rider_offers">
-          <SectionTitle>Rider offers</SectionTitle>
-          <div className="mt-2">
-            <PromoCarousel promos={riderOffers} />
-          </div>
-        </section>
-      ) : null}
+      {ice ? null : offersBlock}
 
 
 
@@ -1083,7 +1138,10 @@ function InfoPanel({
         </section>
       ) : null}
 
+      {ice ? entryCard : null}
+
       <div data-section="quick_links"><EventSectionNav
+        hideTabs={ice ? ICE_HIDDEN_TABS : undefined}
         onSelectTab={onTabChange}
         hasRoutes={days.some((d) => (d.routes ?? []).length > 0)}
         hasFreshNews={hasFreshNews}
@@ -2155,7 +2213,9 @@ function EventSectionNav({
   hasRoutes,
   hasFreshNews,
   hasAccommodation = false,
+  hideTabs,
 }: {
+  hideTabs?: readonly string[];
   onSelectTab: (tab: Tab) => void;
   hasRoutes: boolean;
   hasFreshNews: boolean;
@@ -2172,7 +2232,7 @@ function EventSectionNav({
     { tab: "chat" as Tab, label: "Event chat", icon: MessageCircle, show: true },
     { tab: "ask" as Tab, label: "Ask admin", icon: MessagesSquare, show: true },
     { tab: "sponsors" as Tab, label: "Sponsors", icon: Handshake, show: true },
-  ].filter((l) => l.show);
+  ].filter((l) => l.show && !(hideTabs ?? []).includes(l.tab));
 
   return (
     <section>
