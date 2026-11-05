@@ -520,14 +520,27 @@ function EventSponsorsPanel({ eventId, eventName }: { eventId: string; eventName
           The partners who make Inner City Enduro happen. Tap a logo to visit their site.
         </p>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-          {iceWall.map((s) => (
-            <a key={s.name} href={s.url} target="_blank" rel="noopener noreferrer sponsored" className="block">
+          {iceWall.map((s) => {
+            const tile = (
               <div className="flex aspect-[16/9] w-full items-center justify-center overflow-hidden rounded-2xl bg-white px-2 py-2 ring-1 ring-black/10 shadow-sm">
                 <img src={s.logoUrl} alt={s.name} loading="lazy" className="h-full w-full object-contain" />
               </div>
+            );
+            const label = (
               <p className="mt-1.5 text-center text-[10px] uppercase tracking-[0.14em] text-ink-soft">{s.name}</p>
-            </a>
-          ))}
+            );
+            return s.url ? (
+              <a key={s.name} href={s.url} target="_blank" rel="noopener noreferrer sponsored" className="block">
+                {tile}
+                {label}
+              </a>
+            ) : (
+              <div key={s.name} className="block">
+                {tile}
+                {label}
+              </div>
+            );
+          })}
         </div>
       </div>
     );
