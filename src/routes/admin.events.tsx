@@ -207,6 +207,8 @@ const MARKER_ICONS: NonNullable<CustomMarker["icon"]>[] = [
   "photo",
   "food",
   "water",
+  "spectator",
+  "parking",
 ];
 const MARKER_ICON_GLYPH: Record<NonNullable<CustomMarker["icon"]>, string> = {
   pin: "📍",
@@ -218,6 +220,7 @@ const MARKER_ICON_GLYPH: Record<NonNullable<CustomMarker["icon"]>, string> = {
   food: "🍎",
   water: "💧",
   spectator: "📣",
+  parking: "🅿️",
 };
 
 function CustomMarkerEditor({

@@ -15,7 +15,7 @@ export type EditorPoint = {
 export type EditorLine = { routeId: string; color: string; lines: LatLngAlt[][] };
 
 const GLYPH: Record<string, string> = {
-  water: "💧", warning: "🦺", aid: "✚", food: "🍌", start: "🚩", finish: "🏁", photo: "📷", pin: "📍", spectator: "📣",
+  water: "💧", warning: "🦺", aid: "✚", food: "🍌", start: "🚩", finish: "🏁", photo: "📷", pin: "📍", spectator: "📣", parking: "🅿️",
 };
 
 function icon(p: EditorPoint, selected: boolean) {

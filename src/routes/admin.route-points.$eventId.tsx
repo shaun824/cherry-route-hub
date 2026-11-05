@@ -46,6 +46,7 @@ const TYPES: { icon: Group["icon"]; label: string; defaultName: string }[] = [
   { icon: "pin", label: "Route point", defaultName: "Point" },
   { icon: "aid", label: "Medic / aid", defaultName: "Medic" },
   { icon: "spectator", label: "Spectator point (navigable)", defaultName: "Spectator point" },
+  { icon: "parking", label: "Parking (navigable)", defaultName: "Parking" },
 ];
 
 const ROUTE_COLORS: Record<string, string> = { Gold: "#d4a017", Silver: "#64748b", Bronze: "#b45309" };

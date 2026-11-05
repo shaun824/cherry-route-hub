@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ClientOnly } from "@tanstack/react-router";
 import { MapPin, Maximize2, Minimize2, Minus, Plus, X } from "lucide-react";
 import { buildMapLink } from "@/lib/map-embed";
+import { pinDirectionsUrl, villageSpotIsNavigable } from "@/lib/pin-navigation";
 import { isFixedIceVenue, ICE_VENUE_URL } from "@/lib/ice-venue";
 import {
   VILLAGE_LAYERS,
