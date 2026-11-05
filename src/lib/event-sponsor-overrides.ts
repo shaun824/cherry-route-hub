@@ -135,7 +135,6 @@ import iceLeatt from "@/assets/ice-sponsors/leatt.png.asset.json";
 import iceBeta from "@/assets/ice-sponsors/beta.png.asset.json";
 import iceXy from "@/assets/ice-sponsors/xy.png.asset.json";
 import iceMbda from "@/assets/ice-sponsors/mbda.png.asset.json";
-import iceHub from "@/assets/ice-sponsors/the-hub.png.asset.json";
 import iceNfe from "@/assets/ice-sponsors/nfe.png.asset.json";
 import iceAm from "@/assets/ice-sponsors/am.png.asset.json";
 import icePlastic from "@/assets/ice-sponsors/artboard-8ice-sponsors.png.asset.json";
