@@ -135,7 +135,6 @@ import iceLeatt from "@/assets/ice-sponsors/leatt.png.asset.json";
 import iceBeta from "@/assets/ice-sponsors/beta.png.asset.json";
 import iceXy from "@/assets/ice-sponsors/xy.png.asset.json";
 import iceMbda from "@/assets/ice-sponsors/mbda.png.asset.json";
-import iceHub from "@/assets/ice-sponsors/the-hub.png.asset.json";
 import iceNfe from "@/assets/ice-sponsors/nfe.png.asset.json";
 import iceAm from "@/assets/ice-sponsors/am.png.asset.json";
 import icePlastic from "@/assets/ice-sponsors/artboard-8ice-sponsors.png.asset.json";
@@ -154,7 +153,6 @@ const ICE_SPONSORS: CuratedSponsor[] = [
   { name: "Beta Motorcycles", logoUrl: iceBeta.url, url: "https://betamoto.co.za/" },
   { name: "Xtreme Yamaha", logoUrl: iceXy.url, url: "https://www.facebook.com/xtremeyamaha" },
   { name: "Mandela Bay Development Agency", logoUrl: iceMbda.url, url: "https://www.mbda.co.za/" },
-  { name: "The Engineering Hub", logoUrl: iceHub.url, url: "https://theengineeringhub.co.za/" },
   { name: "Northfield Engineering", logoUrl: iceNfe.url, url: "https://northfieldengineering.com/" },
   { name: "AMC Auto Motorcycles", logoUrl: iceAm.url, url: "https://www.amcgroup.co.za/" },
   { name: "Plastic Rebuilders", logoUrl: icePlastic.url, url: "https://www.plasticrebuilders.co.za/" },
