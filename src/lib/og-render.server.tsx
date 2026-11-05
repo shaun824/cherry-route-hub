@@ -143,7 +143,7 @@ export async function renderOgImage(request: Request): Promise<Response> {
   } catch (err) {
     console.error("og jpeg encode failed", err);
   }
-  return new Response(out, {
+  return new Response(out as unknown as BodyInit, {
     headers: { "Content-Type": type, "Cache-Control": "public, max-age=3600, s-maxage=86400" },
   });
 }
