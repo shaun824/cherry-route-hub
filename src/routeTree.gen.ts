@@ -93,6 +93,7 @@ import { Route as ApiPublicEntryInterestRouteImport } from './routes/api/public/
 import { Route as ApiPublicEventInterestRouteImport } from './routes/api/public/event-interest'
 import { Route as ApiPublicEventInterestUnsubscribeRouteImport } from './routes/api/public/event-interest-unsubscribe'
 import { Route as ApiPublicMarketingSnapshotRouteImport } from './routes/api/public/marketing-snapshot'
+import { Route as ApiPublicOgRouteImport } from './routes/api/public/og'
 import { Route as CrewDepartmentDeptIdRouteImport } from './routes/crew.department.$deptId'
 import { Route as CrewLearnIndexRouteImport } from './routes/crew.learn.index'
 import { Route as CrewLearnCourseIdRouteImport } from './routes/crew.learn.$courseId'
@@ -559,6 +560,11 @@ const ApiPublicMarketingSnapshotRoute =
     path: '/api/public/marketing-snapshot',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicOgRoute = ApiPublicOgRouteImport.update({
+  id: '/api/public/og',
+  path: '/api/public/og',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CrewDepartmentDeptIdRoute = CrewDepartmentDeptIdRouteImport.update({
   id: '/crew/department/$deptId',
   path: '/crew/department/$deptId',
@@ -856,6 +862,7 @@ export interface FileRoutesByFullPath {
   '/api/public/event-interest': typeof ApiPublicEventInterestRoute
   '/api/public/event-interest-unsubscribe': typeof ApiPublicEventInterestUnsubscribeRoute
   '/api/public/marketing-snapshot': typeof ApiPublicMarketingSnapshotRoute
+  '/api/public/og': typeof ApiPublicOgRoute
   '/crew/department/$deptId': typeof CrewDepartmentDeptIdRoute
   '/crew/learn/$courseId': typeof CrewLearnCourseIdRoute
   '/crew/learn/calendar': typeof CrewLearnCalendarRoute
@@ -977,6 +984,7 @@ export interface FileRoutesByTo {
   '/api/public/event-interest': typeof ApiPublicEventInterestRoute
   '/api/public/event-interest-unsubscribe': typeof ApiPublicEventInterestUnsubscribeRoute
   '/api/public/marketing-snapshot': typeof ApiPublicMarketingSnapshotRoute
+  '/api/public/og': typeof ApiPublicOgRoute
   '/crew/department/$deptId': typeof CrewDepartmentDeptIdRoute
   '/crew/learn/$courseId': typeof CrewLearnCourseIdRoute
   '/crew/learn/calendar': typeof CrewLearnCalendarRoute
@@ -1103,6 +1111,7 @@ export interface FileRoutesById {
   '/api/public/event-interest': typeof ApiPublicEventInterestRoute
   '/api/public/event-interest-unsubscribe': typeof ApiPublicEventInterestUnsubscribeRoute
   '/api/public/marketing-snapshot': typeof ApiPublicMarketingSnapshotRoute
+  '/api/public/og': typeof ApiPublicOgRoute
   '/crew/department/$deptId': typeof CrewDepartmentDeptIdRoute
   '/crew/learn/$courseId': typeof CrewLearnCourseIdRoute
   '/crew/learn/calendar': typeof CrewLearnCalendarRoute
@@ -1230,6 +1239,7 @@ export interface FileRouteTypes {
     | '/api/public/event-interest'
     | '/api/public/event-interest-unsubscribe'
     | '/api/public/marketing-snapshot'
+    | '/api/public/og'
     | '/crew/department/$deptId'
     | '/crew/learn/$courseId'
     | '/crew/learn/calendar'
@@ -1351,6 +1361,7 @@ export interface FileRouteTypes {
     | '/api/public/event-interest'
     | '/api/public/event-interest-unsubscribe'
     | '/api/public/marketing-snapshot'
+    | '/api/public/og'
     | '/crew/department/$deptId'
     | '/crew/learn/$courseId'
     | '/crew/learn/calendar'
@@ -1476,6 +1487,7 @@ export interface FileRouteTypes {
     | '/api/public/event-interest'
     | '/api/public/event-interest-unsubscribe'
     | '/api/public/marketing-snapshot'
+    | '/api/public/og'
     | '/crew/department/$deptId'
     | '/crew/learn/$courseId'
     | '/crew/learn/calendar'
@@ -1562,6 +1574,7 @@ export interface RootRouteChildren {
   ApiPublicEventInterestRoute: typeof ApiPublicEventInterestRoute
   ApiPublicEventInterestUnsubscribeRoute: typeof ApiPublicEventInterestUnsubscribeRoute
   ApiPublicMarketingSnapshotRoute: typeof ApiPublicMarketingSnapshotRoute
+  ApiPublicOgRoute: typeof ApiPublicOgRoute
   CrewDepartmentDeptIdRoute: typeof CrewDepartmentDeptIdRoute
   CrewLearnCourseIdRoute: typeof CrewLearnCourseIdRoute
   CrewLearnCalendarRoute: typeof CrewLearnCalendarRoute
@@ -2189,6 +2202,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicMarketingSnapshotRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/og': {
+      id: '/api/public/og'
+      path: '/api/public/og'
+      fullPath: '/api/public/og'
+      preLoaderRoute: typeof ApiPublicOgRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/crew/department/$deptId': {
       id: '/crew/department/$deptId'
       path: '/crew/department/$deptId'
@@ -2651,6 +2671,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicEventInterestUnsubscribeRoute:
     ApiPublicEventInterestUnsubscribeRoute,
   ApiPublicMarketingSnapshotRoute: ApiPublicMarketingSnapshotRoute,
+  ApiPublicOgRoute: ApiPublicOgRoute,
   CrewDepartmentDeptIdRoute: CrewDepartmentDeptIdRoute,
   CrewLearnCourseIdRoute: CrewLearnCourseIdRoute,
   CrewLearnCalendarRoute: CrewLearnCalendarRoute,
