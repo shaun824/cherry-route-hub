@@ -29,7 +29,8 @@ import redCherry from "@/assets/sponsors/red-cherry-events.png.asset.json";
 export type CuratedSponsor = {
   name: string;
   logoUrl: string;
-  url: string;
+  /** Omitted when the sponsor has no site of their own yet; the tile is then not clickable. */
+  url?: string;
 };
 
 export type CuratedSponsors = {
@@ -144,6 +145,8 @@ import iceTl from "@/assets/ice-sponsors/tl.png.asset.json";
 import iceUpc from "@/assets/ice-sponsors/upc.png.asset.json";
 import iceBt from "@/assets/ice-sponsors/bt.png.asset.json";
 import iceSun from "@/assets/ice-sponsors/sun-1.png.asset.json";
+import iceLeader from "@/assets/ice-sponsors/leader-tread.png.asset.json";
+import iceMaluti from "@/assets/ice-sponsors/maluti-tyres.png.asset.json";
 
 /** Inner City Enduro sponsor wall, in the same order as innercityenduro.co.za. */
 const ICE_SPONSORS: CuratedSponsor[] = [
@@ -162,6 +165,8 @@ const ICE_SPONSORS: CuratedSponsor[] = [
   { name: "Universal Power Corporation", logoUrl: iceUpc.url, url: "https://www.facebook.com/universalpower.co.za/" },
   { name: "Billson Trucks", logoUrl: iceBt.url, url: "https://www.billsontrucks.co.za/" },
   { name: "Sun International Boardwalk", logoUrl: iceSun.url, url: "https://www.suninternational.com/boardwalk/" },
+  { name: "Leader Tread", logoUrl: iceLeader.url, url: "https://www.leadertread.co.za/" },
+  { name: "Maluti Tyres", logoUrl: iceMaluti.url },
 ];
 
 export function isIceEvent(eventName: string | null | undefined): boolean {
