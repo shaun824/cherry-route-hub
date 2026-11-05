@@ -1,7 +1,9 @@
 import { ImageResponse, GoogleFont } from "@cf-wasm/og";
 import { createClient } from "@supabase/supabase-js";
-import rceLogo from "@/assets/rce-logo.png.asset.json";
-import defaultPhoto from "@/assets/weekend-warrior-lourensford-2026-cover.jpg.asset.json";
+import { PhotonImage } from "@cf-wasm/photon";
+import rceLogo from "@/assets/og/og-rce-logo.png.asset.json";
+import photoMtb from "@/assets/og/og-photo-mtb.jpg.asset.json";
+import photoMoto from "@/assets/og/og-photo-moto.jpg.asset.json";
 import { OG_SITE } from "./og";
 
 const W = 1200;
@@ -67,6 +69,8 @@ export async function renderOgImage(request: Request): Promise<Response> {
   const page = clean(q.get("p"), 60) || "Rider Hub";
   const sub = clean(q.get("s"), 90);
 
+  const defaults = [photoMtb.url, photoMoto.url];
+  const defaultPhoto = { url: defaults[[...page].reduce((a, c) => a + c.charCodeAt(0), 0) % defaults.length] };
   const event = eventId ? await loadEvent(eventId) : null;
   const [photo, logo, rce] = await Promise.all([
     loadImage(event?.cover ?? null).then((p) => p ?? loadImage(abs(defaultPhoto.url))),
@@ -104,8 +108,8 @@ export async function renderOgImage(request: Request): Promise<Response> {
       {photo ? <img src={photo} width={W} height={H} style={{ position: "absolute", top: 0, left: 0, width: W, height: H, objectFit: "cover" }} /> : null}
       <div style={{ position: "absolute", top: 0, left: 0, width: W, height: H, display: "flex", backgroundImage: "linear-gradient(90deg, rgba(14,8,10,0.92) 0%, rgba(14,8,10,0.75) 55%, rgba(14,8,10,0.25) 100%)" }} />
       <div style={{ position: "absolute", top: 0, left: 0, width: W, height: H, display: "flex", flexDirection: "column", justifyContent: "space-between", padding: "56px 64px" }}>
-        <div style={{ display: "flex", alignSelf: "flex-start", backgroundColor: "#ffffff", borderRadius: 22, padding: "14px 24px", alignItems: "center" }}>
-          {rce ? <img src={rce} height={84} width={240} style={{ height: 84, width: 240, objectFit: "contain" }} /> : null}
+        <div style={{ display: "flex", alignSelf: "flex-start", backgroundColor: "#ffffff", borderRadius: 22, padding: "14px 18px", alignItems: "center" }}>
+          {rce ? <img src={rce} height={104} width={132} style={{ height: 104, width: 132, objectFit: "contain" }} /> : null}
         </div>
         <div style={{ display: "flex", flexDirection: "column", maxWidth: 900 }}>
           <div style={{ display: "flex", width: 96, height: 10, backgroundColor: CHERRY, borderRadius: 5, marginBottom: 24 }} />
@@ -120,12 +124,26 @@ export async function renderOgImage(request: Request): Promise<Response> {
     </div>
   );
 
-  const headers = { "Cache-Control": "public, max-age=3600, s-maxage=86400" };
+  let png: Response;
   try {
-    const img = await ImageResponse.async(body, { width: W, height: H, fonts: [new GoogleFont(font, { weight: 700 })], headers });
-    return img;
+    png = await ImageResponse.async(body, { width: W, height: H, fonts: [new GoogleFont(font, { weight: 700 })] });
   } catch (err) {
     console.error("og render with font failed", err);
-    return ImageResponse.async(body, { width: W, height: H, headers });
+    png = await ImageResponse.async(body, { width: W, height: H });
   }
+  const bytes = new Uint8Array(await png.arrayBuffer());
+  // JPEG keeps the card a few hundred KB so WhatsApp still shows it.
+  let out: Uint8Array = bytes;
+  let type = "image/png";
+  try {
+    const img = PhotonImage.new_from_byteslice(bytes);
+    out = img.get_bytes_jpeg(82);
+    img.free();
+    type = "image/jpeg";
+  } catch (err) {
+    console.error("og jpeg encode failed", err);
+  }
+  return new Response(out, {
+    headers: { "Content-Type": type, "Cache-Control": "public, max-age=3600, s-maxage=86400" },
+  });
 }
