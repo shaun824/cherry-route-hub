@@ -1,3 +1,4 @@
+import { ogImageMeta, eventOgImageUrl, eventTabLabel } from "@/lib/og";
 import { BackLink } from "@/components/back-link";
 import { scrollAppTo } from "@/lib/app-scroll";
 import { isFixedIceVenue, ICE_VENUE_URL, ICE_VENUE_POINT } from "@/lib/ice-venue";
@@ -57,8 +58,9 @@ import { PromoCodeCard } from "@/components/promo-code-card";
 
 
 export const Route = createFileRoute("/spectate/$eventId")({
-  head: ({ params }) => ({
+  head: ({ params, match }) => ({
     meta: [
+      ...ogImageMeta(eventOgImageUrl(params.eventId, eventTabLabel((match as { search?: { tab?: string } } | undefined)?.search?.tab, "Track riders")), "Track riders"),
       { title: `Track riders — Red Cherry Events` },
       {
         name: "description",
@@ -66,7 +68,6 @@ export const Route = createFileRoute("/spectate/$eventId")({
       },
       { property: "og:title", content: "Track riders — Red Cherry Events" },
       { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
       {
         property: "og:description",
         content: `Rider list with bib numbers, batches, results and spectator venue info.`,

@@ -1,3 +1,4 @@
+import { ogImageMeta, appOgImageUrl } from "@/lib/og";
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
@@ -100,6 +101,7 @@ export const Route = createFileRoute("/auth")({
   validateSearch: searchSchema,
   head: () => ({
     meta: [
+      ...ogImageMeta(appOgImageUrl("Sign in", "Create or open your Rider Hub account"), "Sign in to Rider Hub"),
       { title: "Create your Rider Hub account · Red Cherry Events" },
       {
         name: "description",
@@ -110,7 +112,6 @@ export const Route = createFileRoute("/auth")({
       { property: "og:title", content: "Sign in · Red Cherry Events Rider Hub" },
       { property: "og:description", content: "Sign in or create your Red Cherry Events Rider Hub account." },
       { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: AuthPage,

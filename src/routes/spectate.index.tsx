@@ -1,3 +1,4 @@
+import { ogImageMeta, appOgImageUrl } from "@/lib/og";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
@@ -17,6 +18,7 @@ import type { Event } from "@/lib/mock-data";
 export const Route = createFileRoute("/spectate/")({
   head: () => ({
     meta: [
+      ...ogImageMeta(appOgImageUrl("Track riders", "Follow every Red Cherry ride live"), "Track riders"),
       { title: "Track riders — Red Cherry Events" },
       {
         name: "description",
@@ -30,7 +32,6 @@ export const Route = createFileRoute("/spectate/")({
           "Follow Red Cherry rides as a spectator: events that have just finished this year, and everything still to come.",
       },
       { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: SpectatePage,

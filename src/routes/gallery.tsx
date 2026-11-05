@@ -1,3 +1,4 @@
+import { ogImageMeta, appOgImageUrl } from "@/lib/og";
 import { createFileRoute } from "@tanstack/react-router";
 import { PageHeader } from "@/components/ui-bits";
 import { media, events, relativeTime } from "@/lib/mock-data";
@@ -6,6 +7,7 @@ import { Heart, MessageCircle, Share2 } from "lucide-react";
 export const Route = createFileRoute("/gallery")({
   head: () => ({
     meta: [
+      ...ogImageMeta(appOgImageUrl("Gallery", "Photos and videos from our event days"), "Red Cherry Events gallery"),
       { title: "Gallery — Red Cherry Events" },
       { name: "description", content: "Photos and videos from Red Cherry event days." },
     ],

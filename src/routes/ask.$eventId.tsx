@@ -1,3 +1,4 @@
+import { ogImageMeta, eventOgImageUrl } from "@/lib/og";
 // Shareable full-screen event assistant, linked from rider emails.
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
@@ -5,15 +6,15 @@ import { EmbeddedAssistant, eventWaLink } from "@/components/embedded-assistant"
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/ask/$eventId")({
-  head: () => ({
+  head: ({ params }) => ({
     meta: [
+      ...ogImageMeta(eventOgImageUrl(params.eventId, "Ask the assistant"), "Ask the event assistant"),
       { title: "Ask the event assistant · Red Cherry Events" },
       { name: "description", content: "Ask questions about your Red Cherry event — start times, parking, routes, packing and your entry." },
       { name: "robots", content: "noindex" },
       { property: "og:title", content: "Ask the event assistant · Red Cherry Events" },
       { property: "og:description", content: "Ask questions about your Red Cherry event — start times, parking, routes, packing and your entry." },
       { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: AskEventPage,

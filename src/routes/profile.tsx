@@ -1,3 +1,4 @@
+import { ogImageMeta, appOgImageUrl } from "@/lib/og";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { trackAction, useSectionTracking, useClickTracking } from "@/lib/event-analytics";
@@ -23,13 +24,13 @@ import {
 export const Route = createFileRoute("/profile")({
   head: () => ({
     meta: [
+      ...ogImageMeta(appOgImageUrl("Your profile", "Rider details, notifications and account"), "Your profile"),
       { title: "Profile · Red Cherry Events Rider Hub" },
       { name: "description", content: "Manage your Red Cherry rider profile." },
       { name: "robots", content: "noindex,nofollow" },
       { property: "og:title", content: "Profile · Red Cherry Events Rider Hub" },
       { property: "og:description", content: "Manage your rider details, notifications and account." },
       { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: Profile,
