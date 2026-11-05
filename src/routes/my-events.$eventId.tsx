@@ -2215,7 +2215,7 @@ function EventSectionNav({
   hasAccommodation = false,
   hideTabs,
 }: {
-  hideTabs?: readonly Tab[];
+  hideTabs?: readonly string[];
   onSelectTab: (tab: Tab) => void;
   hasRoutes: boolean;
   hasFreshNews: boolean;
