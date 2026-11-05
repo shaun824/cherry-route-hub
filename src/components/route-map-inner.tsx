@@ -15,6 +15,7 @@ import { LocateFixed, Maximize2, Minus, Plus, X } from "lucide-react";
 import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/button";
 import type { CustomMarker, Event, EventRoute } from "@/lib/mock-data";
+import { pinDirectionsUrl, routePinIsNavigable } from "@/lib/pin-navigation";
 import {
   boundsFromCoords,
   parseKml,
@@ -54,6 +55,7 @@ const MARKER_GLYPH: Record<NonNullable<CustomMarker["icon"]>, string> = {
   food: "🍎",
   water: "💧",
   spectator: "📣",
+  parking: "🅿️",
 };
 
 /** Sponsor logos grow to full size once riders zoom in close. */
@@ -675,8 +677,8 @@ export default function RouteMapInner({
                     )}
                   </div>
                 ) : null}
-                {m.icon === "spectator" ? <a
-                  href={`https://www.google.com/maps/dir/?api=1&destination=${m.lat},${m.lng}`}
+                {routePinIsNavigable(m) ? <a
+                  href={pinDirectionsUrl(m.lat, m.lng)}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="mt-1 inline-block rounded-md bg-ink px-2 py-1 text-[11px] font-semibold text-white"
@@ -787,8 +789,8 @@ export default function RouteMapInner({
                           </span>
                         </span>
                       </button>
-                      {m.icon === "spectator" ? <a
-                        href={`https://www.google.com/maps/dir/?api=1&destination=${m.lat},${m.lng}`}
+                      {routePinIsNavigable(m) ? <a
+                        href={pinDirectionsUrl(m.lat, m.lng)}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="shrink-0 rounded-full bg-ink px-3 py-1.5 text-[11px] font-bold text-white"

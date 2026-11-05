@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ClientOnly } from "@tanstack/react-router";
 import { MapPin, Maximize2, Minimize2, Minus, Plus, X } from "lucide-react";
 import { buildMapLink } from "@/lib/map-embed";
+import { pinDirectionsUrl, villageSpotIsNavigable } from "@/lib/pin-navigation";
 import { isFixedIceVenue, ICE_VENUE_URL } from "@/lib/ice-venue";
 import {
   VILLAGE_LAYERS,
@@ -192,6 +193,18 @@ function SpotDetailBody({
         ) : null}
         {detail.description ? (
           <p className="mt-2 text-sm leading-relaxed text-ink-soft">{detail.description}</p>
+        ) : null}
+        {/* Parking points carry a directions link so riders can drive straight to
+            them. Plan-only pins with no real-world position cannot be navigated. */}
+        {villageSpotIsNavigable(detail) && Number.isFinite(detail.lat) && Number.isFinite(detail.lng) ? (
+          <a
+            href={pinDirectionsUrl(detail.lat as number, detail.lng as number)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-2 inline-block rounded-md bg-ink px-2.5 py-1 text-[11px] font-semibold text-white"
+          >
+            Navigate
+          </a>
         ) : null}
         {isCrew && detail.crewNotes ? (
           <div className="mt-2 rounded-xl bg-muted/60 p-2 ring-1 ring-border">
