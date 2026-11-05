@@ -1,3 +1,4 @@
+import { ogImageMeta, appOgImageUrl } from "@/lib/og";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -16,12 +17,12 @@ import { SyncMyEntryButton } from "@/components/sync-my-entry";
 export const Route = createFileRoute("/my-events/")({
   head: () => ({
     meta: [
+      ...ogImageMeta(appOgImageUrl("Your next event", "Your entries, upcoming rides and past events"), "Your next event"),
       { title: "Your next event | Red Cherry Rider Hub" },
       { name: "description", content: "Your entered Red Cherry events, upcoming rides and past events." },
       { property: "og:title", content: "Your next event | Red Cherry Rider Hub" },
       { property: "og:description", content: "Your entered Red Cherry events, upcoming rides and past events." },
       { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: MyEventsIndex,

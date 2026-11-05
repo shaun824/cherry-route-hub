@@ -1,3 +1,4 @@
+import { ogImageMeta, appOgImageUrl } from "@/lib/og";
 import { useIsAdmin } from "@/lib/auth";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
@@ -69,12 +70,12 @@ const QUICK_ICONS: Record<QuickLinkIcon, typeof Newspaper> = {
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
+      ...ogImageMeta(appOgImageUrl("Rider Hub", "Your race dashboard for Red Cherry Events"), "Red Cherry Events Rider Hub"),
       { title: "Red Cherry Events — Rider Hub" },
       { name: "description", content: "Your race dashboard: next event countdown plus upcoming motorbike and bicycle events." },
       { property: "og:title", content: "Red Cherry Events — Rider Hub" },
       { property: "og:description", content: "Your race dashboard for Red Cherry Events." },
       { property: 'og:type', content: 'website' },
-      { name: 'twitter:card', content: 'summary' },
     ],
   }),
   component: Home,

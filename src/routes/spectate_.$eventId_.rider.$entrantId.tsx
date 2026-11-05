@@ -1,3 +1,4 @@
+import { ogImageMeta, eventOgImageUrl } from "@/lib/og";
 import { BackLink } from "@/components/back-link";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
@@ -13,8 +14,9 @@ import { classStartTimes } from "@/lib/class-start-times";
 import { StravaSegmentsPanel } from "@/components/strava-segments-panel";
 
 export const Route = createFileRoute("/spectate_/$eventId_/rider/$entrantId")({
-  head: () => ({
+  head: ({ params }) => ({
     meta: [
+      ...ogImageMeta(eventOgImageUrl(params.eventId, "Rider results"), "Rider results"),
       { title: "Rider details — Red Cherry Events" },
       {
         name: "description",
@@ -27,7 +29,6 @@ export const Route = createFileRoute("/spectate_/$eventId_/rider/$entrantId")({
         content: "Race number, start batch and day-by-day results for this rider.",
       },
       { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: RiderDetailPage,

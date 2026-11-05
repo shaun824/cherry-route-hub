@@ -1,3 +1,4 @@
+import { ogImageMeta, eventOgImageUrl, eventTabLabel } from "@/lib/og";
 import { useHydratedStore } from "@/lib/use-hydrated-store";
 import { isFixedIceVenue, ICE_VENUE_URL } from "@/lib/ice-venue";
 import { excludeEventFromAnalytics } from "@/lib/analytics";
@@ -179,7 +180,7 @@ export const Route = createFileRoute("/my-events/$eventId")({
     if (error || !data) throw notFound();
     return { event: data.is_review_event ? liveReviewEvent(data) : data };
   },
-  head: ({ loaderData }) => {
+  head: ({ loaderData, match }) => {
     const ev = loaderData?.event;
     if (!ev) {
       return { meta: [{ title: "Event — Red Cherry Events" }, { name: "robots", content: "noindex" }] };
@@ -193,7 +194,10 @@ export const Route = createFileRoute("/my-events/$eventId")({
         { property: "og:title", content: title },
         { property: "og:description", content: description },
         { property: "og:type", content: "website" },
-        { name: "twitter:card", content: "summary_large_image" },
+        ...ogImageMeta(
+          eventOgImageUrl(ev.id, eventTabLabel((match as { search?: { tab?: string } } | undefined)?.search?.tab)),
+          `${ev.name} · ${eventTabLabel((match as { search?: { tab?: string } } | undefined)?.search?.tab)}`,
+        ),
       ],
     };
   },

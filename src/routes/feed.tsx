@@ -1,3 +1,4 @@
+import { ogImageMeta, appOgImageUrl } from "@/lib/og";
 import { createFileRoute } from "@tanstack/react-router";
 import { PageHeader, TypeBadge } from "@/components/ui-bits";
 import { relativeTime } from "@/lib/mock-data";
@@ -10,6 +11,7 @@ import { FeedPostBody } from "@/components/feed-post-body";
 export const Route = createFileRoute("/feed")({
   head: () => ({
     meta: [
+      ...ogImageMeta(appOgImageUrl("News feed", "Race notices and event news"), "Red Cherry Events news"),
       { title: "News Feed — Red Cherry Events" },
       { name: "description", content: "Race notices, weather warnings and event news from Red Cherry Events." },
     ],

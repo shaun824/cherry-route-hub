@@ -1,3 +1,4 @@
+import { ogImageMeta, appOgImageUrl } from "@/lib/og";
 import { createFileRoute } from "@tanstack/react-router";
 import { LegalPage, LegalSection } from "@/components/legal-page";
 
@@ -7,12 +8,12 @@ const DESC = "The terms for using the Red Cherry Events Rider Hub app and websit
 export const Route = createFileRoute("/terms-of-service")({
   head: () => ({
     meta: [
+      ...ogImageMeta(appOgImageUrl("Terms of service", "Red Cherry Events Rider Hub"), "Terms of service"),
       { title: TITLE },
       { name: "description", content: DESC },
       { property: "og:title", content: TITLE },
       { property: "og:description", content: DESC },
       { property: "og:type", content: "article" },
-      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: TermsPage,

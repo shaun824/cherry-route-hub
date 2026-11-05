@@ -1,3 +1,4 @@
+import { ogImageMeta, appOgImageUrl } from "@/lib/og";
 // Crew home: pick the event you're working, see the day at a glance and jump
 // straight into the on-site tools (rider lookup, rooming, village map).
 import { createFileRoute, Link, Navigate } from "@tanstack/react-router";
@@ -17,6 +18,7 @@ import type { EventDay, ScheduleItem } from "@/lib/mock-data";
 export const Route = createFileRoute("/crew/")({
   head: () => ({
     meta: [
+      ...ogImageMeta(appOgImageUrl("Crew Centre", "Everything the event crew needs"), "Crew Centre"),
       { title: "Crew dashboard · Red Cherry Events" },
       {
         name: "description",
@@ -29,7 +31,6 @@ export const Route = createFileRoute("/crew/")({
         content: "Everything Red Cherry event crew need on site, in one place.",
       },
       { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
       { name: "robots", content: "noindex,nofollow" },
     ],
   }),

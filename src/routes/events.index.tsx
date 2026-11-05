@@ -1,3 +1,4 @@
+import { ogImageMeta, appOgImageUrl } from "@/lib/og";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { PageHeader, TypeBadge } from "@/components/ui-bits";
 import { formatDate, formatTime } from "@/lib/mock-data";
@@ -17,6 +18,7 @@ export const Route = createFileRoute("/events/")({
   },
   head: () => ({
     meta: [
+      ...ogImageMeta(appOgImageUrl("Events", "Upcoming motorbike and bicycle events"), "Red Cherry Events"),
       { title: "Events — Red Cherry Events" },
       { name: "description", content: "Browse upcoming Red Cherry motorbike and mountain bike events." },
     ],

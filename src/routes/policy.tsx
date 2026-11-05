@@ -1,3 +1,4 @@
+import { ogImageMeta, appOgImageUrl } from "@/lib/og";
 import { createFileRoute } from "@tanstack/react-router";
 import { LegalPage, LegalSection } from "@/components/legal-page";
 
@@ -7,12 +8,12 @@ const DESC = "How the Red Cherry Events Rider Hub collects, uses and protects ri
 export const Route = createFileRoute("/policy")({
   head: () => ({
     meta: [
+      ...ogImageMeta(appOgImageUrl("Privacy policy", "How we look after your information"), "Privacy policy"),
       { title: TITLE },
       { name: "description", content: DESC },
       { property: "og:title", content: TITLE },
       { property: "og:description", content: DESC },
       { property: "og:type", content: "article" },
-      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: PolicyPage,

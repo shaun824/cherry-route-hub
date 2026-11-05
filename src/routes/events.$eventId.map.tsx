@@ -1,3 +1,4 @@
+import { ogImageMeta, eventOgImageUrl } from "@/lib/og";
 import { BackLink } from "@/components/back-link";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { ArrowLeft } from "lucide-react";
@@ -5,14 +6,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { RouteMap } from "@/components/route-map";
 
 export const Route = createFileRoute("/events/$eventId/map")({
-  head: () => ({ meta: [
-    { title: 'Event route map · Red Cherry Rider Hub' },
-    { name: 'description', content: 'Explore event routes, waterpoints and fullscreen GPS route navigation.' },
-    { property: 'og:title', content: 'Event route map · Red Cherry Rider Hub' },
-    { property: 'og:description', content: 'Explore event routes, waterpoints and fullscreen GPS route navigation.' },
-    { property: 'og:type', content: 'website' },
-    { name: 'twitter:card', content: 'summary' },
-  ] }),
   loader: async ({ params }) => {
     const { data, error } = await supabase
       .from("events")
@@ -22,6 +15,14 @@ export const Route = createFileRoute("/events/$eventId/map")({
     if (error || !data) throw notFound();
     return { event: data };
   },
+  head: ({ params }) => ({ meta: [
+      ...ogImageMeta(eventOgImageUrl(params.eventId, "Route map"), "Event route map"),
+    { title: 'Event route map · Red Cherry Rider Hub' },
+    { name: 'description', content: 'Explore event routes, waterpoints and fullscreen GPS route navigation.' },
+    { property: 'og:title', content: 'Event route map · Red Cherry Rider Hub' },
+    { property: 'og:description', content: 'Explore event routes, waterpoints and fullscreen GPS route navigation.' },
+    { property: 'og:type', content: 'website' },
+  ] }),
   component: FullscreenMap,
   notFoundComponent: () => (
     <div className="p-8 text-center text-sm text-ink-soft">

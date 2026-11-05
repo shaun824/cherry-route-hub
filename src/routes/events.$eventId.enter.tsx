@@ -1,3 +1,4 @@
+import { ogImageMeta, eventOgImageUrl } from "@/lib/og";
 import { BackLink } from "@/components/back-link";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
@@ -29,8 +30,9 @@ export const Route = createFileRoute("/events/$eventId/enter")({
     if (!event || !config) throw notFound();
     return { event, config };
   },
-  head: ({ loaderData }) => ({
+  head: ({ loaderData, params }) => ({
     meta: [
+      ...ogImageMeta(eventOgImageUrl(params.eventId, "Enter now"), "Enter this event"),
       {
         title: loaderData
           ? `Enter ${loaderData.event.name} — Red Cherry Events`

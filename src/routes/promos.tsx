@@ -1,3 +1,4 @@
+import { ogImageMeta, appOgImageUrl } from "@/lib/og";
 import { createFileRoute } from "@tanstack/react-router";
 import { PageHeader } from "@/components/ui-bits";
 import { SponsorScroller } from "@/components/sponsor-scroller";
@@ -12,6 +13,7 @@ import { isPromoLive, toEventPromo, type EventPromo } from "@/lib/event-promos";
 export const Route = createFileRoute("/promos")({
   head: () => ({
     meta: [
+      ...ogImageMeta(appOgImageUrl("Supplier promos", "Discount codes from our partners"), "Supplier promos"),
       { title: "Supplier Promos — Red Cherry Events" },
       { name: "description", content: "Discount codes and offers from Red Cherry sponsors and suppliers." },
     ],
