@@ -1,4 +1,4 @@
-import { ogImageMeta, eventOgImageUrl, eventTabLabel } from "@/lib/og";
+import { ogImageMeta, eventOgImageUrl, eventTabLabel, OG_SITE } from "@/lib/og";
 import { BackLink } from "@/components/back-link";
 import { scrollAppTo } from "@/lib/app-scroll";
 import { isFixedIceVenue, ICE_VENUE_URL, ICE_VENUE_POINT } from "@/lib/ice-venue";
@@ -72,7 +72,9 @@ export const Route = createFileRoute("/spectate/$eventId")({
         property: "og:description",
         content: `Rider list with bib numbers, batches, results and spectator venue info.`,
       },
+      { property: "og:url", content: `${OG_SITE}/spectate/${params.eventId}` },
     ],
+    links: [{ rel: "canonical", href: `${OG_SITE}/spectate/${params.eventId}` }],
     ...({ _: params } as Record<string, unknown>),
   }),
   validateSearch: (search: Record<string, unknown>): { tab?: "info" | "riders" | "results" | "live" } => ({

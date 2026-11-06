@@ -1,4 +1,4 @@
-import { ogImageMeta, eventOgImageUrl } from "@/lib/og";
+import { ogImageMeta, eventOgImageUrl, OG_SITE } from "@/lib/og";
 import { BackLink } from "@/components/back-link";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
@@ -29,7 +29,9 @@ export const Route = createFileRoute("/spectate_/$eventId_/rider/$entrantId")({
         content: "Race number, start batch and day-by-day results for this rider.",
       },
       { property: "og:type", content: "website" },
+      { property: "og:url", content: `${OG_SITE}/spectate/${params.eventId}/rider/${params.entrantId}` },
     ],
+    links: [{ rel: "canonical", href: `${OG_SITE}/spectate/${params.eventId}/rider/${params.entrantId}` }],
   }),
   component: RiderDetailPage,
 });
