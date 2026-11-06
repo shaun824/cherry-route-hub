@@ -1,4 +1,4 @@
-import { ogImageMeta, appOgImageUrl } from "@/lib/og";
+import { ogImageMeta, appOgImageUrl, OG_SITE } from "@/lib/og";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -23,7 +23,9 @@ export const Route = createFileRoute("/my-events/")({
       { property: "og:title", content: "Your next event | Red Cherry Rider Hub" },
       { property: "og:description", content: "Your entered Red Cherry events, upcoming rides and past events." },
       { property: "og:type", content: "website" },
+      { property: "og:url", content: `${OG_SITE}/my-events` },
     ],
+    links: [{ rel: "canonical", href: `${OG_SITE}/my-events` }],
   }),
   component: MyEventsIndex,
 });

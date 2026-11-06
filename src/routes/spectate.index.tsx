@@ -1,4 +1,4 @@
-import { ogImageMeta, appOgImageUrl } from "@/lib/og";
+import { ogImageMeta, appOgImageUrl, OG_SITE } from "@/lib/og";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
@@ -32,7 +32,9 @@ export const Route = createFileRoute("/spectate/")({
           "Follow Red Cherry rides as a spectator: events that have just finished this year, and everything still to come.",
       },
       { property: "og:type", content: "website" },
+      { property: "og:url", content: `${OG_SITE}/spectate` },
     ],
+    links: [{ rel: "canonical", href: `${OG_SITE}/spectate` }],
   }),
   component: SpectatePage,
 });

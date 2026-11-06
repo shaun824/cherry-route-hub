@@ -1,4 +1,4 @@
-import { ogImageMeta, appOgImageUrl } from "@/lib/og";
+import { ogImageMeta, appOgImageUrl, OG_SITE } from "@/lib/og";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -22,7 +22,9 @@ export const Route = createFileRoute("/rewards")({
       { property: "og:title", content: "Cherry Miles Rewards · Red Cherry Events" },
       { property: "og:description", content: "Your loyalty points, tier and reward coupons for Red Cherry Events." },
       { property: "og:type", content: "website" },
+      { property: "og:url", content: `${OG_SITE}/rewards` },
     ],
+    links: [{ rel: "canonical", href: `${OG_SITE}/rewards` }],
   }),
   component: RewardsPage,
 });
