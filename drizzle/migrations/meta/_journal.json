@@ -323,6 +323,13 @@
       "when": 1793881126018,
       "tag": "0045_grant_admin_sonnek",
       "breakpoints": true
+    },
+    {
+      "idx": 46,
+      "version": "7",
+      "when": 1793969176617,
+      "tag": "0046_event_capacity",
+      "breakpoints": true
     }
   ]
 }

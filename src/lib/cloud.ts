@@ -213,6 +213,7 @@ function baseEventFromRow(r: Row): Event {
     titleSponsorUrl: ((r as Row).title_sponsor_url as string | null) ?? undefined,
     isReviewEvent: (r as Row).is_review_event === true,
     trackingAnywhere: (r as Row).tracking_anywhere === true,
+    capacity: ((r as Row).capacity as number | null) ?? null,
   };
 }
 
@@ -258,6 +259,7 @@ export async function upsertEventCloud(e: Event): Promise<string | null> {
     social_links: e.socialLinks ?? {},
     spectator_mode: e.spectatorMode ?? false,
     tracking_anywhere: e.trackingAnywhere ?? false,
+    capacity: e.capacity ?? null,
     collects_tshirt_size: e.collectsTshirtSize ?? false,
     collects_jacket_size: e.collectsJacketSize ?? false,
     website_url: e.websiteUrl ?? null,

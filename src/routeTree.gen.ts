@@ -87,6 +87,7 @@ import { Route as AdminRoutePointsIndexRouteImport } from './routes/admin.route-
 import { Route as AdminRoutePointsEventIdRouteImport } from './routes/admin.route-points.$eventId'
 import { Route as AdminVillageIndexRouteImport } from './routes/admin.village.index'
 import { Route as AdminVillageEventIdRouteImport } from './routes/admin.village.$eventId'
+import { Route as ApiPublicAvailabilityRouteImport } from './routes/api/public/availability'
 import { Route as ApiPublicClassAvailabilityRouteImport } from './routes/api/public/class-availability'
 import { Route as ApiPublicEntryCountRouteImport } from './routes/api/public/entry-count'
 import { Route as ApiPublicEntryInterestRouteImport } from './routes/api/public/entry-interest'
@@ -527,6 +528,11 @@ const AdminVillageEventIdRoute = AdminVillageEventIdRouteImport.update({
   path: '/village/$eventId',
   getParentRoute: () => AdminRoute,
 } as any)
+const ApiPublicAvailabilityRoute = ApiPublicAvailabilityRouteImport.update({
+  id: '/api/public/availability',
+  path: '/api/public/availability',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicClassAvailabilityRoute =
   ApiPublicClassAvailabilityRouteImport.update({
     id: '/api/public/class-availability',
@@ -856,6 +862,7 @@ export interface FileRoutesByFullPath {
   '/admin/rider/$userId': typeof AdminRiderUserIdRoute
   '/admin/route-points/$eventId': typeof AdminRoutePointsEventIdRoute
   '/admin/village/$eventId': typeof AdminVillageEventIdRoute
+  '/api/public/availability': typeof ApiPublicAvailabilityRoute
   '/api/public/class-availability': typeof ApiPublicClassAvailabilityRoute
   '/api/public/entry-count': typeof ApiPublicEntryCountRoute
   '/api/public/entry-interest': typeof ApiPublicEntryInterestRoute
@@ -978,6 +985,7 @@ export interface FileRoutesByTo {
   '/admin/rider/$userId': typeof AdminRiderUserIdRoute
   '/admin/route-points/$eventId': typeof AdminRoutePointsEventIdRoute
   '/admin/village/$eventId': typeof AdminVillageEventIdRoute
+  '/api/public/availability': typeof ApiPublicAvailabilityRoute
   '/api/public/class-availability': typeof ApiPublicClassAvailabilityRoute
   '/api/public/entry-count': typeof ApiPublicEntryCountRoute
   '/api/public/entry-interest': typeof ApiPublicEntryInterestRoute
@@ -1105,6 +1113,7 @@ export interface FileRoutesById {
   '/admin/rider/$userId': typeof AdminRiderUserIdRoute
   '/admin/route-points/$eventId': typeof AdminRoutePointsEventIdRoute
   '/admin/village/$eventId': typeof AdminVillageEventIdRoute
+  '/api/public/availability': typeof ApiPublicAvailabilityRoute
   '/api/public/class-availability': typeof ApiPublicClassAvailabilityRoute
   '/api/public/entry-count': typeof ApiPublicEntryCountRoute
   '/api/public/entry-interest': typeof ApiPublicEntryInterestRoute
@@ -1233,6 +1242,7 @@ export interface FileRouteTypes {
     | '/admin/rider/$userId'
     | '/admin/route-points/$eventId'
     | '/admin/village/$eventId'
+    | '/api/public/availability'
     | '/api/public/class-availability'
     | '/api/public/entry-count'
     | '/api/public/entry-interest'
@@ -1355,6 +1365,7 @@ export interface FileRouteTypes {
     | '/admin/rider/$userId'
     | '/admin/route-points/$eventId'
     | '/admin/village/$eventId'
+    | '/api/public/availability'
     | '/api/public/class-availability'
     | '/api/public/entry-count'
     | '/api/public/entry-interest'
@@ -1481,6 +1492,7 @@ export interface FileRouteTypes {
     | '/admin/rider/$userId'
     | '/admin/route-points/$eventId'
     | '/admin/village/$eventId'
+    | '/api/public/availability'
     | '/api/public/class-availability'
     | '/api/public/entry-count'
     | '/api/public/entry-interest'
@@ -1568,6 +1580,7 @@ export interface RootRouteChildren {
   EventsIndexRoute: typeof EventsIndexRoute
   DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
   Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
+  ApiPublicAvailabilityRoute: typeof ApiPublicAvailabilityRoute
   ApiPublicClassAvailabilityRoute: typeof ApiPublicClassAvailabilityRoute
   ApiPublicEntryCountRoute: typeof ApiPublicEntryCountRoute
   ApiPublicEntryInterestRoute: typeof ApiPublicEntryInterestRoute
@@ -2160,6 +2173,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminVillageEventIdRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/api/public/availability': {
+      id: '/api/public/availability'
+      path: '/api/public/availability'
+      fullPath: '/api/public/availability'
+      preLoaderRoute: typeof ApiPublicAvailabilityRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/class-availability': {
       id: '/api/public/class-availability'
       path: '/api/public/class-availability'
@@ -2664,6 +2684,7 @@ const rootRouteChildren: RootRouteChildren = {
   EventsIndexRoute: EventsIndexRoute,
   DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
   Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
+  ApiPublicAvailabilityRoute: ApiPublicAvailabilityRoute,
   ApiPublicClassAvailabilityRoute: ApiPublicClassAvailabilityRoute,
   ApiPublicEntryCountRoute: ApiPublicEntryCountRoute,
   ApiPublicEntryInterestRoute: ApiPublicEntryInterestRoute,

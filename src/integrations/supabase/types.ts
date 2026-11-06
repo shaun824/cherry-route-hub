@@ -2415,6 +2415,7 @@ export type Database = {
           batches: Json
           breakdown_date: string | null
           build_date: string | null
+          capacity: number | null
           classes: Json
           client_contact: string | null
           client_name: string | null
@@ -2474,6 +2475,7 @@ export type Database = {
           batches?: Json
           breakdown_date?: string | null
           build_date?: string | null
+          capacity?: number | null
           classes?: Json
           client_contact?: string | null
           client_name?: string | null
@@ -2533,6 +2535,7 @@ export type Database = {
           batches?: Json
           breakdown_date?: string | null
           build_date?: string | null
+          capacity?: number | null
           classes?: Json
           client_contact?: string | null
           client_name?: string | null

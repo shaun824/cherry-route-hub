@@ -59,3 +59,4 @@
 - Race-control finish boards default to the current/latest riding day; All routes includes that day's courses only, never earlier-day finishers, to preserve still-out counts.
 - Install prompts recognise the native bridge directly through the shared installed-experience helper, without waiting for startup to patch browser standalone flags.
 - Link-preview thumbnails come from the public /api/public/og image route (src/lib/og.ts helpers in each leaf head()); it reads only public event name/cover/logo and outputs small JPEGs so WhatsApp shows them.
+- Marketing-site spots-left feed is GET /api/public/availability?slug= (count-only, is_public events, per-class classes[].capacity plus events.capacity shared limit); never return entrant identities.
