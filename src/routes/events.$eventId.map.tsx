@@ -1,4 +1,4 @@
-import { ogImageMeta, eventOgImageUrl } from "@/lib/og";
+import { ogImageMeta, eventOgImageUrl, OG_SITE } from "@/lib/og";
 import { BackLink } from "@/components/back-link";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { ArrowLeft } from "lucide-react";
@@ -22,7 +22,9 @@ export const Route = createFileRoute("/events/$eventId/map")({
     { property: 'og:title', content: 'Event route map · Red Cherry Rider Hub' },
     { property: 'og:description', content: 'Explore event routes, waterpoints and fullscreen GPS route navigation.' },
     { property: 'og:type', content: 'website' },
-  ] }),
+    { property: 'og:url', content: `${OG_SITE}/events/${params.eventId}/map` },
+  ],
+  links: [{ rel: "canonical", href: `${OG_SITE}/events/${params.eventId}/map` }] }),
   component: FullscreenMap,
   notFoundComponent: () => (
     <div className="p-8 text-center text-sm text-ink-soft">

@@ -1,4 +1,4 @@
-import { ogImageMeta, eventOgImageUrl, eventTabLabel } from "@/lib/og";
+import { ogImageMeta, eventOgImageUrl, eventTabLabel, OG_SITE } from "@/lib/og";
 import { useHydratedStore } from "@/lib/use-hydrated-store";
 import { isFixedIceVenue, ICE_VENUE_URL } from "@/lib/ice-venue";
 import { excludeEventFromAnalytics } from "@/lib/analytics";
@@ -194,11 +194,13 @@ export const Route = createFileRoute("/my-events/$eventId")({
         { property: "og:title", content: title },
         { property: "og:description", content: description },
         { property: "og:type", content: "website" },
+        { property: "og:url", content: `${OG_SITE}/my-events/${ev.id}` },
         ...ogImageMeta(
           eventOgImageUrl(ev.id, eventTabLabel((match as { search?: { tab?: string } } | undefined)?.search?.tab)),
           `${ev.name} · ${eventTabLabel((match as { search?: { tab?: string } } | undefined)?.search?.tab)}`,
         ),
       ],
+      links: [{ rel: "canonical", href: `${OG_SITE}/my-events/${ev.id}` }],
     };
   },
   component: MyEventDetail,

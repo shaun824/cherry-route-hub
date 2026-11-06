@@ -1,4 +1,4 @@
-import { ogImageMeta, appOgImageUrl } from "@/lib/og";
+import { ogImageMeta, appOgImageUrl, OG_SITE } from "@/lib/og";
 import { createFileRoute } from "@tanstack/react-router";
 import { LegalPage, LegalSection } from "@/components/legal-page";
 
@@ -14,7 +14,9 @@ export const Route = createFileRoute("/policy")({
       { property: "og:title", content: TITLE },
       { property: "og:description", content: DESC },
       { property: "og:type", content: "article" },
+      { property: "og:url", content: `${OG_SITE}/policy` },
     ],
+    links: [{ rel: "canonical", href: `${OG_SITE}/policy` }],
   }),
   component: PolicyPage,
 });
