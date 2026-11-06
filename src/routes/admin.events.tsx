@@ -1296,6 +1296,20 @@ function EventEditor({
           </div>
 
 
+          <label className="block md:col-span-2">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-ink-soft">
+              Event places (shared by all classes)
+            </span>
+            <input
+              type="number"
+              min={0}
+              className={inputCls}
+              placeholder="Leave empty if each class has its own limit"
+              value={form.capacity ?? ""}
+              onChange={(e) => update("capacity", e.target.value === "" ? null : Number(e.target.value))}
+            />
+          </label>
+
           <ClassesEditor
             classes={form.classes ?? []}
             onChange={(next) => update("classes", next)}
@@ -1491,6 +1505,15 @@ function ClassesEditor({
                 placeholder="ID (auto)"
                 value={c.id}
                 onChange={(e) => update(i, { id: e.target.value })}
+              />
+              <input
+                type="number"
+                min={0}
+                className={inputCls}
+                placeholder="Places (optional)"
+                aria-label="Class places"
+                value={c.capacity ?? ""}
+                onChange={(e) => update(i, { capacity: e.target.value === "" ? null : Number(e.target.value) })}
               />
               <input
                 className={`${inputCls} md:col-span-4`}
