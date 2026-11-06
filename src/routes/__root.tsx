@@ -165,6 +165,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:title", content: "Red Cherry Events — Rider Hub" },
       { property: "og:description", content: "News, events, live tracking and loyalty for Red Cherry riders." },
       { property: "og:type", content: "website" },
+      { property: "og:site_name", content: "Red Cherry Events Rider Hub" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
     links: [
