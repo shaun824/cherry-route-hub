@@ -1,0 +1,2 @@
+ALTER TABLE public.events ADD COLUMN IF NOT EXISTS capacity integer;
+COMMENT ON COLUMN public.events.capacity IS 'Optional shared place limit across all classes; per-class limits live in classes[].capacity';
