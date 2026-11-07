@@ -21,7 +21,7 @@ const FACTS = [
 
 const SHOW_DELAY_MS = 250; // fast page changes never show the loader
 const MIN_VISIBLE_MS = 900; // once shown, stay long enough to look intentional
-const FIRST_LOAD_MS = 3_200; // long enough to read the welcome and one fact
+const FIRST_LOAD_MS = 700; // brief welcome only; never hold a ready app back
 const SAFETY_TIMEOUT_MS = 6_000;
 const FADE_MS = 320;
 const LAP_MS = 1_900;
@@ -147,7 +147,13 @@ export function AppPreloader({ routeLoading }: { routeLoading: boolean }) {
 
   // App start: one smooth lap while the first screen settles.
   useEffect(() => {
-    show(FIRST_LOAD_MS);
+    // First open this session: brief welcome. Later opens: hide as soon as ready.
+    let seen = false;
+    try {
+      seen = sessionStorage.getItem("rh-preloader-seen") === "1";
+      sessionStorage.setItem("rh-preloader-seen", "1");
+    } catch { /* storage blocked */ }
+    show(seen ? 0 : FIRST_LOAD_MS);
   }, []);
 
   // Slow page changes.
