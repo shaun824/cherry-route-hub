@@ -30,7 +30,6 @@ import { getRouteElevation } from "@/lib/elevation.functions";
 import { withRegistrationDayLabels } from "@/lib/event-days";
 import { useRouteHover } from "@/lib/route-hover";
 import RouteMapTrackpad from "@/components/route-map-trackpad";
-import { FullscreenNavigationBar, useFullscreenMapNavigation, type NavigationFix } from '@/components/fullscreen-map-navigation';
 import { navigationProgress } from '@/lib/fullscreen-navigation';
 // This module is lazy-loaded in the browser; rotation never enters SSR.
 (globalThis as unknown as { L: typeof L }).L = L;
@@ -253,34 +252,17 @@ export default function RouteMapInner({
   const [enabled, setEnabled] = useState<Record<string, boolean>>({});
   const [fs, setFs] = useState(false);
   const [navigationMap, setNavigationMap] = useState<L.Map | null>(null);
-  const [navigationFix, setNavigationFix] = useState<NavigationFix | null>(null);
-  const [locationError, setLocationError] = useState<string | null>(null);
-  const [locOn, setLocOn] = useState(true);
+  // Route viewing never touches the rider's location. Location is only asked for
+  // on the tracking page and in race control, so nothing here calls geolocation.
   const [satellite, setSatellite] = useState(false);
   useEffect(() => {
-    try { setLocOn(localStorage.getItem('rc-route-loc') !== '0'); setSatellite(localStorage.getItem('rc-route-sat') === '1'); } catch { /* ignore */ }
+    try { setSatellite(localStorage.getItem('rc-route-sat') === '1'); } catch { /* ignore */ }
   }, []);
-  const toggleLoc = () => {
-    const next = !locOn;
-    setLocOn(next);
-    if (!next) { setNavigationFix(null); setLocationError('Location is off. Tap Location to turn it back on.'); }
-    try { localStorage.setItem('rc-route-loc', next ? '1' : '0'); } catch { /* ignore */ }
-  };
   const toggleSat = () => {
     const next = !satellite;
     setSatellite(next);
     try { localStorage.setItem('rc-route-sat', next ? '1' : '0'); } catch { /* ignore */ }
   };
-  const navigation = useFullscreenMapNavigation(navigationMap, fs && locOn, navigationFix);
-  useEffect(() => {
-    if (!fs || !locOn) return;
-    if (!navigator.geolocation) { setLocationError('Location is unavailable on this device.'); return; }
-    const watch = navigator.geolocation.watchPosition(p => {
-      setLocationError(null);
-      setNavigationFix({ lat: p.coords.latitude, lng: p.coords.longitude, heading: (p.coords.speed ?? 0) > 1 ? p.coords.heading : null });
-    }, e => setLocationError(e.code === 1 ? 'Allow location to follow your pin.' : 'Waiting for a GPS fix…'), { enableHighAccuracy: true, maximumAge: 0, timeout: 15000 });
-    return () => navigator.geolocation.clearWatch(watch);
-  }, [fs, locOn]);
   const [zoom, setZoom] = useState(12);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [chipDay, setChipDay] = useState<string | null>(null);
@@ -606,13 +588,12 @@ export default function RouteMapInner({
           maxNativeZoom={19}
         />
       )}
-      {keySuffix !== '-fs' || !navigationFix ? <FitToBounds bounds={bounds} /> : null}
+      <FitToBounds bounds={bounds} />
       {keySuffix === '-fs' ? <NavigationMap onMap={setNavigationMap} /> : null}
       {trackpadPan ? <RouteMapTrackpad /> : null}
       <ZoomWatcher onZoom={setZoom} />
       <MapControls bounds={bounds} />
       {keySuffix !== '-fs' ? <HoverMarker /> : null}
-      {keySuffix === '-fs' && navigationFix ? <Marker position={[navigationFix.lat, navigationFix.lng]} zIndexOffset={1500} icon={L.divIcon({ className: '', html: '<div class="grid h-9 w-9 place-items-center rounded-full border-4 border-card bg-primary text-primary-foreground shadow-lg">▲</div>', iconSize: [36, 36], iconAnchor: [18, 18] })}><Tooltip>You</Tooltip></Marker> : null}
       <DirectionArrows lines={arrowLines} />
       {keySuffix === "-fs" ? <FlyTo target={flyTarget} /> : null}
       {visible.map((l) =>
@@ -767,7 +748,7 @@ export default function RouteMapInner({
                     <li key={`${owner.route.id}-${m.id}`} className="flex items-center gap-3 py-2.5">
                       <button
                         type="button"
-                        onClick={() => { navigation.pause(); setFlyTarget({ lat: m.lat, lng: m.lng, n: Date.now() }); }}
+                        onClick={() => { setFlyTarget({ lat: m.lat, lng: m.lng, n: Date.now() }); }}
                         className="flex min-w-0 flex-1 items-start gap-2.5 text-left"
                       >
                         <span
@@ -805,20 +786,16 @@ export default function RouteMapInner({
           </div>
           </div>
           <div className="flex gap-1.5 overflow-x-auto border-t border-border bg-card px-3 py-2" aria-label="Rider map controls">
-            <button type="button" onClick={toggleLoc} aria-pressed={locOn} className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-bold ring-1 ${locOn ? 'bg-primary text-primary-foreground ring-primary' : 'bg-background text-ink ring-border'}`}>
-              {locOn ? 'Location on' : 'Location off'}
-            </button>
-            <button type="button" onClick={() => { navigation.pause(); const b = bounds; if (navigationMap && b) { (navigationMap as L.Map & { setBearing?: (n: number) => void }).setBearing?.(0); navigationMap.fitBounds(b, { padding: [28, 28], animate: true }); } }} className="shrink-0 rounded-full bg-background px-3 py-1.5 text-xs font-bold text-ink ring-1 ring-border">
+            <button type="button" onClick={() => { const b = bounds; if (navigationMap && b) { (navigationMap as L.Map & { setBearing?: (n: number) => void }).setBearing?.(0); navigationMap.fitBounds(b, { padding: [28, 28], animate: true }); } }} className="shrink-0 rounded-full bg-background px-3 py-1.5 text-xs font-bold text-ink ring-1 ring-border">
               Go to route
             </button>
             <button type="button" onClick={toggleSat} aria-pressed={satellite} className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-bold ring-1 ${satellite ? 'bg-primary text-primary-foreground ring-primary' : 'bg-background text-ink ring-border'}`}>
               {satellite ? 'Satellite' : 'Street map'}
             </button>
-            <button type="button" onClick={() => { const c = navigationFix ?? navigationMap?.getCenter(); if (c) window.open(`https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${c.lat},${c.lng}`, '_blank', 'noopener'); }} className="shrink-0 rounded-full bg-background px-3 py-1.5 text-xs font-bold text-ink ring-1 ring-border">
+            <button type="button" onClick={() => { const c = navigationMap?.getCenter(); if (c) window.open(`https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${c.lat},${c.lng}`, '_blank', 'noopener'); }} className="shrink-0 rounded-full bg-background px-3 py-1.5 text-xs font-bold text-ink ring-1 ring-border">
               Street View
             </button>
           </div>
-          <FullscreenNavigationBar fix={navigationFix} error={locationError} routeName={visible[0]?.route.name} progress={navigationFix && visible[0] ? navigationProgress(visible[0].navigationLines, navigationFix.lat, navigationFix.lng) : null} paused={navigation.paused} onResume={navigation.resume} />
         </div>,
         document.body,
       )
