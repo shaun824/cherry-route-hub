@@ -55,6 +55,7 @@ const MARKER_GLYPH: Record<NonNullable<CustomMarker["icon"]>, string> = {
   water: "💧",
   spectator: "📣",
   parking: "🅿️",
+  coffee: "☕",
 };
 
 /** Sponsor logos grow to full size once riders zoom in close. */
@@ -514,7 +515,7 @@ export default function RouteMapInner({
       : visible.length === loaded.length
         ? "all"
         : null;
-  const pointOrder: Record<string, number> = { water: 0, aid: 1, food: 2, start: 3, finish: 4 };
+  const pointOrder: Record<string, number> = { water: 0, aid: 1, food: 2, coffee: 2, start: 3, finish: 4 };
   const listMarkers = [...shownMarkers].sort(
     (a, b) =>
       (pointOrder[a.marker.icon ?? ""] ?? 9) - (pointOrder[b.marker.icon ?? ""] ?? 9) ||
