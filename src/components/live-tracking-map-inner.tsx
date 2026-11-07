@@ -37,6 +37,7 @@ const POINT_TYPE: Record<string, { label: string; glyph: string; color: string }
   warning: { label: "Marshals", glyph: "🦺", color: "#f97316" },
   aid: { label: "Medics", glyph: "✚", color: "#dc2626" },
   food: { label: "Food", glyph: "🍌", color: "#16a34a" },
+  coffee: { label: "Boost bars", glyph: "☕", color: "#009ca6" },
   start: { label: "Start", glyph: "🚩", color: "#334155" },
   finish: { label: "Finish", glyph: "🏁", color: "#334155" },
   photo: { label: "Photo spots", glyph: "📷", color: "#7c3aed" },
@@ -1266,7 +1267,7 @@ export default function LiveTrackingMapInner({
     const byKey = new Map<string, FieldPoint>();
     for (const c of dayCandidates) {
       for (const m of (c.route.customMarkers ?? []) as CustomMarker[]) {
-        if (!["water", "aid", "food", "start", "finish"].includes(m.icon ?? "")) continue;
+        if (!["water", "aid", "food", "coffee", "start", "finish"].includes(m.icon ?? "")) continue;
         const key = `${m.name}|${m.lat.toFixed(4)}|${m.lng.toFixed(4)}`;
         const ex = byKey.get(key);
         if (ex) ex.routes.push(c.route.name);
