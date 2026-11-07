@@ -30,7 +30,6 @@ import { getRouteElevation } from "@/lib/elevation.functions";
 import { withRegistrationDayLabels } from "@/lib/event-days";
 import { useRouteHover } from "@/lib/route-hover";
 import RouteMapTrackpad from "@/components/route-map-trackpad";
-import { FullscreenNavigationBar, useFullscreenMapNavigation, type NavigationFix } from '@/components/fullscreen-map-navigation';
 import { navigationProgress } from '@/lib/fullscreen-navigation';
 // This module is lazy-loaded in the browser; rotation never enters SSR.
 (globalThis as unknown as { L: typeof L }).L = L;
@@ -253,34 +252,17 @@ export default function RouteMapInner({
   const [enabled, setEnabled] = useState<Record<string, boolean>>({});
   const [fs, setFs] = useState(false);
   const [navigationMap, setNavigationMap] = useState<L.Map | null>(null);
-  const [navigationFix, setNavigationFix] = useState<NavigationFix | null>(null);
-  const [locationError, setLocationError] = useState<string | null>(null);
-  const [locOn, setLocOn] = useState(true);
+  // Route viewing never touches the rider's location. Location is only asked for
+  // on the tracking page and in race control, so nothing here calls geolocation.
   const [satellite, setSatellite] = useState(false);
   useEffect(() => {
-    try { setLocOn(localStorage.getItem('rc-route-loc') !== '0'); setSatellite(localStorage.getItem('rc-route-sat') === '1'); } catch { /* ignore */ }
+    try { setSatellite(localStorage.getItem('rc-route-sat') === '1'); } catch { /* ignore */ }
   }, []);
-  const toggleLoc = () => {
-    const next = !locOn;
-    setLocOn(next);
-    if (!next) { setNavigationFix(null); setLocationError('Location is off. Tap Location to turn it back on.'); }
-    try { localStorage.setItem('rc-route-loc', next ? '1' : '0'); } catch { /* ignore */ }
-  };
   const toggleSat = () => {
     const next = !satellite;
     setSatellite(next);
     try { localStorage.setItem('rc-route-sat', next ? '1' : '0'); } catch { /* ignore */ }
   };
-  const navigation = useFullscreenMapNavigation(navigationMap, fs && locOn, navigationFix);
-  useEffect(() => {
-    if (!fs || !locOn) return;
-    if (!navigator.geolocation) { setLocationError('Location is unavailable on this device.'); return; }
-    const watch = navigator.geolocation.watchPosition(p => {
-      setLocationError(null);
-      setNavigationFix({ lat: p.coords.latitude, lng: p.coords.longitude, heading: (p.coords.speed ?? 0) > 1 ? p.coords.heading : null });
-    }, e => setLocationError(e.code === 1 ? 'Allow location to follow your pin.' : 'Waiting for a GPS fix…'), { enableHighAccuracy: true, maximumAge: 0, timeout: 15000 });
-    return () => navigator.geolocation.clearWatch(watch);
-  }, [fs, locOn]);
   const [zoom, setZoom] = useState(12);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [chipDay, setChipDay] = useState<string | null>(null);
