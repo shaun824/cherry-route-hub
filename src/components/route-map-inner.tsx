@@ -588,13 +588,12 @@ export default function RouteMapInner({
           maxNativeZoom={19}
         />
       )}
-      {keySuffix !== '-fs' || !navigationFix ? <FitToBounds bounds={bounds} /> : null}
+      <FitToBounds bounds={bounds} />
       {keySuffix === '-fs' ? <NavigationMap onMap={setNavigationMap} /> : null}
       {trackpadPan ? <RouteMapTrackpad /> : null}
       <ZoomWatcher onZoom={setZoom} />
       <MapControls bounds={bounds} />
       {keySuffix !== '-fs' ? <HoverMarker /> : null}
-      {keySuffix === '-fs' && navigationFix ? <Marker position={[navigationFix.lat, navigationFix.lng]} zIndexOffset={1500} icon={L.divIcon({ className: '', html: '<div class="grid h-9 w-9 place-items-center rounded-full border-4 border-card bg-primary text-primary-foreground shadow-lg">▲</div>', iconSize: [36, 36], iconAnchor: [18, 18] })}><Tooltip>You</Tooltip></Marker> : null}
       <DirectionArrows lines={arrowLines} />
       {keySuffix === "-fs" ? <FlyTo target={flyTarget} /> : null}
       {visible.map((l) =>
@@ -749,7 +748,7 @@ export default function RouteMapInner({
                     <li key={`${owner.route.id}-${m.id}`} className="flex items-center gap-3 py-2.5">
                       <button
                         type="button"
-                        onClick={() => { navigation.pause(); setFlyTarget({ lat: m.lat, lng: m.lng, n: Date.now() }); }}
+                        onClick={() => { setFlyTarget({ lat: m.lat, lng: m.lng, n: Date.now() }); }}
                         className="flex min-w-0 flex-1 items-start gap-2.5 text-left"
                       >
                         <span
@@ -787,20 +786,16 @@ export default function RouteMapInner({
           </div>
           </div>
           <div className="flex gap-1.5 overflow-x-auto border-t border-border bg-card px-3 py-2" aria-label="Rider map controls">
-            <button type="button" onClick={toggleLoc} aria-pressed={locOn} className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-bold ring-1 ${locOn ? 'bg-primary text-primary-foreground ring-primary' : 'bg-background text-ink ring-border'}`}>
-              {locOn ? 'Location on' : 'Location off'}
-            </button>
-            <button type="button" onClick={() => { navigation.pause(); const b = bounds; if (navigationMap && b) { (navigationMap as L.Map & { setBearing?: (n: number) => void }).setBearing?.(0); navigationMap.fitBounds(b, { padding: [28, 28], animate: true }); } }} className="shrink-0 rounded-full bg-background px-3 py-1.5 text-xs font-bold text-ink ring-1 ring-border">
+            <button type="button" onClick={() => { const b = bounds; if (navigationMap && b) { (navigationMap as L.Map & { setBearing?: (n: number) => void }).setBearing?.(0); navigationMap.fitBounds(b, { padding: [28, 28], animate: true }); } }} className="shrink-0 rounded-full bg-background px-3 py-1.5 text-xs font-bold text-ink ring-1 ring-border">
               Go to route
             </button>
             <button type="button" onClick={toggleSat} aria-pressed={satellite} className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-bold ring-1 ${satellite ? 'bg-primary text-primary-foreground ring-primary' : 'bg-background text-ink ring-border'}`}>
               {satellite ? 'Satellite' : 'Street map'}
             </button>
-            <button type="button" onClick={() => { const c = navigationFix ?? navigationMap?.getCenter(); if (c) window.open(`https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${c.lat},${c.lng}`, '_blank', 'noopener'); }} className="shrink-0 rounded-full bg-background px-3 py-1.5 text-xs font-bold text-ink ring-1 ring-border">
+            <button type="button" onClick={() => { const c = navigationMap?.getCenter(); if (c) window.open(`https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${c.lat},${c.lng}`, '_blank', 'noopener'); }} className="shrink-0 rounded-full bg-background px-3 py-1.5 text-xs font-bold text-ink ring-1 ring-border">
               Street View
             </button>
           </div>
-          <FullscreenNavigationBar fix={navigationFix} error={locationError} routeName={visible[0]?.route.name} progress={navigationFix && visible[0] ? navigationProgress(visible[0].navigationLines, navigationFix.lat, navigationFix.lng) : null} paused={navigation.paused} onResume={navigation.resume} />
         </div>,
         document.body,
       )
