@@ -593,7 +593,7 @@ export default function RouteMapInner({
       {trackpadPan ? <RouteMapTrackpad /> : null}
       <ZoomWatcher onZoom={setZoom} />
       <MapControls bounds={bounds} />
-      {keySuffix !== '-fs' ? <HoverMarker /> : null}
+      <HoverMarker />
       <DirectionArrows lines={arrowLines} />
       {keySuffix === "-fs" ? <FlyTo target={flyTarget} /> : null}
       {visible.map((l) =>
