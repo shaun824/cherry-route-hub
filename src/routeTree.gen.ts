@@ -59,6 +59,7 @@ import { Route as AdminSignInsRouteImport } from './routes/admin.sign-ins'
 import { Route as AdminSocialRouteImport } from './routes/admin.social'
 import { Route as AdminSponsorsRouteImport } from './routes/admin.sponsors'
 import { Route as AdminTrackingRouteImport } from './routes/admin.tracking'
+import { Route as AdminWebsiteEnquiriesRouteImport } from './routes/admin.website-enquiries'
 import { Route as AskEventIdRouteImport } from './routes/ask.$eventId'
 import { Route as CrewIndexRouteImport } from './routes/crew.index'
 import { Route as CrewBuildRouteImport } from './routes/crew.build'
@@ -386,6 +387,11 @@ const AdminSponsorsRoute = AdminSponsorsRouteImport.update({
 const AdminTrackingRoute = AdminTrackingRouteImport.update({
   id: '/tracking',
   path: '/tracking',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminWebsiteEnquiriesRoute = AdminWebsiteEnquiriesRouteImport.update({
+  id: '/website-enquiries',
+  path: '/website-enquiries',
   getParentRoute: () => AdminRoute,
 } as any)
 const AskEventIdRoute = AskEventIdRouteImport.update({
@@ -842,6 +848,7 @@ export interface FileRoutesByFullPath {
   '/admin/social': typeof AdminSocialRoute
   '/admin/sponsors': typeof AdminSponsorsRoute
   '/admin/tracking': typeof AdminTrackingRoute
+  '/admin/website-enquiries': typeof AdminWebsiteEnquiriesRoute
   '/ask/$eventId': typeof AskEventIdRoute
   '/crew/build': typeof CrewBuildRoute
   '/crew/inventory': typeof CrewInventoryRoute
@@ -967,6 +974,7 @@ export interface FileRoutesByTo {
   '/admin/social': typeof AdminSocialRoute
   '/admin/sponsors': typeof AdminSponsorsRoute
   '/admin/tracking': typeof AdminTrackingRoute
+  '/admin/website-enquiries': typeof AdminWebsiteEnquiriesRoute
   '/ask/$eventId': typeof AskEventIdRoute
   '/crew/build': typeof CrewBuildRoute
   '/crew/inventory': typeof CrewInventoryRoute
@@ -1095,6 +1103,7 @@ export interface FileRoutesById {
   '/admin/social': typeof AdminSocialRoute
   '/admin/sponsors': typeof AdminSponsorsRoute
   '/admin/tracking': typeof AdminTrackingRoute
+  '/admin/website-enquiries': typeof AdminWebsiteEnquiriesRoute
   '/ask/$eventId': typeof AskEventIdRoute
   '/crew/build': typeof CrewBuildRoute
   '/crew/inventory': typeof CrewInventoryRoute
@@ -1225,6 +1234,7 @@ export interface FileRouteTypes {
     | '/admin/social'
     | '/admin/sponsors'
     | '/admin/tracking'
+    | '/admin/website-enquiries'
     | '/ask/$eventId'
     | '/crew/build'
     | '/crew/inventory'
@@ -1350,6 +1360,7 @@ export interface FileRouteTypes {
     | '/admin/social'
     | '/admin/sponsors'
     | '/admin/tracking'
+    | '/admin/website-enquiries'
     | '/ask/$eventId'
     | '/crew/build'
     | '/crew/inventory'
@@ -1477,6 +1488,7 @@ export interface FileRouteTypes {
     | '/admin/social'
     | '/admin/sponsors'
     | '/admin/tracking'
+    | '/admin/website-enquiries'
     | '/ask/$eventId'
     | '/crew/build'
     | '/crew/inventory'
@@ -1988,6 +2000,13 @@ declare module '@tanstack/react-router' {
       path: '/tracking'
       fullPath: '/admin/tracking'
       preLoaderRoute: typeof AdminTrackingRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/website-enquiries': {
+      id: '/admin/website-enquiries'
+      path: '/website-enquiries'
+      fullPath: '/admin/website-enquiries'
+      preLoaderRoute: typeof AdminWebsiteEnquiriesRouteImport
       parentRoute: typeof AdminRoute
     }
     '/ask/$eventId': {
@@ -2568,6 +2587,7 @@ interface AdminRouteChildren {
   AdminSocialRoute: typeof AdminSocialRoute
   AdminSponsorsRoute: typeof AdminSponsorsRoute
   AdminTrackingRoute: typeof AdminTrackingRoute
+  AdminWebsiteEnquiriesRoute: typeof AdminWebsiteEnquiriesRoute
   AdminIndexRoute: typeof AdminIndexRoute
   AdminEmailBuilderStepIdRoute: typeof AdminEmailBuilderStepIdRoute
   AdminEventInfoEventIdRoute: typeof AdminEventInfoEventIdRoute
@@ -2610,6 +2630,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminSocialRoute: AdminSocialRoute,
   AdminSponsorsRoute: AdminSponsorsRoute,
   AdminTrackingRoute: AdminTrackingRoute,
+  AdminWebsiteEnquiriesRoute: AdminWebsiteEnquiriesRoute,
   AdminIndexRoute: AdminIndexRoute,
   AdminEmailBuilderStepIdRoute: AdminEmailBuilderStepIdRoute,
   AdminEventInfoEventIdRoute: AdminEventInfoEventIdRoute,
