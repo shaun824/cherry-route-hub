@@ -41,11 +41,11 @@ export function isAllowedTdaOrigin(origin: string | null) {
 const optional = (max: number) => z.string().trim().max(max).optional().transform((v) => (v ? v : null));
 
 export const tdaEnquirySchema = z.object({
-  name: z.string({ required_error: "Please add your name." }).trim().min(1, "Please add your name.").max(120, "Your name is too long."),
-  email: z.string({ required_error: "Please add your email address." }).trim().min(1, "Please add your email address.").max(255, "Your email address is too long.").email("Please check your email address.").transform((v) => v.toLowerCase()),
+  name: z.string({ error: "Please add your name." }).trim().min(1, "Please add your name.").max(120, "Your name is too long."),
+  email: z.string({ error: "Please add your email address." }).trim().min(1, "Please add your email address.").max(255, "Your email address is too long.").email("Please check your email address.").transform((v) => v.toLowerCase()),
   phone: optional(40),
   trip: z.string().trim().optional().transform((v) => v || "Not sure yet").refine((v) => (TDA_TRIPS as readonly string[]).includes(v), "Please pick a trip from the list."),
-  message: z.string({ required_error: "Please add your question." }).trim().min(1, "Please add your question.").max(4000, "Your question is too long."),
+  message: z.string({ error: "Please add your question." }).trim().min(1, "Please add your question.").max(4000, "Your question is too long."),
   consent: z.string().optional().transform((v) => v === "on" || v === "true" || v === "yes"),
 });
 

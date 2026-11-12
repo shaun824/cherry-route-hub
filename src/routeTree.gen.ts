@@ -95,6 +95,7 @@ import { Route as ApiPublicEventInterestRouteImport } from './routes/api/public/
 import { Route as ApiPublicEventInterestUnsubscribeRouteImport } from './routes/api/public/event-interest-unsubscribe'
 import { Route as ApiPublicMarketingSnapshotRouteImport } from './routes/api/public/marketing-snapshot'
 import { Route as ApiPublicOgRouteImport } from './routes/api/public/og'
+import { Route as ApiPublicTdaEnquiryRouteImport } from './routes/api/public/tda-enquiry'
 import { Route as CrewDepartmentDeptIdRouteImport } from './routes/crew.department.$deptId'
 import { Route as CrewLearnIndexRouteImport } from './routes/crew.learn.index'
 import { Route as CrewLearnCourseIdRouteImport } from './routes/crew.learn.$courseId'
@@ -571,6 +572,11 @@ const ApiPublicOgRoute = ApiPublicOgRouteImport.update({
   path: '/api/public/og',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicTdaEnquiryRoute = ApiPublicTdaEnquiryRouteImport.update({
+  id: '/api/public/tda-enquiry',
+  path: '/api/public/tda-enquiry',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CrewDepartmentDeptIdRoute = CrewDepartmentDeptIdRouteImport.update({
   id: '/crew/department/$deptId',
   path: '/crew/department/$deptId',
@@ -870,6 +876,7 @@ export interface FileRoutesByFullPath {
   '/api/public/event-interest-unsubscribe': typeof ApiPublicEventInterestUnsubscribeRoute
   '/api/public/marketing-snapshot': typeof ApiPublicMarketingSnapshotRoute
   '/api/public/og': typeof ApiPublicOgRoute
+  '/api/public/tda-enquiry': typeof ApiPublicTdaEnquiryRoute
   '/crew/department/$deptId': typeof CrewDepartmentDeptIdRoute
   '/crew/learn/$courseId': typeof CrewLearnCourseIdRoute
   '/crew/learn/calendar': typeof CrewLearnCalendarRoute
@@ -993,6 +1000,7 @@ export interface FileRoutesByTo {
   '/api/public/event-interest-unsubscribe': typeof ApiPublicEventInterestUnsubscribeRoute
   '/api/public/marketing-snapshot': typeof ApiPublicMarketingSnapshotRoute
   '/api/public/og': typeof ApiPublicOgRoute
+  '/api/public/tda-enquiry': typeof ApiPublicTdaEnquiryRoute
   '/crew/department/$deptId': typeof CrewDepartmentDeptIdRoute
   '/crew/learn/$courseId': typeof CrewLearnCourseIdRoute
   '/crew/learn/calendar': typeof CrewLearnCalendarRoute
@@ -1121,6 +1129,7 @@ export interface FileRoutesById {
   '/api/public/event-interest-unsubscribe': typeof ApiPublicEventInterestUnsubscribeRoute
   '/api/public/marketing-snapshot': typeof ApiPublicMarketingSnapshotRoute
   '/api/public/og': typeof ApiPublicOgRoute
+  '/api/public/tda-enquiry': typeof ApiPublicTdaEnquiryRoute
   '/crew/department/$deptId': typeof CrewDepartmentDeptIdRoute
   '/crew/learn/$courseId': typeof CrewLearnCourseIdRoute
   '/crew/learn/calendar': typeof CrewLearnCalendarRoute
@@ -1250,6 +1259,7 @@ export interface FileRouteTypes {
     | '/api/public/event-interest-unsubscribe'
     | '/api/public/marketing-snapshot'
     | '/api/public/og'
+    | '/api/public/tda-enquiry'
     | '/crew/department/$deptId'
     | '/crew/learn/$courseId'
     | '/crew/learn/calendar'
@@ -1373,6 +1383,7 @@ export interface FileRouteTypes {
     | '/api/public/event-interest-unsubscribe'
     | '/api/public/marketing-snapshot'
     | '/api/public/og'
+    | '/api/public/tda-enquiry'
     | '/crew/department/$deptId'
     | '/crew/learn/$courseId'
     | '/crew/learn/calendar'
@@ -1500,6 +1511,7 @@ export interface FileRouteTypes {
     | '/api/public/event-interest-unsubscribe'
     | '/api/public/marketing-snapshot'
     | '/api/public/og'
+    | '/api/public/tda-enquiry'
     | '/crew/department/$deptId'
     | '/crew/learn/$courseId'
     | '/crew/learn/calendar'
@@ -1588,6 +1600,7 @@ export interface RootRouteChildren {
   ApiPublicEventInterestUnsubscribeRoute: typeof ApiPublicEventInterestUnsubscribeRoute
   ApiPublicMarketingSnapshotRoute: typeof ApiPublicMarketingSnapshotRoute
   ApiPublicOgRoute: typeof ApiPublicOgRoute
+  ApiPublicTdaEnquiryRoute: typeof ApiPublicTdaEnquiryRoute
   CrewDepartmentDeptIdRoute: typeof CrewDepartmentDeptIdRoute
   CrewLearnCourseIdRoute: typeof CrewLearnCourseIdRoute
   CrewLearnCalendarRoute: typeof CrewLearnCalendarRoute
@@ -2229,6 +2242,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicOgRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/tda-enquiry': {
+      id: '/api/public/tda-enquiry'
+      path: '/api/public/tda-enquiry'
+      fullPath: '/api/public/tda-enquiry'
+      preLoaderRoute: typeof ApiPublicTdaEnquiryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/crew/department/$deptId': {
       id: '/crew/department/$deptId'
       path: '/crew/department/$deptId'
@@ -2693,6 +2713,7 @@ const rootRouteChildren: RootRouteChildren = {
     ApiPublicEventInterestUnsubscribeRoute,
   ApiPublicMarketingSnapshotRoute: ApiPublicMarketingSnapshotRoute,
   ApiPublicOgRoute: ApiPublicOgRoute,
+  ApiPublicTdaEnquiryRoute: ApiPublicTdaEnquiryRoute,
   CrewDepartmentDeptIdRoute: CrewDepartmentDeptIdRoute,
   CrewLearnCourseIdRoute: CrewLearnCourseIdRoute,
   CrewLearnCalendarRoute: CrewLearnCalendarRoute,
