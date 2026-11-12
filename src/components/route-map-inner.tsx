@@ -819,6 +819,13 @@ export default function RouteMapInner({
         </button>
       </div>
 
+      {/* Full-page route maps get the same slide-along profile as everywhere else. */}
+      {fill && !fs && visible[0] ? (
+        <div className="max-h-[24dvh] shrink-0 overflow-y-auto">
+          <RouteProfile route={visible[0].route} color={visible[0].color} markers={visible[0].markers} />
+        </div>
+      ) : null}
+
       {showStats && visible.length > 0 && (
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
           <Stat label="Total distance" value={`${totalDistance.toFixed(1)} km`} />

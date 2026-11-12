@@ -32,3 +32,17 @@ describe("route viewing does not ask for location", () => {
     assert.equal(source("./live-tracking-map-inner.tsx").includes("navigator.geolocation"), true);
   });
 });
+
+describe("every route map lets you slide along the profile", () => {
+  const routeMap = source("./route-map-inner.tsx");
+  it("draws the moving arrow on every route map, full screen included", () => {
+    assert.equal(routeMap.includes("<HoverMarker />"), true);
+    assert.equal(/keySuffix\s*[!=]==?\s*["']-fs["']\s*\?\s*null\s*:\s*<HoverMarker/.test(routeMap), false);
+  });
+  it("shows the profile in full screen and on full-page route maps", () => {
+    assert.ok((routeMap.match(/<RouteProfile/g) ?? []).length >= 2);
+  });
+  it("race control map also follows the profile", () => {
+    assert.equal(source("./live-tracking-map-inner.tsx").includes("useRouteHover"), true);
+  });
+});
