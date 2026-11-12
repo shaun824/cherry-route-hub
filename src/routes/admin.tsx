@@ -71,6 +71,7 @@ const navGroups: NavGroup[] = [
       { to: "/admin/email-content", label: "Email content", icon: Mail },
       { to: "/admin/email-workflows", label: "Email workflows", icon: Mail },
       { to: "/admin/emails", label: "Email log", icon: Mail },
+      { to: "/admin/website-enquiries", label: "Website enquiries", icon: Mail },
     ],
   },
   {

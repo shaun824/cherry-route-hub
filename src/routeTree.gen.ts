@@ -59,6 +59,7 @@ import { Route as AdminSignInsRouteImport } from './routes/admin.sign-ins'
 import { Route as AdminSocialRouteImport } from './routes/admin.social'
 import { Route as AdminSponsorsRouteImport } from './routes/admin.sponsors'
 import { Route as AdminTrackingRouteImport } from './routes/admin.tracking'
+import { Route as AdminWebsiteEnquiriesRouteImport } from './routes/admin.website-enquiries'
 import { Route as AskEventIdRouteImport } from './routes/ask.$eventId'
 import { Route as CrewIndexRouteImport } from './routes/crew.index'
 import { Route as CrewBuildRouteImport } from './routes/crew.build'
@@ -95,6 +96,7 @@ import { Route as ApiPublicEventInterestRouteImport } from './routes/api/public/
 import { Route as ApiPublicEventInterestUnsubscribeRouteImport } from './routes/api/public/event-interest-unsubscribe'
 import { Route as ApiPublicMarketingSnapshotRouteImport } from './routes/api/public/marketing-snapshot'
 import { Route as ApiPublicOgRouteImport } from './routes/api/public/og'
+import { Route as ApiPublicTdaEnquiryRouteImport } from './routes/api/public/tda-enquiry'
 import { Route as CrewDepartmentDeptIdRouteImport } from './routes/crew.department.$deptId'
 import { Route as CrewLearnIndexRouteImport } from './routes/crew.learn.index'
 import { Route as CrewLearnCourseIdRouteImport } from './routes/crew.learn.$courseId'
@@ -387,6 +389,11 @@ const AdminTrackingRoute = AdminTrackingRouteImport.update({
   path: '/tracking',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminWebsiteEnquiriesRoute = AdminWebsiteEnquiriesRouteImport.update({
+  id: '/website-enquiries',
+  path: '/website-enquiries',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AskEventIdRoute = AskEventIdRouteImport.update({
   id: '/ask/$eventId',
   path: '/ask/$eventId',
@@ -569,6 +576,11 @@ const ApiPublicMarketingSnapshotRoute =
 const ApiPublicOgRoute = ApiPublicOgRouteImport.update({
   id: '/api/public/og',
   path: '/api/public/og',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicTdaEnquiryRoute = ApiPublicTdaEnquiryRouteImport.update({
+  id: '/api/public/tda-enquiry',
+  path: '/api/public/tda-enquiry',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CrewDepartmentDeptIdRoute = CrewDepartmentDeptIdRouteImport.update({
@@ -836,6 +848,7 @@ export interface FileRoutesByFullPath {
   '/admin/social': typeof AdminSocialRoute
   '/admin/sponsors': typeof AdminSponsorsRoute
   '/admin/tracking': typeof AdminTrackingRoute
+  '/admin/website-enquiries': typeof AdminWebsiteEnquiriesRoute
   '/ask/$eventId': typeof AskEventIdRoute
   '/crew/build': typeof CrewBuildRoute
   '/crew/inventory': typeof CrewInventoryRoute
@@ -870,6 +883,7 @@ export interface FileRoutesByFullPath {
   '/api/public/event-interest-unsubscribe': typeof ApiPublicEventInterestUnsubscribeRoute
   '/api/public/marketing-snapshot': typeof ApiPublicMarketingSnapshotRoute
   '/api/public/og': typeof ApiPublicOgRoute
+  '/api/public/tda-enquiry': typeof ApiPublicTdaEnquiryRoute
   '/crew/department/$deptId': typeof CrewDepartmentDeptIdRoute
   '/crew/learn/$courseId': typeof CrewLearnCourseIdRoute
   '/crew/learn/calendar': typeof CrewLearnCalendarRoute
@@ -960,6 +974,7 @@ export interface FileRoutesByTo {
   '/admin/social': typeof AdminSocialRoute
   '/admin/sponsors': typeof AdminSponsorsRoute
   '/admin/tracking': typeof AdminTrackingRoute
+  '/admin/website-enquiries': typeof AdminWebsiteEnquiriesRoute
   '/ask/$eventId': typeof AskEventIdRoute
   '/crew/build': typeof CrewBuildRoute
   '/crew/inventory': typeof CrewInventoryRoute
@@ -993,6 +1008,7 @@ export interface FileRoutesByTo {
   '/api/public/event-interest-unsubscribe': typeof ApiPublicEventInterestUnsubscribeRoute
   '/api/public/marketing-snapshot': typeof ApiPublicMarketingSnapshotRoute
   '/api/public/og': typeof ApiPublicOgRoute
+  '/api/public/tda-enquiry': typeof ApiPublicTdaEnquiryRoute
   '/crew/department/$deptId': typeof CrewDepartmentDeptIdRoute
   '/crew/learn/$courseId': typeof CrewLearnCourseIdRoute
   '/crew/learn/calendar': typeof CrewLearnCalendarRoute
@@ -1087,6 +1103,7 @@ export interface FileRoutesById {
   '/admin/social': typeof AdminSocialRoute
   '/admin/sponsors': typeof AdminSponsorsRoute
   '/admin/tracking': typeof AdminTrackingRoute
+  '/admin/website-enquiries': typeof AdminWebsiteEnquiriesRoute
   '/ask/$eventId': typeof AskEventIdRoute
   '/crew/build': typeof CrewBuildRoute
   '/crew/inventory': typeof CrewInventoryRoute
@@ -1121,6 +1138,7 @@ export interface FileRoutesById {
   '/api/public/event-interest-unsubscribe': typeof ApiPublicEventInterestUnsubscribeRoute
   '/api/public/marketing-snapshot': typeof ApiPublicMarketingSnapshotRoute
   '/api/public/og': typeof ApiPublicOgRoute
+  '/api/public/tda-enquiry': typeof ApiPublicTdaEnquiryRoute
   '/crew/department/$deptId': typeof CrewDepartmentDeptIdRoute
   '/crew/learn/$courseId': typeof CrewLearnCourseIdRoute
   '/crew/learn/calendar': typeof CrewLearnCalendarRoute
@@ -1216,6 +1234,7 @@ export interface FileRouteTypes {
     | '/admin/social'
     | '/admin/sponsors'
     | '/admin/tracking'
+    | '/admin/website-enquiries'
     | '/ask/$eventId'
     | '/crew/build'
     | '/crew/inventory'
@@ -1250,6 +1269,7 @@ export interface FileRouteTypes {
     | '/api/public/event-interest-unsubscribe'
     | '/api/public/marketing-snapshot'
     | '/api/public/og'
+    | '/api/public/tda-enquiry'
     | '/crew/department/$deptId'
     | '/crew/learn/$courseId'
     | '/crew/learn/calendar'
@@ -1340,6 +1360,7 @@ export interface FileRouteTypes {
     | '/admin/social'
     | '/admin/sponsors'
     | '/admin/tracking'
+    | '/admin/website-enquiries'
     | '/ask/$eventId'
     | '/crew/build'
     | '/crew/inventory'
@@ -1373,6 +1394,7 @@ export interface FileRouteTypes {
     | '/api/public/event-interest-unsubscribe'
     | '/api/public/marketing-snapshot'
     | '/api/public/og'
+    | '/api/public/tda-enquiry'
     | '/crew/department/$deptId'
     | '/crew/learn/$courseId'
     | '/crew/learn/calendar'
@@ -1466,6 +1488,7 @@ export interface FileRouteTypes {
     | '/admin/social'
     | '/admin/sponsors'
     | '/admin/tracking'
+    | '/admin/website-enquiries'
     | '/ask/$eventId'
     | '/crew/build'
     | '/crew/inventory'
@@ -1500,6 +1523,7 @@ export interface FileRouteTypes {
     | '/api/public/event-interest-unsubscribe'
     | '/api/public/marketing-snapshot'
     | '/api/public/og'
+    | '/api/public/tda-enquiry'
     | '/crew/department/$deptId'
     | '/crew/learn/$courseId'
     | '/crew/learn/calendar'
@@ -1588,6 +1612,7 @@ export interface RootRouteChildren {
   ApiPublicEventInterestUnsubscribeRoute: typeof ApiPublicEventInterestUnsubscribeRoute
   ApiPublicMarketingSnapshotRoute: typeof ApiPublicMarketingSnapshotRoute
   ApiPublicOgRoute: typeof ApiPublicOgRoute
+  ApiPublicTdaEnquiryRoute: typeof ApiPublicTdaEnquiryRoute
   CrewDepartmentDeptIdRoute: typeof CrewDepartmentDeptIdRoute
   CrewLearnCourseIdRoute: typeof CrewLearnCourseIdRoute
   CrewLearnCalendarRoute: typeof CrewLearnCalendarRoute
@@ -1977,6 +2002,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminTrackingRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/website-enquiries': {
+      id: '/admin/website-enquiries'
+      path: '/website-enquiries'
+      fullPath: '/admin/website-enquiries'
+      preLoaderRoute: typeof AdminWebsiteEnquiriesRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/ask/$eventId': {
       id: '/ask/$eventId'
       path: '/ask/$eventId'
@@ -2227,6 +2259,13 @@ declare module '@tanstack/react-router' {
       path: '/api/public/og'
       fullPath: '/api/public/og'
       preLoaderRoute: typeof ApiPublicOgRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/tda-enquiry': {
+      id: '/api/public/tda-enquiry'
+      path: '/api/public/tda-enquiry'
+      fullPath: '/api/public/tda-enquiry'
+      preLoaderRoute: typeof ApiPublicTdaEnquiryRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/crew/department/$deptId': {
@@ -2548,6 +2587,7 @@ interface AdminRouteChildren {
   AdminSocialRoute: typeof AdminSocialRoute
   AdminSponsorsRoute: typeof AdminSponsorsRoute
   AdminTrackingRoute: typeof AdminTrackingRoute
+  AdminWebsiteEnquiriesRoute: typeof AdminWebsiteEnquiriesRoute
   AdminIndexRoute: typeof AdminIndexRoute
   AdminEmailBuilderStepIdRoute: typeof AdminEmailBuilderStepIdRoute
   AdminEventInfoEventIdRoute: typeof AdminEventInfoEventIdRoute
@@ -2590,6 +2630,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminSocialRoute: AdminSocialRoute,
   AdminSponsorsRoute: AdminSponsorsRoute,
   AdminTrackingRoute: AdminTrackingRoute,
+  AdminWebsiteEnquiriesRoute: AdminWebsiteEnquiriesRoute,
   AdminIndexRoute: AdminIndexRoute,
   AdminEmailBuilderStepIdRoute: AdminEmailBuilderStepIdRoute,
   AdminEventInfoEventIdRoute: AdminEventInfoEventIdRoute,
@@ -2693,6 +2734,7 @@ const rootRouteChildren: RootRouteChildren = {
     ApiPublicEventInterestUnsubscribeRoute,
   ApiPublicMarketingSnapshotRoute: ApiPublicMarketingSnapshotRoute,
   ApiPublicOgRoute: ApiPublicOgRoute,
+  ApiPublicTdaEnquiryRoute: ApiPublicTdaEnquiryRoute,
   CrewDepartmentDeptIdRoute: CrewDepartmentDeptIdRoute,
   CrewLearnCourseIdRoute: CrewLearnCourseIdRoute,
   CrewLearnCalendarRoute: CrewLearnCalendarRoute,
