@@ -4248,6 +4248,57 @@ export type Database = {
         }
         Relationships: []
       }
+      website_enquiries: {
+        Row: {
+          auto_replied: boolean
+          consent: boolean
+          consent_at: string | null
+          created_at: string
+          email: string
+          event_key: string
+          everlytic_error: string | null
+          everlytic_synced: boolean
+          id: string
+          message: string
+          name: string
+          notified: boolean
+          phone: string | null
+          trip: string | null
+        }
+        Insert: {
+          auto_replied?: boolean
+          consent?: boolean
+          consent_at?: string | null
+          created_at?: string
+          email: string
+          event_key?: string
+          everlytic_error?: string | null
+          everlytic_synced?: boolean
+          id?: string
+          message: string
+          name: string
+          notified?: boolean
+          phone?: string | null
+          trip?: string | null
+        }
+        Update: {
+          auto_replied?: boolean
+          consent?: boolean
+          consent_at?: string | null
+          created_at?: string
+          email?: string
+          event_key?: string
+          everlytic_error?: string | null
+          everlytic_synced?: boolean
+          id?: string
+          message?: string
+          name?: string
+          notified?: boolean
+          phone?: string | null
+          trip?: string | null
+        }
+        Relationships: []
+      }
       whatsapp_opt_outs: {
         Row: {
           created_at: string
