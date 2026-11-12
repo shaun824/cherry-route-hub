@@ -60,3 +60,4 @@
 - Install prompts recognise the native bridge directly through the shared installed-experience helper, without waiting for startup to patch browser standalone flags.
 - Link-preview thumbnails come from the public /api/public/og image route (src/lib/og.ts helpers in each leaf head()); it reads only public event name/cover/logo and outputs small JPEGs so WhatsApp shows them.
 - Marketing-site spots-left feed is GET /api/public/availability?slug= (count-only, is_public events, per-class classes[].capacity plus events.capacity shared limit); never return entrant identities.
+- Tour de Addo website enquiries post to /api/public/tda-enquiry, gated by a CORS origin allow-list instead of a secret (browser caller); store first, then team email, rider auto-reply and consent-only Everlytic sync, whose failures never fail the response.
