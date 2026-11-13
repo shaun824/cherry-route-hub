@@ -75,9 +75,11 @@ export type SocialLinks = {
 export type Event = {
   id: string;
   externalId: string | null; // Entry Ninja event ID
+  slug?: string | null;
   name: string;
   discipline: string;
-  date: string; // ISO
+  date: string; // ISO, or an internal approximate sorting date when datesTbc is true
+  datesTbc?: boolean;
   location: string;
   distanceKm: number;
   status: "open" | "closed" | "live" | "upcoming";

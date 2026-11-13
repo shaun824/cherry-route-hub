@@ -50,13 +50,13 @@ function headingSize(text: string, big: number, small: number): number {
 async function loadEvent(id: string) {
   const url = process.env.SUPABASE_URL;
   const key = process.env.SUPABASE_PUBLISHABLE_KEY;
-  if (!url || !key || !/^[0-9a-f-]{36}$/i.test(id)) return null;
+  if (!url || !key || !/^([0-9a-f-]{36}|[a-z0-9]+(?:-[a-z0-9]+)*)$/i.test(id)) return null;
   const sb = createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
-  const { data } = await sb.from("events").select("id, name, cover_url, logo_url").eq("id", id).maybeSingle();
+  const { data } = await sb.from("events").select("id, name, cover_url, logo_url").eq(/^[0-9a-f-]{36}$/i.test(id) ? "id" : "slug", id).maybeSingle();
   if (!data) return null;
   let cover = abs(data.cover_url);
   if (!cover) {
-    const { data: photo } = await sb.from("event_photos_cache").select("*").eq("event_id", id).limit(1).maybeSingle();
+    const { data: photo } = await sb.from("event_photos_cache").select("*").eq("event_id", data.id).limit(1).maybeSingle();
     const photos = (photo as { photos?: { url?: string }[] } | null)?.photos;
     cover = abs(Array.isArray(photos) ? photos[0]?.url : null);
   }

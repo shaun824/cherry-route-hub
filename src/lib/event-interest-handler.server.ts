@@ -1,7 +1,7 @@
 // Shared event-interest action. The public website form and secret-gated WordPress endpoint use the same stored consent and audience.
 import { z } from "zod";
 
-import { interestConfirmationKey, normaliseEmail, renewedInterestConsent } from "@/lib/event-interest";
+import { eventInterestTemplate, interestConfirmationKey, normaliseEmail, renewedInterestConsent } from "@/lib/event-interest";
 
 const json = (body: unknown, status = 200) =>
   Response.json(body, { status, headers: { "Content-Type": "application/json" } });
@@ -59,7 +59,7 @@ export async function handleEventInterest(request: Request): Promise<Response> {
         // The event must exist and be published.
         const { data: event } = await supabaseAdmin
           .from("events")
-          .select("id, lifecycle, everlytic_interest_list_id, is_review_event")
+          .select("id, name, slug, lifecycle, everlytic_interest_list_id, is_review_event")
           .eq("id", parsed.data.event_id)
           .maybeSingle();
         if (!event || event.lifecycle !== 'published' || event.is_review_event) {
@@ -135,9 +135,13 @@ export async function handleEventInterest(request: Request): Promise<Response> {
         try {
           const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
           const firstName = (parsed.data.name ?? "").trim().split(/\s+/)[0] || null;
-          await sendTemplateEmail("ice-signup-confirmation", email, {
+          await sendTemplateEmail(eventInterestTemplate(event.id), email, {
             idempotencyKey: interestConfirmationKey(signupId, existing?.unsubscribed_at ?? null),
-            templateData: { firstName },
+            templateData: {
+              firstName,
+              eventName: event.name,
+              eventUrl: `https://riderhub.redcherryevents.co.za/my-events/${event.slug || event.id}`,
+            },
           });
         } catch (e) {
           console.error("Event interest confirmation deferred", (e as Error).message);

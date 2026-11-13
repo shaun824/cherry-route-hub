@@ -117,7 +117,7 @@ export function AppPreloader({ routeLoading }: { routeLoading: boolean }) {
         }
         const today = new Date().toISOString().slice(0, 10);
         const { data: ev } = await supabase
-          .from("events").select("name,event_date").gte("event_date", today)
+          .from("events").select("name,event_date").eq("dates_tbc", false).gte("event_date", today)
           .order("event_date", { ascending: true }).limit(1).maybeSingle();
         if (alive && ev?.name) {
           const days = Math.round((new Date(ev.event_date).getTime() - Date.now()) / 86_400_000);

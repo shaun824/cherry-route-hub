@@ -8,6 +8,7 @@ import { activityPackingList } from "@/lib/packing-activity";
 import sabrinaLoveLogo from "@/assets/sabrina-love-logo.png.asset.json";
 import discoveryLogo from "@/assets/discovery-logo.jpg.asset.json";
 import { MyRegistrationCard } from "@/components/my-registration-card";
+import { EventInterestSignupCard } from "@/components/event-interest-signup-card";
 import { scrollAppTo } from "@/lib/app-scroll";
 import { eventApparel, missingSizes, type ApparelFlags } from "@/lib/apparel";
 import { MissingSizeCallout } from "@/components/missing-size-callout";
@@ -171,8 +172,8 @@ export const Route = createFileRoute("/my-events/$eventId")({
   loader: async ({ params }) => {
     const { data, error } = await supabase
       .from("events")
-      .select("id, name, discipline, event_date, location, map_query, distance_km, description, hero_color, logo_url, days, schedule, social_links, status, entry_ninja_url, website_url, collects_tshirt_size, collects_jacket_size, is_review_event")
-      .eq("id", params.eventId)
+      .select("id, slug, dates_tbc, name, discipline, event_date, location, map_query, distance_km, description, hero_color, logo_url, days, schedule, social_links, status, entry_ninja_url, website_url, collects_tshirt_size, collects_jacket_size, is_review_event")
+      .eq(/^[0-9a-f-]{36}$/i.test(params.eventId) ? "id" : "slug", params.eventId)
       .maybeSingle();
     // Private review events are only readable with the rider's session, which the
     // server render does not have; the browser re-runs this loader after hydration.
@@ -186,7 +187,8 @@ export const Route = createFileRoute("/my-events/$eventId")({
       return { meta: [{ title: "Event — Red Cherry Events" }, { name: "robots", content: "noindex" }] };
     }
     const title = `${ev.name} · Red Cherry Events`;
-    const description = `${ev.name} in ${ev.location}: results, schedule, routes, venue, packing list and event info.`;
+    const description = `${ev.name} in ${ev.location}: ${ev.dates_tbc ? "2027 dates to be confirmed, entry alerts, " : ""}results, schedule, routes, venue, packing list and event info.`;
+    const eventPath = ev.slug || ev.id;
     return {
       meta: [
         { title },
@@ -194,13 +196,13 @@ export const Route = createFileRoute("/my-events/$eventId")({
         { property: "og:title", content: title },
         { property: "og:description", content: description },
         { property: "og:type", content: "website" },
-        { property: "og:url", content: `${OG_SITE}/my-events/${ev.id}` },
+        { property: "og:url", content: `${OG_SITE}/my-events/${eventPath}` },
         ...ogImageMeta(
-          eventOgImageUrl(ev.id, eventTabLabel((match as { search?: { tab?: string } } | undefined)?.search?.tab)),
+          eventOgImageUrl(eventPath, eventTabLabel((match as { search?: { tab?: string } } | undefined)?.search?.tab)),
           `${ev.name} · ${eventTabLabel((match as { search?: { tab?: string } } | undefined)?.search?.tab)}`,
         ),
       ],
-      links: [{ rel: "canonical", href: `${OG_SITE}/my-events/${ev.id}` }],
+      links: [{ rel: "canonical", href: `${OG_SITE}/my-events/${eventPath}` }],
     };
   },
   component: MyEventDetail,
@@ -351,7 +353,7 @@ function MyEventDetailInner({ event }: { event: NonNullable<ReturnType<typeof Ro
             </p>
             <h1 className="mt-1 font-display text-2xl font-bold leading-tight">{event.name}</h1>
             <p className="mt-2 text-xs opacity-90">
-              {new Date(event.event_date).toLocaleString("en-ZA", {
+              {event.dates_tbc ? "2027 dates to be confirmed" : new Date(event.event_date).toLocaleString("en-ZA", {
                 weekday: "long",
                 day: "numeric",
                 month: "short",
@@ -414,14 +416,16 @@ function MyEventDetailInner({ event }: { event: NonNullable<ReturnType<typeof Ro
           <p role="note" className="rounded-xl bg-amber-100 px-3 py-2 text-xs font-semibold text-amber-900">{REVIEW_EVENT_NOTE}</p>
         </div>
       ) : null}
-      <div className="px-5 pt-4">
-        <RaceWeekBanner
-          eventId={event.id}
-          eventName={event.name}
-          eventDate={event.event_date}
-          days={cleanEventDays(event.days)}
-        />
-      </div>
+      {event.dates_tbc ? null : (
+        <div className="px-5 pt-4">
+          <RaceWeekBanner
+            eventId={event.id}
+            eventName={event.name}
+            eventDate={event.event_date}
+            days={cleanEventDays(event.days)}
+          />
+        </div>
+      )}
 
       <div className="px-5 py-4">
         {tab === "info" && (
@@ -1037,7 +1041,7 @@ function InfoPanel({
   eventId: string;
   description: string | null;
   distanceKm: number;
-  event: { id?: string; days?: unknown; schedule?: unknown; location?: string | null; map_query?: string | null; social_links?: unknown; entry_ninja_url?: string | null; website_url?: string | null; event_date?: string | null };
+  event: { id?: string; days?: unknown; schedule?: unknown; location?: string | null; map_query?: string | null; social_links?: unknown; entry_ninja_url?: string | null; website_url?: string | null; event_date?: string | null; dates_tbc?: boolean };
   isLive: boolean;
   eventName: string;
   onTabChange: (tab: Tab) => void;
@@ -1051,7 +1055,7 @@ function InfoPanel({
     ? Math.ceil((new Date(event.event_date).getTime() - Date.now()) / 86_400_000)
     : null;
   const showWeather =
-    daysToEvent !== null && daysToEvent <= 10 && daysToEvent >= -1 && Boolean(event.location);
+    !event.dates_tbc && daysToEvent !== null && daysToEvent <= 10 && daysToEvent >= -1 && Boolean(event.location);
   const q = useQuery({ queryKey: ["event-info", eventId], queryFn: () => fetchEventInfo(eventId) });
   const info = q.data;
   const riderOffers = useEventPromos(eventName);
@@ -1065,14 +1069,16 @@ function InfoPanel({
   const isLongAbout = aboutText.length > DESCRIPTION_PREVIEW_LENGTH;
   const [aboutExpanded, setAboutExpanded] = useState(false);
   const ice = isIceEvent(eventName);
-  const entryCard = (
-      <div data-section={signedIn ? "entry_status" : "locked_entry"}>
+  const entryCard = event.dates_tbc && !event.entry_ninja_url ? (
+    <EventInterestSignupCard eventId={eventId} eventName={eventName} />
+  ) : (
+    <div data-section={signedIn ? "entry_status" : "locked_entry"}>
       <YourEntryCard
         eventId={eventId}
         entryUrl={event.entry_ninja_url ?? event.website_url ?? null}
         apparel={eventApparel(event as never)}
       />
-      </div>
+    </div>
   );
   const offersBlock = riderOffers.length > 0 ? (
         <section data-section="rider_offers">

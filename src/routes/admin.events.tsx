@@ -14,12 +14,14 @@ import {
   GripVertical,
   Upload,
   Loader2,
+  RefreshCw,
 } from "lucide-react";
 import { useAdminStore, newId } from "@/lib/store";
 import type { Batch, BatchPrice, CustomMarker, EntryCategory, Event, EventDay, EventRoute, RouteTier, ScheduleItem } from "@/lib/mock-data";
 import { supabase } from "@/integrations/supabase/client";
 import { coordsFromMapInput, isShortMapLink } from "@/lib/map-embed";
 import { resolveMapLink } from "@/lib/map-link.functions";
+import { syncEntryNinjaEvent } from "@/lib/entryninja.functions";
 
 async function uploadEventImage(file: File): Promise<string> {
   const ext = file.name.split(".").pop()?.toLowerCase() ?? "png";
@@ -420,6 +422,22 @@ function AdminEvents() {
   const del = useAdminStore((s) => s.deleteEvent);
   const [editing, setEditing] = useState<Event | null>(null);
   const [filter, setFilter] = useState<Lifecycle | "all">("all");
+  const [syncingId, setSyncingId] = useState<string | null>(null);
+  const [syncMessage, setSyncMessage] = useState<string | null>(null);
+  const runEntrantSync = useServerFn(syncEntryNinjaEvent);
+
+  async function syncEntrants(event: Event) {
+    setSyncingId(event.id);
+    setSyncMessage(null);
+    try {
+      const result = await runEntrantSync({ data: { enEventId: Number(event.externalId), eventId: event.id } });
+      setSyncMessage(`Synced ${event.name}: ${result.linked} entrants imported or updated.`);
+    } catch (error) {
+      setSyncMessage(error instanceof Error ? error.message : "Entry Ninja sync failed.");
+    } finally {
+      setSyncingId(null);
+    }
+  }
 
   // Events that ended more than a week ago are clutter in day-to-day admin —
   // hide them everywhere except the explicit "archived" view.
@@ -453,6 +471,7 @@ function AdminEvents() {
       lifecycle: "draft",
       entered: false,
       externalId: null,
+      slug: null,
     });
 
   return (
@@ -471,6 +490,8 @@ function AdminEvents() {
           <Plus className="h-4 w-4" /> New event
         </button>
       </header>
+
+      {syncMessage ? <p role="status" className="mb-3 rounded-lg bg-secondary px-3 py-2 text-xs font-semibold text-ink">{syncMessage}</p> : null}
 
       <div className="mb-3 flex flex-wrap gap-1.5">
         {(["all", ...LIFECYCLES] as const).map((k) => (
@@ -530,6 +551,16 @@ function AdminEvents() {
                   </td>
                   <td className="px-4 py-3 text-right">
                     <div className="inline-flex gap-1">
+                      {e.externalId ? (
+                        <button
+                          onClick={() => void syncEntrants(e)}
+                          disabled={syncingId === e.id}
+                          className="inline-flex items-center gap-1 rounded-md px-2 py-1.5 text-xs font-semibold text-ink-soft hover:bg-secondary disabled:opacity-50"
+                          title="Sync entrants from Entry Ninja"
+                        >
+                          <RefreshCw className={`h-4 w-4 ${syncingId === e.id ? "animate-spin" : ""}`} /> Sync now
+                        </button>
+                      ) : null}
                       {lc !== "published" ? (
                         <button
                           onClick={() => setLifecycle(e, "published")}
@@ -745,6 +776,15 @@ function EventEditor({
               onChange={(e) => update("name", e.target.value)}
             />
           </Field>
+          <Field label="Clean web address (slug)">
+            <input
+              className={inputCls}
+              value={form.slug ?? ""}
+              placeholder="jbfe-sea-to-sea-south-2027"
+              onChange={(e) => update("slug", e.target.value.trim().toLowerCase().replace(/[^a-z0-9-]/g, "") || null)}
+            />
+            <p className="mt-1 text-[11px] text-ink-soft">Public link: /my-events/{form.slug || "event-id"}</p>
+          </Field>
           <Field label="Discipline">
             <input
               className={inputCls}
@@ -759,6 +799,17 @@ function EventEditor({
               value={dateLocal}
               onChange={(e) => update("date", new Date(e.target.value).toISOString())}
             />
+          </Field>
+          <Field label="Dates to be confirmed">
+            <label className="flex items-center gap-2 rounded-md border border-border bg-background px-3 py-2 text-sm">
+              <input
+                type="checkbox"
+                checked={form.datesTbc ?? false}
+                onChange={(e) => update("datesTbc", e.target.checked)}
+              />
+              <span>Show dates to be confirmed publicly</span>
+            </label>
+            <p className="mt-1 text-[11px] text-ink-soft">The date above is then used only to sort the event internally.</p>
           </Field>
           <Field label="Location">
             <input
