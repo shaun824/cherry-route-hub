@@ -1,4 +1,11 @@
 import { afterAll, expect, mock, test } from "bun:test";
+import { eventInterestTemplate } from "./event-interest";
+import { ICE_EVENT_ID } from "./ice-interest";
+
+test("ICE keeps its branded confirmation while other events use the shared template", () => {
+  expect(eventInterestTemplate(ICE_EVENT_ID)).toBe("ice-interest-confirmation");
+  expect(eventInterestTemplate("2544f097-ba01-416a-8f51-dbd8af33f5de")).toBe("event-interest-confirmation");
+});
 
 let signup = { id: "signup-1", unsubscribed_at: "2026-10-31T10:00:00Z" };
 const confirmationKeys = [];
@@ -6,7 +13,7 @@ const originalKey = process.env.EVENT_INTEREST_KEY;
 process.env.EVENT_INTEREST_KEY = "test-only-event-interest";
 mock.module("@/integrations/supabase/client.server", () => ({
   supabaseAdmin: { from: (table) => {
-    if (table === "events") return { select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: { id: "f046ce38-e687-4038-959d-271ba20825f0", lifecycle: "published", everlytic_interest_list_id: null } }) }) }) };
+    if (table === "events") return { select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: { id: "f046ce38-e687-4038-959d-271ba20825f0", name: "Inner City Enduro 2026", slug: null, lifecycle: "published", everlytic_interest_list_id: null } }) }) }) };
     return {
       select: () => ({ gte: async () => ({ count: 0 }), eq: () => ({ eq: () => ({ maybeSingle: async () => ({ data: { ...signup } }) }) }) }),
       update: (patch) => ({ eq: async () => { signup = { ...signup, ...patch }; return { error: null }; } }),
