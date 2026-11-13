@@ -171,7 +171,7 @@ export type EmergencyContact = { label: string; phone: string };
 export type EventInfoBlock = {
   event_id: string;
   venue_address: string | null;
-  /** Optional separate registration / check-in venue (rare: e.g. TDA Nyathi checks in at Addo Main Camp). */
+  /** Optional separate registration / check-in venue (rare: e.g. TDA Nyati checks in at Addo Main Camp). */
   reg_venue_name: string | null;
   reg_venue_address: string | null;
   reg_venue_lat: number | null;
