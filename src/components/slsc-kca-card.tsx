@@ -51,7 +51,7 @@ function RaisedProgress({ raised, goal, updated }: { raised: number; goal: numbe
   }, [raised]);
 
   return (
-    <div className="mt-5 rounded-2xl bg-black/15 p-4 ring-1 ring-primary-foreground/20">
+    <div className="mt-5 rounded-2xl bg-ink/15 p-4 ring-1 ring-primary-foreground/20">
       <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-primary-foreground/85">Raised so far, with KCA's match</p>
       <div className="mt-1 flex flex-wrap items-end justify-between gap-x-3 gap-y-1">
         <p className="font-display text-3xl font-black tracking-tight text-primary-foreground" aria-live="polite">
@@ -60,7 +60,7 @@ function RaisedProgress({ raised, goal, updated }: { raised: number; goal: numbe
         <p className="pb-1 text-xs font-semibold text-primary-foreground/85">Goal {formatRand(goal)}</p>
       </div>
       <div
-        className="mt-3 h-3 overflow-hidden rounded-full bg-black/25 ring-1 ring-primary-foreground/15"
+        className="mt-3 h-3 overflow-hidden rounded-full bg-ink/25 ring-1 ring-primary-foreground/15"
         role="progressbar"
         aria-label="Raised towards the KCA campaign goal"
         aria-valuemin={0}
@@ -121,7 +121,7 @@ export function SlscKcaCard({
         {hasRaisedFigure ? (
           <RaisedProgress raised={campaign.raised!} goal={goal} updated={campaign.updated} />
         ) : (
-          <div className="mt-5 rounded-2xl bg-black/15 px-4 py-3 ring-1 ring-primary-foreground/20">
+          <div className="mt-5 rounded-2xl bg-ink/15 px-4 py-3 ring-1 ring-primary-foreground/20">
             <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-primary-foreground/80">Our shared goal</p>
             <p className="mt-0.5 font-display text-2xl font-black text-primary-foreground">{formatRand(goal)}</p>
           </div>
@@ -134,7 +134,7 @@ export function SlscKcaCard({
               target="_blank"
               rel="noreferrer"
               data-track-action="slsc_entry_donation_opened"
-              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-card px-4 py-3 text-center text-sm font-black shadow-sm transition-transform active:scale-[0.98]"
+              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-primary-foreground px-4 py-3 text-center text-sm font-black shadow-sm transition-transform active:scale-[0.98]"
               style={{ color: SLSC_PINK }}
             >
               Enter &amp; add a donation <ArrowRight className="h-4 w-4" aria-hidden="true" />
@@ -160,16 +160,16 @@ export function SlscKcaCard({
           About KCA <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
         </a>
 
-        <div className="mt-5 grid grid-cols-2 gap-3 border-t border-white/25 pt-4">
+        <div className="mt-5 grid grid-cols-2 gap-3 border-t border-primary-foreground/25 pt-4">
           <div className="min-w-0 text-center">
             <p className="min-h-8 text-[9px] font-bold uppercase leading-tight tracking-[0.1em] text-primary-foreground/85">Brought to you by</p>
-            <div className="mt-1 grid h-16 place-items-center rounded-xl bg-card p-2">
+            <div className="mt-1 grid h-16 place-items-center rounded-xl bg-primary-foreground p-2">
               <img src={titleSponsorLogoUrl || discoveryLogo.url} alt="Discovery" className="max-h-full max-w-full object-contain" loading="lazy" />
             </div>
           </div>
           <div className="min-w-0 text-center">
             <p className="min-h-8 text-[9px] font-bold uppercase leading-tight tracking-[0.1em] text-primary-foreground/85">Every entry &amp; donation matched by</p>
-            <div className="mt-1 grid h-16 place-items-center rounded-xl bg-card p-2">
+            <div className="mt-1 grid h-16 place-items-center rounded-xl bg-primary-foreground p-2">
               <img src={kcaLogo.url} alt="Keep a Child Alive" className="max-h-full max-w-full object-contain" loading="lazy" />
             </div>
           </div>
