@@ -136,9 +136,9 @@ function SportGroup({
                   <div className="min-w-0">
                     <p className="truncate font-display text-[15px] font-bold text-ink">{e.name}</p>
                     <p className="mt-0.5 truncate text-xs text-muted-foreground">
-                      {formatDate(e.date)} · {e.location}
+                      {e.datesTbc ? "Dates to be confirmed" : formatDate(e.date)} · {e.location}
                     </p>
-                    <p className="mt-1 text-[11px] font-bold text-cherry">{daysAway(e.date)}</p>
+                    <p className="mt-1 text-[11px] font-bold text-cherry">{e.datesTbc ? "2027 dates coming soon" : daysAway(e.date)}</p>
                   </div>
                 </div>
                 <div className="flex shrink-0 items-center gap-2">

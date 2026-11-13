@@ -1,6 +1,13 @@
 // Shared helpers for event interest sign-ups (people who opt in on an event
 // website before entries open, e.g. the Inner City Enduro contact form).
 
+import { ICE_EVENT_ID } from "./ice-interest";
+
+/** ICE has its own branded confirmation; all other events use the shared template. */
+export function eventInterestTemplate(eventId: string) {
+  return eventId === ICE_EVENT_ID ? "ice-signup-confirmation" : "event-interest-confirmation";
+}
+
 export function normaliseEmail(email: string): string {
   return String(email ?? "").trim().toLowerCase();
 }

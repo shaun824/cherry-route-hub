@@ -117,7 +117,7 @@ function Events() {
               <div className="flex items-center justify-between px-4 py-3">
                 <div className="min-w-0">
                   <p className="text-sm font-semibold text-ink">
-                    {formatDate(e.date)} · {formatTime(e.date)}
+                    {e.datesTbc ? "Dates to be confirmed" : `${formatDate(e.date)} · ${formatTime(e.date)}`}
                   </p>
                   <p className="mt-0.5 flex items-center gap-1 truncate text-xs text-muted-foreground">
                     <MapPin className="h-3.5 w-3.5" /> {e.location} · {e.distanceKm}km

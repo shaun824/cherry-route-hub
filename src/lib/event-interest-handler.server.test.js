@@ -3,7 +3,7 @@ import { eventInterestTemplate } from "./event-interest";
 import { ICE_EVENT_ID } from "./ice-interest";
 
 test("ICE keeps its branded confirmation while other events use the shared template", () => {
-  expect(eventInterestTemplate(ICE_EVENT_ID)).toBe("ice-interest-confirmation");
+  expect(eventInterestTemplate(ICE_EVENT_ID)).toBe("ice-signup-confirmation");
   expect(eventInterestTemplate("2544f097-ba01-416a-8f51-dbd8af33f5de")).toBe("event-interest-confirmation");
 });
 
