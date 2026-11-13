@@ -8,6 +8,7 @@ import { MapPin, ChevronRight, Bike, Motorbike } from "lucide-react";
 import { getEventSport, getEventSportLabel } from "@/lib/event-sport";
 import { brandHeader } from "@/lib/event-brand";
 import { EventLogo } from "@/components/event-logo";
+import { SlscKcaPill, isSabrinaLoveEvent } from "@/components/slsc-kca-card";
 
 type SportFilter = "all" | "moto" | "mtb";
 
@@ -122,6 +123,7 @@ function Events() {
                   <p className="mt-0.5 flex items-center gap-1 truncate text-xs text-muted-foreground">
                     <MapPin className="h-3.5 w-3.5" /> {e.location} · {e.distanceKm}km
                   </p>
+                  {isSabrinaLoveEvent(e.name) ? <SlscKcaPill /> : null}
                 </div>
                 <div className="flex items-center gap-2">
                   {e.entered ? (

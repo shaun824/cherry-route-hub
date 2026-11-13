@@ -6,6 +6,7 @@ import { Binoculars, CalendarDays, ChevronRight, History, Lock, MapPin } from "l
 import { useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { PageHeader } from "@/components/ui-bits";
+import { SlscKcaPill, isSabrinaLoveEvent } from "@/components/slsc-kca-card";
 import { useAdminStore } from "@/lib/store";
 import { useHydratedStore } from "@/lib/use-hydrated-store";
 import { formatDate, formatTime } from "@/lib/mock-data";
@@ -217,6 +218,7 @@ function SpectatorCard({ event }: { event: Event }) {
         {event.discipline}
       </p>
       <h2 className="mt-1 font-display text-base font-bold text-ink">{event.name}</h2>
+      {isSabrinaLoveEvent(event.name) ? <SlscKcaPill /> : null}
       <div className="mt-2 space-y-1 text-xs text-ink-soft">
         <p className="flex items-center gap-1.5">
           <CalendarDays className="h-3.5 w-3.5" />
