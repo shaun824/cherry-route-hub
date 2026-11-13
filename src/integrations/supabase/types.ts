@@ -2423,6 +2423,7 @@ export type Database = {
           collects_tshirt_size: boolean
           cover_url: string | null
           created_at: string
+          dates_tbc: boolean
           days: Json
           description: string | null
           discipline: string
@@ -2483,6 +2484,7 @@ export type Database = {
           collects_tshirt_size?: boolean
           cover_url?: string | null
           created_at?: string
+          dates_tbc?: boolean
           days?: Json
           description?: string | null
           discipline: string
@@ -2543,6 +2545,7 @@ export type Database = {
           collects_tshirt_size?: boolean
           cover_url?: string | null
           created_at?: string
+          dates_tbc?: boolean
           days?: Json
           description?: string | null
           discipline?: string

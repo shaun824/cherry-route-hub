@@ -9,6 +9,11 @@
 
 # Roadmap
 
+## JBFE Sea to Sea 2027 event pages (Shaun, 13 Nov)
+- [ ] Add public South 2027 with clean slug, Entry Ninja 84861, packages, hotels, itinerary and daily distances
+- [ ] Add public North 2027 placeholder with clean slug, dates marked TBC and interest sign-up
+- [ ] Support slug event URLs, verify signed-out pages/sign-up, run tests and publish
+
 ## Project monitoring fixes (1 Nov)
 - [x] Verify all five findings against current code and live schedule configuration; cron finding stale, all 13 active HTTP jobs use the private key
 - [x] Correct day-specific finish counts, manual tracking stop, renewed signup consent and locked-screen SOS failures

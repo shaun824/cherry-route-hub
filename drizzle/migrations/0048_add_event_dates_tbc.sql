@@ -1,0 +1,2 @@
+ALTER TABLE public.events ADD COLUMN dates_tbc boolean NOT NULL DEFAULT false;
+COMMENT ON COLUMN public.events.dates_tbc IS 'When true, event_date is only an internal approximate sorting date and public surfaces must show dates to be confirmed.';
