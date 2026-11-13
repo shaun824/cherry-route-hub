@@ -1,0 +1,2 @@
+DROP POLICY IF EXISTS "Public presentation settings only" ON public.site_settings;
+CREATE POLICY "Public presentation settings only" ON public.site_settings FOR SELECT TO anon, authenticated USING (key IN ('branding','loyalty','quick_links','support','waivers','slsc_kca_campaign') OR key LIKE 'class_availability:%' OR private.is_admin());
