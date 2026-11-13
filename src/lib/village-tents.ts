@@ -1,5 +1,5 @@
 // Tent pins: optional precise points inside a drawn village area, plus bulk
-// rules ("tents 1-40 sit in Nyathi camp") so a whole block can be placed at once.
+// rules ("tents 1-40 sit in Nyati camp") so a whole block can be placed at once.
 import { supabase } from "@/integrations/supabase/client";
 import { labelsMatch, normaliseLabel } from "@/lib/rooming-import";
 import { withSnapshot } from "@/lib/offline-pack";
@@ -85,7 +85,7 @@ export type TentRule = {
   event_id: string;
   venue_id?: string | null;
   zone_id: string;
-  /** "1-40", "A*", "Nyathi*" — matched against the tent number */
+  /** "1-40", "A*", "Nyati*" — matched against the tent number */
   pattern: string;
 };
 
@@ -151,7 +151,7 @@ export function tentForLabel<T extends { label: string; kind?: string | null }>(
   return tents.find((t) => (t.kind ?? "tent") !== "marker" && labelsMatch(t.label, tentNumber)) ?? null;
 }
 
-/** Does a bulk rule ("1-40", "A*", "Nyathi*") cover this tent number? */
+/** Does a bulk rule ("1-40", "A*", "Nyati*") cover this tent number? */
 export function ruleMatches(pattern: string, tentNumber: string | null | undefined): boolean {
   const tent = (tentNumber ?? "").trim();
   if (!tent || !pattern.trim()) return false;

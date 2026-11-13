@@ -16,8 +16,10 @@ export const Route = createFileRoute("/api/public/availability")({
     handlers: {
       OPTIONS: async () => new Response(null, { status: 204, headers: cors }),
       GET: async ({ request }) => {
-        const slug = new URL(request.url).searchParams.get("slug")?.trim().toLowerCase() ?? "";
+        let slug = new URL(request.url).searchParams.get("slug")?.trim().toLowerCase() ?? "";
         if (!SLUG_RE.test(slug)) return notFound();
+        // Legacy spelling kept working for marketing sites already pointing at it.
+        slug = slug.replace("nyathi", "nyati");
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
         const { data: ev } = await supabaseAdmin
           .from("events")
