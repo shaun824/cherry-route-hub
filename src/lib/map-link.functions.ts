@@ -24,7 +24,9 @@ export const resolveMapLink = createServerFn({ method: "POST" })
       };
     }
 
-    const start = /^https?:\/\//i.test(data.url) ? data.url : `https://${data.url}`;
+    const start = /^https?:\/\//i.test(data.url)
+      ? data.url.replace(/^http:\/\//i, "https://")
+      : `https://${data.url}`;
 
     let host: string;
     try {
@@ -32,7 +34,11 @@ export const resolveMapLink = createServerFn({ method: "POST" })
     } catch {
       return { ok: false as const, error: "That does not look like a valid link." };
     }
-    const allowed = /(^|\.)(google\.[a-z.]+|goo\.gl)$/.test(host);
+    const parsed = new URL(start);
+    const allowed =
+      parsed.protocol === "https:" &&
+      !parsed.port &&
+      /^(maps\.app\.goo\.gl|goo\.gl|(www\.|maps\.)?google\.(com|co\.za|co\.uk))$/.test(host);
     if (!allowed) {
       return { ok: false as const, error: "Please paste a Google Maps link." };
     }
@@ -51,9 +57,19 @@ export const resolveMapLink = createServerFn({ method: "POST" })
       try {
         const res = await fetch(start, {
           redirect: "follow",
+          signal: AbortSignal.timeout(8000),
           headers: { "User-Agent": ua, Accept: "text/html,*/*" },
         });
         const candidate = res.url || start;
+        // Only read pages that ended up on Google after redirects.
+        try {
+          const finalHost = new URL(candidate).hostname.toLowerCase();
+          if (!/(^|\.)google\.(com|co\.za|co\.uk)$/.test(finalHost) && !/(^|\.)goo\.gl$/.test(finalHost)) {
+            continue;
+          }
+        } catch {
+          continue;
+        }
         if (coordsFromMapUrl(candidate)) {
           finalUrl = candidate;
           break;

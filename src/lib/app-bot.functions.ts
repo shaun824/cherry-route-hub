@@ -39,7 +39,14 @@ export const askAppBot = createServerFn({ method: "POST" })
     const authHeader = getRequestHeader("authorization") ?? null;
     const userId = await resolveOptionalUserId(authHeader);
     const { enforceRequestQuota } = await import("@/lib/request-quota.server");
-    await enforceRequestQuota("assistant", 30, userId);
+    if (userId) {
+      await enforceRequestQuota("assistant", 30, userId);
+    } else {
+      // Signed-out use stays available for spectators, but with a tighter
+      // per-IP limit and a shared ceiling so the AI spend is bounded.
+      await enforceRequestQuota("assistant-anon", 12, null);
+      await enforceRequestQuota("assistant-anon-global", 400, null, "global:assistant-anon");
+    }
 
     // Internal-tier knowledge is only ever exposed to verified staff
     // (admins and crew) — never to riders or signed-out visitors.
