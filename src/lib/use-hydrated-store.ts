@@ -31,6 +31,7 @@ export function useHydratedStore() {
               quickLinks: settings.quickLinks ?? s.settings.quickLinks,
               waivers: settings.waivers ?? s.settings.waivers,
               features: settings.features ?? s.settings.features,
+              kcaCampaign: settings.kcaCampaign ?? s.settings.kcaCampaign,
             }
           : s.settings,
       }));
@@ -68,6 +69,7 @@ export function useHydratedStore() {
               quickLinks: settings.quickLinks ?? s.settings.quickLinks,
               waivers: settings.waivers ?? s.settings.waivers,
               features: settings.features ?? s.settings.features,
+              kcaCampaign: settings.kcaCampaign ?? s.settings.kcaCampaign,
             },
           }));
         });

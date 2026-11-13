@@ -59,11 +59,18 @@ export type Features = {
   entriesEnabled: boolean;
 };
 
+export type KcaCampaign = {
+  raised: number | null;
+  goal: number;
+  updated: string;
+};
+
 export type SiteSettings = {
   branding: Branding;
   quickLinks: QuickLink[];
   waivers: Waivers;
   features: Features;
+  kcaCampaign: KcaCampaign;
 };
 
 export const DEFAULT_SETTINGS: SiteSettings = {
