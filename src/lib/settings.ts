@@ -103,6 +103,11 @@ export const DEFAULT_SETTINGS: SiteSettings = {
     // Pivot: entries are handled on Entry Ninja for now.
     entriesEnabled: false,
   },
+  kcaCampaign: {
+    raised: null,
+    goal: 1_000_000,
+    updated: "",
+  },
 };
 
 export async function fetchSettings(): Promise<Partial<SiteSettings> | null> {
@@ -121,6 +126,7 @@ export async function fetchSettings(): Promise<Partial<SiteSettings> | null> {
       out.quickLinks = v.items ?? [];
     } else if (key === "waivers") out.waivers = value as Waivers;
     else if (key === "features") out.features = value as Features;
+    else if (key === "slsc_kca_campaign") out.kcaCampaign = value as KcaCampaign;
   }
   return out;
 }
@@ -154,5 +160,13 @@ export async function saveFeatures(f: Features) {
     .from("site_settings")
     .upsert({ key: "features", value: f as never });
   if (error) console.warn("[settings:saveFeatures]", error);
+  return !error;
+}
+
+export async function saveKcaCampaign(campaign: KcaCampaign) {
+  const { error } = await supabase
+    .from("site_settings")
+    .upsert({ key: "slsc_kca_campaign", value: campaign as never });
+  if (error) console.warn("[settings:saveKcaCampaign]", error);
   return !error;
 }
