@@ -430,7 +430,7 @@ function AdminEvents() {
     setSyncingId(event.id);
     setSyncMessage(null);
     try {
-      const result = await runEntrantSync({ data: { eventId: event.id } });
+      const result = await runEntrantSync({ data: { enEventId: Number(event.externalId), eventId: event.id } });
       setSyncMessage(`Synced ${event.name}: ${result.linked} entrants imported or updated.`);
     } catch (error) {
       setSyncMessage(error instanceof Error ? error.message : "Entry Ninja sync failed.");
