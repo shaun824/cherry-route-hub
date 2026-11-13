@@ -550,6 +550,28 @@ export default function RouteMapInner({
       </div>
     ) : null;
 
+  const dayChips = () =>
+    dayLabels.length > 1 ? (
+      <div className="flex flex-wrap gap-2" role="group" aria-label="Riding days">
+        {["All days", ...dayLabels].map((label, index) => {
+          const day = index === 0 ? null : label;
+          return (
+            <Button
+              key={label}
+              type="button"
+              size="sm"
+              variant={chipDay === day ? "default" : "outline"}
+              aria-pressed={chipDay === day}
+              onClick={() => showOnlyDay(day)}
+              className="h-auto min-h-9 whitespace-normal px-3 py-1.5 text-xs"
+            >
+              {label}
+            </Button>
+          );
+        })}
+      </div>
+    ) : null;
+
   const renderMap = (h: string, keySuffix: string) => (
     <MapContainer
       key={loaded.map((l) => l.route.id).join(",") + keySuffix}
@@ -696,22 +718,7 @@ export default function RouteMapInner({
                 {totalDistance.toFixed(1)} km · {visible.length}/{loaded.length} routes
               </p>
             </div>
-            {dayLabels.length > 1 ? (
-              <div className="flex gap-1.5 overflow-x-auto">
-                {[["all", "All days"] as const, ...dayLabels.map((d) => [d, d] as const)].map(([k, label]) => (
-                  <button
-                    key={k}
-                    type="button"
-                    onClick={() => showOnlyDay(k === "all" ? null : k)}
-                    className={`shrink-0 rounded-full px-3 py-1 text-xs font-bold ring-1 ${
-                      (chipDay ?? "all") === k ? "bg-cherry text-white ring-cherry" : "bg-background text-ink ring-border"
-                    }`}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
-            ) : null}
+            {dayChips()}
             {routeChips(true)}
           </div>
           <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
@@ -804,7 +811,12 @@ export default function RouteMapInner({
 
   return (
     <div className={fill ? "flex h-full flex-col gap-3 p-3" : immersive ? "space-y-3 bg-pe-plett-deep p-3" : "space-y-3"}>
-      {showToggles && routeChips(false)}
+      {showToggles && (
+        <div className="shrink-0 space-y-2">
+          {dayChips()}
+          {routeChips(false)}
+        </div>
+      )}
 
       <div
         className={`relative overflow-hidden rounded-2xl ring-1 ${immersive ? "ring-pe-plett-accent/30" : "ring-border"} ${fill ? "min-h-0 flex-1" : ""}`}
