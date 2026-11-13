@@ -51,16 +51,16 @@ export function RaisedProgress({ raised, goal, updated }: { raised: number; goal
   }, [raised]);
 
   return (
-    <div className="mt-5 rounded-2xl bg-ink/15 p-4 ring-1 ring-primary-foreground/20">
-      <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-primary-foreground/85">Raised so far, with KCA's match</p>
-      <div className="mt-1 flex flex-wrap items-end justify-between gap-x-3 gap-y-1">
-        <p className="font-display text-3xl font-black tracking-tight text-primary-foreground" aria-live="polite">
-          {formatRand(displayed)}
-        </p>
-        <p className="pb-1 text-xs font-semibold text-primary-foreground/85">Goal {formatRand(goal)}</p>
+    <div className="mt-5 border-y border-primary-foreground/25 py-4">
+      <div className="flex flex-wrap items-end justify-between gap-x-3 gap-y-1">
+        <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-primary-foreground/85">Raised so far, with KCA's match</p>
+        <p className="text-xs font-semibold text-primary-foreground/85">Goal {formatRand(goal)}</p>
       </div>
+      <p className="mt-1 font-display text-3xl font-black tracking-tight text-primary-foreground" aria-live="polite">
+        {formatRand(displayed)}
+      </p>
       <div
-        className="mt-3 h-3 overflow-hidden rounded-full bg-ink/25 ring-1 ring-primary-foreground/15"
+        className="mt-3 h-2 overflow-hidden rounded-full bg-ink/25"
         role="progressbar"
         aria-label="Raised towards the KCA campaign goal"
         aria-valuemin={0}
@@ -91,86 +91,87 @@ export function SlscKcaCard({
   return (
     <section
       data-section="kca_matching"
-      className="relative overflow-hidden rounded-3xl p-5 text-primary-foreground shadow-lg sm:p-6"
+      className="overflow-hidden rounded-3xl p-5 text-primary-foreground shadow-md sm:p-6"
       style={{ background: SLSC_GRADIENT }}
     >
-      <div className="pointer-events-none absolute -right-12 -top-16 h-44 w-44 rounded-full bg-card/10 blur-2xl" />
-      <div className="relative">
-        <p className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.14em] text-primary-foreground/90 sm:text-[11px]">
-          <span className="h-2 w-2 shrink-0 animate-pulse rounded-full motion-reduce:animate-none" style={{ backgroundColor: SUN_YELLOW }} />
-          Sabrina Love Summer Challenge · 27–30 Dec 2026
-        </p>
-        <h2 className="mt-3 font-display text-2xl font-black leading-[1.12] tracking-tight text-primary-foreground sm:text-3xl">
-          Give once. Make <span style={{ color: SUN_YELLOW }}>twice</span> the difference.
-        </h2>
-        <p
-          className="mt-2 text-xl leading-tight text-primary-foreground sm:text-2xl"
-          style={{ fontFamily: '"Segoe Print", "Bradley Hand", cursive', transform: "rotate(-1deg)" }}
-        >
-          Let's raise a million!
-        </p>
-        <p className="mt-4 text-sm leading-relaxed text-primary-foreground/95">
-          This summer, Keep A Child Alive (KCA) will match every Summer Challenge entry and every donation, rand for rand. Whether you paddle, walk, run or ride, your support goes twice as far for children with disabilities and their families in Plettenberg Bay and the Bitou region.
-        </p>
+      <p className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.14em] text-primary-foreground/90 sm:text-[11px]">
+        <span className="h-2 w-2 shrink-0 animate-pulse rounded-full motion-reduce:animate-none" style={{ backgroundColor: SUN_YELLOW }} />
+        Sabrina Love Summer Challenge · 27–30 Dec 2026
+      </p>
+      <h2 className="mt-3 font-display text-2xl font-black leading-[1.12] tracking-tight text-primary-foreground sm:text-3xl">
+        Give once. Make <span style={{ color: SUN_YELLOW }}>twice</span> the difference.
+      </h2>
+      <p
+        className="mt-2 text-xl leading-tight text-primary-foreground sm:text-2xl"
+        style={{ fontFamily: '"Segoe Print", "Bradley Hand", cursive', transform: "rotate(-1deg)" }}
+      >
+        Let's raise a million!
+      </p>
+      <p className="mt-4 text-sm leading-relaxed text-primary-foreground/95">
+        This summer, Keep A Child Alive (KCA) will match every Summer Challenge entry and every donation, rand for rand. Whether you paddle, walk, run or ride, your support goes twice as far for children with disabilities and their families in Plettenberg Bay and the Bitou region.
+      </p>
 
-        <div className="mt-4 inline-flex items-center gap-2 rounded-full px-3 py-2 text-xs font-black text-ink" style={{ backgroundColor: SUN_YELLOW }}>
-          <Heart className="h-4 w-4 shrink-0 fill-current" aria-hidden="true" />
-          R1 = R2 — Every rand you give is doubled for the children.
+      <p className="mt-4 flex items-start gap-2 text-sm font-bold leading-snug" style={{ color: SUN_YELLOW }}>
+        <Heart className="mt-0.5 h-4 w-4 shrink-0 fill-current" aria-hidden="true" />
+        <span>R1 = R2 · Every rand you give is doubled for the children.</span>
+      </p>
+
+      {hasRaisedFigure ? (
+        <RaisedProgress raised={campaign.raised!} goal={goal} updated={campaign.updated} />
+      ) : (
+        <div className="mt-5 flex items-end justify-between gap-4 border-y border-primary-foreground/25 py-3">
+          <p className="pb-1 text-[11px] font-bold uppercase tracking-[0.14em] text-primary-foreground/80">Our shared goal</p>
+          <p className="font-display text-2xl font-black text-primary-foreground">{formatRand(goal)}</p>
         </div>
+      )}
 
-        {hasRaisedFigure ? (
-          <RaisedProgress raised={campaign.raised!} goal={goal} updated={campaign.updated} />
-        ) : (
-          <div className="mt-5 rounded-2xl bg-ink/15 px-4 py-3 ring-1 ring-primary-foreground/20">
-            <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-primary-foreground/80">Our shared goal</p>
-            <p className="mt-0.5 font-display text-2xl font-black text-primary-foreground">{formatRand(goal)}</p>
-          </div>
-        )}
-
-        <div className="mt-5 grid gap-2 sm:grid-cols-2">
-          {entryUrl ? (
-            <a
-              href={entryUrl}
-              target="_blank"
-              rel="noreferrer"
-              data-track-action="slsc_entry_donation_opened"
-              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-primary-foreground px-4 py-3 text-center text-sm font-black shadow-sm transition-transform active:scale-[0.98]"
-              style={{ color: SLSC_PINK }}
-            >
-              Enter &amp; add a donation <ArrowRight className="h-4 w-4" aria-hidden="true" />
-            </a>
-          ) : null}
+      <div className="mt-5 grid gap-2 sm:grid-cols-2">
+        {entryUrl ? (
           <a
-            href={GIVENGAIN_URL}
+            href={entryUrl}
             target="_blank"
             rel="noreferrer"
-            data-track-action="slsc_donate_opened"
-            className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full px-4 py-3 text-center text-sm font-black text-primary-foreground ring-2 ring-primary-foreground/70 transition-transform active:scale-[0.98]"
+            data-track-action="slsc_entry_donation_opened"
+            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-primary-foreground px-4 py-2.5 text-center text-sm font-black transition-transform active:scale-[0.98]"
+            style={{ color: SLSC_PINK }}
           >
-            Donate on GivenGain ♥
+            Enter &amp; add a donation <ArrowRight className="h-4 w-4" aria-hidden="true" />
           </a>
-        </div>
+        ) : null}
+        <a
+          href={GIVENGAIN_URL}
+          target="_blank"
+          rel="noreferrer"
+          data-track-action="slsc_donate_opened"
+          className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-center text-sm font-bold text-primary-foreground ring-1 ring-primary-foreground/60 transition-transform active:scale-[0.98]"
+        >
+          Donate on GivenGain <Heart className="h-4 w-4 fill-current" aria-hidden="true" />
+        </a>
+      </div>
+      <div className="mt-2 text-center">
         <a
           href={KCA_URL}
           target="_blank"
           rel="noreferrer"
           data-track-action="kca_link_opened"
-          className="mt-3 inline-flex items-center gap-1.5 text-xs font-bold text-primary-foreground underline decoration-primary-foreground/60 underline-offset-4"
+          className="inline-flex items-center gap-1.5 px-2 py-1 text-xs font-semibold text-primary-foreground underline decoration-primary-foreground/60 underline-offset-4"
         >
           About KCA <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
         </a>
+      </div>
 
-        <div className="mt-5 grid grid-cols-2 gap-3 border-t border-primary-foreground/25 pt-4">
-          <div className="min-w-0 text-center">
-            <p className="min-h-8 text-[9px] font-bold uppercase leading-tight tracking-[0.1em] text-primary-foreground/85">Brought to you by</p>
-            <div className="mt-1 grid h-16 place-items-center rounded-xl bg-primary-foreground p-2">
-              <img src={titleSponsorLogoUrl || discoveryLogo.url} alt="Discovery" className="max-h-full max-w-full object-contain" loading="lazy" />
+      <div className="mt-4 rounded-2xl bg-primary-foreground px-3 py-3 text-ink">
+        <div className="grid grid-cols-2">
+          <div className="min-w-0 px-1 text-center">
+            <p className="flex min-h-7 items-center justify-center text-[8px] font-bold uppercase leading-tight tracking-[0.1em] text-ink-soft">Brought to you by</p>
+            <div className="mt-1 flex h-12 items-center justify-center overflow-hidden">
+              <img src={titleSponsorLogoUrl || discoveryLogo.url} alt="Discovery" className="h-12 w-full object-contain" loading="lazy" />
             </div>
           </div>
-          <div className="min-w-0 text-center">
-            <p className="min-h-8 text-[9px] font-bold uppercase leading-tight tracking-[0.1em] text-primary-foreground/85">Every entry &amp; donation matched by</p>
-            <div className="mt-1 grid h-16 place-items-center rounded-xl bg-primary-foreground p-2">
-              <img src={kcaLogo.url} alt="Keep a Child Alive" className="max-h-full max-w-full object-contain" loading="lazy" />
+          <div className="min-w-0 border-l border-ink/10 px-1 text-center">
+            <p className="flex min-h-7 items-center justify-center text-[8px] font-bold uppercase leading-tight tracking-[0.1em] text-ink-soft">Every entry &amp; donation matched by</p>
+            <div className="mt-1 flex h-12 items-center justify-center overflow-hidden">
+              <img src={kcaLogo.url} alt="Keep a Child Alive" className="h-12 w-full object-contain" loading="lazy" />
             </div>
           </div>
         </div>
