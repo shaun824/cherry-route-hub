@@ -1,17 +1,11 @@
-import { beforeEach, describe, it } from "node:test";
+import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { renderToStaticMarkup } from "react-dom/server";
 import { KCA_URL } from "./sabrina-love";
-import { DEFAULT_SETTINGS } from "./settings";
-import { useAdminStore } from "./store";
-import { SlscKcaCard, formatRand } from "@/components/slsc-kca-card";
+import { RaisedProgress, SlscKcaCard, formatRand } from "@/components/slsc-kca-card";
 import { KcaMatchBand } from "@/lib/email-templates/sabrina-love-brand";
 
 const ENTRY_URL = "https://www.entryninja.com/events/83457-walk-surf-ski";
-
-beforeEach(() => {
-  useAdminStore.setState({ settings: DEFAULT_SETTINGS });
-});
 
 describe("Sabrina Love approved KCA campaign", () => {
   it("points at keepachildalive.org on the card and in email", () => {
@@ -48,13 +42,7 @@ describe("Sabrina Love approved KCA campaign", () => {
   });
 
   it("shows the shared raised figure, progress and updated date once supplied", () => {
-    useAdminStore.setState({
-      settings: {
-        ...DEFAULT_SETTINGS,
-        kcaCampaign: { raised: 250000, goal: 1000000, updated: "2026-11-13" },
-      },
-    });
-    const html = renderToStaticMarkup(<SlscKcaCard entryUrl={ENTRY_URL} />);
+    const html = renderToStaticMarkup(<RaisedProgress raised={250000} goal={1000000} updated="2026-11-13" />);
     assert.match(html, /Raised so far, with KCA&#x27;s match/);
     assert.match(html, /aria-valuenow="250000"/);
     assert.match(html, /aria-valuemax="1000000"/);

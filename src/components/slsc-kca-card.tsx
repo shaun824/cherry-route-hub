@@ -25,7 +25,7 @@ function formatUpdated(value: string) {
   return date.toLocaleDateString("en-ZA", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
 }
 
-function RaisedProgress({ raised, goal, updated }: { raised: number; goal: number; updated: string }) {
+export function RaisedProgress({ raised, goal, updated }: { raised: number; goal: number; updated: string }) {
   const [displayed, setDisplayed] = useState(0);
   const percent = Math.min(100, Math.max(0, (raised / goal) * 100));
 
