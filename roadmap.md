@@ -9,6 +9,12 @@
 
 # Roadmap
 
+## KCA match campaign (Shaun, 13 Nov)
+- [x] KCA match campaign approved — matches every entry & donation, R1m goal (Shaun, 13 Nov)
+- [x] Upgrade all four event and spectator cards, listings and email wording
+- [x] Add one shared admin-editable raised total, goal and updated date, with no placeholder total
+- [x] Run campaign tests and verify public/mobile pages
+
 ## JBFE Sea to Sea 2027 event pages (Shaun, 13 Nov)
 - [x] Add public South 2027 with clean slug, Entry Ninja 84861, packages, hotels, itinerary and daily distances
 - [x] Add public North 2027 placeholder with clean slug, dates marked TBC and interest sign-up

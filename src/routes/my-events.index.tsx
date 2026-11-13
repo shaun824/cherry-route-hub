@@ -9,6 +9,7 @@ import { fetchMyEvents } from "@/lib/my-events";
 import { linkMyEntry, getMyEntrant } from "@/lib/roster.functions";
 import { useServerFn } from "@tanstack/react-start";
 import { UpcomingBySport } from "@/components/upcoming-by-sport";
+import { SlscKcaPill, isSabrinaLoveEvent } from "@/components/slsc-kca-card";
 import { getEventSport } from "@/lib/event-sport";
 import { brandHeader } from "@/lib/event-brand";
 import { EventLogo } from "@/components/event-logo";
@@ -205,6 +206,7 @@ function EventRow({ r }: { r: any }) {
                 {r.event.discipline}
               </p>
               <p className="font-display text-lg font-bold leading-tight">{r.event.name}</p>
+              {isSabrinaLoveEvent(r.event.name) ? <SlscKcaPill /> : null}
             </div>
             <EventLogo src={r.event.logo_url} name={r.event.name} size="md" onBrand />
           </div>

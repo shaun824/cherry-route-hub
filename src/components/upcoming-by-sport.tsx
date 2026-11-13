@@ -4,6 +4,7 @@ import { Bike, ChevronDown, Motorbike } from "lucide-react";
 
 import { formatDate, type Event } from "@/lib/mock-data";
 import { EventLogo } from "@/components/event-logo";
+import { SlscKcaPill, isSabrinaLoveEvent } from "@/components/slsc-kca-card";
 import { getEventSport } from "@/lib/event-sport";
 import { useAdminStore } from "@/lib/store";
 import { useHydratedStore } from "@/lib/use-hydrated-store";
@@ -139,6 +140,7 @@ function SportGroup({
                       {e.datesTbc ? "Dates to be confirmed" : formatDate(e.date)} · {e.location}
                     </p>
                     <p className="mt-1 text-[11px] font-bold text-cherry">{e.datesTbc ? "2027 dates coming soon" : daysAway(e.date)}</p>
+                    {isSabrinaLoveEvent(e.name) ? <SlscKcaPill /> : null}
                   </div>
                 </div>
                 <div className="flex shrink-0 items-center gap-2">

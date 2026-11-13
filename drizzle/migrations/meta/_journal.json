@@ -344,6 +344,13 @@
       "when": 1794582896312,
       "tag": "0048_add_event_dates_tbc",
       "breakpoints": true
+    },
+    {
+      "idx": 49,
+      "version": "7",
+      "when": 1794584608993,
+      "tag": "0049_public_slsc_kca_campaign_setting",
+      "breakpoints": true
     }
   ]
 }

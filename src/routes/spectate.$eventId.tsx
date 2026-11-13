@@ -3,6 +3,7 @@ import { BackLink } from "@/components/back-link";
 import { scrollAppTo } from "@/lib/app-scroll";
 import { isFixedIceVenue, ICE_VENUE_URL, ICE_VENUE_POINT } from "@/lib/ice-venue";
 import { PodiumSection } from "@/components/podium-section";
+import { SlscKcaCard, isSabrinaLoveEvent } from "@/components/slsc-kca-card";
 import { EventResultsPanel } from "@/components/event-results-panel";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -409,6 +410,12 @@ function SpectatorEventPage() {
           ) : null}
         </div>
       </div>
+
+      {isSabrinaLoveEvent(event.name) ? (
+        <div className="px-5 pt-4">
+          <SlscKcaCard entryUrl={event.entryUrl} titleSponsorLogoUrl={event.titleSponsorLogoUrl} />
+        </div>
+      ) : null}
 
       {/* Tabs */}
       <div ref={tabNavRef} data-tour="tabs" className="sticky top-0 z-20 -mt-3 px-5">

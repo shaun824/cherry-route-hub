@@ -33,6 +33,7 @@ import {
 } from "lucide-react";
 
 import { BrandMark, SectionTitle, TypeBadge } from "@/components/ui-bits";
+import { SlscKcaPill, isSabrinaLoveEvent } from "@/components/slsc-kca-card";
 import { RaceWeekBanner, isRaceWeek } from "@/components/race-week-banner";
 import { SponsorScroller } from "@/components/sponsor-scroller";
 import { RedCherrySocials } from "@/components/social-links-card";
@@ -604,6 +605,7 @@ function EventSpotlight({
                 {eyebrow}
               </p>
               <p className="font-display text-lg font-bold leading-tight">{name}</p>
+              {isSabrinaLoveEvent(name) ? <SlscKcaPill /> : null}
             </div>
             {titleSponsor ? (
               <div className="w-[112px] shrink-0 sm:w-[150px]">
@@ -1095,6 +1097,7 @@ function NextEventHero({ row }: { row: MyEventRow }) {
         ) : null}
       </div>
       <p className="mt-1 font-display text-2xl font-bold leading-tight">{row.event.name}</p>
+      {isSabrinaLoveEvent(row.event.name) ? <SlscKcaPill /> : null}
 
       {row.event.title_sponsor_logo_url || row.event.title_sponsor_name ? (
         <div className="mt-3 flex flex-col items-center gap-2 rounded-2xl bg-white px-4 py-3 shadow-md ring-1 ring-black/10">

@@ -52,12 +52,12 @@ export function SlscHeader({ dayLabel, photoUrl, photoAlt }: { dayLabel: string;
 export function KcaMatchBand({ entryUrl }: { entryUrl: string }) {
   return <Section style={{ backgroundColor: sl.white, border: `2px solid ${sl.pink}`, padding: '24px 22px', margin: '12px 0 24px', borderRadius: '12px' }}>
     <Img src={absolute(kcaLogo.url)} alt="Keep a Child Alive" width="110" style={{ width: '110px', height: 'auto', display: 'block', margin: '0 0 14px' }} />
-    <Text style={{ ...sl.label }}>♥ DONATION MATCHING WITH KCA</Text>
+    <Text style={{ ...sl.label }}>♥ EVERY ENTRY &amp; DONATION MATCHED BY KCA</Text>
     <Heading as="h2" style={{ color: sl.ink, fontSize: '24px', lineHeight: '1.25', fontWeight: 800, margin: '0 0 12px' }}>
       Give once. Make <span style={{ color: sl.pink }}>twice</span> the difference.
     </Heading>
     <Text style={{ ...sl.text }}>
-      Keep a Child Alive is matching every donation made through the Summer Challenge. Your entry and any extra donation count double for children with disabilities in the greater Plettenberg Bay community.
+      Keep A Child Alive (KCA) will match every Summer Challenge entry and every donation, rand for rand. Whether you paddle, walk, run or ride, your support goes twice as far for children with disabilities and their families in Plettenberg Bay and the Bitou region.
     </Text>
     <Text style={{ ...sl.text, fontWeight: 700, color: sl.pink }}>♥ Let's raise a million!</Text>
     <Row style={{ margin: '6px 0 4px' }}>

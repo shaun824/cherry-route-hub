@@ -15,6 +15,7 @@ import {
   Eye,
   EyeOff,
   Handshake,
+  Heart,
   Image as ImageIcon,
   MapPin,
   Newspaper,
@@ -37,8 +38,10 @@ import {
   saveQuickLinks,
   saveWaivers,
   saveFeatures,
+  saveKcaCampaign,
   type Branding,
   type Features,
+  type KcaCampaign,
   type QuickLink,
   type QuickLinkIcon,
   type Waivers,
@@ -77,9 +80,11 @@ function AdminSettings() {
   const [branding, setBranding] = useState<Branding>(settings.branding);
   const [quickLinks, setQuickLinks] = useState<QuickLink[]>(settings.quickLinks);
   const [waivers, setWaivers] = useState<Waivers>(settings.waivers);
+  const [kcaCampaign, setKcaCampaign] = useState<KcaCampaign>(settings.kcaCampaign);
   useEffect(() => setBranding(settings.branding), [settings.branding]);
   useEffect(() => setQuickLinks(settings.quickLinks), [settings.quickLinks]);
   useEffect(() => setWaivers(settings.waivers), [settings.waivers]);
+  useEffect(() => setKcaCampaign(settings.kcaCampaign), [settings.kcaCampaign]);
 
   const [previewOpen, setPreviewOpen] = useState(true);
   const [previewTab, setPreviewTab] = useState<"home" | "waivers">("home");
@@ -87,7 +92,8 @@ function AdminSettings() {
   const anyDirty =
     JSON.stringify(branding) !== JSON.stringify(settings.branding) ||
     JSON.stringify(quickLinks) !== JSON.stringify(settings.quickLinks) ||
-    JSON.stringify(waivers) !== JSON.stringify(settings.waivers);
+    JSON.stringify(waivers) !== JSON.stringify(settings.waivers) ||
+    JSON.stringify(kcaCampaign) !== JSON.stringify(settings.kcaCampaign);
 
   return (
     <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
@@ -114,6 +120,12 @@ function AdminSettings() {
           onChange={setBranding}
           initial={settings.branding}
           onSaved={(b) => setSettings({ branding: b })}
+        />
+        <KcaCampaignCard
+          value={kcaCampaign}
+          onChange={setKcaCampaign}
+          initial={settings.kcaCampaign}
+          onSaved={(campaign) => setSettings({ kcaCampaign: campaign })}
         />
         <QuickLinksCard
           value={quickLinks}
@@ -466,6 +478,97 @@ function BrandingCard({
         </Field>
       </div>
 
+      <SaveBar dirty={dirty} saving={saving} saved={saved} onSave={submit} />
+    </section>
+  );
+}
+
+/* ---------- Shared KCA campaign ---------- */
+
+function KcaCampaignCard({
+  value,
+  onChange,
+  initial,
+  onSaved,
+}: {
+  value: KcaCampaign;
+  onChange: (campaign: KcaCampaign) => void;
+  initial: KcaCampaign;
+  onSaved: (campaign: KcaCampaign) => void;
+}) {
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [error, setError] = useState("");
+  const dirty = useMemo(() => JSON.stringify(value) !== JSON.stringify(initial), [value, initial]);
+
+  const submit = async () => {
+    if (!Number.isFinite(value.goal) || value.goal <= 0) {
+      setError("Enter a goal greater than zero.");
+      return;
+    }
+    if (value.raised !== null && (!Number.isFinite(value.raised) || value.raised < 0)) {
+      setError("The raised amount must be zero or more, or left blank.");
+      return;
+    }
+    setError("");
+    setSaving(true);
+    const ok = await saveKcaCampaign(value);
+    setSaving(false);
+    if (ok) {
+      onSaved(value);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 1600);
+    } else {
+      setError("The campaign could not be saved. Please try again.");
+    }
+  };
+
+  return (
+    <section className="rounded-2xl bg-card p-5 ring-1 ring-border">
+      <div className="flex items-center gap-2">
+        <span className="grid h-8 w-8 place-items-center rounded-lg bg-cherry/10 text-cherry">
+          <Heart className="h-4 w-4" />
+        </span>
+        <div>
+          <h2 className="font-display font-bold text-ink">KCA match campaign</h2>
+          <p className="text-xs text-ink-soft">One live total for all four Sabrina Love Summer Challenge events.</p>
+        </div>
+      </div>
+      <div className="mt-4 grid gap-3 md:grid-cols-3">
+        <Field label="Raised with KCA's match (Rand)">
+          <input
+            type="number"
+            min="0"
+            step="1"
+            className={input()}
+            value={value.raised ?? ""}
+            placeholder="Blank until confirmed"
+            onChange={(e) => onChange({ ...value, raised: e.target.value === "" ? null : Number(e.target.value) })}
+          />
+        </Field>
+        <Field label="Campaign goal (Rand)">
+          <input
+            type="number"
+            min="1"
+            step="1"
+            className={input()}
+            value={value.goal}
+            onChange={(e) => onChange({ ...value, goal: Number(e.target.value) })}
+          />
+        </Field>
+        <Field label="Total last updated">
+          <input
+            type="date"
+            className={input()}
+            value={value.updated.slice(0, 10)}
+            onChange={(e) => onChange({ ...value, updated: e.target.value })}
+          />
+        </Field>
+      </div>
+      <p className="mt-3 text-xs leading-relaxed text-ink-soft">
+        Leave the raised amount blank to hide the total and progress bar. The campaign goal still shows on every event.
+      </p>
+      {error ? <p role="alert" className="mt-3 text-xs font-semibold text-cherry">{error}</p> : null}
       <SaveBar dirty={dirty} saving={saving} saved={saved} onSave={submit} />
     </section>
   );
