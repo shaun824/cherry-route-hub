@@ -424,7 +424,7 @@ function AdminEvents() {
   const [filter, setFilter] = useState<Lifecycle | "all">("all");
   const [syncingId, setSyncingId] = useState<string | null>(null);
   const [syncMessage, setSyncMessage] = useState<string | null>(null);
-  const runEntrantSync = useServerFn(syncEventEntrants);
+  const runEntrantSync = useServerFn(syncEntryNinjaEvent);
 
   async function syncEntrants(event: Event) {
     setSyncingId(event.id);
