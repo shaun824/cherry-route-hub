@@ -15,6 +15,7 @@ import {
   Eye,
   EyeOff,
   Handshake,
+  Heart,
   Image as ImageIcon,
   MapPin,
   Newspaper,
@@ -37,8 +38,10 @@ import {
   saveQuickLinks,
   saveWaivers,
   saveFeatures,
+  saveKcaCampaign,
   type Branding,
   type Features,
+  type KcaCampaign,
   type QuickLink,
   type QuickLinkIcon,
   type Waivers,
@@ -77,9 +80,11 @@ function AdminSettings() {
   const [branding, setBranding] = useState<Branding>(settings.branding);
   const [quickLinks, setQuickLinks] = useState<QuickLink[]>(settings.quickLinks);
   const [waivers, setWaivers] = useState<Waivers>(settings.waivers);
+  const [kcaCampaign, setKcaCampaign] = useState<KcaCampaign>(settings.kcaCampaign);
   useEffect(() => setBranding(settings.branding), [settings.branding]);
   useEffect(() => setQuickLinks(settings.quickLinks), [settings.quickLinks]);
   useEffect(() => setWaivers(settings.waivers), [settings.waivers]);
+  useEffect(() => setKcaCampaign(settings.kcaCampaign), [settings.kcaCampaign]);
 
   const [previewOpen, setPreviewOpen] = useState(true);
   const [previewTab, setPreviewTab] = useState<"home" | "waivers">("home");
@@ -87,7 +92,8 @@ function AdminSettings() {
   const anyDirty =
     JSON.stringify(branding) !== JSON.stringify(settings.branding) ||
     JSON.stringify(quickLinks) !== JSON.stringify(settings.quickLinks) ||
-    JSON.stringify(waivers) !== JSON.stringify(settings.waivers);
+    JSON.stringify(waivers) !== JSON.stringify(settings.waivers) ||
+    JSON.stringify(kcaCampaign) !== JSON.stringify(settings.kcaCampaign);
 
   return (
     <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
@@ -114,6 +120,12 @@ function AdminSettings() {
           onChange={setBranding}
           initial={settings.branding}
           onSaved={(b) => setSettings({ branding: b })}
+        />
+        <KcaCampaignCard
+          value={kcaCampaign}
+          onChange={setKcaCampaign}
+          initial={settings.kcaCampaign}
+          onSaved={(campaign) => setSettings({ kcaCampaign: campaign })}
         />
         <QuickLinksCard
           value={quickLinks}

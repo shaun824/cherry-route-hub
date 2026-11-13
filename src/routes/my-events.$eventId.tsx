@@ -172,7 +172,7 @@ export const Route = createFileRoute("/my-events/$eventId")({
   loader: async ({ params }) => {
     const { data, error } = await supabase
       .from("events")
-      .select("id, slug, dates_tbc, name, discipline, event_date, location, map_query, distance_km, description, hero_color, logo_url, days, schedule, social_links, status, entry_ninja_url, website_url, collects_tshirt_size, collects_jacket_size, is_review_event")
+      .select("id, slug, dates_tbc, name, discipline, event_date, location, map_query, distance_km, description, hero_color, logo_url, days, schedule, social_links, status, entry_ninja_url, website_url, title_sponsor_logo_url, collects_tshirt_size, collects_jacket_size, is_review_event")
       .eq(/^[0-9a-f-]{36}$/i.test(params.eventId) ? "id" : "slug", params.eventId)
       .maybeSingle();
     // Private review events are only readable with the rider's session, which the
@@ -368,6 +368,12 @@ function MyEventDetailInner({ event }: { event: NonNullable<ReturnType<typeof Ro
           <EventLogo src={event.logo_url} name={event.name} size="lg" onBrand />
         </div>
       </div>
+
+      {isSabrinaLoveEvent(event.name) ? (
+        <div className="px-5 pt-4">
+          <SlscKcaCard entryUrl={event.entry_ninja_url} titleSponsorLogoUrl={event.title_sponsor_logo_url} />
+        </div>
+      ) : null}
 
       <nav ref={tabNavRef} className="sticky top-0 z-10 flex gap-1 overflow-x-auto border-b border-border bg-card/95 px-2 py-2 backdrop-blur">
         {(
@@ -1092,7 +1098,6 @@ function InfoPanel({
   return (
     <div className="space-y-4">
       {ice ? offersBlock : null}
-      {isSabrinaLoveEvent(eventName) ? <SlscKcaCard /> : null}
       {isLive ? (
         <section data-section="live_tracking">
           <SectionTitle>Live tracking & SOS</SectionTitle>
