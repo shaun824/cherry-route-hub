@@ -21,7 +21,7 @@ import type { Batch, BatchPrice, CustomMarker, EntryCategory, Event, EventDay, E
 import { supabase } from "@/integrations/supabase/client";
 import { coordsFromMapInput, isShortMapLink } from "@/lib/map-embed";
 import { resolveMapLink } from "@/lib/map-link.functions";
-import { syncEventEntrants } from "@/lib/entryninja-sync.functions";
+import { syncEntryNinjaEvent } from "@/lib/entryninja.functions";
 
 async function uploadEventImage(file: File): Promise<string> {
   const ext = file.name.split(".").pop()?.toLowerCase() ?? "png";
