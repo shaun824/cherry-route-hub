@@ -1,9 +1,9 @@
 import { getRequestHeader } from "@tanstack/react-start/server";
 
 /** Atomic durable quotas, shared by all app instances, keyed independently of caller session IDs. */
-export async function enforceRequestQuota(scope: string, limit: number, userId?: string | null) {
+export async function enforceRequestQuota(scope: string, limit: number, userId?: string | null, actorOverride?: string) {
   const ip = getRequestHeader("cf-connecting-ip") ?? "unknown";
-  const actor = userId ? `user:${userId}` : `ip:${ip}`;
+  const actor = actorOverride ?? (userId ? `user:${userId}` : `ip:${ip}`);
   const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(actor));
   const hash = Array.from(new Uint8Array(digest), (b) => b.toString(16).padStart(2, "0")).join("");
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
