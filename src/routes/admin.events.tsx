@@ -453,6 +453,7 @@ function AdminEvents() {
       lifecycle: "draft",
       entered: false,
       externalId: null,
+      slug: null,
     });
 
   return (
@@ -745,6 +746,15 @@ function EventEditor({
               onChange={(e) => update("name", e.target.value)}
             />
           </Field>
+          <Field label="Clean web address (slug)">
+            <input
+              className={inputCls}
+              value={form.slug ?? ""}
+              placeholder="jbfe-sea-to-sea-south-2027"
+              onChange={(e) => update("slug", e.target.value.trim().toLowerCase().replace(/[^a-z0-9-]/g, "") || null)}
+            />
+            <p className="mt-1 text-[11px] text-ink-soft">Public link: /my-events/{form.slug || "event-id"}</p>
+          </Field>
           <Field label="Discipline">
             <input
               className={inputCls}
@@ -759,6 +769,17 @@ function EventEditor({
               value={dateLocal}
               onChange={(e) => update("date", new Date(e.target.value).toISOString())}
             />
+          </Field>
+          <Field label="Dates to be confirmed">
+            <label className="flex items-center gap-2 rounded-md border border-border bg-background px-3 py-2 text-sm">
+              <input
+                type="checkbox"
+                checked={form.datesTbc ?? false}
+                onChange={(e) => update("datesTbc", e.target.checked)}
+              />
+              <span>Show dates to be confirmed publicly</span>
+            </label>
+            <p className="mt-1 text-[11px] text-ink-soft">The date above is then used only to sort the event internally.</p>
           </Field>
           <Field label="Location">
             <input
