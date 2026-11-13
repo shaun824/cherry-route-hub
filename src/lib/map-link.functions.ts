@@ -24,7 +24,9 @@ export const resolveMapLink = createServerFn({ method: "POST" })
       };
     }
 
-    const start = /^https?:\/\//i.test(data.url) ? data.url : `https://${data.url}`;
+    const start = /^https?:\/\//i.test(data.url)
+      ? data.url.replace(/^http:\/\//i, "https://")
+      : `https://${data.url}`;
 
     let host: string;
     try {
