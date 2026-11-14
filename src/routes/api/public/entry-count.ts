@@ -39,7 +39,7 @@ export const Route = createFileRoute('/api/public/entry-count')({
         if (availability) {
           return Response.json(
             { event: availability.event, taken: availability.totals.taken, cap: capOverride ?? availability.totals.cap },
-            { headers: { ...corsHeaders, 'cache-control': 'public, max-age=3600' } },
+            { headers: { ...corsHeaders, 'cache-control': 'no-store' } },
           )
         }
 
@@ -67,7 +67,7 @@ export const Route = createFileRoute('/api/public/entry-count')({
           {
             headers: {
               ...corsHeaders,
-              'cache-control': 'public, max-age=3600',
+              'cache-control': 'no-store',
             },
           },
         )

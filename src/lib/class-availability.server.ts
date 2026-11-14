@@ -1,9 +1,14 @@
 // Server-only: per-class "places left" straight from Entry Ninja (source of truth),
-// cached in site_settings for 24 hours so website traffic never hits Entry Ninja directly.
+// cached in site_settings for five minutes so website traffic never hits Entry Ninja directly.
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 type AnyClient = SupabaseClient<any, any, any>;
-const TTL_MS = 24 * 60 * 60 * 1000;
+const TTL_MS = 5 * 60 * 1000;
+
+export function isAvailabilityFresh(updatedAt: string, now = Date.now()): boolean {
+  const age = now - new Date(updatedAt).getTime();
+  return Number.isFinite(age) && age >= 0 && age < TTL_MS;
+}
 
 // Friendly keys for PE Plett classes; unknown classes fall back to "class-<id>".
 const CLASS_KEYS: Record<number, string> = {
@@ -60,7 +65,7 @@ export async function getClassAvailability(supabase: AnyClient, eventId: string)
   const cacheKey = `class_availability:${eventId}`;
   const { data: cached } = await supabase.from("site_settings").select("value, updated_at").eq("key", cacheKey).maybeSingle();
   const cachedValue = cached?.value as ClassAvailability | undefined;
-  if (cachedValue?.updated_at && Date.now() - new Date(cachedValue.updated_at).getTime() < TTL_MS) {
+  if (cachedValue?.updated_at && isAvailabilityFresh(cachedValue.updated_at)) {
     return { ...cachedValue, event: ev.name };
   }
 
