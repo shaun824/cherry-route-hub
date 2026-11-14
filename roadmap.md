@@ -9,6 +9,10 @@
 
 # Roadmap
 
+## Grabouw bot correction (Shaun, 14 Nov)
+- [x] Save the confirmed Otto1890 Weekend Warrior Grabouw / Oak Valley dates, 2–4 April 2027
+- [x] Make the answer available across events and email Quinn the confirmed dates using the existing app-email sender
+
 ## KCA match campaign (Shaun, 13 Nov)
 - [x] KCA match campaign approved — matches every entry & donation, R1m goal (Shaun, 13 Nov)
 - [x] Upgrade all four event and spectator cards, listings and email wording
